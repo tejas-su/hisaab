@@ -1,0 +1,17 @@
+{
+  "@@locale": "en",
+  "appTitle": "Expense Tracker",
+  "leftToSpend": "Left to spend",
+  "perDayUntilPayday": "{amount}/day until payday",
+  "@perDayUntilPayday": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "overBy": "{amount} over",
+  "@overBy": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "daysLeft": "{count, plural, =0{Payday today} =1{1 day left} other{{count} days left}}",
+  "@daysLeft": {
+    "placeholders": { "count": { "type": "int" } }
+  }
+}
