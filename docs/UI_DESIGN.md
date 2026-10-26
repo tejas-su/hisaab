@@ -4,7 +4,7 @@
 **Direction:** calm monochrome plus one signal colour.
 **Mascot:** none; the concept uses no characters.
 
-Every decision below traces to research (§12). Colours, fonts and formatting were checked on 2026-10-26.
+Every decision below traces to research (§12). Colours, fonts and formatting were checked on 2026-10-26. Exact behaviour and formulas are in [SPEC.md](SPEC.md), mockups are in [design/](design/README.md), and the reasons are in [DECISIONS.md](DECISIONS.md).
 
 > **Name decision (2026-10-26):** the brand is the **"hisaab•" wordmark**: lowercase, with the marigold dot.
 >
@@ -29,7 +29,7 @@ Why this concept:
 - **It follows the safer-spending research.** Showing the exact amount left for the whole month raised spending 26–33% (University of Arizona / Think Forward). Hisaab's hero shows **today's share**, and the month total stays secondary.
 - **It is honest, as Rams asks.** If you spend less today, tomorrow's block grows; if you overspend, tomorrow's block shrinks. Nothing is hidden.
 
-The range line underneath borrows from electric cars. EV drivers trust a range display that says where you will arrive and with how much left. Hisaab writes "Lasts till payday · ₹900 spare", payday being the destination. It is labelled as a forecast and smoothed, so it never jitters.
+The range line underneath borrows from electric cars. EV drivers trust a range display that says where you will arrive and with how much left. Hisaab writes "Lasts till payday · about ₹9,300 spare", payday being the destination. It is labelled as a forecast and smoothed, so it never jitters.
 
 ---
 
@@ -104,9 +104,9 @@ Inside the hero display card (both themes), these extra tokens apply:
 ### 3.3 States with one colour
 | State | Today's block | Words + glyph |
 |---|---|---|
-| On track | Solid marigold, draining from the top as you spend | "Lasts till payday · ₹900 spare" with a check glyph |
+| On track | Solid marigold, draining from the top as you spend | "Lasts till payday · about ₹9,300 spare" with a check glyph |
 | Slow down (< 25% of today left, or the forecast falls short of payday) | Marigold **outline** with a thin marigold sliver | "Slow down · at this pace it runs out 22 Nov" with an alert glyph |
-| Over today | Empty block with a diagonal hatch in `displayInk2`; **tomorrow's block is visibly shorter** | "₹220 over today · tomorrow ₹1,610" |
+| Over today | Empty block with a diagonal hatch in `displayInk2`; **tomorrow's block is visibly shorter** | "₹220 over today · each day after ₹1,776" |
 | Over for the cycle | All blocks empty and outlined | "Over by ₹1,200 · payday in 4 days" + "See where it went" |
 
 These rules come from the iOS battery (colour appears only when the state is unusual), Apple's gauge guidance (change the fill at thresholds and label the ends) and Oura (number plus a verdict word).
@@ -168,14 +168,14 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 
 ### 5.2 Home
 ```
- hisaab•                Sat, 26 Oct   [⚙]
+ hisaab•                Mon, 26 Oct   [⚙]
  ┌────────────────────────────────────────┐   ink "display" card
  │ Safe to spend today                    │
- │ ₹1,850                                 │   Anek 76 · wdth 85
+ │ ₹1,430                                 │   Anek 76 · wdth 85
  │ ▇ ▆ ▆ ▆ ▆ ▆ ▆ ▆ ▆              ⚑ 4 Nov │   today = marigold, 8 more days
- │ ✓ Lasts till payday · ₹900 spare        │
+ │ ✓ Lasts till payday · about ₹9,300 spare│
  └────────────────────────────────────────┘
- ⓘ Rent ₹15,000 goes out in 3 days
+ ⓘ Electricity ₹1,200 goes out in 3 days
  Today                         ₹420  See all
    [🍴] Food     Chai & samosa          ₹60
    [🚌] Travel   Auto to office        ₹120
@@ -195,7 +195,6 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - Height is 40dp. Today is first, on the left.
   - A flag with the payday date closes the row.
 - **Tap the hero** to flip between *Today* and *This week*. Monzo users found a daily figure meaningless when they don't spend every day.
-- **Long-press a block** to see that day's share.
 - **When you underspend:** the next morning the blocks grow, the number rolls up, and a one-line note appears: "You saved ₹300 yesterday, so every day got ₹35 more."
 - **Empty Today:** "Nothing spent today. Tap Add when you do."
 
@@ -309,7 +308,7 @@ One effect per event, never buzzy.
 - Touch targets ≥ 48dp; keys and tiles are 64–96dp.
 - AA contrast on every text pair (verified above).
 - State is shown by fill, outline, hatch **and** words.
-- TalkBack reads, for example: "Safe to spend today: 1,850 rupees. 9 days to payday. Lasts till payday with 900 rupees spare."
+- TalkBack reads, for example: "Safe to spend today: 1,430 rupees. 9 days to payday. Lasts till payday with about 9,300 rupees spare."
 - Text scales to 1.5× with no clipping. Every colour has an increased-contrast variant (HIG).
 
 ## 10. Android

@@ -10,10 +10,13 @@ Rules and skills are adapted from the team's `melento-nocode-flutter` setup. Whe
 
 | Doc | What it decides |
 |---|---|
-| [docs/PLAN.md](docs/PLAN.md) | Product scope, the zero-config defaults (§2), data model, architecture, milestones M0–M6 |
+| [docs/SPEC.md](docs/SPEC.md) | **Behaviour, exactly:** business rules with formulas and worked examples (BR-), screen requirements with acceptance criteria (FR-), edge cases, NFRs. Tests cite these IDs |
 | [docs/UI_DESIGN.md](docs/UI_DESIGN.md) | Design spec: Day Blocks concept, tokens, type, screens, motion, haptics, copy, accessibility, with research sources |
+| [docs/design/](docs/design/README.md) | HTML mockups matching the spec's worked example |
+| [docs/PLAN.md](docs/PLAN.md) | Product scope, the zero-config defaults (§2), data model, architecture, milestones M0–M6 |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log; append a row when a decision changes |
 
-Before building or changing a screen, read its section in `UI_DESIGN.md`. The spec wins over taste. If a change departs from it, say so and update the doc in the same change.
+Before building or changing anything, read its BR/FR entries in `SPEC.md` and its section in `UI_DESIGN.md`. When docs disagree, SPEC › UI_DESIGN › mockups › PLAN. If a change departs from them, say so and update the doc in the same change.
 
 ## Working approach
 

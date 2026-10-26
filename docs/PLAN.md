@@ -39,18 +39,14 @@ Every setting the user must think about is friction. The app decides; power user
 
 ## 3. Screens
 
-1. **Onboarding (2 steps, progress dots)**
-   1. "How much do you get paid?" — amount keypad.
-   2. "When does it come?" — big chips: *1st of month* · *Last day* · *Pick a date* · *Every week* · *It keeps changing*.
-   3. Optional skip-able: "Any fixed bills?" — Rent, EMI, Phone, Subscriptions chips with amount.
-2. **Home** — hero "Left to spend" number · "₹300/day until payday" · progress ring to payday · last 5 entries · big **+**.
-3. **Add / Edit (tray)** — amount keypad (phone layout, ₹10–₹500 quick chips) → Next → category grid (8 fixed tiles); tapping a tile saves. Spent/Got toggle at the top (defaults to Spent). Note optional.
-4. **History** — grouped by day, filter chips (category, month), swipe to delete + undo.
-5. **Insights** — donut by category, daily bars, vs last cycle, 3 plain-English tips ("Food is up 30% vs last month").
-6. **Ask AI** — see §7.
-7. **Settings** — recurring items, categories, month start, keep-aside amount, backup/restore.
+1. **Onboarding (3 steps, progress dots):** income amount, when it comes, optional fixed bills (SPEC FR-ON).
+2. **Home:** the hero card (safe to spend today, Day Blocks, range line), due-soon nudge, Today list, dock (FR-HO).
+3. **Add tray:** amount keypad, then category tiles; tapping a tile saves (FR-AD).
+4. **Spends:** Ask AI card, pace chart, where-it-went bars (no donut), up to 3 insights, and *See every entry* for the full day-grouped history (FR-SP).
+5. **Ask AI:** goal, period, preview, copy/share/open ChatGPT (FR-AI).
+6. **Settings:** money, categories, look, data (FR-SE).
 
-Navigation: floating dock with **Home · (+ Add) · Spends**. Ask AI is the top card on Spends. History opens from Home ("See all"). Settings is at the top right of Home. See UI_DESIGN.md §4.
+Navigation: floating dock with **Home · (+ Add) · Spends**. Ask AI is the top card on Spends. The full history opens from Home ("See all") or Spends. Settings is at the top right of Home. See UI_DESIGN.md §4.
 
 ---
 
@@ -58,7 +54,7 @@ Navigation: floating dock with **Home · (+ Add) · Spends**. Ask AI is the top 
 
 Full spec, research and verified tokens are in **[UI_DESIGN.md](UI_DESIGN.md)**. Summary:
 - Name: **hisaab•** wordmark (lowercase, marigold dot). The Play Store title gets a descriptor such as "hisaab• – Daily Spend Tracker", because the bare name is crowded; see UI_DESIGN.md.
-- Hero concept: **Day Blocks.** The money for the pay cycle is cut into one block per day until payday. Today's block glows marigold and drains as you spend. A range line underneath ("Lasts till payday · ₹900 spare") answers "will it last?". There is no mascot.
+- Hero concept: **Day Blocks.** The money for the pay cycle is cut into one block per day until payday. Today's block glows marigold and drains as you spend. A range line underneath ("Lasts till payday · about ₹9,300 spare") answers "will it last?". There is no mascot.
 - Palette: calm warm monochrome plus **one signal colour, marigold `#FFB020`**, which means "today / act" only. This follows the Braun ET66 lineage. There is no red: states are shown by fill, outline and hatch plus words.
 - Type: Anek Latin (amounts and titles, `wdth` 85) and Mukta (body). Both are bundled and have ₹, tabular figures and Devanagari.
 - Icons: Hugeicons stroke-rounded, monochrome, always with a label.
@@ -86,10 +82,10 @@ Dependencies added: `intl`, `flutter_localizations`, `flutter: generate: true`, 
 ## 6. Key logic (pure Dart, unit-tested)
 
 - `PeriodCalculator` — given payday rule + month-start setting + today → current cycle start/end, days left.
-- `SafeToSpend` = (income in cycle − keep-aside − bills still due in cycle − spent) ÷ days left (incl. today).
+- `SafeToSpend`: today's share `A = floor((income − keep-aside − bills still due − spent before today) ÷ days left incl. today)`; hero = `A − spent today`. The exact rules are in SPEC BR-3 to BR-7.
 - `RecurringEngine` — on app start/resume, posts every due occurrence up to today (catch-up for missed days), advances `next_due`. Idempotent (unique key `recurring_id + due_date`).
 - `InsightRules` — category deltas vs previous cycle, biggest category, unusual single expense (> 2× category median).
-- `BudgetSuggester` — after one full cycle, suggest per-category limits = rounded actual spend.
+- `BudgetSuggester`: after one full cycle, suggests per-category limits equal to last cycle's spend, rounded up to the next ₹500 (SPEC BR-12).
 
 ---
 
@@ -120,10 +116,10 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 
 | Table | Columns |
 |---|---|
-| `categories` | id, name, icon_key, color_key, kind (in/out), budget_minor NULL, sort, archived |
+| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived |
 | `transactions` | id, amount_minor, currency, kind, category_id, date, note NULL, recurring_id NULL, created_at |
 | `recurring` | id, label, amount_minor, currency, kind, category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active |
-| `settings` | key, value (locale, currency, payday_rule, month_start, keep_aside_minor, onboarding_done) |
+| `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `keep_aside_minor`. Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). The pay rule lives on the income `recurring` row (DECISIONS D20) |
 
 Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transactions(recurring_id, date)`.
 
@@ -180,7 +176,7 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | # | Scope | Done when |
 |---|---|---|
 | M0 | Design tokens + theme (light/dark), AppIcon, l10n wiring, Money/formatter, Clock, AppLogger, DI, DB + migrations, seeded categories; add `fpdart`, `figma_squircle`, `path`; bundle fonts; `git init` | App boots in `en_IN`, ₹ formats Indian-style, analyze clean, coverage script runs |
-| M1 | Onboarding, Home hero, Add sheet, History, undo, core motion | Log an expense in < 5s, 3 taps |
+| M1 | Onboarding, Home hero, Add tray, Today list, undo, core motion | Log an expense in < 5 s, Add → digits → Next → tile |
 | M2 | RecurringEngine (income + bills), PeriodCalculator | Payday auto-adds income; catch-up works; tests green |
 | M3 | Safe-to-spend, status colours, auto-suggested budgets | Over-budget turns red with one shake |
 | M4 | Insights: charts + rule tips | vs-last-cycle shown, 3 tips max |

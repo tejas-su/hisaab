@@ -47,4 +47,10 @@ docs/
 
 - Before changing a feature, check `docs/features/<feature-name>/` and read the relevant files
 - If your change alters documented behaviour, update the matching doc in the same change. If no doc exists yet, mention it rather than creating one unasked
-- Product-level docs stay at the `docs/` root: `docs/PLAN.md` (product and build plan) and `docs/UI_DESIGN.md` (design spec). When a change alters a decision recorded there (a token, a screen, a milestone), update that doc in the same change
+- Product-level docs stay at the `docs/` root:
+  - `docs/SPEC.md`: behaviour, with BR/FR/NFR IDs. Tests cite these IDs.
+  - `docs/UI_DESIGN.md`: design spec.
+  - `docs/PLAN.md`: build plan.
+  - `docs/DECISIONS.md`: decision log; append rows, never rewrite them.
+  - `docs/design/`: HTML mockups.
+  - When a change alters something recorded there (a rule, a token, a screen, a milestone), update that doc in the same change. When docs disagree, SPEC › UI_DESIGN › mockups › PLAN
