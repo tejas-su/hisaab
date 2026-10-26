@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
+import '../../../core/money/money.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/entry_kind.dart';
 import '../model/category_model.dart';
@@ -17,6 +18,8 @@ abstract final class CategoryMapper {
           iconKey: model.iconKey,
           kind: kind,
           sort: model.sort,
+          // why: limits are stored without a currency; v1 ships rupees only.
+          limit: Option<int>.fromNullable(model.budgetMinor).map(Money.new),
         ),
       );
 }

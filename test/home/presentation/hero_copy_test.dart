@@ -20,6 +20,7 @@ CycleSummary _summary({
   int spentToday = 420,
   Option<Money> tomorrow = const Option<Money>.none(),
   CalendarDate today = const CalendarDate(2026, 10, 26),
+  int spentThisWeek = 420,
 }) =>
     CycleSummary(
       cycle: const PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3)),
@@ -31,9 +32,12 @@ CycleSummary _summary({
       state: state,
       forecast: forecast,
       earliestEntryDate: const CalendarDate(2026, 9, 4),
+      spentThisWeek: Money.fromMajor(spentThisWeek),
     );
 
 HeroCopy _copy(CycleSummary summary) => HeroCopy.of(summary, strings: _strings, money: _money);
+
+HeroCopy _weekCopy(CycleSummary summary) => HeroCopy.of(summary, strings: _strings, money: _money, week: true);
 
 void main() {
   setUpAll(() => initializeDateFormatting('en_IN'));
@@ -118,6 +122,48 @@ void main() {
 
     test('compares by value', () {
       expect(_copy(_summary(state: const OnTrack())), _copy(_summary(state: const OnTrack())));
+    });
+  });
+
+  group('HeroCopy — This week (FR-HO-2)', () {
+    test('Today is the default title', () {
+      expect(_copy(_summary(state: const OnTrack())).title, 'Safe to spend today');
+    });
+
+    test('on track: 7 × ₹1,850 − ₹420 = ₹12,530 this week, read aloud with the week title', () {
+      final HeroCopy copy = _weekCopy(_summary(state: const OnTrack(), forecast: LastsTillPayday(Money.fromMajor(9300))));
+      expect(copy.title, 'Safe to spend this week');
+      expect(copy.heroAmount, Money.fromMajor(12530));
+      expect(copy.muted, isFalse);
+      expect(copy.overText, const Option<String>.none());
+      expect(copy.laterCaption, '9 days to payday');
+      expect(copy.range, const RangeWords('Lasts till payday', 'about ₹9,300 spare'));
+      expect(
+        copy.spoken,
+        'Safe to spend this week: 12,530 rupees. 9 days to payday. Lasts till payday, about 9,300 rupees spare.',
+      );
+    });
+
+    test('over today but not over the week: the week amount shows, without today\'s overspend', () {
+      final HeroCopy copy =
+          _weekCopy(_summary(state: OverToday(Money.fromMajor(220)), spentToday: 2070, spentThisWeek: 2070));
+      expect(copy.heroAmount, Money.fromMajor(10880));
+      expect(copy.muted, isFalse);
+      expect(copy.overText, const Option<String>.none());
+    });
+
+    test('over the week: ₹0, muted, and how far over in words', () {
+      final HeroCopy copy = _weekCopy(_summary(state: const OnTrack(), spentThisWeek: 13000));
+      expect(copy.heroAmount, Money.zero);
+      expect(copy.muted, isTrue);
+      expect(copy.overText, const Option<String>.of('₹50 over this week'));
+    });
+
+    test('spending exactly the week\'s shares is ₹0 and muted, with no overspend', () {
+      final HeroCopy copy = _weekCopy(_summary(state: const OnTrack(), spentThisWeek: 12950));
+      expect(copy.heroAmount, Money.zero);
+      expect(copy.muted, isTrue);
+      expect(copy.overText, const Option<String>.none());
     });
   });
 }

@@ -33,6 +33,9 @@ final class Money extends Equatable implements Comparable<Money> {
   /// Returns this minus [other]; both must share a currency.
   Money operator -(Money other) => Money(amountMinor - _sameCurrency(other).amountMinor, currency: currency);
 
+  /// Returns this amount [times] over, e.g. a daily share for a number of days.
+  Money operator *(int times) => Money(amountMinor * times, currency: currency);
+
   bool operator <(Money other) => compareTo(other) < 0;
 
   bool operator >(Money other) => compareTo(other) > 0;

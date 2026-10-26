@@ -127,6 +127,42 @@ abstract class AppLocalizations {
   /// **'Safe to spend today'**
   String get safeToSpendToday;
 
+  /// No description provided for @safeToSpendThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe to spend this week'**
+  String get safeToSpendThisWeek;
+
+  /// TalkBack hint for tapping the hero card while it shows today: "Double tap to show this week"
+  ///
+  /// In en, this message translates to:
+  /// **'show this week'**
+  String get showThisWeek;
+
+  /// TalkBack hint for tapping the hero card while it shows this week
+  ///
+  /// In en, this message translates to:
+  /// **'show today'**
+  String get showToday;
+
+  /// No description provided for @amountOverThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over this week'**
+  String amountOverThisWeek(String amount);
+
+  /// Home's morning note after an underspend (SPEC BR-8)
+  ///
+  /// In en, this message translates to:
+  /// **'You saved {amount} yesterday, so every day got {more} more.'**
+  String savedYesterday(String amount, String more);
+
+  /// Home's morning note when the saving adds under one rupee to each day
+  ///
+  /// In en, this message translates to:
+  /// **'You saved {amount} yesterday.'**
+  String savedYesterdayOnly(String amount);
+
   /// No description provided for @daysToPayday.
   ///
   /// In en, this message translates to:

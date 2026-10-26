@@ -6,6 +6,7 @@ import 'package:expense_tracker/ledger/domain/entities/cycle_state.dart';
 import 'package:expense_tracker/ledger/domain/entities/cycle_summary.dart';
 import 'package:expense_tracker/ledger/domain/entities/range_forecast.dart';
 import 'package:expense_tracker/ledger/domain/entities/spend_preview.dart';
+import 'package:expense_tracker/ledger/domain/entities/yesterday_saving.dart';
 import 'package:expense_tracker/ledger/domain/safe_to_spend.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -40,6 +41,15 @@ CycleInputs _inputs({
     );
 
 CycleSummary _compute(CycleInputs inputs) => SafeToSpend.compute(inputs, earliestEntryDate: _earliest);
+
+// Sun 25 Oct, the day before the worked example: P = ₹16,650 over 10 days, so A = ₹1,665.
+CycleInputs _yesterday({int spent = 0}) => _inputs(today: const CalendarDate(2026, 10, 25), spentToday: spent);
+
+CycleSummary _computeWeek(CycleInputs inputs, {int spentThisWeek = 420}) =>
+    SafeToSpend.compute(inputs, earliestEntryDate: _earliest, spentThisWeek: _rupees(spentThisWeek));
+
+CycleSummary _computeAfter(CycleInputs yesterday) =>
+    SafeToSpend.compute(_inputs(), earliestEntryDate: _earliest, yesterday: Option<CycleInputs>.of(yesterday));
 
 void main() {
   group('SafeToSpend.compute — SPEC worked example', () {
@@ -193,6 +203,72 @@ void main() {
         SafeToSpend.previewSpend(lastDay, lastDay.todayShare + _rupees(1)),
         isA<OverTodayShare>().having((OverTodayShare p) => p.tomorrow, 'tomorrow', const Option<Money>.none()),
       );
+    });
+  });
+
+  group('CycleSummary.safeThisWeek (FR-HO-2)', () {
+    test('worked example: 7 × ₹1,850 − ₹420 spent since Monday = ₹12,530', () {
+      expect(_computeWeek(_inputs()).safeThisWeek, _rupees(12530));
+    });
+
+    test('fewer than 7 days to payday counts only the days left', () {
+      // Fri 30 Oct: D = 5, A = 16,650 / 5 = ₹3,330.
+      final CycleSummary summary = _computeWeek(_inputs(today: const CalendarDate(2026, 10, 30)), spentThisWeek: 1000);
+      expect(summary.safeThisWeek, _rupees(5 * 3330 - 1000));
+    });
+
+    test('on the last day only today\'s share counts', () {
+      final CycleSummary summary = _computeWeek(_inputs(today: const CalendarDate(2026, 11, 3)), spentThisWeek: 0);
+      expect(summary.safeThisWeek, summary.todayShare);
+    });
+
+    test('goes below ₹0 when the week\'s spending passes its shares', () {
+      expect(_computeWeek(_inputs(), spentThisWeek: 13000).safeThisWeek, _rupees(-50));
+    });
+
+    test('A = 0 leaves only what was spent, as a negative', () {
+      final CycleSummary summary = _computeWeek(_inputs(billsDue: 20000));
+      expect(summary.safeThisWeek, _rupees(-420));
+    });
+  });
+
+  group('SafeToSpend.compute — saved yesterday (BR-8)', () {
+    test('no yesterday given means no note', () {
+      expect(_compute(_inputs()).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+
+    test('nothing spent yesterday saves the whole ₹1,665 share; each of 9 days gets ₹185 more', () {
+      expect(
+        _computeAfter(_yesterday()).savedYesterday,
+        Option<YesterdaySaving>.of(YesterdaySaving(saved: _rupees(1665), eachDayMore: _rupees(185))),
+      );
+    });
+
+    test('spending ₹1,365 saves ₹300; the ₹33.33 a day floors to ₹33', () {
+      expect(
+        _computeAfter(_yesterday(spent: 1365)).savedYesterday,
+        Option<YesterdaySaving>.of(YesterdaySaving(saved: _rupees(300), eachDayMore: _rupees(33))),
+      );
+    });
+
+    test('saving less than one rupee a day still counts, with ₹0 more each day', () {
+      expect(
+        _computeAfter(_yesterday(spent: 1660)).savedYesterday,
+        Option<YesterdaySaving>.of(YesterdaySaving(saved: _rupees(5), eachDayMore: Money.zero)),
+      );
+    });
+
+    test('spending exactly yesterday\'s share saves nothing', () {
+      expect(_computeAfter(_yesterday(spent: 1665)).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+
+    test('overspending yesterday saves nothing', () {
+      expect(_computeAfter(_yesterday(spent: 2000)).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+
+    test('a share of ₹0 yesterday saves nothing', () {
+      final CycleInputs broke = _inputs(today: const CalendarDate(2026, 10, 25), billsDue: 20000, spentToday: 0);
+      expect(_computeAfter(broke).savedYesterday, const Option<YesterdaySaving>.none());
     });
   });
 }

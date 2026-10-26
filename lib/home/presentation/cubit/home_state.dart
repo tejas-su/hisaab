@@ -21,6 +21,7 @@ final class HomeLoading extends HomeState {
 /// latest entries.
 ///
 /// [undo] holds an entry just deleted, so the page can offer Undo once (SPEC BR-10).
+/// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
 final class HomeReady extends HomeState {
   const HomeReady({
     required this.summary,
@@ -28,6 +29,7 @@ final class HomeReady extends HomeState {
     required this.categories,
     this.dueSoon = const Option<DueSoonBill>.none(),
     this.undo = const Option<Entry>.none(),
+    this.showWeek = false,
   });
 
   final CycleSummary summary;
@@ -41,18 +43,21 @@ final class HomeReady extends HomeState {
   /// The soonest bill going out within 5 days, if any (FR-HO-3).
   final Option<DueSoonBill> dueSoon;
   final Option<Entry> undo;
+  final bool showWeek;
 
   /// Returns a copy with the given fields replaced; [undo] resets unless passed.
-  HomeReady copyWith({List<Entry>? todayEntries, Option<Entry> undo = const Option<Entry>.none()}) => HomeReady(
+  HomeReady copyWith({List<Entry>? todayEntries, Option<Entry> undo = const Option<Entry>.none(), bool? showWeek}) =>
+      HomeReady(
         summary: summary,
         todayEntries: todayEntries ?? this.todayEntries,
         categories: categories,
         dueSoon: dueSoon,
         undo: undo,
+        showWeek: showWeek ?? this.showWeek,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, dueSoon, undo];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, dueSoon, undo, showWeek];
 }
 
 /// Loading failed; a quiet message with Try again.

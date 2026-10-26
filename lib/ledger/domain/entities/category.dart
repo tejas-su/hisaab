@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'package:fpdart/fpdart.dart';
 
+import '../../../core/money/money.dart';
 import 'entry_kind.dart';
 
 /// A fixed bucket for entries, such as Food or Salary (SPEC BR-11).
@@ -13,6 +15,7 @@ final class Category extends Equatable {
     required this.kind,
     required this.sort,
     this.customName,
+    this.limit = const Option<Money>.none(),
   });
 
   final int id;
@@ -30,8 +33,11 @@ final class Category extends Equatable {
   /// The user's rename, if any.
   final String? customName;
 
+  /// The optional spending limit for one cycle; off by default (SPEC BR-12).
+  final Option<Money> limit;
+
   @override
-  List<Object?> get props => <Object?>[id, key, iconKey, kind, sort, customName];
+  List<Object?> get props => <Object?>[id, key, iconKey, kind, sort, customName, limit];
 }
 
 /// The seed category keys (SPEC BR-11), matching the v1 migration.

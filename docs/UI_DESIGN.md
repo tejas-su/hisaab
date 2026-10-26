@@ -152,6 +152,45 @@ The wordmark shrunk to its first letter and its dot: **h•**. The ET66 has one 
 - **Sources:** `docs/design/brand/` holds the master SVGs, the 512px Play Store PNG and the 1024×500 Play feature graphic (the wordmark, "Know what you can spend today." and the Home hero card with the SPEC worked-example numbers, on ink). The Android resources (`mipmap-anydpi-v26/ic_launcher.xml`, `drawable/ic_launcher_foreground.xml`, `drawable/ic_launcher_monochrome.xml`, legacy `mipmap-*/ic_launcher.png`) are generated from the same geometry.
 - **Rejected:** a row of day blocks (reads as a battery or signal meter, a cliché §12 already rejects); the marigold Add key with a "+" (generic); an h whose leg is today's block (reads as a broken glyph).
 
+### 3.7 Launch splash
+The native Android splash, shown before Flutter draws (D41). Preview: `docs/design/mockups/09-splash.html` (`?t=<ms>` freezes a frame).
+
+- **Story, "Aaj":** today and tomorrow arrive as day blocks. Today lands with weight and fills marigold from the baseline. Tomorrow steps back. Today rounds into the dot, the full stop of the h•.
+- **One colour from tap to Home (D42):** the splash background, the icon background and Home's background are the same, so no circle is drawn.
+
+  | | Light | Dark |
+  |---|---|---|
+  | Background | `bg` `#F6F5F1` | `bg` `#121211` |
+  | h | `ink` `#161615` | `#F2F1EC` |
+  | Today's dot | `signal` with a 1-unit `ink` outline (like the wordmark) | `signal`, no outline |
+  | Day blocks | `line` `#DAD8D1` | hero `track` `#3A3A37` |
+
+- **Composition (D43):** the mark is drawn at 0.75 inside the system's 192dp mask, so tomorrow fits whole. A second trailing day would be sliced by the invisible mask edge.
+- **Timing (ms from the start of the icon animation):**
+
+  | ms | What moves |
+  |---|---|
+  | 0–100 | Hold while the launcher window grows |
+  | 100–220 | Today fades in |
+  | 100–380 | Today and tomorrow slide in (translateX 26→0), landing with speed |
+  | 100–380 | Today stretches along its travel (scaleX 1.16, scaleY 0.92), easing to 1.06 / 0.97 |
+  | 240–340 | Tomorrow fades in to 60%, only once it is wholly inside the mask |
+  | 380–440 | Impact squash (scaleX 0.86, scaleY 1.08) |
+  | 380–600 | Tomorrow fades out by 470 and slides away (+34) |
+  | 380–560 | Today fills marigold from the baseline |
+  | 440–660 | Today settles |
+  | 520–800 | Today morphs from block to dot |
+
+- **Exit:** the system's default fade into Home. Because the colours match, it reads as the icon dissolving into the app.
+- **The splash never delays Home (NFR-9).** It is removed on Flutter's first frame, wherever the animation has got to. On a fast release cold start (moto g45), only the arrival shows before the system freezes the splash for hand-off. The fill and the dot show on slower starts.
+- **Below Android 12:** a static h• (the last frame) on the same background.
+- **Animations off:** the system shows the last frame and closes the splash with no fade.
+- **Sources:**
+  - `android/app/src/main/res/drawable-v31/splash_icon.xml` (the animation);
+  - `drawable/splash_icon_static.xml`;
+  - `values*/splash_colors.xml`;
+  - `values-v31/` and `values-night-v31/styles.xml`.
+
 ---
 
 ## 4. Information architecture
@@ -296,6 +335,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
 - **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate.
+- **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
 
 ## 7. Haptics (Flutter 3.47, verified)
 
@@ -326,6 +366,10 @@ One effect per event, never buzzy.
 - All orientations and window sizes; never locked (§13).
 - Edge-to-edge (API 36). The dock sits above `MediaQuery.paddingOf(context).bottom`.
 - Predictive back: `PredictiveBackPageTransitionsBuilder` and `PopScope`. A back swipe scales the tray down.
+- Launch splash (§3.7):
+  - It is native: the Android 12+ `SplashScreen` API, and a static icon below that.
+  - It is one colour from tap to Home in each mode.
+  - It follows the phone's dark mode. When the in-app look setting (FR-SE-3) is built, it must also call `UiModeManager.setApplicationNightMode()` (API 31+) so the splash follows the app's choice.
 - Later quick-add options:
   - App shortcut.
   - Home-screen widget showing the hero card in miniature (`home_widget`).

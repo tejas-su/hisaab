@@ -145,6 +145,10 @@ The states below are evaluated in order, and the first match wins.
 ### BR-8 Midnight and resume
 - When the app resumes, and at local midnight while it is open, the app re-runs the recurring engine (BR-9) and then recomputes BR-1 to BR-7.
 - If the date changed, `A` is recomputed. The "you saved ₹X yesterday" note appears if yesterday's `S_today < A`.
+  - **Saved:** `X = A_yesterday − S_yesterday`, where `A_yesterday` is rebuilt from the ledger as it stood yesterday: *Got* entries dated up to yesterday, and bills posted today still counted in `B`.
+  - **Each day more:** `Y = floor(X / D)`, with `D` counted from today. With nothing else changed, today's `A` is exactly `A_yesterday + X / D`, so the note credits only the underspend (DECISIONS D38).
+  - The note reads "You saved ₹{X} yesterday, so every day got ₹{Y} more." When `Y < ₹1` it reads "You saved ₹{X} yesterday." It shows all day. It never shows on the cycle's first day, since yesterday belongs to the previous cycle. It also never shows when the first entry was saved today, since the app wasn't tracking yesterday (DECISIONS D38).
+  - **Example:** in the worked example nothing was spent on Sun 25 Oct, when `A = 16,650 / 10 = ₹1,665`. So `X = ₹1,665` and `Y = floor(1,665 / 9) = ₹185`, which matches `1,850 − 1,665`.
 
 ### BR-9 Recurring engine
 - Each rule has: `amountMinor`, kind (*Spent*/*Got*), category, frequency (weekly / every 2 weeks / monthly / yearly), anchor date, `next_due` and `active`.
@@ -176,6 +180,9 @@ The states below are evaluated in order, and the first match wins.
 
 ### BR-12 Category limits (optional)
 - They are off by default. After the **first full cycle**, Spends offers "Use these limits?" with each limit set to that category's spend last cycle, **rounded up to the next ₹500**. One tap accepts all of them.
+  - **Full cycle:** the previous cycle counts as full when the earliest entry in the ledger was *saved* (`created_at`, not its date) on or before that cycle's start (DECISIONS D39).
+  - Only categories with spending last cycle get a limit. Exactly ₹500 stays ₹500, and ₹501 becomes ₹1,000.
+  - The offer is not made once any category has a limit.
 - **Display:** the bar fills to `spent / max(spent of any category)`. A limit tick sits at `limit / max`, and any spend past the tick is drawn hatched, never red.
 
 ### BR-13 Percentages (Spends)
@@ -246,6 +253,9 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Day Blocks (BR-6), with the "Today" and "{D} days to payday" captions and the payday flag date.
   - The range line (BR-7).
   - Tapping the hero toggles *Today* ↔ *This week*. *This week* shows `A × min(7, D) − (spent since the start of the week, Monday)`, and the toggle lasts for the session only.
+    - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37).
+    - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
+    - The Day Blocks, their captions and the range line stay on today. TalkBack offers "Double tap to show this week" (or "show today").
 - **FR-HO-3** **Due-soon nudge** (BR-9), when applicable.
 - **FR-HO-4** **Today list:**
   - The header shows today's total and *See all*.
@@ -346,6 +356,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | NFR-6 | APK under 15 MB (fonts subset to Latin plus Devanagari) |
 | NFR-7 | Changed-lines test coverage ≥ 90% (target 100%) per change (`.claude/rules/tests.md`) |
 | NFR-8 | Adaptive layout: no orientation or size lock; works from 320dp phones to tablets, in every foldable posture and in multi-window (UI_DESIGN §13) |
+| NFR-9 | The launch splash never delays Home: it is dismissed on Flutter's first frame. Its icon animation lasts 800 ms or less. Its background matches Home's in light and dark (UI_DESIGN §3.7) |
 
 ---
 

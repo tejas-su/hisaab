@@ -60,8 +60,21 @@ final class LedgerRepositoryImpl implements LedgerRepository {
         ),
       ).flatMap(_found).map(_notify);
 
+  @override
+  TaskEither<Failure, Option<CalendarDate>> firstLoggedOn() => dbTask(_entries.firstCreatedAt).chainEither(
+        (String? text) => Option<String>.fromNullable(text).match(
+          () => Either<Failure, Option<CalendarDate>>.right(const Option<CalendarDate>.none()),
+          (String createdAt) => _dayOf(createdAt).map(Option<CalendarDate>.of),
+        ),
+      );
+
   /// Closes [changes]; call when the app's composition root is torn down.
   Future<void> dispose() => _changes.close();
+
+  static Either<Failure, CalendarDate> _dayOf(String createdAt) =>
+      Option<DateTime>.fromNullable(DateTime.tryParse(createdAt))
+          .map(CalendarDate.fromDateTime)
+          .toEither<Failure>(() => InvalidDataFailure('Bad created_at "$createdAt"'));
 
   TaskEither<Failure, EntryModel> _existing(int id) => dbTask(() => _entries.byId(id)).chainEither(
         (EntryModel? model) =>

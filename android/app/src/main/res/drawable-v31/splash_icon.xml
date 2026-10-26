@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Launch splash icon, concept C★ "Aaj" (UI_DESIGN §3.7, preview: docs/design/mockups/09-splash.html).
+    Today and tomorrow arrive as day blocks; today lands, lights up and rounds into the dot; tomorrow steps back.
+    Generated from the spec §2 timing table; the last frame is the static h•.
+    Frame 0 is intentionally empty of blocks: alphas start at 0 so nothing pops at the invisible mask edge.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <!-- 288dp with a 108 viewport: the system mask (r = 36 units) matches the adaptive-icon grid. -->
+        <vector
+            android:width="288dp"
+            android:height="288dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <!-- Drawn at 0.75 so tomorrow fits wholly inside the mask. -->
+            <group
+                android:name="mark"
+                android:pivotX="54"
+                android:pivotY="54"
+                android:scaleX="0.75"
+                android:scaleY="0.75">
+                <path
+                    android:name="h"
+                    android:fillColor="@color/splash_mark"
+                    android:pathData="M45.92 76L45.92 54.83Q45.92 53.34 45.61 52.29Q45.29 51.24 44.55 50.71Q43.8 50.18 42.44 50.18Q41.4 50.18 40.56 50.61Q39.71 51.04 39.19 51.79Q38.68 52.54 38.41 53.5L36.22 49.18L38.65 49.18Q39.05 47.25 39.98 45.71Q40.91 44.16 42.58 43.25Q44.26 42.34 46.89 42.34Q49.88 42.34 51.74 43.56Q53.6 44.79 54.5 47.2Q55.4 49.61 55.4 53.24L55.4 76ZM29.04 76L29.04 32L38.41 32L38.41 40.54L38.28 50.88L38.48 52.17L38.48 76Z" />
+                <group
+                    android:name="row"
+                    android:translateX="26">
+                    <group android:name="tomorrow">
+                        <path
+                            android:name="tomorrow_block"
+                            android:fillAlpha="0"
+                            android:fillColor="@color/splash_day"
+                            android:pathData="M84.34,56 L89.34,56 C91.55,56 93.34,57.79 93.34,60 L93.34,72 C93.34,74.21 91.55,76 89.34,76 L84.34,76 C82.13,76 80.34,74.21 80.34,72 L80.34,60 C80.34,57.79 82.13,56 84.34,56 Z" />
+                    </group>
+                    <group
+                        android:name="today"
+                        android:pivotX="70.84"
+                        android:pivotY="76">
+                        <path
+                            android:name="today_base"
+                            android:fillAlpha="0"
+                            android:fillColor="@color/splash_day"
+                            android:pathData="M68.34,56 L73.34,56 C75.55,56 77.34,57.79 77.34,60 L77.34,72 C77.34,74.21 75.55,76 73.34,76 L68.34,76 C66.13,76 64.34,74.21 64.34,72 L64.34,60 C64.34,57.79 66.13,56 68.34,56 Z" />
+                        <group android:name="today_lit">
+                            <clip-path
+                                android:name="fill_clip"
+                                android:pathData="M40,76 L120,76 L120,76 L40,76 Z" />
+                            <path
+                                android:name="today_fill"
+                                android:fillAlpha="0"
+                                android:fillColor="@color/splash_signal"
+                                android:pathData="M68.34,56 L73.34,56 C75.55,56 77.34,57.79 77.34,60 L77.34,72 C77.34,74.21 75.55,76 73.34,76 L68.34,76 C66.13,76 64.34,74.21 64.34,72 L64.34,60 C64.34,57.79 66.13,56 68.34,56 Z" />
+                        </group>
+                        <path
+                            android:name="today_outline"
+                            android:pathData="M68.34,56 L73.34,56 C75.55,56 77.34,57.79 77.34,60 L77.34,72 C77.34,74.21 75.55,76 73.34,76 L68.34,76 C66.13,76 64.34,74.21 64.34,72 L64.34,60 C64.34,57.79 66.13,56 68.34,56 Z"
+                            android:strokeAlpha="0"
+                            android:strokeColor="@color/splash_outline"
+                            android:strokeWidth="1" />
+                    </group>
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="row">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="translateX"
+                    android:startOffset="100"
+                    android:duration="280"
+                    android:valueFrom="26"
+                    android:valueTo="0">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.25" android:controlY1="0.5" android:controlX2="0.6" android:controlY2="0.9" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="today">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:startOffset="100"
+                    android:duration="100"
+                    android:valueFrom="1"
+                    android:valueTo="1.16">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0" android:controlY1="0" android:controlX2="0.2" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:startOffset="200"
+                    android:duration="180"
+                    android:valueFrom="1.16"
+                    android:valueTo="1.06"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:startOffset="380"
+                    android:duration="60"
+                    android:valueFrom="1.06"
+                    android:valueTo="0.86">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0" android:controlY1="0" android:controlX2="0.2" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:startOffset="440"
+                    android:duration="220"
+                    android:valueFrom="0.86"
+                    android:valueTo="1">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.23" android:controlY1="1" android:controlX2="0.32" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:startOffset="100"
+                    android:duration="100"
+                    android:valueFrom="1"
+                    android:valueTo="0.92">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0" android:controlY1="0" android:controlX2="0.2" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:startOffset="200"
+                    android:duration="180"
+                    android:valueFrom="0.92"
+                    android:valueTo="0.97"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:startOffset="380"
+                    android:duration="60"
+                    android:valueFrom="0.97"
+                    android:valueTo="1.08">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0" android:controlY1="0" android:controlX2="0.2" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:startOffset="440"
+                    android:duration="220"
+                    android:valueFrom="1.08"
+                    android:valueTo="1">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.23" android:controlY1="1" android:controlX2="0.32" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="today_base">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:startOffset="100"
+                    android:duration="120"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:startOffset="559"
+                    android:duration="1"
+                    android:valueFrom="1"
+                    android:valueTo="0"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:startOffset="520"
+                    android:duration="280"
+                    android:valueFrom="M68.34,56 L73.34,56 C75.55,56 77.34,57.79 77.34,60 L77.34,72 C77.34,74.21 75.55,76 73.34,76 L68.34,76 C66.13,76 64.34,74.21 64.34,72 L64.34,60 C64.34,57.79 66.13,56 68.34,56 Z"
+                    android:valueTo="M70.84,59.74 L70.84,59.74 C75.33,59.74 78.97,63.38 78.97,67.87 L78.97,67.87 C78.97,72.36 75.33,76 70.84,76 L70.84,76 C66.35,76 62.71,72.36 62.71,67.87 L62.71,67.87 C62.71,63.38 66.35,59.74 70.84,59.74 Z"
+                    android:valueType="pathType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.23" android:controlY1="1" android:controlX2="0.32" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="today_fill">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:startOffset="100"
+                    android:duration="120"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:startOffset="520"
+                    android:duration="280"
+                    android:valueFrom="M68.34,56 L73.34,56 C75.55,56 77.34,57.79 77.34,60 L77.34,72 C77.34,74.21 75.55,76 73.34,76 L68.34,76 C66.13,76 64.34,74.21 64.34,72 L64.34,60 C64.34,57.79 66.13,56 68.34,56 Z"
+                    android:valueTo="M70.84,59.74 L70.84,59.74 C75.33,59.74 78.97,63.38 78.97,67.87 L78.97,67.87 C78.97,72.36 75.33,76 70.84,76 L70.84,76 C66.35,76 62.71,72.36 62.71,67.87 L62.71,67.87 C62.71,63.38 66.35,59.74 70.84,59.74 Z"
+                    android:valueType="pathType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.23" android:controlY1="1" android:controlX2="0.32" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="today_outline">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="100"
+                    android:duration="120"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:startOffset="520"
+                    android:duration="280"
+                    android:valueFrom="M68.34,56 L73.34,56 C75.55,56 77.34,57.79 77.34,60 L77.34,72 C77.34,74.21 75.55,76 73.34,76 L68.34,76 C66.13,76 64.34,74.21 64.34,72 L64.34,60 C64.34,57.79 66.13,56 68.34,56 Z"
+                    android:valueTo="M70.84,59.74 L70.84,59.74 C75.33,59.74 78.97,63.38 78.97,67.87 L78.97,67.87 C78.97,72.36 75.33,76 70.84,76 L70.84,76 C66.35,76 62.71,72.36 62.71,67.87 L62.71,67.87 C62.71,63.38 66.35,59.74 70.84,59.74 Z"
+                    android:valueType="pathType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.23" android:controlY1="1" android:controlX2="0.32" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="fill_clip">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:startOffset="380"
+                    android:duration="180"
+                    android:valueFrom="M40,76 L120,76 L120,76 L40,76 Z"
+                    android:valueTo="M40,54 L120,54 L120,76 L40,76 Z"
+                    android:valueType="pathType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.2" android:controlY1="0" android:controlX2="0" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tomorrow_block">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:startOffset="240"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="0.6"
+                    android:interpolator="@android:interpolator/linear" />
+                <objectAnimator
+                    android:propertyName="fillAlpha"
+                    android:startOffset="380"
+                    android:duration="90"
+                    android:valueFrom="0.6"
+                    android:valueTo="0"
+                    android:interpolator="@android:interpolator/linear" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="tomorrow">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="translateX"
+                    android:startOffset="380"
+                    android:duration="220"
+                    android:valueFrom="0"
+                    android:valueTo="34">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:controlX1="0.4" android:controlY1="0" android:controlX2="1" android:controlY2="1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

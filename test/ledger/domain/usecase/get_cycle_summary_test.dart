@@ -9,8 +9,10 @@ import 'package:expense_tracker/ledger/domain/entities/budget_settings.dart';
 import 'package:expense_tracker/ledger/domain/entities/cycle_state.dart';
 import 'package:expense_tracker/ledger/domain/entities/cycle_summary.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/range_forecast.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/ledger/domain/entities/yesterday_saving.dart';
 import 'package:expense_tracker/ledger/domain/usecase/get_cycle_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -25,18 +27,20 @@ void main() {
   late FakeLedgerRepository ledger;
   late FakeRecurringRepository recurring;
   late FakeBudgetSettingsRepository settings;
+  late FakeClock clock;
   late GetCycleSummary getCycleSummary;
 
   setUp(() {
     ledger = FakeLedgerRepository(WorkedExample.entries);
     recurring = FakeRecurringRepository(WorkedExample.rules);
     settings = FakeBudgetSettingsRepository();
+    clock = FakeClock(WorkedExample.now);
     getCycleSummary = GetCycleSummary(
       ledger: ledger,
       recurring: recurring,
       settings: settings,
       periods: const PeriodCalculator(),
-      clock: FakeClock(WorkedExample.now),
+      clock: clock,
     );
   });
 
@@ -44,6 +48,20 @@ void main() {
 
   Future<CycleSummary> summary() async =>
       (await getCycleSummary(const NoParams()).run()).getOrElse((Failure failure) => fail(failure.message));
+
+  void addEntry(int rupees, CalendarDate date, {EntryKind kind = EntryKind.spent, int? recurringId}) => ledger.entries.add(
+        Entry(
+          id: 100 + ledger.entries.length,
+          amount: Money.fromMajor(rupees),
+          kind: kind,
+          categoryId: 1,
+          date: date,
+          createdAt: DateTime(date.year, date.month, date.day, 12),
+          recurringId: recurringId,
+        ),
+      );
+
+  void setToday(CalendarDate day) => clock.current = DateTime(day.year, day.month, day.day, 10);
 
   group('GetCycleSummary', () {
     test('reproduces the SPEC worked example from ledger data', () async {
@@ -113,5 +131,116 @@ void main() {
         expect(result.getLeft().toNullable(), isA<DatabaseFailure>());
       });
     }
+  });
+
+  group('GetCycleSummary — this week (FR-HO-2)', () {
+    test('worked example: 7 × ₹1,850 − ₹420 = ₹12,530 safe this week', () async {
+      expect((await summary()).safeThisWeek, Money.fromMajor(12530));
+    });
+
+    test('Monday is the week start, so Sunday\'s spending is last week\'s', () async {
+      addEntry(500, const CalendarDate(2026, 10, 25));
+      expect((await summary()).spentThisWeek, Money.fromMajor(420));
+    });
+
+    test('entries dated after today are not counted yet', () async {
+      setToday(const CalendarDate(2026, 10, 19));
+      expect((await summary()).spentThisWeek, Money.zero);
+    });
+
+    test('counts every day from Monday to today', () async {
+      setToday(const CalendarDate(2026, 10, 28));
+      addEntry(300, const CalendarDate(2026, 10, 27));
+      addEntry(100, const CalendarDate(2026, 10, 28));
+      expect((await summary()).spentThisWeek, Money.fromMajor(820));
+    });
+
+    test('a week that began in the last cycle counts only this cycle\'s days', () async {
+      // Sun 4 Oct is payday; that week's Monday (28 Sep) was in the previous cycle.
+      setToday(const CalendarDate(2026, 10, 4));
+      addEntry(700, const CalendarDate(2026, 10, 1));
+      expect((await summary()).spentThisWeek, Money.zero);
+    });
+
+    test('Got entries never count as spent', () async {
+      addEntry(900, WorkedExample.today, kind: EntryKind.got);
+      expect((await summary()).spentThisWeek, Money.fromMajor(420));
+    });
+  });
+
+  group('GetCycleSummary — saved yesterday (BR-8)', () {
+    test('worked example: nothing spent on Sun 25 Oct saves its ₹1,665 share, ₹185 more a day', () async {
+      expect(
+        (await summary()).savedYesterday,
+        Option<YesterdaySaving>.of(YesterdaySaving(saved: Money.fromMajor(1665), eachDayMore: Money.fromMajor(185))),
+      );
+    });
+
+    test('yesterday\'s spending is taken off yesterday\'s share', () async {
+      addEntry(1365, const CalendarDate(2026, 10, 25));
+      expect((await summary()).savedYesterday.map((YesterdaySaving s) => s.saved), Option<Money>.of(Money.fromMajor(300)));
+    });
+
+    test('money that came in today was not part of yesterday\'s share', () async {
+      addEntry(900, WorkedExample.today, kind: EntryKind.got);
+      expect((await summary()).savedYesterday.map((YesterdaySaving s) => s.saved), Option<Money>.of(Money.fromMajor(1665)));
+    });
+
+    test('a bill posted today was still due yesterday', () async {
+      // Thu 29 Oct: electricity posted today. Yesterday P = 45,000 − 1,200 − 27,570 over 7 days.
+      setToday(const CalendarDate(2026, 10, 29));
+      addEntry(1200, const CalendarDate(2026, 10, 29), recurringId: WorkedExample.electricity.id);
+      recurring.rules = <RecurringRule>[
+        WorkedExample.salary,
+        WorkedExample.rent,
+        RecurringRule(
+          id: WorkedExample.electricity.id,
+          label: WorkedExample.electricity.label,
+          amount: WorkedExample.electricity.amount,
+          kind: WorkedExample.electricity.kind,
+          categoryId: WorkedExample.electricity.categoryId,
+          schedule: WorkedExample.electricity.schedule,
+          nextDue: const CalendarDate(2026, 11, 29),
+        ),
+      ];
+      expect(
+        (await summary()).savedYesterday,
+        Option<YesterdaySaving>.of(YesterdaySaving(saved: Money.fromMajor(2318), eachDayMore: Money.fromMajor(386))),
+      );
+    });
+
+    test('overspending yesterday shows no note', () async {
+      addEntry(2000, const CalendarDate(2026, 10, 25));
+      expect((await summary()).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+
+    // A mid-cycle install: onboarding back-posts salary to 4 Oct, but every entry is saved at [at].
+    void allSavedAt(DateTime at) => ledger.entries.replaceRange(0, ledger.entries.length, <Entry>[
+          for (final Entry e in WorkedExample.entries)
+            Entry(
+              id: e.id,
+              amount: e.amount,
+              kind: e.kind,
+              categoryId: e.categoryId,
+              date: e.date,
+              createdAt: at,
+              recurringId: e.recurringId,
+            ),
+        ]);
+
+    test('first used today: yesterday wasn\'t tracked, so no note', () async {
+      allSavedAt(WorkedExample.now);
+      expect((await summary()).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+
+    test('first used late yesterday: the note shows', () async {
+      allSavedAt(DateTime(2026, 10, 25, 23, 50));
+      expect((await summary()).savedYesterday.isSome(), isTrue);
+    });
+
+    test('on payday yesterday was the last cycle, so no note', () async {
+      setToday(const CalendarDate(2026, 10, 4));
+      expect((await summary()).savedYesterday, const Option<YesterdaySaving>.none());
+    });
   });
 }

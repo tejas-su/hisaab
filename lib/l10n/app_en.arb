@@ -5,6 +5,44 @@
   "navSpends": "Spends",
   "settings": "Settings",
   "safeToSpendToday": "Safe to spend today",
+  "safeToSpendThisWeek": "Safe to spend this week",
+  "showThisWeek": "show this week",
+  "@showThisWeek": {
+    "description": "TalkBack hint for tapping the hero card while it shows today: \"Double tap to show this week\""
+  },
+  "showToday": "show today",
+  "@showToday": {
+    "description": "TalkBack hint for tapping the hero card while it shows this week"
+  },
+  "amountOverThisWeek": "{amount} over this week",
+  "@amountOverThisWeek": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savedYesterday": "You saved {amount} yesterday, so every day got {more} more.",
+  "@savedYesterday": {
+    "description": "Home's morning note after an underspend (SPEC BR-8)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "more": {
+        "type": "String"
+      }
+    }
+  },
+  "savedYesterdayOnly": "You saved {amount} yesterday.",
+  "@savedYesterdayOnly": {
+    "description": "Home's morning note when the saving adds under one rupee to each day",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "daysToPayday": "{count, plural, =1{1 day to payday} other{{count} days to payday}}",
   "@daysToPayday": {
     "placeholders": {

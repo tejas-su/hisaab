@@ -35,6 +35,12 @@ abstract interface class LedgerRepository {
   /// taken again, or `DatabaseFailure`.
   TaskEither<Failure, Entry> restore(Entry entry);
 
+  /// The day the earliest entry still in the ledger was saved: roughly when the app was first used.
+  ///
+  /// Returns [Right] with the day, or [None] for an empty ledger; or [Left] with
+  /// `DatabaseFailure`, or `InvalidDataFailure` for an unreadable created time.
+  TaskEither<Failure, Option<CalendarDate>> firstLoggedOn();
+
   /// Emits once after each successful write; never errors. Home and Spends reload on it.
   Stream<void> get changes;
 }

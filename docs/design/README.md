@@ -14,6 +14,7 @@ The mockups illustrate [../UI_DESIGN.md](../UI_DESIGN.md). Every number in them 
 | [06-spends.html](mockups/06-spends.html) | Spends | Pace chart, largest-remainder percentages, limit tick and hatched overspend (FR-SP-3/4, BR-12/13) |
 | [07-ask-ai.html](mockups/07-ask-ai.html) | Ask AI | Goals, period, preview, Hide my notes, Copy & open ChatGPT (FR-AI-1..4) |
 | [08-design-system.html](mockups/08-design-system.html) | Design system | Tokens, the four Day Blocks states, type, keys, motion, haptics |
+| [09-splash.html](mockups/09-splash.html) | Launch splash (Android 12+) | Animated, in light and dark side by side: launcher zoom, today and tomorrow arrive, today lights up and becomes the dot, exit into Home. `?t=420` opens paused on a frame (spec: `docs/superpowers/specs/2026-10-26-splash-screen-design.md`) |
 
 [brand/](brand/) holds the app icon masters (UI_DESIGN §3.6): `hisaab-icon.svg` (full icon), `hisaab-icon-foreground.svg` and `hisaab-icon-monochrome.svg` (adaptive layers), `hisaab-play-store-512.png`, and the Play Store feature graphic `hisaab-play-feature-1024x500.png`.
 

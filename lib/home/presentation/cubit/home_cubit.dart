@@ -12,7 +12,7 @@ import 'home_state.dart';
 
 /// Owns Home's summary, due-soon nudge and Today list (SPEC FR-HO). Driven by [load] (start,
 /// resume, midnight) and by every write through [LedgerRepository.changes] and
-/// [RecurringRepository.changes]; the page calls [delete] and [undo].
+/// [RecurringRepository.changes]; the page calls [delete], [undo] and [toggleWeek].
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit({
     required this._getCycleSummary,
@@ -74,8 +74,23 @@ class HomeCubit extends Cubit<HomeState> {
     emit(loaded.match((Failure failure) {
       _logFailure('home.load_failed')(failure);
       return HomeFailed(failure);
-    }, (HomeReady ready) => ready));
+    }, (HomeReady ready) => ready.copyWith(showWeek: _showingWeek)));
   }
+
+  /// Flips the hero between *Today* and *This week*; the choice lasts for the session (FR-HO-2).
+  void toggleWeek() {
+    final HomeState current = state;
+    if (current is! HomeReady) {
+      return;
+    }
+    emit(current.copyWith(showWeek: !current.showWeek));
+    unawaited(_haptics.tick());
+  }
+
+  bool get _showingWeek => switch (state) {
+        HomeReady(:final bool showWeek) => showWeek,
+        HomeLoading() || HomeFailed() => false,
+      };
 
   /// Deletes [entry] at once (the row disappears synchronously) and then offers Undo.
   Future<void> delete(Entry entry) async {

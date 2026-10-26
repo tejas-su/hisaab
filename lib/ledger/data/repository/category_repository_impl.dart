@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/db/db_row.dart';
 import '../../../core/errors/failure.dart';
+import '../../../core/money/money.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repository/category_repository.dart';
 import '../datasource/categories_local_data_source.dart';
@@ -17,4 +18,9 @@ final class CategoryRepositoryImpl implements CategoryRepository {
   @override
   TaskEither<Failure, List<Category>> all() => dbTask(_categories.all)
       .chainEither((List<CategoryModel> models) => models.traverseEither(CategoryMapper.toEntity));
+
+  @override
+  TaskEither<Failure, Unit> setLimits(Map<int, Money> limits) => dbTask(
+        () => _categories.setBudgets(limits.map((int id, Money limit) => MapEntry<int, int>(id, limit.amountMinor))),
+      ).map((void _) => unit);
 }

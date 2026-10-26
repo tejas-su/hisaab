@@ -22,6 +22,9 @@ abstract interface class EntriesLocalDataSource {
 
   /// Deletes row [id] and returns the number of rows removed.
   Future<int> delete(int id);
+
+  /// The earliest `created_at` of any row, or null when there are none.
+  Future<String?> firstCreatedAt();
 }
 
 /// [EntriesLocalDataSource] backed by the app's sqflite database.
@@ -64,4 +67,12 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
   @override
   Future<int> delete(int id) =>
       _db.delete(Tables.transactions, where: '${TransactionColumns.id} = ?', whereArgs: <Object?>[id]);
+
+  @override
+  Future<String?> firstCreatedAt() async {
+    const String first = 'first';
+    final List<Map<String, Object?>> rows =
+        await _db.rawQuery('SELECT MIN(${TransactionColumns.createdAt}) AS $first FROM ${Tables.transactions}');
+    return rows.single.stringOrNullAt(first);
+  }
 }

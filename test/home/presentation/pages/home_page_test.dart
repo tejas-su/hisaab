@@ -7,6 +7,7 @@ import 'package:expense_tracker/home/home.dart';
 import 'package:expense_tracker/home/presentation/widgets/due_soon_note.dart';
 import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
 import 'package:expense_tracker/home/presentation/widgets/home_header.dart';
+import 'package:expense_tracker/home/presentation/widgets/saved_yesterday_note.dart';
 import 'package:expense_tracker/home/presentation/widgets/today_list.dart';
 import 'package:expense_tracker/home/presentation/widgets/today_row.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
@@ -143,6 +144,7 @@ void main() {
         final double hero = tester.getTopLeft(find.text('Safe to spend today')).dx;
         expect(tester.getTopLeft(find.descendant(of: find.byType(TodayList), matching: find.text('Today'))).dx, hero);
         expect(tester.getTopLeft(find.descendant(of: find.byType(DueSoonNote), matching: find.byType(AppIcon))).dx, hero);
+        expect(tester.getTopLeft(find.descendant(of: find.byType(SavedYesterdayNote), matching: find.byType(AppIcon))).dx, hero);
       });
 
       testWidgets('Today list rows start on the hero\'s content edge', (WidgetTester tester) async {
@@ -240,6 +242,60 @@ void main() {
       expect(find.text('₹1,020 over today'), findsOneWidget);
       expect(find.text('Each day after: ₹1,722'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    group('This week (FR-HO-2)', () {
+      testWidgets('tapping the hero flips to this week and back', (WidgetTester tester) async {
+        await pump(tester);
+        await tester.tap(find.byType(HeroCard));
+        await tester.pumpAndSettle();
+        expect(find.text('Safe to spend this week'), findsOneWidget);
+        expect(find.text('₹12,530'), findsOneWidget);
+        expect(find.text('9 days to payday'), findsOneWidget, reason: 'the blocks stay on today');
+        await tester.tap(find.byType(HeroCard));
+        await tester.pumpAndSettle();
+        expect(find.text('Safe to spend today'), findsOneWidget);
+        expect(find.text('₹1,430'), findsOneWidget);
+      });
+
+      testWidgets('TalkBack can flip it too, and hears what a tap will do', (WidgetTester tester) async {
+        final SemanticsHandle handle = tester.ensureSemantics();
+        await pump(tester);
+        final Finder hero = find.bySemanticsLabel(RegExp('^Safe to spend today'));
+        expect(tester.getSemantics(hero), isSemantics(hasTapAction: true, onTapHint: 'show this week'));
+        tester.semantics.tap(find.semantics.byLabel(RegExp('^Safe to spend today')));
+        await tester.pumpAndSettle();
+        final Finder week = find.bySemanticsLabel(RegExp('^Safe to spend this week: 12,530 rupees'));
+        expect(week, findsOneWidget);
+        expect(tester.getSemantics(week), isSemantics(onTapHint: 'show today'));
+        handle.dispose();
+      });
+    });
+
+    group('saved yesterday (BR-8)', () {
+      testWidgets('nothing spent yesterday: the note shows the saving and what each day gained', (WidgetTester tester) async {
+        final SemanticsHandle handle = tester.ensureSemantics();
+        await pump(tester);
+        expect(find.text('You saved ₹1,665 yesterday, so every day got ₹185 more.'), findsOneWidget);
+        expect(find.bySemanticsLabel('You saved 1,665 rupees yesterday, so every day got 185 rupees more.'), findsOneWidget);
+        handle.dispose();
+      });
+
+      testWidgets('under ₹1 more a day: only the saving is mentioned', (WidgetTester tester) async {
+        await services.ledger
+            .add(EntryDraft(amount: Money.fromMajor(1660), kind: EntryKind.spent, categoryId: 1, date: const CalendarDate(2026, 10, 25)))
+            .run();
+        await pump(tester);
+        expect(find.text('You saved ₹5 yesterday.'), findsOneWidget);
+      });
+
+      testWidgets('no note after overspending yesterday', (WidgetTester tester) async {
+        await services.ledger
+            .add(EntryDraft(amount: Money.fromMajor(2000), kind: EntryKind.spent, categoryId: 1, date: const CalendarDate(2026, 10, 25)))
+            .run();
+        await pump(tester);
+        expect(find.byType(SavedYesterdayNote), findsNothing);
+      });
     });
 
     final List<(String, Size, double)> windows = <(String, Size, double)>[

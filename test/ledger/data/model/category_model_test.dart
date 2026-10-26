@@ -32,6 +32,16 @@ void main() {
       expect(model.customName, 'Khana');
     });
 
+    test('reads a limit (BR-12)', () {
+      final CategoryModel model = CategoryModel.fromRow(<String, Object?>{..._row, CategoryColumns.budgetMinor: 1000000})
+          .getOrElse((Failure f) => fail(f.message));
+      expect(model.budgetMinor, 1000000);
+    });
+
+    test('returns InvalidDataFailure for a limit that is not a whole number', () {
+      expect(CategoryModel.fromRow(<String, Object?>{..._row, CategoryColumns.budgetMinor: '10000'}).isLeft(), isTrue);
+    });
+
     test('returns InvalidDataFailure for a bad sort column', () {
       expect(CategoryModel.fromRow(<String, Object?>{..._row, CategoryColumns.sort: null}).isLeft(), isTrue);
     });

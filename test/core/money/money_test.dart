@@ -22,6 +22,17 @@ void main() {
       expect(total - Money.fromMajor(870), Money.fromMajor(2000));
     });
 
+    test('multiplies by a whole count in minor units', () {
+      expect(Money.fromMajor(1850) * 7, Money.fromMajor(12950));
+      expect(Money.fromMajor(1850) * 0, Money.zero);
+      expect(const Money(-5) * 3, const Money(-15));
+    });
+
+    test('keeps the currency when multiplying', () {
+      const CurrencySpec yen = CurrencySpec(code: 'JPY', symbol: '¥', minorDigits: 0);
+      expect((const Money(3, currency: yen) * 2).currency, yen);
+    });
+
     test('compares by amount', () {
       expect(Money.fromMajor(1) < Money.fromMajor(2), isTrue);
       expect(Money.fromMajor(2) > Money.fromMajor(1), isTrue);

@@ -16,10 +16,12 @@ import '../domain/repository/category_repository.dart';
 import '../domain/repository/ledger_repository.dart';
 import '../domain/repository/recurring_repository.dart';
 import '../domain/usecase/add_bill.dart';
+import '../domain/usecase/apply_suggested_limits.dart';
 import '../domain/usecase/delete_bill.dart';
 import '../domain/usecase/edit_bill.dart';
 import '../domain/usecase/get_bills.dart';
 import '../domain/usecase/get_due_soon_bill.dart';
+import '../domain/usecase/get_suggested_limits.dart';
 import '../domain/usecase/restore_bill.dart';
 import '../domain/usecase/delete_entry.dart';
 import '../domain/usecase/get_cycle_summary.dart';
@@ -59,5 +61,16 @@ void registerLedgerServices(GetIt getIt) {
         periods: getIt<PeriodCalculator>(),
         clock: clock,
       ),
-    );
+    )
+    ..registerSingleton<GetSuggestedLimits>(
+      GetSuggestedLimits(
+        ledger: ledger,
+        recurring: recurring,
+        settings: getIt<BudgetSettingsRepository>(),
+        categories: getIt<CategoryRepository>(),
+        periods: getIt<PeriodCalculator>(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: getIt<CategoryRepository>()));
 }

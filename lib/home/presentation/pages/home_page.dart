@@ -14,6 +14,7 @@ import '../widgets/hero_card.dart';
 import '../widgets/hero_skeleton.dart';
 import '../widgets/home_header.dart';
 import '../widgets/no_income_card.dart';
+import '../widgets/saved_yesterday_note.dart';
 import '../widgets/today_list.dart';
 
 /// Home: how much is safe to spend today, the Day Blocks and today's entries (SPEC FR-HO).
@@ -65,12 +66,26 @@ class HomePage extends StatelessWidget {
             _todayList(context, state),
           ],
         HomeReady(:final CycleSummary summary) => <Widget>[
-            HeroCard(summary: summary, assemble: assemble),
+            HeroCard(
+              summary: summary,
+              week: state.showWeek,
+              onTap: context.read<HomeCubit>().toggleWeek,
+              assemble: assemble,
+            ),
+            ..._savedYesterday(summary),
             ..._dueSoon(state),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
           ],
       };
+
+  static List<Widget> _savedYesterday(CycleSummary summary) => summary.savedYesterday.match(
+        () => const <Widget>[],
+        (YesterdaySaving saving) => <Widget>[
+          const SizedBox(height: HisaabSpacing.m),
+          SavedYesterdayNote(saving: saving),
+        ],
+      );
 
   static List<Widget> _dueSoon(HomeReady state) => state.dueSoon.match(
         () => const <Widget>[],

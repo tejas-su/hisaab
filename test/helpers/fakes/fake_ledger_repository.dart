@@ -81,6 +81,13 @@ final class FakeLedgerRepository implements LedgerRepository {
       });
 
   @override
+  TaskEither<Failure, Option<CalendarDate>> firstLoggedOn() => _run(
+        () => Option<DateTime>.fromNullable(
+          entries.map((Entry e) => e.createdAt).fold<DateTime?>(null, (DateTime? first, DateTime at) => first == null || at.isBefore(first) ? at : first),
+        ).map(CalendarDate.fromDateTime),
+      );
+
+  @override
   Stream<void> get changes => _changes.stream;
 
   /// Closes the change stream.

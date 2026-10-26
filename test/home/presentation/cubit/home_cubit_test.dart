@@ -253,6 +253,47 @@ void main() {
     });
   });
 
+  group('HomeCubit.toggleWeek (FR-HO-2)', () {
+    test('starts on Today', () async {
+      await cubit.load();
+      expect(ready().showWeek, isFalse);
+    });
+
+    test('flips to This week and back, with a tick each time', () async {
+      await cubit.load();
+      cubit.toggleWeek();
+      expect(ready().showWeek, isTrue);
+      cubit.toggleWeek();
+      expect(ready().showWeek, isFalse);
+      expect(haptics.events, <String>['tick', 'tick']);
+    });
+
+    test('stays on This week when Home reloads', () async {
+      await cubit.load();
+      cubit.toggleWeek();
+      await cubit.load();
+      expect(ready().showWeek, isTrue);
+    });
+
+    test('stays on This week after a delete', () async {
+      await cubit.load();
+      cubit.toggleWeek();
+      await cubit.delete(ready().todayEntries.first);
+      expect(ready().showWeek, isTrue);
+    });
+
+    test('does nothing before Home has loaded', () {
+      cubit.toggleWeek();
+      expect(cubit.state, const HomeLoading());
+      expect(haptics.events, isEmpty);
+    });
+  });
+
+  test('carries yesterday\'s saving through to the summary (BR-8)', () async {
+    await cubit.load();
+    expect(ready().summary.savedYesterday.isSome(), isTrue);
+  });
+
   test('closing mid-load does not throw', () async {
     final Future<void> loading = cubit.load();
     await cubit.close();

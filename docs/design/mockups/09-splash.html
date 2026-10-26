@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Splash Final</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#E9E7E1; --bg:#F6F5F1; --surface:#FCFBF8; --sunk:#ECEAE4; --line:#DAD8D1;
+  --ink:#161615; --ink2:#62615C; --signal:#FFB020;
+  --display:#161615; --dink:#F2F1EC; --dink2:#9C9B95; --track:#3A3A37;
+  --mark:#161615; --outline:#161615; --day:#DAD8D1;
+  --wall:#2F3337;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0B0B0A; --bg:#121211; --surface:#1A1A18; --sunk:#232320; --line:#2C2C29;
+    --ink:#F2F1EC; --ink2:#9C9B95; --display:#1C1C1A;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0B0B0A; --bg:#121211; --surface:#1A1A18; --sunk:#232320; --line:#2C2C29;
+  --ink:#F2F1EC; --ink2:#9C9B95; --display:#1C1C1A;
+}
+/* Device themes: fixed per column, independent of the page theme. */
+.light{--bg:#F6F5F1; --surface:#FCFBF8; --sunk:#ECEAE4; --line:#DAD8D1; --ink:#161615; --ink2:#62615C; --display:#161615;
+  --mark:#161615; --outline:#161615; --day:#DAD8D1}
+.dark{--bg:#121211; --surface:#1A1A18; --sunk:#232320; --line:#2C2C29; --ink:#F2F1EC; --ink2:#9C9B95; --display:#1C1C1A;
+  --mark:#F2F1EC; --outline:transparent; --day:#3A3A37}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:'Mukta',system-ui,sans-serif;font-size:15px;line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+h1{font-family:'Anek Latin',sans-serif;font-weight:600;font-size:30px;line-height:1.1;margin:0 0 4px;letter-spacing:-.3px}
+h1 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--signal);box-shadow:0 0 0 1px var(--ink);margin-left:2px}
+h2{font-family:'Anek Latin',sans-serif;font-weight:600;font-size:22px;line-height:1.15;margin:0 0 10px}
+.sub{color:var(--ink2);margin:0 0 18px;max-width:820px}
+
+.bar{position:sticky;top:0;z-index:5;background:var(--page);padding:10px 0 12px;border-bottom:1px solid var(--line);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.btn{font:600 15px 'Mukta',sans-serif;border:0;border-radius:14px;background:var(--sunk);color:var(--ink);height:40px;padding:0 14px;cursor:pointer}
+.btn.play{background:var(--signal);color:#161615;border:1.5px solid #161615;box-shadow:0 2px 0 #161615;min-width:96px}
+.btn.play:active{transform:translateY(2px);box-shadow:0 0 0 #161615}
+.seg{display:inline-flex;background:var(--sunk);border-radius:14px;padding:3px}
+.seg button{font:600 14px 'Mukta',sans-serif;border:0;background:transparent;color:var(--ink2);height:34px;padding:0 10px;border-radius:11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ctl{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink2);font-weight:600}
+.ctl input[type=range]{accent-color:var(--ink);width:150px}
+.chk{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer}
+.chk input{accent-color:var(--ink);width:18px;height:18px}
+.scrub{flex:1 1 260px;display:flex;align-items:center;gap:10px}
+.scrub input{flex:1;accent-color:var(--ink)}
+.ms{font-family:'Anek Latin',sans-serif;font-weight:600;font-feature-settings:'tnum';min-width:74px;text-align:right}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:20px;margin-bottom:18px}
+.page-card{background:var(--surface)}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:18px}
+.mode{border-radius:22px;padding:16px;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.mode h3{margin:0 0 10px;font-size:15px;font-weight:700}
+.mode h3 span{font-weight:500;color:var(--ink2);font-feature-settings:'tnum'}
+.stage{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.closeup{flex:1 1 220px;max-width:300px;aspect-ratio:1;border-radius:18px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.closeup svg{width:100%;height:100%;display:block}
+.phase{font-size:13px;font-weight:600;margin-top:8px;min-height:19px}
+
+.trk{position:relative;height:66px;margin:4px 0 4px;border-radius:10px;background:var(--sunk);overflow:hidden}
+.trk .s{position:absolute;height:13px;border-radius:5px;background:var(--ink);opacity:.8}
+.trk .ready{position:absolute;top:0;bottom:0;width:2px;background:var(--ink2)}
+.trk .ready::after{content:'ready';position:absolute;top:-1px;left:4px;font-size:10px;font-weight:700;color:var(--ink2)}
+.trk .ph{position:absolute;top:0;bottom:0;width:2px;background:var(--signal);box-shadow:0 0 0 1px #161615}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--ink2);font-feature-settings:'tnum'}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+td,th{text-align:left;padding:6px;border-top:1px solid var(--line);vertical-align:top}
+th{font-weight:700;color:var(--ink2);border-top:0}
+td:first-child{white-space:nowrap;font-feature-settings:'tnum';font-weight:600}
+td.c{white-space:nowrap;color:var(--ink2);font-family:ui-monospace,monospace;font-size:12px}
+code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--sunk);padding:1px 5px;border-radius:5px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px;box-shadow:0 0 0 1px var(--ink2)}
+
+.phone{--s:.5;width:calc(390px*var(--s));height:calc(844px*var(--s));border-radius:calc(46px*var(--s));overflow:hidden;position:relative;flex:none;
+  box-shadow:0 0 0 5px #0E0E0D, 0 0 0 6px #3a3a37}
+.screen{position:absolute;left:0;top:0;width:390px;height:844px;transform:scale(var(--s));transform-origin:0 0;overflow:hidden}
+.launcher{position:absolute;inset:0;background:var(--wall)}
+.app{position:absolute;width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;transform:translate(-50%,-32px)}
+.app i{display:block;width:64px;height:64px;border-radius:50%;background:#4A4F55}
+.app b{display:block;width:44px;height:8px;border-radius:4px;background:#5B6066}
+.app span{font-size:13px;color:#F2F1EC;line-height:14px}
+.app svg{width:96px;height:96px;margin:-16px}
+.win{position:absolute;inset:0;transform-origin:195px 422px;overflow:hidden}
+.home{position:absolute;inset:0;background:var(--bg);color:var(--ink);padding:52px 20px 0}
+.splash{position:absolute;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.splash svg{width:288px;height:288px}
+
+.hrow{display:flex;align-items:center;justify-content:space-between;height:44px}
+.wm{font-family:'Anek Latin',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.4px}
+.wm i{display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--signal);box-shadow:0 0 0 1px var(--outline);margin-left:2px}
+.date{font-size:15px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:12px}
+.date b{width:44px;height:44px;border-radius:14px;background:var(--sunk)}
+.hero{margin-top:14px;border-radius:28px;background:var(--display);color:var(--dink);padding:20px 20px 16px}
+.hero .l{font-size:15px;font-weight:500;color:var(--dink2)}
+.hero .n{display:block;margin-top:4px;font-family:'Anek Latin',sans-serif;font-weight:600;font-size:76px;line-height:76px;font-variation-settings:'wdth' 85;letter-spacing:-.8px;font-feature-settings:'tnum'}
+.blocks{margin-top:16px;display:flex;gap:6px;padding-right:54px}
+.blocks i{flex:1;height:40px;border-radius:8px;background:var(--track);position:relative;overflow:hidden}
+.blocks i.today::after{content:'';position:absolute;left:0;right:0;bottom:0;height:77%;background:var(--signal)}
+.range{margin-top:14px;padding-top:12px;border-top:1px solid #2C2C29;font-size:15px;color:var(--dink2)}
+.range b{color:var(--dink);font-weight:700}
+.list{margin-top:12px;border-radius:28px;background:var(--surface);padding:10px 20px}
+.li{display:flex;align-items:center;gap:12px;padding:9px 0}
+.li i{width:42px;height:42px;border-radius:14px;background:var(--sunk)}
+.li span{flex:1;font-weight:600}
+.li em{font-style:normal;font-weight:700;font-feature-settings:'tnum'}
+.dock{position:absolute;left:20px;right:20px;bottom:24px;height:76px;border-radius:30px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.dock b{width:136px;height:56px;border-radius:18px;background:var(--signal);border:1.5px solid #161615;box-shadow:0 2px 0 #161615;display:flex;align-items:center;justify-content:center;font-family:'Anek Latin',sans-serif;font-size:21px;font-weight:600;color:#161615}
+.maskline{fill:none;stroke:#E5484D;stroke-width:.4;stroke-dasharray:1.5 1.2;opacity:0}
+.showmask .maskline{opacity:1}
+@media (max-width:600px){ .phone{--s:.42} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Splash, final: C★<span class="dot"></span></h1>
+  <p class="sub">One colour from tap to Home: splash background = icon background = Home background, in light and in dark. Today and tomorrow arrive with weight. Today lands and lights up, tomorrow steps back, and today rounds into the full stop.</p>
+
+  <div class="bar" role="toolbar" aria-label="Playback">
+    <button class="btn play" id="play">Pause</button>
+    <button class="btn" id="replay">Replay</button>
+    <div class="seg" id="speed" aria-label="Speed">
+      <button data-v="1" aria-pressed="true">1×</button>
+      <button data-v="0.5">½×</button>
+      <button data-v="0.25">¼×</button>
+      <button data-v="0.1">⅒×</button>
+    </div>
+    <label class="ctl">App ready <input type="range" id="ready" min="200" max="1600" step="10" value="1000"><span class="ms" id="readyv">1000 ms</span></label>
+    <label class="chk"><input type="checkbox" id="zoom" checked> Launcher zoom</label>
+    <label class="chk"><input type="checkbox" id="reduce"> Remove animations</label>
+    <label class="chk"><input type="checkbox" id="mask"> Show mask</label>
+    <label class="chk"><input type="checkbox" id="loop" checked> Loop</label>
+    <div class="scrub"><input type="range" id="scrub" min="0" max="2000" step="1" value="0" aria-label="Timeline"><span class="ms" id="tv">0 ms</span></div>
+  </div>
+
+  <section class="card">
+    <div class="modes" id="modes"></div>
+    <div class="trk" id="trk" style="margin-top:18px"></div>
+    <div class="axis"><span>0</span><span>400</span><span>800</span><span>1200</span><span>1600 ms</span></div>
+    <p class="phase" id="phase"></p>
+  </section>
+
+  <section class="card">
+    <h2>Timing sheet</h2>
+    <table>
+      <tr><th>ms</th><th>What moves</th><th>Curve (pathInterpolator)</th></tr>
+      <tr><td>—</td><td>Composition: the mark is drawn at 75% (pivot 54, 54) inside the 192dp mask, so the trailing day (tomorrow, 60% opacity) fits whole. A second day would be sliced by the mask edge</td><td class="c">—</td></tr>
+      <tr><td>0–100</td><td>Hold: launcher window is still growing</td><td class="c">—</td></tr>
+      <tr><td>100–220</td><td>Today fades in (so it never pops at the invisible mask edge)</td><td class="c">linear</td></tr>
+      <tr><td>240–340</td><td>Tomorrow fades in, only once it is wholly inside the mask</td><td class="c">linear</td></tr>
+      <tr><td>100–380</td><td>Today + tomorrow slide in, translateX 26→0, landing with speed</td><td class="c">0.25, 0.5, 0.6, 0.9</td></tr>
+      <tr><td>100–200</td><td>Today stretches along travel: scaleX 1.16, scaleY 0.92 (pivot: bottom centre 70.84, 76)</td><td class="c">0, 0, 0.2, 1</td></tr>
+      <tr><td>380–440</td><td>Impact squash: scaleX 0.86, scaleY 1.08</td><td class="c">0, 0, 0.2, 1</td></tr>
+      <tr><td>380–560</td><td>Today fills marigold from the baseline (clip-path rises 0→22)</td><td class="c">0.2, 0, 0, 1</td></tr>
+      <tr><td>380–600</td><td>Tomorrow steps back: slides out right (+34), gone by 470</td><td class="c">0.4, 0, 1, 1</td></tr>
+      <tr><td>440–660</td><td>Today settles to scale 1, 1</td><td class="c">0.23, 1, 0.32, 1</td></tr>
+      <tr><td>520–800</td><td>Today morphs block 13×20 r4 → circle Ø16.26 (pathData)</td><td class="c">0.23, 1, 0.32, 1</td></tr>
+      <tr><td>800+</td><td>Last frame = the static h• icon, held until ready</td><td class="c">—</td></tr>
+      <tr><td>ready</td><td>Exit: Android’s default fade into Home (no custom exit, D44). On a fast start Android first freezes the splash about 250 ms at hand-off, so the fill and the dot may not be reached. Animations off: the last frame, then no fade</td><td class="c">system</td></tr>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Colours</h2>
+    <table>
+      <tr><th>Part</th><th>Light</th><th>Dark</th></tr>
+      <tr><td>Splash background = Home background</td><td><span class="sw" style="background:#F6F5F1"></span><code>bg #F6F5F1</code></td><td><span class="sw" style="background:#121211"></span><code>bg #121211</code></td></tr>
+      <tr><td>Icon background</td><td>none (same as splash)</td><td>none (same as splash)</td></tr>
+      <tr><td>h</td><td><span class="sw" style="background:#161615"></span><code>ink #161615</code></td><td><span class="sw" style="background:#F2F1EC"></span><code>ink #F2F1EC</code></td></tr>
+      <tr><td>Dot / today</td><td><span class="sw" style="background:#FFB020"></span><code>signal</code> + ink outline (as the wordmark)</td><td><span class="sw" style="background:#FFB020"></span><code>signal</code>, no outline</td></tr>
+      <tr><td>Days (grey blocks)</td><td><span class="sw" style="background:#DAD8D1"></span><code>line #DAD8D1</code></td><td><span class="sw" style="background:#3A3A37"></span><code>track #3A3A37</code></td></tr>
+    </table>
+  </section>
+</div>
+
+<script>
+const STEM = 'M29.04 76L29.04 32L38.41 32L38.41 40.54L38.28 50.88L38.48 52.17L38.48 76Z';
+const SHOULDER = 'M45.92 76L45.92 54.83Q45.92 53.34 45.61 52.29Q45.29 51.24 44.55 50.71Q43.8 50.18 42.44 50.18Q41.4 50.18 40.56 50.61Q39.71 51.04 39.19 51.79Q38.68 52.54 38.41 53.5L36.22 49.18L38.65 49.18Q39.05 47.25 39.98 45.71Q40.91 44.16 42.58 43.25Q44.26 42.34 46.89 42.34Q49.88 42.34 51.74 43.56Q53.6 44.79 54.5 47.2Q55.4 49.61 55.4 53.24L55.4 76Z';
+const MARIGOLD = '#FFB020';
+const DOT_CX = 70.84, BASE = 76, D = 16.26, BW = 13, BH = 20, BR = 4, GAP = 3;
+const TRAIL = [.6];
+// Splash mark sits at 75% inside the 192dp mask, so the first trailing day fits whole.
+const SPLASH_SCALE = .75;
+const EXIT_MS = 200, ZOOM_MS = 350, AXIS_MS = 1600, DUR = 800;
+
+function bezier(x1, y1, x2, y2) {
+  const cx = 3*x1, bx = 3*(x2-x1)-cx, ax = 1-cx-bx;
+  const cy = 3*y1, by = 3*(y2-y1)-cy, ay = 1-cy-by;
+  const sx = t => ((ax*t+bx)*t+cx)*t, sy = t => ((ay*t+by)*t+cy)*t;
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let lo = 0, hi = 1, t = x;
+    for (let i = 0; i < 40; i++) { if (sx(t) < x) lo = t; else hi = t; t = (lo+hi)/2; }
+    return sy(t);
+  };
+}
+const E = {
+  lin: t => t,
+  in: bezier(.4, 0, 1, 1),
+  out: bezier(0, 0, .2, 1),
+  roll: bezier(.23, 1, .32, 1),
+  std: bezier(.2, 0, 0, 1),
+  hit: bezier(.25, .5, .6, .9),
+};
+const clamp = v => Math.max(0, Math.min(1, v));
+function track(t, keys) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    const [t1, v1, e = E.lin] = keys[i], [t0, v0] = keys[i-1];
+    if (t <= t1) return v0 + (v1-v0) * e((t-t0)/(t1-t0));
+  }
+  return keys[keys.length-1][1];
+}
+function shape(t, keys) {
+  const pick = i => keys.map(([ms, v, e]) => [ms, v[i], e]);
+  return {w: track(t, pick(0)), h: track(t, pick(1)), rx: track(t, pick(2))};
+}
+const BLOCK = [BW, BH, BR], DOTS = [D, D, D/2];
+const REST = {tx:0, sx:1, sy:1, w:D, h:D, rx:D/2, fillH:40, dotOp:1, trainTx:0, trainOp:0};
+
+function at(t) {
+  const tx = track(t, [[0,26],[100,26],[380,0,E.hit]]);
+  return {...REST, tx,
+    sx: track(t, [[0,1],[100,1],[200,1.16,E.out],[380,1.06],[440,.86,E.out],[660,1,E.roll]]),
+    sy: track(t, [[0,1],[100,1],[200,.92,E.out],[380,.97],[440,1.08,E.out],[660,1,E.roll]]),
+    dotOp: track(t, [[0,0],[100,0],[220,1]]),
+    fillH: track(t, [[0,0],[380,0],[560,22,E.std]]),
+    trainTx: tx + track(t, [[0,0],[380,0],[600,34,E.in]]),
+    // Tomorrow is only visible while it sits wholly inside the mask, so the edge never slices it.
+    trainOp: track(t, [[0,0],[240,0],[340,1],[380,1],[470,0]]),
+    ...shape(t, [[0,BLOCK],[520,BLOCK],[800,DOTS,E.roll]])};
+}
+const SEGS = [[100,220,'fade in',0],[100,380,'travel',1],[380,440,'impact',2],[380,560,'fill',3],[380,600,'days retreat',0],[520,800,'round into dot',2]];
+
+let uid = 0;
+// bg: draw the splash-coloured disc behind (launcher icon keeps its ink disc instead).
+function iconSVG(cls, launcher) {
+  const i = uid++;
+  const train = [1].map(k => `<rect x="${DOT_CX - BW/2 + k*(BW+GAP)}" y="${BASE-BH}" width="${BW}" height="${BH}" rx="${BR}" fill="var(--day)" opacity="${TRAIL[k-1]}"/>`).join('');
+  const markFill = launcher ? '#F2F1EC' : 'var(--mark)';
+  const outline = launcher ? 'transparent' : 'var(--outline)';
+  return `<svg class="${cls}" viewBox="0 0 108 108" aria-hidden="true">
+    <defs>
+      <clipPath id="m${i}"><circle cx="54" cy="54" r="36"/></clipPath>
+      <clipPath id="f${i}"><rect class="fc" x="40" y="${BASE-40}" width="80" height="40"/></clipPath>
+    </defs>
+    <g clip-path="url(#m${i})">
+      ${launcher ? '<circle cx="54" cy="54" r="36" fill="#161615"/>' : ''}
+      <g transform="translate(54 54) scale(${launcher ? 1 : SPLASH_SCALE}) translate(-54 -54)">
+      <path d="${STEM}" fill="${markFill}"/>
+      <path d="${SHOULDER}" fill="${markFill}"/>
+      <g class="train" opacity="0">${train}</g>
+      <g class="dotg">
+        <rect class="dot base" fill="var(--day)"/>
+        <rect class="dot lit" fill="${MARIGOLD}" clip-path="url(#f${i})"/>
+        <rect class="dot outl" fill="none" stroke="${outline}" stroke-width="1"/>
+      </g>
+      </g>
+    </g>
+    <circle class="maskline" cx="54" cy="54" r="36"/>
+  </svg>`;
+}
+function applyIcon(svg, st) {
+  const g = svg.querySelector('.dotg');
+  g.setAttribute('transform', `translate(${st.tx} 0) translate(${DOT_CX} ${BASE}) scale(${st.sx} ${st.sy}) translate(${-DOT_CX} ${-BASE})`);
+  g.setAttribute('opacity', st.dotOp);
+  for (const r of svg.querySelectorAll('.dot')) {
+    r.setAttribute('x', DOT_CX - st.w/2); r.setAttribute('y', BASE - st.h);
+    r.setAttribute('width', st.w); r.setAttribute('height', st.h); r.setAttribute('rx', st.rx);
+  }
+  const fc = svg.querySelector('.fc');
+  fc.setAttribute('y', BASE - st.fillH); fc.setAttribute('height', st.fillH);
+  // Hide the grey day once fully lit, so no grey fringe shows round the marigold edge.
+  svg.querySelector('.base').setAttribute('opacity', st.fillH >= st.h ? 0 : 1);
+  const tr = svg.querySelector('.train');
+  tr.setAttribute('transform', `translate(${st.trainTx} 0)`);
+  tr.setAttribute('opacity', st.trainOp);
+}
+
+const HOME = `
+  <div class="hrow"><span class="wm">hisaab<i></i></span><span class="date">Mon, 26 Oct <b></b></span></div>
+  <div class="hero"><span class="l">Safe to spend today</span><span class="n">₹1,430</span>
+    <div class="blocks"><i class="today"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="range">Lasts till payday · about <b>₹9,300 spare</b></div></div>
+  <div class="list">
+    <div class="li"><i></i><span>Food</span><em>₹60</em></div>
+    <div class="li"><i></i><span>Travel</span><em>₹120</em></div>
+    <div class="li"><i></i><span>Shopping</span><em>₹240</em></div>
+  </div>
+  <div class="dock"><b>+ Add</b></div>`;
+const APPS = [[49,520],[146,520],[244,520],[341,520],[49,640],[244,640],[341,640]];
+const ICON_AT = [146, 640];
+
+const modes = document.getElementById('modes');
+const stages = [['light','Light','#F6F5F1'],['dark','Dark','#121211']].map(([cls, label, hex]) => {
+  const el = document.createElement('div');
+  el.className = `mode ${cls}`;
+  el.innerHTML = `
+    <h3>${label} <span>· splash, icon and Home all ${hex}</span></h3>
+    <div class="stage">
+      <div class="phone"><div class="screen">
+        <div class="launcher">
+          ${APPS.map(([x, y]) => `<div class="app" style="left:${x}px;top:${y}px"><i></i><b></b></div>`).join('')}
+          <div class="app" style="left:${ICON_AT[0]}px;top:${ICON_AT[1]}px">${iconSVG('static', true)}<span>hisaab</span></div>
+        </div>
+        <div class="win">
+          <div class="home">${HOME}</div>
+          <div class="splash">${iconSVG('anim splashicon')}</div>
+        </div>
+      </div></div>
+      <div class="closeup">${iconSVG('anim closeicon')}</div>
+    </div>`;
+  modes.appendChild(el);
+  applyIcon(el.querySelector('svg.static'), REST);
+  return {
+    win: el.querySelector('.win'),
+    splash: el.querySelector('.splash'),
+    splashIcon: el.querySelector('.splashicon'),
+    closeIcon: el.querySelector('.closeicon'),
+  };
+});
+const trk = document.getElementById('trk');
+trk.innerHTML = SEGS.map(([a, b, l, row]) => `<div class="s" title="${l}" style="top:${5 + row*15}px;left:${a/AXIS_MS*100}%;width:${(b-a)/AXIS_MS*100}%"></div>`).join('')
+  + '<div class="ready" id="readym"></div><div class="ph" id="ph"></div>';
+
+const S = {t: 0, playing: true, speed: 1, ready: 1000, zoom: true, reduce: false, loop: true, last: null};
+const total = () => Math.max(S.ready + EXIT_MS, DUR) + 900;
+const $ = id => document.getElementById(id);
+
+function render() {
+  const t = S.t;
+  const z = S.zoom && !S.reduce ? E.std(clamp(t / ZOOM_MS)) : 1;
+  const ex = S.reduce ? (t >= S.ready ? 1 : 0) : E.in(clamp((t - S.ready) / EXIT_MS));
+  const dx = (ICON_AT[0] - 195) * (1 - z), dy = (ICON_AT[1] - 422) * (1 - z);
+  // Window grows from the launcher icon: the splash's 72-unit mask circle (192px here) starts at the icon's 64px.
+  const sc = 64/192 + (1 - 64/192) * z;
+  const inY = (422 - 96) * (1 - z), inX = (195 - 96) * (1 - z), rad = 96 * (1 - z);
+  const cutAt = S.ready + EXIT_MS;
+  const tA = S.reduce ? DUR : Math.min(t, DUR);
+  const tClose = S.reduce ? DUR : Math.min(t, DUR, cutAt);
+
+  for (const k of stages) {
+    applyIcon(k.splashIcon, at(tA));
+    k.splash.style.opacity = 1 - ex;
+    k.splash.style.visibility = ex >= 1 ? 'hidden' : 'visible';
+    k.win.style.transform = `translate(${dx}px, ${dy}px) scale(${sc})`;
+    k.win.style.clipPath = `inset(${inY}px ${inX}px ${inY}px ${inX}px round ${rad}px)`;
+    applyIcon(k.closeIcon, at(tClose));
+  }
+  const hit = SEGS.filter(([a, b]) => tA >= a && tA < b).map(s => s[2]);
+  $('phase').textContent = t >= cutAt ? 'Home'
+    : t >= S.ready ? 'Exit'
+    : tA >= DUR ? 'Held on the last frame (static icon)'
+    : (hit.length ? hit.join(' + ') : 'hold');
+  if (!S.reduce && cutAt < DUR && t >= cutAt) $('phase').textContent = `Cut at ${Math.round(cutAt)} ms (close-ups show the last frame users saw)`;
+  $('readym').style.left = `${Math.min(S.ready, AXIS_MS) / AXIS_MS * 100}%`;
+  $('ph').style.left = `${Math.min(t, AXIS_MS) / AXIS_MS * 100}%`;
+  $('scrub').max = Math.round(total());
+  $('scrub').value = Math.round(t);
+  $('tv').textContent = `${Math.round(t)} ms`;
+}
+
+function loop(now) {
+  if (S.playing) {
+    if (S.last != null) S.t += (now - S.last) * S.speed;
+    S.last = now;
+    if (S.t >= total()) {
+      if (S.loop) S.t = 0;
+      else { S.t = total(); setPlaying(false); }
+    }
+  } else S.last = null;
+  render();
+  requestAnimationFrame(loop);
+}
+function setPlaying(p) { S.playing = p; S.last = null; $('play').textContent = p ? 'Pause' : 'Play'; }
+
+$('play').onclick = () => { if (!S.playing && S.t >= total()) S.t = 0; setPlaying(!S.playing); };
+$('replay').onclick = () => { S.t = 0; setPlaying(true); };
+$('scrub').oninput = e => { setPlaying(false); S.t = +e.target.value; };
+$('ready').oninput = e => { S.ready = +e.target.value; $('readyv').textContent = `${S.ready} ms`; };
+$('zoom').onchange = e => S.zoom = e.target.checked;
+$('reduce').onchange = e => S.reduce = e.target.checked;
+$('mask').onchange = e => document.body.classList.toggle('showmask', e.target.checked);
+$('loop').onchange = e => S.loop = e.target.checked;
+$('speed').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('speed').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  S.speed = +b.dataset.v;
+};
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); $('play').click(); }
+});
+// ?t=420 opens paused on that frame.
+const qt = new URLSearchParams(location.search).get('t');
+if (qt !== null) { S.t = +qt; setPlaying(false); }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

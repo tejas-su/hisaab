@@ -6,6 +6,7 @@ import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import 'cycle_state.dart';
 import 'range_forecast.dart';
+import 'yesterday_saving.dart';
 
 /// Today's answer to "how much can I safely spend?" for one cycle (SPEC BR-2 to BR-7).
 final class CycleSummary extends Equatable {
@@ -19,6 +20,8 @@ final class CycleSummary extends Equatable {
     required this.state,
     required this.forecast,
     required this.earliestEntryDate,
+    this.spentThisWeek = Money.zero,
+    this.savedYesterday = const Option<YesterdaySaving>.none(),
   });
 
   final PayCycle cycle;
@@ -41,6 +44,13 @@ final class CycleSummary extends Equatable {
   /// The oldest date an entry may be given: the start of the previous cycle (BR-10).
   final CalendarDate earliestEntryDate;
 
+  /// *Spent* entries from Monday (or the cycle start, if later) to today (FR-HO-2).
+  final Money spentThisWeek;
+
+  /// What yesterday's underspend added to each day; [None] when nothing was saved or
+  /// yesterday was in the previous cycle (BR-8).
+  final Option<YesterdaySaving> savedYesterday;
+
   /// `D`: days left including today (BR-2).
   int get daysLeft => cycle.daysLeftFrom(today);
 
@@ -50,7 +60,12 @@ final class CycleSummary extends Equatable {
   /// `A − S_today`; negative when today is overspent. The hero never shows it below ₹0.
   Money get safeToday => todayShare - spentToday;
 
+  /// `A × min(7, D) − spent this week`; negative when the week is overspent (FR-HO-2).
+  Money get safeThisWeek => todayShare * (daysLeft < _daysInWeek ? daysLeft : _daysInWeek) - spentThisWeek;
+
+  static const int _daysInWeek = 7;
+
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate];
+      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday];
 }

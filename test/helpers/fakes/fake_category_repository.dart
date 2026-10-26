@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/ledger/domain/entities/category.dart';
 import 'package:expense_tracker/ledger/domain/repository/category_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -11,6 +12,19 @@ final class FakeCategoryRepository implements CategoryRepository {
 
   final List<Category> categories;
   Failure? failure;
+
+  /// Every map passed to [setLimits], in order.
+  final List<Map<int, Money>> savedLimits = <Map<int, Money>>[];
+
+  @override
+  TaskEither<Failure, Unit> setLimits(Map<int, Money> limits) {
+    final Failure? current = failure;
+    if (current != null) {
+      return TaskEither<Failure, Unit>.left(current);
+    }
+    savedLimits.add(limits);
+    return TaskEither<Failure, Unit>.right(unit);
+  }
 
   @override
   TaskEither<Failure, List<Category>> all() {

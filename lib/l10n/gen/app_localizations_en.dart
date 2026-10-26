@@ -25,6 +25,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safeToSpendToday => 'Safe to spend today';
 
   @override
+  String get safeToSpendThisWeek => 'Safe to spend this week';
+
+  @override
+  String get showThisWeek => 'show this week';
+
+  @override
+  String get showToday => 'show today';
+
+  @override
+  String amountOverThisWeek(String amount) {
+    return '$amount over this week';
+  }
+
+  @override
+  String savedYesterday(String amount, String more) {
+    return 'You saved $amount yesterday, so every day got $more more.';
+  }
+
+  @override
+  String savedYesterdayOnly(String amount) {
+    return 'You saved $amount yesterday.';
+  }
+
+  @override
   String daysToPayday(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

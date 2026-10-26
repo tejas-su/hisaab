@@ -148,4 +148,43 @@ void main() {
       expect(await storedCreatedAt(saved.id), DateTime(2026, 10, 26, 10, 30).toIso8601String());
     });
   });
+
+  group('LedgerRepositoryImpl.firstLoggedOn (BR-12)', () {
+    late FakeClock clock;
+    late LedgerRepositoryImpl timed;
+
+    setUp(() {
+      clock = FakeClock(DateTime(2026, 10, 26, 23, 59));
+      timed = LedgerRepositoryImpl(entries: SqfliteEntriesLocalDataSource(database), clock: clock);
+      addTearDown(timed.dispose);
+    });
+
+    test('an empty ledger was never logged in', () async {
+      expect(_right(await timed.firstLoggedOn().run()), const Option<CalendarDate>.none());
+    });
+
+    test('is the day the earliest entry was saved, not the date it was given', () async {
+      _right(await timed.add(_draft(date: const CalendarDate(2026, 10, 4))).run());
+      clock.advance(const Duration(days: 3));
+      _right(await timed.add(_draft()).run());
+      expect(_right(await timed.firstLoggedOn().run()), const Option<CalendarDate>.of(CalendarDate(2026, 10, 26)));
+    });
+
+    test('a database error becomes DatabaseFailure', () async {
+      await database.close();
+      expect((await timed.firstLoggedOn().run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
+    test('an unreadable created time becomes InvalidDataFailure', () async {
+      await database.db.insert(Tables.transactions, <String, Object?>{
+        TransactionColumns.amountMinor: 100,
+        TransactionColumns.currency: 'INR',
+        TransactionColumns.kind: EntryKindValues.spent,
+        TransactionColumns.categoryId: 1,
+        TransactionColumns.date: '2026-10-26',
+        TransactionColumns.createdAt: 'yesterday',
+      });
+      expect((await timed.firstLoggedOn().run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+  });
 }

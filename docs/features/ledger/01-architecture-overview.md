@@ -1,6 +1,6 @@
 # Ledger Architecture Overview
 
-**Status:** built in M1; M2 added bill rules (`GetBills`, `AddBill`, `EditBill`, `DeleteBill`, `RestoreBill`) and the due-soon nudge (`GetDueSoonBill`). Category limits, insights and budget suggestions (BR-12, BR-14) land with Spends in M4.
+**Status:** built in M1; M2 added bill rules (`GetBills`, `AddBill`, `EditBill`, `DeleteBill`, `RestoreBill`) and the due-soon nudge (`GetDueSoonBill`). M3 added *This week* and "you saved yesterday" to `CycleSummary` and the BR-12 logic: `BudgetSuggester`, category limits, `GetSuggestedLimits`, `ApplySuggestedLimits`. Insights (BR-14) and the limit offer's UI land with Spends in M4.
 
 ## 1. Purpose
 The ledger is the shared money feature. It owns entries, categories and recurring rules, and the pure maths that turns them into today's share. Every UI feature reads money data through `lib/ledger/ledger.dart` and nothing else.
@@ -28,15 +28,17 @@ Rule edits  → RecurringRepository.changes → HomeCubit, BillsCubit reload
 | Class | File | Responsibility |
 |---|---|---|
 | `Entry`, `EntryDraft`, `EntryKind` | `domain/entities/` | A saved entry (with `createdAt`, set once on add and kept by edit and Undo), an unsaved one, *Spent*/*Got* |
-| `Category`, `CategoryKeys` | `domain/entities/category.dart` | Fixed seed buckets (BR-11) |
+| `Category`, `CategoryKeys` | `domain/entities/category.dart` | Fixed seed buckets (BR-11), each with an optional `limit` (BR-12, `budget_minor`) |
 | `RecurringRule`, `RecurringDraft`, `Schedule`, `Frequency` | `domain/entities/` | Rules and their schedule (BR-9) |
-| `CycleSummary`, `CycleState`, `RangeForecast`, `SpendPreview` | `domain/entities/` | Today's answer, BR-5 states, BR-7 forecast, FR-AD-3 preview |
+| `CycleSummary`, `CycleState`, `RangeForecast`, `SpendPreview`, `YesterdaySaving` | `domain/entities/` | Today's answer (with `safeThisWeek`, FR-HO-2), BR-5 states, BR-7 forecast, FR-AD-3 preview, BR-8 saving |
 | `SafeToSpend` | `domain/safe_to_spend.dart` | Pure BR-3..BR-7 and the Add preview; shares floor to whole rupees |
 | `RecurringSchedule` | `domain/recurring_schedule.dart` | Next date, first date on/after a day, dates in a range; clamps like BR-1 |
 | `PayRuleSchedule` | `domain/pay_rule_schedule.dart` | `PayRule` ↔ salary `Schedule` (DECISIONS D20) |
 | `EntryValidator` | `domain/entry_validator.dart` | BR-10: ₹1..₹99,99,99,999, no future date, trimmed note ≤ 80 |
 | `SaveEntry`, `DeleteEntry`, `RestoreEntry` | `domain/usecase/` | Add or replace, delete (returns the entry), undo |
-| `GetCycleSummary` | `domain/usecase/get_cycle_summary.dart` | Loads settings, rules and the cycle's entries; computes `B` from rules |
+| `GetCycleSummary` | `domain/usecase/get_cycle_summary.dart` | Loads settings, rules and the cycle's entries; computes `B` from rules, this week's spending, and yesterday's inputs for the saving note (DECISIONS D37, D38) |
+| `BudgetSuggester` | `domain/budget_suggester.dart` | Pure BR-12: last cycle's *Spent* per category, rounded up to the next ₹500 |
+| `GetSuggestedLimits`, `ApplySuggestedLimits` | `domain/usecase/` | The "Use these limits?" offer after a full cycle (D39), and accepting it in one write |
 | `PostDueRecurring` | `domain/usecase/post_due_recurring.dart` | The recurring engine (see `recurring-engine`) |
 | `GetDueSoonBill` | `domain/usecase/get_due_soon_bill.dart` | FR-HO-3 nudge |
 | `GetBills`, `AddBill`, `EditBill`, `DeleteBill`, `RestoreBill` | `domain/usecase/` | Settings' fixed bills (FR-SE-1, DECISIONS D33–D35) |

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch splash colours, dark (UI_DESIGN §3.7). -->
+<resources>
+    <color name="splash_bg">#121211</color>
+    <color name="splash_mark">#F2F1EC</color>
+    <color name="splash_outline">#00000000</color>
+    <color name="splash_day">#3A3A37</color>
+    <color name="splash_signal">#FFB020</color>
+</resources>

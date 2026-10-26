@@ -25,6 +25,7 @@ final class RangeWords extends Equatable {
 /// TalkBack reads for the whole card (FR-HO-7).
 final class HeroCopy extends Equatable {
   const HeroCopy._({
+    required this.title,
     required this.heroAmount,
     required this.muted,
     required this.overText,
@@ -36,31 +37,41 @@ final class HeroCopy extends Equatable {
   });
 
   /// Builds the copy for [summary] in [strings], formatting amounts with [money].
-  factory HeroCopy.of(CycleSummary summary, {required AppLocalizations strings, required MoneyFormatter money}) {
+  ///
+  /// With [week] the number is *This week*'s (FR-HO-2); the blocks' words stay on today.
+  factory HeroCopy.of(
+    CycleSummary summary, {
+    required AppLocalizations strings,
+    required MoneyFormatter money,
+    bool week = false,
+  }) {
     final DateFormat dayMonth = DateFormat('d MMM', money.locale);
     String date(CalendarDate day) => dayMonth.format(DateTime(day.year, day.month, day.day));
     String shown(Money amount) => money.format(amount);
     String spokenAmount(Money amount) => strings.spokenAmount(money.digits(amount));
-    final bool over = summary.state is OverToday || summary.state is OverCycle;
-    final Money hero = over || summary.safeToday.isNegative ? Money.zero : summary.safeToday;
+    final _Headline headline = week ? _Headline.week(summary, strings) : _Headline.today(summary, strings);
     final String days = strings.daysToPayday(summary.daysLeft);
     final RangeWords spokenRange = _range(summary, strings, spokenAmount, date);
     return HeroCopy._(
-      heroAmount: hero,
-      muted: over,
-      overText: _overText(summary.state, strings, shown),
+      title: headline.title,
+      heroAmount: headline.amount,
+      muted: headline.muted,
+      overText: headline.overText(shown),
       laterCaption: _laterCaption(summary, strings, shown).getOrElse(() => days),
       range: _range(summary, strings, shown, date),
       calm: summary.state is OnTrack && summary.forecast is! RunsOut,
       payday: date(summary.payday),
       spoken: strings.heroSpoken(
-        strings.safeToSpendToday,
-        spokenAmount(hero),
+        headline.title,
+        spokenAmount(headline.amount),
         _laterCaption(summary, strings, spokenAmount).getOrElse(() => days),
         _join(strings, spokenRange),
       ),
     );
   }
+
+  /// "Safe to spend today" or "Safe to spend this week".
+  final String title;
 
   /// Never below ₹0; ₹0 in the over states.
   final Money heroAmount;
@@ -68,7 +79,7 @@ final class HeroCopy extends Equatable {
   /// The hero number is shown quieter (`displayInk2`) when over.
   final bool muted;
 
-  /// "₹220 over today" next to the ₹0, in the over states.
+  /// "₹220 over today" (or "over this week") next to the ₹0, in the over states.
   final Option<String> overText;
 
   /// Right-hand caption under the blocks: days to payday, or each later day's share.
@@ -82,12 +93,6 @@ final class HeroCopy extends Equatable {
   final String payday;
   final String spoken;
 
-  static Option<String> _overText(CycleState state, AppLocalizations strings, String Function(Money) amount) =>
-      switch (state) {
-        OverToday(:final Money over) => Option<String>.of(strings.amountOverToday(amount(over))),
-        OverCycle(:final Money over) => Option<String>.of(strings.amountOver(amount(over))),
-        NoIncome() || SlowDown() || OnTrack() => const Option<String>.none(),
-      };
 
   static Option<String> _laterCaption(CycleSummary summary, AppLocalizations strings, String Function(Money) amount) =>
       summary.state is OverToday
@@ -120,5 +125,45 @@ final class HeroCopy extends Equatable {
   }
 
   @override
-  List<Object?> get props => <Object?>[heroAmount, muted, overText, laterCaption, range, calm, payday, spoken];
+  List<Object?> get props => <Object?>[title, heroAmount, muted, overText, laterCaption, range, calm, payday, spoken];
 }
+
+/// The title, number and overspend words for *Today* or *This week*.
+final class _Headline {
+  const _Headline({required this.title, required this.amount, required this.muted, this.over = const Option<_Over>.none()});
+
+  factory _Headline.today(CycleSummary summary, AppLocalizations strings) {
+    final Option<_Over> over = switch (summary.state) {
+      OverToday(:final Money over) => Option<_Over>.of((over, strings.amountOverToday)),
+      OverCycle(:final Money over) => Option<_Over>.of((over, strings.amountOver)),
+      NoIncome() || SlowDown() || OnTrack() => const Option<_Over>.none(),
+    };
+    return _Headline(
+      title: strings.safeToSpendToday,
+      amount: over.isSome() || summary.safeToday.isNegative ? Money.zero : summary.safeToday,
+      muted: over.isSome(),
+      over: over,
+    );
+  }
+
+  factory _Headline.week(CycleSummary summary, AppLocalizations strings) {
+    final Money left = summary.safeThisWeek;
+    return _Headline(
+      title: strings.safeToSpendThisWeek,
+      amount: left.isNegative ? Money.zero : left,
+      muted: left.isNegative || left.isZero,
+      over: left.isNegative ? Option<_Over>.of((Money.zero - left, strings.amountOverThisWeek)) : const Option<_Over>.none(),
+    );
+  }
+
+  final String title;
+  final Money amount;
+  final bool muted;
+  final Option<_Over> over;
+
+  Option<String> overText(String Function(Money) shown) =>
+      over.map(((Money, String Function(String)) over) => over.$2(shown(over.$1)));
+}
+
+/// How far over, and the words that say it.
+typedef _Over = (Money, String Function(String));

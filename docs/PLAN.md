@@ -179,7 +179,7 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | M0 | Design tokens + theme (light/dark), AppIcon, l10n wiring, Money/formatter, Clock, AppLogger, DI, DB + migrations, seeded categories; add `fpdart`, `figma_squircle`, `path`; bundle fonts; `git init` | App boots in `en_IN`, ₹ formats Indian-style, analyze clean, coverage script runs |
 | M1 ✓ | Onboarding, Home hero (all BR-5 states, range line), Add tray, Today list, undo, core motion. Pulled forward because the hero needs them: `SafeToSpend` (BR-3..BR-7) and the recurring engine on start/resume | Log an expense in < 5 s, Add → digits → Next → tile |
 | M2 ✓ | Recurring: midnight re-run (BR-8), due-soon nudge (FR-HO-3), bills in Settings | Payday auto-adds income at midnight; nudge shows the soonest bill |
-| M3 | *This week* toggle (FR-HO-2), "you saved yesterday" (BR-8), auto-suggested budgets (BR-12) | Weekly view and morning note work |
+| M3 | *This week* toggle (FR-HO-2), "you saved yesterday" (BR-8), auto-suggested budgets (BR-12: `BudgetSuggester`, `GetSuggestedLimits`, `ApplySuggestedLimits`, category limits saved; the "Use these limits?" offer is shown by Spends in M4 as BR-14 insight #4) | Weekly view and morning note work |
 | M4 | Insights: charts + rule tips | vs-last-cycle shown, 3 tips max |
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |
 | M6 | CSV/JSON backup & restore, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall; TalkBack reads every control |

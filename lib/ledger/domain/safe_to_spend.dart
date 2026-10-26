@@ -7,6 +7,7 @@ import 'entities/cycle_state.dart';
 import 'entities/cycle_summary.dart';
 import 'entities/range_forecast.dart';
 import 'entities/spend_preview.dart';
+import 'entities/yesterday_saving.dart';
 
 /// The pure maths behind the hero: today's share, the state and the forecast (SPEC BR-3 to BR-7).
 ///
@@ -17,10 +18,19 @@ abstract final class SafeToSpend {
   static const int _forecastRoundingMajor = 100;
 
   /// Computes today's summary from [inputs]; [earliestEntryDate] is passed through for the Add tray.
-  static CycleSummary compute(CycleInputs inputs, {required CalendarDate earliestEntryDate}) {
+  ///
+  /// [spentThisWeek] is passed through for the *This week* view (FR-HO-2). [yesterday] holds the
+  /// inputs as they stood yesterday, when yesterday is in the same cycle; it drives the "you saved
+  /// ₹X yesterday" note (BR-8).
+  static CycleSummary compute(
+    CycleInputs inputs, {
+    required CalendarDate earliestEntryDate,
+    Money spentThisWeek = Money.zero,
+    Option<CycleInputs> yesterday = const Option<CycleInputs>.none(),
+  }) {
     final int daysLeft = inputs.cycle.daysLeftFrom(inputs.today);
-    final Money pool = inputs.income - inputs.keepAside - inputs.billsDue - inputs.spentBefore;
-    final Money share = _atLeastZero(_floorShare(pool, daysLeft));
+    final Money pool = _pool(inputs);
+    final Money share = _share(pool, daysLeft);
     final Money remaining = pool - inputs.spentToday;
     final RangeForecast forecast = _forecast(inputs, remaining, daysLeft);
     return CycleSummary(
@@ -33,6 +43,8 @@ abstract final class SafeToSpend {
       state: _state(inputs, share: share, remaining: remaining, forecast: forecast),
       forecast: forecast,
       earliestEntryDate: earliestEntryDate,
+      spentThisWeek: spentThisWeek,
+      savedYesterday: yesterday.flatMap((CycleInputs before) => _savedYesterday(before, daysLeft)),
     );
   }
 
@@ -47,6 +59,21 @@ abstract final class SafeToSpend {
       over: Money.zero - left,
       tomorrow: _laterShare(summary.pool - spentAfter, summary.daysLeft),
     );
+  }
+
+  static Money _pool(CycleInputs inputs) => inputs.income - inputs.keepAside - inputs.billsDue - inputs.spentBefore;
+
+  static Money _share(Money pool, int daysLeft) => _atLeastZero(_floorShare(pool, daysLeft));
+
+  // why: with nothing else changed, today's share is yesterday's plus `saved / D`, so the note
+  // credits only the underspend, not income or bills that also moved overnight.
+  static Option<YesterdaySaving> _savedYesterday(CycleInputs yesterday, int daysLeftToday) {
+    final Money share = _share(_pool(yesterday), yesterday.cycle.daysLeftFrom(yesterday.today));
+    final Money saved = share - yesterday.spentToday;
+    if (saved.isNegative || saved.isZero) {
+      return const Option<YesterdaySaving>.none();
+    }
+    return Option<YesterdaySaving>.of(YesterdaySaving(saved: saved, eachDayMore: _floorShare(saved, daysLeftToday)));
   }
 
   static CycleState _state(
