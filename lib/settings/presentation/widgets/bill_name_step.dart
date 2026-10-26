@@ -9,8 +9,9 @@ import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
-import '../cubit/bill_editor_cubit.dart';
-import '../cubit/bill_editor_state.dart';
+import '../bloc/bill_editor_bloc.dart';
+import '../bloc/bill_editor_event.dart';
+import '../bloc/bill_editor_state.dart';
 import 'bill_question.dart';
 
 /// Step 1 of the bill editor: type a name, or tap a common bill to name it and move on.
@@ -39,7 +40,7 @@ class _BillNameStepState extends State<BillNameStep> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final BillEditorCubit cubit = context.read<BillEditorCubit>();
+    final BillEditorBloc bloc = context.read<BillEditorBloc>();
     final VoidCallback? delete = widget.onDelete;
     return AdaptiveSplit(
       header: BillQuestion(
@@ -52,8 +53,8 @@ class _BillNameStepState extends State<BillNameStep> {
             maxLength: BillValidator.maxLabelLength,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,
-            onChanged: cubit.rename,
-            onSubmitted: (String _) => cubit.next(),
+            onChanged: (String label) => bloc.add(BillEditorRenamed(label)),
+            onSubmitted: (String _) => bloc.add(const BillEditorNextPressed()),
             onTapOutside: (PointerDownEvent _) => FocusScope.of(context).unfocus(),
             decoration: InputDecoration(
               labelText: strings.billNameLabel,
@@ -80,7 +81,7 @@ class _BillNameStepState extends State<BillNameStep> {
                   key: ValueKey<String>('bill-${kind.name}'),
                   label: strings.billName(kind.name),
                   selected: widget.form.kind == Option<BillKind>.of(kind),
-                  onPressed: () => cubit.pickKind(kind, strings.billName(kind.name)),
+                  onPressed: () => bloc.add(BillEditorKindPicked(kind, strings.billName(kind.name))),
                 ),
             ],
           ),
@@ -91,7 +92,7 @@ class _BillNameStepState extends State<BillNameStep> {
               key: const ValueKey<String>('bill-next'),
               label: strings.next,
               icon: AppIcons.next,
-              onPressed: widget.form.label.trim().isEmpty ? null : cubit.next,
+              onPressed: widget.form.label.trim().isEmpty ? null : () => bloc.add(const BillEditorNextPressed()),
             ),
           ),
         ],

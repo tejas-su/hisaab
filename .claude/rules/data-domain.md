@@ -16,7 +16,7 @@ paths:
 
 ## Data class equality
 - All entities, models and value objects (`Money`, `Period`) extend `Equatable` (or override `==`/`hashCode`)
-- Without correct equality, Cubit state comparison silently breaks and triggers spurious rebuilds
+- Without correct equality, Bloc state comparison silently breaks and triggers spurious rebuilds
 - Value objects compare by value, not reference
 
 ## Money & time in the domain
@@ -28,7 +28,7 @@ paths:
 ## Use cases
 - One use case per operation, named as a verb phrase: `SaveEntry`, `GetCycleSummary`, `PostDueRecurring`
 - Expose only a single `call()` method
-- Pure: no UI, no Cubit, no direct data source access — only repository calls and pure domain functions
+- Pure: no UI, no Bloc, no direct data source access — only repository calls and pure domain functions
 - Implement the abstract `UseCase<T, Params>` from `core/usecases/` — never define the contract inline
 
 ## Error handling (fpdart)
@@ -38,13 +38,13 @@ paths:
 - Wrap data source calls with `TaskEither.tryCatch(() async { ... }, (err, st) => DatabaseFailure(err))` — never manual `try/catch`
 - The base `Failure` abstract class lives in `core/errors/`; feature subtypes live in the feature's `domain/` and extend it
 - Never duplicate `Failure` definitions across features
-- Chain with `.flatMap`, `.map`, `.mapLeft`; no `.run()` until the Cubit layer
+- Chain with `.flatMap`, `.map`, `.mapLeft`; no `.run()` until the Bloc layer
 - `fpdart` is added in milestone M0 (see `docs/PLAN.md`); if it is missing, ask before adding it
 
 ## Mappers
 - Every model ↔ entity conversion lives in a dedicated mapper class, one per aggregate
 - Pure functions: `toEntity(model)` and `toModel(entity)` — no side effects
-- Never inline mapping in repositories, use cases, or Cubits
+- Never inline mapping in repositories, use cases, or Blocs
 
 ## Repository contracts
 - One method per operation — no business logic or decision-making

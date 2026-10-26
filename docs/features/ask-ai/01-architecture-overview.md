@@ -11,20 +11,20 @@ Ask AI turns the user's money data into a ready-to-paste prompt for ChatGPT or a
 ## 3. Data flow
 ```
 AskAiPage
-  → AskAiCubit.load(cycle)
+  → AskAiBloc ← AskAiLoadRequested(cycle)
     → GetPromptInput(cycle, period, hideNotes)           lib/ask_ai/domain/usecase/
        → LedgerRepository / CategoryRepository / RecurringRepository
        → PromptInput (income, pay rule, period dates, category totals, bills, entries)
     → PromptBuilder.build(input, goal, customQuestion)   pure, deterministic (BR-15)
        → PromptText(text, entryCount, summarisedWeeks?)
   → emit AskAiReady (preview)
-  → AskAiCubit.selectGoal / setPeriod / setHideNotes / setQuestion → rebuild preview   FR-AI-2
-  → AskAiCubit.copyAndOpenChatGpt
+  → AskAiGoalSelected / AskAiPeriodChanged / AskAiHideNotesChanged / AskAiQuestionChanged → rebuild preview   FR-AI-2
+  → AskAiChatGptRequested
        → ClipboardService.copy(text)
        → ChatGptLink.forText(text) → url or plain chatgpt.com      BR-15 (≤ 2,000 encoded chars)
        → ExternalLinkLauncher.open(url)
-  → AskAiCubit.shareToOtherAi → ShareService.shareText(text)
-  → AskAiCubit.copyOnly       → ClipboardService.copy(text)
+  → AskAiShareRequested    → ShareService.shareText(text)
+  → AskAiCopyRequested     → ClipboardService.copy(text)
   → emit with lastAction → BlocListener shows the toast "Copied. Paste it in the chat."
 ```
 
@@ -32,7 +32,7 @@ AskAiPage
 | Class | Layer | Responsibility |
 |---|---|---|
 | `AskAiPage` | `lib/ask_ai/presentation/pages/` | Goal cards, period chips, preview, notes switch, actions |
-| `AskAiCubit` | presentation/cubit | Holds selections; regenerates the preview; runs actions through the seams |
+| `AskAiBloc`, `AskAiEvent` | presentation/bloc | Holds selections; regenerates the preview; runs actions through the seams |
 | `GoalCard`, `PromptPreview` | presentation/widgets | Selected card ink-filled with marigold check; collapsible preview |
 | `GetPromptInput` | domain/usecase | Gathers the period's data from the ledger |
 | `PromptBuilder` | `lib/ask_ai/domain/prompt_builder.dart` | Pure; byte-identical output for the same input; 12,000-char guard with weekly summarising |

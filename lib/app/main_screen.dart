@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/fpdart.dart' show Option;
 
+import '../core/extensions/build_context_extensions.dart';
+import '../core/layout/app_layout.dart';
 import '../core/time/clock.dart';
+import '../core/time/pay_cycle.dart';
 import '../home/home.dart';
 import '../ledger/ledger.dart';
 import '../spends/spends.dart';
 import 'app_shell.dart';
+import 'shell_destination.dart';
 import 'widgets/midnight_listener.dart';
 import 'widgets/resume_listener.dart';
 
-/// Home and Spends in the adaptive shell, with Home reloading on resume and at midnight
-/// (SPEC BR-8).
+/// Home and Spends in the adaptive shell, both reloading on resume and at midnight (SPEC BR-8).
 ///
-/// Needs a [HomeCubit] above it. [clock] times midnight; the callbacks open the Add tray and
-/// Settings.
-class MainScreen extends StatelessWidget {
+/// Needs a [HomeBloc] and a [SpendsBloc] above it. [clock] times midnight; the callbacks open
+/// the Add tray, Settings and a cycle's entries.
+class MainScreen extends StatefulWidget {
   const MainScreen({
     super.key,
     required this.clock,
     required this.onAdd,
     required this.onEdit,
     required this.onOpenSettings,
+    required this.onSeeEntries,
     this.assemble = false,
   });
 
@@ -28,21 +33,49 @@ class MainScreen extends StatelessWidget {
   final ValueChanged<EntryKind> onAdd;
   final ValueChanged<Entry> onEdit;
   final VoidCallback onOpenSettings;
+  final void Function(PayCycle cycle, Option<int> categoryId) onSeeEntries;
   final bool assemble;
 
   @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  final ValueNotifier<ShellDestination> _destination = ValueNotifier<ShellDestination>(ShellDestination.home);
+
+  @override
+  void dispose() {
+    _destination.dispose();
+    super.dispose();
+  }
+
+  void _reload() {
+    context.read<HomeBloc>().add(const HomeLoadRequested());
+    context.read<SpendsBloc>().add(const SpendsLoadRequested());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final HomeCubit home = context.read<HomeCubit>();
+    final bool spendsBeside = context.layout.panes is SideBySidePanes;
     return Scaffold(
       body: MidnightListener(
-        clock: clock,
-        onNewDay: home.load,
+        clock: widget.clock,
+        onNewDay: _reload,
         child: ResumeListener(
-          onResume: home.load,
+          onResume: _reload,
           child: AppShell(
-            home: HomePage(onAdd: onAdd, onEdit: onEdit, onOpenSettings: onOpenSettings, assemble: assemble),
-            spends: const SpendsPage(),
-            onAdd: () => onAdd(EntryKind.spent),
+            destination: _destination,
+            home: HomePage(
+              onAdd: widget.onAdd,
+              onEdit: widget.onEdit,
+              onOpenSettings: widget.onOpenSettings,
+              onSeeAll: (PayCycle cycle) => widget.onSeeEntries(cycle, const Option<int>.none()),
+              // why: beside Home in two panes, Spends is already on screen, so the step is hidden.
+              onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,
+              assemble: widget.assemble,
+            ),
+            spends: SpendsPage(today: widget.clock.today(), onSeeEntries: widget.onSeeEntries),
+            onAdd: () => widget.onAdd(EntryKind.spent),
           ),
         ),
       ),

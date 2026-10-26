@@ -2,6 +2,7 @@ import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
 import 'package:expense_tracker/home/home.dart';
 import 'package:expense_tracker/home/presentation/widgets/due_soon_note.dart';
@@ -9,46 +10,55 @@ import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
 import 'package:expense_tracker/home/presentation/widgets/home_header.dart';
 import 'package:expense_tracker/home/presentation/widgets/saved_yesterday_note.dart';
 import 'package:expense_tracker/home/presentation/widgets/today_list.dart';
-import 'package:expense_tracker/home/presentation/widgets/today_row.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fake_services.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
   late FakeServices services;
-  late HomeCubit cubit;
+  late HomeBloc bloc;
   late List<Object> calls;
 
   setUp(() {
     services = FakeServices();
-    cubit = services.homeCubit();
+    bloc = services.homeBloc();
     calls = <Object>[];
   });
 
   tearDown(() async {
-    await cubit.close();
+    await bloc.close();
     await services.dispose();
   });
 
-  Future<void> pump(WidgetTester tester, {bool load = true, Size size = TestWindows.phone, double textScale = 1, ThemeMode theme = ThemeMode.light}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    bool load = true,
+    Size size = TestWindows.phone,
+    double textScale = 1,
+    ThemeMode theme = ThemeMode.light,
+    bool links = false,
+  }) async {
     if (load) {
-      await tester.runAsync(cubit.load);
+      await tester.runAsync(() => bloc.dispatch(const HomeLoadRequested()));
     }
     await pumpApp(
       tester,
-      BlocProvider<HomeCubit>.value(
-        value: cubit,
+      BlocProvider<HomeBloc>.value(
+        value: bloc,
         child: Scaffold(
           body: HomePage(
             onAdd: (EntryKind kind) => calls.add(kind),
             onEdit: (Entry entry) => calls.add(entry),
             onOpenSettings: () => calls.add('settings'),
+            onSeeAll: links ? calls.add : null,
+            onSeeWhereItWent: links ? () => calls.add('spends') : null,
           ),
         ),
       ),
@@ -134,6 +144,14 @@ void main() {
         });
       }
 
+      testWidgets('Settings draws a 40dp well, flush with the cards, inside a 48dp tap target', (WidgetTester tester) async {
+        await pump(tester);
+        final Finder well = find.byKey(const ValueKey<String>('open-settings-well'));
+        expect(tester.getSize(find.byKey(const ValueKey<String>('open-settings'))), const Size(48, 48));
+        expect(tester.getSize(well), const Size(40, 40));
+        expect(tester.getTopRight(well).dx, tester.getTopRight(find.byType(HeroCard)).dx);
+      });
+
       testWidgets('the wordmark starts on the cards\' left edge', (WidgetTester tester) async {
         await pump(tester);
         expect(tester.getTopLeft(find.byType(HomeHeader)).dx, tester.getTopLeft(find.byType(HeroCard)).dx);
@@ -149,7 +167,7 @@ void main() {
 
       testWidgets('Today list rows start on the hero\'s content edge', (WidgetTester tester) async {
         await pump(tester);
-        final Finder well = find.descendant(of: find.byType(TodayRow).first, matching: find.byType(Container)).first;
+        final Finder well = find.descendant(of: find.byType(EntryRow).first, matching: find.byType(Container)).first;
         expect(tester.getTopLeft(well).dx, tester.getTopLeft(find.text('Safe to spend today')).dx);
       });
 
@@ -181,7 +199,7 @@ void main() {
     testWidgets('swiping deletes at once and Undo brings it back (BR-10)', (WidgetTester tester) async {
       await pump(tester);
       await tester.drag(find.text('Chai & samosa'), const Offset(-500, 0));
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(find.text('Chai & samosa'), findsNothing);
       expect(find.text('Deleted ₹60'), findsOneWidget);
       expect(services.haptics.events, contains('threshold'));
@@ -248,12 +266,12 @@ void main() {
       testWidgets('tapping the hero flips to this week and back', (WidgetTester tester) async {
         await pump(tester);
         await tester.tap(find.byType(HeroCard));
-        await tester.pumpAndSettle();
+        await tester.settle();
         expect(find.text('Safe to spend this week'), findsOneWidget);
         expect(find.text('₹12,530'), findsOneWidget);
         expect(find.text('9 days to payday'), findsOneWidget, reason: 'the blocks stay on today');
         await tester.tap(find.byType(HeroCard));
-        await tester.pumpAndSettle();
+        await tester.settle();
         expect(find.text('Safe to spend today'), findsOneWidget);
         expect(find.text('₹1,430'), findsOneWidget);
       });
@@ -264,7 +282,7 @@ void main() {
         final Finder hero = find.bySemanticsLabel(RegExp('^Safe to spend today'));
         expect(tester.getSemantics(hero), isSemantics(hasTapAction: true, onTapHint: 'show this week'));
         tester.semantics.tap(find.semantics.byLabel(RegExp('^Safe to spend today')));
-        await tester.pumpAndSettle();
+        await tester.settle();
         final Finder week = find.bySemanticsLabel(RegExp('^Safe to spend this week: 12,530 rupees'));
         expect(week, findsOneWidget);
         expect(tester.getSemantics(week), isSemantics(onTapHint: 'show today'));
@@ -295,6 +313,56 @@ void main() {
             .run();
         await pump(tester);
         expect(find.byType(SavedYesterdayNote), findsNothing);
+      });
+    });
+
+    group('links out (FR-HO-4, FR-HO-5)', () {
+      Future<void> overspend() =>
+          services.ledger.add(EntryDraft(amount: Money.fromMajor(2450), kind: EntryKind.spent, categoryId: 3, date: WorkedExample.today)).run();
+
+      testWidgets('See all opens the cycle\'s entries and ends on the card\'s content edge', (WidgetTester tester) async {
+        await pump(tester, links: true);
+        final Finder seeAll = find.byKey(const ValueKey<String>('see-all'));
+        expect(tester.getTopRight(seeAll).dx, tester.getTopRight(find.byType(TodayList)).dx - 20);
+        await tester.tap(seeAll);
+        expect(calls.single, isA<PayCycle>());
+      });
+
+      testWidgets('without the links, See all is hidden', (WidgetTester tester) async {
+        await pump(tester);
+        expect(find.byKey(const ValueKey<String>('see-all')), findsNothing);
+      });
+
+      testWidgets('over today: a calm card spreads the overspend and offers See where it went', (WidgetTester tester) async {
+        await overspend();
+        await pump(tester, links: true);
+        expect(find.text('It happens. The ₹1,020 is spread across the next 8 days, so each one is a little smaller.'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey<String>('see-where-it-went')));
+        expect(calls, <Object>['spends']);
+      });
+
+      testWidgets('over today with one day after: it comes out of tomorrow', (WidgetTester tester) async {
+        services.clock.current = DateTime(2026, 11, 2, 10);
+        await services.ledger
+            .add(EntryDraft(amount: Money.fromMajor(9000), kind: EntryKind.spent, categoryId: 3, date: const CalendarDate(2026, 11, 2)))
+            .run();
+        await pump(tester);
+        expect(find.textContaining('comes out of tomorrow'), findsOneWidget);
+      });
+
+      testWidgets('over the cycle: the money is used up until payday', (WidgetTester tester) async {
+        await services.ledger
+            .add(EntryDraft(amount: Money.fromMajor(17000), kind: EntryKind.spent, categoryId: 3, date: WorkedExample.today))
+            .run();
+        await pump(tester);
+        expect(find.text("It happens. This month's money is used up. It starts again on payday, 4 Nov."), findsOneWidget);
+        expect(find.byKey(const ValueKey<String>('see-where-it-went')), findsNothing, reason: 'no link was given');
+      });
+
+      testWidgets('on track: no over card', (WidgetTester tester) async {
+        await pump(tester, links: true);
+        expect(find.byKey(const ValueKey<String>('see-where-it-went')), findsNothing);
+        expect(find.textContaining('It happens.'), findsNothing);
       });
     });
 

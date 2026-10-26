@@ -4,22 +4,28 @@ import 'package:expense_tracker/app/app_shell.dart';
 import 'package:expense_tracker/app/widgets/hisaab_dock.dart';
 import 'package:expense_tracker/home/home.dart';
 import 'package:expense_tracker/spends/spends.dart';
+import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../helpers/fake_services.dart';
+import '../helpers/fixtures/ledger/worked_example.dart';
 import '../helpers/pump_app.dart';
 
 late FakeServices _services;
 
-Widget _shell() => BlocProvider<HomeCubit>(
-      create: (BuildContext _) => _services.homeCubit()..load(),
+Widget _shell() => MultiBlocProvider(
+      providers: <BlocProvider<Object?>>[
+        BlocProvider<HomeBloc>(create: (BuildContext _) => _services.homeBloc()..add(const HomeLoadRequested())),
+        BlocProvider<SpendsBloc>(create: (BuildContext _) => _services.spendsBloc()..add(const SpendsLoadRequested())),
+      ],
       child: Scaffold(
         body: AppShell(
           home: HomePage(onAdd: (EntryKind _) {}, onEdit: (Entry _) {}, onOpenSettings: () {}),
-          spends: const SpendsPage(),
+          spends: SpendsPage(today: WorkedExample.today, onSeeEntries: (PayCycle _, Option<int> _) {}),
           onAdd: () {},
         ),
       ),

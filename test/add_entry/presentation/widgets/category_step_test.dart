@@ -1,5 +1,5 @@
-import 'package:expense_tracker/add_entry/presentation/cubit/add_entry_cubit.dart';
-import 'package:expense_tracker/add_entry/presentation/cubit/add_entry_state.dart';
+import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_bloc.dart';
+import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_state.dart';
 import 'package:expense_tracker/add_entry/presentation/widgets/category_step.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/widgets/category_tile.dart';
@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fake_services.dart';
 import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
@@ -18,14 +19,16 @@ void main() {
   testWidgets('while saving, the tapped tile is flashed ink and no tile takes taps (FR-AD-5, FR-AD-6)', (WidgetTester tester) async {
     final FakeServices services = FakeServices();
     addTearDown(services.dispose);
-    final AddEntryCubit cubit = AddEntryCubit(
-      saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
-      deleteEntry: DeleteEntry(ledger: services.ledger),
-      haptics: services.haptics,
-      clock: services.clock,
-      categories: seedCategories,
+    final AddEntryBloc bloc = await tester.buildBloc(
+      () => AddEntryBloc(
+        saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
+        deleteEntry: DeleteEntry(ledger: services.ledger),
+        haptics: services.haptics,
+        clock: services.clock,
+        categories: seedCategories,
+      ),
     );
-    addTearDown(cubit.close);
+    addTearDown(bloc.close);
     final EntryForm form = EntryForm(
       kind: EntryKind.spent,
       rupees: 60,
@@ -37,8 +40,8 @@ void main() {
     );
     await pumpApp(
       tester,
-      BlocProvider<AddEntryCubit>.value(
-        value: cubit,
+      BlocProvider<AddEntryBloc>.value(
+        value: bloc,
         child: Scaffold(body: CategoryStep(state: AddEntrySaving(form, categoryId: SeedCategoryIds.food))),
       ),
     );
@@ -55,14 +58,16 @@ void main() {
     Future<void> pumpStep(WidgetTester tester, {Option<Entry> editing = const Option<Entry>.none(), Size size = TestWindows.phone, double textScale = 1}) async {
       final FakeServices services = FakeServices();
       addTearDown(services.dispose);
-      final AddEntryCubit cubit = AddEntryCubit(
-        saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
-        deleteEntry: DeleteEntry(ledger: services.ledger),
-        haptics: services.haptics,
-        clock: services.clock,
-        categories: seedCategories,
+      final AddEntryBloc bloc = await tester.buildBloc(
+        () => AddEntryBloc(
+          saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
+          deleteEntry: DeleteEntry(ledger: services.ledger),
+          haptics: services.haptics,
+          clock: services.clock,
+          categories: seedCategories,
+        ),
       );
-      addTearDown(cubit.close);
+      addTearDown(bloc.close);
       final EntryForm form = EntryForm(
         kind: EntryKind.spent,
         rupees: 60,
@@ -75,7 +80,7 @@ void main() {
       );
       await pumpApp(
         tester,
-        BlocProvider<AddEntryCubit>.value(value: cubit, child: Scaffold(body: CategoryStep(state: AddEntryEditing(form)))),
+        BlocProvider<AddEntryBloc>.value(value: bloc, child: Scaffold(body: CategoryStep(state: AddEntryEditing(form)))),
         size: size,
         textScale: textScale,
       );
@@ -95,6 +100,14 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+
+    testWidgets('Back draws a 40dp well on the tiles\' left edge, inside a 48dp tap target', (WidgetTester tester) async {
+      await pumpStep(tester);
+      final Finder well = find.byKey(const ValueKey<String>('back-to-amount-well'));
+      expect(tester.getSize(find.byKey(const ValueKey<String>('back-to-amount'))), const Size(48, 48));
+      expect(tester.getSize(well), const Size(40, 40));
+      expect(tester.getTopLeft(well).dx, tilesLeft(tester));
+    });
 
     testWidgets('the open note field also ends on the tiles\' edge', (WidgetTester tester) async {
       await pumpStep(tester);

@@ -11,8 +11,10 @@ import '../../../core/widgets/keypad.dart';
 import '../../../core/widgets/shake.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../cubit/add_entry_cubit.dart';
-import '../cubit/add_entry_state.dart';
+import '../../../ledger/ledger.dart';
+import '../bloc/add_entry_bloc.dart';
+import '../bloc/add_entry_event.dart';
+import '../bloc/add_entry_state.dart';
 import 'kind_switch.dart';
 import 'quick_add_chips.dart';
 import 'spend_preview_line.dart';
@@ -29,14 +31,14 @@ class AmountStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AddEntryCubit cubit = context.read<AddEntryCubit>();
+    final AddEntryBloc bloc = context.read<AddEntryBloc>();
     final bool short = sideBySide || context.layout.heightClass == HeightClass.compact;
     return AdaptiveSplit(
       fullWindow: false,
       sideBySide: sideBySide,
       header: Column(
         children: <Widget>[
-          KindSwitch(kind: state.form.kind, onChanged: cubit.setKind),
+          KindSwitch(kind: state.form.kind, onChanged: (EntryKind kind) => bloc.add(AddEntryKindChanged(kind))),
           SizedBox(height: short ? HisaabSpacing.m : 30),
           Shake(
             trigger: state.rejections,
@@ -48,7 +50,7 @@ class AmountStep extends StatelessWidget {
           const SizedBox(height: 6),
           SpendPreviewLine(preview: state.form.preview),
           const SizedBox(height: HisaabSpacing.l),
-          QuickAddChips(onAdd: cubit.quickAdd),
+          QuickAddChips(onAdd: (int rupees) => bloc.add(AddEntryQuickAdded(rupees))),
         ],
       ),
       controls: Column(
@@ -56,9 +58,9 @@ class AmountStep extends StatelessWidget {
         children: <Widget>[
           Keypad(
             keyHeight: short ? HisaabSizes.minTouchTarget : HisaabSizes.keypadKeyHeight,
-            onKey: cubit.pressKey,
-            onBackspace: cubit.backspace,
-            onClear: cubit.clear,
+            onKey: (String key) => bloc.add(AddEntryKeyPressed(key)),
+            onBackspace: () => bloc.add(const AddEntryBackspacePressed()),
+            onClear: () => bloc.add(const AddEntryCleared()),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -67,7 +69,7 @@ class AmountStep extends StatelessWidget {
               key: const ValueKey<String>('add-next'),
               label: AppLocalizations.of(context).next,
               icon: AppIcons.next,
-              onPressed: state.form.rupees > 0 ? cubit.next : null,
+              onPressed: state.form.rupees > 0 ? () => bloc.add(const AddEntryNextPressed()) : null,
             ),
           ),
         ],

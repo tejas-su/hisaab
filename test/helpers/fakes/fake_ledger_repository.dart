@@ -30,11 +30,23 @@ final class FakeLedgerRepository implements LedgerRepository {
 
   void _notify() => _changes.add(null);
 
+  /// When set, the next [entriesBetween] read takes the entries as they are now but answers
+  /// only once this completes, so a test can finish a later read first.
+  Completer<void>? nextReadGate;
+
   @override
-  TaskEither<Failure, List<Entry>> entriesBetween(CalendarDate from, CalendarDate to) => _run(
-        () => entries.where((Entry e) => !e.date.isBefore(from) && !e.date.isAfter(to)).toList()
-          ..sort((Entry a, Entry b) => b.id.compareTo(a.id)),
-      );
+  TaskEither<Failure, List<Entry>> entriesBetween(CalendarDate from, CalendarDate to) {
+    final Completer<void>? gate = nextReadGate;
+    nextReadGate = null;
+    final TaskEither<Failure, List<Entry>> read = _run(
+      () => entries.where((Entry e) => !e.date.isBefore(from) && !e.date.isAfter(to)).toList()
+        ..sort((Entry a, Entry b) => b.id.compareTo(a.id)),
+    );
+    return gate == null ? read : TaskEither<Failure, Unit>(() async {
+      await gate.future;
+      return Either<Failure, Unit>.right(unit);
+    }).flatMap((Unit _) => read);
+  }
 
   @override
   TaskEither<Failure, Entry> add(EntryDraft draft) => _run(() {
@@ -60,8 +72,20 @@ final class FakeLedgerRepository implements LedgerRepository {
     });
   }
 
+  /// When set, the next [delete] waits for it before it removes anything, like a slow write.
+  Completer<void>? nextDeleteGate;
+
   @override
   TaskEither<Failure, Entry> delete(int id) {
+    final Completer<void>? gate = nextDeleteGate;
+    nextDeleteGate = null;
+    return gate == null ? _delete(id) : TaskEither<Failure, Unit>(() async {
+      await gate.future;
+      return Either<Failure, Unit>.right(unit);
+    }).flatMap((Unit _) => _delete(id));
+  }
+
+  TaskEither<Failure, Entry> _delete(int id) {
     final int index = entries.indexWhere((Entry e) => e.id == id);
     if (index < 0 && failure == null) {
       return TaskEither<Failure, Entry>.left(EntryNotFoundFailure('No entry $id'));

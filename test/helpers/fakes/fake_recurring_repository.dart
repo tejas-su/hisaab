@@ -30,8 +30,20 @@ final class FakeRecurringRepository implements RecurringRepository {
     return current == null ? TaskEither<Failure, T>.right(action()) : TaskEither<Failure, T>.left(current);
   }
 
+  /// When set, the next [activeRules] read takes the rules as they are now but answers only
+  /// once this completes, so a test can finish a later read first.
+  Completer<void>? nextReadGate;
+
   @override
-  TaskEither<Failure, List<RecurringRule>> activeRules() => _run(() => rules);
+  TaskEither<Failure, List<RecurringRule>> activeRules() {
+    final Completer<void>? gate = nextReadGate;
+    nextReadGate = null;
+    final TaskEither<Failure, List<RecurringRule>> read = _run(() => rules);
+    return gate == null ? read : TaskEither<Failure, Unit>(() async {
+      await gate.future;
+      return Either<Failure, Unit>.right(unit);
+    }).flatMap((Unit _) => read);
+  }
 
   @override
   TaskEither<Failure, int> post(RecurringPosting posting) => _run(() {

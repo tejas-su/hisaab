@@ -10,8 +10,9 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/bill_draft.dart';
 import '../../domain/entities/onboarding_draft.dart';
 import '../../domain/entities/onboarding_step.dart';
-import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
+import '../bloc/onboarding_bloc.dart';
+import '../bloc/onboarding_event.dart';
+import '../bloc/onboarding_state.dart';
 import 'amount_controls.dart';
 import '../../../core/widgets/amount_display.dart';
 import '../../../core/widgets/day_of_month_grid.dart';
@@ -28,7 +29,7 @@ class BillEditorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final OnboardingCubit cubit = context.read<OnboardingCubit>();
+    final OnboardingBloc bloc = context.read<OnboardingBloc>();
     final String name = strings.billName(editor.kind.name);
     final bool alreadyAdded = draft.bills.any((BillDraft bill) => bill.kind == editor.kind);
     final Widget remove = alreadyAdded
@@ -37,7 +38,7 @@ class BillEditorView extends StatelessWidget {
             child: HisaabChip(
               label: strings.removeBill(name),
               icon: AppIcons.delete,
-              onPressed: () => cubit.removeBill(editor.kind),
+              onPressed: () => bloc.add(OnboardingBillRemoved(editor.kind)),
             ),
           )
         : const SizedBox.shrink();
@@ -52,11 +53,11 @@ class BillEditorView extends StatelessWidget {
               remove,
             ],
           ),
-          controls: AmountControls(cubit: cubit, canContinue: editor.rupees > 0),
+          controls: AmountControls(bloc: bloc, canContinue: editor.rupees > 0),
         ),
       BillStage.day => AdaptiveSplit(
           header: StepHeader(step: OnboardingStep.bills, question: strings.billDayQuestion(name)),
-          controls: DayOfMonthGrid(onDay: cubit.chooseBillDay),
+          controls: DayOfMonthGrid(onDay: (int day) => bloc.add(OnboardingBillDayChosen(day))),
         ),
     };
   }

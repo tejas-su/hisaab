@@ -25,6 +25,137 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safeToSpendToday => 'Safe to spend today';
 
   @override
+  String get earlierCycle => 'Earlier';
+
+  @override
+  String get laterCycle => 'Later';
+
+  @override
+  String get spentSoFar => 'Spent so far';
+
+  @override
+  String ofAmount(String amount) {
+    return 'of $amount';
+  }
+
+  @override
+  String get wordGap => ' ';
+
+  @override
+  String spentSoFarSpoken(String amount) {
+    return 'Spent so far: $amount';
+  }
+
+  @override
+  String categoryRowSpoken(String category, String amount, int percent) {
+    return '$category: $amount, $percent%';
+  }
+
+  @override
+  String get paceYou => 'You';
+
+  @override
+  String get paceSteady => 'Steady pace';
+
+  @override
+  String get belowPace => 'Below pace';
+
+  @override
+  String get abovePace => 'Above pace';
+
+  @override
+  String paceSpoken(String spent, String budget, String verdict) {
+    return '$spent spent so far of $budget. $verdict.';
+  }
+
+  @override
+  String get whereItWent => 'Where it went';
+
+  @override
+  String percentShare(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String pastLimit(String amount) {
+    return '$amount past limit';
+  }
+
+  @override
+  String limitOf(String amount) {
+    return 'limit $amount';
+  }
+
+  @override
+  String nothingSpentIn(String cycle) {
+    return 'Nothing spent in $cycle yet.';
+  }
+
+  @override
+  String get tipsTitle => 'Worth knowing';
+
+  @override
+  String insightCategoryUp(String category, String amount) {
+    return '$category is up $amount from last month.';
+  }
+
+  @override
+  String insightBiggestSpend(String category, String amount, String date) {
+    return 'Your biggest $category spend was $amount on $date.';
+  }
+
+  @override
+  String insightSteadiest(String category) {
+    return '$category is your steadiest spend.';
+  }
+
+  @override
+  String get insightLimitOffer =>
+      'Use last month\'s spending as limits? Each is rounded up to the next ₹500.';
+
+  @override
+  String get seeEntries => 'See entries';
+
+  @override
+  String get useTheseLimits => 'Use these limits';
+
+  @override
+  String get seeEveryEntry => 'See every entry';
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get everyEntry => 'Every entry';
+
+  @override
+  String get allCategories => 'All';
+
+  @override
+  String get noEntriesHere => 'Nothing here yet.';
+
+  @override
+  String get seeWhereItWent => 'See where it went';
+
+  @override
+  String overTodayCard(String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other:
+          'It happens. The $amount is spread across the next $days days, so each one is a little smaller.',
+      one:
+          'It happens. The $amount comes out of tomorrow, so it is a little smaller.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String overCycleCard(String date) {
+    return 'It happens. This month\'s money is used up. It starts again on payday, $date.';
+  }
+
+  @override
   String get safeToSpendThisWeek => 'Safe to spend this week';
 
   @override
@@ -63,9 +194,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String spokenAmount(String amount) {
     return '$amount rupees';
   }
-
-  @override
-  String get screenInProgress => 'This screen is being built.';
 
   @override
   String get startupFailed =>

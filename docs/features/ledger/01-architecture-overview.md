@@ -11,7 +11,7 @@ The ledger is the shared money feature. It owns entries, categories and recurrin
 
 ## 3. Data flow
 ```
-HomeCubit / AddEntryCubit / CompleteOnboarding
+HomeBloc / AddEntryBloc / CompleteOnboarding
   → SaveEntry / DeleteEntry / RestoreEntry / GetCycleSummary / PostDueRecurring   (domain/usecase/)
     → LedgerRepository / CategoryRepository / RecurringRepository / BudgetSettingsRepository
       → Sqflite*LocalDataSource (rows) → *Model.fromRow → *Mapper.toEntity
@@ -20,8 +20,8 @@ GetCycleSummary
   → PayRuleSchedule.payRuleOf(salary rule)        BR-1 (no salary rule → calendar month)
   → PeriodCalculator.cycleFor(today, rule, monthStart)
   → SafeToSpend.compute(CycleInputs)              BR-3..BR-7 → CycleSummary
-Every write → LedgerRepository.changes (Stream<void>) → HomeCubit reloads   BR-10
-Rule edits  → RecurringRepository.changes → HomeCubit, BillsCubit reload
+Every write → LedgerRepository.changes (Stream<void>) → HomeBloc reloads (HomeLoadRequested)   BR-10
+Rule edits  → RecurringRepository.changes → HomeBloc, BillsBloc reload
 ```
 
 ## 4. Key classes
@@ -47,6 +47,7 @@ Rule edits  → RecurringRepository.changes → HomeCubit, BillsCubit reload
 | `Sqflite*LocalDataSource` | `data/datasource/` | The only code touching `AppDatabase` |
 | `*Model`, `*Mapper`, `EntryKindMapper` | `data/model/`, `data/mapper/` | `is`-narrowed rows (`core/db/db_row.dart`) ↔ entities |
 | `CategoryExtensions.labelIn` | `presentation/category_extensions.dart` | Rename or localised seed name |
+| `EntryRow` | `presentation/widgets/entry_row.dart` | One entry row shared by Home's Today list and Spends' *Every entry*: tap to edit, swipe to delete, TalkBack Delete action |
 
 ## 5. State variants
 No UI state. Consumers switch on `CycleState` (`NoIncome`, `OverCycle`, `OverToday`, `SlowDown`, `OnTrack`) and `RangeForecast` (`TooEarlyToForecast`, `LastsTillPayday`, `RunsOut`).

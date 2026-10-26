@@ -202,9 +202,11 @@ At most **3** are shown, chosen in priority order:
 1. **A category up at least 20% and at least ₹1,000 against the previous cycle at the same day-of-cycle.** "{Cat} is up ₹X from last month." Day-of-cycle `k` is compared with day `min(k, previous cycle length)` of the previous cycle; this matters for 28-, 30- and 31-day cycles.
 2. **A single entry larger than 2× that category's median entry this cycle.** "Your biggest {cat} spend was ₹X on {date}."
 3. **The cycle's steadiest category** (lowest week-to-week variance, with at least 4 entries). "{Cat} is your steadiest spend."
-4. **The limit offer** from BR-12.
+4. **The limit offer** from BR-12, on the current cycle only.
 
-Each insight carries one action: *See entries*, *Set a limit* or *Use these limits*.
+- Each rule gives at most one insight. #1 picks the biggest rise and needs a fully tracked previous cycle (the first entry saved on or before its start). #2 picks the biggest standout. #2 and #3 leave out bills posted by a rule.
+- #3 compares the spread of whole-week totals relative to their size (coefficient of variation), needs at least 2 whole weeks, and breaks ties by the bigger total (DECISIONS D50).
+- Each insight carries one action: *See entries* (#1–#3, filtered to the category) or *Use these limits* (#4). *Set a limit* waits for its own design (DECISIONS D51).
 
 ### BR-15 Ask AI prompt
 - **Inputs:**
@@ -263,6 +265,9 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Swipe left to delete, with Undo (BR-10). Tapping a row edits it.
   - Empty state: "Nothing spent today. Tap Add when you do."
 - **FR-HO-5** **Over states** (BR-5 #2 and #3) show a calm card with one next step, *See where it went*, which opens Spends.
+  - Over today: "It happens. The ₹220 is spread across the next 3 days, so each one is a little smaller." (with one day after today: "comes out of tomorrow"). On the last day `A = P`, so any overspend is over for the cycle.
+  - Over for the cycle: "It happens. This month's money is used up. It starts again on payday, 4 Nov."
+  - The step is hidden when Spends is already beside Home in two panes (DECISIONS D54).
 - **FR-HO-6** The dock offers Home · **Add** · Spends. Add opens the tray (FR-AD).
 - **FR-HO-7** The hero card is announced as one TalkBack node (UI_DESIGN §9).
 
@@ -290,15 +295,21 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 ### 4.4 Spends (FR-SP)
 - **FR-SP-1** A cycle switcher `‹ October ›` shows the current and earlier cycles. Next is disabled on the current cycle.
-- **FR-SP-2** The **Ask AI** card at the top opens FR-AI.
+  - A cycle is named after the month holding most of its days, with the year when it isn't this year; a weekly cycle by its dates (DECISIONS D52).
+  - Earlier is enabled while the cycle before has entries, or the app was in use before it ended.
+  - An empty cycle reads "Nothing spent in October yet." and hides the chart and the list.
+- **FR-SP-2** The **Ask AI** card at the top opens FR-AI. It ships with Ask AI in M5 (DECISIONS D53).
 - **FR-SP-3** **Pace chart:**
   - The cumulative *Spent* line (solid ink) against the steady-pace line from (start, 0) to (end, `I − K`) (dotted).
   - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).
   - A "Below pace" or "Above pace" verdict with a glyph.
   - A today marker in marigold.
+  - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. Without income there is no steady line, so only the total shows (DECISIONS D49).
+  - Verdict: *Below pace* when spending so far is at or under the steady line on the same day.
 - **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12).
 - **FR-SP-5** **Insights** (BR-14), with their actions.
 - **FR-SP-6** *See every entry* opens a day-grouped list with category and cycle filter chips. Swipe to delete and tap to edit, as on Home.
+  - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See entries* opens it on that category (DECISIONS D53).
 
 ### 4.5 Ask AI (FR-AI)
 - **FR-AI-1** Goal cards in a 2×2 grid plus a full-width *Ask my own question*, which opens a 200-character text field. The selected card is ink-filled with a marigold check.

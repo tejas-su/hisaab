@@ -27,6 +27,9 @@ abstract final class HisaabSpacing {
 abstract final class HisaabSizes {
   /// Smallest allowed touch target.
   static const double minTouchTarget = 48;
+
+  /// The visible well of a header icon button, drawn inside a [minTouchTarget] tap area.
+  static const double iconWell = 40;
   static const double keypadKeyHeight = 64;
   static const double tileHeight = 96;
   static const double dockHeight = 76;

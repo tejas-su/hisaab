@@ -13,7 +13,8 @@ import '../../../ledger/ledger.dart';
 import '../../domain/entities/onboarding_draft.dart';
 import '../../domain/entities/onboarding_step.dart';
 import '../../domain/entities/setup_labels.dart';
-import '../cubit/onboarding_cubit.dart';
+import '../bloc/onboarding_bloc.dart';
+import '../bloc/onboarding_event.dart';
 import 'step_header.dart';
 
 /// Step 3: "Any fixed bills?" with a chip per common bill and Skip always visible (FR-ON-4).
@@ -35,7 +36,7 @@ class BillsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final OnboardingCubit cubit = context.read<OnboardingCubit>();
+    final OnboardingBloc bloc = context.read<OnboardingBloc>();
     final Map<BillKind, BillDraft> added = <BillKind, BillDraft>{for (final BillDraft bill in draft.bills) bill.kind: bill};
     return AdaptiveSplit(
       header: StepHeader(
@@ -63,7 +64,7 @@ class BillsStep extends StatelessWidget {
                   icon: added.containsKey(kind) ? AppIcons.check : AppIcons.add,
                   detail: _detail(context, strings, added[kind]),
                   selected: added.containsKey(kind),
-                  onPressed: () => cubit.openBill(kind),
+                  onPressed: () => bloc.add(OnboardingBillOpened(kind)),
                 ),
             ],
           ),
@@ -73,7 +74,7 @@ class BillsStep extends StatelessWidget {
             child: SignalKey(
               key: const ValueKey<String>('finish-onboarding'),
               label: draft.bills.isEmpty ? strings.skip : strings.done,
-              onPressed: busy ? null : () => cubit.finish(labelsOf(strings)),
+              onPressed: busy ? null : () => bloc.add(OnboardingFinishRequested(labelsOf(strings))),
             ),
           ),
         ],

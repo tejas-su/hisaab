@@ -127,6 +127,198 @@ abstract class AppLocalizations {
   /// **'Safe to spend today'**
   String get safeToSpendToday;
 
+  /// No description provided for @earlierCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get earlierCycle;
+
+  /// No description provided for @laterCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get laterCycle;
+
+  /// No description provided for @spentSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent so far'**
+  String get spentSoFar;
+
+  /// After the big spent-so-far number on Spends: "₹27,570 of ₹45,000"
+  ///
+  /// In en, this message translates to:
+  /// **'of {amount}'**
+  String ofAmount(String amount);
+
+  /// The space between the spent amount and "of ₹45,000"
+  ///
+  /// In en, this message translates to:
+  /// **' '**
+  String get wordGap;
+
+  /// No description provided for @spentSoFarSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent so far: {amount}'**
+  String spentSoFarSpoken(String amount);
+
+  /// TalkBack for a Where it went row
+  ///
+  /// In en, this message translates to:
+  /// **'{category}: {amount}, {percent}%'**
+  String categoryRowSpoken(String category, String amount, int percent);
+
+  /// No description provided for @paceYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get paceYou;
+
+  /// No description provided for @paceSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady pace'**
+  String get paceSteady;
+
+  /// No description provided for @belowPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Below pace'**
+  String get belowPace;
+
+  /// No description provided for @abovePace.
+  ///
+  /// In en, this message translates to:
+  /// **'Above pace'**
+  String get abovePace;
+
+  /// TalkBack sentence for the whole pace chart card
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} spent so far of {budget}. {verdict}.'**
+  String paceSpoken(String spent, String budget, String verdict);
+
+  /// No description provided for @whereItWent.
+  ///
+  /// In en, this message translates to:
+  /// **'Where it went'**
+  String get whereItWent;
+
+  /// No description provided for @percentShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String percentShare(int percent);
+
+  /// No description provided for @pastLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} past limit'**
+  String pastLimit(String amount);
+
+  /// TalkBack detail for a category row with a limit
+  ///
+  /// In en, this message translates to:
+  /// **'limit {amount}'**
+  String limitOf(String amount);
+
+  /// No description provided for @nothingSpentIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spent in {cycle} yet.'**
+  String nothingSpentIn(String cycle);
+
+  /// No description provided for @tipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth knowing'**
+  String get tipsTitle;
+
+  /// No description provided for @insightCategoryUp.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} is up {amount} from last month.'**
+  String insightCategoryUp(String category, String amount);
+
+  /// No description provided for @insightBiggestSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Your biggest {category} spend was {amount} on {date}.'**
+  String insightBiggestSpend(String category, String amount, String date);
+
+  /// No description provided for @insightSteadiest.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} is your steadiest spend.'**
+  String insightSteadiest(String category);
+
+  /// No description provided for @insightLimitOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use last month\'s spending as limits? Each is rounded up to the next ₹500.'**
+  String get insightLimitOffer;
+
+  /// No description provided for @seeEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'See entries'**
+  String get seeEntries;
+
+  /// No description provided for @useTheseLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Use these limits'**
+  String get useTheseLimits;
+
+  /// No description provided for @seeEveryEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'See every entry'**
+  String get seeEveryEntry;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// No description provided for @everyEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Every entry'**
+  String get everyEntry;
+
+  /// No description provided for @allCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allCategories;
+
+  /// No description provided for @noEntriesHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet.'**
+  String get noEntriesHere;
+
+  /// No description provided for @seeWhereItWent.
+  ///
+  /// In en, this message translates to:
+  /// **'See where it went'**
+  String get seeWhereItWent;
+
+  /// Calm card under the hero when today is overspent (SPEC FR-HO-5); days is at least 1, since on the last day any overspend is over the cycle
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it is a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}'**
+  String overTodayCard(String amount, int days);
+
+  /// Calm card under the hero when the whole cycle is overspent (SPEC FR-HO-5)
+  ///
+  /// In en, this message translates to:
+  /// **'It happens. This month\'s money is used up. It starts again on payday, {date}.'**
+  String overCycleCard(String date);
+
   /// No description provided for @safeToSpendThisWeek.
   ///
   /// In en, this message translates to:
@@ -174,12 +366,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} rupees'**
   String spokenAmount(String amount);
-
-  /// Temporary body text on screens that land in a later milestone
-  ///
-  /// In en, this message translates to:
-  /// **'This screen is being built.'**
-  String get screenInProgress;
 
   /// Shown only when the local database cannot be opened at start-up
   ///

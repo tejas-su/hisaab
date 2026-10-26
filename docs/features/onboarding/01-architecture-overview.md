@@ -6,24 +6,24 @@
 Three questions (income, when it comes, fixed bills) create everything the ledger needs and land the user on a working Home. No sign-up, permissions or currency picker.
 
 ## 2. Entry point
-`AppRoot` (`lib/app/app_root.dart`) asks `LaunchCubit`; when `AppPreferencesRepository.onboardingDone()` is false it shows `AppRoutes.onboarding`, which provides `OnboardingCubit` (started) and `OnboardingPage`.
+`AppRoot` (`lib/app/app_root.dart`) asks `LaunchBloc` (`LaunchStarted`); when `AppPreferencesRepository.onboardingDone()` is false it shows `AppRoutes.onboarding`, which provides `OnboardingBloc` (`OnboardingStarted` added) and `OnboardingPage`.
 
 ## 3. Data flow
 ```
-OnboardingPage → OnboardingCubit
-  pressKey / backspace / clear / next          step 1 income, or the open bill's amount (AmountInput)
-  openPicker / choosePayRule                   step 2 (FR-ON-3)
-  openBill / chooseBillDay / removeBill        step 3 (FR-ON-4)
-  back                                         one level back; false on step 1 (PopScope lets the app close)
+OnboardingPage → OnboardingBloc (events)
+  KeyPressed / BackspacePressed / Cleared / NextPressed   step 1 income, or the open bill's amount (AmountInput)
+  PickerOpened / PayRuleChosen                 step 2 (FR-ON-3)
+  BillOpened / BillDayChosen / BillRemoved     step 3 (FR-ON-4)
+  BackPressed                                  one level back; on step 1 PopScope lets the app close instead
     every answer change → OnboardingDraftRepository.save   JSON in settings.onboarding_draft (FR-ON-6)
-  finish(SetupLabels)                          also "Skip"
+  FinishRequested(SetupLabels)                 also "Skip"; droppable
     → CompleteOnboarding
         CategoryRepository.all
         LedgerSetupBuilder.build               pure: rules dated from this cycle's start
         RecurringRepository.startFresh         one transaction; replaces all rules and entries
         AppPreferencesRepository.markOnboardingDone   sets the flag, deletes the draft
         PostDueRecurring                       a failure here is logged, not returned
-  → OnboardingDone → LaunchCubit.onboardingFinished → Home with the blocks-assemble entrance
+  → OnboardingDone → LaunchOnboardingFinished → Home with the blocks-assemble entrance
 ```
 
 ## 4. Key classes
@@ -32,7 +32,7 @@ OnboardingPage → OnboardingCubit
 | `OnboardingPage` | `presentation/pages/` | Picks the step widget; `PopScope` back handling |
 | `IncomeStep`, `PaydayStep`, `BillsStep`, `BillEditorView` | `presentation/widgets/` | One question each, laid out by `AdaptiveSplit` |
 | `DailyPreview` | `presentation/widgets/` | "That's about ₹1,500 a day" plus 30 blocks (÷ 30, preview only) |
-| `OnboardingCubit`, `OnboardingState` | `presentation/cubit/` | Answers, pickers, bill editor, double-finish guard |
+| `OnboardingBloc`, `OnboardingEvent`, `OnboardingState` | `presentation/bloc/` | Answers, pickers, bill editor; `OnboardingFinishRequested` is `droppable()` |
 | `OnboardingDraft`, `BillDraft`, `BillKind`, `SetupLabels` | `domain/entities/` | The answers and the localised rule names |
 | `LedgerSetupBuilder` | `domain/ledger_setup_builder.dart` | Answers → `LedgerSetup` |
 | `CompleteOnboarding` | `domain/usecase/` | The finish, safe to retry |

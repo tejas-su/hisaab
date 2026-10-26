@@ -36,7 +36,8 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
 
   | Package | Use |
   |---|---|
-  | `flutter_bloc` | State management (Cubits by default) |
+  | `flutter_bloc` | State management: Bloc with sealed events everywhere, no Cubits |
+  | `bloc_concurrency` | Event transformers: `restartable()` for loads, `droppable()` for saves |
   | `get_it` | DI, used only at the composition root |
   | `equatable` | Value equality |
   | `sqflite` | Local database |
@@ -95,12 +96,12 @@ These are app-specific, and the rules files carry the details.
 | File | Covers | Applies to |
 |---|---|---|
 | [dart-core.md](.claude/rules/dart-core.md) | Architecture, core layer, naming, function design, money/date/locale rules, null and type safety, DI with get_it, exports, enums, keys, hygiene, logging | `lib/**/*.dart`, `test/**/*.dart` |
-| [bloc.md](.claude/rules/bloc.md) | Cubit-first, sealed states, async, streams, `isClosed` and double-submit safety, event transformers | `bloc/`, `cubit/`, `*_bloc.dart`, `*_cubit.dart` |
+| [bloc.md](.claude/rules/bloc.md) | Bloc everywhere, event naming, sealed states and events, concurrency transformers, async, streams, tracing | `bloc/`, `*_bloc.dart`, `*_event.dart` |
 | [data-domain.md](.claude/rules/data-domain.md) | Entities and models, equality, money and dates in the domain, use cases, fpdart errors, mappers, repositories, sqflite data sources, migrations | `data/`, `domain/`, `core/db`, `core/money`, `core/time` |
 | [presentation.md](.claude/rules/presentation.md) | Widget structure, navigation, Bloc usage, performance, the design-system rules, focus | `presentation/`, `core/widgets`, `core/design`, `app/` |
 | [accessibility.md](.claude/rules/accessibility.md) | Semantics, tap targets, contrast, Hisaab conventions (spoken amounts, hero sentence, DayBlocks), a11y tests | widget files |
 | [code-docs.md](.claude/rules/code-docs.md) | Dartdoc on public APIs, what to document per kind, `// why:` comments, TODO/deprecation format | `lib/**/*.dart`, `test/**/*.dart` |
-| [tests.md](.claude/rules/tests.md) | When to test, TDD, layout, fakes (no mocking library), date and money edge cases, Cubit and widget patterns, coverage gate | `test/**`, `integration_test/**` |
+| [tests.md](.claude/rules/tests.md) | When to test, TDD, layout, fakes (no mocking library), date and money edge cases, Bloc and widget patterns, coverage gate | `test/**`, `integration_test/**` |
 | [feature-docs.md](.claude/rules/feature-docs.md) | Feature docs location, numbering, style, keeping PLAN/UI_DESIGN in sync | `docs/**/*.md` |
 
 **Skills** (`.claude/skills/`) load on demand, or you can run them with `/<name>`:
@@ -119,7 +120,7 @@ These are app-specific, and the rules files carry the details.
 Read [tests.md](.claude/rules/tests.md) before writing or changing any test.
 
 - **Coverage:** new or changed code is covered in the same change. The hard floor is **≥ 90% of changed lines** and the target is 100%. List every uncovered line with a reason, and don't use `// coverage:ignore`. Check with `scripts/changed_lines_coverage.sh [base-ref]`.
-- **TDD for logic:** use cases, `PeriodCalculator`, `SafeToSpend`, the recurring engine, `PromptBuilder`, mappers and Cubits are written test-first. A bug fix starts with a failing regression test.
+- **TDD for logic:** use cases, `PeriodCalculator`, `SafeToSpend`, the recurring engine, `PromptBuilder`, mappers and Blocs are written test-first. A bug fix starts with a failing regression test.
 - **Dates and money get edge cases:** payday on the 29th–31st, leap years, year-crossing cycles, zero days left, ₹0, the 9-digit cap, overspend larger than the remaining total, and a recurring catch-up posted exactly once. Pin "today" with `FakeClock`.
 - **Test doubles:** hand-written fakes by default. `sqflite_common_ffi` runs real SQLite in tests. Ask before adding `mocktail` or `bloc_test`.
 - **Existing tests are the contract:** change the code, not the test. If a test looks wrong, stop and ask.

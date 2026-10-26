@@ -7,7 +7,7 @@ Posts salary and fixed bills on their due dates, including every occurrence miss
 
 ## 2. Entry point
 `PostDueRecurring` runs:
-- at the start of every `HomeCubit.load()`: app start, every ledger or rule write, resume (`ResumeListener`) and local midnight (`MidnightListener`, timed by `Clock.untilTomorrow()` and re-armed on resume), both in `lib/app/main_screen.dart`;
+- at the start of every Home load (`HomeLoadRequested`): app start, every ledger or rule write, resume (`ResumeListener`) and local midnight (`MidnightListener`, timed by `Clock.untilTomorrow()` and re-armed on resume), both in `lib/app/main_screen.dart`;
 - once when onboarding finishes (`CompleteOnboarding`).
 
 ## 3. Data flow
@@ -34,7 +34,7 @@ PostDueRecurring(NoParams)                         lib/ledger/domain/usecase/pos
 | `RecurringRepositoryImpl` | `data/repository/` | Validates, then posts; also `startFresh` for onboarding |
 | `SqfliteRecurringLocalDataSource` | `data/datasource/` | The transaction; also `insert`, `update` (active rules only) and `setActive` |
 | `GetDueSoonBill`, `DueSoonBill` | `domain/usecase/`, `domain/entities/` | The nudge: soonest unposted *Spent* date 1–5 days ahead (`RecurringSchedule.firstUnpostedAfter`) |
-| `MidnightListener` | `lib/app/widgets/midnight_listener.dart` | Calls `HomeCubit.load` just after local midnight |
+| `MidnightListener` | `lib/app/widgets/midnight_listener.dart` | Adds `HomeLoadRequested` just after local midnight |
 
 ## 5. State variants
 None. Home logs a failed run and still loads; the next load retries.

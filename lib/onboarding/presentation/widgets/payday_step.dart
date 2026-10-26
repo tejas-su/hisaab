@@ -7,8 +7,9 @@ import '../../../core/widgets/adaptive_split.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/onboarding_step.dart';
-import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
+import '../bloc/onboarding_bloc.dart';
+import '../bloc/onboarding_event.dart';
+import '../bloc/onboarding_state.dart';
 import '../../../core/widgets/day_of_month_grid.dart';
 import 'step_header.dart';
 import 'weekday_picker.dart';
@@ -25,16 +26,16 @@ class PaydayStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final OnboardingCubit cubit = context.read<OnboardingCubit>();
+    final OnboardingBloc bloc = context.read<OnboardingBloc>();
     final (String question, Widget controls) = switch (state.picker) {
-      PaydayPicker.none => (strings.paydayQuestion, _choices(strings, cubit)),
+      PaydayPicker.none => (strings.paydayQuestion, _choices(strings, bloc)),
       PaydayPicker.dayOfMonth => (
           strings.pickPaydayQuestion,
-          DayOfMonthGrid(onDay: (int day) => cubit.choosePayRule(MonthlyOnDay(day))),
+          DayOfMonthGrid(onDay: (int day) => bloc.add(OnboardingPayRuleChosen(MonthlyOnDay(day)))),
         ),
       PaydayPicker.weekday => (
           strings.pickWeekdayQuestion,
-          WeekdayPicker(onWeekday: (int weekday) => cubit.choosePayRule(WeeklyOn(weekday))),
+          WeekdayPicker(onWeekday: (int weekday) => bloc.add(OnboardingPayRuleChosen(WeeklyOn(weekday)))),
         ),
     };
     return AdaptiveSplit(
@@ -43,13 +44,13 @@ class PaydayStep extends StatelessWidget {
     );
   }
 
-  Widget _choices(AppLocalizations strings, OnboardingCubit cubit) {
+  Widget _choices(AppLocalizations strings, OnboardingBloc bloc) {
     final List<(String, String, VoidCallback)> choices = <(String, String, VoidCallback)>[
-      ('first', strings.payFirstOfMonth, () => cubit.choosePayRule(const MonthlyOnDay(1))),
-      ('last', strings.payLastDay, () => cubit.choosePayRule(const LastDayOfMonth())),
-      ('date', strings.payPickDate, () => cubit.openPicker(PaydayPicker.dayOfMonth)),
-      ('week', strings.payEveryWeek, () => cubit.openPicker(PaydayPicker.weekday)),
-      ('changes', strings.payItChanges, () => cubit.choosePayRule(const IrregularIncome())),
+      ('first', strings.payFirstOfMonth, () => bloc.add(const OnboardingPayRuleChosen(MonthlyOnDay(1)))),
+      ('last', strings.payLastDay, () => bloc.add(const OnboardingPayRuleChosen(LastDayOfMonth()))),
+      ('date', strings.payPickDate, () => bloc.add(const OnboardingPickerOpened(PaydayPicker.dayOfMonth))),
+      ('week', strings.payEveryWeek, () => bloc.add(const OnboardingPickerOpened(PaydayPicker.weekday))),
+      ('changes', strings.payItChanges, () => bloc.add(const OnboardingPayRuleChosen(IrregularIncome()))),
     ];
     return Column(
       mainAxisSize: MainAxisSize.min,

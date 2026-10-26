@@ -1,12 +1,14 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/settings/presentation/cubit/bills_cubit.dart';
+import 'package:expense_tracker/settings/presentation/bloc/bills_bloc.dart';
+import 'package:expense_tracker/settings/presentation/bloc/bills_event.dart';
 import 'package:expense_tracker/settings/presentation/pages/bills_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
@@ -15,13 +17,13 @@ import '../../../helpers/pump_app.dart';
 void main() {
   late FakeRecurringRepository recurring;
   late FakeHaptics haptics;
-  late BillsCubit cubit;
+  late BillsBloc bloc;
   late List<Object> calls;
 
   setUp(() {
     recurring = FakeRecurringRepository(WorkedExample.rules);
     haptics = FakeHaptics();
-    cubit = BillsCubit(
+    bloc = BillsBloc(
       getBills: GetBills(recurring: recurring),
       deleteBill: DeleteBill(recurring: recurring),
       restoreBill: RestoreBill(recurring: recurring),
@@ -32,18 +34,18 @@ void main() {
   });
 
   tearDown(() async {
-    await cubit.close();
+    await bloc.close();
     await recurring.dispose();
   });
 
   Future<void> pump(WidgetTester tester, {bool load = true, Size size = TestWindows.phone, double textScale = 1}) async {
     if (load) {
-      await tester.runAsync(cubit.load);
+      await tester.runAsync(() => bloc.dispatch(const BillsLoadRequested()));
     }
     await pumpApp(
       tester,
-      BlocProvider<BillsCubit>.value(
-        value: cubit,
+      BlocProvider<BillsBloc>.value(
+        value: bloc,
         child: BillsPage(onAdd: () => calls.add('add'), onEdit: (RecurringRule bill) => calls.add(bill)),
       ),
       size: size,
@@ -90,7 +92,7 @@ void main() {
     testWidgets('swiping deletes at once and Undo brings it back', (WidgetTester tester) async {
       await pump(tester);
       await tester.drag(find.text('Rent'), const Offset(-500, 0));
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(find.text('Rent'), findsNothing);
       expect(find.text('Deleted Rent'), findsOneWidget);
       expect(haptics.events, contains('threshold'));

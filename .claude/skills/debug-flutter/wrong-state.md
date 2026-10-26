@@ -2,13 +2,13 @@
 
 ## 1. Trace the state back
 
-Flow: **Event (or Cubit method) → Handler → emit(State) → BlocBuilder/BlocListener**
+Flow: **Event → Handler → emit(State) → BlocBuilder/BlocListener**
 
 Ask: "What state do you *expect*, and what do you *see*?" Then trace backwards:
 
 1. Which `BlocBuilder` / `BlocConsumer` renders the wrong data?
 2. Which state subclass and field is it rendering?
-3. Which bloc/cubit emits that state — find the `emit(...)` call
+3. Which bloc emits that state — find the `emit(...)` call
 4. What event or method triggered that emit — follow the call chain
 5. Where did the *data* come from — repository, a domain calculation (`SafeToSpend`, `PeriodCalculator`), or local state?
 
@@ -38,7 +38,7 @@ class _DebugBlocObserver extends BlocObserver {
 }
 ```
 
-Most state in Hisaab lives in Cubits, which don't produce `onEvent`/`onTransition`. Add an `onChange(BlocBase bloc, Change change)` override to see their emits too. Ask the user to reproduce and paste the `[BLOC]` lines.
+Every state holder is a Bloc, and `AppBlocObserver` already logs each transition as `bloc.transition` (bloc, event, from, to; type names only). Ask the user to reproduce and paste those lines first; add the temporary observer above only when you need field values.
 
 ## 3. Wrong-number suspects in this app
 - **Date math** — payday on the 29th–31st in a short month, a cycle crossing the year, "today" taken from `DateTime.now()` instead of the injected `Clock`, or a `DateTime` with a time of day compared as if it were a date. Reproduce with `FakeClock` pinned to the reported date
@@ -46,7 +46,7 @@ Most state in Hisaab lives in Cubits, which don't produce `onEvent`/`onTransitio
 - **Recurring catch-up** — posted twice (missing unique index) or skipped (wrong `next_due` advance)
 - **Money precision** — a `double` slipped into an amount path; amounts must stay `int` paise
 - **Month start setting** — "Payday" vs "1st of month" not passed into `PeriodCalculator`
-- **Stale summary after a save** — the Home cubit didn't re-read after the Add tray saved (no repository change stream, or the listener isn't wired)
+- **Stale summary after a save** — the Home bloc didn't re-read after the Add tray saved (no repository change stream, or the listener isn't wired)
 
 ## 4. Fix and verify
 - Fix only the state transition that is wrong

@@ -33,18 +33,18 @@ A text diagram, with each arrow annotated with the real class or method name:
 
 ```
 User Action
-  → Bloc event (or Cubit method for simple no-event flows)
+  → Bloc event
     → Use Case
       → Repository
         → Local Data Source (sqflite)
           → Model (row)
             → Mapper
               → Entity
-                → Bloc/Cubit state
+                → Bloc state
                   → UI rebuild
 ```
 
-If a feature skips layers, draw the flow as it actually is. For updates pushed after a save, include the repository change stream → listening cubit path.
+If a feature skips layers, draw the flow as it actually is. For updates pushed after a save, include the repository change stream → bloc reload event path.
 
 ### 4. Key classes
 

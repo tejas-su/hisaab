@@ -57,15 +57,23 @@ class HomeHeader extends StatelessWidget {
           key: const ValueKey<String>('open-settings'),
           semanticLabel: settings,
           onPressed: onOpenSettings,
+          // why: the well is smaller than the tap area so it doesn't outweigh the wordmark; it sits
+          // at the end so its visible edge stays flush with the cards.
           builder: (BuildContext context, bool pressed) => Container(
             width: HisaabSizes.minTouchTarget,
             height: HisaabSizes.minTouchTarget,
-            alignment: Alignment.center,
-            decoration: ShapeDecoration(
-              color: pressed ? context.colors.hairline : context.colors.sunk,
-              shape: HisaabShapes.squircle(14),
+            alignment: AlignmentDirectional.centerEnd,
+            child: Container(
+              key: const ValueKey<String>('open-settings-well'),
+              width: HisaabSizes.iconWell,
+              height: HisaabSizes.iconWell,
+              alignment: Alignment.center,
+              decoration: ShapeDecoration(
+                color: pressed ? context.colors.hairline : context.colors.sunk,
+                shape: HisaabShapes.squircle(HisaabRadii.chip),
+              ),
+              child: const AppIcon(AppIcons.settings),
             ),
-            child: const AppIcon(AppIcons.settings),
           ),
         ),
       ],

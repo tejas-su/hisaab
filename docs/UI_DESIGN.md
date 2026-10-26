@@ -147,6 +147,7 @@ Rules: no all-caps eyebrow labels, and no semibold body text. Supports text scal
   - The free set has no ⌫, so the keypad's delete key uses a glyph drawn in Hugeicons' format (`HisaabGlyphs.backspace`): `Keyboard`'s body height and squircle corners, a tip rounded like `Tag01`, and `CancelSquare`'s inner × (D48). A plain × would read as "close the tray" and ← as "back", which the app already uses for navigation.
   - Category icons sit in `sunk` wells and are **monochrome**. Categories are told apart by icon, word and fixed position, not colour.
   - Every icon has a label.
+  - **Header icon buttons** (Home's Settings, the tray's Back): a 40dp `sunk` well with 12 corners inside the 48dp tap target, set flush with the outer edge so the well lines up with the cards or tiles (D57). A full 48dp well outweighed the wordmark.
 
 ### 3.6 App icon
 The wordmark shrunk to its first letter and its dot: **h•**. The ET66 has one yellow key; the icon has one yellow dot.

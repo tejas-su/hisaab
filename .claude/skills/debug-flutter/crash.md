@@ -12,11 +12,11 @@
 | Database | `core/db/`, `*_data_source*.dart` — migration errors, constraint violations, `as` casts on rows |
 | Repository | `*_repository_impl.dart` — is the exception mapped to a `Failure` or swallowed? |
 | Use case | `*_usecase.dart` — does the exception propagate or get swallowed? |
-| Bloc/Cubit | the `on<Event>` handler or cubit method — missing `isClosed` guard before `emit()` |
+| Bloc | the `on<Event>` handler — `emit` after the handler returned (an un-awaited future), or an event added after `close()` |
 | Widget | `initState`, `dispose`, `BlocProvider.of()` outside `build` |
 
 ## 3. Crash patterns to check first
-- **`emit()` after close** — a save or load finishes after the tray or page closed. Check for an `isClosed` guard after every `await`
+- **`emit()` after the handler finished** — a handler fired a future without `await`, so its `emit` runs after the handler returned (bloc asserts). Await everything inside `on<Event>` handlers; an `add` after `close()` throws too
 - **Migration failure on upgrade** — `onUpgrade` throws, so the app crashes at startup for existing users only. Reproduce by installing the previous version's schema, then upgrading
 - **Row cast errors** — a model's `fromRow` uses `as` on a column that can be `null` or the wrong type. Narrow with `is`
 - **Unique-constraint violation** — a recurring post inserted twice without `ConflictAlgorithm.ignore`

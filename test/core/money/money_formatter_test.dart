@@ -23,6 +23,13 @@ void main() {
       expect(formatter.format(Money.fromMajor(999999999)), '₹99,99,99,999');
     });
 
+    test('compact never shows paise below a thousand', () {
+      expect(formatter.compact(Money.zero), '₹0');
+      expect(formatter.compact(Money.fromMajor(500)), '₹500');
+      expect(formatter.compact(Money.fromMajor(999)), '₹999');
+      expect(formatter.compact(Money.fromMajor(1000)), '₹1K');
+    });
+
     test('compact uses lakh and crore', () {
       expect(formatter.compact(Money.fromMajor(125000)), '₹1.25L');
       expect(formatter.compact(Money.fromMajor(12500000)), '₹1.25Cr');

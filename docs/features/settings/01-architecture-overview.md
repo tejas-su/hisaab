@@ -1,6 +1,6 @@
 # Settings Architecture Overview
 
-**Status:** M1 built the preferences part: `AppPreferencesRepository` (onboarding flag and draft). M2 built `SettingsPage` with the Money group's **Fixed bills** (`BillsPage`, `BillEditorPage`, `BillsCubit`, `BillEditorCubit`; use cases in `lib/ledger/`). Salary and payday, keep aside, month start, categories and look come later; backup, restore, export and reset in M6. Names below that aren't in the code yet are the intended ones.
+**Status:** M1 built the preferences part: `AppPreferencesRepository` (onboarding flag and draft). M2 built `SettingsPage` with the Money group's **Fixed bills** (`BillsPage`, `BillEditorPage`, `BillsBloc`, `BillEditorBloc`; use cases in `lib/ledger/`). Salary and payday, keep aside, month start, categories and look come later; backup, restore, export and reset in M6. Names below that aren't in the code yet are the intended ones.
 
 ## 1. Purpose
 Settings holds the few choices the app could not default away, all at most one level deep: money setup, categories, look, data and about.
@@ -12,13 +12,13 @@ Settings holds the few choices the app could not default away, all at most one l
 ## 3. Data flow
 ```
 SettingsPage → Fixed bills (built, M2)
-  BillsPage    → BillsCubit.load → GetBills                 active Spent rules, soonest first
+  BillsPage    → BillsLoadRequested → GetBills                 active Spent rules, soonest first
                → swipe/Delete → DeleteBill (active = 0) → Undo → RestoreBill        D35
-  BillEditorPage → BillEditorCubit: name → amount → day (tap saves)
+  BillEditorPage → BillEditorBloc: name → amount → day (BillEditorDayChosen saves, droppable)
                → AddBill (category from chip; first post on/after today)            D33
                → EditBill (next date keeps the unposted month)                      D34
-  RecurringRepository.changes → BillsCubit and HomeCubit reload
-SettingsPage → SettingsCubit.load → read BudgetSettings, income rule, categories, AppPreferences   (planned)
+  RecurringRepository.changes → BillsBloc and HomeBloc reload
+SettingsPage → SettingsBloc (SettingsLoadRequested) → read BudgetSettings, income rule, categories, AppPreferences   (planned)
   Money      → UpdateIncomeRule → RecurringRepository                               FR-SE-1 (future only, BR-9)
              → SetMonthStart / SetKeepAside → BudgetSettingsRepository             BR-1, BR-3
   Categories → RenameCategory / SetCategoryIcon → CategoryRepository               FR-SE-2, BR-11
@@ -37,9 +37,9 @@ Every write → LedgerRepository.changes → Home/Spends recompute
 | `SettingsPage` | `lib/settings/presentation/pages/settings_page.dart` | Groups of `SettingsRow`s; today only Money → Fixed bills |
 | `BillsPage`, `BillsList`, `BillRow` | `lib/settings/presentation/` | The bills card; tap to edit, swipe or TalkBack action to delete, Undo snackbar |
 | `BillEditorPage`, `BillNameStep`, `BillAmountStep`, `BillDayStep` | `lib/settings/presentation/` | One question per screen in `AdaptiveSplit`; `PopScope` steps back |
-| `BillsCubit`, `BillEditorCubit` | `lib/settings/presentation/cubit/` | List with delete/undo; the editor's three answers and the save |
+| `BillsBloc`, `BillEditorBloc` and their events | `lib/settings/presentation/bloc/` | List with delete/undo; the editor's three answers and the save |
 | `GetBills`, `AddBill`, `EditBill`, `DeleteBill`, `RestoreBill`, `BillValidator` | `lib/ledger/domain/` | Rule edits affect future posts only (BR-9) |
-| Planned: `MoneySettingsPage`, `CategoriesPage`, `DataPage`, `AboutPage`, `SettingsCubit`, `DataCubit`, `UpdateIncomeRule` | — | Later milestones |
+| Planned: `MoneySettingsPage`, `CategoriesPage`, `DataPage`, `AboutPage`, `SettingsBloc`, `DataBloc`, `UpdateIncomeRule` | — | Later milestones |
 | `SetMonthStart`, `SetKeepAside` | `lib/ledger/domain/usecase/` | Money settings feeding BR-1 and BR-3 |
 | `RenameCategory`, `SetCategoryIcon` | `lib/ledger/domain/usecase/` | Order and count stay fixed |
 | `SetThemeMode` | `lib/settings/domain/usecase/` | Light / Dark / Match phone |

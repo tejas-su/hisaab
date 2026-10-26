@@ -3,9 +3,9 @@ import 'package:expense_tracker/core/time/clock.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/home/home.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:expense_tracker/spends/spends.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repository_impl.dart';
-import 'package:expense_tracker/ledger/domain/repository/budget_settings_repository.dart';
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:get_it/get_it.dart';
 
@@ -43,8 +43,8 @@ final class FakeServices {
 
   PostDueRecurring get postDue => PostDueRecurring(recurring: recurring, clock: clock);
 
-  /// A [HomeCubit] over these fakes; the caller loads and closes it.
-  HomeCubit homeCubit() => HomeCubit(
+  /// A [HomeBloc] over these fakes; the caller loads and closes it.
+  HomeBloc homeBloc() => HomeBloc(
         getCycleSummary: getCycleSummary,
         postDueRecurring: postDue,
         getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
@@ -53,6 +53,35 @@ final class FakeServices {
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
+        haptics: haptics,
+      );
+
+  /// The limit offer's use case over these fakes.
+  GetSuggestedLimits get getSuggestedLimits => GetSuggestedLimits(
+        ledger: ledger,
+        recurring: recurring,
+        settings: settings,
+        categories: categories,
+        periods: const PeriodCalculator(),
+        clock: clock,
+      );
+
+  /// The Spends overview over these fakes.
+  GetSpendsOverview get getSpendsOverview => GetSpendsOverview(
+        ledger: ledger,
+        recurring: recurring,
+        settings: settings,
+        categories: categories,
+        suggestLimits: getSuggestedLimits,
+        periods: const PeriodCalculator(),
+        clock: clock,
+      );
+
+  /// A [SpendsBloc] over these fakes; the caller loads and closes it.
+  SpendsBloc spendsBloc() => SpendsBloc(
+        getOverview: getSpendsOverview,
+        applyLimits: ApplySuggestedLimits(categories: categories),
+        ledger: ledger,
         haptics: haptics,
       );
 
@@ -77,6 +106,9 @@ final class FakeServices {
     ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
     ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(getCycleSummary)
+    ..registerSingleton<GetSuggestedLimits>(getSuggestedLimits)
+    ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: categories))
+    ..registerSingleton<GetSpendsOverview>(getSpendsOverview)
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(
       CompleteOnboarding(

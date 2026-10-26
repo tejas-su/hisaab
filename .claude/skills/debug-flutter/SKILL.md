@@ -39,7 +39,7 @@ Single Flutter app, Android only. Product and design specs: `docs/PLAN.md`, `doc
 1. **Never guess the root cause** — read the actual file before proposing a fix
 2. **One change at a time** — fix, confirm with the user, then continue
 3. **Do not refactor** — fix only the specific problem
-4. **Always check `dispose()` / `close()`** whenever you touch a StatefulWidget or Cubit/Bloc
+4. **Always check `dispose()` / `close()`** whenever you touch a StatefulWidget or Bloc
 5. **Use `AppLogger`** for debug logging (`AppLogger.log(tag: '...', data: {...})`), not `print()`. Never log notes or other personal text
 6. **Ask before each phase** — present the diagnosis and confirm before applying the fix
 7. **Add a regression test** — when the bug can be reproduced in a unit or widget test, write one that fails before the fix and passes after (see `.claude/rules/tests.md`). Date bugs get a `FakeClock` test pinned to the failing date. If it can't be tested as-is, say why

@@ -8,13 +8,14 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
-import '../cubit/bills_cubit.dart';
-import '../cubit/bills_state.dart';
+import '../bloc/bills_bloc.dart';
+import '../bloc/bills_event.dart';
+import '../bloc/bills_state.dart';
 import '../widgets/bills_list.dart';
 
 /// Fixed bills (SPEC FR-SE-1): the list, Add a bill, tap to edit, swipe to delete with Undo.
 ///
-/// Needs a [BillsCubit] above it. [onAdd] and [onEdit] open the bill editor.
+/// Needs a [BillsBloc] above it. [onAdd] and [onEdit] open the bill editor.
 class BillsPage extends StatelessWidget {
   const BillsPage({super.key, required this.onAdd, required this.onEdit});
 
@@ -41,7 +42,7 @@ class BillsPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: BlocConsumer<BillsCubit, BillsState>(
+        child: BlocConsumer<BillsBloc, BillsState>(
           listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
           listener: _offerUndo,
           builder: (BuildContext context, BillsState state) => ListView(
@@ -59,13 +60,13 @@ class BillsPage extends StatelessWidget {
 
   List<Widget> _content(BuildContext context, BillsState state) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final BillsCubit cubit = context.read<BillsCubit>();
+    final BillsBloc bloc = context.read<BillsBloc>();
     return switch (state) {
       BillsLoading() => const <Widget>[],
       BillsFailed() => <Widget>[
           Text(strings.loadFailed, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2)),
           const SizedBox(height: HisaabSpacing.m),
-          Align(alignment: AlignmentDirectional.centerStart, child: HisaabChip(label: strings.tryAgain, onPressed: cubit.load)),
+          Align(alignment: AlignmentDirectional.centerStart, child: HisaabChip(label: strings.tryAgain, onPressed: () => bloc.add(const BillsLoadRequested()))),
         ],
       BillsReady(:final List<RecurringRule> bills) => <Widget>[
           Align(
@@ -76,7 +77,9 @@ class BillsPage extends StatelessWidget {
           if (bills.isEmpty)
             Text(strings.noBills, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2))
           else
-            BillsList(bills: bills, onEdit: onEdit, onDelete: cubit.delete, onThresholdReached: cubit.swipeThresholdReached),
+            BillsList(bills: bills, onEdit: onEdit, onDelete: (RecurringRule bill) => bloc.add(BillsDeleteRequested(bill)),
+              onThresholdReached: () => bloc.add(const BillsSwipeThresholdReached()),
+            ),
         ],
     };
   }
@@ -87,14 +90,14 @@ class BillsPage extends StatelessWidget {
       return;
     }
     final AppLocalizations strings = AppLocalizations.of(context);
-    final BillsCubit cubit = context.read<BillsCubit>();
+    final BillsBloc bloc = context.read<BillsBloc>();
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           duration: undoWindow,
           content: Text(strings.billDeleted(deleted.label)),
-          action: SnackBarAction(label: strings.undo, onPressed: () => cubit.undo(deleted)),
+          action: SnackBarAction(label: strings.undo, onPressed: () => bloc.add(BillsUndoRequested(deleted))),
         ),
       );
   }

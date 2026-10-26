@@ -31,7 +31,7 @@ void main() {
 
   tearDown(() => services.dispose());
 
-  AddEntryCubit cubit({Option<Entry> editing = const Option<Entry>.none()}) => AddEntryCubit(
+  AddEntryBloc bloc({Option<Entry> editing = const Option<Entry>.none()}) => AddEntryBloc(
         saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
         deleteEntry: DeleteEntry(ledger: services.ledger),
         haptics: services.haptics,
@@ -53,7 +53,7 @@ void main() {
       Scaffold(
         body: Builder(
           builder: (BuildContext context) => Center(
-            child: TextButton(onPressed: () => AddEntryTray.show(context, cubit(editing: editing)), child: const Text('open')),
+            child: TextButton(onPressed: () => AddEntryTray.show(context, bloc(editing: editing)), child: const Text('open')),
           ),
         ),
       ),
@@ -78,6 +78,17 @@ void main() {
   }
 
   group('AddEntryTray (FR-AD)', () {
+    testWidgets('⌫ drops the last digit and a long-press clears the amount (FR-AD-2)', (WidgetTester tester) async {
+      await open(tester);
+      await type(tester, '245');
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.pump();
+      expect(find.text('₹24'), findsOneWidget);
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.pump();
+      expect(find.text('₹24'), findsNothing);
+    });
+
     testWidgets('Add → digits → Next → tile saves and closes (the 4-tap path)', (WidgetTester tester) async {
       await open(tester);
       await type(tester, '60');

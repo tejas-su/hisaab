@@ -6,14 +6,16 @@ import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/category_tile.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
-import '../cubit/add_entry_cubit.dart';
-import '../cubit/add_entry_state.dart';
+import '../bloc/add_entry_bloc.dart';
+import '../bloc/add_entry_event.dart';
+import '../bloc/add_entry_state.dart';
 import 'date_chip.dart';
 import 'note_chip.dart';
 
@@ -30,7 +32,7 @@ class CategoryStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final AddEntryCubit cubit = context.read<AddEntryCubit>();
+    final AddEntryBloc bloc = context.read<AddEntryBloc>();
     final EntryForm form = state.form;
     final AddEntryState current = state;
     final int? flashed = switch (current) {
@@ -44,25 +46,25 @@ class CategoryStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          _title(context, strings, cubit, form),
+          _title(context, strings, bloc, form),
           const SizedBox(height: 18),
-          _grid(context, strings, form.tiles, flashed, saving ? null : cubit.pickCategory),
+          _grid(context, strings, form.tiles, flashed, saving ? null : (int categoryId) => bloc.add(AddEntryCategoryPicked(categoryId))),
           const SizedBox(height: 18),
           // why: the chips span exactly the tile grid's width; the note takes what the date
           // leaves, so the row's right edge meets the tiles'. Delete gets its own line, so
           // three chips never crowd one row at large text sizes.
           Row(
             children: <Widget>[
-              DateChip(date: form.date, today: form.today, earliest: form.earliestDate, onChanged: cubit.setDate),
+              DateChip(date: form.date, today: form.today, earliest: form.earliestDate, onChanged: (CalendarDate date) => bloc.add(AddEntryDateChanged(date))),
               const SizedBox(width: HisaabSpacing.s),
-              Expanded(child: NoteChip(note: form.note, onChanged: cubit.setNote)),
+              Expanded(child: NoteChip(note: form.note, onChanged: (String note) => bloc.add(AddEntryNoteChanged(note)))),
             ],
           ),
           if (form.editing.isSome()) ...<Widget>[
             const SizedBox(height: HisaabSpacing.s),
             Align(
               alignment: AlignmentDirectional.centerStart,
-              child: HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onPressed: cubit.delete),
+              child: HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onPressed: () => bloc.add(const AddEntryDeleteRequested())),
             ),
           ],
           if (current is AddEntryEditing && current.failed) ...<Widget>[
@@ -74,18 +76,25 @@ class CategoryStep extends StatelessWidget {
     );
   }
 
-  Widget _title(BuildContext context, AppLocalizations strings, AddEntryCubit cubit, EntryForm form) => Row(
+  Widget _title(BuildContext context, AppLocalizations strings, AddEntryBloc bloc, EntryForm form) => Row(
         children: <Widget>[
           Pressable(
             key: const ValueKey<String>('back-to-amount'),
             semanticLabel: strings.backToAmount,
-            onPressed: cubit.back,
+            onPressed: () => bloc.add(const AddEntryBackPressed()),
+            // why: same well as Home's Settings button, at the start so it lines up with the tiles.
             builder: (BuildContext context, bool pressed) => Container(
               width: HisaabSizes.minTouchTarget,
               height: HisaabSizes.minTouchTarget,
-              alignment: Alignment.center,
-              decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
-              child: const AppIcon(AppIcons.back),
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
+                key: const ValueKey<String>('back-to-amount-well'),
+                width: HisaabSizes.iconWell,
+                height: HisaabSizes.iconWell,
+                alignment: Alignment.center,
+                decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(HisaabRadii.chip)),
+                child: const AppIcon(AppIcons.back),
+              ),
             ),
           ),
           const SizedBox(width: HisaabSpacing.m),

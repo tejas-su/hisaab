@@ -4,8 +4,9 @@ import 'package:get_it/get_it.dart';
 
 import '../core/extensions/build_context_extensions.dart';
 import '../settings/settings.dart';
-import 'cubit/launch_cubit.dart';
-import 'cubit/launch_state.dart';
+import 'bloc/launch_bloc.dart';
+import 'bloc/launch_event.dart';
+import 'bloc/launch_state.dart';
 import 'routes.dart';
 import 'widgets/startup_failure_view.dart';
 
@@ -16,12 +17,12 @@ class AppRoot extends StatelessWidget {
   final GetIt getIt;
 
   @override
-  Widget build(BuildContext context) => BlocProvider<LaunchCubit>(
-        create: (BuildContext _) => LaunchCubit(preferences: getIt<AppPreferencesRepository>())..start(),
-        child: BlocBuilder<LaunchCubit, LaunchState>(
+  Widget build(BuildContext context) => BlocProvider<LaunchBloc>(
+        create: (BuildContext _) => LaunchBloc(preferences: getIt<AppPreferencesRepository>())..add(const LaunchStarted()),
+        child: BlocBuilder<LaunchBloc, LaunchState>(
           builder: (BuildContext context, LaunchState state) => switch (state) {
             LaunchLoading() => ColoredBox(color: context.colors.background, child: const SizedBox.expand()),
-            LaunchNeedsOnboarding() => AppRoutes.onboarding(getIt, onFinished: context.read<LaunchCubit>().onboardingFinished),
+            LaunchNeedsOnboarding() => AppRoutes.onboarding(getIt, onFinished: () => context.read<LaunchBloc>().add(const LaunchOnboardingFinished())),
             LaunchReady(:final bool assemble) => AppRoutes.main(getIt, assemble: assemble),
             LaunchFailed() => const StartupFailureView(),
           },

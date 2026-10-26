@@ -1,7 +1,7 @@
 # Hisaab — Product & Build Plan
 
 Target: **Android only** (v1). Currency: **INR** (architected for any locale/currency).
-Stack: Flutter · flutter_bloc (Cubits) · get_it · sqflite · equatable · fpdart · intl + gen-l10n · hugeicons · figma_squircle · bundled fonts (Anek Latin, Mukta).
+Stack: Flutter · flutter_bloc (Bloc with events) + bloc_concurrency · get_it · sqflite · equatable · fpdart · intl + gen-l10n · hugeicons · figma_squircle · bundled fonts (Anek Latin, Mukta).
 
 ---
 
@@ -75,7 +75,7 @@ Dependencies added: `intl`, `flutter_localizations`, `flutter: generate: true`, 
 - **Dates**: `DateFormat` with app locale; "Today/Yesterday" via ARB; week start from `MaterialLocalizations.firstDayOfWeekIndex`.
 - **Keypad**: decimal separator from `NumberFormat(locale).symbols.DECIMAL_SEP`.
 - **Layout**: `EdgeInsetsDirectional` / `AlignmentDirectional` everywhere (RTL-safe for free).
-- **Locale source**: `SettingsCubit` holds `Locale` + `CurrencySpec`; `MaterialApp` reads them. Default `en_IN`.
+- **Locale source**: `SettingsBloc` holds `Locale` + `CurrencySpec`; `MaterialApp` reads them. Default `en_IN`.
 
 ---
 
@@ -148,7 +148,7 @@ lib/
     domain/ data/              entities, repositories, use cases (SaveEntry, GetCycleSummary,
                                PostDueRecurring), SafeToSpend, InsightRules, BudgetSuggester
   onboarding/ home/ add_entry/ spends/ ask_ai/ settings/
-    presentation/              pages, widgets, cubit (+ domain/ when the feature owns logic,
+    presentation/              pages, widgets, bloc (+ domain/ when the feature owns logic,
                                e.g. ask_ai/domain/PromptBuilder)
   l10n/                        app_en.arb, gen/
 ```
@@ -158,7 +158,7 @@ Rules:
 - Widgets never touch the DB.
 - Domain code is pure Dart with an injected `Clock`.
 - Errors use `fpdart` `TaskEither<Failure, T>` (added in M0).
-- Cubits are the default, and Bloc is used only when event modelling is needed.
+- Every state holder is a Bloc with sealed events (no Cubits); loads are `restartable()` and saves `droppable()` (D58).
 
 ## 10. Android specifics
 - `minSdk 24`, edge-to-edge (enforced on Android 15), predictive back enabled.
@@ -166,7 +166,7 @@ Rules:
 - Other platform folders (ios/macos/linux/windows/web) left untouched but not built or tested.
 
 ## 11. Dependencies
-Added: `intl`, `flutter_localizations`, `hugeicons`.
+Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58).
 To add when the milestone needs them: `figma_squircle` (M0), `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `file_picker` (M6), `home_widget` + `quick_settings_tile` (later).
 Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/` (M0).
 
@@ -180,7 +180,7 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | M1 ✓ | Onboarding, Home hero (all BR-5 states, range line), Add tray, Today list, undo, core motion. Pulled forward because the hero needs them: `SafeToSpend` (BR-3..BR-7) and the recurring engine on start/resume | Log an expense in < 5 s, Add → digits → Next → tile |
 | M2 ✓ | Recurring: midnight re-run (BR-8), due-soon nudge (FR-HO-3), bills in Settings | Payday auto-adds income at midnight; nudge shows the soonest bill |
 | M3 | *This week* toggle (FR-HO-2), "you saved yesterday" (BR-8), auto-suggested budgets (BR-12: `BudgetSuggester`, `GetSuggestedLimits`, `ApplySuggestedLimits`, category limits saved; the "Use these limits?" offer is shown by Spends in M4 as BR-14 insight #4) | Weekly view and morning note work |
-| M4 | Insights: charts + rule tips | vs-last-cycle shown, 3 tips max |
+| M4 ✓ | Spends: pace chart (a painter, not `fl_chart`), *Where it went* with limits, insights (BR-14), *Every entry* (FR-SP-6); Home's *See all* and over card. The Ask AI card comes with M5 and *Set a limit* waits for a design (DECISIONS D49–D54) | vs-last-cycle shown, 3 tips max |
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |
 | M6 | CSV/JSON backup & restore, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall; TalkBack reads every control |
 

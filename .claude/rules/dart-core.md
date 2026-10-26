@@ -37,7 +37,7 @@ paths:
 
 ## Naming
 - Files: `snake_case.dart`; classes: `PascalCase`; private members: `_camelCase`
-- Cubit files: `<feature>_cubit.dart`, `<feature>_state.dart`; Bloc files add `<feature>_bloc.dart`, `<feature>_event.dart`
+- Bloc files: `<feature>_bloc.dart`, `<feature>_event.dart`, `<feature>_state.dart` in `presentation/bloc/`; no Cubits
 
 ## Code quality
 - SOLID principles; prefer composition over inheritance
@@ -56,7 +56,7 @@ paths:
 - Prefer pure functions — same input, same output, no side effects
 - Use `map`, `where`, `fold`, `reduce`, `expand` over imperative `for` loops
 - Never mutate a list or map in place; transform and return a new collection
-- Side effects (I/O, database, clipboard, share sheet) only in data sources and Blocs/Cubits
+- Side effects (I/O, database, clipboard, share sheet) only in data sources and Blocs
 
 ## Money, dates and locale (app-specific, non-negotiable)
 - Money is **always** `int` minor units (paise) wrapped in `Money`; never `double` for an amount
@@ -77,7 +77,7 @@ paths:
 
 ## Dependency wiring
 - `get_it` is the service locator, used **only** in `lib/core/di/` and at composition roots (route/page builders). Nothing else calls `GetIt.I`
-- Pass dependencies via constructor arguments; never instantiate them inside Blocs/Cubits or widgets
+- Pass dependencies via constructor arguments; never instantiate them inside Blocs or widgets
 - Depend on an abstract class at every I/O boundary (repository, data source, platform service such as clipboard, share, haptics, clock) so a fake can replace it in tests; don't add interfaces elsewhere (see `.claude/rules/tests.md`, "Abstraction for testability")
 - The page receives what it needs through its constructor from the route builder; below the page, dependencies travel through constructors too — no service lookup through `BuildContext`, and no default parameter that builds a concrete data-layer class
 

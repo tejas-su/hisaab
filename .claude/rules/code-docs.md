@@ -60,7 +60,7 @@ TaskEither<Failure, CycleSummary> call(DateTime day) { ... }
 | Mapper | Only non-obvious conversions (defaults, unit changes, fallbacks) |
 | Use case | The operation, its params, and what Left/Right mean |
 | Repository contract | Each method's contract: inputs, outputs, failure cases |
-| Bloc/Cubit | What state it owns and who drives it (methods/events, repository streams, parent screen) |
+| Bloc | What state it owns and who drives it (events, repository streams, parent screen) |
 | Bloc events | The user intent or trigger each event represents |
 | Bloc states | The UI situation each state maps to |
 | Widget | What it renders and when to use it; required inputs and callbacks |

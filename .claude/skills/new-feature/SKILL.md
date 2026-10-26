@@ -1,6 +1,6 @@
 ---
 name: new-feature
-description: Scaffold a complete new feature under lib/<feature_name>/ following Hisaab's clean architecture (domain/data/presentation, Cubit, barrel file, tests). Use when the user asks to create, add, or scaffold a new feature or module.
+description: Scaffold a complete new feature under lib/<feature_name>/ following Hisaab's clean architecture (domain/data/presentation, Bloc, barrel file, tests). Use when the user asks to create, add, or scaffold a new feature or module.
 argument-hint: "Feature name (e.g. add_entry, ask_ai)"
 ---
 
@@ -30,10 +30,11 @@ lib/<feature_name>/
 │   └── repository/<feature_name>_repository_impl.dart
 │
 └── presentation/
-    ├── pages/<feature_name>_page.dart           ← page widget, receives its cubit from the route
+    ├── pages/<feature_name>_page.dart           ← page widget, receives its bloc from the route
     ├── widgets/                                 ← one widget per file
-    └── cubit/
-        ├── <feature_name>_cubit.dart
+    └── bloc/
+        ├── <feature_name>_bloc.dart
+        ├── <feature_name>_event.dart            ← sealed events, past tense
         └── <feature_name>_state.dart            ← sealed states
 
 test/<feature_name>/                             ← mirrors lib/<feature_name>/ (see .claude/rules/tests.md)
@@ -41,8 +42,8 @@ test/<feature_name>/                             ← mirrors lib/<feature_name>/
 ├── data/mapper/<feature_name>_mapper_test.dart
 ├── data/model/<feature_name>_model_test.dart    ← fromRow incl. null/missing/wrong-typed columns
 ├── data/repository/<feature_name>_repository_impl_test.dart
-├── presentation/cubit/<feature_name>_cubit_test.dart
-└── presentation/pages/<feature_name>_page_test.dart   ← each state renders; key taps call the cubit
+├── presentation/bloc/<feature_name>_bloc_test.dart
+└── presentation/pages/<feature_name>_page_test.dart   ← each state renders; key taps add the right event
 test/helpers/fakes/fake_<feature_name>_repository.dart
 ```
 
@@ -72,8 +73,9 @@ Create files in `core/` **only** when logic is genuinely shared across two or mo
 - **Repository impl**: constructor-injected data source; wrap calls with `TaskEither.tryCatch(..., (err, st) => DatabaseFailure(err))`; multi-row writes in one transaction
 - **Use case**: single `call(Params)` returning `TaskEither<Failure, T>`; calls repositories and pure domain functions only; no `.run()`
 - **State**: `sealed` class; variants named for the UI situation (e.g. `Initial`, `Loading`, `Ready`, `Failed`), `Equatable`
-- **Cubit**: thin; maps methods to use cases; guards `isClosed` before `emit` after every `await`; ignores re-entrant calls while saving. Use a `Bloc` only per `.claude/rules/bloc.md`
-- **Page**: receives its cubit/dependencies through its constructor from `lib/app/routes.dart`; provides the cubit via `BlocProvider.value`
+- **Event**: `sealed` class; one `final class` per user intent or trigger, past tense (`<Feature>LoadRequested`, `<Feature>SaveRequested`), `Equatable`
+- **Bloc**: thin; one `on<Event>` handler per event, calling use cases; `restartable()` on loads, `droppable()` on saves, each with a test that fails without it (see `.claude/rules/bloc.md`)
+- **Page**: receives its bloc/dependencies through its constructor from `lib/app/routes.dart`; provides the bloc via `BlocProvider.value`
 - **Widgets**: tokens only (`HisaabColors`, theme `TextTheme`, motion/haptics wrappers, `AppIcon`); all copy from `AppLocalizations`, all amounts from `MoneyFormatter`
 - **Strings**: add every new user-facing string to `lib/l10n/app_en.arb` (with `@` metadata for placeholders/plurals) and run `flutter gen-l10n`
 - **DI**: register implementations in `lib/core/di/`; nothing below the route calls `GetIt.I`

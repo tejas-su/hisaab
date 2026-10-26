@@ -7,13 +7,14 @@ import '../../../core/layout/window_class.dart';
 import '../../../core/widgets/keypad.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../cubit/onboarding_cubit.dart';
+import '../bloc/onboarding_bloc.dart';
+import '../bloc/onboarding_event.dart';
 
 /// The keypad and Next key shared by the income question and the bill amount.
 class AmountControls extends StatelessWidget {
-  const AmountControls({super.key, required this.cubit, required this.canContinue});
+  const AmountControls({super.key, required this.bloc, required this.canContinue});
 
-  final OnboardingCubit cubit;
+  final OnboardingBloc bloc;
   final bool canContinue;
 
   @override
@@ -24,9 +25,9 @@ class AmountControls extends StatelessWidget {
       children: <Widget>[
         Keypad(
           keyHeight: short ? HisaabSizes.minTouchTarget : 60,
-          onKey: cubit.pressKey,
-          onBackspace: cubit.backspace,
-          onClear: cubit.clear,
+          onKey: (String key) => bloc.add(OnboardingKeyPressed(key)),
+          onBackspace: () => bloc.add(const OnboardingBackspacePressed()),
+          onClear: () => bloc.add(const OnboardingCleared()),
         ),
         const SizedBox(height: 14),
         SizedBox(
@@ -34,7 +35,7 @@ class AmountControls extends StatelessWidget {
           child: SignalKey(
             label: AppLocalizations.of(context).next,
             icon: AppIcons.next,
-            onPressed: canContinue ? cubit.next : null,
+            onPressed: canContinue ? () => bloc.add(const OnboardingNextPressed()) : null,
           ),
         ),
       ],

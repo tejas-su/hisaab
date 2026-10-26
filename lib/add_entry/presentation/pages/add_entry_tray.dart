@@ -7,8 +7,9 @@ import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/layout/app_layout.dart';
 import '../../../core/widgets/adaptive_split.dart';
-import '../cubit/add_entry_cubit.dart';
-import '../cubit/add_entry_state.dart';
+import '../bloc/add_entry_bloc.dart';
+import '../bloc/add_entry_event.dart';
+import '../bloc/add_entry_state.dart';
 import '../widgets/amount_step.dart';
 import '../widgets/category_step.dart';
 
@@ -22,11 +23,11 @@ class AddEntryTray extends StatelessWidget {
   /// Space left above the tray on step 1, so the hero stays in sight behind the scrim.
   static const double _gapAbove = 72;
 
-  /// Opens the tray over [context] with [cubit], which the tray closes when it goes away.
+  /// Opens the tray over [context] with [bloc], which the tray closes when it goes away.
   ///
   /// On a tabletop fold the sheet keeps to the lower half (Flutter's sheets never straddle a
   /// fold), so the hero stays readable above it and the keypad sits on the flat half.
-  static Future<void> show(BuildContext context, AddEntryCubit cubit) {
+  static Future<void> show(BuildContext context, AddEntryBloc bloc) {
     final bool tabletop = context.layout.panes is TabletopPanes;
     return showModalBottomSheet<void>(
       context: context,
@@ -38,19 +39,19 @@ class AddEntryTray extends StatelessWidget {
       shape: HisaabShapes.trayTop(),
       constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop,
-      builder: (BuildContext _) => BlocProvider<AddEntryCubit>(create: (BuildContext _) => cubit, child: const AddEntryTray()),
+      builder: (BuildContext _) => BlocProvider<AddEntryBloc>(create: (BuildContext _) => bloc, child: const AddEntryTray()),
     );
   }
 
   @override
-  Widget build(BuildContext context) => BlocConsumer<AddEntryCubit, AddEntryState>(
+  Widget build(BuildContext context) => BlocConsumer<AddEntryBloc, AddEntryState>(
         listenWhen: (AddEntryState previous, AddEntryState current) => current is AddEntryFinished,
         listener: (BuildContext context, AddEntryState state) => Navigator.of(context).pop(),
         builder: (BuildContext context, AddEntryState state) => PopScope(
           canPop: state.form.step == AddEntryStep.amount,
           onPopInvokedWithResult: (bool didPop, Object? _) {
             if (!didPop) {
-              context.read<AddEntryCubit>().back();
+              context.read<AddEntryBloc>().add(const AddEntryBackPressed());
             }
           },
           child: Padding(

@@ -44,7 +44,7 @@ lib/habits/
 3. `HabitIndexBuilder` turns rows into a `HabitIndex` using the injected `Clock`.
 4. Each detector maps `(HabitIndex, now)` to `Option<Suggestion>`. Detectors never import each other or Flutter.
 5. `SuggestionGate` drops anything that is resting or already dismissed today, and freezes the day's suggestion.
-6. The result is cached. `AddEntryCubit` and `HomeCubit` read it **synchronously**, so a suggestion is in the first frame or not shown that session (NFR-1: tray opens ≤ 150 ms).
+6. The result is cached. `AddEntryBloc` and `HomeBloc` read it **synchronously**, so a suggestion is in the first frame or not shown that session (NFR-1: tray opens ≤ 150 ms).
 
 ## Dependencies
 

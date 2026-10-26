@@ -15,9 +15,14 @@ final class MoneyFormatter {
       NumberFormat.currency(locale: locale, symbol: money.currency.symbol, decimalDigits: 0)
           .format(money.floorMajor);
 
-  /// Formats [money] compactly for chart axes, e.g. `₹1.25L`, `₹1.25Cr`.
-  String compact(Money money) =>
-      NumberFormat.compactCurrency(locale: locale, symbol: money.currency.symbol).format(money.floorMajor);
+  /// Formats [money] compactly for chart axes, e.g. `₹1.25L`, `₹1.25Cr`; under a thousand it is
+  /// the plain amount, e.g. `₹500`.
+  String compact(Money money) => money.floorMajor.abs() < _compactFrom
+      ? format(money)
+      : NumberFormat.compactCurrency(locale: locale, symbol: money.currency.symbol).format(money.floorMajor);
+
+  // why: `intl` prints small compact amounts with two decimals ("₹0.00"), which would show paise.
+  static const int _compactFrom = 1000;
 
   /// Formats [money] without a symbol, for spoken labels such as "1,430 rupees".
   String digits(Money money) => NumberFormat.decimalPattern(locale).format(money.floorMajor);

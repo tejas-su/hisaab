@@ -23,18 +23,18 @@ Background and sources: `docs/features/tdd-in-flutter/`.
 2. **Green:** write the least code that passes. No extra branches or speculative parameters
 3. **Refactor:** clean up `lib/` and the test with every test still green. Never edit an assertion during refactor
 4. Repeat in small steps, one behaviour per cycle. A bug fix starts with a test that reproduces it
-- **Test-first is the default for logic:** use cases, repositories, mappers, validators, Blocs/Cubits. For layout-only widget work, building first is fine, but the tests land in the same change
+- **Test-first is the default for logic:** use cases, repositories, mappers, validators, Blocs. For layout-only widget work, building first is fine, but the tests land in the same change
 - **If the test is hard to write, change the design, not the test:** the usual causes are a hard-wired singleton, a dependency built inside the class, or a function doing more than one thing
 - Proportions follow the test pyramid: many unit tests, many widget tests, few integration tests (integration tests aren't set up here)
 
 ## Abstraction for testability
 
 - **Abstract each I/O boundary, and only those:** repositories, data sources (sqflite), platform or plugin access (clipboard, share sheet, `url_launcher`, haptics), and clock/ID/random sources. Don't add an interface for pure functions, mappers, entities, or a class with a single implementation and no I/O
-- **Define the interface from the consumer's need.** Ask what the use case or cubit must call, not what the API offers. Keep interfaces small; split a wide one rather than faking many methods
+- **Define the interface from the consumer's need.** Ask what the use case or bloc must call, not what the API offers. Keep interfaces small; split a wide one rather than faking many methods
 - **Inject through the constructor.** The class under test never builds its dependencies, uses `static` state, or looks them up through `BuildContext` (see `.claude/rules/dart-core.md`, "Dependency wiring"). The real implementation is wired only at the feature's composition root
 - **The fake implements the same abstract class** as the real one, so a signature change breaks the fake at compile time
 - **Legacy code with a hard-wired singleton:** add the smallest seam (a constructor parameter, real thing wired at the composition root) and say so in the report. Ask before refactoring a legacy file only to test it
-- **Widgets receive their cubit or dependencies from above** (constructor or `BlocProvider`), so a test can pass a fake or a seeded cubit
+- **Widgets receive their bloc or dependencies from above** (constructor or `BlocProvider`), so a test can pass a fake or a seeded bloc
 
 ## Coverage: every piece of new code is covered
 
@@ -47,7 +47,7 @@ Background and sources: `docs/features/tdd-in-flutter/`.
 | Whole repo | No threshold. Don't backfill untouched code |
 
 - **Why 90%, not a hard 100%:** Google's guidance is that per-commit goals of 99% are reasonable and 90% is a good lower threshold, and that chasing 100% gives diminishing returns and a false sense of security. A floor every change can reach, plus honest reporting of gaps, gives better tests than a 100% gate that pushes toward assertion-free tests or `coverage:ignore` comments
-- **New pure-Dart logic** (use cases, mappers, validators, repositories with fakes, Blocs/Cubits) is cheap to test: aim for 100% and expect no gaps. The floor is for what can't be tested as-is (see the acceptable gaps below)
+- **New pure-Dart logic** (use cases, mappers, validators, repositories with fakes, Blocs) is cheap to test: aim for 100% and expect no gaps. The floor is for what can't be tested as-is (see the acceptable gaps below)
 
 - Every new or changed function, method and branch must be exercised by a test. Being above the floor doesn't excuse a gap: a gap is only acceptable for platform-only code, a hard-wired singleton in legacy code, or a defensive branch that is unreachable; "didn't get to it" is not a reason
 - **Metric:** line coverage is the gate. Branch coverage (`--branch-coverage`, `BRDA:` entries in lcov) is collected too; use it to spot an untested `if`/`else` body or `switch` arm on your changed lines, but it has no numeric threshold
@@ -90,7 +90,7 @@ awk -v f="lib/path/to/changed_file.dart" '$0=="SF:"f{p=1;next} /^end_of_record/{
 
 **Report it in this format** in the final message:
 ```
-Coverage (changed lines): lib/x/presentation/cubit/y_cubit.dart 24/24, lib/x/data/z.dart 10/12
+Coverage (changed lines): lib/x/presentation/bloc/y_bloc.dart 24/24, lib/x/data/z.dart 10/12
 Total: 34/36 (94.4%), floor 90% ✓
 Gaps: lib/x/data/z.dart:41-42 — platform channel call, no seam without refactor
 ```
@@ -166,7 +166,7 @@ void main() {
 
 ## Location & naming
 
-- `test/` mirrors `lib/`: `lib/add_entry/presentation/cubit/add_entry_cubit.dart` → `test/add_entry/presentation/cubit/add_entry_cubit_test.dart`
+- `test/` mirrors `lib/`: `lib/add_entry/presentation/bloc/add_entry_bloc.dart` → `test/add_entry/presentation/bloc/add_entry_bloc_test.dart`
 - Test files end in `_test.dart`; one test file per source file under test
 - Shared test code lives in `test/helpers/`:
   ```
@@ -184,7 +184,7 @@ void main() {
 2. **Mappers and model `fromRow`/`toRow`/`toJson`:** real row shapes, plus missing, `null`, and wrong-typed columns
 3. **Repositories:** with fake data sources. Success, thrown exceptions mapped to the right `Failure`, and empty results
    - **Date and money logic gets extra edge cases:** payday on the 29th–31st in February and 30-day months, leap years, a cycle that crosses a year, the last day of a cycle, zero days left, ₹0, the 9-digit cap, overspend larger than the remaining total, recurring catch-up after weeks away (and posted exactly once)
-4. **Blocs/Cubits:** the initial state, the emitted state sequence for each event/method, error states, and no emit after `close()`
+4. **Blocs:** the initial state, the emitted state sequence for each event, error states, overlapping events (a second tap, a newer load), and no emit after `close()`
 5. **Widgets:** each Bloc state renders the right UI; key interactions call the right event/callback
 6. **Validators, formatters, extensions:** table-style happy, negative, and edge cases (see the `isValidEmail` example above)
 
@@ -196,7 +196,7 @@ Don't test Flutter or third-party behaviour, trivial getters, or private methods
 - Test names describe behaviour: `'emits [Loading, Loaded] when fetch succeeds'`, `'returns ServerFailure when the API throws'`
 - Arrange → Act → Assert (set up, one action, expectations), one behaviour per test. A test must not depend on another test's result or on execution order, and must not use artificial delays
 - No logic in tests (no `if`/loops deciding what to assert). For table cases, build the list and generate one `test` per entry
-- Fresh instances in `setUp`. Close blocs/cubits and dispose controllers in `tearDown`
+- Fresh instances in `setUp`. Close blocs and dispose controllers in `tearDown`
 - Tests follow the same lints as `lib/` (`analysis_options.yaml`: no `print`, typed public APIs)
 
 ## Test doubles: mocks vs fakes vs stubs
@@ -234,27 +234,30 @@ Details:
 - Never touch the real on-device database, the clipboard, the share sheet, `url_launcher` or haptics in unit/widget tests. Inject a fake (an in-memory `sqflite_common_ffi` database only for data-source tests)
 - Never depend on wall-clock time or randomness. Inject `FakeClock` for anything involving "today", paydays or cycles
 
-## Bloc / Cubit tests (without `bloc_test`)
+## Bloc tests (without `bloc_test`)
+
+`test/helpers/bloc_dispatch.dart` adds `bloc.dispatch(event)`: it adds the event and waits for the handler and its awaited fakes.
 
 ```dart
-test('emits [Loading, Loaded] when fetch succeeds', () async {
+test('emits [Loading, Loaded] when the load succeeds', () async {
   final FakeItemsRepository repository = FakeItemsRepository();
-  final ItemsCubit cubit = ItemsCubit(repository: repository);
-  addTearDown(cubit.close);
+  final ItemsBloc bloc = ItemsBloc(repository: repository);
+  addTearDown(bloc.close);
 
   final Future<void> expectation = expectLater(
-    cubit.stream,
+    bloc.stream,
     emitsInOrder(<Matcher>[isA<ItemsLoading>(), isA<ItemsLoaded>()]),
   );
 
-  await cubit.fetchItems();
+  await bloc.dispatch(const ItemsLoadRequested());
   await expectation;
 });
 ```
 
 - Set up `expectLater` **before** acting, so no emission is missed
 - Assert on state types with `isA<T>()`, and on fields with `.having(...)` when the values matter
-- Also test the initial state, and that closing mid-request doesn't throw (the `isClosed` guard)
+- Also test the initial state, and that closing mid-request doesn't throw: `bloc.add(event); await expectLater(bloc.close(), completes);`
+- **Every transformer gets a test that fails without it.** The fakes answer at once, so overlap never happens by itself: gate the fake (`nextReadGate`, `nextDeleteGate`, a `Completer`) so the first event is still in flight when the second arrives. For `restartable()`, a slow load with stale data must not land last; for `droppable()`, a second save while the first is gated must not write twice
 
 ## `TaskEither` / `Either` results
 
@@ -269,9 +272,10 @@ result.fold(
 
 ## Widget tests
 
-- Wrap with `pumpApp` from `test/helpers/pump_app.dart` (MaterialApp, app theme, `BlocProvider.value` with a seeded fake/real cubit), not bare widgets
+- Wrap with `pumpApp` from `test/helpers/pump_app.dart` (MaterialApp, app theme, `BlocProvider.value` with a seeded fake/real bloc), not bare widgets
 - Find by `Key` (`find.byKey(const ValueKey<String>('submit-button'))`), semantics label, or text, in that order of preference. Avoid finding by widget type when several instances exist
 - `await tester.tap(...)` then `await tester.pump()`. Use `pumpAndSettle` only when no infinite animation (e.g. a spinner) is on screen
+- **A bloc handles events in the zone it was built in.** Build it in `setUp` or with `tester.buildBloc(...)`, outside the test's fake async zone (one built inside never finishes `close()` in a tear-down). After an interaction that adds an event, call `tester.settle()` (from `bloc_dispatch.dart`), not `pumpAndSettle()`, so the bloc gets a real event-loop turn
 - Cover the loading, error, empty, and success states of any widget that switches on Bloc state
 
 ## Existing tests are the contract. Don't edit them to pass

@@ -1,12 +1,13 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/settings/presentation/cubit/bill_editor_cubit.dart';
+import 'package:expense_tracker/settings/presentation/bloc/bill_editor_bloc.dart';
 import 'package:expense_tracker/settings/presentation/pages/bill_editor_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
@@ -17,12 +18,12 @@ import '../../../helpers/pump_app.dart';
 
 void main() {
   late FakeRecurringRepository recurring;
-  late BillEditorCubit cubit;
+  late BillEditorBloc bloc;
   late int deletes;
 
-  BillEditorCubit build(Option<RecurringRule> editing) {
+  BillEditorBloc build(Option<RecurringRule> editing) {
     final FakeClock clock = FakeClock(WorkedExample.now);
-    return BillEditorCubit(
+    return BillEditorBloc(
       addBill: AddBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
       editBill: EditBill(recurring: recurring, clock: clock),
       haptics: FakeHaptics(),
@@ -36,7 +37,7 @@ void main() {
   });
 
   tearDown(() async {
-    await cubit.close();
+    await bloc.close();
     await recurring.dispose();
   });
 
@@ -47,12 +48,12 @@ void main() {
     Size size = TestWindows.phone,
     double textScale = 1,
   }) async {
-    cubit = build(editing);
+    bloc = await tester.buildBloc(() => build(editing));
     await pumpApp(tester, const Scaffold(), size: size, textScale: textScale);
     tester.state<NavigatorState>(find.byType(Navigator)).push(
       MaterialPageRoute<void>(
-        builder: (BuildContext _) => BlocProvider<BillEditorCubit>.value(
-          value: cubit,
+        builder: (BuildContext _) => BlocProvider<BillEditorBloc>.value(
+          value: bloc,
           child: BillEditorPage(onDelete: editing.isSome() ? () => deletes++ : null),
         ),
       ),
@@ -63,27 +64,39 @@ void main() {
   Future<void> keys(WidgetTester tester, String digits) async {
     for (final String key in digits.split('')) {
       await tester.tap(find.byKey(ValueKey<String>('keypad-$key')));
-      await tester.pump();
+      await tester.settle();
     }
   }
 
   Future<void> next(WidgetTester tester) async {
     await tester.tap(find.byKey(const ValueKey<String>('bill-next')));
-    await tester.pumpAndSettle();
+    await tester.settle();
   }
 
   Future<void> saveOn(WidgetTester tester, int day) async {
     await tester.tap(find.byKey(ValueKey<String>('day-$day')));
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-    await tester.pumpAndSettle();
+    await tester.settle();
   }
 
   group('BillEditorPage: adding (FR-SE-1)', () {
+    testWidgets('⌫ drops the last digit and a long-press clears the amount', (WidgetTester tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-rent')));
+      await tester.settle();
+      await keys(tester, '820');
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('₹82'), findsOneWidget);
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('₹82'), findsNothing);
+    });
+
     testWidgets('name → amount → day saves the bill and closes', (WidgetTester tester) async {
       await open(tester);
       expect(find.text("What's the bill called?"), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
-      await tester.pump();
+      await tester.settle();
       await next(tester);
       expect(find.text('How much is Water?'), findsOneWidget);
       await keys(tester, '300');
@@ -99,20 +112,20 @@ void main() {
     testWidgets('the keyboard\'s Next moves on, and tapping outside hides the keyboard', (WidgetTester tester) async {
       await open(tester);
       await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
-      await tester.pump();
+      await tester.settle();
       await tester.tapAt(const Offset(200, 120));
       await tester.pump();
       expect(tester.testTextInput.isVisible, isFalse);
       await tester.showKeyboard(find.byKey(const ValueKey<String>('bill-name')));
       await tester.testTextInput.receiveAction(TextInputAction.next);
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(find.text('How much is Water?'), findsOneWidget);
     });
 
     testWidgets('a chip names the bill and moves straight to the amount', (WidgetTester tester) async {
       await open(tester);
       await tester.tap(find.byKey(const ValueKey<String>('bill-rent')));
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(find.text('How much is Rent?'), findsOneWidget);
     });
 
@@ -121,7 +134,7 @@ void main() {
       await next(tester);
       expect(find.text("What's the bill called?"), findsOneWidget);
       await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
-      await tester.pump();
+      await tester.settle();
       await next(tester);
       await next(tester);
       expect(find.text('How much is Water?'), findsOneWidget);
@@ -130,13 +143,13 @@ void main() {
     testWidgets('Back steps back with the name kept, then closes', (WidgetTester tester) async {
       await open(tester);
       await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
-      await tester.pump();
+      await tester.settle();
       await next(tester);
       await tester.tap(find.byTooltip('Back'));
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(find.text('Water'), findsOneWidget);
       await tester.tap(find.byTooltip('Back'));
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(find.byType(BillEditorPage), findsNothing);
       expect(recurring.rules, WorkedExample.rules);
     });
@@ -144,7 +157,7 @@ void main() {
     testWidgets('a failed save stays on the day and says so', (WidgetTester tester) async {
       await open(tester);
       await tester.tap(find.byKey(const ValueKey<String>('bill-emi')));
-      await tester.pumpAndSettle();
+      await tester.settle();
       await keys(tester, '5000');
       await next(tester);
       recurring.failure = DatabaseFailure('locked');
@@ -183,7 +196,7 @@ void main() {
     testWidgets('every step lays out without overflow on $name', (WidgetTester tester) async {
       await open(tester, size: size, textScale: scale);
       await tester.tap(find.byKey(const ValueKey<String>('bill-rent')));
-      await tester.pumpAndSettle();
+      await tester.settle();
       expect(tester.takeException(), isNull);
       await keys(tester, '9');
       await next(tester);

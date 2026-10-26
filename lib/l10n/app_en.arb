@@ -5,6 +5,162 @@
   "navSpends": "Spends",
   "settings": "Settings",
   "safeToSpendToday": "Safe to spend today",
+  "earlierCycle": "Earlier",
+  "laterCycle": "Later",
+  "spentSoFar": "Spent so far",
+  "ofAmount": "of {amount}",
+  "@ofAmount": {
+    "description": "After the big spent-so-far number on Spends: \"₹27,570 of ₹45,000\"",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "wordGap": " ",
+  "@wordGap": {
+    "description": "The space between the spent amount and \"of ₹45,000\""
+  },
+  "spentSoFarSpoken": "Spent so far: {amount}",
+  "@spentSoFarSpoken": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryRowSpoken": "{category}: {amount}, {percent}%",
+  "@categoryRowSpoken": {
+    "description": "TalkBack for a Where it went row",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "paceYou": "You",
+  "paceSteady": "Steady pace",
+  "belowPace": "Below pace",
+  "abovePace": "Above pace",
+  "paceSpoken": "{spent} spent so far of {budget}. {verdict}.",
+  "@paceSpoken": {
+    "description": "TalkBack sentence for the whole pace chart card",
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "budget": {
+        "type": "String"
+      },
+      "verdict": {
+        "type": "String"
+      }
+    }
+  },
+  "whereItWent": "Where it went",
+  "percentShare": "{percent}%",
+  "@percentShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "pastLimit": "{amount} past limit",
+  "@pastLimit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "limitOf": "limit {amount}",
+  "@limitOf": {
+    "description": "TalkBack detail for a category row with a limit",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "nothingSpentIn": "Nothing spent in {cycle} yet.",
+  "@nothingSpentIn": {
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsTitle": "Worth knowing",
+  "insightCategoryUp": "{category} is up {amount} from last month.",
+  "@insightCategoryUp": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "insightBiggestSpend": "Your biggest {category} spend was {amount} on {date}.",
+  "@insightBiggestSpend": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "insightSteadiest": "{category} is your steadiest spend.",
+  "@insightSteadiest": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "insightLimitOffer": "Use last month's spending as limits? Each is rounded up to the next ₹500.",
+  "seeEntries": "See entries",
+  "useTheseLimits": "Use these limits",
+  "seeEveryEntry": "See every entry",
+  "seeAll": "See all",
+  "everyEntry": "Every entry",
+  "allCategories": "All",
+  "noEntriesHere": "Nothing here yet.",
+  "seeWhereItWent": "See where it went",
+  "overTodayCard": "{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it is a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}",
+  "@overTodayCard": {
+    "description": "Calm card under the hero when today is overspent (SPEC FR-HO-5); days is at least 1, since on the last day any overspend is over the cycle",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "overCycleCard": "It happens. This month's money is used up. It starts again on payday, {date}.",
+  "@overCycleCard": {
+    "description": "Calm card under the hero when the whole cycle is overspent (SPEC FR-HO-5)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "safeToSpendThisWeek": "Safe to spend this week",
   "showThisWeek": "show this week",
   "@showThisWeek": {
@@ -59,10 +215,6 @@
         "type": "String"
       }
     }
-  },
-  "screenInProgress": "This screen is being built.",
-  "@screenInProgress": {
-    "description": "Temporary body text on screens that land in a later milestone"
   },
   "startupFailed": "hisaab couldn't open its data. Close the app and open it again.",
   "@startupFailed": {

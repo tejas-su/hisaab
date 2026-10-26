@@ -14,11 +14,14 @@ import '../core/widgets/pane.dart';
 /// - Two panes (tablets, landscape, book posture): Home beside Spends, split at the hinge
 ///   when there is one, and no dock; the Add key sits at the bottom of the Home pane.
 /// - Tabletop posture: the screen above the fold, the dock below it.
+///
+/// [destination], when given, lets the caller switch screens too (Home's *See where it went*).
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.home, required this.spends, required this.onAdd});
+  const AppShell({super.key, required this.home, required this.spends, required this.onAdd, this.destination});
 
   final Widget home;
   final Widget spends;
+  final ValueNotifier<ShellDestination>? destination;
 
   /// Opens the Add tray.
   final VoidCallback onAdd;
@@ -28,17 +31,33 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  ShellDestination _selected = ShellDestination.home;
+  ValueNotifier<ShellDestination>? _own;
+
+  ValueNotifier<ShellDestination> get _destination =>
+      widget.destination ?? (_own ??= ValueNotifier<ShellDestination>(ShellDestination.home));
+
+  ShellDestination get _selected => _destination.value;
 
   Widget get _selectedScreen => switch (_selected) {
         ShellDestination.home => widget.home,
         ShellDestination.spends => widget.spends,
       };
 
-  void _select(ShellDestination destination) => setState(() => _selected = destination);
+  void _select(ShellDestination destination) => _destination.value = destination;
 
   @override
-  Widget build(BuildContext context) {
+  void dispose() {
+    _own?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<ShellDestination>(
+        valueListenable: _destination,
+        builder: (BuildContext context, ShellDestination _, Widget? _) => _frame(context),
+      );
+
+  Widget _frame(BuildContext context) {
     final Size window = MediaQuery.sizeOf(context);
     return ColoredBox(
       color: context.colors.background,

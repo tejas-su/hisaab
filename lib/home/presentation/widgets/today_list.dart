@@ -6,9 +6,10 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/money/money.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
-import 'today_row.dart';
 
-/// Today's latest entries with the day's total, or the empty sentence (SPEC FR-HO-4).
+/// Today's latest entries with the day's total and *See all*, or the empty sentence (SPEC FR-HO-4).
+///
+/// [onSeeAll] opens every entry of the cycle; *See all* is hidden when it is null.
 class TodayList extends StatelessWidget {
   const TodayList({
     super.key,
@@ -18,6 +19,7 @@ class TodayList extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onThresholdReached,
+    this.onSeeAll,
   });
 
   final List<Entry> entries;
@@ -26,6 +28,7 @@ class TodayList extends StatelessWidget {
   final ValueChanged<Entry> onEdit;
   final ValueChanged<Entry> onDelete;
   final VoidCallback onThresholdReached;
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +48,21 @@ class TodayList extends StatelessWidget {
               children: <Widget>[
                 Semantics(header: true, child: Text(strings.todayList, style: text.titleLarge)),
                 const SizedBox(width: 10),
-                Text(context.money.format(spentToday), style: text.labelLarge?.copyWith(color: context.colors.ink2, fontSize: 15)),
+                Expanded(
+                  child: Text(context.money.format(spentToday), style: text.labelLarge?.copyWith(color: context.colors.ink2, fontSize: 15)),
+                ),
+                if (onSeeAll case final VoidCallback seeAll)
+                  TextButton(
+                    key: const ValueKey<String>('see-all'),
+                    onPressed: seeAll,
+                    style: TextButton.styleFrom(
+                      foregroundColor: context.colors.ink,
+                      minimumSize: const Size(HisaabSizes.minTouchTarget, HisaabSizes.minTouchTarget),
+                      // why: no inset, so the label ends on the cards' content edge.
+                      padding: EdgeInsetsDirectional.zero,
+                    ),
+                    child: Text(strings.seeAll, style: text.labelLarge?.copyWith(fontSize: 15)),
+                  ),
               ],
             ),
           ),
@@ -56,7 +73,7 @@ class TodayList extends StatelessWidget {
             ),
           for (final (int index, Entry entry) in entries.indexed) ...<Widget>[
             if (index > 0) Divider(indent: 74, endIndent: HisaabSpacing.gutter, color: context.colors.hairline),
-            TodayRow(
+            EntryRow(
               key: ValueKey<int>(entry.id),
               entry: entry,
               category: categories[entry.categoryId],

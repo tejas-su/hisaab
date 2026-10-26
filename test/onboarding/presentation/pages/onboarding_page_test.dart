@@ -10,24 +10,25 @@ import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repo
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
-import 'package:expense_tracker/onboarding/presentation/cubit/onboarding_state.dart';
+import 'package:expense_tracker/onboarding/presentation/bloc/onboarding_state.dart';
 import 'package:expense_tracker/core/widgets/signal_key.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fake_services.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
   late FakeServices services;
-  late OnboardingCubit cubit;
+  late OnboardingBloc bloc;
   late int finished;
 
   setUp(() {
     services = FakeServices(onboardingDone: false, entries: <Entry>[], rules: <RecurringRule>[]);
-    cubit = OnboardingCubit(
+    bloc = OnboardingBloc(
       drafts: OnboardingDraftRepositoryImpl(preferences: services.preferences),
       completeOnboarding: CompleteOnboarding(
         categories: services.categories,
@@ -42,7 +43,7 @@ void main() {
   });
 
   tearDown(() async {
-    await cubit.close();
+    await bloc.close();
     await services.dispose();
   });
 
@@ -52,10 +53,10 @@ void main() {
     double textScale = 1,
     List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
   }) async {
-    await tester.runAsync(cubit.start);
+    await tester.runAsync(() => bloc.dispatch(const OnboardingStarted()));
     await pumpApp(
       tester,
-      BlocProvider<OnboardingCubit>.value(value: cubit, child: OnboardingPage(onFinished: () => finished++)),
+      BlocProvider<OnboardingBloc>.value(value: bloc, child: OnboardingPage(onFinished: () => finished++)),
       size: size,
       textScale: textScale,
       displayFeatures: displayFeatures,
@@ -75,6 +76,17 @@ void main() {
   }
 
   group('OnboardingPage (FR-ON)', () {
+    testWidgets('⌫ drops the last digit and a long-press clears the income', (WidgetTester tester) async {
+      await pump(tester);
+      await tapKeys(tester, '450');
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await settle(tester);
+      expect(find.text('₹45'), findsOneWidget);
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await settle(tester);
+      expect(find.text('₹45'), findsNothing);
+    });
+
     testWidgets('three questions to Home: income, payday, a bill, Done', (WidgetTester tester) async {
       await pump(tester);
       expect(find.text('How much money comes in each month?'), findsOneWidget);
@@ -120,7 +132,7 @@ void main() {
       expect(find.text('Which day of the week?'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('weekday-5')));
       await settle(tester);
-      expect(cubit.state, isA<OnboardingInProgress>().having((OnboardingInProgress s) => s.draft.payRule, 'rule', const Option<PayRule>.of(WeeklyOn(5))));
+      expect(bloc.state, isA<OnboardingInProgress>().having((OnboardingInProgress s) => s.draft.payRule, 'rule', const Option<PayRule>.of(WeeklyOn(5))));
     });
 
     final List<(String, PayRule)> quickChoices = <(String, PayRule)>[
@@ -137,7 +149,7 @@ void main() {
         await tester.tap(find.byKey(ValueKey<String>(key)));
         await settle(tester);
         expect(find.text('Any fixed bills?'), findsOneWidget);
-        expect((cubit.state as OnboardingInProgress).draft.payRule, Option<PayRule>.of(rule));
+        expect((bloc.state as OnboardingInProgress).draft.payRule, Option<PayRule>.of(rule));
       });
     }
 
@@ -172,7 +184,7 @@ void main() {
       await pump(tester);
       await tester.tap(find.text('Skip'));
       await settle(tester);
-      expect(cubit.state, isA<OnboardingFinishing>());
+      expect(bloc.state, isA<OnboardingFinishing>());
       expect(tester.widget<SignalKey>(find.byKey(const ValueKey<String>('finish-onboarding'))).onPressed, isNull);
       services.preferences.markDoneGate?.complete();
       await settle(tester);

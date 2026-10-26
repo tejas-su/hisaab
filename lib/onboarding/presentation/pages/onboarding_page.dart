@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/onboarding_step.dart';
-import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
+import '../bloc/onboarding_bloc.dart';
+import '../bloc/onboarding_event.dart';
+import '../bloc/onboarding_state.dart';
 import '../widgets/bill_editor_view.dart';
 import '../widgets/bills_step.dart';
 import '../widgets/income_step.dart';
 import '../widgets/payday_step.dart';
 
-/// Onboarding: three questions, then Home (SPEC FR-ON). Needs an [OnboardingCubit] above it.
+/// Onboarding: three questions, then Home (SPEC FR-ON). Needs an [OnboardingBloc] above it.
 ///
 /// Back steps back through the questions; on the first one it leaves the app. [onFinished]
 /// runs once everything is saved.
@@ -19,14 +20,14 @@ class OnboardingPage extends StatelessWidget {
   final VoidCallback onFinished;
 
   @override
-  Widget build(BuildContext context) => BlocConsumer<OnboardingCubit, OnboardingState>(
+  Widget build(BuildContext context) => BlocConsumer<OnboardingBloc, OnboardingState>(
         listenWhen: (OnboardingState previous, OnboardingState current) => current is OnboardingDone,
         listener: (BuildContext context, OnboardingState state) => onFinished(),
         builder: (BuildContext context, OnboardingState state) => PopScope(
           canPop: _canLeave(state),
           onPopInvokedWithResult: (bool didPop, Object? _) {
             if (!didPop) {
-              context.read<OnboardingCubit>().back();
+              context.read<OnboardingBloc>().add(const OnboardingBackPressed());
             }
           },
           child: Scaffold(body: _body(state)),

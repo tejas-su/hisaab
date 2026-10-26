@@ -15,16 +15,16 @@ The visual and interaction spec is `docs/UI_DESIGN.md`. Read the relevant sectio
 - If a file exceeds ~150 lines, split it
 - Pages → `presentation/pages/`, feature-scoped widgets → `presentation/widgets/`
 - Widgets shared by **more than one feature** go in `core/widgets/`. Don't duplicate them per feature
-- Separate stateful logic (Cubit) from pure UI widgets
-- A page or widget receives its cubit and dependencies from above (constructor or `BlocProvider`); it never creates a data-layer object itself, so a widget test can supply a fake or a seeded cubit
+- Separate stateful logic (Bloc) from pure UI widgets
+- A page or widget receives its bloc and dependencies from above (constructor or `BlocProvider`); it never creates a data-layer object itself, so a widget test can supply a fake or a seeded bloc
 
 ## Widgets
 - `const` constructors on every widget that doesn't depend on runtime data
-- No `BuildContext`, `Navigator`, or any Flutter UI import inside a Cubit/Bloc
-- No business logic inside `build()` — extract to named methods or Cubits
+- No `BuildContext`, `Navigator`, or any Flutter UI import inside a Bloc
+- No business logic inside `build()` — extract to named methods or Blocs
 
 ## Navigation
-- Navigate only from pages/widgets — never from inside a Cubit
+- Navigate only from pages/widgets — never from inside a Bloc
 - Use `BlocListener` to react to state changes that need navigation, the Add tray, or snackbars
 - Keep route definitions centralised in `lib/app/routes.dart`
 - Android predictive back: pages use `PopScope`; the theme sets `PredictiveBackPageTransitionsBuilder`
@@ -33,7 +33,7 @@ The visual and interaction spec is `docs/UI_DESIGN.md`. Read the relevant sectio
 - `BlocBuilder` — rebuilds UI; use only when the widget tree must change
 - `BlocListener` — one-time side effects (navigation, snackbars, haptics); no tree changes
 - `BlocConsumer` — only when both are needed; otherwise separate `Builder`/`Listener`
-- Never subscribe to a Cubit manually in `initState`/`dispose`. Avoid `BlocProvider.of(context)` in `initState`
+- Never subscribe to a Bloc manually in `initState`/`dispose`. Avoid `BlocProvider.of(context)` in `initState`
 
 ## Performance
 - `buildWhen` on `BlocBuilder` to skip rebuilds when irrelevant fields change

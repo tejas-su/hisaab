@@ -6,19 +6,19 @@
 The Add tray logs money out or in. The path is the Add key, the digits, Next, then a category tile. Speed is the feature: never add a tap or a field.
 
 ## 2. Entry point
-`AppRoutes.openAddTray` builds an `AddEntryCubit` with Home's `CycleSummary` (for the preview and the earliest date) and categories, then `AddEntryTray.show`. Callers: the dock's Add key (`AddKey`), the Add key under the Home pane in two-pane layouts, *Add money* (on *Got*), and a Today row tap (edit mode).
+`AppRoutes.openAddTray` builds an `AddEntryBloc` with Home's `CycleSummary` (for the preview and the earliest date) and categories, then `AddEntryTray.show`. Callers: the dock's Add key (`AddKey`), the Add key under the Home pane in two-pane layouts, *Add money* (on *Got*), and a Today row tap (edit mode).
 
 ## 3. Data flow
 ```
-Step 1  setKind · pressKey · backspace · clear · quickAdd   AmountInput; tick or reject haptic
+Step 1  KindChanged · KeyPressed · BackspacePressed · Cleared · QuickAdded   AmountInput; tick or reject haptic
         preview = SafeToSpend.previewSpend(summary, amount − edited amount if today)
-        next()                                              only when amount > 0
-Step 2  setDate (clamped earliest..today) · setNote
-        pickCategory(id) → AddEntrySaving (tile flashes) → SaveEntry
+        NextPressed                                         only when amount > 0
+Step 2  DateChanged (clamped earliest..today) · NoteChanged
+        CategoryPicked(id) (droppable) → AddEntrySaving (tile flashes) → SaveEntry
            Right → success haptic → AddEntryFinished → tray pops; Home reloads via changes
            Left  → reject haptic → AddEntryEditing(failed: true)
-        delete() (edit mode) → DeleteEntry → AddEntryFinished
-back(): step 2 → step 1 (PopScope); step 1 → the sheet closes without saving
+        DeleteRequested (edit mode, droppable) → DeleteEntry → AddEntryFinished
+BackPressed: step 2 → step 1 (PopScope); step 1 → the sheet closes without saving
 ```
 
 ## 4. Key classes
@@ -27,7 +27,7 @@ back(): step 2 → step 1 (PopScope); step 1 → the sheet closes without saving
 | `AddEntryTray` | `presentation/pages/` | The sheet, step switch, back handling |
 | `AmountStep` | `presentation/widgets/` | `KindSwitch`, amount, `SpendPreviewLine`, `QuickAddChips`, `Keypad`, Next |
 | `CategoryStep` | `presentation/widgets/` | Title, 4-column tile grid, `DateChip`, `NoteChip`, Delete in edit mode |
-| `AddEntryCubit`, `AddEntryState`, `EntryForm` | `presentation/cubit/` | Form, preview, double-tap guard |
+| `AddEntryBloc`, `AddEntryEvent`, `AddEntryState`, `EntryForm` | `presentation/bloc/` | Form, preview; tile save and Delete are `droppable()` |
 | `Keypad`, `SignalKey`, `CategoryTile`, `HisaabChip`, `Shake` | `lib/core/widgets/` | Shared controls |
 
 ## 5. State variants

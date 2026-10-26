@@ -5,8 +5,9 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/widgets/adaptive_split.dart';
 import '../../../core/widgets/day_of_month_grid.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../cubit/bill_editor_cubit.dart';
-import '../cubit/bill_editor_state.dart';
+import '../bloc/bill_editor_bloc.dart';
+import '../bloc/bill_editor_event.dart';
+import '../bloc/bill_editor_state.dart';
 import 'bill_question.dart';
 
 /// Step 3 of the bill editor: the day of the month it goes out; tapping a day saves.
@@ -28,7 +29,7 @@ class BillDayStep extends StatelessWidget {
           ],
         ],
       ),
-      controls: DayOfMonthGrid(onDay: context.read<BillEditorCubit>().chooseDay),
+      controls: DayOfMonthGrid(onDay: (int day) => context.read<BillEditorBloc>().add(BillEditorDayChosen(day))),
     );
   }
 }

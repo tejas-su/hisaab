@@ -5,8 +5,8 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/widgets/adaptive_split.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/onboarding_step.dart';
-import '../cubit/onboarding_cubit.dart';
-import '../cubit/onboarding_state.dart';
+import '../bloc/onboarding_bloc.dart';
+import '../bloc/onboarding_state.dart';
 import 'amount_controls.dart';
 import '../../../core/widgets/amount_display.dart';
 import 'daily_preview.dart';
@@ -36,7 +36,7 @@ class IncomeStep extends StatelessWidget {
           ],
         ],
       ),
-      controls: AmountControls(cubit: context.read<OnboardingCubit>(), canContinue: hasAmount),
+      controls: AmountControls(bloc: context.read<OnboardingBloc>(), canContinue: hasAmount),
     );
   }
 }

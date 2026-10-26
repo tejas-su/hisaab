@@ -3,8 +3,9 @@
 library;
 
 export 'domain/repository/app_preferences_repository.dart';
-export 'presentation/cubit/bill_editor_cubit.dart';
-export 'presentation/cubit/bills_cubit.dart';
+export 'presentation/bloc/bill_editor_bloc.dart';
+export 'presentation/bloc/bills_bloc.dart';
+export 'presentation/bloc/bills_event.dart';
 export 'presentation/pages/bill_editor_page.dart';
 export 'presentation/pages/bills_page.dart';
 export 'presentation/pages/settings_page.dart';

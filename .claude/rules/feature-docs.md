@@ -38,7 +38,7 @@ docs/
 ## Writing style
 
 - Start with an `# H1` title naming the topic
-- Name real files as backticked repo-relative paths (`lib/add_entry/presentation/cubit/add_entry_cubit.dart`) and real class/method names. Read the source first; never guess names
+- Name real files as backticked repo-relative paths (`lib/add_entry/presentation/bloc/add_entry_bloc.dart`) and real class/method names. Read the source first; never guess names
 - Describe flows as numbered steps; use tables for mappings (class → layer → responsibility)
 - Keep it to 1–2 sentences per item, no padding. State what the code does today; mark planned or uncertain behaviour explicitly
 - When a doc was written from a branch diff, add a short "Source scope" list naming the files it covers

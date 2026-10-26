@@ -11,8 +11,9 @@ import '../../../core/widgets/amount_display.dart';
 import '../../../core/widgets/keypad.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
-import '../cubit/bill_editor_cubit.dart';
-import '../cubit/bill_editor_state.dart';
+import '../bloc/bill_editor_bloc.dart';
+import '../bloc/bill_editor_event.dart';
+import '../bloc/bill_editor_state.dart';
 import 'bill_question.dart';
 
 /// Step 2 of the bill editor: the amount on the in-app keypad, then Next.
@@ -24,7 +25,7 @@ class BillAmountStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final BillEditorCubit cubit = context.read<BillEditorCubit>();
+    final BillEditorBloc bloc = context.read<BillEditorBloc>();
     final bool short = context.layout.heightClass == HeightClass.compact;
     return AdaptiveSplit(
       header: BillQuestion(
@@ -39,9 +40,9 @@ class BillAmountStep extends StatelessWidget {
         children: <Widget>[
           Keypad(
             keyHeight: short ? HisaabSizes.minTouchTarget : 60,
-            onKey: cubit.pressKey,
-            onBackspace: cubit.backspace,
-            onClear: cubit.clear,
+            onKey: (String key) => bloc.add(BillEditorKeyPressed(key)),
+            onBackspace: () => bloc.add(const BillEditorBackspacePressed()),
+            onClear: () => bloc.add(const BillEditorCleared()),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -50,7 +51,7 @@ class BillAmountStep extends StatelessWidget {
               key: const ValueKey<String>('bill-next'),
               label: strings.next,
               icon: AppIcons.next,
-              onPressed: form.rupees > 0 ? cubit.next : null,
+              onPressed: form.rupees > 0 ? () => bloc.add(const BillEditorNextPressed()) : null,
             ),
           ),
         ],

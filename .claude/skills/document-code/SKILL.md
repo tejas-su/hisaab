@@ -12,7 +12,7 @@ Scope: docs *inside Dart files*. Feature-level docs (architecture, flows, behavi
 
 ## Procedure
 
-1. Read the target file(s) for **$ARGUMENTS**. For a folder, work file by file, starting with the public API (barrel file, pages, blocs/cubits, use cases, repositories)
+1. Read the target file(s) for **$ARGUMENTS**. For a folder, work file by file, starting with the public API (barrel file, pages, blocs, use cases, repositories)
 2. List every public class, mixin, enum, extension, typedef, constructor, method, and property
 3. Add `///` dartdoc to each one missing it (one sentence minimum, more only when genuinely needed), using the "What to document, by kind" table in the rule
 4. Fix existing dartdoc that is wrong, stale, or restates the name
@@ -26,4 +26,4 @@ Scope: docs *inside Dart files*. Feature-level docs (architecture, flows, behavi
 - Every symbol documented, grouped by file
 - Comments removed or corrected, and why
 - Confirm that no logic changed
-- Code issues noticed but not fixed (e.g. a missing `isClosed` guard, a swallowed exception)
+- Code issues noticed but not fixed (e.g. an un-awaited future in a bloc handler, a swallowed exception)
