@@ -1,5 +1,5 @@
 name: expense_tracker
-description: "A new Flutter project."
+description: "hisaab• — how much can I safely spend today? An offline expense tracker for India."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -8,22 +8,44 @@ environment:
 
 dependencies:
   equatable: ^3.0.0
+  figma_squircle: ^0.6.3
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
   flutter_localizations:
     sdk: flutter
+  fpdart: ^1.2.0
   get_it: ^9.3.0
-  google_fonts: ^9.0.0
   hugeicons: ^1.2.0
   intl: ^0.20.3
+  path: ^1.9.1
   sqflite: ^2.4.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  sqflite_common_ffi: ^2.4.5
 
 flutter:
   uses-material-design: true
   generate: true
+
+  assets:
+    - assets/fonts/OFL-AnekLatin.txt
+    - assets/fonts/OFL-Mukta.txt
+
+  fonts:
+    - family: AnekLatin
+      fonts:
+        - asset: assets/fonts/AnekLatin-Variable.ttf
+    - family: Mukta
+      fonts:
+        - asset: assets/fonts/Mukta-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Mukta-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Mukta-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Mukta-Bold.ttf
+          weight: 700

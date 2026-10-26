@@ -21,7 +21,7 @@ paths:
 
 ## Money & time in the domain
 - Amounts are `Money(amountMinor: int, currency: CurrencySpec)`; arithmetic happens on `amountMinor`. Never `double`
-- Dates that mean "a day" (expense date, payday) are calendar dates (`DateTime` at local midnight, compared with `isSameDay`), never instants with a time of day
+- Dates that mean "a day" (expense date, payday) are `CalendarDate` (`core/time/calendar_date.dart`), stored as `YYYY-MM-DD`, never a `DateTime`. Parse with `CalendarDate.parse` (an `Either`)
 - Domain logic takes "today" as a parameter or from the injected `Clock`; it never calls `DateTime.now()`
 - Period math (payday clamping to month end, weekly cycles, "it changes" → calendar month) lives only in `PeriodCalculator`
 
@@ -36,7 +36,7 @@ paths:
 - `Either<Failure, T>` for synchronous operations (mappers, validators)
 - `Option<T>` instead of `T?` inside domain logic chains where absence has meaning
 - Wrap data source calls with `TaskEither.tryCatch(() async { ... }, (err, st) => DatabaseFailure(err))` — never manual `try/catch`
-- The base `Failure` sealed class lives in `core/errors/`; feature subtypes live in the feature's `domain/` and extend it
+- The base `Failure` abstract class lives in `core/errors/`; feature subtypes live in the feature's `domain/` and extend it
 - Never duplicate `Failure` definitions across features
 - Chain with `.flatMap`, `.map`, `.mapLeft`; no `.run()` until the Cubit layer
 - `fpdart` is added in milestone M0 (see `docs/PLAN.md`); if it is missing, ask before adding it
@@ -59,7 +59,7 @@ paths:
 - Each data source has its own interface so it can be faked
 - Repositories receive data sources through the constructor; never open the database inside a repository
 - Multi-row writes (posting recurring catch-ups, restoring a backup) run inside one `db.transaction`
-- Recurring posts are idempotent: rely on the unique index `transactions(recurring_id, date)` and `ConflictAlgorithm.ignore`
+- Recurring posts are idempotent: rely on the unique index `transactions(recurring_id, date)` and `ConflictAlgorithm.ignore`. `OR IGNORE` also silently skips CHECK and NOT NULL violations, so validate every row before posting and use it only for that insert. `ON CONFLICT … DO NOTHING` would be safer but needs SQLite 3.24, which minSdk 24 doesn't guarantee
 
 ## Schema & migrations
 - Every schema change bumps the DB version and adds a migration step in `core/db/migrations/`; never edit a shipped migration

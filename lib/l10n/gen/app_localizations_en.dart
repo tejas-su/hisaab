@@ -10,30 +10,40 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Expense Tracker';
+  String get appTitle => 'hisaab';
 
   @override
-  String get leftToSpend => 'Left to spend';
+  String get navHome => 'Home';
 
   @override
-  String perDayUntilPayday(String amount) {
-    return '$amount/day until payday';
-  }
+  String get navSpends => 'Spends';
 
   @override
-  String overBy(String amount) {
-    return '$amount over';
-  }
+  String get settings => 'Settings';
 
   @override
-  String daysLeft(int count) {
+  String get safeToSpendToday => 'Safe to spend today';
+
+  @override
+  String daysToPayday(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count days left',
-      one: '1 day left',
-      zero: 'Payday today',
+      other: '$count days to payday',
+      one: '1 day to payday',
     );
     return '$_temp0';
   }
+
+  @override
+  String spokenAmount(String amount) {
+    return '$amount rupees';
+  }
+
+  @override
+  String get screenInProgress => 'This screen is being built.';
+
+  @override
+  String get startupFailed =>
+      'hisaab couldn\'t open its data. Close the app and open it again.';
 }

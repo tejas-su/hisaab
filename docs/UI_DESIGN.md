@@ -312,6 +312,7 @@ One effect per event, never buzzy.
 - Text scales to 1.5× with no clipping. Every colour has an increased-contrast variant (HIG).
 
 ## 10. Android
+- All orientations and window sizes; never locked (§13).
 - Edge-to-edge (API 36). The dock sits above `MediaQuery.paddingOf(context).bottom`.
 - Predictive back: `PredictiveBackPageTransitionsBuilder` and `PopScope`. A back swipe scales the tray down.
 - Later quick-add options:
@@ -320,9 +321,10 @@ One effect per event, never buzzy.
   - Quick Settings tile using `startActivityAndCollapse(PendingIntent)`.
 
 ## 11. Flutter implementation notes
-- `core/design/tokens.dart`: `ThemeExtension<HisaabColors>` with light and dark instances, including the `display*` tokens.
-- `core/design/type.dart`: Anek Latin (with `FontVariation('wdth', 85)` on amounts) and Mukta; `FontFeature.tabularFigures()` on all amounts.
-- `core/design/motion.dart`: the four spring tokens and `reduceMotion(context)`.
+- `core/design/hisaab_colors.dart`: `ThemeExtension<HisaabColors>` with light and dark instances, including the `display*` tokens. A test fails the build if any token pair drops below WCAG AA.
+- `core/design/hisaab_type.dart`: Anek Latin (with `FontVariation('wdth', 85)` on amounts) and Mukta; `FontFeature.tabularFigures()` on all amounts.
+- `core/design/hisaab_motion.dart`: the four spring tokens and `reduceMotion(context)`.
+- `core/layout/`: `AppLayout.resolve` and `AppLayoutScope` (§13).
 - `core/design/haptics.dart`: `Haptics.tick()`, `.success()`, `.reject()`, `.threshold()`.
 - `core/widgets/`:
   - `DayBlocks` (`CustomPainter`: N blocks, today fill level, state, payday flag)
@@ -372,3 +374,28 @@ One effect per event, never buzzy.
   - Indigo, emerald and other Tailwind defaults.
   - Glass on content.
   - Streak shame.
+
+---
+
+## 13. Adaptive layout: foldables, tablets, multi-window
+
+Android 16 (API 36, which this app targets) ignores orientation, aspect-ratio and resizability locks on displays at least 600dp wide. Foldables, tablets, split-screen and desktop windowing are normal, so every screen must adapt rather than assume a portrait phone.
+
+**One pure function decides the layout:** `AppLayout.resolve(window size, display features)` in `lib/core/layout/`. It is unit-tested for every posture below. Screens read the result with `context.layout`; they never check `MediaQuery` widths themselves.
+
+| Window | Width class | Arrangement |
+|---|---|---|
+| Phone, folded foldable, split-screen half (under 600dp) | compact | One pane, full width, dock at the bottom |
+| Unfolded foldable in portrait, small tablet (600–839dp) | medium | One pane as a **centred 560dp column**, dock at the bottom |
+| Tablet, unfolded foldable in landscape, phone in landscape (840dp and up) | expanded | **Two panes**: Home (40% of the width, clamped to 360–480dp) beside Spends; no dock, since both are visible |
+| A vertical fold or hinge across the window (book posture), window at least 600dp | — | Two panes **split exactly at the fold**; with a physical hinge, nothing is drawn inside the hinge gap |
+| A horizontal fold, half-opened (tabletop posture) | — | **Content above the fold, controls below it** (dock now; keypad in the Add tray in M1) |
+| Height under 480dp (phone landscape, small multi-window) | compact height | Denser layouts (M1: smaller hero, keypad beside the amount) |
+
+**Rules:**
+- **Use the window, never the screen.** Sizes come from `MediaQuery.sizeOf`, which is the app window in split-screen or freeform mode.
+- **Nothing straddles a fold or hinge.** Display-feature bounds come from `MediaQuery.displayFeaturesOf`. Cutouts never split the layout; they are handled by safe areas.
+- **Panes keep clear of system bars only on the window edges they touch,** so the right pane doesn't get left padding for a left-side cutout.
+- **Text scale:** layouts are tested at 2× on a 320dp phone. Controls grow (minimum heights, never fixed), and dock labels scale down instead of overflowing.
+- **Readable width:** body content never exceeds 560dp in a single pane.
+- **Tests** cover phone, phone landscape, unfolded foldable, tablet, book posture with a fold, a hinge with a gap, tabletop, split-screen, 2× text and dark theme (`test/core/layout/`, `test/app/app_shell_test.dart`). New screens add their own size cases through `test/helpers/pump_app.dart` (`TestWindows`).

@@ -20,8 +20,9 @@ paths:
   ├── db/           ← AppDatabase (sqflite), versioned migrations
   ├── design/       ← tokens (HisaabColors), type, motion, haptics, AppIcon/AppIcons
   ├── di/           ← get_it registration (composition root only)
-  ├── errors/       ← base Failure sealed class and shared Failure subtypes
+  ├── errors/       ← base Failure abstract class and shared Failure subtypes
   ├── extensions/   ← extension methods on Dart/Flutter types
+  ├── layout/       ← AppLayout.resolve, AppLayoutScope (adaptive panes, folds)
   ├── logging/      ← AppLogger
   ├── money/        ← Money, CurrencySpec, MoneyFormatter
   ├── time/         ← Clock abstraction, PeriodCalculator
@@ -31,7 +32,7 @@ paths:
 - Core has **no knowledge of any feature**: no imports from `lib/<feature>/`
 - Never put feature-specific business logic, models, or entities in `core/`
 - A file belongs in `core/` only if two or more unrelated features would otherwise duplicate it
-- `core/errors/` defines the base `Failure` sealed class; features extend it in their own `domain/`
+- `core/errors/` defines the base `Failure` abstract class (not `sealed`: Dart forbids subclassing a sealed class from another library); features extend it in their own `domain/`
 - `core/usecases/` defines the abstract `UseCase<T, Params>`; all feature use cases implement it
 
 ## Naming

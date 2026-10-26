@@ -97,32 +97,56 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Expense Tracker'**
+  /// **'hisaab'**
   String get appTitle;
 
-  /// No description provided for @leftToSpend.
+  /// No description provided for @navHome.
   ///
   /// In en, this message translates to:
-  /// **'Left to spend'**
-  String get leftToSpend;
+  /// **'Home'**
+  String get navHome;
 
-  /// No description provided for @perDayUntilPayday.
+  /// No description provided for @navSpends.
   ///
   /// In en, this message translates to:
-  /// **'{amount}/day until payday'**
-  String perDayUntilPayday(String amount);
+  /// **'Spends'**
+  String get navSpends;
 
-  /// No description provided for @overBy.
+  /// No description provided for @settings.
   ///
   /// In en, this message translates to:
-  /// **'{amount} over'**
-  String overBy(String amount);
+  /// **'Settings'**
+  String get settings;
 
-  /// No description provided for @daysLeft.
+  /// No description provided for @safeToSpendToday.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{Payday today} =1{1 day left} other{{count} days left}}'**
-  String daysLeft(int count);
+  /// **'Safe to spend today'**
+  String get safeToSpendToday;
+
+  /// No description provided for @daysToPayday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day to payday} other{{count} days to payday}}'**
+  String daysToPayday(int count);
+
+  /// Screen-reader form of an amount; amount is digits with Indian grouping, e.g. 1,430
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} rupees'**
+  String spokenAmount(String amount);
+
+  /// Temporary body text on screens that land in a later milestone
+  ///
+  /// In en, this message translates to:
+  /// **'This screen is being built.'**
+  String get screenInProgress;
+
+  /// Shown only when the local database cannot be opened at start-up
+  ///
+  /// In en, this message translates to:
+  /// **'hisaab couldn\'t open its data. Close the app and open it again.'**
+  String get startupFailed;
 }
 
 class _AppLocalizationsDelegate

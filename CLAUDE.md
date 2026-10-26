@@ -42,9 +42,10 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
   | `sqflite` | Local database |
   | `intl` + `flutter_localizations` | Formatting and l10n, via gen-l10n |
   | `hugeicons` | Icons |
-  | `google_fonts` | Fonts, bundled with runtime fetching off |
+  | `fpdart` | `Either` / `TaskEither` errors |
+  | Bundled fonts | Anek Latin and Mukta in `assets/fonts/`, with OFL licences |
 
-- Planned for M0: `fpdart`, `figma_squircle`, `path`. Planned later: `animations`, `fl_chart`, `share_plus`, `url_launcher`. **Ask before adding any dependency not listed in PLAN §11.**
+- `figma_squircle` and `path` are also installed. Planned later: `animations`, `fl_chart`, `share_plus`, `url_launcher`. **Ask before adding any dependency not listed in PLAN §11.**
 - Commands:
 
   | Command | Purpose |
@@ -55,7 +56,7 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
   | `flutter test` | Run tests |
   | `flutter run -d <device>` | Run the app |
 
-- The project is **not a git repo yet**. `scripts/changed_lines_coverage.sh` needs git, and `git init` is part of M0.
+- The git repo is **local only**. Never add a remote and never push. Commit only when asked.
 
 ## Architecture
 
@@ -83,6 +84,7 @@ These are app-specific, and the rules files carry the details.
 - **One signal colour:** marigold `#FFB020` means *today / act* only. It is never placed bare on the light background.
 - **No red, no green, no category colours.** State is shown by fill, outline, hatch and words.
 - **Icons:** Hugeicons only, through `AppIcon`, always with a label.
+- **Adaptive layout:** never lock orientation or assume a portrait phone. Read `context.layout` (`lib/core/layout/`), never raw `MediaQuery` widths. Nothing straddles a fold. New screens are tested at the `TestWindows` sizes (UI_DESIGN §13).
 - **Entry speed:** the Add flow is Add → digits → Next → tile. Never add a tap or a field to it, and never reorder categories, the keypad or the dock.
 - **Privacy:** no network access, no analytics. Never log notes or amounts with personal text. The only data that leaves the device is the Ask AI export the user triggers and previews.
 
@@ -119,7 +121,7 @@ Read [tests.md](.claude/rules/tests.md) before writing or changing any test.
 - **Coverage:** new or changed code is covered in the same change. The hard floor is **≥ 90% of changed lines** and the target is 100%. List every uncovered line with a reason, and don't use `// coverage:ignore`. Check with `scripts/changed_lines_coverage.sh [base-ref]`.
 - **TDD for logic:** use cases, `PeriodCalculator`, `SafeToSpend`, the recurring engine, `PromptBuilder`, mappers and Cubits are written test-first. A bug fix starts with a failing regression test.
 - **Dates and money get edge cases:** payday on the 29th–31st, leap years, year-crossing cycles, zero days left, ₹0, the 9-digit cap, overspend larger than the remaining total, and a recurring catch-up posted exactly once. Pin "today" with `FakeClock`.
-- **Test doubles:** hand-written fakes by default. Only `flutter_test` is installed, so ask before adding `mocktail`, `bloc_test` or `sqflite_common_ffi`.
+- **Test doubles:** hand-written fakes by default. `sqflite_common_ffi` runs real SQLite in tests. Ask before adding `mocktail` or `bloc_test`.
 - **Existing tests are the contract:** change the code, not the test. If a test looks wrong, stop and ask.
 - **Layout:** `test/` mirrors `lib/`. Shared fakes and fixtures go in `test/helpers/`.
 - **Done means:** tests pass, the coverage script passes (or gaps are reported), and `flutter analyze` is clean.

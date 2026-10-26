@@ -1,17 +1,25 @@
 {
   "@@locale": "en",
-  "appTitle": "Expense Tracker",
-  "leftToSpend": "Left to spend",
-  "perDayUntilPayday": "{amount}/day until payday",
-  "@perDayUntilPayday": {
-    "placeholders": { "amount": { "type": "String" } }
-  },
-  "overBy": "{amount} over",
-  "@overBy": {
-    "placeholders": { "amount": { "type": "String" } }
-  },
-  "daysLeft": "{count, plural, =0{Payday today} =1{1 day left} other{{count} days left}}",
-  "@daysLeft": {
+  "appTitle": "hisaab",
+  "navHome": "Home",
+  "navSpends": "Spends",
+  "settings": "Settings",
+  "safeToSpendToday": "Safe to spend today",
+  "daysToPayday": "{count, plural, =1{1 day to payday} other{{count} days to payday}}",
+  "@daysToPayday": {
     "placeholders": { "count": { "type": "int" } }
+  },
+  "spokenAmount": "{amount} rupees",
+  "@spokenAmount": {
+    "description": "Screen-reader form of an amount; amount is digits with Indian grouping, e.g. 1,430",
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "screenInProgress": "This screen is being built.",
+  "@screenInProgress": {
+    "description": "Temporary body text on screens that land in a later milestone"
+  },
+  "startupFailed": "hisaab couldn't open its data. Close the app and open it again.",
+  "@startupFailed": {
+    "description": "Shown only when the local database cannot be opened at start-up"
   }
 }

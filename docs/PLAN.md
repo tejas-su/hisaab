@@ -1,7 +1,7 @@
 # Hisaab — Product & Build Plan
 
 Target: **Android only** (v1). Currency: **INR** (architected for any locale/currency).
-Stack: Flutter · flutter_bloc (Cubits) · get_it · sqflite · equatable · intl + gen-l10n · hugeicons · google_fonts.
+Stack: Flutter · flutter_bloc (Cubits) · get_it · sqflite · equatable · fpdart · intl + gen-l10n · hugeicons · figma_squircle · bundled fonts (Anek Latin, Mukta).
 
 ---
 
@@ -137,11 +137,12 @@ lib/
     db/                        AppDatabase (sqflite), versioned migrations
     design/                    tokens (HisaabColors), type, motion, haptics, AppIcon/AppIcons
     di/                        get_it registration (composition root only)
-    errors/                    base Failure sealed class
+    errors/                    base Failure abstract class
     logging/                   AppLogger
     money/                     Money, CurrencySpec, MoneyFormatter
     time/                      Clock, PeriodCalculator
     usecases/                  UseCase<T, Params>
+    layout/                    AppLayout.resolve, AppLayoutScope (adaptive panes, folds)
     widgets/                   Keypad, AmountText, DayBlocks, SignalKey, Tray, CategoryTile
   ledger/                      shared money feature: transactions, categories, recurring
     domain/ data/              entities, repositories, use cases (SaveEntry, GetCycleSummary,
@@ -161,7 +162,7 @@ Rules:
 
 ## 10. Android specifics
 - `minSdk 24`, edge-to-edge (enforced on Android 15), predictive back enabled.
-- Portrait only for v1.
+- Every orientation and window size. Adaptive layout for foldables, tablets and multi-window (UI_DESIGN §13, DECISIONS D22).
 - Other platform folders (ios/macos/linux/windows/web) left untouched but not built or tested.
 
 ## 11. Dependencies

@@ -24,7 +24,7 @@ Tests should cite the ID they cover.
 ## 1. Scope
 
 ### 1.1 In v1
-- Android phones (API 24+), portrait only, one user per device, works fully offline.
+- Android (API 24+), on phones, foldables, tablets and in multi-window, in any orientation (UI_DESIGN §13). One user per device. Works fully offline.
 - One currency (INR) and English text. The code is ready for other locales and currencies (PLAN §5).
 - Recurring income and recurring bills.
 - Manual expenses and manual income ("Got").
@@ -325,6 +325,9 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E13 | Reduce motion on | All motion becomes 150 ms crossfades; values still update |
 | E14 | Restore with a corrupt or older file | Validated first; an invalid file changes nothing; an older version is migrated |
 | E15 | More than 31 days left (weekly cycles can't; monthly can't) | Not possible by BR-1; asserted in a test |
+| E16 | Foldable opened into book posture while the app is running | Re-lays out into two panes split at the fold, with no data or state loss |
+| E17 | Tabletop posture | Content above the fold, controls below it |
+| E18 | App in a 412×400dp split-screen window | Compact layout; every control still reachable |
 
 ---
 
@@ -339,6 +342,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | NFR-5 | Data safety: every multi-row write is in a transaction; migrations are tested from each previous schema version; backup/restore round-trips byte-equal data |
 | NFR-6 | APK under 15 MB (fonts subset to Latin plus Devanagari) |
 | NFR-7 | Changed-lines test coverage ≥ 90% (target 100%) per change (`.claude/rules/tests.md`) |
+| NFR-8 | Adaptive layout: no orientation or size lock; works from 320dp phones to tablets, in every foldable posture and in multi-window (UI_DESIGN §13) |
 
 ---
 
