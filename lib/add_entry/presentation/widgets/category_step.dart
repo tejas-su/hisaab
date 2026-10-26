@@ -1,0 +1,140 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/design/app_icon.dart';
+import '../../../core/design/app_icons.dart';
+import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/design/hisaab_shapes.dart';
+import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/widgets/amount_text.dart';
+import '../../../core/widgets/category_tile.dart';
+import '../../../core/widgets/hisaab_chip.dart';
+import '../../../core/widgets/pressable.dart';
+import '../../../l10n/gen/app_localizations.dart';
+import '../../../ledger/ledger.dart';
+import '../cubit/add_entry_cubit.dart';
+import '../cubit/add_entry_state.dart';
+import 'date_chip.dart';
+import 'note_chip.dart';
+
+/// Step 2 of the tray: "What was it for?" as a fixed grid of tiles; tapping one saves (FR-AD-5).
+///
+/// Date and note are optional chips. In edit mode a Delete chip appears (FR-AD-8).
+class CategoryStep extends StatelessWidget {
+  const CategoryStep({super.key, required this.state});
+
+  final AddEntryState state;
+
+  static const int _columns = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final AddEntryCubit cubit = context.read<AddEntryCubit>();
+    final EntryForm form = state.form;
+    final AddEntryState current = state;
+    final int? flashed = switch (current) {
+      AddEntrySaving(:final int categoryId) => categoryId,
+      AddEntryFinished(:final int? categoryId) => categoryId,
+      AddEntryEditing() => null,
+    };
+    final bool saving = current is! AddEntryEditing;
+    return SingleChildScrollView(
+      padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.m, HisaabSpacing.gutter, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          _title(context, strings, cubit, form),
+          const SizedBox(height: 18),
+          _grid(context, strings, form.tiles, flashed, saving ? null : cubit.pickCategory),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: HisaabSpacing.s,
+            runSpacing: HisaabSpacing.s,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              DateChip(date: form.date, today: form.today, earliest: form.earliestDate, onChanged: cubit.setDate),
+              SizedBox(width: 220, child: NoteChip(note: form.note, onChanged: cubit.setNote)),
+              if (form.editing.isSome())
+                HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onPressed: cubit.delete),
+            ],
+          ),
+          if (current is AddEntryEditing && current.failed) ...<Widget>[
+            const SizedBox(height: HisaabSpacing.m),
+            Text(strings.couldntSave, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _title(BuildContext context, AppLocalizations strings, AddEntryCubit cubit, EntryForm form) => Row(
+        children: <Widget>[
+          Pressable(
+            key: const ValueKey<String>('back-to-amount'),
+            semanticLabel: strings.backToAmount,
+            onPressed: cubit.back,
+            builder: (BuildContext context, bool pressed) => Container(
+              width: HisaabSizes.minTouchTarget,
+              height: HisaabSizes.minTouchTarget,
+              alignment: Alignment.center,
+              decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
+              child: const AppIcon(AppIcons.back),
+            ),
+          ),
+          const SizedBox(width: HisaabSpacing.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                AmountText(form.amount, roll: false, style: Theme.of(context).textTheme.displaySmall),
+                Text(
+                  form.kind == EntryKind.spent ? strings.whatWasItFor : strings.whereFrom,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: context.colors.ink2),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+
+  Widget _grid(
+    BuildContext context,
+    AppLocalizations strings,
+    List<Category> tiles,
+    int? flashed,
+    ValueChanged<int>? onPick,
+  ) =>
+      Column(
+        children: <Widget>[
+          for (int row = 0; row * _columns < tiles.length; row++) ...<Widget>[
+            if (row > 0) const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                for (int column = 0; column < _columns; column++) ...<Widget>[
+                  if (column > 0) const SizedBox(width: 10),
+                  Expanded(child: _tile(strings, tiles, row * _columns + column, flashed, onPick)),
+                ],
+              ],
+            ),
+          ],
+        ],
+      );
+
+  Widget _tile(AppLocalizations strings, List<Category> tiles, int index, int? flashed, ValueChanged<int>? onPick) {
+    if (index >= tiles.length) {
+      return const SizedBox.shrink();
+    }
+    final Category category = tiles[index];
+    final String label = category.labelIn(strings);
+    return CategoryTile(
+      key: ValueKey<String>('tile-${category.key}'),
+      icon: AppIcons.forKey(category.iconKey),
+      label: label,
+      semanticLabel: strings.saveToCategory(label),
+      flashed: category.id == flashed,
+      onPressed: onPick == null ? null : () => onPick(category.id),
+    );
+  }
+}

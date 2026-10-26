@@ -7,12 +7,20 @@
   "safeToSpendToday": "Safe to spend today",
   "daysToPayday": "{count, plural, =1{1 day to payday} other{{count} days to payday}}",
   "@daysToPayday": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "spokenAmount": "{amount} rupees",
   "@spokenAmount": {
     "description": "Screen-reader form of an amount; amount is digits with Indian grouping, e.g. 1,430",
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "screenInProgress": "This screen is being built.",
   "@screenInProgress": {
@@ -21,5 +29,300 @@
   "startupFailed": "hisaab couldn't open its data. Close the app and open it again.",
   "@startupFailed": {
     "description": "Shown only when the local database cannot be opened at start-up"
-  }
+  },
+  "back": "Back",
+  "next": "Next",
+  "done": "Done",
+  "skip": "Skip",
+  "delete": "Delete",
+  "undo": "Undo",
+  "tryAgain": "Try again",
+  "couldntSave": "Couldn't save. Try again.",
+  "separator": " · ",
+  "@separator": {
+    "description": "Joins two parts of one line, e.g. \"Lasts till payday · about ₹9,300 spare\""
+  },
+  "spokenPair": "{first}, {second}",
+  "@spokenPair": {
+    "description": "Screen-reader form of two parts of one line",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteLastDigit": "Delete last digit. Long-press to clear",
+  "categoryName": "{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Salary} other_income{Other income} other{Other}}",
+  "@categoryName": {
+    "description": "Default name of a seeded category, by its stored key",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingProgress": "Step {step} of {total}",
+  "@onboardingProgress": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "incomeQuestion": "How much money comes in each month?",
+  "incomeHint": "Your salary after tax. You can change it any time.",
+  "dailyPreview": "That's about {amount} a day",
+  "@dailyPreview": {
+    "description": "Rough daily share while typing income (amount ÷ 30)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyPreviewCaption": "One block for every day of the month",
+  "paydayQuestion": "When does it come?",
+  "paydayHint": "Your month runs from one payday to the next.",
+  "payFirstOfMonth": "1st of the month",
+  "payLastDay": "Last day",
+  "payPickDate": "Pick a date",
+  "payEveryWeek": "Every week",
+  "payItChanges": "It changes",
+  "pickPaydayQuestion": "Which day of the month?",
+  "pickWeekdayQuestion": "Which day of the week?",
+  "billsQuestion": "Any fixed bills?",
+  "billsHint": "Money that goes out on the same day every month. Add them now or later.",
+  "billName": "{kind, select, rent{Rent} emi{EMI} phone{Phone} internet{Internet} schoolFees{School fees} subscriptions{Subscriptions} other{Bill}}",
+  "@billName": {
+    "description": "Name of a fixed bill chip, by its kind",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "billAmountQuestion": "How much is {bill}?",
+  "@billAmountQuestion": {
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  },
+  "billDayQuestion": "Which day does {bill} go out?",
+  "@billDayQuestion": {
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  },
+  "billDetail": "{amount} on day {day}",
+  "@billDetail": {
+    "description": "Chip detail for an added bill",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "removeBill": "Remove {bill}",
+  "@removeBill": {
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  },
+  "todayTitle": "Today",
+  "todayList": "Today",
+  "lastsTillPayday": "Lasts till payday",
+  "aboutSpare": "about {amount} spare",
+  "@aboutSpare": {
+    "description": "Forecast: money left at payday, rounded to ₹100",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "runsOutOn": "At this pace it runs out on {date}",
+  "@runsOutOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "runsOutOnLower": "at this pace it runs out on {date}",
+  "@runsOutOnLower": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "slowDown": "Slow down",
+  "shareAlmostUsed": "today's share is almost used",
+  "overToday": "Over today",
+  "stillLasts": "still lasts till payday",
+  "overBy": "Over by {amount}",
+  "@overBy": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paydayIn": "{count, plural, =1{payday tomorrow} other{payday in {count} days}}",
+  "@paydayIn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "amountOverToday": "{amount} over today",
+  "@amountOverToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "amountOver": "{amount} over",
+  "@amountOver": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eachDayAfter": "Each day after: {amount}",
+  "@eachDayAfter": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "moreDays": "+{count}",
+  "@moreDays": {
+    "description": "Label after the visible day blocks when there are too many to draw",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "heroSpoken": "{label}: {amount}. {days}. {line}.",
+  "@heroSpoken": {
+    "description": "Screen-reader sentence for the whole hero card",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      },
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "noIncomeTitle": "Add money you got this month",
+  "noIncomeBody": "Your daily share starts once there's money to share.",
+  "addMoney": "Add money",
+  "emptyToday": "Nothing spent today. Tap Add when you do.",
+  "entryDeleted": "Deleted {amount}",
+  "@entryDeleted": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "loadFailed": "Couldn't load your money.",
+  "gotAmount": "+{amount}",
+  "@gotAmount": {
+    "description": "An amount of money that came in",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "add": "Add",
+  "spent": "Spent",
+  "got": "Got",
+  "moneyOutOrIn": "Money out or in",
+  "quickAdd": "+{amount}",
+  "@quickAdd": {
+    "description": "Quick chip that adds this amount",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "quickAddSpoken": "Add {amount}",
+  "@quickAddSpoken": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "leavesForToday": "Leaves {amount} for today",
+  "@leavesForToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "overTodayShare": "{amount} over today's share",
+  "@overTodayShare": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tomorrowShare": "tomorrow {amount}",
+  "@tomorrowShare": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "whatWasItFor": "What was it for?",
+  "whereFrom": "Where did it come from?",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "pickDate": "Pick a date",
+  "addNote": "Add a note",
+  "noteHint": "A few words",
+  "saveToCategory": "{category}. Save",
+  "@saveToCategory": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "backToAmount": "Back to amount"
 }

@@ -36,7 +36,8 @@ Future<void> loadAppFonts() async {
 }
 
 /// Pumps [child] inside the app's theme, localisations and [AppLayoutScope], in a window of
-/// [size] with optional [displayFeatures] (folds, hinges) and [textScale].
+/// [size] with optional [displayFeatures] (folds, hinges), [textScale] and [reduceMotion].
+/// Pass `settle: false` to inspect an entrance animation from its first frame.
 Future<void> pumpApp(
   WidgetTester tester,
   Widget child, {
@@ -44,6 +45,8 @@ Future<void> pumpApp(
   List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
   ThemeMode themeMode = ThemeMode.light,
   double textScale = 1,
+  bool reduceMotion = false,
+  bool settle = true,
 }) async {
   await tester.runAsync(loadAppFonts);
   tester.view
@@ -53,6 +56,10 @@ Future<void> pumpApp(
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  if (reduceMotion) {
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+  }
 
   await tester.pumpWidget(
     MaterialApp(
@@ -66,5 +73,7 @@ Future<void> pumpApp(
       home: child,
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  }
 }

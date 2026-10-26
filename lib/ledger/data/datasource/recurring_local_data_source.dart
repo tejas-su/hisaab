@@ -1,0 +1,79 @@
+import 'package:sqflite/sqflite.dart';
+
+import '../../../core/db/app_database.dart';
+import '../../../core/db/db_row.dart';
+import '../../../core/db/db_schema.dart';
+import '../model/entry_model.dart';
+import '../model/recurring_model.dart';
+
+/// Reads `recurring` rows and runs the engine's multi-row writes, each in one transaction.
+abstract interface class RecurringLocalDataSource {
+  /// Every active rule.
+  Future<List<RecurringModel>> activeRules();
+
+  /// Inserts [entries] (skipping any `(recurring_id, date)` already posted) and sets each rule's
+  /// `next_due` from [nextDueByRuleId], atomically. Returns how many entries were inserted.
+  Future<int> post(List<EntryModel> entries, Map<int, String> nextDueByRuleId);
+
+  /// Deletes every entry and rule, then inserts [rules] and [entries], atomically.
+  Future<void> startFresh(List<RecurringModel> rules, List<EntryModel> entries);
+}
+
+/// [RecurringLocalDataSource] backed by the app's sqflite database.
+final class SqfliteRecurringLocalDataSource implements RecurringLocalDataSource {
+  const SqfliteRecurringLocalDataSource(this._database);
+
+  final AppDatabase _database;
+
+  @override
+  Future<List<RecurringModel>> activeRules() async {
+    final List<Map<String, Object?>> rows = await _database.db.query(
+      Tables.recurring,
+      where: '${RecurringColumns.active} = 1',
+      orderBy: RecurringColumns.id,
+    );
+    return rows.map((Map<String, Object?> row) => requireRow(RecurringModel.fromRow(row))).toList();
+  }
+
+  // why: OR IGNORE makes a repeat or racing run harmless (SPEC BR-9, E8). It would also skip a
+  // CHECK violation silently, so the repository validates every entry before calling this.
+  @override
+  Future<int> post(List<EntryModel> entries, Map<int, String> nextDueByRuleId) =>
+      _database.db.transaction((Transaction txn) async {
+        int inserted = 0;
+        for (final EntryModel entry in entries) {
+          final int before = await _changes(txn);
+          await txn.insert(Tables.transactions, entry.toRow(), conflictAlgorithm: ConflictAlgorithm.ignore);
+          inserted += await _changes(txn) - before;
+        }
+        for (final MapEntry<int, String> rule in nextDueByRuleId.entries) {
+          await txn.update(
+            Tables.recurring,
+            <String, Object?>{RecurringColumns.nextDue: rule.value},
+            where: '${RecurringColumns.id} = ?',
+            whereArgs: <Object?>[rule.key],
+          );
+        }
+        return inserted;
+      });
+
+  @override
+  Future<void> startFresh(List<RecurringModel> rules, List<EntryModel> entries) =>
+      _database.db.transaction((Transaction txn) async {
+        await txn.delete(Tables.transactions);
+        await txn.delete(Tables.recurring);
+        for (final RecurringModel rule in rules) {
+          await txn.insert(Tables.recurring, rule.toRow());
+        }
+        for (final EntryModel entry in entries) {
+          await txn.insert(Tables.transactions, entry.toRow());
+        }
+      });
+
+  // why: sqflite's insert result is unreliable after an ignored conflict, but SQLite's
+  // total_changes() counts only rows actually written.
+  static Future<int> _changes(Transaction txn) async {
+    final List<Map<String, Object?>> rows = await txn.rawQuery('SELECT total_changes() AS n');
+    return rows.single.intAt('n');
+  }
+}

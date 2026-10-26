@@ -12,16 +12,20 @@ import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import '../helpers/fake_services.dart';
+
 void main() {
   group('HisaabApp', () {
     testWidgets('boots into the adaptive shell', (WidgetTester tester) async {
-      await tester.pumpWidget(const HisaabApp());
+      final FakeServices services = FakeServices();
+      addTearDown(services.dispose);
+      await tester.pumpWidget(HisaabApp(getIt: services.register(GetIt.asNewInstance())));
       await tester.pumpAndSettle();
       expect(find.byType(AppShell), findsOneWidget);
     });
 
     testWidgets('shows a recovery message when the database failed to open', (WidgetTester tester) async {
-      await tester.pumpWidget(const HisaabApp(startupFailed: true));
+      await tester.pumpWidget(const HisaabApp.startupFailed());
       await tester.pumpAndSettle();
       expect(find.textContaining("couldn't open its data"), findsOneWidget);
       expect(find.byType(AppShell), findsNothing);

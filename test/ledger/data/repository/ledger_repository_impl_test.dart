@@ -1,0 +1,112 @@
+import 'package:expense_tracker/core/db/app_database.dart';
+import 'package:expense_tracker/core/db/db_schema.dart';
+import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/ledger/data/datasource/entries_local_data_source.dart';
+import 'package:expense_tracker/ledger/data/repository/ledger_repository_impl.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry_draft.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
+import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../../helpers/fakes/fake_clock.dart';
+import '../../../helpers/test_database.dart';
+
+const CalendarDate _today = CalendarDate(2026, 10, 26);
+
+EntryDraft _draft({int rupees = 60, CalendarDate date = _today, String? note = 'Chai'}) =>
+    EntryDraft(amount: Money.fromMajor(rupees), kind: EntryKind.spent, categoryId: 1, date: date, note: note);
+
+T _right<T>(Either<Failure, T> result) => result.getOrElse((Failure f) => fail(f.message));
+
+void main() {
+  late AppDatabase database;
+  late LedgerRepositoryImpl repository;
+  late List<void> changes;
+
+  setUp(() async {
+    database = await openTestDatabase();
+    repository = LedgerRepositoryImpl(
+      entries: SqfliteEntriesLocalDataSource(database),
+      clock: FakeClock(DateTime(2026, 10, 26, 10, 30)),
+    );
+    changes = <void>[];
+    repository.changes.listen(changes.add);
+    addTearDown(repository.dispose);
+  });
+
+  group('LedgerRepositoryImpl', () {
+    test('adds an entry and reads it back', () async {
+      final Entry saved = _right(await repository.add(_draft()).run());
+      expect(saved.note, 'Chai');
+      expect(_right(await repository.entriesBetween(_today, _today).run()), <Entry>[saved]);
+    });
+
+    test('lists a range newest first and excludes dates outside it', () async {
+      final Entry older = _right(await repository.add(_draft(date: _today.addDays(-1))).run());
+      final Entry newer = _right(await repository.add(_draft()).run());
+      _right(await repository.add(_draft(date: _today.addDays(-40))).run());
+      expect(_right(await repository.entriesBetween(_today.addDays(-7), _today).run()), <Entry>[newer, older]);
+    });
+
+    test('notifies listeners after every write (BR-10)', () async {
+      final Entry saved = _right(await repository.add(_draft()).run());
+      _right(await repository.replace(saved.id, _draft(rupees: 80)).run());
+      _right(await repository.delete(saved.id).run());
+      _right(await repository.restore(saved).run());
+      await pumpEventQueue();
+      expect(changes, hasLength(4));
+    });
+
+    test('replace keeps the id and the recurring link', () async {
+      final int id = await database.db.insert(Tables.transactions, <String, Object?>{
+        TransactionColumns.amountMinor: 820000,
+        TransactionColumns.kind: EntryKindValues.spent,
+        TransactionColumns.categoryId: 7,
+        TransactionColumns.date: '2026-10-05',
+        TransactionColumns.recurringId: null,
+        TransactionColumns.createdAt: '2026-10-05T00:00:00',
+      });
+      final Entry replaced = _right(await repository.replace(id, _draft(rupees: 8500, note: null)).run());
+      expect((replaced.id, replaced.amount, replaced.note), (id, Money.fromMajor(8500), null));
+    });
+
+    test('replace and delete return EntryNotFoundFailure for a missing id', () async {
+      expect((await repository.replace(404, _draft()).run()).getLeft().toNullable(), isA<EntryNotFoundFailure>());
+      expect((await repository.delete(404).run()).getLeft().toNullable(), isA<EntryNotFoundFailure>());
+      expect(changes, isEmpty);
+    });
+
+    test('delete then restore brings back the same entry', () async {
+      final Entry saved = _right(await repository.add(_draft()).run());
+      expect(_right(await repository.delete(saved.id).run()), saved);
+      expect(_right(await repository.entriesBetween(_today, _today).run()), isEmpty);
+      expect(_right(await repository.restore(saved).run()), saved);
+    });
+
+    test('restoring an id that exists again is a DatabaseFailure', () async {
+      final Entry saved = _right(await repository.add(_draft()).run());
+      expect((await repository.restore(saved).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
+    test('a database error becomes DatabaseFailure', () async {
+      await database.close();
+      expect((await repository.add(_draft()).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
+    test('an unreadable stored row becomes InvalidDataFailure', () async {
+      await database.db.insert(Tables.transactions, <String, Object?>{
+        TransactionColumns.amountMinor: 100,
+        TransactionColumns.currency: 'XYZ',
+        TransactionColumns.kind: EntryKindValues.spent,
+        TransactionColumns.categoryId: 1,
+        TransactionColumns.date: '2026-10-26',
+        TransactionColumns.createdAt: '2026-10-26T00:00:00',
+      });
+      expect((await repository.entriesBetween(_today, _today).run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+  });
+}

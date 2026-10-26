@@ -91,3 +91,9 @@ abstract final class FrequencyValues {
   static const String monthly = 'monthly';
   static const String yearly = 'yearly';
 }
+
+/// Stored values of [SettingKeys.monthStart].
+abstract final class MonthStartValues {
+  static const String payday = 'payday';
+  static const String firstOfMonth = 'first_of_month';
+}

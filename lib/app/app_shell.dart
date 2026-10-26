@@ -4,20 +4,24 @@ import '../core/design/hisaab_dimensions.dart';
 import '../core/extensions/build_context_extensions.dart';
 import '../core/layout/app_layout.dart';
 import 'shell_destination.dart';
+import 'widgets/add_key.dart';
 import 'widgets/hisaab_dock.dart';
-import 'widgets/pane.dart';
+import '../core/widgets/pane.dart';
 
 /// The adaptive frame around Home and Spends (UI_DESIGN §13).
 ///
 /// - One pane (phones, folded, split-screen): one screen at a time with the dock.
 /// - Two panes (tablets, landscape, book posture): Home beside Spends, split at the hinge
-///   when there is one, and no dock.
+///   when there is one, and no dock; the Add key sits at the bottom of the Home pane.
 /// - Tabletop posture: the screen above the fold, the dock below it.
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.home, required this.spends});
+  const AppShell({super.key, required this.home, required this.spends, required this.onAdd});
 
   final Widget home;
   final Widget spends;
+
+  /// Opens the Add tray.
+  final VoidCallback onAdd;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -63,7 +67,19 @@ class _AppShellState extends State<AppShell> {
       ];
 
   List<Widget> _sideBySide(Rect primary, Rect secondary, Size window, {required bool showDivider}) => <Widget>[
-        Pane(rect: primary, windowSize: window, child: widget.home),
+        Pane(
+          rect: primary,
+          windowSize: window,
+          child: Column(
+            children: <Widget>[
+              Expanded(child: widget.home),
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+                child: AddKey(onAdd: widget.onAdd),
+              ),
+            ],
+          ),
+        ),
         Pane(rect: secondary, windowSize: window, child: widget.spends),
         if (showDivider)
           Positioned(
@@ -86,6 +102,6 @@ class _AppShellState extends State<AppShell> {
           HisaabSpacing.gutter,
           HisaabSpacing.xl,
         ),
-        child: HisaabDock(selected: _selected, onSelected: _select),
+        child: HisaabDock(selected: _selected, onSelected: _select, onAdd: widget.onAdd),
       );
 }

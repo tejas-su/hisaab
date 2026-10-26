@@ -1,4 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../errors/failure.dart';
 
 /// A currency the app can store and display: ISO code, symbol and minor-unit digits.
 final class CurrencySpec extends Equatable {
@@ -7,6 +10,15 @@ final class CurrencySpec extends Equatable {
 
   /// The Indian rupee, the only currency shipped in v1.
   static const CurrencySpec inr = CurrencySpec(code: 'INR', symbol: '₹', minorDigits: 2);
+
+  /// Every currency the app knows, by ISO code.
+  static const Map<String, CurrencySpec> _byCode = <String, CurrencySpec>{'INR': inr};
+
+  /// Looks up a stored ISO [code].
+  ///
+  /// Returns [Right] with the currency, or [Left] with [InvalidDataFailure] for an unknown code.
+  static Either<Failure, CurrencySpec> fromCode(String code) => Option<CurrencySpec>.fromNullable(_byCode[code])
+      .toEither<Failure>(() => InvalidDataFailure('Unknown currency "$code"'));
 
   /// ISO 4217 code, stored next to every amount in the database.
   final String code;

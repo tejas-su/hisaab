@@ -1,0 +1,15 @@
+import 'package:get_it/get_it.dart';
+
+import '../core/db/app_database.dart';
+import '../core/di/service_locator.dart';
+import '../ledger/ledger.dart';
+import '../onboarding/onboarding.dart';
+import '../settings/settings.dart';
+
+/// Registers every service the app needs, core first and then each feature in dependency order.
+void registerAppServices(GetIt getIt, {required AppDatabase database}) {
+  registerCoreServices(getIt, database: database);
+  registerSettingsServices(getIt);
+  registerLedgerServices(getIt);
+  registerOnboardingServices(getIt);
+}

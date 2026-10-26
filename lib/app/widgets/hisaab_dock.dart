@@ -5,16 +5,18 @@ import '../../core/design/hisaab_dimensions.dart';
 import '../../core/extensions/build_context_extensions.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../shell_destination.dart';
+import 'add_key.dart';
 import 'dock_item.dart';
 
-/// The floating bottom dock used when only one pane is visible (UI_DESIGN §4).
+/// The floating bottom dock: Home · Add · Spends (UI_DESIGN §4), used when one pane is visible.
 ///
-/// Positions never change (DECISIONS D13); the marigold Add key joins the centre in M1.
+/// Positions never change (DECISIONS D13). The marigold Add key opens the Add tray.
 class HisaabDock extends StatelessWidget {
-  const HisaabDock({super.key, required this.selected, required this.onSelected});
+  const HisaabDock({super.key, required this.selected, required this.onSelected, required this.onAdd});
 
   final ShellDestination selected;
   final ValueChanged<ShellDestination> onSelected;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,7 @@ class HisaabDock extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Expanded(
+            flex: 2,
             child: DockItem(
               icon: AppIcons.home,
               label: strings.navHome,
@@ -38,7 +41,10 @@ class HisaabDock extends StatelessWidget {
             ),
           ),
           const SizedBox(width: HisaabSpacing.s),
+          Expanded(flex: 3, child: AddKey(onAdd: onAdd)),
+          const SizedBox(width: HisaabSpacing.s),
           Expanded(
+            flex: 2,
             child: DockItem(
               icon: AppIcons.spends,
               label: strings.navSpends,

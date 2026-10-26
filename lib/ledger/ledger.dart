@@ -1,0 +1,33 @@
+/// Ledger feature: the shared money data (entries, categories, recurring rules) and the
+/// safe-to-spend maths. Other features import the ledger only through this file.
+library;
+
+export 'domain/entities/budget_settings.dart';
+export 'domain/entities/category.dart';
+export 'domain/entities/cycle_state.dart';
+export 'domain/entities/cycle_summary.dart';
+export 'domain/entities/entry.dart';
+export 'domain/entities/entry_draft.dart';
+export 'domain/entities/entry_kind.dart';
+export 'domain/entities/frequency.dart';
+export 'domain/entities/ledger_setup.dart';
+export 'domain/entities/range_forecast.dart';
+export 'domain/entities/recurring_draft.dart';
+export 'domain/entities/recurring_rule.dart';
+export 'domain/entities/schedule.dart';
+export 'domain/entities/spend_preview.dart';
+export 'domain/entry_validator.dart';
+export 'domain/failures/ledger_failures.dart';
+export 'domain/pay_rule_schedule.dart';
+export 'domain/recurring_schedule.dart';
+export 'domain/repository/category_repository.dart';
+export 'domain/repository/ledger_repository.dart';
+export 'domain/repository/recurring_repository.dart';
+export 'domain/safe_to_spend.dart';
+export 'domain/usecase/delete_entry.dart';
+export 'domain/usecase/get_cycle_summary.dart';
+export 'domain/usecase/post_due_recurring.dart';
+export 'domain/usecase/restore_entry.dart';
+export 'domain/usecase/save_entry.dart';
+export 'presentation/category_extensions.dart';
+export 'di/ledger_module.dart';

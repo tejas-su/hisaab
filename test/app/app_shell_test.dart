@@ -4,27 +4,44 @@ import 'package:expense_tracker/app/app_shell.dart';
 import 'package:expense_tracker/app/widgets/hisaab_dock.dart';
 import 'package:expense_tracker/home/home.dart';
 import 'package:expense_tracker/spends/spends.dart';
+import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
 
-const AppShell _shell = AppShell(home: HomePage(), spends: SpendsPage());
+late FakeServices _services;
+
+Widget _shell() => BlocProvider<HomeCubit>(
+      create: (BuildContext _) => _services.homeCubit()..load(),
+      child: Scaffold(
+        body: AppShell(
+          home: HomePage(onAdd: (EntryKind _) {}, onEdit: (Entry _) {}, onOpenSettings: () {}),
+          spends: const SpendsPage(),
+          onAdd: () {},
+        ),
+      ),
+    );
 
 DisplayFeature _fold(Rect bounds, DisplayFeatureState state) =>
     DisplayFeature(bounds: bounds, type: DisplayFeatureType.fold, state: state);
 
 void main() {
+  setUp(() => _services = FakeServices());
+  tearDown(() => _services.dispose());
+
   group('AppShell adapts to the window (UI_DESIGN §13)', () {
     testWidgets('phone: one screen at a time with the dock', (WidgetTester tester) async {
-      await pumpApp(tester, _shell);
+      await pumpApp(tester, _shell());
       expect(find.byType(HomePage), findsOneWidget);
       expect(find.byType(SpendsPage), findsNothing);
       expect(find.byType(HisaabDock), findsOneWidget);
     });
 
     testWidgets('phone: the dock switches to Spends and back', (WidgetTester tester) async {
-      await pumpApp(tester, _shell);
+      await pumpApp(tester, _shell());
       Finder dockItem(String label) =>
           find.descendant(of: find.byType(HisaabDock), matching: find.bySemanticsLabel(label));
       await tester.tap(dockItem('Spends'));
@@ -38,14 +55,14 @@ void main() {
     });
 
     testWidgets('unfolded foldable portrait: a centred column no wider than 560 dp', (WidgetTester tester) async {
-      await pumpApp(tester, _shell, size: TestWindows.foldableUnfolded);
+      await pumpApp(tester, _shell(), size: TestWindows.foldableUnfolded);
       final Rect home = tester.getRect(find.byType(HomePage));
       expect(home.width, lessThanOrEqualTo(560));
       expect(home.center.dx, closeTo(TestWindows.foldableUnfolded.width / 2, 0.5));
     });
 
     testWidgets('tablet: Home beside Spends, no dock', (WidgetTester tester) async {
-      await pumpApp(tester, _shell, size: TestWindows.tablet);
+      await pumpApp(tester, _shell(), size: TestWindows.tablet);
       expect(find.byType(HomePage), findsOneWidget);
       expect(find.byType(SpendsPage), findsOneWidget);
       expect(find.byType(HisaabDock), findsNothing);
@@ -55,7 +72,7 @@ void main() {
     testWidgets('book posture: nothing straddles the vertical fold', (WidgetTester tester) async {
       await pumpApp(
         tester,
-        _shell,
+        _shell(),
         size: TestWindows.foldableLandscape,
         displayFeatures: <DisplayFeature>[
           _fold(const Rect.fromLTRB(420, 0, 420, 701), DisplayFeatureState.postureHalfOpened),
@@ -68,7 +85,7 @@ void main() {
     testWidgets('tabletop posture: the screen above the fold, the dock below it', (WidgetTester tester) async {
       await pumpApp(
         tester,
-        _shell,
+        _shell(),
         size: const Size(701, 841),
         displayFeatures: <DisplayFeature>[
           _fold(const Rect.fromLTRB(0, 420, 701, 420), DisplayFeatureState.postureHalfOpened),
@@ -79,18 +96,18 @@ void main() {
     });
 
     testWidgets('phone landscape lays out two panes without overflow', (WidgetTester tester) async {
-      await pumpApp(tester, _shell, size: TestWindows.phoneLandscape);
+      await pumpApp(tester, _shell(), size: TestWindows.phoneLandscape);
       expect(find.byType(SpendsPage), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('small phone at 2× text size does not overflow', (WidgetTester tester) async {
-      await pumpApp(tester, _shell, size: TestWindows.smallPhone, textScale: 2);
+      await pumpApp(tester, _shell(), size: TestWindows.smallPhone, textScale: 2);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('dark theme renders', (WidgetTester tester) async {
-      await pumpApp(tester, _shell, themeMode: ThemeMode.dark);
+      await pumpApp(tester, _shell(), themeMode: ThemeMode.dark);
       expect(tester.takeException(), isNull);
       expect(find.byType(HomePage), findsOneWidget);
     });
@@ -99,7 +116,7 @@ void main() {
   group('AppShell accessibility', () {
     testWidgets('meets tap-target, label and contrast guidelines', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
-      await pumpApp(tester, _shell);
+      await pumpApp(tester, _shell());
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       await expectLater(tester, meetsGuideline(textContrastGuideline));
@@ -108,7 +125,7 @@ void main() {
 
     testWidgets('the selected dock item is announced as selected', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
-      await pumpApp(tester, _shell);
+      await pumpApp(tester, _shell());
       expect(
         tester.getSemantics(find.descendant(of: find.byType(HisaabDock), matching: find.bySemanticsLabel('Home'))),
         matchesSemantics(label: 'Home', isButton: true, isSelected: true, hasSelectedState: true, hasTapAction: true),

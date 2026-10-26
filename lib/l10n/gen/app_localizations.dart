@@ -92,7 +92,10 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('en', 'IN'),
+  ];
 
   /// No description provided for @appTitle.
   ///
@@ -147,6 +150,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'hisaab couldn\'t open its data. Close the app and open it again.'**
   String get startupFailed;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @couldntSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save. Try again.'**
+  String get couldntSave;
+
+  /// Joins two parts of one line, e.g. "Lasts till payday · about ₹9,300 spare"
+  ///
+  /// In en, this message translates to:
+  /// **' · '**
+  String get separator;
+
+  /// Screen-reader form of two parts of one line
+  ///
+  /// In en, this message translates to:
+  /// **'{first}, {second}'**
+  String spokenPair(String first, String second);
+
+  /// No description provided for @deleteLastDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete last digit. Long-press to clear'**
+  String get deleteLastDigit;
+
+  /// Default name of a seeded category, by its stored key
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Salary} other_income{Other income} other{Other}}'**
+  String categoryName(String key);
+
+  /// No description provided for @onboardingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String onboardingProgress(int step, int total);
+
+  /// No description provided for @incomeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How much money comes in each month?'**
+  String get incomeQuestion;
+
+  /// No description provided for @incomeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your salary after tax. You can change it any time.'**
+  String get incomeHint;
+
+  /// Rough daily share while typing income (amount ÷ 30)
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s about {amount} a day'**
+  String dailyPreview(String amount);
+
+  /// No description provided for @dailyPreviewCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'One block for every day of the month'**
+  String get dailyPreviewCaption;
+
+  /// No description provided for @paydayQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'When does it come?'**
+  String get paydayQuestion;
+
+  /// No description provided for @paydayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your month runs from one payday to the next.'**
+  String get paydayHint;
+
+  /// No description provided for @payFirstOfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1st of the month'**
+  String get payFirstOfMonth;
+
+  /// No description provided for @payLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Last day'**
+  String get payLastDay;
+
+  /// No description provided for @payPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get payPickDate;
+
+  /// No description provided for @payEveryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Every week'**
+  String get payEveryWeek;
+
+  /// No description provided for @payItChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'It changes'**
+  String get payItChanges;
+
+  /// No description provided for @pickPaydayQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Which day of the month?'**
+  String get pickPaydayQuestion;
+
+  /// No description provided for @pickWeekdayQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Which day of the week?'**
+  String get pickWeekdayQuestion;
+
+  /// No description provided for @billsQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Any fixed bills?'**
+  String get billsQuestion;
+
+  /// No description provided for @billsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Money that goes out on the same day every month. Add them now or later.'**
+  String get billsHint;
+
+  /// Name of a fixed bill chip, by its kind
+  ///
+  /// In en, this message translates to:
+  /// **'{kind, select, rent{Rent} emi{EMI} phone{Phone} internet{Internet} schoolFees{School fees} subscriptions{Subscriptions} other{Bill}}'**
+  String billName(String kind);
+
+  /// No description provided for @billAmountQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How much is {bill}?'**
+  String billAmountQuestion(String bill);
+
+  /// No description provided for @billDayQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Which day does {bill} go out?'**
+  String billDayQuestion(String bill);
+
+  /// Chip detail for an added bill
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} on day {day}'**
+  String billDetail(String amount, int day);
+
+  /// No description provided for @removeBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {bill}'**
+  String removeBill(String bill);
+
+  /// No description provided for @todayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayTitle;
+
+  /// No description provided for @todayList.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayList;
+
+  /// No description provided for @lastsTillPayday.
+  ///
+  /// In en, this message translates to:
+  /// **'Lasts till payday'**
+  String get lastsTillPayday;
+
+  /// Forecast: money left at payday, rounded to ₹100
+  ///
+  /// In en, this message translates to:
+  /// **'about {amount} spare'**
+  String aboutSpare(String amount);
+
+  /// No description provided for @runsOutOn.
+  ///
+  /// In en, this message translates to:
+  /// **'At this pace it runs out on {date}'**
+  String runsOutOn(String date);
+
+  /// No description provided for @runsOutOnLower.
+  ///
+  /// In en, this message translates to:
+  /// **'at this pace it runs out on {date}'**
+  String runsOutOnLower(String date);
+
+  /// No description provided for @slowDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow down'**
+  String get slowDown;
+
+  /// No description provided for @shareAlmostUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'today\'s share is almost used'**
+  String get shareAlmostUsed;
+
+  /// No description provided for @overToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Over today'**
+  String get overToday;
+
+  /// No description provided for @stillLasts.
+  ///
+  /// In en, this message translates to:
+  /// **'still lasts till payday'**
+  String get stillLasts;
+
+  /// No description provided for @overBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Over by {amount}'**
+  String overBy(String amount);
+
+  /// No description provided for @paydayIn.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{payday tomorrow} other{payday in {count} days}}'**
+  String paydayIn(int count);
+
+  /// No description provided for @amountOverToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over today'**
+  String amountOverToday(String amount);
+
+  /// No description provided for @amountOver.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over'**
+  String amountOver(String amount);
+
+  /// No description provided for @eachDayAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Each day after: {amount}'**
+  String eachDayAfter(String amount);
+
+  /// Label after the visible day blocks when there are too many to draw
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String moreDays(int count);
+
+  /// Screen-reader sentence for the whole hero card
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {amount}. {days}. {line}.'**
+  String heroSpoken(String label, String amount, String days, String line);
+
+  /// No description provided for @noIncomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add money you got this month'**
+  String get noIncomeTitle;
+
+  /// No description provided for @noIncomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily share starts once there\'s money to share.'**
+  String get noIncomeBody;
+
+  /// No description provided for @addMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Add money'**
+  String get addMoney;
+
+  /// No description provided for @emptyToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spent today. Tap Add when you do.'**
+  String get emptyToday;
+
+  /// No description provided for @entryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {amount}'**
+  String entryDeleted(String amount);
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your money.'**
+  String get loadFailed;
+
+  /// An amount of money that came in
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}'**
+  String gotAmount(String amount);
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @spent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get spent;
+
+  /// No description provided for @got.
+  ///
+  /// In en, this message translates to:
+  /// **'Got'**
+  String get got;
+
+  /// No description provided for @moneyOutOrIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Money out or in'**
+  String get moneyOutOrIn;
+
+  /// Quick chip that adds this amount
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}'**
+  String quickAdd(String amount);
+
+  /// No description provided for @quickAddSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {amount}'**
+  String quickAddSpoken(String amount);
+
+  /// No description provided for @leavesForToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaves {amount} for today'**
+  String leavesForToday(String amount);
+
+  /// No description provided for @overTodayShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over today\'s share'**
+  String overTodayShare(String amount);
+
+  /// No description provided for @tomorrowShare.
+  ///
+  /// In en, this message translates to:
+  /// **'tomorrow {amount}'**
+  String tomorrowShare(String amount);
+
+  /// No description provided for @whatWasItFor.
+  ///
+  /// In en, this message translates to:
+  /// **'What was it for?'**
+  String get whatWasItFor;
+
+  /// No description provided for @whereFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Where did it come from?'**
+  String get whereFrom;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @pickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get pickDate;
+
+  /// No description provided for @addNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get addNote;
+
+  /// No description provided for @noteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A few words'**
+  String get noteHint;
+
+  /// No description provided for @saveToCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}. Save'**
+  String saveToCategory(String category);
+
+  /// No description provided for @backToAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to amount'**
+  String get backToAmount;
 }
 
 class _AppLocalizationsDelegate
@@ -167,6 +620,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'en':
+      {
+        switch (locale.countryCode) {
+          case 'IN':
+            return AppLocalizationsEnIn();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':

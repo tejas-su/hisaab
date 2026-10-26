@@ -1,0 +1,119 @@
+import 'package:expense_tracker/add_entry/add_entry.dart';
+import 'package:expense_tracker/app/app_shell.dart';
+import 'package:expense_tracker/app/hisaab_app.dart';
+import 'package:expense_tracker/app/widgets/startup_failure_view.dart';
+import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
+import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:expense_tracker/onboarding/onboarding.dart';
+import 'package:expense_tracker/settings/settings.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
+
+import '../helpers/fake_services.dart';
+import '../helpers/pump_app.dart';
+
+void main() {
+  late FakeServices services;
+
+  tearDown(() => services.dispose());
+
+  Future<void> boot(WidgetTester tester, FakeServices fakes) async {
+    services = fakes;
+    await tester.runAsync(loadAppFonts);
+    tester.view
+      ..physicalSize = TestWindows.phone
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(HisaabApp(getIt: fakes.register(GetIt.asNewInstance())));
+    await settle(tester);
+  }
+
+  group('AppRoot (FR-ON-1)', () {
+    testWidgets('a fresh install opens onboarding', (WidgetTester tester) async {
+      await boot(tester, FakeServices(onboardingDone: false, entries: <Entry>[], rules: <RecurringRule>[]));
+      expect(find.byType(OnboardingPage), findsOneWidget);
+    });
+
+    testWidgets('finishing onboarding lands on Home with the blocks assembling', (WidgetTester tester) async {
+      await boot(tester, FakeServices(onboardingDone: false, entries: <Entry>[], rules: <RecurringRule>[]));
+      for (final String key in <String>['4', '5', '0', '0', '0']) {
+        await tester.tap(find.byKey(ValueKey<String>('keypad-$key')));
+        await settle(tester);
+      }
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('payday-first')));
+      await settle(tester);
+      await tester.tap(find.text('Skip'));
+      await settle(tester);
+      expect(find.byType(AppShell), findsOneWidget);
+      expect(tester.widget<DayBlocks>(find.byType(DayBlocks)).assemble, isTrue);
+    });
+
+    testWidgets('a returning user goes straight to Home, in en_IN', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      expect(find.byType(AppShell), findsOneWidget);
+      expect(Localizations.localeOf(tester.element(find.byType(AppShell))), const Locale('en', 'IN'));
+      expect(find.text('₹1,430'), findsOneWidget);
+    });
+
+    testWidgets('an unreadable preference shows the startup failure', (WidgetTester tester) async {
+      final FakeServices fakes = FakeServices()..preferences.failure = DatabaseFailure('locked');
+      await boot(tester, fakes);
+      expect(find.byType(StartupFailureView), findsOneWidget);
+    });
+
+    testWidgets('the dock\'s Add key opens the tray and a save updates Home', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.byKey(const ValueKey<String>('add-key')));
+      await settle(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-3')));
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-0')));
+      await tester.tap(find.byKey(const ValueKey<String>('add-next')));
+      await settle(tester);
+      await tester.tap(find.bySemanticsLabel('Food. Save'));
+      await settle(tester);
+      expect(find.byType(AddEntryTray), findsNothing);
+      expect(find.text('₹1,400'), findsOneWidget);
+    });
+
+    testWidgets('tapping a row opens the tray prefilled', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.text('Chai & samosa'));
+      await settle(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.text('₹60'), findsWidgets);
+    });
+
+    testWidgets('Settings opens from Home and goes back', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      expect(find.byType(SettingsPage), findsOneWidget);
+      await tester.tap(find.byTooltip('Back'));
+      await settle(tester);
+      expect(find.byType(SettingsPage), findsNothing);
+    });
+
+    testWidgets('Home reloads when the app resumes (BR-8)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await services.ledger
+          .add(EntryDraft(amount: Money.fromMajor(30), kind: EntryKind.spent, categoryId: 1, date: services.clock.today()))
+          .run();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester);
+      expect(services.recurring.postings, isEmpty);
+      expect(find.text('₹1,400'), findsOneWidget);
+    });
+  });
+}
+
+Future<void> settle(WidgetTester tester) async {
+  await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  await tester.pumpAndSettle();
+}

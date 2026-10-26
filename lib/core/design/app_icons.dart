@@ -23,6 +23,8 @@ abstract final class AppIcons {
   static const AppIconData delete = HugeIcons.strokeRoundedDelete02;
   static const AppIconData limit = HugeIcons.strokeRoundedTarget01;
   static const AppIconData recurring = HugeIcons.strokeRoundedRepeat;
+  static const AppIconData dropdown = HugeIcons.strokeRoundedArrowDown01;
+  static const AppIconData check = HugeIcons.strokeRoundedTick02;
 
   /// Category icons by the `icon_key` stored in the database (SPEC BR-11).
   static const Map<String, AppIconData> byKey = <String, AppIconData>{

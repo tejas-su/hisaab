@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../design/hisaab_colors.dart';
 import '../layout/app_layout.dart';
 import '../layout/app_layout_scope.dart';
+import '../money/money_formatter.dart';
 
 /// Shortcuts from [BuildContext] to the app's design tokens and adaptive layout.
 extension BuildContextExtensions on BuildContext {
@@ -11,4 +12,7 @@ extension BuildContextExtensions on BuildContext {
 
   /// The adaptive layout resolved for the current window.
   AppLayout get layout => AppLayoutScope.of(this);
+
+  /// Formats money for the app's current locale (`en_IN` gives ₹1,25,000).
+  MoneyFormatter get money => MoneyFormatter(locale: Localizations.localeOf(this).toString());
 }

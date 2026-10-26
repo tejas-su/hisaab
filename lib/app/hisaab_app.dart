@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
 
 import '../core/design/hisaab_colors.dart';
 import '../core/design/hisaab_theme.dart';
 import '../core/layout/app_layout_scope.dart';
-import '../home/home.dart';
 import '../l10n/gen/app_localizations.dart';
-import '../spends/spends.dart';
-import 'app_shell.dart';
+import 'app_root.dart';
 import 'widgets/startup_failure_view.dart';
 
-/// The root widget: theme, localisation (en_IN), adaptive layout and the shell.
+/// The root widget: theme, localisation (en_IN), adaptive layout and the first screen.
 class HisaabApp extends StatelessWidget {
-  /// Creates the app; [startupFailed] shows a recovery message instead of the shell.
-  const HisaabApp({super.key, this.startupFailed = false});
+  /// Creates the app with its registered services in [getIt].
+  const HisaabApp({super.key, required GetIt this.getIt}) : startupFailed = false;
 
+  /// Creates the app showing only a recovery message, for when the database can't be opened.
+  const HisaabApp.startupFailed({super.key})
+      : getIt = null,
+        startupFailed = true;
+
+  final GetIt? getIt;
   final bool startupFailed;
 
   static const Locale locale = Locale('en', 'IN');
@@ -29,7 +34,10 @@ class HisaabApp extends StatelessWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (BuildContext context, Widget? child) => _EdgeToEdge(child: AppLayoutScope(child: child ?? const SizedBox())),
-        home: startupFailed ? const StartupFailureView() : const AppShell(home: HomePage(), spends: SpendsPage()),
+        home: switch (getIt) {
+          final GetIt services when !startupFailed => AppRoot(getIt: services),
+          _ => const StartupFailureView(),
+        },
       );
 }
 
