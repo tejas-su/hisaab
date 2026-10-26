@@ -186,6 +186,9 @@ const DOT_CX = 70.84, BASE = 76, D = 16.26, BW = 13, BH = 20, BR = 4, GAP = 3;
 const TRAIL = [.6];
 // Splash mark sits at 75% inside the 192dp mask, so the first trailing day fits whole.
 const SPLASH_SCALE = .75;
+// Optical centring (D55, D56): the heavy h and the trailing dot read left and low when box-centred.
+const LAUNCHER_FIT = {s: .88, tx: 4, ty: -2.5};
+const SPLASH_FIT = {s: SPLASH_SCALE, tx: 3.41, ty: -2.13};
 const EXIT_MS = 200, ZOOM_MS = 350, AXIS_MS = 1600, DUR = 800;
 
 function bezier(x1, y1, x2, y2) {
@@ -251,7 +254,7 @@ function iconSVG(cls, launcher) {
     </defs>
     <g clip-path="url(#m${i})">
       ${launcher ? '<circle cx="54" cy="54" r="36" fill="#161615"/>' : ''}
-      <g transform="translate(54 54) scale(${launcher ? 1 : SPLASH_SCALE}) translate(-54 -54)">
+      <g transform="translate(${54 + (launcher ? LAUNCHER_FIT : SPLASH_FIT).tx} ${54 + (launcher ? LAUNCHER_FIT : SPLASH_FIT).ty}) scale(${(launcher ? LAUNCHER_FIT : SPLASH_FIT).s}) translate(-54 -54)">
       <path d="${STEM}" fill="${markFill}"/>
       <path d="${SHOULDER}" fill="${markFill}"/>
       <g class="train" opacity="0">${train}</g>

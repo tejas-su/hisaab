@@ -14,13 +14,16 @@
             android:height="288dp"
             android:viewportWidth="108"
             android:viewportHeight="108">
-            <!-- Drawn at 0.75 so tomorrow fits wholly inside the mask. -->
+            <!-- Drawn at 0.75 so tomorrow fits wholly inside the mask, and nudged right and up like the
+                 launcher icon so the final h• is optically centred (D56). -->
             <group
                 android:name="mark"
                 android:pivotX="54"
                 android:pivotY="54"
                 android:scaleX="0.75"
-                android:scaleY="0.75">
+                android:scaleY="0.75"
+                android:translateX="3.41"
+                android:translateY="-2.13">
                 <path
                     android:name="h"
                     android:fillColor="@color/splash_mark"

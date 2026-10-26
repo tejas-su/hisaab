@@ -1,9 +1,12 @@
 import 'package:hugeicons/hugeicons.dart';
 
+import 'hisaab_glyphs.dart';
+
 /// Hugeicons glyph data; the package represents icons as SVG path lists, not `IconData`.
 typedef AppIconData = List<List<dynamic>>;
 
-/// Every icon the app uses (UI_DESIGN §3.5). Hugeicons stroke-rounded only; never `Icons.*`.
+/// Every icon the app uses (UI_DESIGN §3.5). Hugeicons stroke-rounded only, plus the few
+/// [HisaabGlyphs] drawn in its format where the free set has none; never `Icons.*`.
 abstract final class AppIcons {
   static const AppIconData home = HugeIcons.strokeRoundedHome01;
   static const AppIconData spends = HugeIcons.strokeRoundedChartHistogram;
@@ -16,7 +19,7 @@ abstract final class AppIcons {
   static const AppIconData info = HugeIcons.strokeRoundedInformationCircle;
   static const AppIconData back = HugeIcons.strokeRoundedArrowLeft01;
   static const AppIconData next = HugeIcons.strokeRoundedArrowRight02;
-  static const AppIconData backspace = HugeIcons.strokeRoundedCancel01;
+  static const AppIconData backspace = HisaabGlyphs.backspace;
   static const AppIconData note = HugeIcons.strokeRoundedNote01;
   static const AppIconData copy = HugeIcons.strokeRoundedCopy01;
   static const AppIconData share = HugeIcons.strokeRoundedShare08;

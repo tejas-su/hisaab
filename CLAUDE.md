@@ -83,7 +83,7 @@ These are app-specific, and the rules files carry the details.
   - Never use `Color(0xFF…)`, `Colors.*` or `Icons.*` in a widget.
 - **One signal colour:** marigold `#FFB020` means *today / act* only. It is never placed bare on the light background.
 - **No red, no green, no category colours.** State is shown by fill, outline, hatch and words.
-- **Icons:** Hugeicons only, through `AppIcon`, always with a label.
+- **Icons:** Hugeicons only, through `AppIcon`, always with a label. A glyph the free set lacks is drawn in Hugeicons' format in `HisaabGlyphs` (`lib/core/design/hisaab_glyphs.dart`), reusing an original's corner curves (D48).
 - **Adaptive layout:** never lock orientation or assume a portrait phone. Read `context.layout` (`lib/core/layout/`), never raw `MediaQuery` widths. Nothing straddles a fold. New screens are tested at the `TestWindows` sizes (UI_DESIGN §13).
 - **Entry speed:** the Add flow is Add → digits → Next → tile. Never add a tap or a field to it, and never reorder categories, the keypad or the dock.
 - **Privacy:** no network access, no analytics. Never log notes or amounts with personal text. The only data that leaves the device is the Ask AI export the user triggers and previews.

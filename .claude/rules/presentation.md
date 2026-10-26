@@ -49,7 +49,7 @@ The visual and interaction spec is `docs/UI_DESIGN.md`. Read the relevant sectio
 - **Signal colour (marigold):** means "today / act" only — today's day block, the Add key, the keypad Next key, the Ask AI well. Never decoration, never on the bare light background (always on `ink` or carrying `ink` text/outline)
 - **No red, no green, no category colours.** State is shown by fill, outline, hatch and words
 - **Type:** only through the theme's `TextTheme` built in `core/design/hisaab_type.dart` (Anek Latin for amounts and titles, Mukta for body). Every amount style has `FontFeature.tabularFigures()`
-- **Icons:** Hugeicons only, through `AppIcon(AppIcons.x)`; never `Icon(Icons.*)`. Every icon has a visible label or a semantics label
+- **Icons:** Hugeicons only, through `AppIcon(AppIcons.x)`; never `Icon(Icons.*)`. A glyph Hugeicons lacks goes in `HisaabGlyphs` in Hugeicons' path format (24 grid, 1.5 stroke, round caps and joins, corners copied from a Hugeicons original), never a hand-drawn `CustomPainter`. Every icon has a visible label or a semantics label
 - **Motion:** only the spring/duration tokens in `core/design/hisaab_motion.dart`; check `HisaabMotion.reduceMotion(context)` and fall back to a 150ms crossfade
 - **Haptics:** only through `Haptics.tick()/success()/reject()/threshold()`; one effect per user event
 - **Shape:** radii from the token scale; continuous corners via `figma_squircle`. No glass or blur on any surface that shows an amount

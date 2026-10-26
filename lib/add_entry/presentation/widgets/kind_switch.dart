@@ -37,6 +37,11 @@ class KindSwitch extends StatelessWidget {
 
   Widget _segment(BuildContext context, EntryKind value, String label) {
     final bool selected = value == kind;
+    // why: light layers alternate (D47), so the pick rises out of the sunk track as a light
+    // pill; in dark, where surface is darker than sunk, it stays an ink pill.
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final Color selectedFill = light ? context.colors.surface : context.colors.ink;
+    final Color selectedText = light ? context.colors.ink : context.colors.background;
     return Pressable(
       key: ValueKey<String>('kind-${value.name}'),
       semanticLabel: label,
@@ -46,13 +51,13 @@ class KindSwitch extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 112, minHeight: HisaabSizes.minTouchTarget),
         alignment: Alignment.center,
         decoration: ShapeDecoration(
-          color: selected ? context.colors.ink : null,
+          color: selected ? selectedFill : null,
           shape: HisaabShapes.squircle(HisaabRadii.chip),
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: selected ? context.colors.background : context.colors.ink2,
+                color: selected ? selectedText : context.colors.ink2,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
               ),
         ),

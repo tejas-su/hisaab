@@ -9,6 +9,7 @@ import 'package:expense_tracker/core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 void main() {
   group('HisaabMotion', () {
@@ -90,6 +91,24 @@ void main() {
 
     test('unknown keys fall back to "other"', () {
       expect(AppIcons.forKey('nope'), AppIcons.byKey['other']);
+    });
+
+    test('the keypad delete key is a ⌫, not the close ×', () {
+      expect(AppIcons.backspace, isNot(same(HugeIcons.strokeRoundedCancel01)));
+      expect(AppIcons.backspace, hasLength(2));
+    });
+
+    test('the drawn ⌫ keeps Hugeicons stroke-rounded attributes on its 24 grid', () {
+      for (final List<dynamic> element in AppIcons.backspace) {
+        final Map<String, String> attributes = element[1] as Map<String, String>;
+        expect(element.first, 'path');
+        expect(attributes['strokeWidth'], '1.5');
+        expect(attributes['strokeLinecap'], 'round');
+        expect(attributes['strokeLinejoin'], 'round');
+        final Iterable<double> coordinates =
+            RegExp(r'-?\d+(\.\d+)?').allMatches(attributes['d']!).map((RegExpMatch m) => double.parse(m[0]!));
+        expect(coordinates, everyElement(inInclusiveRange(2, 22)));
+      }
     });
   });
 

@@ -144,6 +144,7 @@ Rules: no all-caps eyebrow labels, and no semibold body text. Supports text scal
   - There is no glass and no blur on content. Apple's Liquid Glass guidance puts glass only on navigation.
 - **Icons:**
   - Hugeicons stroke-rounded only, size 24, `strokeWidth` 1.6, in `ink`.
+  - The free set has no ⌫, so the keypad's delete key uses a glyph drawn in Hugeicons' format (`HisaabGlyphs.backspace`): `Keyboard`'s body height and squircle corners, a tip rounded like `Tag01`, and `CancelSquare`'s inner × (D48). A plain × would read as "close the tray" and ← as "back", which the app already uses for navigation.
   - Category icons sit in `sunk` wells and are **monochrome**. Categories are told apart by icon, word and fixed position, not colour.
   - Every icon has a label.
 
@@ -152,7 +153,7 @@ The wordmark shrunk to its first letter and its dot: **h•**. The ET66 has one 
 
 - **Mark:** Anek Latin "h" at weight 700, `wdth` 85 (the hero amount's face), in `displayInk` `#F2F1EC` on an `ink` `#161615` field. The marigold dot sits on the baseline, 220 font units after the h.
 - **Dot size:** 0.50 × x-height. The wordmark's dot is 0.63 × x-height, but at that size the icon reads as "ho"; 0.50 reads as "h." down to 36px.
-- **Grid:** 108dp adaptive canvas; the mark is 44dp tall and 50dp wide, centred inside the 66dp safe zone, so every launcher mask (circle, squircle, rounded square) keeps it whole.
+- **Grid:** 108dp adaptive canvas; the drawn mark (44dp tall, 50dp wide) is scaled to 0.88 (about 39 × 44dp), in line with other launcher glyphs, and **optically centred**: it sits 4dp right and 2.5dp up from box-centre, because the heavy h and the small trailing dot otherwise read 6.7dp left and 4.5dp low (D55). Its farthest point is 28.3dp from centre, inside the 66dp safe zone, so every launcher mask (circle, squircle, rounded square) keeps it whole. The transform is one `<group>` / `<g>`, so the glyph's path data stays as generated.
 - **Themed icon (Android 13+):** the same geometry as a monochrome layer; the dot survives as a dot.
 - **Never:** a marigold field, an outline-only h, a gradient, a shadow, or the dot moved off the baseline.
 - **Sources:** `docs/design/brand/` holds the master SVGs, the 512px Play Store PNG and the 1024×500 Play feature graphic (the wordmark, "Know what you can spend today." and the Home hero card with the SPEC worked-example numbers, on ink). The Android resources (`mipmap-anydpi-v26/ic_launcher.xml`, `drawable/ic_launcher_foreground.xml`, `drawable/ic_launcher_monochrome.xml`, legacy `mipmap-*/ic_launcher.png`) are generated from the same geometry.
@@ -172,6 +173,7 @@ The native Android splash, shown before Flutter draws (D41). Preview: `docs/desi
   | Day blocks | `line` `#D3D0C8` | hero `track` `#3A3A37` |
 
 - **Composition (D43):** the mark is drawn at 0.75 inside the system's 192dp mask, so tomorrow fits whole. A second trailing day would be sliced by the invisible mask edge.
+- **Optical centre (D56):** the launcher icon's nudge, scaled to 0.75 (3.41 right, 2.13 up in the 108 viewport, about 9dp and 6dp on screen), so the final h• no longer reads 13dp left and 9dp low of the screen centre. Tomorrow still clears the mask by about 1 unit at its closest corner.
 - **Timing (ms from the start of the icon animation):**
 
   | ms | What moves |
@@ -256,7 +258,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 
 ### 5.3 Add: one tray, two steps
 **Step 1 · Amount**
-- [Spent | Got] segmented control, defaulting to Spent.
+- [Spent | Got] segmented control, defaulting to Spent. In light theme the selected segment is a near-white `surface` pill with bold `ink` text, raised out of the `sunk` track; in dark it is an `ink` pill. It is never marigold: it is a mode, not an action, and Next is the tray's only marigold (D47).
 - Amount in Anek 60 with live lakh grouping.
 - Quick chips **+₹10 +₹20 +₹50 +₹100 +₹500** that *add* to the amount, like counting notes.
 - Phone-layout keypad (1-2-3 on top, as on the UPI PIN pad):
