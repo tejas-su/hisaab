@@ -7,10 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --page:#E9E7E1; --bg:#F6F5F1; --surface:#FCFBF8; --sunk:#ECEAE4; --line:#DAD8D1;
+  --page:#E9E7E1; --bg:#EEECE6; --surface:#FFFEFB; --sunk:#E4E1DA; --line:#D3D0C8;
   --ink:#161615; --ink2:#62615C; --signal:#FFB020;
   --display:#161615; --dink:#F2F1EC; --dink2:#9C9B95; --track:#3A3A37;
-  --mark:#161615; --outline:#161615; --day:#DAD8D1;
+  --mark:#161615; --outline:#161615; --day:#D3D0C8;
   --wall:#2F3337;
 }
 @media (prefers-color-scheme: dark){
@@ -24,8 +24,8 @@
   --ink:#F2F1EC; --ink2:#9C9B95; --display:#1C1C1A;
 }
 /* Device themes: fixed per column, independent of the page theme. */
-.light{--bg:#F6F5F1; --surface:#FCFBF8; --sunk:#ECEAE4; --line:#DAD8D1; --ink:#161615; --ink2:#62615C; --display:#161615;
-  --mark:#161615; --outline:#161615; --day:#DAD8D1}
+.light{--bg:#EEECE6; --surface:#FFFEFB; --sunk:#E4E1DA; --line:#D3D0C8; --ink:#161615; --ink2:#62615C; --display:#161615;
+  --mark:#161615; --outline:#161615; --day:#D3D0C8}
 .dark{--bg:#121211; --surface:#1A1A18; --sunk:#232320; --line:#2C2C29; --ink:#F2F1EC; --ink2:#9C9B95; --display:#1C1C1A;
   --mark:#F2F1EC; --outline:transparent; --day:#3A3A37}
 
@@ -169,11 +169,11 @@ code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--sunk);
     <h2>Colours</h2>
     <table>
       <tr><th>Part</th><th>Light</th><th>Dark</th></tr>
-      <tr><td>Splash background = Home background</td><td><span class="sw" style="background:#F6F5F1"></span><code>bg #F6F5F1</code></td><td><span class="sw" style="background:#121211"></span><code>bg #121211</code></td></tr>
+      <tr><td>Splash background = Home background</td><td><span class="sw" style="background:#EEECE6"></span><code>bg #EEECE6</code></td><td><span class="sw" style="background:#121211"></span><code>bg #121211</code></td></tr>
       <tr><td>Icon background</td><td>none (same as splash)</td><td>none (same as splash)</td></tr>
       <tr><td>h</td><td><span class="sw" style="background:#161615"></span><code>ink #161615</code></td><td><span class="sw" style="background:#F2F1EC"></span><code>ink #F2F1EC</code></td></tr>
       <tr><td>Dot / today</td><td><span class="sw" style="background:#FFB020"></span><code>signal</code> + ink outline (as the wordmark)</td><td><span class="sw" style="background:#FFB020"></span><code>signal</code>, no outline</td></tr>
-      <tr><td>Days (grey blocks)</td><td><span class="sw" style="background:#DAD8D1"></span><code>line #DAD8D1</code></td><td><span class="sw" style="background:#3A3A37"></span><code>track #3A3A37</code></td></tr>
+      <tr><td>Days (grey blocks)</td><td><span class="sw" style="background:#D3D0C8"></span><code>line #D3D0C8</code></td><td><span class="sw" style="background:#3A3A37"></span><code>track #3A3A37</code></td></tr>
     </table>
   </section>
 </div>
@@ -297,7 +297,7 @@ const APPS = [[49,520],[146,520],[244,520],[341,520],[49,640],[244,640],[341,640
 const ICON_AT = [146, 640];
 
 const modes = document.getElementById('modes');
-const stages = [['light','Light','#F6F5F1'],['dark','Dark','#121211']].map(([cls, label, hex]) => {
+const stages = [['light','Light','#EEECE6'],['dark','Dark','#121211']].map(([cls, label, hex]) => {
   const el = document.createElement('div');
   el.className = `mode ${cls}`;
   el.innerHTML = `

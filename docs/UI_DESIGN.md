@@ -50,7 +50,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 ### 3.1 The lineage
 - In 1987 Dieter Rams' **Braun ET66** calculator had a light body, dark keys, and **one yellow "=" key**.
 - Apple's iOS Calculator famously echoed it.
-- Hisaab borrows the same idea: a warm off-white "body", ink "display" and "keys", and **one marigold key**. That key is the Add button, the keypad's Next key and today's block.
+- Hisaab borrows the same idea: a warm off-white "body" and **one marigold key**. In light theme the "display" is a near-white card on the body, the same layer as every other card (D46); in dark theme it is a dark readout. That key is the Add button, the keypad's Next key and today's block.
 - Marigold (genda) also reads as Indian and festive, and no money app owns it. Wise uses lime, Robinhood chartreuse, Cash App green, CRED a neon yellow-green, and Mercury indigo.
 
 ### 3.2 Tokens
@@ -59,11 +59,11 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 
 | Token | Hex | Use |
 |---|---|---|
-| `bg` | `#F6F5F1` | App background (warm off-white, never `#FFF`) |
-| `surface` | `#FCFBF8` | Cards, sheets, dock |
-| `sunk` | `#ECEAE4` | Keys, chips, icon wells |
-| `hairline` | `#DAD8D1` | 1px dividers, outlines |
-| `ink` | `#161615` | Text, the hero "display" card, selected states |
+| `bg` | `#EEECE6` | App background, the lowest layer (warm grey, never `#FFF`) |
+| `surface` | `#FFFEFB` | Cards, sheets, dock: raised, so lighter than `bg` |
+| `sunk` | `#E4E1DA` | Keys, chips, icon wells: pressed in, so darker than `bg` and `surface` |
+| `hairline` | `#D3D0C8` | 1px dividers, outlines, pressed keys |
+| `ink` | `#161615` | Text, selected states, the edge around marigold |
 | `ink2` | `#62615C` | Secondary text |
 | `signal` | `#FFB020` | **Today + act only.** Always sits on `ink`, or carries `ink` text |
 
@@ -79,26 +79,28 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `ink2` | `#9C9B95` |
 | `signal` | `#FFB020` (same hue) |
 
-Inside the hero display card (both themes), these extra tokens apply:
+Inside the hero display card, these extra tokens apply:
 
-| Token | Hex |
-|---|---|
-| `display` | `#161615` (light theme) / `#1C1C1A` (dark theme) |
-| `displayInk` | `#F2F1EC` |
-| `displayInk2` | `#9C9B95` |
-| `blockIdle` | `#3A3A37` |
+| Token | Light | Dark |
+|---|---|---|
+| `display` | `#FFFEFB` (= `surface`) | `#1C1C1A` |
+| `displayInk` | `#161615` | `#F2F1EC` |
+| `displayInk2` | `#62615C` | `#9C9B95` |
+| `blockIdle` | `#D3D0C8` (1.53:1 on `display`) | `#3A3A37` |
+| `displayEdge` | `#161615`: 1.5px edge on today's block while it shows marigold | transparent (none) |
 
 **Contrast (verified):**
 
 | Pair | Light | Dark |
 |---|---|---|
-| `ink` on `bg` | 16.6 | 16.6 |
-| `ink2` on `bg` | 5.69 | 6.73 |
-| `ink2` on `sunk` | 5.16 | 5.44 |
+| `ink` on `bg` | 15.3 | 16.6 |
+| `ink2` on `bg` | 5.25 | 6.73 |
+| `ink2` on `sunk` | 4.75 | 5.44 |
 | `ink` text on `signal` | 9.90 | — |
-| `signal` on `display` | 10.25 | — |
+| `displayInk2` on `display` | 6.15 | 6.73 |
+| `signal` on `display` | — (never bare: `displayEdge` is 17.95 on `display`, 9.90 on `signal`) | 10.25 |
 
-- Marigold on the light `bg` is only 1.68:1, so **marigold never sits bare on the light background**. It always appears on ink or has an ink outline or ink label.
+- Marigold on the light `bg` is only 1.55:1, so **marigold never sits bare on the light background**. It always appears on ink or has an ink outline or ink label.
 - **Cold-proofing:** every neutral has a slight warm tint, the motion is playful and the corners are soft (Nothing's hardware team calls this "softer and friendlier").
 
 ### 3.3 States with one colour
@@ -132,7 +134,11 @@ Rules: no all-caps eyebrow labels, and no semibold body text. Supports text scal
   - Continuous squircle corners (`figma_squircle`, smoothing 0.6).
   - Radius scale: 8 (day blocks) · 12 (chips) · 16 (keys) · 22 (tiles) · 28 (cards, hero) · 36 (tray).
 - **Depth:**
-  - Surfaces are layered by colour, not shadow.
+  - Surfaces are layered by colour, not shadow (D45).
+  - **Light theme alternates**, like IBM Carbon's light themes and Apple's grouped backgrounds: the page is grey (`bg`), a card on it is near-white (`surface`, 1.17:1), and keys or wells inside it step back to grey (`sunk`, 1.30:1 on `surface`). A higher layer is never darker than the one below it (unlike Material 3's light tonal surfaces).
+  - **Dark theme steps lighter** with each layer (`bg` → `surface` → `sunk`), like Carbon's dark themes and Atlassian's elevation.
+  - The hero display card is part of this: in light theme it is the near-white `surface` layer, its future days are grey blocks inside it, and today's marigold block carries a 1.5px ink edge, like the Add key. In *slow down* the marigold ring sits inside that edge.
+  - Cards have no border; the fill gap carries the edge. Only the floating dock keeps a hairline. Never nest a card inside a card: within a card, rows are split by hairlines.
   - The marigold key has a **2px ink lip** that collapses when pressed, a nod to Braun's physical keys.
   - Trays sit over a 32% `ink` scrim.
   - There is no glass and no blur on content. Apple's Liquid Glass guidance puts glass only on navigation.
@@ -160,10 +166,10 @@ The native Android splash, shown before Flutter draws (D41). Preview: `docs/desi
 
   | | Light | Dark |
   |---|---|---|
-  | Background | `bg` `#F6F5F1` | `bg` `#121211` |
+  | Background | `bg` `#EEECE6` | `bg` `#121211` |
   | h | `ink` `#161615` | `#F2F1EC` |
   | Today's dot | `signal` with a 1-unit `ink` outline (like the wordmark) | `signal`, no outline |
-  | Day blocks | `line` `#DAD8D1` | hero `track` `#3A3A37` |
+  | Day blocks | `line` `#D3D0C8` | hero `track` `#3A3A37` |
 
 - **Composition (D43):** the mark is drawn at 0.75 inside the system's 192dp mask, so tomorrow fits whole. A second trailing day would be sliced by the invisible mask edge.
 - **Timing (ms from the start of the icon animation):**
@@ -219,7 +225,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 ### 5.2 Home
 ```
  hisaab•                Mon, 26 Oct   [⚙]
- ┌────────────────────────────────────────┐   ink "display" card
+ ┌────────────────────────────────────────┐   "display" card
  │ Safe to spend today                    │
  │ ₹1,430                                 │   Anek 76 · wdth 85
  │ ▇ ▆ ▆ ▆ ▆ ▆ ▆ ▆ ▆              ⚑ 4 Nov │   today = marigold, 8 more days

@@ -4,8 +4,9 @@ import '../design/hisaab_dimensions.dart';
 import '../design/hisaab_shapes.dart';
 import '../extensions/build_context_extensions.dart';
 
-/// The ink "display" card that holds amounts and Day Blocks, like a calculator's readout
-/// (UI_DESIGN §3.1). Text inside uses `displayInk` / `displayInk2`.
+/// The "display" card that holds amounts and Day Blocks: the light `surface` layer in light
+/// theme, a calculator-style readout in dark (UI_DESIGN §3.1). Text inside uses
+/// `displayInk` / `displayInk2`.
 class DisplayCard extends StatelessWidget {
   const DisplayCard({super.key, required this.child, this.radius = HisaabRadii.card, this.padding});
 

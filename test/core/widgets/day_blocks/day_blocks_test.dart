@@ -84,6 +84,60 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    group('today’s edge', () {
+      const Color edge = Color(0xFF161615);
+      const DayBlocksColors colors =
+          DayBlocksColors(signal: Color(0xFFFFB020), idle: Color(0xFFD3D0C8), outline: Color(0xFF62615C), edge: edge);
+      final TextPainter label = TextPainter(text: const TextSpan(text: '+9'), textDirection: TextDirection.ltr)..layout();
+      tearDownAll(label.dispose);
+
+      PaintPatternPredicate strokeOf(Color color) => (Symbol method, List<dynamic> arguments) {
+            final Object? paint = arguments.length > 1 ? arguments[1] : null;
+            return method == #drawRRect && paint is Paint && paint.style == PaintingStyle.stroke && paint.color.toARGB32() == color.toARGB32();
+          };
+
+      void Function(Canvas) paintStyle(DayBlocksStyle style) => (Canvas canvas) =>
+          DayBlocksPainter(data: DayBlocksData(count: 9, style: style, todayFill: 0.2), colors: colors, moreLabel: label)
+              .paint(canvas, const Size(320, 40));
+
+      for (final DayBlocksStyle style in <DayBlocksStyle>[DayBlocksStyle.onTrack, DayBlocksStyle.preview, DayBlocksStyle.slowDown]) {
+        test('outlines marigold in ${style.name}', () {
+          expect(paintStyle(style), paints..something(strokeOf(edge)));
+        });
+      }
+
+      test('keeps the marigold ring inside the edge in slowDown', () {
+        expect(
+          paintStyle(DayBlocksStyle.slowDown),
+          paints
+            ..something(strokeOf(const Color(0xFFFFB020)))
+            ..something(strokeOf(edge)),
+        );
+      });
+
+      for (final DayBlocksStyle style in <DayBlocksStyle>[DayBlocksStyle.overToday, DayBlocksStyle.overCycle]) {
+        test('is not drawn in ${style.name}, where no marigold shows', () {
+          expect(paintStyle(style), isNot(paints..something(strokeOf(edge))));
+        });
+      }
+
+      test('without an edge, the slowDown ring stays at the block’s rim', () {
+        const DayBlocksColors noEdge = DayBlocksColors(signal: Color(0xFFFFB020), idle: Color(0xFF3A3A37), outline: Color(0xFF9C9B95));
+        expect(
+          (Canvas canvas) => DayBlocksPainter(
+            data: const DayBlocksData(count: 9, style: DayBlocksStyle.slowDown, todayFill: 0.2),
+            colors: noEdge,
+            moreLabel: label,
+          ).paint(canvas, const Size(320, 40)),
+          paints
+            ..something((Symbol method, List<dynamic> arguments) {
+              final Object? shape = arguments.isEmpty ? null : arguments.first;
+              return method == #drawRRect && shape is RRect && shape.left == 0.75 && shape.top == 0.75;
+            }),
+        );
+      });
+    });
+
     test('repaints only when its inputs change', () {
       final TextPainter label = TextPainter(text: const TextSpan(text: '+9'), textDirection: TextDirection.ltr);
       const DayBlocksColors colors = DayBlocksColors(signal: Color(0xFFFFB020), idle: Color(0xFF3A3A37), outline: Color(0xFF9C9B95));

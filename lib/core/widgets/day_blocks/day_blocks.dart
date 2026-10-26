@@ -91,6 +91,7 @@ class _DayBlocksState extends State<DayBlocks> with TickerProviderStateMixin {
                 signal: context.colors.signal,
                 idle: context.colors.blockIdle,
                 outline: context.colors.displayInk2,
+                edge: context.colors.displayEdge,
               ),
               moreLabel: moreLabel,
               assembled: _assembled.value.clamp(0, 1),

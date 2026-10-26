@@ -8,13 +8,16 @@ import 'day_blocks_layout.dart';
 
 /// The colours [DayBlocksPainter] uses, taken from the hero's display tokens.
 final class DayBlocksColors {
-  const DayBlocksColors({required this.signal, required this.idle, required this.outline});
+  const DayBlocksColors({required this.signal, required this.idle, required this.outline, this.edge = const Color(0x00000000)});
 
   final Color signal;
   final Color idle;
 
   /// Outline and hatch for the over states (`displayInk2`).
   final Color outline;
+
+  /// Edge around today's block while it shows marigold (`displayEdge`); transparent draws none.
+  final Color edge;
 }
 
 /// Paints the Day Blocks row (SPEC BR-6, UI_DESIGN §3.3) for an animated [data] snapshot.
@@ -74,11 +77,14 @@ class DayBlocksPainter extends CustomPainter {
       case DayBlocksStyle.onTrack:
         canvas.drawRRect(shape, Paint()..color = colors.idle);
         _paintFill(canvas, shape, data.todayFill);
+        _paintEdge(canvas, shape);
       case DayBlocksStyle.preview:
         canvas.drawRRect(shape, Paint()..color = colors.signal);
+        _paintEdge(canvas, shape);
       case DayBlocksStyle.slowDown:
         _paintFill(canvas, shape, data.todayFill);
-        canvas.drawRRect(shape.deflate(_stroke / 2), _outline(colors.signal));
+        canvas.drawRRect(shape.deflate(_stroke / 2 + _edgeInset), _outline(colors.signal));
+        _paintEdge(canvas, shape);
       case DayBlocksStyle.overToday:
         _paintHatch(canvas, shape);
         canvas.drawRRect(shape.deflate(_stroke / 2), _outline(colors.outline));
@@ -86,6 +92,11 @@ class DayBlocksPainter extends CustomPainter {
         canvas.drawRRect(shape.deflate(_stroke / 2), _outline(colors.outline));
     }
   }
+
+  // why: the marigold ring steps inside a visible edge so both stay readable.
+  double get _edgeInset => colors.edge.a == 0 ? 0 : _stroke;
+
+  void _paintEdge(Canvas canvas, RRect shape) => canvas.drawRRect(shape.deflate(_stroke / 2), _outline(colors.edge));
 
   void _paintLater(Canvas canvas, ({double left, double width}) block, double rowHeight, double appear) {
     if (data.style == DayBlocksStyle.overCycle) {
@@ -142,5 +153,6 @@ class DayBlocksPainter extends CustomPainter {
       oldDelegate.colors.signal != colors.signal ||
       oldDelegate.colors.idle != colors.idle ||
       oldDelegate.colors.outline != colors.outline ||
+      oldDelegate.colors.edge != colors.edge ||
       oldDelegate.moreLabel.text != moreLabel.text;
 }

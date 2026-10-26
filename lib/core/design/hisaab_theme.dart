@@ -26,7 +26,8 @@ abstract final class HisaabTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: colors.display,
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: colors.displayInk),
-        actionTextColor: colors.signal,
+        // why: the light card is near-white, where marigold text would be 1.6:1.
+        actionTextColor: brightness == Brightness.light ? colors.displayInk : colors.signal,
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: <TargetPlatform, PageTransitionsBuilder>{

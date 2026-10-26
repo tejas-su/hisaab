@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// The app's colour tokens (UI_DESIGN §3.2): warm monochrome plus one marigold signal.
 ///
-/// [signal] means "today / act" only and must never sit bare on [background] in light
-/// theme (1.68:1); it always sits on [display]/[ink] or carries [onSignal] text.
+/// [signal] means "today / act" only and must never sit bare on a light surface (about
+/// 1.6:1); in light theme it always carries an [ink]/[displayEdge] edge or [onSignal] text.
 @immutable
 final class HisaabColors extends ThemeExtension<HisaabColors> {
   const HisaabColors({
@@ -19,22 +19,24 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.displayInk,
     required this.displayInk2,
     required this.blockIdle,
+    required this.displayEdge,
   });
 
   /// Light theme tokens.
   static const HisaabColors light = HisaabColors(
-    background: Color(0xFFF6F5F1),
-    surface: Color(0xFFFCFBF8),
-    sunk: Color(0xFFECEAE4),
-    hairline: Color(0xFFDAD8D1),
+    background: Color(0xFFEEECE6),
+    surface: Color(0xFFFFFEFB),
+    sunk: Color(0xFFE4E1DA),
+    hairline: Color(0xFFD3D0C8),
     ink: Color(0xFF161615),
     ink2: Color(0xFF62615C),
     signal: Color(0xFFFFB020),
     onSignal: Color(0xFF161615),
-    display: Color(0xFF161615),
-    displayInk: Color(0xFFF2F1EC),
-    displayInk2: Color(0xFF9C9B95),
-    blockIdle: Color(0xFF3A3A37),
+    display: Color(0xFFFFFEFB),
+    displayInk: Color(0xFF161615),
+    displayInk2: Color(0xFF62615C),
+    blockIdle: Color(0xFFD3D0C8),
+    displayEdge: Color(0xFF161615),
   );
 
   /// Dark theme tokens, designed rather than inverted.
@@ -51,6 +53,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displayInk: Color(0xFFF2F1EC),
     displayInk2: Color(0xFF9C9B95),
     blockIdle: Color(0xFF3A3A37),
+    displayEdge: Color(0x00000000),
   );
 
   final Color background;
@@ -70,13 +73,17 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// Text and icons drawn on [signal].
   final Color onSignal;
 
-  /// The hero "display" card.
+  /// The hero "display" card: the light `surface` layer in light theme, a dark readout in dark.
   final Color display;
   final Color displayInk;
   final Color displayInk2;
 
   /// Day blocks that are not today.
   final Color blockIdle;
+
+  /// The edge around today's marigold block, so marigold never sits bare on a light card;
+  /// transparent where the card is dark.
+  final Color displayEdge;
 
   @override
   HisaabColors copyWith({
@@ -92,6 +99,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? displayInk,
     Color? displayInk2,
     Color? blockIdle,
+    Color? displayEdge,
   }) =>
       HisaabColors(
         background: background ?? this.background,
@@ -106,6 +114,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
         displayInk: displayInk ?? this.displayInk,
         displayInk2: displayInk2 ?? this.displayInk2,
         blockIdle: blockIdle ?? this.blockIdle,
+        displayEdge: displayEdge ?? this.displayEdge,
       );
 
   @override
@@ -127,6 +136,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       displayInk: mix(displayInk, other.displayInk),
       displayInk2: mix(displayInk2, other.displayInk2),
       blockIdle: mix(blockIdle, other.blockIdle),
+      displayEdge: mix(displayEdge, other.displayEdge),
     );
   }
 }

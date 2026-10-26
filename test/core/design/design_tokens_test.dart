@@ -66,6 +66,11 @@ void main() {
       expect(HisaabTheme.dark().brightness, Brightness.dark);
     });
 
+    test('snackbar action is ink on the light card and marigold on the dark one', () {
+      expect(HisaabTheme.light().snackBarTheme.actionTextColor, HisaabColors.light.displayInk);
+      expect(HisaabTheme.dark().snackBarTheme.actionTextColor, HisaabColors.dark.signal);
+    });
+
     test('uses predictive back transitions on Android', () {
       expect(
         HisaabTheme.light().pageTransitionsTheme.builders[TargetPlatform.android],

@@ -27,15 +27,46 @@ void main() {
         expect(_contrast(colors.onSignal, colors.signal), greaterThanOrEqualTo(4.5));
       });
 
-      test('$name: display card text ≥ 4.5:1 and signal on display ≥ 3:1', () {
+      test('$name: display card text ≥ 4.5:1', () {
         expect(_contrast(colors.displayInk, colors.display), greaterThanOrEqualTo(4.5));
         expect(_contrast(colors.displayInk2, colors.display), greaterThanOrEqualTo(4.5));
-        expect(_contrast(colors.signal, colors.display), greaterThanOrEqualTo(3));
       });
     }
 
+    test('dark: signal on display ≥ 3:1', () {
+      expect(_contrast(HisaabColors.dark.signal, HisaabColors.dark.display), greaterThanOrEqualTo(3));
+    });
+
+    test('light: the ink edge makes today’s block ≥ 3:1 against the card and against marigold', () {
+      const HisaabColors light = HisaabColors.light;
+      expect(_contrast(light.displayEdge, light.display), greaterThanOrEqualTo(3));
+      expect(_contrast(light.displayEdge, light.signal), greaterThanOrEqualTo(3));
+    });
+
+    test('dark: no edge is drawn around today’s block', () {
+      expect(HisaabColors.dark.displayEdge.a, 0);
+    });
+
     test('signal is never usable bare on the light background (guards the UI_DESIGN rule)', () {
       expect(_contrast(HisaabColors.light.signal, HisaabColors.light.background), lessThan(3));
+    });
+  });
+
+  group('HisaabColors light layers alternate (UI_DESIGN §3.5)', () {
+    const HisaabColors light = HisaabColors.light;
+
+    test('cards are lighter than the page and clearly apart from it', () {
+      expect(light.surface.computeLuminance(), greaterThan(light.background.computeLuminance()));
+      expect(_contrast(light.surface, light.background), greaterThanOrEqualTo(1.15));
+    });
+
+    test('the hero card sits on the same light layer as other cards', () {
+      expect(light.display, light.surface);
+    });
+
+    test('sunk wells are darker than both the card and the page', () {
+      expect(light.sunk.computeLuminance(), lessThan(light.background.computeLuminance()));
+      expect(_contrast(light.sunk, light.surface), greaterThanOrEqualTo(1.25));
     });
   });
 
