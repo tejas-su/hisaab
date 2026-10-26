@@ -11,12 +11,23 @@ class ResumeListener extends StatefulWidget {
   State<ResumeListener> createState() => _ResumeListenerState();
 }
 
-class _ResumeListenerState extends State<ResumeListener> {
-  late final AppLifecycleListener _listener = AppLifecycleListener(onResume: () => widget.onResume());
+class _ResumeListenerState extends State<ResumeListener> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.onResume();
+    }
+  }
 
   @override
   void dispose() {
-    _listener.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

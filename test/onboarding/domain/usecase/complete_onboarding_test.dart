@@ -3,7 +3,6 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_rule.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/onboarding/domain/entities/bill_kind.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/setup_labels.dart';
 import 'package:expense_tracker/onboarding/domain/usecase/complete_onboarding.dart';

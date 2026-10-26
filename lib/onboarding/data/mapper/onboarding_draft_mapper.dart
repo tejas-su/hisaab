@@ -6,7 +6,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/pay_rule.dart';
 import '../../domain/entities/bill_draft.dart';
-import '../../domain/entities/bill_kind.dart';
+import '../../../ledger/ledger.dart';
 import '../../domain/entities/onboarding_draft.dart';
 import '../../domain/entities/onboarding_step.dart';
 

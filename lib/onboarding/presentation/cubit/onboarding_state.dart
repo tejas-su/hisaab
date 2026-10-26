@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../domain/entities/bill_kind.dart';
+import '../../../ledger/ledger.dart';
 import '../../domain/entities/onboarding_draft.dart';
 
 /// Which extra picker step 2 is showing.

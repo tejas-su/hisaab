@@ -88,12 +88,9 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
     );
   }
 
-  // why: BR-3 `B` covers occurrences after today only; anything due today or earlier is the
-  // engine's job, so a missed next_due must not be counted twice.
+  // why: BR-3 `B` covers occurrences after today only.
   static Iterable<Money> _billsAfter(RecurringRule rule, CalendarDate today, PayCycle cycle) {
-    final CalendarDate tomorrow = today.addDays(1);
-    final CalendarDate from = rule.nextDue.isAfter(tomorrow) ? rule.nextDue : tomorrow;
-    final CalendarDate first = RecurringSchedule.firstOnOrAfter(rule.schedule, from);
+    final CalendarDate first = RecurringSchedule.firstUnpostedAfter(rule.schedule, rule.nextDue, today: today);
     return RecurringSchedule.datesFrom(rule.schedule, first, through: cycle.end).map((CalendarDate _) => rule.amount);
   }
 

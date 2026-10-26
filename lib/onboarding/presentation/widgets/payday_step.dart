@@ -9,7 +9,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/onboarding_step.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
-import 'day_of_month_grid.dart';
+import '../../../core/widgets/day_of_month_grid.dart';
 import 'step_header.dart';
 import 'weekday_picker.dart';
 

@@ -1,6 +1,6 @@
 # Ledger Architecture Overview
 
-**Status:** built in M1. Category limits, insights and budget suggestions (BR-12, BR-14) land with Spends in M4.
+**Status:** built in M1; M2 added bill rules (`GetBills`, `AddBill`, `EditBill`, `DeleteBill`, `RestoreBill`) and the due-soon nudge (`GetDueSoonBill`). Category limits, insights and budget suggestions (BR-12, BR-14) land with Spends in M4.
 
 ## 1. Purpose
 The ledger is the shared money feature. It owns entries, categories and recurring rules, and the pure maths that turns them into today's share. Every UI feature reads money data through `lib/ledger/ledger.dart` and nothing else.
@@ -21,6 +21,7 @@ GetCycleSummary
   → PeriodCalculator.cycleFor(today, rule, monthStart)
   → SafeToSpend.compute(CycleInputs)              BR-3..BR-7 → CycleSummary
 Every write → LedgerRepository.changes (Stream<void>) → HomeCubit reloads   BR-10
+Rule edits  → RecurringRepository.changes → HomeCubit, BillsCubit reload
 ```
 
 ## 4. Key classes
@@ -37,7 +38,10 @@ Every write → LedgerRepository.changes (Stream<void>) → HomeCubit reloads   
 | `SaveEntry`, `DeleteEntry`, `RestoreEntry` | `domain/usecase/` | Add or replace, delete (returns the entry), undo |
 | `GetCycleSummary` | `domain/usecase/get_cycle_summary.dart` | Loads settings, rules and the cycle's entries; computes `B` from rules |
 | `PostDueRecurring` | `domain/usecase/post_due_recurring.dart` | The recurring engine (see `recurring-engine`) |
-| `*RepositoryImpl` | `data/repository/` | `dbTask` wraps data sources; `LedgerRepositoryImpl` owns `changes` |
+| `GetDueSoonBill` | `domain/usecase/get_due_soon_bill.dart` | FR-HO-3 nudge |
+| `GetBills`, `AddBill`, `EditBill`, `DeleteBill`, `RestoreBill` | `domain/usecase/` | Settings' fixed bills (FR-SE-1, DECISIONS D33–D35) |
+| `BillInput`, `BillKind`, `BillValidator` | `domain/` | A typed bill; the common-bill chips and their category; name 1–40, amount as BR-10, day 1–31 |
+| `*RepositoryImpl` | `data/repository/` | `dbTask` wraps data sources; `LedgerRepositoryImpl` and `RecurringRepositoryImpl` own `changes` |
 | `Sqflite*LocalDataSource` | `data/datasource/` | The only code touching `AppDatabase` |
 | `*Model`, `*Mapper`, `EntryKindMapper` | `data/model/`, `data/mapper/` | `is`-narrowed rows (`core/db/db_row.dart`) ↔ entities |
 | `CategoryExtensions.labelIn` | `presentation/category_extensions.dart` | Rename or localised seed name |
@@ -54,6 +58,8 @@ No UI state. Consumers switch on `CycleState` (`NoIncome`, `OverCycle`, `OverTod
 | `FutureDateFailure` | Entry dated after today |
 | `NoteTooLongFailure` | Note over 80 characters after trimming |
 | `EntryNotFoundFailure` | Edit or delete of a missing id |
+| `RuleNotFoundFailure` | Edit, delete or restore of a missing or stopped rule |
+| `InvalidBillNameFailure` | Bill name blank or over 40 characters |
 
 ## 7. External dependencies
 - **Core:** `Money`, `CurrencySpec.fromCode`, `AmountInput`, `CalendarDate`, `Clock`, `PeriodCalculator`, `PayRule`, `AppDatabase`, `db_row.dart`, `Failure`, `UseCase`.

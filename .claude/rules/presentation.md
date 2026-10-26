@@ -55,6 +55,7 @@ The visual and interaction spec is `docs/UI_DESIGN.md`. Read the relevant sectio
 - **Shape:** radii from the token scale; continuous corners via `figma_squircle`. No glass or blur on any surface that shows an amount
 - **Copy:** from `AppLocalizations`; amounts from `MoneyFormatter`. Never the words "transaction", "debit/credit", "budget period", "Oops"
 - **Layout:** `EdgeInsetsDirectional` / `AlignmentDirectional`; the floating dock sits above `MediaQuery.paddingOf(context).bottom` (edge-to-edge)
+- **Alignment:** content shares one outer edge (`HisaabSpacing.gutter`) and cards one inner inset (`HisaabSpacing.gutter`); header actions sit flush with the cards' edge, and captions line up with what they label. Never put a loose `Flexible` beside an `Expanded`/`Spacer` in one `Row` (its unused share ends up as empty space at the row's end); give label columns fixed widths rather than offsets that assume a text width. New screens get a widget test asserting their shared edges
 - **Adaptive:** read `context.layout` (`WidthClass`, `HeightClass`, pane arrangement), never raw `MediaQuery` widths. Use minimum sizes, not fixed heights, so text scaling can't overflow. Widget tests pump at the `TestWindows` sizes via `pumpApp` (UI_DESIGN §13)
 
 ## Accessibility

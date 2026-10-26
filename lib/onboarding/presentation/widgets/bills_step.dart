@@ -9,7 +9,7 @@ import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/bill_draft.dart';
-import '../../domain/entities/bill_kind.dart';
+import '../../../ledger/ledger.dart';
 import '../../domain/entities/onboarding_draft.dart';
 import '../../domain/entities/onboarding_step.dart';
 import '../../domain/entities/setup_labels.dart';

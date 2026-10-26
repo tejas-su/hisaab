@@ -151,4 +151,96 @@ void main() {
       expect((await repository.activeRules().run()).getLeft().toNullable(), isA<DatabaseFailure>());
     });
   });
+
+  group('RecurringRepositoryImpl bill writes (FR-SE-1)', () {
+    late List<void> changes;
+
+    setUp(() async {
+      right(await repository.startFresh(LedgerSetup(rules: <RecurringDraft>[_salary])).run());
+      changes = <void>[];
+      repository.changes.listen(changes.add);
+      addTearDown(repository.dispose);
+    });
+
+    Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+    test('add stores an active rule, returns it with its id and notifies', () async {
+      final RecurringRule added = right(await repository.add(_milk).run());
+      await settle();
+      expect(added, right(await repository.activeRules().run()).last);
+      expect(added.draft, _milk);
+      expect(changes, hasLength(1));
+    });
+
+    test('update overwrites an active rule\'s fields, keeps its id and notifies', () async {
+      final RecurringRule added = right(await repository.add(_milk).run());
+      final RecurringRule edited = RecurringRule(
+        id: added.id,
+        label: 'Milk & bread',
+        amount: Money.fromMajor(350),
+        kind: added.kind,
+        categoryId: added.categoryId,
+        schedule: added.schedule,
+        nextDue: const CalendarDate(2026, 10, 30),
+      );
+      expect(right(await repository.update(edited).run()), edited);
+      await settle();
+      expect(right(await repository.activeRules().run()).last, edited);
+      expect(changes, hasLength(2));
+    });
+
+    test('update returns RuleNotFoundFailure for a missing rule and doesn\'t notify', () async {
+      final RecurringRule ghost = RecurringRule(
+        id: 99,
+        label: 'Ghost',
+        amount: Money.fromMajor(1),
+        kind: EntryKind.spent,
+        categoryId: SeedCategoryIds.bills,
+        schedule: _milk.schedule,
+        nextDue: _milk.nextDue,
+      );
+      expect((await repository.update(ghost).run()).getLeft().toNullable(), isA<RuleNotFoundFailure>());
+      await settle();
+      expect(changes, isEmpty);
+    });
+
+    test('setActive(false) stops a rule and keeps its posted entries; true brings it back', () async {
+      final RecurringRule added = right(await repository.add(_milk).run());
+      right(await engine()(const NoParams()).run());
+      final int posted = (await entries()).length;
+
+      right(await repository.setActive(added.id, active: false).run());
+      expect(right(await repository.activeRules().run()).map((RecurringRule r) => r.id), isNot(contains(added.id)));
+      expect(await entries(), hasLength(posted));
+
+      right(await repository.setActive(added.id, active: true).run());
+      expect(right(await repository.activeRules().run()).last, added.copyWith(nextDue: const CalendarDate(2026, 10, 30)));
+      await settle();
+      expect(changes, hasLength(3));
+    });
+
+    test('an inactive rule can\'t be updated', () async {
+      final RecurringRule added = right(await repository.add(_milk).run());
+      right(await repository.setActive(added.id, active: false).run());
+      expect((await repository.update(added).run()).getLeft().toNullable(), isA<RuleNotFoundFailure>());
+    });
+
+    test('setActive returns RuleNotFoundFailure for a missing rule', () async {
+      expect((await repository.setActive(99, active: false).run()).getLeft().toNullable(), isA<RuleNotFoundFailure>());
+    });
+
+    test('add returns DatabaseFailure when a CHECK rejects the row', () async {
+      final RecurringDraft zero = RecurringDraft(
+        label: 'Zero',
+        amount: Money.zero,
+        kind: EntryKind.spent,
+        categoryId: SeedCategoryIds.bills,
+        schedule: _milk.schedule,
+        nextDue: _milk.nextDue,
+      );
+      expect((await repository.add(zero).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+      await settle();
+      expect(changes, isEmpty);
+    });
+  });
 }

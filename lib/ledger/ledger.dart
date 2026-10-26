@@ -2,10 +2,14 @@
 /// safe-to-spend maths. Other features import the ledger only through this file.
 library;
 
+export 'domain/bill_validator.dart';
+export 'domain/entities/bill_input.dart';
+export 'domain/entities/bill_kind.dart';
 export 'domain/entities/budget_settings.dart';
 export 'domain/entities/category.dart';
 export 'domain/entities/cycle_state.dart';
 export 'domain/entities/cycle_summary.dart';
+export 'domain/entities/due_soon_bill.dart';
 export 'domain/entities/entry.dart';
 export 'domain/entities/entry_draft.dart';
 export 'domain/entities/entry_kind.dart';
@@ -24,9 +28,15 @@ export 'domain/repository/category_repository.dart';
 export 'domain/repository/ledger_repository.dart';
 export 'domain/repository/recurring_repository.dart';
 export 'domain/safe_to_spend.dart';
+export 'domain/usecase/add_bill.dart';
+export 'domain/usecase/delete_bill.dart';
 export 'domain/usecase/delete_entry.dart';
+export 'domain/usecase/edit_bill.dart';
+export 'domain/usecase/get_bills.dart';
 export 'domain/usecase/get_cycle_summary.dart';
+export 'domain/usecase/get_due_soon_bill.dart';
 export 'domain/usecase/post_due_recurring.dart';
+export 'domain/usecase/restore_bill.dart';
 export 'domain/usecase/restore_entry.dart';
 export 'domain/usecase/save_entry.dart';
 export 'presentation/category_extensions.dart';

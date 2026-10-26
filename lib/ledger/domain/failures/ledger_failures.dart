@@ -19,3 +19,13 @@ final class NoteTooLongFailure extends Failure {
 final class EntryNotFoundFailure extends Failure {
   const EntryNotFoundFailure(super.message);
 }
+
+/// An edit, delete or restore named a recurring rule that doesn't exist or is no longer active.
+final class RuleNotFoundFailure extends Failure {
+  const RuleNotFoundFailure(super.message);
+}
+
+/// A bill name that is blank or longer than `BillValidator.maxLabelLength` after trimming.
+final class InvalidBillNameFailure extends Failure {
+  const InvalidBillNameFailure(super.message);
+}

@@ -1,16 +1,23 @@
+import 'dart:async';
+
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/ledger/domain/entities/ledger_setup.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_draft.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_posting.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
 import 'package:expense_tracker/ledger/domain/repository/recurring_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
-/// An in-memory [RecurringRepository] that records what was posted and set up.
+/// An in-memory [RecurringRepository] that records what was posted and set up. [rules] are the
+/// active ones; a stopped rule moves to [stopped].
 final class FakeRecurringRepository implements RecurringRepository {
   FakeRecurringRepository([this.rules = const <RecurringRule>[]]);
 
   List<RecurringRule> rules;
+  List<RecurringRule> stopped = <RecurringRule>[];
+  final StreamController<void> _changes = StreamController<void>.broadcast(sync: true);
+  int _nextId = 100;
   Failure? failure;
 
   /// Failure for [startFresh] only, to test partial onboarding.
@@ -51,4 +58,58 @@ final class FakeRecurringRepository implements RecurringRepository {
         ];
         return unit;
       }, startFreshFailure);
+
+  @override
+  TaskEither<Failure, RecurringRule> add(RecurringDraft draft) => _run(() {
+        final RecurringRule rule = _ruleFrom(_nextId++, draft);
+        rules = <RecurringRule>[...rules, rule];
+        _changes.add(null);
+        return rule;
+      });
+
+  @override
+  TaskEither<Failure, RecurringRule> update(RecurringRule rule) {
+    if (failure == null && !rules.any((RecurringRule r) => r.id == rule.id)) {
+      return TaskEither<Failure, RecurringRule>.left(RuleNotFoundFailure('No rule ${rule.id}'));
+    }
+    return _run(() {
+      rules = <RecurringRule>[for (final RecurringRule r in rules) r.id == rule.id ? rule : r];
+      _changes.add(null);
+      return rule;
+    });
+  }
+
+  @override
+  TaskEither<Failure, Unit> setActive(int id, {required bool active}) {
+    final List<RecurringRule> from = active ? stopped : rules;
+    final RecurringRule? rule = from.where((RecurringRule r) => r.id == id).firstOrNull;
+    if (failure == null && rule == null) {
+      return TaskEither<Failure, Unit>.left(RuleNotFoundFailure('No rule $id'));
+    }
+    return _run(() {
+      final List<RecurringRule> rest = <RecurringRule>[...from.where((RecurringRule r) => r.id != id)];
+      final List<RecurringRule> to = <RecurringRule>[...active ? rules : stopped, ?rule];
+      rules = active ? to : rest;
+      stopped = active ? rest : to;
+      _changes.add(null);
+      return unit;
+    });
+  }
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
+  /// Closes the change stream.
+  Future<void> dispose() => _changes.close();
+
+  static RecurringRule _ruleFrom(int id, RecurringDraft draft) => RecurringRule(
+        id: id,
+        label: draft.label,
+        amount: draft.amount,
+        kind: draft.kind,
+        categoryId: draft.categoryId,
+        schedule: draft.schedule,
+        nextDue: draft.nextDue,
+        isIncomeSource: draft.isIncomeSource,
+      );
 }

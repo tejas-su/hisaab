@@ -600,6 +600,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to amount'**
   String get backToAmount;
+
+  /// Home's due-soon nudge for the next fixed bill, e.g. "Electricity ₹1,200 goes out in 3 days"
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}'**
+  String billGoesOut(String bill, String amount, int days);
+
+  /// Settings group heading for money setup
+  ///
+  /// In en, this message translates to:
+  /// **'Money'**
+  String get settingsMoney;
+
+  /// No description provided for @fixedBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed bills'**
+  String get fixedBills;
+
+  /// No description provided for @fixedBillsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'They go out by themselves on their day. Today\'s share already leaves room for them.'**
+  String get fixedBillsHint;
+
+  /// No description provided for @addBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a bill'**
+  String get addBill;
+
+  /// No description provided for @noBills.
+  ///
+  /// In en, this message translates to:
+  /// **'No fixed bills yet. Add rent, EMI or anything that goes out every month.'**
+  String get noBills;
+
+  /// When a fixed bill goes out
+  ///
+  /// In en, this message translates to:
+  /// **'Every month on day {day}'**
+  String billEveryMonth(int day);
+
+  /// Screen-reader label of one fixed bill row
+  ///
+  /// In en, this message translates to:
+  /// **'{bill}, {amount}, {when}'**
+  String billRowSpoken(String bill, String amount, String when);
+
+  /// No description provided for @billNameQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s the bill called?'**
+  String get billNameQuestion;
+
+  /// No description provided for @billNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get billNameLabel;
+
+  /// Placeholder in the bill name field
+  ///
+  /// In en, this message translates to:
+  /// **'Electricity, water, tuition…'**
+  String get billNameHint;
+
+  /// No description provided for @billDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {bill}'**
+  String billDeleted(String bill);
 }
 
 class _AppLocalizationsDelegate

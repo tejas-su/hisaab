@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'bill_kind.dart';
+import '../../../ledger/ledger.dart';
 
 /// The localised names to store on the rules onboarding creates (the domain has no l10n).
 final class SetupLabels extends Equatable {

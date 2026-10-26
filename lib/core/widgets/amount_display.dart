@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/money/money.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/shake.dart';
+import '../money/money.dart';
+import 'amount_text.dart';
+import 'shake.dart';
 
 /// The big amount being typed, which shakes when a key is refused.
 class AmountDisplay extends StatelessWidget {

@@ -5,7 +5,6 @@ import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/onboarding/data/mapper/onboarding_draft_mapper.dart';
 import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repository_impl.dart';
 import 'package:expense_tracker/onboarding/domain/entities/bill_draft.dart';
-import 'package:expense_tracker/onboarding/domain/entities/bill_kind.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
 import 'package:expense_tracker/onboarding/domain/entities/setup_labels.dart';

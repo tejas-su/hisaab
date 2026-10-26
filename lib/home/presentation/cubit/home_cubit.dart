@@ -10,19 +10,23 @@ import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
 import 'home_state.dart';
 
-/// Owns Home's summary and Today list (SPEC FR-HO). Driven by [load] (start, resume) and by
-/// every ledger write through [LedgerRepository.changes]; the page calls [delete] and [undo].
+/// Owns Home's summary, due-soon nudge and Today list (SPEC FR-HO). Driven by [load] (start,
+/// resume, midnight) and by every write through [LedgerRepository.changes] and
+/// [RecurringRepository.changes]; the page calls [delete] and [undo].
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit({
     required this._getCycleSummary,
     required this._postDueRecurring,
+    required this._getDueSoonBill,
     required this._ledger,
+    required RecurringRepository recurring,
     required this._categories,
     required this._deleteEntry,
     required this._restoreEntry,
     required this._haptics,
   }) : super(const HomeLoading()) {
     _changes = _ledger.changes.listen((void _) => load());
+    _ruleChanges = recurring.changes.listen((void _) => load());
   }
 
   /// Most rows the Today list shows (FR-HO-4).
@@ -30,17 +34,26 @@ class HomeCubit extends Cubit<HomeState> {
 
   final GetCycleSummary _getCycleSummary;
   final PostDueRecurring _postDueRecurring;
+  final GetDueSoonBill _getDueSoonBill;
   final LedgerRepository _ledger;
   final CategoryRepository _categories;
   final DeleteEntry _deleteEntry;
   final RestoreEntry _restoreEntry;
   final Haptics _haptics;
   late final StreamSubscription<void> _changes;
+  late final StreamSubscription<void> _ruleChanges;
 
-  /// Posts any due recurring entries, then works out today's summary and list (BR-8).
+  /// Posts any due recurring entries, then works out today's summary, nudge and list (BR-8).
   Future<void> load() async {
     final Either<Failure, int> posted = await _postDueRecurring(const NoParams()).run();
     posted.mapLeft(_logFailure('home.post_due_failed'));
+    final Option<DueSoonBill> dueSoon = (await _getDueSoonBill(const NoParams()).run()).match(
+      (Failure failure) {
+        _logFailure('home.due_soon_failed')(failure);
+        return const Option<DueSoonBill>.none();
+      },
+      (Option<DueSoonBill> bill) => bill,
+    );
     final Either<Failure, HomeReady> loaded = await _getCycleSummary(const NoParams())
         .flatMap(
           (CycleSummary summary) => _categories.all().flatMap(
@@ -49,6 +62,7 @@ class HomeCubit extends Cubit<HomeState> {
                         summary: summary,
                         todayEntries: entries.take(todayListLimit).toList(),
                         categories: <int, Category>{for (final Category c in categories) c.id: c},
+                        dueSoon: dueSoon,
                       ),
                     ),
               ),
@@ -103,6 +117,7 @@ class HomeCubit extends Cubit<HomeState> {
   @override
   Future<void> close() async {
     await _changes.cancel();
+    await _ruleChanges.cancel();
     return super.close();
   }
 }

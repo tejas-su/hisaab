@@ -23,6 +23,10 @@ class HeroCard extends StatelessWidget {
   final CycleSummary summary;
   final bool assemble;
 
+  /// Width of the payday flag column and its gap from the blocks (UI_DESIGN §5.2 mockup).
+  static const double _flagColumnWidth = 44;
+  static const double _flagGap = 10;
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
@@ -70,13 +74,19 @@ class HeroCard extends StatelessWidget {
                     assemble: assemble,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Column(
-                  children: <Widget>[
-                    AppIcon(AppIcons.payday, size: 18, color: context.colors.displayInk),
-                    const SizedBox(height: 2),
-                    Text(copy.payday, style: caption?.copyWith(fontWeight: FontWeight.w600)),
-                  ],
+                const SizedBox(width: _flagGap),
+                SizedBox(
+                  width: _flagColumnWidth,
+                  child: Column(
+                    children: <Widget>[
+                      AppIcon(AppIcons.payday, size: 18, color: context.colors.displayInk),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(copy.payday, style: caption?.copyWith(fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -84,9 +94,10 @@ class HeroCard extends StatelessWidget {
             Row(
               children: <Widget>[
                 Text(strings.todayTitle, style: caption),
-                const Spacer(),
-                Flexible(child: Text(copy.laterCaption, style: caption, textAlign: TextAlign.end)),
-                const SizedBox(width: 54),
+                const SizedBox(width: HisaabSpacing.s),
+                // why: ends exactly under the last block, past which sits the flag column.
+                Expanded(child: Text(copy.laterCaption, style: caption, textAlign: TextAlign.end)),
+                const SizedBox(width: _flagGap + _flagColumnWidth),
               ],
             ),
             const SizedBox(height: 14),

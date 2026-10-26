@@ -51,5 +51,16 @@ void main() {
     test('forecasts without data', () {
       expect(const TooEarlyToForecast().props, isEmpty);
     });
+
+    test('RecurringRule.copyWith keeps what isn\'t passed, and its draft drops only the id', () {
+      expect(WorkedExample.rent.copyWith(), WorkedExample.rent);
+      expect(WorkedExample.salary.draft.isIncomeSource, isTrue);
+    });
+
+    test('bill params compare by their fields', () {
+      final BillInput input = BillInput(label: 'Rent', amount: Money.fromMajor(8200), dueDay: 5);
+      expect(AddBillParams(input: input), AddBillParams(input: input));
+      expect(EditBillParams(rule: WorkedExample.rent, input: input).props, <Object?>[WorkedExample.rent, input]);
+    });
   });
 }

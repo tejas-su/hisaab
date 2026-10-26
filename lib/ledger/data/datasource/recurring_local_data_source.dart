@@ -17,6 +17,15 @@ abstract interface class RecurringLocalDataSource {
 
   /// Deletes every entry and rule, then inserts [rules] and [entries], atomically.
   Future<void> startFresh(List<RecurringModel> rules, List<EntryModel> entries);
+
+  /// Inserts a new active [rule] and returns its id.
+  Future<int> insert(RecurringModel rule);
+
+  /// Overwrites the active rule with [rule]'s id; returns the number of rows changed (0 or 1).
+  Future<int> update(RecurringModel rule);
+
+  /// Sets rule [id]'s `active` flag; returns the number of rows changed (0 or 1).
+  Future<int> setActive(int id, {required bool active});
 }
 
 /// [RecurringLocalDataSource] backed by the app's sqflite database.
@@ -69,6 +78,25 @@ final class SqfliteRecurringLocalDataSource implements RecurringLocalDataSource 
           await txn.insert(Tables.transactions, entry.toRow());
         }
       });
+
+  @override
+  Future<int> insert(RecurringModel rule) => _database.db.insert(Tables.recurring, rule.toRow());
+
+  @override
+  Future<int> update(RecurringModel rule) => _database.db.update(
+        Tables.recurring,
+        rule.toRow(),
+        where: '${RecurringColumns.id} = ? AND ${RecurringColumns.active} = 1',
+        whereArgs: <Object?>[rule.id],
+      );
+
+  @override
+  Future<int> setActive(int id, {required bool active}) => _database.db.update(
+        Tables.recurring,
+        <String, Object?>{RecurringColumns.active: active ? 1 : 0},
+        where: '${RecurringColumns.id} = ?',
+        whereArgs: <Object?>[id],
+      );
 
   // why: sqflite's insert result is unreliable after an ignored conflict, but SQLite's
   // total_changes() counts only rows actually written.

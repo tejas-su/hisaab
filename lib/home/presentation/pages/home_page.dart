@@ -9,6 +9,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
+import '../widgets/due_soon_note.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/hero_skeleton.dart';
 import '../widgets/home_header.dart';
@@ -59,15 +60,22 @@ class HomePage extends StatelessWidget {
         HomeFailed() => <Widget>[_failed(context)],
         HomeReady(:final CycleSummary summary) when summary.state is NoIncome => <Widget>[
             NoIncomeCard(onAddMoney: () => onAdd(EntryKind.got)),
+            ..._dueSoon(state),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
           ],
         HomeReady(:final CycleSummary summary) => <Widget>[
             HeroCard(summary: summary, assemble: assemble),
+            ..._dueSoon(state),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
           ],
       };
+
+  static List<Widget> _dueSoon(HomeReady state) => state.dueSoon.match(
+        () => const <Widget>[],
+        (DueSoonBill bill) => <Widget>[const SizedBox(height: HisaabSpacing.m), DueSoonNote(bill: bill)],
+      );
 
   Widget _todayList(BuildContext context, HomeReady state) {
     final HomeCubit cubit = context.read<HomeCubit>();

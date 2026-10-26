@@ -324,5 +324,66 @@
       }
     }
   },
-  "backToAmount": "Back to amount"
+  "backToAmount": "Back to amount",
+  "billGoesOut": "{bill} {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}",
+  "@billGoesOut": {
+    "description": "Home's due-soon nudge for the next fixed bill, e.g. \"Electricity ₹1,200 goes out in 3 days\"",
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsMoney": "Money",
+  "@settingsMoney": {
+    "description": "Settings group heading for money setup"
+  },
+  "fixedBills": "Fixed bills",
+  "fixedBillsHint": "They go out by themselves on their day. Today's share already leaves room for them.",
+  "addBill": "Add a bill",
+  "noBills": "No fixed bills yet. Add rent, EMI or anything that goes out every month.",
+  "billEveryMonth": "Every month on day {day}",
+  "@billEveryMonth": {
+    "description": "When a fixed bill goes out",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "billRowSpoken": "{bill}, {amount}, {when}",
+  "@billRowSpoken": {
+    "description": "Screen-reader label of one fixed bill row",
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "billNameQuestion": "What's the bill called?",
+  "billNameLabel": "Name",
+  "billNameHint": "Electricity, water, tuition…",
+  "@billNameHint": {
+    "description": "Placeholder in the bill name field"
+  },
+  "billDeleted": "Deleted {bill}",
+  "@billDeleted": {
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  }
 }

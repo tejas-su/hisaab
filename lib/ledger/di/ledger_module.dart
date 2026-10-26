@@ -15,6 +15,12 @@ import '../domain/repository/budget_settings_repository.dart';
 import '../domain/repository/category_repository.dart';
 import '../domain/repository/ledger_repository.dart';
 import '../domain/repository/recurring_repository.dart';
+import '../domain/usecase/add_bill.dart';
+import '../domain/usecase/delete_bill.dart';
+import '../domain/usecase/edit_bill.dart';
+import '../domain/usecase/get_bills.dart';
+import '../domain/usecase/get_due_soon_bill.dart';
+import '../domain/usecase/restore_bill.dart';
 import '../domain/usecase/delete_entry.dart';
 import '../domain/usecase/get_cycle_summary.dart';
 import '../domain/usecase/post_due_recurring.dart';
@@ -26,11 +32,11 @@ void registerLedgerServices(GetIt getIt) {
   final AppDatabase database = getIt<AppDatabase>();
   final Clock clock = getIt<Clock>();
   final LedgerRepositoryImpl ledger = LedgerRepositoryImpl(entries: SqfliteEntriesLocalDataSource(database), clock: clock);
-  final RecurringRepository recurring =
+  final RecurringRepositoryImpl recurring =
       RecurringRepositoryImpl(recurring: SqfliteRecurringLocalDataSource(database), clock: clock);
   getIt
     ..registerSingleton<LedgerRepository>(ledger, dispose: (LedgerRepository _) => ledger.dispose())
-    ..registerSingleton<RecurringRepository>(recurring)
+    ..registerSingleton<RecurringRepository>(recurring, dispose: (RecurringRepository _) => recurring.dispose())
     ..registerSingleton<CategoryRepository>(CategoryRepositoryImpl(categories: SqfliteCategoriesLocalDataSource(database)))
     ..registerSingleton<BudgetSettingsRepository>(
       BudgetSettingsRepositoryImpl(settings: SqfliteBudgetSettingsLocalDataSource(database)),
@@ -39,6 +45,12 @@ void registerLedgerServices(GetIt getIt) {
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(PostDueRecurring(recurring: recurring, clock: clock))
+    ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
+    ..registerSingleton<GetBills>(GetBills(recurring: recurring))
+    ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
+    ..registerSingleton<EditBill>(EditBill(recurring: recurring, clock: clock))
+    ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
+    ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(
       GetCycleSummary(
         ledger: ledger,

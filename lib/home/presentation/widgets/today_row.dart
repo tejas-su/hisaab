@@ -71,7 +71,7 @@ class TodayRow extends StatelessWidget {
     final String amount = context.money.format(entry.amount);
     final Category? kind = category;
     return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: 18, vertical: 9),
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: 9),
       child: Row(
         children: <Widget>[
           Container(

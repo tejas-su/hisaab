@@ -47,7 +47,9 @@ final class FakeServices {
   HomeCubit homeCubit() => HomeCubit(
         getCycleSummary: getCycleSummary,
         postDueRecurring: postDue,
+        getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
         ledger: ledger,
+        recurring: recurring,
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
@@ -68,6 +70,12 @@ final class FakeServices {
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(postDue)
+    ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
+    ..registerSingleton<GetBills>(GetBills(recurring: recurring))
+    ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: categories, clock: clock))
+    ..registerSingleton<EditBill>(EditBill(recurring: recurring, clock: clock))
+    ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
+    ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(getCycleSummary)
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(
@@ -80,6 +88,9 @@ final class FakeServices {
       ),
     );
 
-  /// Closes the fake ledger's change stream.
-  Future<void> dispose() => ledger.dispose();
+  /// Closes the fakes' change streams.
+  Future<void> dispose() async {
+    await ledger.dispose();
+    await recurring.dispose();
+  }
 }

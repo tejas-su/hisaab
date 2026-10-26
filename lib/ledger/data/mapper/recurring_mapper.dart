@@ -42,8 +42,9 @@ abstract final class RecurringMapper {
         ),
       );
 
-  /// The row for a new rule from [draft].
-  static RecurringModel toModel(RecurringDraft draft) => RecurringModel(
+  /// The row for [draft]: a new rule, or rule [id] when given.
+  static RecurringModel toModel(RecurringDraft draft, {int? id}) => RecurringModel(
+        id: id,
         label: draft.label,
         amountMinor: draft.amount.amountMinor,
         currency: draft.amount.currency.code,

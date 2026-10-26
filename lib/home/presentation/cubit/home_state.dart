@@ -17,7 +17,8 @@ final class HomeLoading extends HomeState {
   const HomeLoading();
 }
 
-/// The hero for [summary] (whose state may be `NoIncome`) and today's latest entries.
+/// The hero for [summary] (whose state may be `NoIncome`), the due-soon nudge and today's
+/// latest entries.
 ///
 /// [undo] holds an entry just deleted, so the page can offer Undo once (SPEC BR-10).
 final class HomeReady extends HomeState {
@@ -25,6 +26,7 @@ final class HomeReady extends HomeState {
     required this.summary,
     required this.todayEntries,
     required this.categories,
+    this.dueSoon = const Option<DueSoonBill>.none(),
     this.undo = const Option<Entry>.none(),
   });
 
@@ -35,6 +37,9 @@ final class HomeReady extends HomeState {
 
   /// Every category by id, to label the rows.
   final Map<int, Category> categories;
+
+  /// The soonest bill going out within 5 days, if any (FR-HO-3).
+  final Option<DueSoonBill> dueSoon;
   final Option<Entry> undo;
 
   /// Returns a copy with the given fields replaced; [undo] resets unless passed.
@@ -42,11 +47,12 @@ final class HomeReady extends HomeState {
         summary: summary,
         todayEntries: todayEntries ?? this.todayEntries,
         categories: categories,
+        dueSoon: dueSoon,
         undo: undo,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, undo];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, dueSoon, undo];
 }
 
 /// Loading failed; a quiet message with Try again.

@@ -8,7 +8,7 @@ import '../../domain/entities/onboarding_step.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
 import 'amount_controls.dart';
-import 'amount_display.dart';
+import '../../../core/widgets/amount_display.dart';
 import 'daily_preview.dart';
 import 'step_header.dart';
 

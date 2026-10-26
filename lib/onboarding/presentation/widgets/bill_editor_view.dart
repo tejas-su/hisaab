@@ -13,8 +13,8 @@ import '../../domain/entities/onboarding_step.dart';
 import '../cubit/onboarding_cubit.dart';
 import '../cubit/onboarding_state.dart';
 import 'amount_controls.dart';
-import 'amount_display.dart';
-import 'day_of_month_grid.dart';
+import '../../../core/widgets/amount_display.dart';
+import '../../../core/widgets/day_of_month_grid.dart';
 import 'step_header.dart';
 
 /// One bill being added: its amount on a mini keypad, then the day it goes out (FR-ON-4).

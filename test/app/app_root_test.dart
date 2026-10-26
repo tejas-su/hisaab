@@ -4,7 +4,9 @@ import 'package:expense_tracker/app/hisaab_app.dart';
 import 'package:expense_tracker/app/widgets/startup_failure_view.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
+import 'package:expense_tracker/ledger/domain/entities/occurrence.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/settings/settings.dart';
@@ -100,6 +102,34 @@ void main() {
       expect(find.byType(SettingsPage), findsNothing);
     });
 
+    testWidgets('a bill added in Settings shows up in Home\'s nudge (FR-SE-1, FR-HO-3)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('open-bills')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('add-bill')));
+      await settle(tester);
+      await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey<String>('bill-next')));
+      await settle(tester);
+      for (final String key in <String>['3', '0', '0']) {
+        await tester.tap(find.byKey(ValueKey<String>('keypad-$key')));
+        await tester.pump();
+      }
+      await tester.tap(find.byKey(const ValueKey<String>('bill-next')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('day-27')));
+      await settle(tester);
+      expect(find.text('Water'), findsOneWidget, reason: 'back on the bills list');
+      await tester.tap(find.byTooltip('Back'));
+      await settle(tester);
+      await tester.tap(find.byTooltip('Back'));
+      await settle(tester);
+      expect(find.text('Water ₹300 goes out tomorrow'), findsOneWidget);
+    });
+
     testWidgets('Home reloads when the app resumes (BR-8)', (WidgetTester tester) async {
       await boot(tester, FakeServices());
       await services.ledger
@@ -110,6 +140,25 @@ void main() {
       await settle(tester);
       expect(services.recurring.postings, isEmpty);
       expect(find.text('₹1,400'), findsOneWidget);
+    });
+
+    testWidgets('payday adds the salary at midnight while the app is open (BR-8)', (WidgetTester tester) async {
+      final FakeServices fakes = FakeServices();
+      fakes.clock.current = DateTime(2026, 11, 3, 23, 59, 30);
+      await boot(tester, fakes);
+      expect(find.text('Tue, 3 Nov'), findsOneWidget);
+      final int before = services.recurring.postings.length;
+
+      services.clock.advance(const Duration(seconds: 31));
+      await tester.pump(const Duration(seconds: 31));
+      await settle(tester);
+
+      expect(services.recurring.postings.length, before + 1);
+      expect(
+        services.recurring.postings.last.occurrences.map((Occurrence o) => (o.rule.label, o.date)),
+        contains(('Salary', const CalendarDate(2026, 11, 4))),
+      );
+      expect(find.text('Wed, 4 Nov'), findsOneWidget);
     });
   });
 }

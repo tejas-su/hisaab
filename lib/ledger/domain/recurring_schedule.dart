@@ -27,6 +27,15 @@ abstract final class RecurringSchedule {
         Frequency.yearly => _notBefore(date, _yearlyIn(schedule, date.year), schedule),
       };
 
+  /// The first due date after [today] that the engine hasn't posted, for a rule whose next
+  /// unposted date is [nextDue].
+  // why: anything due today or earlier is the engine's job (BR-3, BR-9), so a stale next_due
+  // must not be counted again as upcoming.
+  static CalendarDate firstUnpostedAfter(Schedule schedule, CalendarDate nextDue, {required CalendarDate today}) {
+    final CalendarDate tomorrow = today.addDays(1);
+    return firstOnOrAfter(schedule, nextDue.isAfter(tomorrow) ? nextDue : tomorrow);
+  }
+
   /// Every due date from [first] (itself a due date) up to and including [through].
   static List<CalendarDate> datesFrom(Schedule schedule, CalendarDate first, {required CalendarDate through}) {
     final List<CalendarDate> dates = <CalendarDate>[];

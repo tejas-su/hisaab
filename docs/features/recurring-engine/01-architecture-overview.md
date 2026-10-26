@@ -1,13 +1,13 @@
 # Recurring Engine Architecture Overview
 
-**Status:** built in M1 (start and resume triggers). The midnight timer (BR-8) and the due-soon nudge (FR-HO-3) are M2.
+**Status:** built in M1 (start and resume triggers); M2 added the midnight re-run (BR-8), the due-soon nudge (FR-HO-3) and bill edits from Settings.
 
 ## 1. Purpose
 Posts salary and fixed bills on their due dates, including every occurrence missed while the app was closed. A repeat run, a crash mid-run or two racing runs never double-post. The code lives in `lib/ledger/`.
 
 ## 2. Entry point
 `PostDueRecurring` runs:
-- at the start of every `HomeCubit.load()`: app start, every ledger write, and resume (`ResumeListener` in `lib/app/main_screen.dart`);
+- at the start of every `HomeCubit.load()`: app start, every ledger or rule write, resume (`ResumeListener`) and local midnight (`MidnightListener`, timed by `Clock.untilTomorrow()` and re-armed on resume), both in `lib/app/main_screen.dart`;
 - once when onboarding finishes (`CompleteOnboarding`).
 
 ## 3. Data flow
@@ -32,7 +32,9 @@ PostDueRecurring(NoParams)                         lib/ledger/domain/usecase/pos
 | `RecurringSchedule` | `domain/recurring_schedule.dart` | Weekly, every 2 weeks, monthly (clamped, returns to the anchor day), yearly (29 Feb clamps) |
 | `RecurringPosting`, `Occurrence` | `domain/entities/` | What one run writes |
 | `RecurringRepositoryImpl` | `data/repository/` | Validates, then posts; also `startFresh` for onboarding |
-| `SqfliteRecurringLocalDataSource` | `data/datasource/` | The transaction |
+| `SqfliteRecurringLocalDataSource` | `data/datasource/` | The transaction; also `insert`, `update` (active rules only) and `setActive` |
+| `GetDueSoonBill`, `DueSoonBill` | `domain/usecase/`, `domain/entities/` | The nudge: soonest unposted *Spent* date 1–5 days ahead (`RecurringSchedule.firstUnpostedAfter`) |
+| `MidnightListener` | `lib/app/widgets/midnight_listener.dart` | Calls `HomeCubit.load` just after local midnight |
 
 ## 5. State variants
 None. Home logs a failed run and still loads; the next load retries.
@@ -48,5 +50,6 @@ None. Home logs a failed run and still loads; the next load retries.
 
 ## 8. Known limitations / TODOs
 - Posts are dated on their due date, so a catch-up can change `S_prev` and today's `A` (intended by BR-3).
-- No midnight re-run while the app stays open (M2).
-- Editing a rule's anchor (Settings, later) must recompute `next_due` without re-posting.
+- Rule writes (`add`, `update`, `setActive`) emit on `RecurringRepository.changes`; the engine's `post` doesn't, since the caller reloads anyway.
+- Editing a bill's day recomputes `next_due` without re-posting (DECISIONS D34); a deleted rule is `active = 0`, so Undo resumes it with its old `next_due` (D35).
+- A sleeping phone can delay the midnight timer; the resume reload covers that case.

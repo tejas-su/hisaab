@@ -25,23 +25,32 @@ class HomeHeader extends StatelessWidget {
     final String settings = AppLocalizations.of(context).settings;
     return Row(
       children: <Widget>[
-        // why: at the largest text sizes the row is wider than a small phone; scale, don't clip.
-        const Flexible(
-          child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Wordmark()),
-        ),
-        const SizedBox(width: HisaabSpacing.m),
+        // why: a loose Flexible next to an Expanded leaves its unused share empty at the row's
+        // end, pushing Settings off the cards' edge; both shrinkable parts share one Expanded.
         Expanded(
-          child: day == null
-              ? const SizedBox.shrink()
-              : FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(
-                    DateFormat('EEE, d MMM', Localizations.localeOf(context).toString())
-                        .format(DateTime(day.year, day.month, day.day)),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(color: context.colors.ink2, fontSize: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              // why: at the largest text sizes the row is wider than a small phone; scale, don't clip.
+              const Flexible(
+                child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: Wordmark()),
+              ),
+              if (day != null) ...<Widget>[
+                const SizedBox(width: HisaabSpacing.m),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Text(
+                      DateFormat('EEE, d MMM', Localizations.localeOf(context).toString())
+                          .format(DateTime(day.year, day.month, day.day)),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: context.colors.ink2, fontSize: 15),
+                    ),
                   ),
                 ),
+              ],
+            ],
+          ),
         ),
         const SizedBox(width: HisaabSpacing.m),
         Pressable(

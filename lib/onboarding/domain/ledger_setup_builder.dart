@@ -9,7 +9,6 @@ import '../../core/time/pay_rule.dart';
 import '../../core/time/period_calculator.dart';
 import '../../ledger/ledger.dart';
 import 'entities/bill_draft.dart';
-import 'entities/bill_kind.dart';
 import 'entities/onboarding_draft.dart';
 import 'entities/setup_labels.dart';
 
@@ -85,8 +84,7 @@ abstract final class LedgerSetupBuilder {
   ) {
     final Schedule schedule =
         Schedule(frequency: Frequency.monthly, anchor: RecurringSchedule.monthlyAnchor(bill.dueDay, near: today));
-    final String categoryKey = bill.kind == BillKind.rent ? CategoryKeys.home : CategoryKeys.bills;
-    return _categoryId(categories, categoryKey).map(
+    return _categoryId(categories, bill.kind.categoryKey).map(
       (int categoryId) => RecurringDraft(
         label: labels.bills[bill.kind] ?? bill.kind.name,
         amount: bill.amount,

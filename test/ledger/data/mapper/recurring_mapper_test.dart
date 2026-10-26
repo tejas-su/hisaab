@@ -58,6 +58,10 @@ void main() {
       expect(RecurringMapper.toModel(_draft), _model(id: null));
     });
 
+    test('maps a draft with an id to that rule\'s row', () {
+      expect(RecurringMapper.toModel(_draft, id: 3), _model());
+    });
+
     for (final Frequency frequency in Frequency.values) {
       test('round-trips the ${frequency.name} frequency', () {
         final RecurringModel model = RecurringMapper.toModel(

@@ -354,6 +354,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToAmount => 'Back to amount';
+
+  @override
+  String billGoesOut(String bill, String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $days days',
+      one: 'tomorrow',
+    );
+    return '$bill $amount goes out $_temp0';
+  }
+
+  @override
+  String get settingsMoney => 'Money';
+
+  @override
+  String get fixedBills => 'Fixed bills';
+
+  @override
+  String get fixedBillsHint =>
+      'They go out by themselves on their day. Today\'s share already leaves room for them.';
+
+  @override
+  String get addBill => 'Add a bill';
+
+  @override
+  String get noBills =>
+      'No fixed bills yet. Add rent, EMI or anything that goes out every month.';
+
+  @override
+  String billEveryMonth(int day) {
+    return 'Every month on day $day';
+  }
+
+  @override
+  String billRowSpoken(String bill, String amount, String when) {
+    return '$bill, $amount, $when';
+  }
+
+  @override
+  String get billNameQuestion => 'What\'s the bill called?';
+
+  @override
+  String get billNameLabel => 'Name';
+
+  @override
+  String get billNameHint => 'Electricity, water, tuition…';
+
+  @override
+  String billDeleted(String bill) {
+    return 'Deleted $bill';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

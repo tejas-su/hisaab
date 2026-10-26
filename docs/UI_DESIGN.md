@@ -149,7 +149,7 @@ The wordmark shrunk to its first letter and its dot: **h•**. The ET66 has one 
 - **Grid:** 108dp adaptive canvas; the mark is 44dp tall and 50dp wide, centred inside the 66dp safe zone, so every launcher mask (circle, squircle, rounded square) keeps it whole.
 - **Themed icon (Android 13+):** the same geometry as a monochrome layer; the dot survives as a dot.
 - **Never:** a marigold field, an outline-only h, a gradient, a shadow, or the dot moved off the baseline.
-- **Sources:** `docs/design/brand/` holds the master SVGs and the 512px Play Store PNG. The Android resources (`mipmap-anydpi-v26/ic_launcher.xml`, `drawable/ic_launcher_foreground.xml`, `drawable/ic_launcher_monochrome.xml`, legacy `mipmap-*/ic_launcher.png`) are generated from the same geometry.
+- **Sources:** `docs/design/brand/` holds the master SVGs, the 512px Play Store PNG and the 1024×500 Play feature graphic (the wordmark, "Know what you can spend today." and the Home hero card with the SPEC worked-example numbers, on ink). The Android resources (`mipmap-anydpi-v26/ic_launcher.xml`, `drawable/ic_launcher_foreground.xml`, `drawable/ic_launcher_monochrome.xml`, legacy `mipmap-*/ic_launcher.png`) are generated from the same geometry.
 - **Rejected:** a row of day blocks (reads as a battery or signal meter, a cliché §12 already rejects); the marigold Add key with a "+" (generic); an h whose leg is today's block (reads as a broken glyph).
 
 ---
@@ -258,7 +258,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 ### 5.6 Settings (one level)
 - **Money:**
   - Salary and payday
-  - Fixed bills
+  - Fixed bills: one card of rows (name, "Every month on day 29", amount), soonest first, with *Add a bill* above it. Tap a row to change it; swipe it away with Undo. Adding or changing asks one question per screen, like onboarding: the name (a field plus the onboarding bill chips), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
   - Keep aside each month
   - My month starts on: *Payday* (default) / *1st*
 - **Categories:** rename, change icon.

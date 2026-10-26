@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/pay_rule.dart';
 import 'bill_draft.dart';
-import 'bill_kind.dart';
+import '../../../ledger/ledger.dart';
 import 'onboarding_step.dart';
 
 /// The answers so far, saved after every change so onboarding resumes where it stopped (FR-ON-6).

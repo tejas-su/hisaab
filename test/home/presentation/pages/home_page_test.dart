@@ -1,6 +1,14 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/design/app_icon.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
 import 'package:expense_tracker/home/home.dart';
+import 'package:expense_tracker/home/presentation/widgets/due_soon_note.dart';
+import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
+import 'package:expense_tracker/home/presentation/widgets/home_header.dart';
+import 'package:expense_tracker/home/presentation/widgets/today_list.dart';
+import 'package:expense_tracker/home/presentation/widgets/today_row.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -75,6 +83,85 @@ void main() {
         findsOneWidget,
       );
       handle.dispose();
+    });
+
+    testWidgets('nudges about the soonest bill, read with spoken amounts (FR-HO-3)', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pump(tester);
+      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
+      expect(find.bySemanticsLabel('Electricity 1,200 rupees goes out in 3 days'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('a bill due tomorrow says tomorrow', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[
+        WorkedExample.salary,
+        WorkedExample.electricity.copyWith(
+          schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 9, 27)),
+          nextDue: const CalendarDate(2026, 10, 27),
+        ),
+      ];
+      await pump(tester);
+      expect(find.text('Electricity ₹1,200 goes out tomorrow'), findsOneWidget);
+    });
+
+    testWidgets('no nudge when no bill goes out within 5 days', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[WorkedExample.salary, WorkedExample.rent];
+      await pump(tester);
+      expect(find.textContaining('goes out'), findsNothing);
+    });
+
+    testWidgets('the nudge shows under the no-income card too', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[WorkedExample.electricity];
+      services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.got);
+      await pump(tester);
+      expect(find.text('Add money you got this month'), findsOneWidget);
+      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
+    });
+
+    group('alignment', () {
+      for (final (String name, Size size, double scale) in <(String, Size, double)>[
+        ('a phone', TestWindows.phone, 1),
+        ('a 320dp phone at 1.5× text', TestWindows.smallPhone, 1.5),
+      ]) {
+        testWidgets('Settings sits flush with the cards\' right edge on $name', (WidgetTester tester) async {
+          await pump(tester, size: size, textScale: scale);
+          expect(
+            tester.getTopRight(find.byKey(const ValueKey<String>('open-settings'))).dx,
+            tester.getTopRight(find.byType(HeroCard)).dx,
+          );
+        });
+      }
+
+      testWidgets('the wordmark starts on the cards\' left edge', (WidgetTester tester) async {
+        await pump(tester);
+        expect(tester.getTopLeft(find.byType(HomeHeader)).dx, tester.getTopLeft(find.byType(HeroCard)).dx);
+      });
+
+      testWidgets('hero, nudge and Today list content share one left inset', (WidgetTester tester) async {
+        await pump(tester);
+        final double hero = tester.getTopLeft(find.text('Safe to spend today')).dx;
+        expect(tester.getTopLeft(find.descendant(of: find.byType(TodayList), matching: find.text('Today'))).dx, hero);
+        expect(tester.getTopLeft(find.descendant(of: find.byType(DueSoonNote), matching: find.byType(AppIcon))).dx, hero);
+      });
+
+      testWidgets('Today list rows start on the hero\'s content edge', (WidgetTester tester) async {
+        await pump(tester);
+        final Finder well = find.descendant(of: find.byType(TodayRow).first, matching: find.byType(Container)).first;
+        expect(tester.getTopLeft(well).dx, tester.getTopLeft(find.text('Safe to spend today')).dx);
+      });
+
+      testWidgets('"N days to payday" ends where the last block ends', (WidgetTester tester) async {
+        await pump(tester);
+        expect(tester.getTopRight(find.text('9 days to payday')).dx, tester.getTopRight(find.byType(DayBlocks)).dx);
+      });
+
+      testWidgets('the payday flag sits centred in a 44dp column at the card\'s content edge', (WidgetTester tester) async {
+        await pump(tester);
+        final double flagCentre = tester.getCenter(find.text('4 Nov')).dx;
+        final double cardContentRight = tester.getTopRight(find.byType(HeroCard)).dx - 20;
+        expect(flagCentre, closeTo(cardContentRight - 22, 0.5));
+      });
     });
 
     testWidgets('Settings opens from the header', (WidgetTester tester) async {

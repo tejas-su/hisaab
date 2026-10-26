@@ -38,7 +38,7 @@ class TodayList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(18, HisaabSpacing.s, 18, 6),
+            padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, 6),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
@@ -51,11 +51,11 @@ class TodayList extends StatelessWidget {
           ),
           if (entries.isEmpty)
             Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(18, HisaabSpacing.xs, 18, HisaabSpacing.m),
+              padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.xs, HisaabSpacing.gutter, HisaabSpacing.m),
               child: Text(strings.emptyToday, style: text.bodyMedium?.copyWith(color: context.colors.ink2)),
             ),
           for (final (int index, Entry entry) in entries.indexed) ...<Widget>[
-            if (index > 0) Divider(indent: 72, endIndent: 18, color: context.colors.hairline),
+            if (index > 0) Divider(indent: 74, endIndent: HisaabSpacing.gutter, color: context.colors.hairline),
             TodayRow(
               key: ValueKey<int>(entry.id),
               entry: entry,

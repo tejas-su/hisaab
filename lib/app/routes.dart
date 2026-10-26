@@ -30,7 +30,9 @@ abstract final class AppRoutes {
         create: (BuildContext _) => HomeCubit(
           getCycleSummary: getIt<GetCycleSummary>(),
           postDueRecurring: getIt<PostDueRecurring>(),
+          getDueSoonBill: getIt<GetDueSoonBill>(),
           ledger: getIt<LedgerRepository>(),
+          recurring: getIt<RecurringRepository>(),
           categories: getIt<CategoryRepository>(),
           deleteEntry: getIt<DeleteEntry>(),
           restoreEntry: getIt<RestoreEntry>(),
@@ -38,14 +40,70 @@ abstract final class AppRoutes {
         )..load(),
         child: Builder(
           builder: (BuildContext context) => MainScreen(
+            clock: getIt<Clock>(),
             assemble: assemble,
             onAdd: (EntryKind kind) => openAddTray(context, getIt, kind: kind),
             onEdit: (Entry entry) => openAddTray(context, getIt, editing: Option<Entry>.of(entry)),
             onOpenSettings: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (BuildContext _) => const SettingsPage()),
+              MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt)),
             ),
           ),
         ),
+      );
+
+  /// Settings, one level deep (FR-SE).
+  static Widget settings(GetIt getIt) => Builder(
+        builder: (BuildContext context) => SettingsPage(
+          onOpenBills: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt)),
+          ),
+        ),
+      );
+
+  /// The Fixed bills list (FR-SE-1); add and edit open the bill editor.
+  static Widget bills(GetIt getIt) => BlocProvider<BillsCubit>(
+        create: (BuildContext _) => BillsCubit(
+          getBills: getIt<GetBills>(),
+          deleteBill: getIt<DeleteBill>(),
+          restoreBill: getIt<RestoreBill>(),
+          recurring: getIt<RecurringRepository>(),
+          haptics: getIt<Haptics>(),
+        )..load(),
+        child: Builder(
+          builder: (BuildContext context) => BillsPage(
+            onAdd: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (BuildContext _) => billEditor(getIt)),
+            ),
+            onEdit: (RecurringRule bill) => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (BuildContext editor) => billEditor(
+                  getIt,
+                  editing: Option<RecurringRule>.of(bill),
+                  onDelete: () {
+                    Navigator.of(editor).pop();
+                    context.read<BillsCubit>().delete(bill);
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+  /// Adds a bill, or changes [editing]; [onDelete] offers Delete when changing one.
+  static Widget billEditor(
+    GetIt getIt, {
+    Option<RecurringRule> editing = const Option<RecurringRule>.none(),
+    VoidCallback? onDelete,
+  }) =>
+      BlocProvider<BillEditorCubit>(
+        create: (BuildContext _) => BillEditorCubit(
+          addBill: getIt<AddBill>(),
+          editBill: getIt<EditBill>(),
+          haptics: getIt<Haptics>(),
+          editing: editing,
+        ),
+        child: BillEditorPage(onDelete: onDelete),
       );
 
   /// Opens the Add tray from Home's [context], reusing Home's summary and categories.

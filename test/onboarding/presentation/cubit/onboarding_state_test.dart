@@ -1,4 +1,4 @@
-import 'package:expense_tracker/onboarding/domain/entities/bill_kind.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_kind.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/setup_labels.dart';
 import 'package:expense_tracker/onboarding/presentation/cubit/onboarding_state.dart';

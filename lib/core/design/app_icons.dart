@@ -13,6 +13,7 @@ abstract final class AppIcons {
   static const AppIconData payday = HugeIcons.strokeRoundedFlag02;
   static const AppIconData onTrack = HugeIcons.strokeRoundedCheckmarkCircle02;
   static const AppIconData alert = HugeIcons.strokeRoundedAlertCircle;
+  static const AppIconData info = HugeIcons.strokeRoundedInformationCircle;
   static const AppIconData back = HugeIcons.strokeRoundedArrowLeft01;
   static const AppIconData next = HugeIcons.strokeRoundedArrowRight02;
   static const AppIconData backspace = HugeIcons.strokeRoundedCancel01;

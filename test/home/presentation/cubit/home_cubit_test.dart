@@ -38,7 +38,9 @@ void main() {
         clock: clock,
       ),
       postDueRecurring: PostDueRecurring(recurring: recurring, clock: clock),
+      getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
       ledger: ledger,
+      recurring: recurring,
       categories: categories,
       deleteEntry: DeleteEntry(ledger: ledger),
       restoreEntry: RestoreEntry(ledger: ledger),
@@ -99,7 +101,9 @@ void main() {
           clock: clock,
         ),
         postDueRecurring: PostDueRecurring(recurring: broken, clock: clock),
+        getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
         ledger: ledger,
+        recurring: recurring,
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
@@ -108,6 +112,50 @@ void main() {
       addTearDown(withBrokenEngine.close);
       await withBrokenEngine.load();
       expect(withBrokenEngine.state, isA<HomeReady>());
+    });
+
+    test('shows the soonest bill due within 5 days (FR-HO-3)', () async {
+      await cubit.load();
+      expect(
+        ready().dueSoon,
+        Option<DueSoonBill>.of(
+          DueSoonBill(label: 'Electricity', amount: Money.fromMajor(1200), dueDate: const CalendarDate(2026, 10, 29), daysAway: 3),
+        ),
+      );
+    });
+
+    test('still loads, without the nudge, when bills can\'t be read for it', () async {
+      final FakeClock clock = FakeClock(WorkedExample.now);
+      final HomeCubit withBrokenNudge = HomeCubit(
+        getCycleSummary: GetCycleSummary(
+          ledger: ledger,
+          recurring: recurring,
+          settings: FakeBudgetSettingsRepository(),
+          periods: const PeriodCalculator(),
+          clock: clock,
+        ),
+        postDueRecurring: PostDueRecurring(recurring: recurring, clock: clock),
+        getDueSoonBill: GetDueSoonBill(recurring: FakeRecurringRepository()..failure = DatabaseFailure('locked'), clock: clock),
+        ledger: ledger,
+        recurring: recurring,
+        categories: categories,
+        deleteEntry: DeleteEntry(ledger: ledger),
+        restoreEntry: RestoreEntry(ledger: ledger),
+        haptics: haptics,
+      );
+      addTearDown(withBrokenNudge.close);
+      await withBrokenNudge.load();
+      expect((withBrokenNudge.state as HomeReady).dueSoon, const Option<DueSoonBill>.none());
+    });
+
+    test('reloads after a bill is added, edited or deleted in Settings', () async {
+      await cubit.load();
+      final Future<void> reloaded = expectLater(
+        cubit.stream,
+        emitsThrough(isA<HomeReady>().having((HomeReady s) => s.dueSoon, 'dueSoon', const Option<DueSoonBill>.none())),
+      );
+      await recurring.setActive(WorkedExample.electricity.id, active: false).run();
+      await reloaded;
     });
 
     test('emits HomeFailed when the summary can\'t be read', () async {
@@ -180,7 +228,9 @@ void main() {
           clock: FakeClock(WorkedExample.now),
         ),
         postDueRecurring: PostDueRecurring(recurring: recurring, clock: FakeClock(WorkedExample.now)),
+        getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: FakeClock(WorkedExample.now)),
         ledger: ledger,
+        recurring: recurring,
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),

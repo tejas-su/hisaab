@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/money/money.dart';
-import 'bill_kind.dart';
+import '../../../ledger/ledger.dart';
 
 /// A fixed monthly bill picked during onboarding: what, how much and on which day.
 final class BillDraft extends Equatable {

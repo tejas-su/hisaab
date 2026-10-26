@@ -155,7 +155,10 @@ The states below are evaluated in order, and the first match wins.
 - **Idempotency:** the unique index `(recurring_id, date)` plus `ConflictAlgorithm.ignore` means a crash or double run never double-posts.
 - **Catch-up:** after 6 weeks away, a weekly rule posts all 6 occurrences, each with its own date.
 - **Editing a rule** changes future occurrences only; already-posted entries are not touched. **Deleting a rule** stops future posts and keeps past entries.
-- **Due-soon nudge:** when an unposted *Spent* occurrence falls within the next 5 days, Home shows "{Label} ₹{amount} goes out in {n} days". Only the soonest one is shown.
+  - A bill **added** in Settings first goes out on its next due date on or after today; earlier dates this cycle are not back-posted (DECISIONS D33).
+  - When a bill's **day changes**, its next date is the new day in the month of the old `next_due` (the first month not yet posted), or, if that day has passed, the next due date from today. No month is posted twice and nothing is back-posted (D34).
+  - **Delete** stops the rule at once, with Undo (6 s) that resumes it (D35).
+- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label} ₹{amount} goes out in {n} days" ("goes out tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown.
 
 ### BR-10 Entries
 - The amount is 1 to 999,999,999 rupees (at most 9 digits) and is stored as paise.
@@ -296,7 +299,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
   - Salary and payday (edits the income rule; future cycles only).
-  - Fixed bills (list, add, edit, delete rules).
+  - Fixed bills (list, add, edit, delete rules). The list shows each bill's name, day and amount, soonest first. Adding or editing asks three questions: the name (typed, or one of the onboarding chips, which also moves on), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*; every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe or *Delete* removes a bill with Undo (BR-9).
   - Keep aside each month.
   - My month starts on: *Payday* / *1st*.
 - **FR-SE-2** Categories: rename, change icon.

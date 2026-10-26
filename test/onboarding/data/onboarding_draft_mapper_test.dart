@@ -5,7 +5,7 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/pay_rule.dart';
 import 'package:expense_tracker/onboarding/data/mapper/onboarding_draft_mapper.dart';
 import 'package:expense_tracker/onboarding/domain/entities/bill_draft.dart';
-import 'package:expense_tracker/onboarding/domain/entities/bill_kind.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_kind.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
 import 'package:flutter_test/flutter_test.dart';
