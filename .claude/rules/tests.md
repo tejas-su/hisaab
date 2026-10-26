@@ -6,7 +6,7 @@ paths:
 
 # Testing conventions
 
-The only test dependency available is `flutter_test`; `mocktail`, `mockito`, `bloc_test`, `fake_async` and `sqflite_common_ffi` are **not** installed. Write tests with `flutter_test` and hand-written fakes, and ask before adding a test dependency. (Data-source tests against a real in-memory database need `sqflite_common_ffi`; propose it when the first data source lands.)
+Test dependencies: `flutter_test` and `sqflite_common_ffi` (real in-memory SQLite for data sources and repositories; `test/helpers/test_database.dart`). `mocktail`, `mockito`, `bloc_test` and `fake_async` are **not** installed: write hand-written fakes and ask before adding a test dependency. `test/helpers/fake_services.dart` wires every service from fakes for widget and app tests.
 
 ## When to write tests
 

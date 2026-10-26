@@ -15,6 +15,8 @@ The mockups illustrate [../UI_DESIGN.md](../UI_DESIGN.md). Every number in them 
 | [07-ask-ai.html](mockups/07-ask-ai.html) | Ask AI | Goals, period, preview, Hide my notes, Copy & open ChatGPT (FR-AI-1..4) |
 | [08-design-system.html](mockups/08-design-system.html) | Design system | Tokens, the four Day Blocks states, type, keys, motion, haptics |
 
+[brand/](brand/) holds the app icon masters (UI_DESIGN §3.6): `hisaab-icon.svg` (full icon), `hisaab-icon-foreground.svg` and `hisaab-icon-monochrome.svg` (adaptive layers), and `hisaab-play-store-512.png`.
+
 **Worked example behind the numbers.** Income is ₹45,000, paid on the 4th, so the cycle runs Sun 4 Oct to Tue 3 Nov 2026. "Today" is Mon 26 Oct (9 days left). An electricity bill of ₹1,200 is due 29 Oct, and ₹27,150 was spent before today. That gives P = ₹16,650 and A = ₹1,850 a day. ₹420 has been spent today, so the hero shows ₹1,430. The dark mockup is Sat 31 Oct (4 days left) with ₹2,070 spent today.
 
 **Fidelity notes**

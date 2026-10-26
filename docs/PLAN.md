@@ -11,7 +11,7 @@ The app answers one question: **"How much can I still spend?"**
 
 - **Money in** — recurring income, entered once, auto-added every payday.
 - **Money out** — expenses + recurring bills (auto-added).
-- **Left** — one big number on Home. Green / amber / red.
+- **Left** — one big number on Home: today's safe share. No red or green; states are shown by fill, outline, hatch and words (DECISIONS D9).
 
 North-star test: a 5-year-old can log an expense, and anyone can understand Home in under 2 seconds.
 
@@ -31,7 +31,7 @@ Every setting the user must think about is friction. The app decides; power user
 | Accounts / wallets / cash vs UPI | Not in v1 | — |
 | Delete | Instant + Undo snackbar (no "Are you sure?") | — |
 | Edit recurring rule | Applies to future entries; past entries untouched. No dialog. | — |
-| Over budget | Shown as "₹1,200 over" in red, never "-₹1,200" | — |
+| Over budget | Shown as "₹1,200 over" in words, never "-₹1,200" and never red | — |
 | Paise | Whole rupees only: no decimal key, never displayed (stored as minor units) | — |
 | Savings goal | Off. Optional "Keep aside every month" amount, subtracted from spendable | Toggle |
 
@@ -167,7 +167,7 @@ Rules:
 
 ## 11. Dependencies
 Added: `intl`, `flutter_localizations`, `hugeicons`.
-To add when the milestone needs them: `figma_squircle` (M0), `animations` (M1), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `file_picker` (M6), `home_widget` + `quick_settings_tile` (later).
+To add when the milestone needs them: `figma_squircle` (M0), `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `file_picker` (M6), `home_widget` + `quick_settings_tile` (later).
 Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/` (M0).
 
 ---
@@ -177,9 +177,9 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | # | Scope | Done when |
 |---|---|---|
 | M0 | Design tokens + theme (light/dark), AppIcon, l10n wiring, Money/formatter, Clock, AppLogger, DI, DB + migrations, seeded categories; add `fpdart`, `figma_squircle`, `path`; bundle fonts; `git init` | App boots in `en_IN`, ₹ formats Indian-style, analyze clean, coverage script runs |
-| M1 | Onboarding, Home hero, Add tray, Today list, undo, core motion | Log an expense in < 5 s, Add → digits → Next → tile |
-| M2 | RecurringEngine (income + bills), PeriodCalculator | Payday auto-adds income; catch-up works; tests green |
-| M3 | Safe-to-spend, status colours, auto-suggested budgets | Over-budget turns red with one shake |
+| M1 ✓ | Onboarding, Home hero (all BR-5 states, range line), Add tray, Today list, undo, core motion. Pulled forward because the hero needs them: `SafeToSpend` (BR-3..BR-7) and the recurring engine on start/resume | Log an expense in < 5 s, Add → digits → Next → tile |
+| M2 | Recurring: midnight re-run (BR-8), due-soon nudge (FR-HO-3), bills in Settings | Payday auto-adds income at midnight; nudge shows the soonest bill |
+| M3 | *This week* toggle (FR-HO-2), "you saved yesterday" (BR-8), auto-suggested budgets (BR-12) | Weekly view and morning note work |
 | M4 | Insights: charts + rule tips | vs-last-cycle shown, 3 tips max |
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |
 | M6 | CSV/JSON backup & restore, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall; TalkBack reads every control |

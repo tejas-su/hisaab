@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/ledger/domain/entities/ledger_setup.dart';
+import 'package:expense_tracker/ledger/domain/entities/recurring_draft.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_posting.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/ledger/domain/repository/recurring_repository.dart';
@@ -31,9 +32,23 @@ final class FakeRecurringRepository implements RecurringRepository {
         return posting.occurrences.length;
       });
 
+  /// Records [setup] and replaces [rules] with it, ids from 1.
   @override
   TaskEither<Failure, Unit> startFresh(LedgerSetup setup) => _run(() {
         setups.add(setup);
+        rules = <RecurringRule>[
+          for (final (int index, RecurringDraft draft) in setup.rules.indexed)
+            RecurringRule(
+              id: index + 1,
+              label: draft.label,
+              amount: draft.amount,
+              kind: draft.kind,
+              categoryId: draft.categoryId,
+              schedule: draft.schedule,
+              nextDue: draft.nextDue,
+              isIncomeSource: draft.isIncomeSource,
+            ),
+        ];
         return unit;
       }, startFreshFailure);
 }

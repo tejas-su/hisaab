@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:expense_tracker/core/errors/failure.dart';
@@ -10,6 +11,7 @@ import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/onboarding/presentation/cubit/onboarding_state.dart';
+import 'package:expense_tracker/core/widgets/signal_key.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -160,6 +162,21 @@ void main() {
       await settle(tester);
       expect(find.text("Couldn't save. Try again."), findsOneWidget);
       expect(finished, 0);
+    });
+
+    testWidgets('while saving, the finish key is disabled', (WidgetTester tester) async {
+      services.preferences.draftJson = OnboardingDraftMapper.toJson(
+        OnboardingDraft(step: OnboardingStep.bills, income: Money.fromMajor(45000), payRule: const Option<PayRule>.of(MonthlyOnDay(4))),
+      );
+      services.preferences.markDoneGate = Completer<void>();
+      await pump(tester);
+      await tester.tap(find.text('Skip'));
+      await settle(tester);
+      expect(cubit.state, isA<OnboardingFinishing>());
+      expect(tester.widget<SignalKey>(find.byKey(const ValueKey<String>('finish-onboarding'))).onPressed, isNull);
+      services.preferences.markDoneGate?.complete();
+      await settle(tester);
+      expect(finished, 1);
     });
 
     testWidgets('an added bill can be removed', (WidgetTester tester) async {

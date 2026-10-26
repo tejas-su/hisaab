@@ -218,6 +218,26 @@ void main() {
       expect(cubit.state.form.preview, const Option<SpendPreview>.none());
     });
 
+    test('keys and edits are ignored while saving', () async {
+      final AddEntryCubit cubit = build()
+        ..pressKey('6')
+        ..next();
+      final Future<void> saving = cubit.pickCategory(SeedCategoryIds.food);
+      cubit
+        ..pressKey('1')
+        ..setNote('late');
+      expect(cubit.state.form.rupees, 6);
+      expect(cubit.state.form.note, '');
+      await saving;
+    });
+
+    test('closing mid-delete does not throw', () async {
+      final AddEntryCubit cubit = build(editing: Option<Entry>.of(WorkedExample.entries[3]));
+      final Future<void> deleting = cubit.delete();
+      await cubit.close();
+      await expectLater(deleting, completes);
+    });
+
     test('closing mid-save does not throw', () async {
       final AddEntryCubit cubit = build()
         ..pressKey('6')

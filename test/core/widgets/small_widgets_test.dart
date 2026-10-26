@@ -64,7 +64,7 @@ void main() {
         tester,
         ValueListenableBuilder<int>(
           valueListenable: trigger,
-          builder: (BuildContext _, int value, Widget? __) => Shake(trigger: value, child: const Text('₹0')),
+          builder: (BuildContext _, int value, Widget? _) => Shake(trigger: value, child: const Text('₹0')),
         ),
       );
       trigger.value = 1;
@@ -82,7 +82,7 @@ void main() {
         tester,
         ValueListenableBuilder<int>(
           valueListenable: trigger,
-          builder: (BuildContext _, int value, Widget? __) => Shake(trigger: value, child: const Text('₹0')),
+          builder: (BuildContext _, int value, Widget? _) => Shake(trigger: value, child: const Text('₹0')),
         ),
         reduceMotion: true,
       );

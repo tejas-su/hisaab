@@ -8,7 +8,7 @@ import '../../helpers/pump_app.dart';
 Widget _host(ValueNotifier<Money> amount, {bool roll = true}) => Scaffold(
       body: ValueListenableBuilder<Money>(
         valueListenable: amount,
-        builder: (BuildContext _, Money value, Widget? __) => AmountText(value, roll: roll),
+        builder: (BuildContext _, Money value, Widget? _) => AmountText(value, roll: roll),
       ),
     );
 

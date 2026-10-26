@@ -191,6 +191,12 @@ void main() {
       expect(ledger.entries, contains(WorkedExample.entries.last));
     });
 
+    test('closing mid-delete does not throw', () async {
+      final Future<void> deleting = cubit.delete(ready().todayEntries.last);
+      await cubit.close();
+      await expectLater(deleting, completes);
+    });
+
     test('crossing the swipe threshold plays one light haptic', () {
       cubit.swipeThresholdReached();
       expect(haptics.events, <String>['threshold']);

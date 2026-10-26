@@ -1,73 +1,54 @@
 # Add Entry Architecture Overview
 
-**Status:** planned (milestone M1), no code yet. Names below are the intended ones; update this doc when the code lands.
+**Status:** built in M1.
 
 ## 1. Purpose
-The Add tray logs money out or in. The path is the Add key, then the digits, then Next, then a category tile. Speed is the feature: never add a tap or a field (CLAUDE.md non-negotiables).
+The Add tray logs money out or in. The path is the Add key, the digits, Next, then a category tile. Speed is the feature: never add a tap or a field.
 
 ## 2. Entry point
-- The marigold **Add** key in the dock opens `AddEntryTray` as a two-step tray over Home or Spends (FR-HO-6).
-- Tapping a Today row or a history row opens the same tray in edit mode (FR-AD-8).
+`AppRoutes.openAddTray` builds an `AddEntryCubit` with Home's `CycleSummary` (for the preview and the earliest date) and categories, then `AddEntryTray.show`. Callers: the dock's Add key (`AddKey`), the Add key under the Home pane in two-pane layouts, *Add money* (on *Got*), and a Today row tap (edit mode).
 
 ## 3. Data flow
 ```
-Add key → AddEntryTray (container transform from the key)
-  Step 1 (amount)
-    → AddEntryCubit.setKind(Spent|Got)                      FR-AD-1
-    → AddEntryCubit.key(digit | '00' | backspace | clear) → AmountInput (core/money)    FR-AD-2
-    → AddEntryCubit.quickAdd(₹10…₹500)                      FR-AD-1 (adds, never replaces)
-    → preview: SafeToSpend.previewAfter(summary, amount)    FR-AD-3 (BR-4 with the typed amount)
-    → AddEntryCubit.next()                                  FR-AD-4
-  Step 2 (category)
-    → AddEntryCubit.setDate / setNote                       BR-10
-    → AddEntryCubit.pickCategory(id) → SaveEntry(NewEntry)  ledger use case
-      → LedgerRepository.save → changes → HomeCubit reloads
-  → emit AddEntrySaved → BlocListener: tile flash, tray closes, success haptic   FR-AD-5
+Step 1  setKind · pressKey · backspace · clear · quickAdd   AmountInput; tick or reject haptic
+        preview = SafeToSpend.previewSpend(summary, amount − edited amount if today)
+        next()                                              only when amount > 0
+Step 2  setDate (clamped earliest..today) · setNote
+        pickCategory(id) → AddEntrySaving (tile flashes) → SaveEntry
+           Right → success haptic → AddEntryFinished → tray pops; Home reloads via changes
+           Left  → reject haptic → AddEntryEditing(failed: true)
+        delete() (edit mode) → DeleteEntry → AddEntryFinished
+back(): step 2 → step 1 (PopScope); step 1 → the sheet closes without saving
 ```
 
 ## 4. Key classes
-| Class | Layer | Responsibility |
+| Class | File | Responsibility |
 |---|---|---|
-| `AddEntryTray` | `lib/add_entry/presentation/pages/` | Hosts both steps; height change between steps; predictive-back aware |
-| `AmountStep` | presentation/widgets | Spent/Got segment, `AmountText`, quick chips, `Keypad`, Next `SignalKey` |
-| `CategoryStep` | presentation/widgets | 2×4 `CategoryTile` grid (fixed order, BR-11), date and note chips |
-| `AddEntryCubit` | presentation/cubit | Owns amount digits, kind, date, note, step; ignores re-entrant saves (FR-AD-6) |
-| `AmountInput` | `lib/core/money/amount_input.dart` | Pure rules: leading zeros, 9-digit cap, `00`, backspace, clear, quick add |
-| `Keypad` | `lib/core/widgets/` | Phone layout 1-2-3 on top; `00 · 0 · ⌫`; long-press ⌫ clears |
-| `SignalKey` | `lib/core/widgets/` | The marigold key with the ink lip (Next, Add) |
-| `SaveEntry` | `lib/ledger/domain/usecase/` | Validates and saves or replaces (BR-10) |
+| `AddEntryTray` | `presentation/pages/` | The sheet, step switch, back handling |
+| `AmountStep` | `presentation/widgets/` | `KindSwitch`, amount, `SpendPreviewLine`, `QuickAddChips`, `Keypad`, Next |
+| `CategoryStep` | `presentation/widgets/` | Title, 4-column tile grid, `DateChip`, `NoteChip`, Delete in edit mode |
+| `AddEntryCubit`, `AddEntryState`, `EntryForm` | `presentation/cubit/` | Form, preview, double-tap guard |
+| `Keypad`, `SignalKey`, `CategoryTile`, `HisaabChip`, `Shake` | `lib/core/widgets/` | Shared controls |
 
 ## 5. State variants
 | State | UI |
 |---|---|
-| `AddEntryAmount(kind, digits, preview?)` | Step 1; Next enabled when the amount is above 0 |
-| `AddEntryCategory(kind, amount, date, note, categories)` | Step 2; tiles save on tap |
-| `AddEntrySaving(...)` | Tiles disabled; further taps ignored |
-| `AddEntrySaved(entry)` | One-shot: close the tray, haptic, Home drains |
-| `AddEntryFailed(failure, previous)` | Stays on step 2 with "Couldn't save. Try again."; input kept |
+| `AddEntryEditing(form, rejections, failed)` | The current step; amount shakes on a refused key; "Couldn't save. Try again." |
+| `AddEntrySaving(form, categoryId)` | That tile is ink; taps ignored |
+| `AddEntryFinished(form, categoryId)` | The tray pops |
 
-## 6. Failure types
-| Failure | Cause |
-|---|---|
-| `InvalidAmountFailure` | Amount is 0 or over 9 digits; normally blocked by the keypad (reject haptic + shake) |
-| `FutureDateFailure` | The date picker allowed a future date (it should not; BR-10) |
-| `DatabaseFailure` | Save failed; the tray stays open (FR-AD-6) |
-| `EntryNotFoundFailure` | Editing an entry deleted elsewhere |
+## 6. Layout
+- Phone: step 1 nearly full height, step 2 its natural height.
+- Short windows (landscape, split-screen): amount beside the keypad.
+- Tabletop: the sheet keeps to the half below the fold (Flutter sheets never straddle a fold), amount beside keypad (DECISIONS D28).
+- Width capped at 560dp.
 
-## 7. External dependencies
-- **Ledger:** `SaveEntry`, `DeleteEntry` (edit mode), `CategoryRepository.all(kind)`, `GetCycleSummary` (for the preview).
-- **Core:** `AmountInput`, `MoneyFormatter`, `Keypad`, `SignalKey`, `CategoryTile`, `Tray`, `Haptics`, motion tokens.
-- **Package:** `animations` (container transform, M1).
+## 7. Failure types
+`InvalidAmountFailure`, `FutureDateFailure`, `NoteTooLongFailure` (normally prevented by the UI), `DatabaseFailure`, `EntryNotFoundFailure`.
 
 ## 8. Design spec
-- Behaviour: `docs/SPEC.md` FR-AD-1 to FR-AD-8, BR-10, BR-11, E11.
-- Visuals and feel:
-  - `docs/UI_DESIGN.md` §5.3 (both steps).
-  - §6 (`standard` and `flick` springs, tile flash 120 ms).
-  - §7 (tick / success / reject haptics).
-  - §9 (keypad labels).
+`docs/SPEC.md` FR-AD-1 to FR-AD-8, BR-10, BR-11, E11; `docs/UI_DESIGN.md` §5.3, §6, §7, §9, §13.
 
 ## 9. Known limitations / TODOs
-- No decimal key, by design. Paise are never entered (PLAN §2).
-- "Make this repeat" via a long-press on Next appears in older notes. SPEC has no FR for it, so it stays out of v1 unless added.
-- Edit mode replaces the entry in place. Undo for edits is not specified.
+- No container transform from the Add key; the sheet slides up. The `animations` package isn't needed yet.
+- The 120 ms tile flash shows while the sheet drops rather than delaying the save.

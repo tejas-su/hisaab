@@ -73,6 +73,7 @@ void main() {
       expect(find.byType(AddEntryTray), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('keypad-3')));
       await tester.tap(find.byKey(const ValueKey<String>('keypad-0')));
+      await tester.pump();
       await tester.tap(find.byKey(const ValueKey<String>('add-next')));
       await settle(tester);
       await tester.tap(find.bySemanticsLabel('Food. Save'));

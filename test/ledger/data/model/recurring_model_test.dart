@@ -2,7 +2,6 @@ import 'package:expense_tracker/core/db/db_schema.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/ledger/data/model/recurring_model.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 
 const Map<String, Object?> _row = <String, Object?>{
   RecurringColumns.id: 1,

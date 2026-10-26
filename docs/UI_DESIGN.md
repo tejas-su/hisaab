@@ -141,6 +141,17 @@ Rules: no all-caps eyebrow labels, and no semibold body text. Supports text scal
   - Category icons sit in `sunk` wells and are **monochrome**. Categories are told apart by icon, word and fixed position, not colour.
   - Every icon has a label.
 
+### 3.6 App icon
+The wordmark shrunk to its first letter and its dot: **h•**. The ET66 has one yellow key; the icon has one yellow dot.
+
+- **Mark:** Anek Latin "h" at weight 700, `wdth` 85 (the hero amount's face), in `displayInk` `#F2F1EC` on an `ink` `#161615` field. The marigold dot sits on the baseline, 220 font units after the h.
+- **Dot size:** 0.50 × x-height. The wordmark's dot is 0.63 × x-height, but at that size the icon reads as "ho"; 0.50 reads as "h." down to 36px.
+- **Grid:** 108dp adaptive canvas; the mark is 44dp tall and 50dp wide, centred inside the 66dp safe zone, so every launcher mask (circle, squircle, rounded square) keeps it whole.
+- **Themed icon (Android 13+):** the same geometry as a monochrome layer; the dot survives as a dot.
+- **Never:** a marigold field, an outline-only h, a gradient, a shadow, or the dot moved off the baseline.
+- **Sources:** `docs/design/brand/` holds the master SVGs and the 512px Play Store PNG. The Android resources (`mipmap-anydpi-v26/ic_launcher.xml`, `drawable/ic_launcher_foreground.xml`, `drawable/ic_launcher_monochrome.xml`, legacy `mipmap-*/ic_launcher.png`) are generated from the same geometry.
+- **Rejected:** a row of day blocks (reads as a battery or signal meter, a cliché §12 already rejects); the marigold Add key with a "+" (generic); an h whose leg is today's block (reads as a broken glyph).
+
 ---
 
 ## 4. Information architecture
@@ -387,10 +398,12 @@ Android 16 (API 36, which this app targets) ignores orientation, aspect-ratio an
 |---|---|---|
 | Phone, folded foldable, split-screen half (under 600dp) | compact | One pane, full width, dock at the bottom |
 | Unfolded foldable in portrait, small tablet (600–839dp) | medium | One pane as a **centred 560dp column**, dock at the bottom |
-| Tablet, unfolded foldable in landscape, phone in landscape (840dp and up) | expanded | **Two panes**: Home (40% of the width, clamped to 360–480dp) beside Spends; no dock, since both are visible |
+| Tablet, unfolded foldable in landscape, phone in landscape (840dp and up) | expanded | **Two panes**: Home (40% of the width, clamped to 360–480dp) beside Spends; no dock, since both are visible, and the marigold Add key sits at the bottom of the Home pane |
 | A vertical fold or hinge across the window (book posture), window at least 600dp | — | Two panes **split exactly at the fold**; with a physical hinge, nothing is drawn inside the hinge gap |
-| A horizontal fold, half-opened (tabletop posture) | — | **Content above the fold, controls below it** (dock now; keypad in the Add tray in M1) |
-| Height under 480dp (phone landscape, small multi-window) | compact height | Denser layouts (M1: smaller hero, keypad beside the amount) |
+| A horizontal fold, half-opened (tabletop posture) | — | **Content above the fold, controls below it**: the dock below; onboarding's keypad below; the Add tray keeps to the lower half with the amount beside the keypad, so the hero stays readable above (Flutter sheets never straddle a fold) |
+| Height under 480dp (phone landscape, small multi-window) | compact height | Denser layouts: keypad beside the amount, 48dp keys |
+
+**One widget places question and keypad:** `AdaptiveSplit` (`lib/core/widgets/`) puts a screen's header and controls in the right place for every row above.
 
 **Rules:**
 - **Use the window, never the screen.** Sizes come from `MediaQuery.sizeOf`, which is the app window in split-screen or freeform mode.

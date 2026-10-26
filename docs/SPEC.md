@@ -355,3 +355,4 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | Q3 | Play Store title descriptor | "hisaab• – Daily Spend Tracker", pending a trademark search |
 | Q4 | Should the cycle-summary share card be in v1 (UI_DESIGN §6) or v1.1? | v1.1 |
 | Q5 | Should long-pressing a day block show that day's share, or long-pressing Next offer "make this repeat"? | Neither in v1. Hidden gestures fail the 5-year-old test; recurring bills are added in Settings (FR-SE-1) |
+| Q6 | Installing mid-cycle: the whole salary counts but spending before install is unknown, so the first days' share is too high. Ask "How much is left right now?" in onboarding? | No extra question; the share corrects itself at the next payday |

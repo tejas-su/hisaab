@@ -23,16 +23,20 @@ class AddEntryTray extends StatelessWidget {
   static const double _gapAbove = 72;
 
   /// Opens the tray over [context] with [cubit], which the tray closes when it goes away.
+  ///
+  /// On a tabletop fold the sheet keeps to the lower half (Flutter's sheets never straddle a
+  /// fold), so the hero stays readable above it and the keypad sits on the flat half.
   static Future<void> show(BuildContext context, AddEntryCubit cubit) {
     final bool tabletop = context.layout.panes is TabletopPanes;
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: !tabletop,
+      useSafeArea: true,
+      anchorPoint: tabletop ? Offset(0, MediaQuery.sizeOf(context).height) : null,
       backgroundColor: context.colors.surface,
       barrierColor: context.colors.ink.withValues(alpha: 0.32),
       shape: HisaabShapes.trayTop(),
-      constraints: const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
+      constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop,
       builder: (BuildContext _) => BlocProvider<AddEntryCubit>(create: (BuildContext _) => cubit, child: const AddEntryTray()),
     );
@@ -63,12 +67,11 @@ class AddEntryTray extends StatelessWidget {
 
   Widget _step(BuildContext context, AddEntryState state) {
     if (state is AddEntryEditing && state.form.step == AddEntryStep.amount) {
-      final bool tabletop = context.layout.panes is TabletopPanes;
-      final double window = MediaQuery.sizeOf(context).height;
-      return SizedBox(
-        height: tabletop ? window : window - _gapAbove - HisaabSpacing.xxl,
-        child: AmountStep(state: state, fullWindow: tabletop),
-      );
+      final PaneArrangement panes = context.layout.panes;
+      final double height = panes is TabletopPanes
+          ? panes.bottom.height - MediaQuery.paddingOf(context).bottom
+          : MediaQuery.sizeOf(context).height - _gapAbove - HisaabSpacing.xxl;
+      return SizedBox(height: height, child: AmountStep(state: state, sideBySide: panes is TabletopPanes));
     }
     return CategoryStep(state: state);
   }

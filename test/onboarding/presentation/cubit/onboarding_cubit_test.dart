@@ -86,6 +86,12 @@ void main() {
       expect(progress().draft, draft);
     });
 
+    test('closing while the draft loads emits nothing', () async {
+      final Future<void> starting = cubit.start();
+      await cubit.close();
+      await expectLater(starting, completes);
+    });
+
     test('starts over when the draft can\'t be read', () async {
       preferences.failure = DatabaseFailure('locked');
       await cubit.start();
@@ -117,6 +123,12 @@ void main() {
       expect(progress().draft.income, Money.fromMajor(45));
       await cubit.clear();
       expect(progress().draft.income, Money.zero);
+    });
+
+    test('a failed draft save keeps the answer on screen', () async {
+      preferences.failure = DatabaseFailure('locked');
+      await typeIncome('7');
+      expect(progress().draft.income, Money.fromMajor(7));
     });
 
     test('Next does nothing at ₹0', () async {

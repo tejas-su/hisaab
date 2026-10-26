@@ -215,9 +215,12 @@ void main() {
       });
     }
 
-    testWidgets('tabletop: the keypad sits below the fold', (WidgetTester tester) async {
+    testWidgets('tabletop: the whole tray sits below the fold and takes taps', (WidgetTester tester) async {
       await open(tester, size: const Size(701, 841), displayFeatures: const <DisplayFeature>[_tabletopFold]);
-      expect(tester.getRect(find.byKey(const ValueKey<String>('keypad-1'))).top, greaterThanOrEqualTo(420));
+      expect(tester.getRect(find.byType(AddEntryTray)).top, greaterThanOrEqualTo(420));
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-7')));
+      await tester.pump();
+      expect(find.text('₹7'), findsOneWidget);
     });
 
     testWidgets('meets tap-target, label and contrast guidelines', (WidgetTester tester) async {

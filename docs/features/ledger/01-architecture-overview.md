@@ -1,85 +1,68 @@
 # Ledger Architecture Overview
 
-**Status:** planned (milestone M0–M2), no code yet. Names below are the intended ones; update this doc when the code lands.
+**Status:** built in M1. Category limits, insights and budget suggestions (BR-12, BR-14) land with Spends in M4.
 
 ## 1. Purpose
 The ledger is the shared money feature. It owns entries, categories and recurring rules, and the pure maths that turns them into today's share. Every UI feature reads money data through `lib/ledger/ledger.dart` and nothing else.
 
 ## 2. Entry point
-- There is no page of its own.
-- Other features import the barrel `lib/ledger/ledger.dart`.
-- Repositories and use cases are registered in `lib/core/di/` and handed to pages by `lib/app/routes.dart`.
+- No page of its own. Other features import the barrel `lib/ledger/ledger.dart`.
+- `registerLedgerServices` (`lib/ledger/di/ledger_module.dart`) registers the repositories and use cases; `lib/app/app_services.dart` calls it at start-up.
 
 ## 3. Data flow
 ```
-Feature cubit (HomeCubit, AddEntryCubit, SpendsCubit…)
-  → SaveEntry / DeleteEntry / GetCycleSummary            (lib/ledger/domain/usecase/)
+HomeCubit / AddEntryCubit / CompleteOnboarding
+  → SaveEntry / DeleteEntry / RestoreEntry / GetCycleSummary / PostDueRecurring   (domain/usecase/)
     → LedgerRepository / CategoryRepository / RecurringRepository / BudgetSettingsRepository
-      → EntriesLocalDataSource, CategoriesLocalDataSource,
-        RecurringLocalDataSource, SettingsLocalDataSource  (sqflite via AppDatabase)
-        → *Model.fromRow → *Mapper.toEntity → entity
+      → Sqflite*LocalDataSource (rows) → *Model.fromRow → *Mapper.toEntity
   ← TaskEither<Failure, T>
 GetCycleSummary
-  → PeriodCalculator.cycleFor(today, payRule, monthStart)  (lib/core/time/)   BR-1, BR-2
-  → SafeToSpend.compute(inputs)                             (lib/ledger/domain/)  BR-3..BR-7
-  → CycleSummary
-Writes → LedgerRepository.changes (Stream<void>) → listening cubits re-run GetCycleSummary   BR-10
+  → PayRuleSchedule.payRuleOf(salary rule)        BR-1 (no salary rule → calendar month)
+  → PeriodCalculator.cycleFor(today, rule, monthStart)
+  → SafeToSpend.compute(CycleInputs)              BR-3..BR-7 → CycleSummary
+Every write → LedgerRepository.changes (Stream<void>) → HomeCubit reloads   BR-10
 ```
 
 ## 4. Key classes
-| Class | Layer | Responsibility |
+| Class | File | Responsibility |
 |---|---|---|
-| `TransactionEntity` | `lib/ledger/domain/entities/` | One *Spent*/*Got* entry: `Money`, kind, category id, calendar date, note, optional recurring id |
-| `CategoryEntity` | domain/entities | Name, icon key, kind, fixed sort order, optional limit (BR-11, BR-12) |
-| `RecurringRuleEntity` | domain/entities | Amount, kind, category, frequency, anchor date, `nextDue`, active (BR-9) |
-| `CycleSummary` | domain/entities | Cycle dates, `D`, `P`, `A`, `safeToday`, `overToday`, `tomorrow`, state, forecast |
-| `SafeToSpend` | `lib/ledger/domain/safe_to_spend.dart` | Pure computation of BR-3 to BR-7; no I/O, takes `today` as a parameter |
-| `CycleState` | domain | Sealed: `NoIncome`, `OverCycle`, `OverToday`, `SlowDown`, `OnTrack` (BR-5) |
-| `RangeForecast` | domain | Sealed: `Hidden`, `LastsTillPayday(spare)`, `RunsOut(date)` (BR-7) |
-| `LedgerRepository` | domain/repository | `save`, `delete`, `entriesBetween`, `changes` stream |
-| `CategoryRepository` | domain/repository | `all(kind)`, `rename`, `setIcon`, `setLimits` |
-| `RecurringRepository` | domain/repository | Rules CRUD, `dueOn(today)`, `postDue(occurrences)` (see `recurring-engine`) |
-| `BudgetSettingsRepository` | domain/repository | Month start, keep aside |
-| `SaveEntry` | domain/usecase | Validates BR-10 (amount range, no future date, note ≤ 80) and saves or replaces |
-| `DeleteEntry` | domain/usecase | Deletes and returns the entity so Undo can re-save it |
-| `GetCycleSummary` | domain/usecase | Loads the inputs for the cycle containing `today`, then runs `SafeToSpend` |
-| `InsightRules`, `BudgetSuggester` | domain | Pure rules for BR-14 and BR-12, consumed by `spends` |
-| `LedgerRepositoryImpl` (+ others) | `lib/ledger/data/repository/` | Wraps data sources in `TaskEither.tryCatch`; emits on `changes` after each write |
-| `*LocalDataSource` | data/datasource | Only classes touching `AppDatabase`; raw rows in and out |
-| `*Model`, `*Mapper` | data/model, data/mapper | `fromRow`/`toRow` with `is`-narrowed columns; model ↔ entity |
-| `AppDatabase` | `lib/core/db/` | Opens sqflite, runs versioned migrations in `core/db/migrations/` |
-
-**Tables** (PLAN §8): `categories`, `transactions`, `recurring`, `settings`.
-- Indexes: `transactions(date)`, `transactions(category_id, date)`.
-- **Unique** index: `transactions(recurring_id, date)`.
+| `Entry`, `EntryDraft`, `EntryKind` | `domain/entities/` | A saved entry, an unsaved one, *Spent*/*Got* |
+| `Category`, `CategoryKeys` | `domain/entities/category.dart` | Fixed seed buckets (BR-11) |
+| `RecurringRule`, `RecurringDraft`, `Schedule`, `Frequency` | `domain/entities/` | Rules and their schedule (BR-9) |
+| `CycleSummary`, `CycleState`, `RangeForecast`, `SpendPreview` | `domain/entities/` | Today's answer, BR-5 states, BR-7 forecast, FR-AD-3 preview |
+| `SafeToSpend` | `domain/safe_to_spend.dart` | Pure BR-3..BR-7 and the Add preview; shares floor to whole rupees |
+| `RecurringSchedule` | `domain/recurring_schedule.dart` | Next date, first date on/after a day, dates in a range; clamps like BR-1 |
+| `PayRuleSchedule` | `domain/pay_rule_schedule.dart` | `PayRule` ↔ salary `Schedule` (DECISIONS D20) |
+| `EntryValidator` | `domain/entry_validator.dart` | BR-10: ₹1..₹99,99,99,999, no future date, trimmed note ≤ 80 |
+| `SaveEntry`, `DeleteEntry`, `RestoreEntry` | `domain/usecase/` | Add or replace, delete (returns the entry), undo |
+| `GetCycleSummary` | `domain/usecase/get_cycle_summary.dart` | Loads settings, rules and the cycle's entries; computes `B` from rules |
+| `PostDueRecurring` | `domain/usecase/post_due_recurring.dart` | The recurring engine (see `recurring-engine`) |
+| `*RepositoryImpl` | `data/repository/` | `dbTask` wraps data sources; `LedgerRepositoryImpl` owns `changes` |
+| `Sqflite*LocalDataSource` | `data/datasource/` | The only code touching `AppDatabase` |
+| `*Model`, `*Mapper`, `EntryKindMapper` | `data/model/`, `data/mapper/` | `is`-narrowed rows (`core/db/db_row.dart`) ↔ entities |
+| `CategoryExtensions.labelIn` | `presentation/category_extensions.dart` | Rename or localised seed name |
 
 ## 5. State variants
-The ledger has no UI state. It hands consumers the following sealed results:
-
-| Type | Variants | Maps to |
-|---|---|---|
-| `CycleState` | `NoIncome`, `OverCycle`, `OverToday`, `SlowDown`, `OnTrack` | Home hero and Day Blocks (BR-5) |
-| `RangeForecast` | `Hidden`, `LastsTillPayday`, `RunsOut` | Home range line (BR-7) |
+No UI state. Consumers switch on `CycleState` (`NoIncome`, `OverCycle`, `OverToday`, `SlowDown`, `OnTrack`) and `RangeForecast` (`TooEarlyToForecast`, `LastsTillPayday`, `RunsOut`).
 
 ## 6. Failure types
 | Failure | Cause |
 |---|---|
-| `DatabaseFailure` (core) | A sqflite read or write threw |
-| `NoIncomeFailure` | No *Got* entry and no recurring income, so no cycle can be computed (BR-5 #1, E10) |
-| `InvalidAmountFailure` | Amount ≤ 0 or more than 9 digits (BR-10) |
-| `FutureDateFailure` | Entry dated after today (BR-10) |
-| `EntryNotFoundFailure` | Edit or delete of an id that no longer exists |
+| `DatabaseFailure` (core) | sqflite threw |
+| `InvalidDataFailure` (core) | A stored row, currency, kind, frequency, date or setting can't be read |
+| `InvalidAmountFailure` | Amount under ₹1 or over 9 digits |
+| `FutureDateFailure` | Entry dated after today |
+| `NoteTooLongFailure` | Note over 80 characters after trimming |
+| `EntryNotFoundFailure` | Edit or delete of a missing id |
 
 ## 7. External dependencies
-- **Core:** `Money`, `CurrencySpec` (`core/money`), `Clock`, `PeriodCalculator`, `PayRule` (`core/time`), `AppDatabase` (`core/db`), `Failure`, `UseCase`, `AppLogger`.
-- **Packages:** `sqflite`, `path`, `fpdart` (M0), `equatable`.
+- **Core:** `Money`, `CurrencySpec.fromCode`, `AmountInput`, `CalendarDate`, `Clock`, `PeriodCalculator`, `PayRule`, `AppDatabase`, `db_row.dart`, `Failure`, `UseCase`.
+- **Packages:** `sqflite`, `fpdart`, `equatable`, `get_it` (module only).
 
 ## 8. Design spec
-- Behaviour: `docs/SPEC.md` BR-1 to BR-14, plus edge cases E1–E9.
-- Copy that the ledger's results feed: `docs/UI_DESIGN.md` §3.3 (states) and §8 (voice, amounts).
+`docs/SPEC.md` BR-1 to BR-11, E1–E9, E11; `docs/UI_DESIGN.md` §3.3 and §8.
 
 ## 9. Known limitations / TODOs
-- One currency only. `currency` is stored per row so multi-currency needs no migration (PLAN §5).
-- Category order and count are fixed in v1 (BR-11).
-- Undo after delete re-saves the returned entity with the same id. Confirm that this keeps `recurring_id` and the unique index intact.
-- Decided (DECISIONS D20): one `settings` key-value table. `BudgetSettingsRepository` (ledger) owns `currency`, `month_start` and `keep_aside_minor`; `AppPreferencesRepository` (settings feature) owns the theme and onboarding keys.
+- One currency only; `currency` is stored per row.
+- Restoring an entry whose id was reused is a `DatabaseFailure` (ids are AUTOINCREMENT, so this can't happen in normal use).
+- `B` is computed from rules on every load; fine for a handful of rules.

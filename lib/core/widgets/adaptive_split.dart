@@ -11,17 +11,26 @@ import 'pane.dart';
 ///
 /// - Tabletop posture: header above the fold, controls below it.
 /// - Book posture or a wide window: header and controls side by side, split at the fold.
-/// - Short windows (phone landscape): side by side.
+/// - Short windows (phone landscape), or when [sideBySide] asks for it: side by side.
 /// - Otherwise: header on top, controls at the bottom, at most 560dp wide.
 ///
 /// The fold-aware arrangements need window coordinates, so they apply only when [fullWindow]
 /// is true (the widget fills the app window). The header scrolls if it doesn't fit.
 class AdaptiveSplit extends StatelessWidget {
-  const AdaptiveSplit({super.key, required this.header, required this.controls, this.fullWindow = true});
+  const AdaptiveSplit({
+    super.key,
+    required this.header,
+    required this.controls,
+    this.fullWindow = true,
+    this.sideBySide = false,
+  });
 
   final Widget header;
   final Widget controls;
   final bool fullWindow;
+
+  /// Put header and controls side by side even in a tall window, e.g. in a short, wide tray.
+  final bool sideBySide;
 
   static const double readableWidth = 560;
   static const EdgeInsetsDirectional _padding = EdgeInsetsDirectional.fromSTEB(
@@ -41,7 +50,7 @@ class AdaptiveSplit extends StatelessWidget {
     if (fullWindow && panes is SideBySidePanes) {
       return _inPanes(context, panes.primary, panes.secondary);
     }
-    if (layout.heightClass == HeightClass.compact) {
+    if (sideBySide || layout.heightClass == HeightClass.compact) {
       return SafeArea(
         child: Row(
           children: <Widget>[

@@ -47,7 +47,7 @@ void main() {
       addTearDown(data.dispose);
       await pumpApp(
         tester,
-        ValueListenableBuilder<DayBlocksData>(valueListenable: data, builder: (BuildContext _, DayBlocksData d, Widget? __) => _Host(d)),
+        ValueListenableBuilder<DayBlocksData>(valueListenable: data, builder: (BuildContext _, DayBlocksData d, Widget? _) => _Host(d)),
       );
       data.value = const DayBlocksData(count: 9, style: DayBlocksStyle.onTrack, todayFill: 0.2, laterHeight: 0.5);
       await tester.pump();
@@ -62,7 +62,7 @@ void main() {
       addTearDown(data.dispose);
       await pumpApp(
         tester,
-        ValueListenableBuilder<DayBlocksData>(valueListenable: data, builder: (BuildContext _, DayBlocksData d, Widget? __) => _Host(d)),
+        ValueListenableBuilder<DayBlocksData>(valueListenable: data, builder: (BuildContext _, DayBlocksData d, Widget? _) => _Host(d)),
         reduceMotion: true,
       );
       data.value = const DayBlocksData(count: 9, style: DayBlocksStyle.onTrack, todayFill: 0.2);

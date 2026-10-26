@@ -81,9 +81,6 @@ sealed class AddEntryState extends Equatable {
   const AddEntryState(this.form);
 
   final EntryForm form;
-
-  @override
-  List<Object?> get props => <Object?>[form];
 }
 
 /// Typing or choosing. [rejections] counts refused keys so the amount shakes; [failed] shows

@@ -1,6 +1,6 @@
 # Settings Architecture Overview
 
-**Status:** planned (milestone M3 for money, categories and look; M6 for backup, restore, export and reset), no code yet. Names below are the intended ones; update this doc when the code lands.
+**Status:** M1 built the preferences part: `AppPreferencesRepository` (onboarding flag and draft, `lib/settings/`) and a placeholder `SettingsPage` opened from Home. Money, categories and look land in M3; backup, restore, export and reset in M6. Other names below are the intended ones.
 
 ## 1. Purpose
 Settings holds the few choices the app could not default away, all at most one level deep: money setup, categories, look, data and about.

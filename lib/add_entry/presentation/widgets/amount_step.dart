@@ -20,19 +20,20 @@ import 'spend_preview_line.dart';
 /// Step 1 of the tray: Spent/Got, the amount, its effect on today, quick chips, keypad, Next
 /// (SPEC FR-AD-1 to FR-AD-4).
 class AmountStep extends StatelessWidget {
-  const AmountStep({super.key, required this.state, required this.fullWindow});
+  const AmountStep({super.key, required this.state, this.sideBySide = false});
 
   final AddEntryEditing state;
 
-  /// The tray fills the window (tabletop posture), so the keypad goes below the fold.
-  final bool fullWindow;
+  /// Amount beside the keypad, for the short, wide tray below a tabletop fold.
+  final bool sideBySide;
 
   @override
   Widget build(BuildContext context) {
     final AddEntryCubit cubit = context.read<AddEntryCubit>();
-    final bool short = context.layout.heightClass == HeightClass.compact;
+    final bool short = sideBySide || context.layout.heightClass == HeightClass.compact;
     return AdaptiveSplit(
-      fullWindow: fullWindow,
+      fullWindow: false,
+      sideBySide: sideBySide,
       header: Column(
         children: <Widget>[
           KindSwitch(kind: state.form.kind, onChanged: cubit.setKind),
