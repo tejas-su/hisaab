@@ -36,12 +36,12 @@ final class LedgerRepositoryImpl implements LedgerRepository {
       ).flatMap(_found).map(_notify);
 
   @override
-  TaskEither<Failure, Entry> replace(int id, EntryDraft draft) => _existing(id)
+  TaskEither<Failure, Entry> replace(int id, EntryDraft draft) => _found(id)
       .flatMap(
-        (EntryModel current) => dbTask(
+        (Entry current) => dbTask(
           () => _entries.update(
             id,
-            EntryMapper.toModel(draft, createdAt: _clock.now(), id: id, recurringId: current.recurringId),
+            EntryMapper.toModel(draft, createdAt: current.createdAt, id: id, recurringId: current.recurringId),
           ),
         ),
       )
@@ -56,7 +56,7 @@ final class LedgerRepositoryImpl implements LedgerRepository {
   @override
   TaskEither<Failure, Entry> restore(Entry entry) => dbTask(
         () => _entries.insert(
-          EntryMapper.toModel(entry.draft, createdAt: _clock.now(), id: entry.id, recurringId: entry.recurringId),
+          EntryMapper.toModel(entry.draft, createdAt: entry.createdAt, id: entry.id, recurringId: entry.recurringId),
         ),
       ).flatMap(_found).map(_notify);
 

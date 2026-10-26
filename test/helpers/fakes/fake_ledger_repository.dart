@@ -53,7 +53,7 @@ final class FakeLedgerRepository implements LedgerRepository {
     }
     return _run(() {
       saved.add(draft);
-      final Entry entry = _entryFrom(id, draft, recurringId: entries[index].recurringId);
+      final Entry entry = _entryFrom(id, draft, recurringId: entries[index].recurringId, createdAt: entries[index].createdAt);
       entries[index] = entry;
       _notify();
       return entry;
@@ -86,12 +86,16 @@ final class FakeLedgerRepository implements LedgerRepository {
   /// Closes the change stream.
   Future<void> dispose() => _changes.close();
 
-  static Entry _entryFrom(int id, EntryDraft draft, {int? recurringId}) => Entry(
+  /// The created time stamped on new entries; the fake has no clock.
+  static final DateTime addedAt = DateTime(2026, 10, 26, 10, 30);
+
+  static Entry _entryFrom(int id, EntryDraft draft, {int? recurringId, DateTime? createdAt}) => Entry(
         id: id,
         amount: draft.amount,
         kind: draft.kind,
         categoryId: draft.categoryId,
         date: draft.date,
+        createdAt: createdAt ?? addedAt,
         note: draft.note,
         recurringId: recurringId,
       );

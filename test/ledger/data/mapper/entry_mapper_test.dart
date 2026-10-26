@@ -21,24 +21,25 @@ const EntryModel _model = EntryModel(
   createdAt: '2026-10-26T10:30:00.000',
 );
 
-const Entry _entry = Entry(
+final Entry _entry = Entry(
   id: 4,
-  amount: Money(6000),
+  amount: const Money(6000),
   kind: EntryKind.spent,
   categoryId: 1,
-  date: CalendarDate(2026, 10, 26),
+  date: const CalendarDate(2026, 10, 26),
+  createdAt: DateTime(2026, 10, 26, 10, 30),
   note: 'Chai',
   recurringId: 2,
 );
 
-EntryModel _withModel({String? kind, String? currency, String? date, bool noId = false}) => EntryModel(
+EntryModel _withModel({String? kind, String? currency, String? date, String? createdAt, bool noId = false}) => EntryModel(
       id: noId ? null : _model.id,
       amountMinor: _model.amountMinor,
       currency: currency ?? _model.currency,
       kind: kind ?? _model.kind,
       categoryId: _model.categoryId,
       date: date ?? _model.date,
-      createdAt: _model.createdAt,
+      createdAt: createdAt ?? _model.createdAt,
     );
 
 void main() {
@@ -58,6 +59,7 @@ void main() {
       ('an unknown kind', _withModel(kind: 'sideways')),
       ('an unknown currency', _withModel(currency: 'XYZ')),
       ('a bad date', _withModel(date: '26/10/2026')),
+      ('a bad created time', _withModel(createdAt: 'yesterday')),
       ('no id', _withModel(noId: true)),
     ];
     for (final (String name, EntryModel model) in bad) {

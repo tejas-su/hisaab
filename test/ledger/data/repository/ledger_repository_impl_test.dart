@@ -109,4 +109,43 @@ void main() {
       expect((await repository.entriesBetween(_today, _today).run()).getLeft().toNullable(), isA<InvalidDataFailure>());
     });
   });
+
+  group('LedgerRepositoryImpl keeps when an entry was first saved', () {
+    late FakeClock clock;
+    late LedgerRepositoryImpl timed;
+
+    setUp(() {
+      clock = FakeClock(DateTime(2026, 10, 26, 10, 30));
+      timed = LedgerRepositoryImpl(entries: SqfliteEntriesLocalDataSource(database), clock: clock);
+      addTearDown(timed.dispose);
+    });
+
+    Future<String> storedCreatedAt(int id) async => (await database.db.query(
+          Tables.transactions,
+          columns: <String>[TransactionColumns.createdAt],
+          where: '${TransactionColumns.id} = ?',
+          whereArgs: <Object?>[id],
+        ))
+            .single[TransactionColumns.createdAt]! as String;
+
+    test('editing an entry keeps its original created time', () async {
+      final Entry saved = _right(await timed.add(_draft()).run());
+      clock.advance(const Duration(hours: 5));
+      _right(await timed.replace(saved.id, _draft(rupees: 80)).run());
+      expect(await storedCreatedAt(saved.id), DateTime(2026, 10, 26, 10, 30).toIso8601String());
+    });
+
+    test('Undo after delete restores the original created time', () async {
+      final Entry saved = _right(await timed.add(_draft()).run());
+      _right(await timed.delete(saved.id).run());
+      clock.advance(const Duration(seconds: 4));
+      _right(await timed.restore(saved).run());
+      expect(await storedCreatedAt(saved.id), DateTime(2026, 10, 26, 10, 30).toIso8601String());
+    });
+
+    test('a new entry is stamped with the clock\'s now', () async {
+      final Entry saved = _right(await timed.add(_draft()).run());
+      expect(await storedCreatedAt(saved.id), DateTime(2026, 10, 26, 10, 30).toIso8601String());
+    });
+  });
 }

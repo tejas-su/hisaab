@@ -7,6 +7,7 @@ import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/fake_services.dart';
 import '../../../helpers/fixtures/ledger/categories.dart';
@@ -48,5 +49,72 @@ void main() {
       find.descendant(of: find.byKey(const ValueKey<String>('tile-food')), matching: find.byType(Container)).first,
     );
     expect((surface.decoration! as ShapeDecoration).color, HisaabColors.light.ink);
+  });
+
+  group('chip row alignment', () {
+    Future<void> pumpStep(WidgetTester tester, {Option<Entry> editing = const Option<Entry>.none(), Size size = TestWindows.phone, double textScale = 1}) async {
+      final FakeServices services = FakeServices();
+      addTearDown(services.dispose);
+      final AddEntryCubit cubit = AddEntryCubit(
+        saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
+        deleteEntry: DeleteEntry(ledger: services.ledger),
+        haptics: services.haptics,
+        clock: services.clock,
+        categories: seedCategories,
+      );
+      addTearDown(cubit.close);
+      final EntryForm form = EntryForm(
+        kind: EntryKind.spent,
+        rupees: 60,
+        date: WorkedExample.today,
+        today: WorkedExample.today,
+        earliestDate: WorkedExample.today.addDays(-30),
+        tiles: seedCategories.where((Category c) => c.kind == EntryKind.spent).toList(),
+        step: AddEntryStep.category,
+        editing: editing,
+      );
+      await pumpApp(
+        tester,
+        BlocProvider<AddEntryCubit>.value(value: cubit, child: Scaffold(body: CategoryStep(state: AddEntryEditing(form)))),
+        size: size,
+        textScale: textScale,
+      );
+    }
+
+    double tilesLeft(WidgetTester tester) => tester.getTopLeft(find.byKey(const ValueKey<String>('tile-food'))).dx;
+    double tilesRight(WidgetTester tester) => tester.getTopRight(find.byKey(const ValueKey<String>('tile-bills'))).dx;
+
+    for (final (String name, Size size, double scale) in <(String, Size, double)>[
+      ('a phone', TestWindows.phone, 1),
+      ('a 320dp phone at 1.5× text', TestWindows.smallPhone, 1.5),
+    ]) {
+      testWidgets('the date and note chips span exactly the tiles\' width on $name', (WidgetTester tester) async {
+        await pumpStep(tester, size: size, textScale: scale);
+        expect(tester.getTopLeft(find.byKey(const ValueKey<String>('date-chip'))).dx, tilesLeft(tester));
+        expect(tester.getTopRight(find.byKey(const ValueKey<String>('note-chip'))).dx, tilesRight(tester));
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('the open note field also ends on the tiles\' edge', (WidgetTester tester) async {
+      await pumpStep(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('note-chip')));
+      await tester.pump();
+      expect(tester.getTopRight(find.byKey(const ValueKey<String>('note-field'))).dx, tilesRight(tester));
+    });
+
+    testWidgets('editing: Delete starts its own line on the tiles\' left edge', (WidgetTester tester) async {
+      await pumpStep(tester, editing: Option<Entry>.of(WorkedExample.entries[3]));
+      final Offset delete = tester.getTopLeft(find.byKey(const ValueKey<String>('delete-entry')));
+      expect(delete.dx, tilesLeft(tester));
+      expect(delete.dy, greaterThan(tester.getBottomLeft(find.byKey(const ValueKey<String>('note-chip'))).dy));
+      expect(tester.getTopRight(find.byKey(const ValueKey<String>('note-chip'))).dx, tilesRight(tester));
+    });
+
+    testWidgets('editing fits all three chips on a 320dp phone at 2× text', (WidgetTester tester) async {
+      await pumpStep(tester, editing: Option<Entry>.of(WorkedExample.entries[3]), size: TestWindows.smallPhone, textScale: 2);
+      expect(tester.takeException(), isNull);
+      expect(tester.getTopRight(find.byKey(const ValueKey<String>('note-chip'))).dx, tilesRight(tester));
+    });
   });
 }

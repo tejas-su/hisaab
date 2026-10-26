@@ -64,6 +64,7 @@ abstract final class WorkedExample {
         kind: kind,
         categoryId: categoryId,
         date: date,
+        createdAt: DateTime(date.year, date.month, date.day, 9, id),
         note: note,
         recurringId: recurringId,
       );

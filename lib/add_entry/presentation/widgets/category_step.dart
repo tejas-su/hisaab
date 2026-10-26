@@ -48,17 +48,23 @@ class CategoryStep extends StatelessWidget {
           const SizedBox(height: 18),
           _grid(context, strings, form.tiles, flashed, saving ? null : cubit.pickCategory),
           const SizedBox(height: 18),
-          Wrap(
-            spacing: HisaabSpacing.s,
-            runSpacing: HisaabSpacing.s,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          // why: the chips span exactly the tile grid's width; the note takes what the date
+          // leaves, so the row's right edge meets the tiles'. Delete gets its own line, so
+          // three chips never crowd one row at large text sizes.
+          Row(
             children: <Widget>[
               DateChip(date: form.date, today: form.today, earliest: form.earliestDate, onChanged: cubit.setDate),
-              SizedBox(width: 220, child: NoteChip(note: form.note, onChanged: cubit.setNote)),
-              if (form.editing.isSome())
-                HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onPressed: cubit.delete),
+              const SizedBox(width: HisaabSpacing.s),
+              Expanded(child: NoteChip(note: form.note, onChanged: cubit.setNote)),
             ],
           ),
+          if (form.editing.isSome()) ...<Widget>[
+            const SizedBox(height: HisaabSpacing.s),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onPressed: cubit.delete),
+            ),
+          ],
           if (current is AddEntryEditing && current.failed) ...<Widget>[
             const SizedBox(height: HisaabSpacing.m),
             Text(strings.couldntSave, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),

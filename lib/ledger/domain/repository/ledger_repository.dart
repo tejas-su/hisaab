@@ -17,7 +17,7 @@ abstract interface class LedgerRepository {
   /// Returns [Right] with the saved entry, or [Left] with `DatabaseFailure`.
   TaskEither<Failure, Entry> add(EntryDraft draft);
 
-  /// Overwrites entry [id] with [draft], keeping its recurring link.
+  /// Overwrites entry [id] with [draft], keeping its recurring link and created time.
   ///
   /// Returns [Right] with the updated entry, [Left] with `EntryNotFoundFailure` when [id] is
   /// gone, or `DatabaseFailure`.
@@ -29,7 +29,7 @@ abstract interface class LedgerRepository {
   /// `EntryNotFoundFailure` when [id] is gone, or `DatabaseFailure`.
   TaskEither<Failure, Entry> delete(int id);
 
-  /// Puts a deleted [entry] back with its original id and recurring link (Undo).
+  /// Puts a deleted [entry] back with its original id, recurring link and created time (Undo).
   ///
   /// Returns [Right] with the entry, or [Left] with `EntryNotFoundFailure` if the id is
   /// taken again, or `DatabaseFailure`.

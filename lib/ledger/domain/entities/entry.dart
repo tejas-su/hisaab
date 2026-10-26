@@ -13,6 +13,7 @@ final class Entry extends Equatable {
     required this.kind,
     required this.categoryId,
     required this.date,
+    required this.createdAt,
     this.note,
     this.recurringId,
   });
@@ -22,6 +23,9 @@ final class Entry extends Equatable {
   final EntryKind kind;
   final int categoryId;
   final CalendarDate date;
+
+  /// When the entry was first saved; edits and Undo keep it, so it records real habits.
+  final DateTime createdAt;
   final String? note;
 
   /// The rule that posted this entry; null for entries the user typed.
@@ -31,5 +35,5 @@ final class Entry extends Equatable {
   EntryDraft get draft => EntryDraft(amount: amount, kind: kind, categoryId: categoryId, date: date, note: note);
 
   @override
-  List<Object?> get props => <Object?>[id, amount, kind, categoryId, date, note, recurringId];
+  List<Object?> get props => <Object?>[id, amount, kind, categoryId, date, createdAt, note, recurringId];
 }

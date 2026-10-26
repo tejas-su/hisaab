@@ -27,7 +27,7 @@ Rule edits  → RecurringRepository.changes → HomeCubit, BillsCubit reload
 ## 4. Key classes
 | Class | File | Responsibility |
 |---|---|---|
-| `Entry`, `EntryDraft`, `EntryKind` | `domain/entities/` | A saved entry, an unsaved one, *Spent*/*Got* |
+| `Entry`, `EntryDraft`, `EntryKind` | `domain/entities/` | A saved entry (with `createdAt`, set once on add and kept by edit and Undo), an unsaved one, *Spent*/*Got* |
 | `Category`, `CategoryKeys` | `domain/entities/category.dart` | Fixed seed buckets (BR-11) |
 | `RecurringRule`, `RecurringDraft`, `Schedule`, `Frequency` | `domain/entities/` | Rules and their schedule (BR-9) |
 | `CycleSummary`, `CycleState`, `RangeForecast`, `SpendPreview` | `domain/entities/` | Today's answer, BR-5 states, BR-7 forecast, FR-AD-3 preview |
