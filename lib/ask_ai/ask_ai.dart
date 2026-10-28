@@ -5,3 +5,6 @@ export 'di/ask_ai_module.dart';
 export 'domain/usecase/get_prompt_input.dart';
 export 'domain/entities/prompt_input.dart';
 export 'domain/ai_handoff.dart';
+export 'presentation/bloc/ask_ai_bloc.dart';
+export 'presentation/bloc/ask_ai_event.dart';
+export 'presentation/bloc/ask_ai_state.dart';
