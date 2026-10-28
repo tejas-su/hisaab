@@ -24,11 +24,13 @@ void main() {
   late FakeServices services;
   late SpendsBloc bloc;
   late List<(PayCycle, Option<int>)> opened;
+  late List<PayCycle> asked;
 
   setUp(() {
     services = FakeServices();
     bloc = services.spendsBloc();
     opened = <(PayCycle, Option<int>)>[];
+    asked = <PayCycle>[];
   });
 
   tearDown(() async {
@@ -48,6 +50,7 @@ void main() {
           body: SpendsPage(
             today: WorkedExample.today,
             onSeeEntries: (PayCycle cycle, Option<int> category) => opened.add((cycle, category)),
+            onAskAi: asked.add,
           ),
         ),
       ),
@@ -139,6 +142,7 @@ void main() {
       await tester.tap(find.text('See entries'));
       expect(opened, <(PayCycle, Option<int>)>[(_october, const Option<int>.of(SeedCategoryIds.food))]);
       await tester.ensureVisible(find.text('Use these limits'));
+      await tester.pump();
       await tester.runAsync(() async {
         await tester.tap(find.text('Use these limits'));
         await pumpEventQueue();
@@ -152,6 +156,7 @@ void main() {
       await pump(tester);
       services.categories.failure = DatabaseFailure('locked');
       await tester.ensureVisible(find.text('Use these limits'));
+      await tester.pump();
       await tester.runAsync(() async {
         await tester.tap(find.text('Use these limits'));
         await pumpEventQueue();
@@ -233,6 +238,20 @@ void main() {
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       await expectLater(tester, meetsGuideline(textContrastGuideline));
       handle.dispose();
+    });
+
+    testWidgets('the Ask AI card sits above the pace card and opens Ask AI for the cycle', (WidgetTester tester) async {
+      await pump(tester);
+      final Finder card = find.byKey(const ValueKey<String>('ask-ai-card'));
+      expect(tester.getTopLeft(card).dy, lessThan(tester.getTopLeft(find.byType(PaceCard)).dy));
+      await tester.tap(card);
+      expect(asked, <PayCycle>[_october]);
+    });
+
+    testWidgets('an empty cycle has no Ask AI card', (WidgetTester tester) async {
+      services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.spent);
+      await pump(tester);
+      expect(find.byKey(const ValueKey<String>('ask-ai-card')), findsNothing);
     });
   });
 }

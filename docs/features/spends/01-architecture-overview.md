@@ -1,6 +1,6 @@
 # Spends Architecture Overview
 
-**Status:** built in M4: cycle switcher, pace chart, *Where it went* with limits, insights with their actions, and *Every entry*. The Ask AI card (FR-SP-2) lands with Ask AI in M5 (DECISIONS D53).
+**Status:** built in M4: cycle switcher, pace chart, *Where it went* with limits, insights with their actions, and *Every entry*. The Ask AI card (FR-SP-2) was added in M5 (DECISIONS D53, D61).
 
 ## 1. Purpose
 Spends shows where the money went in a cycle: a pace chart, a sorted category list with optional limits, at most 3 plain insights, and every entry by day.
@@ -32,7 +32,8 @@ EntriesFilterChanged / DeleteRequested / UndoRequested (same Undo flow as Home)
 ## 4. Key classes
 | Class | File | Responsibility |
 |---|---|---|
-| `SpendsPage` | `presentation/pages/spends_page.dart` | Title, switcher, pace card, *Where it went*, insights, *See every entry* |
+| `SpendsPage` | `presentation/pages/spends_page.dart` | Title, switcher, Ask AI card, pace card, *Where it went*, insights, *See every entry* |
+| `AskAiCard` | `presentation/widgets/ask_ai_card.dart` | Ink-outlined card with a marigold well; `onAskAi` opens Ask AI for the shown cycle (FR-SP-2) |
 | `SpendsBloc`, `SpendsEvent`, `SpendsState` | `presentation/bloc/` | Which cycle is shown; newest request wins (`restartable()`); limits save is `droppable()` |
 | `CycleSwitcher` | `presentation/widgets/cycle_switcher.dart` | `‹ October ›`; a null callback disables an arrow |
 | `CycleLabel` | `presentation/cycle_label.dart` | Month holding most of the cycle's days; weekly cycles by dates (D52) |
@@ -51,7 +52,7 @@ EntriesFilterChanged / DeleteRequested / UndoRequested (same Undo flow as Home)
 |---|---|
 | `SpendsLoading` | Title only |
 | `SpendsReady` with an empty overview | "Nothing spent in October yet." and *See every entry* |
-| `SpendsReady` | Full screen; `limitsFailed` adds "Couldn't save. Try again." under the offer |
+| `SpendsReady` | Full screen with the Ask AI card on top; `limitsFailed` adds "Couldn't save. Try again." under the offer |
 | `SpendsFailed` | "Couldn't load your money." and Try again |
 | `EntriesReady` with nothing in the filter | "Nothing here yet." under the chips |
 

@@ -20,7 +20,7 @@ final class AskAiLoading extends AskAiState {
 /// The user's [choice] and the [prompt] it builds from [input].
 ///
 /// [toasts] counts the times "Copied. Paste it in the chat." should have shown; the page shows
-/// one each time it goes up (DECISIONS D63).
+/// one each time it goes up (DECISIONS D62).
 final class AskAiReady extends AskAiState {
   const AskAiReady({required this.input, required this.choice, required this.prompt, this.toasts = 0});
 

@@ -1,72 +1,63 @@
 # Ask AI Architecture Overview
 
-**Status:** planned (milestone M5), no code yet. Names below are the intended ones; update this doc when the code lands.
+**Status:** built in M5. Device check pending: confirm the prompt pastes cleanly into ChatGPT on a phone before M5 is ticked in PLAN §12.
 
 ## 1. Purpose
-Ask AI turns the user's money data into a ready-to-paste prompt for ChatGPT or any other AI. The app never calls an AI itself. It prepares text, shows exactly what will be sent, and hands it off.
+Ask AI turns the user's money data into a ready-to-paste prompt for ChatGPT or any other AI. The app never calls an AI itself. It prepares text, shows exactly what will be sent, and hands it off only when the user taps.
 
 ## 2. Entry point
-- The Ask AI card at the top of `SpendsPage` opens `AskAiPage` for the selected cycle (FR-SP-2).
+- The Ask AI card at the top of `SpendsPage` opens `AskAiPage` for the cycle Spends shows (FR-SP-2, DECISIONS D60). The card shows only when that cycle has spends (D61).
+- `AppRoutes.askAi` in `lib/app/routes.dart` builds the `AskAiBloc` and adds `AskAiLoadRequested`.
 
 ## 3. Data flow
-```
-AskAiPage
-  → AskAiBloc ← AskAiLoadRequested(cycle)
-    → GetPromptInput(cycle, period, hideNotes)           lib/ask_ai/domain/usecase/
-       → LedgerRepository / CategoryRepository / RecurringRepository
-       → PromptInput (income, pay rule, period dates, category totals, bills, entries)
-    → PromptBuilder.build(input, goal, customQuestion)   pure, deterministic (BR-15)
-       → PromptText(text, entryCount, summarisedWeeks?)
-  → emit AskAiReady (preview)
-  → AskAiGoalSelected / AskAiPeriodChanged / AskAiHideNotesChanged / AskAiQuestionChanged → rebuild preview   FR-AI-2
-  → AskAiChatGptRequested
-       → ClipboardService.copy(text)
-       → ChatGptLink.forText(text) → url or plain chatgpt.com      BR-15 (≤ 2,000 encoded chars)
-       → ExternalLinkLauncher.open(url)
-  → AskAiShareRequested    → ShareService.shareText(text)
-  → AskAiCopyRequested     → ClipboardService.copy(text)
-  → emit with lastAction → BlocListener shows the toast "Copied. Paste it in the chat."
-```
+1. `AskAiLoadRequested` runs `GetPromptInput(cycle)`. It loads the shown cycle and the two before it, the active rules, the categories, and the entries up to today, into one `PromptInput`.
+2. The bloc builds the prompt with `PromptBuilder.build(input, choice, nameOf:)` and emits `AskAiReady`.
+3. `AskAiGoalChosen`, `AskAiPeriodChosen`, `AskAiNotesHidden` and `AskAiQuestionChanged` change the `PromptChoice` and rebuild the prompt without reading again (FR-AI-2).
+4. An action button adds an `AskAiHandoffEvent` (`droppable()`), which is ignored while `choice.canSend` is false:
+   - `AskAiChatGptPressed`: `AiHandoff.copy`, then `AiHandoff.open` with `ChatGptLink.prefilled(text)`, or `ChatGptLink.home` when the encoded text is over 2,000 characters.
+   - `AskAiOtherAiPressed`: `AiHandoff.share`.
+   - `AskAiCopyPressed`: `AiHandoff.copy`.
+5. When the user has to paste, the bloc raises `AskAiReady.toasts`, and the page's `BlocConsumer` shows "Copied. Paste it in the chat." (D62).
 
 ## 4. Key classes
-| Class | Layer | Responsibility |
+| Class | File | Responsibility |
 |---|---|---|
-| `AskAiPage` | `lib/ask_ai/presentation/pages/` | Goal cards, period chips, preview, notes switch, actions |
-| `AskAiBloc`, `AskAiEvent` | presentation/bloc | Holds selections; regenerates the preview; runs actions through the seams |
-| `GoalCard`, `PromptPreview` | presentation/widgets | Selected card ink-filled with marigold check; collapsible preview |
-| `GetPromptInput` | domain/usecase | Gathers the period's data from the ledger |
-| `PromptBuilder` | `lib/ask_ai/domain/prompt_builder.dart` | Pure; byte-identical output for the same input; 12,000-char guard with weekly summarising |
-| `AskGoal` | domain | Enum: review, save, budget, onTrack, custom |
-| `ChatGptLink` | domain | Pure: builds the `?q=` URL or falls back to the bare site |
-| `ClipboardService` | domain (interface) / data (`Clipboard.setData`) | Seam for tests |
-| `ShareService` | domain (interface) / data (`share_plus`) | Android share sheet |
-| `ExternalLinkLauncher` | domain (interface) / data (`url_launcher`) | Opens the browser or ChatGPT app via intent |
+| `AskAiPage` | `lib/ask_ai/presentation/pages/ask_ai_page.dart` | Places the choices and the send panel in one pane, or in two panes / across a tabletop fold |
+| `AskAiHeader`, `AskAiControls`, `GoalCard`, `OwnQuestionField` | `lib/ask_ai/presentation/widgets/` | Back and title; goal grid with a marigold check on the selected card; period chips; the 200-character question |
+| `AskAiSendPanel`, `PromptPreview` | `lib/ask_ai/presentation/widgets/` | "What will be sent · n entries", the first 4 lines or the full text, *Hide my notes*, and the three actions |
+| `AskAiBloc`, `AskAiEvent`, `AskAiState` | `lib/ask_ai/presentation/bloc/` | Holds the choice, rebuilds the prompt, runs the hand-off |
+| `GetPromptInput` | `lib/ask_ai/domain/usecase/get_prompt_input.dart` | Loads the three cycles' data once |
+| `PromptBuilder`, `PromptCsv` | `lib/ask_ai/domain/` | Pure, deterministic BR-15 text with RFC 4180 CSV; groups the oldest 7-day blocks to stay ≤ 12,000 characters (D59, D64) |
+| `AskGoal`, `AskPeriod`, `PromptChoice`, `PromptInput`, `PromptText` | `lib/ask_ai/domain/` | Goals, periods, the user's choice, the loaded data, and the result |
+| `ChatGptLink` | `lib/ask_ai/domain/chat_gpt_link.dart` | The `?q=` link when the encoded text fits in 2,000 characters |
+| `AiHandoff` / `SystemAiHandoff` | `domain/ai_handoff.dart` / `data/system_ai_handoff.dart` | Copy (clipboard), open (`url_launcher`), share (`share_plus`) (D63) |
+| `registerAskAiServices` | `lib/ask_ai/di/ask_ai_module.dart` | Registers `GetPromptInput` and `AiHandoff` |
 
 ## 5. State variants
 | State | UI |
 |---|---|
-| `AskAiLoading` | Preview skeleton |
-| `AskAiReady(goal, period, hideNotes, question, prompt, lastAction?)` | Full screen; `lastAction` drives one-shot toasts |
-| `AskAiEmpty` | No entries in the period: "Add a few spends first, then ask." |
-| `AskAiFailed(failure)` | Retry line |
+| `AskAiLoading` | Header only |
+| `AskAiReady` | Full screen. A blank own question disables the three actions (D65) |
+| `AskAiFailed` | "Couldn't load your money." and Try again |
 
 ## 6. Failure types
 | Failure | Cause |
 |---|---|
-| `DatabaseFailure` | Loading the input failed |
-| `ClipboardFailure` | The platform clipboard call threw |
-| `LaunchFailure` | No app can open the URL. The text is still copied; show the toast only |
+| `DatabaseFailure`, `InvalidDataFailure` | A ledger read failed, which gives `AskAiFailed` |
+
+`AiHandoff.open` returns false instead of failing when nothing can open the link. The text is already copied, so the toast shows.
 
 ## 7. External dependencies
-- **Ledger:** repositories (read only).
-- **Core:** `MoneyFormatter` (the prompt uses plain `₹` amounts, `en_IN`), `PeriodCalculator`, `Clock`.
-- **Packages:** `share_plus`, `url_launcher` (M5); Flutter `services` for the clipboard.
+- **Ledger:** repositories, read only, through `ledger.dart`.
+- **Core:** `MoneyFormatter` (`en_IN`), `PeriodCalculator`, `Clock`, `Haptics`, `Pane`, `HisaabChip`, `SignalKey`.
+- **Packages:** `share_plus` and `url_launcher` (M5). The manifest adds an https `VIEW` query for API 30+. No INTERNET permission is added (NFR-2).
 
 ## 8. Design spec
-- Behaviour: `docs/SPEC.md` FR-AI-1 to FR-AI-4, BR-15, NFR-2 (intent, not app networking), NFR-3.
-- Visuals: `docs/UI_DESIGN.md` §5.5. The template text is in PLAN §7.
+- Behaviour: `docs/SPEC.md` FR-AI-1 to FR-AI-4, BR-15, NFR-2, NFR-3.
+- Visuals: `docs/UI_DESIGN.md` §5.4 (card) and §5.5 (screen).
+- Decisions: `docs/DECISIONS.md` D59–D65.
 
 ## 9. Known limitations / TODOs
-- The ChatGPT `?q=` prefill is an undocumented URL behaviour. Keep the copy fallback as the primary promise.
-- "Last 3 cycles" with a long history can hit the 12,000-char guard. Golden-test the summarised form.
-- The goal task texts are copy that needs a review pass before M5 ships.
+- The ChatGPT `?q=` prefill is an undocumented URL behaviour. The copy fallback stays the primary promise.
+- The goal task texts in `PromptBuilder._task` are draft copy and need a product review.
+- `SystemAiHandoff.open` and `share` call platform plugins and are not covered by unit tests.

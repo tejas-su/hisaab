@@ -1,3 +1,4 @@
+import 'package:expense_tracker/ask_ai/ask_ai.dart';
 import 'package:expense_tracker/add_entry/add_entry.dart';
 import 'package:expense_tracker/app/hisaab_app.dart';
 import 'package:expense_tracker/app/main_screen.dart';
@@ -65,6 +66,15 @@ void main() {
       await tapAndLoad(tester, dock('Spends'));
       await tapAndLoad(tester, find.byKey(const ValueKey<String>('see-every-entry')));
       expect(find.byType(EntriesPage), findsOneWidget);
+    });
+
+    testWidgets('Spends\' Ask AI card opens Ask AI for the shown cycle', (WidgetTester tester) async {
+      await boot(tester);
+      await tapAndLoad(tester, dock('Spends'));
+      await tapAndLoad(tester, find.byKey(const ValueKey<String>('ask-ai-card')));
+      expect(find.byType(AskAiPage), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('What will be sent · 6 entries'), 200, scrollable: find.byType(Scrollable).last);
+      expect(find.text('What will be sent · 6 entries'), findsOneWidget);
     });
 
     testWidgets('over today, See where it went switches to Spends', (WidgetTester tester) async {

@@ -211,7 +211,7 @@ At most **3** are shown, chosen in priority order:
 ### BR-15 Ask AI prompt
 - **Inputs:**
   - Goal: Review my month / Help me save / Make me a budget / Am I on track? / Ask my own question.
-  - Period: this cycle (default) or the last 3 cycles.
+  - Period: this cycle (default) or the last 3 cycles. "This cycle" is the one Spends shows; the last 3 are it and the two before it (DECISIONS D60).
   - "Hide my notes" switch (off by default).
 - **Output:** plain UTF-8 text in this order:
   1. Role line.
@@ -221,11 +221,12 @@ At most **3** are shown, chosen in priority order:
   5. Entries as CSV (`date,amount,kind,category,note`, oldest first; the note column is dropped when notes are hidden).
   6. The task text for the chosen goal.
 - **Determinism:** the same data always produces byte-identical text, so it can be checked with a golden-string test.
-- **Size guard:** if the text is over 12,000 characters, the oldest entries are summarised by week first, and the preview says so.
+- **Size guard:** if the text is over 12,000 characters, the oldest entries are summarised by week first, and the preview says so. Weeks are 7-day blocks from the period start, folded oldest first, one at a time, until the text fits (DECISIONS D64).
 - **"Copy & open ChatGPT":**
   1. Copy the text to the clipboard.
-  2. Open `https://chatgpt.com/?q=<url-encoded>` when the encoded text is ≤ 2,000 characters. Otherwise open `https://chatgpt.com/` and show the toast "Copied. Paste it in the chat."
-- **Other actions:** "Other AI" opens the Android share sheet with the text. "Copy only" copies it.
+  2. Open `https://chatgpt.com/?q=<url-encoded>` when the encoded text is ≤ 2,000 characters. Otherwise open `https://chatgpt.com/` and show the toast "Copied. Paste it in the chat." The toast also shows when nothing could open the link (DECISIONS D62).
+- **Other actions:** "Other AI" opens the Android share sheet with the text. "Copy only" copies it and shows the same toast.
+- **Own question:** while it is blank, all three actions are disabled.
 
 ### BR-16 Backup, restore, export
 - **Backup:** a single JSON file (`hisaab-backup-YYYY-MM-DD.json`) containing the schema version, settings, categories, rules and entries. It is saved through the system file picker.
@@ -298,7 +299,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - A cycle is named after the month holding most of its days, with the year when it isn't this year; a weekly cycle by its dates (DECISIONS D52).
   - Earlier is enabled while the cycle before has entries, or the app was in use before it ended.
   - An empty cycle reads "Nothing spent in October yet." and hides the chart and the list.
-- **FR-SP-2** The **Ask AI** card at the top opens FR-AI. It ships with Ask AI in M5 (DECISIONS D53).
+- **FR-SP-2** The **Ask AI** card at the top opens FR-AI for the cycle shown. It shows only when that cycle has spends (DECISIONS D53, D61).
 - **FR-SP-3** **Pace chart:**
   - The cumulative *Spent* line (solid ink) against the steady-pace line from (start, 0) to (end, `I − K`) (dotted).
   - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).

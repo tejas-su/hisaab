@@ -17,6 +17,7 @@ import '../bloc/spends_bloc.dart';
 import '../bloc/spends_event.dart';
 import '../bloc/spends_state.dart';
 import '../cycle_label.dart';
+import '../widgets/ask_ai_card.dart';
 import '../widgets/cycle_switcher.dart';
 import '../widgets/insights_card.dart';
 import '../widgets/pace_card.dart';
@@ -26,12 +27,13 @@ import '../widgets/where_it_went_card.dart';
 /// Spends: where a cycle's money went, its pace and a few insights (SPEC FR-SP).
 ///
 /// Needs a [SpendsBloc] above it. [today] names cycles; [onSeeEntries] opens a cycle's
-/// entries, optionally for one category (FR-SP-6).
+/// entries, optionally for one category (FR-SP-6); [onAskAi] opens Ask AI for a cycle (FR-SP-2).
 class SpendsPage extends StatelessWidget {
-  const SpendsPage({super.key, required this.today, required this.onSeeEntries});
+  const SpendsPage({super.key, required this.today, required this.onSeeEntries, required this.onAskAi});
 
   final CalendarDate today;
   final void Function(PayCycle cycle, Option<int> categoryId) onSeeEntries;
+  final ValueChanged<PayCycle> onAskAi;
 
   @override
   Widget build(BuildContext context) => BlocBuilder<SpendsBloc, SpendsState>(
@@ -87,6 +89,12 @@ class SpendsPage extends StatelessWidget {
             ..._seeEveryEntry(context, overview),
           ],
         SpendsReady(:final SpendsOverview overview, :final bool limitsFailed) => <Widget>[
+            AskAiCard(
+              key: const ValueKey<String>('ask-ai-card'),
+              cycleLabel: _label(context, overview.cycle),
+              onPressed: () => onAskAi(overview.cycle),
+            ),
+            const SizedBox(height: HisaabSpacing.m),
             PaceCard(spent: overview.spent, pace: overview.pace, showToday: overview.isCurrent),
             const SizedBox(height: HisaabSpacing.m),
             WhereItWentCard(rows: overview.rows),

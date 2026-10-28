@@ -285,6 +285,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **Header:** `‹ October ›`.
 - **Ask AI card (top):**
   - Ink outline card with a marigold well, since the AI handoff is an act.
+  - Shown only when the cycle has spends (DECISIONS D61).
   - Text: "Ask AI about October — get a second opinion in one tap."
 - **Pace chart:**
   - A solid `ink` line for your spending and a dotted `ink2` line for steady pace.
@@ -296,12 +297,13 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **Insights:** at most 3 plain sentences, each with a next step, for example "Food is up ₹1,900 from September, mostly weekend orders. [Set a Food limit]".
 
 ### 5.5 Ask AI
-1. Goal cards (2×2): *Review my month* · *Help me save* · *Make me a budget* · *Am I on track?*, plus a full-width *Ask my own question*. The selected card is ink-filled.
+1. Goal cards (2×2): *Review my month* · *Help me save* · *Make me a budget* · *Am I on track?*, plus a full-width *Ask my own question*. The selected card is ink-filled with a marigold check.
 2. Period chips: *This month* (default) · *Last 3 months*.
 3. Preview card showing "What will be sent · 142 entries", with *Show full text*.
 4. Switch: **Hide my notes**.
-5. Primary marigold key **Copy & open ChatGPT**. Secondary: *Other AI* (share sheet) · *Copy only*.
-6. After copying, a toast: "Copied. Paste it in the chat."
+5. Primary marigold key **Copy & open ChatGPT**. Secondary: *Other AI* (share sheet) · *Copy only*. While an own question is blank, all three are grey and disabled (DECISIONS D65).
+6. When the user must paste, a toast: "Copied. Paste it in the chat." That is after *Copy only*, and after *Copy & open ChatGPT* when ChatGPT can't be prefilled (DECISIONS D62).
+7. With two panes or a tabletop fold, the goals and period sit in one pane and the preview, switch and actions in the other.
 
 ### 5.6 Settings (one level)
 - **Money:**

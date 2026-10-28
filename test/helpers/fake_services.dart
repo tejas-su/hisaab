@@ -129,6 +129,17 @@ final class FakeServices {
     ..registerSingleton<GetSuggestedLimits>(getSuggestedLimits)
     ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: categories))
     ..registerSingleton<GetSpendsOverview>(getSpendsOverview)
+    ..registerSingleton<GetPromptInput>(
+      GetPromptInput(
+        ledger: ledger,
+        recurring: recurring,
+        settings: settings,
+        categories: categories,
+        periods: const PeriodCalculator(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<AiHandoff>(handoff)
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(
       CompleteOnboarding(

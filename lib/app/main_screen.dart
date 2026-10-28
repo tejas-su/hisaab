@@ -26,6 +26,7 @@ class MainScreen extends StatefulWidget {
     required this.onEdit,
     required this.onOpenSettings,
     required this.onSeeEntries,
+    required this.onAskAi,
     this.assemble = false,
   });
 
@@ -34,6 +35,9 @@ class MainScreen extends StatefulWidget {
   final ValueChanged<Entry> onEdit;
   final VoidCallback onOpenSettings;
   final void Function(PayCycle cycle, Option<int> categoryId) onSeeEntries;
+
+  /// Opens Ask AI for the cycle Spends shows (SPEC FR-SP-2).
+  final ValueChanged<PayCycle> onAskAi;
   final bool assemble;
 
   @override
@@ -74,7 +78,7 @@ class _MainScreenState extends State<MainScreen> {
               onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,
               assemble: widget.assemble,
             ),
-            spends: SpendsPage(today: widget.clock.today(), onSeeEntries: widget.onSeeEntries),
+            spends: SpendsPage(today: widget.clock.today(), onSeeEntries: widget.onSeeEntries, onAskAi: widget.onAskAi),
             onAdd: () => widget.onAdd(EntryKind.spent),
           ),
         ),

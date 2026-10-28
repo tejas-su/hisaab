@@ -4,11 +4,13 @@ import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
 
 import '../add_entry/add_entry.dart';
+import '../ask_ai/ask_ai.dart';
 import '../core/design/haptics.dart';
 import '../core/errors/failure.dart';
 import '../core/time/clock.dart';
 import '../core/time/pay_cycle.dart';
 import '../home/home.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../ledger/ledger.dart';
 import '../onboarding/onboarding.dart';
 import '../settings/settings.dart';
@@ -61,6 +63,9 @@ abstract final class AppRoutes {
             onOpenSettings: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt)),
             ),
+            onAskAi: (PayCycle cycle) => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (BuildContext _) => askAi(getIt, cycle: cycle)),
+            ),
             onSeeEntries: (PayCycle cycle, Option<int> categoryId) => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (BuildContext _) => entries(
@@ -93,6 +98,25 @@ abstract final class AppRoutes {
           haptics: getIt<Haptics>(),
         )..add(const EntriesLoadRequested()),
         child: EntriesPage(cycle: cycle, today: getIt<Clock>().today(), onEdit: onEdit),
+      );
+
+  /// Ask AI for [cycle], the one Spends shows (FR-AI).
+  static Widget askAi(GetIt getIt, {required PayCycle cycle}) => Builder(
+        // why: the category names are read here, not in `create`, which may not listen to
+        // inherited widgets such as the localisations.
+        builder: (BuildContext context) {
+          final AppLocalizations strings = AppLocalizations.of(context);
+          return BlocProvider<AskAiBloc>(
+            create: (BuildContext _) => AskAiBloc(
+              cycle: cycle,
+              getInput: getIt<GetPromptInput>(),
+              handoff: getIt<AiHandoff>(),
+              haptics: getIt<Haptics>(),
+              nameOf: (Category category) => category.labelIn(strings),
+            )..add(const AskAiLoadRequested()),
+            child: const AskAiPage(),
+          );
+        },
       );
 
   /// Settings, one level deep (FR-SE).
