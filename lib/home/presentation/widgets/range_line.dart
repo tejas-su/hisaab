@@ -1,3 +1,4 @@
+import '../../../core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/design/app_icon.dart';
@@ -30,7 +31,7 @@ class RangeLine extends StatelessWidget {
           child: Text.rich(
             TextSpan(
               children: <InlineSpan>[
-                TextSpan(text: words.lead, style: base?.copyWith(fontWeight: FontWeight.w700)),
+                TextSpan(text: words.lead, style: HisaabType.emphasized(base)),
                 if (detail != null) ...<InlineSpan>[
                   TextSpan(text: AppLocalizations.of(context).separator),
                   TextSpan(text: detail),

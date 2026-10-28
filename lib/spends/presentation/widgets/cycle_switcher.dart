@@ -33,7 +33,7 @@ class CycleSwitcher extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: _maxLabelWidth),
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700)),
+              child: Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 15)),
             ),
           ),
           _arrow(context, const ValueKey<String>('later-cycle'), AppIcons.next, strings.laterCycle, onLater),

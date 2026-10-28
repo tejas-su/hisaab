@@ -89,7 +89,7 @@ class EntryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(kind?.labelIn(strings) ?? strings.categoryName('other'), style: text.titleMedium),
+                Text(kind?.labelIn(strings) ?? strings.categoryName('other'), style: text.bodyLarge),
                 if (note != null) Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodySmall?.copyWith(fontSize: 14)),
               ],
             ),

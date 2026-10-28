@@ -1,6 +1,6 @@
 # Typography: weight, emphasis and hierarchy
 
-**Status:** approved as D68. Recommendations 2–5 are applied on Ask AI first; 1 (drop weight 500) and 6 (Regular captions) change the shared theme, so they wait for the app-wide pass.
+**Status:** approved as D68 and applied app-wide: Ask AI first, then Home, Add, Spends, Settings and onboarding.
 
 ## 1. Question
 How do the major design systems show hierarchy and emphasis with type: size, weight or colour? And does Hisaab's scale (`lib/core/design/hisaab_type.dart`, UI_DESIGN §3.4) follow them?

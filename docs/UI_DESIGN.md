@@ -124,13 +124,13 @@ All three fonts are by **Ek Type**. Each has ₹ (U+20B9), tabular figures (`tnu
 | Body | **Mukta** | 16/24 | 400 |
 | Label | Mukta | 14/20 | 600 |
 | Small heading (`titleSmall`) | Mukta | 14/20 | 600 |
-| Caption | Mukta | 13/18 | 500, `ink2` |
+| Caption | Mukta | 13/18 | 400, `ink2` |
 
 Hindi later uses **Anek Devanagari** with the same metrics, so no layout changes are needed.
 
 Rules: no all-caps eyebrow labels, and no semibold body text.
 
-**Hierarchy (D68, docs/design-research case study 02):** size sets the level and one weight step sets emphasis within it. List row titles are Regular body text (`bodyLarge`); the picked, unread or today item steps up to `HisaabType.emphasis` (600) through `HisaabType.emphasized`, never an inline `fontWeight`. A card's header uses a title style (`titleLarge`), not its rows' style. Secondary text steps back by `ink2` colour at Regular (`HisaabType.regular`), not by a lighter weight. Applied on Ask AI first; Home, Spends and Settings follow. Supports text scaling to 1.5×, with the hero stepping down 76 → 56 → 44.
+**Hierarchy (D68, docs/design-research case study 02):** size sets the level and one weight step sets emphasis within it. List row titles are Regular body text (`bodyLarge`); the picked, unread or today item steps up to `HisaabType.emphasis` (600) through `HisaabType.emphasized`, never an inline `fontWeight`. A card's header uses a title style (`titleLarge`), not its rows' style. Secondary text steps back by `ink2` colour at Regular (`HisaabType.regular`), not by a lighter weight. Mukta uses only 400 and 600, with 700 kept for row amounts; keypad digits are Regular Anek, because their size ranks them. Applied app-wide. Supports text scaling to 1.5×, with the hero stepping down 76 → 56 → 44.
 
 ### 3.5 Shape, depth, icons
 - **Corners:**

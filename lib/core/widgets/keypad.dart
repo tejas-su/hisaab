@@ -1,3 +1,4 @@
+import '../design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 
 import '../design/app_icon.dart';
@@ -66,7 +67,7 @@ class Keypad extends StatelessWidget {
         onPressed: () => onKey(key),
         child: Text(
           key,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: key.length > 1 ? 23 : 27, fontWeight: FontWeight.w500),
+          style: HisaabType.regular(Theme.of(context).textTheme.headlineSmall)?.copyWith(fontSize: key.length > 1 ? 23 : 27),
         ),
       );
 }

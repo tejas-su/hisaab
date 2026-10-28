@@ -57,6 +57,26 @@ void main() {
       expect(HisaabType.rowAmount(const Color(0xFF000000)).fontFeatures, contains(const FontFeature.tabularFigures()));
     });
 
+    test('captions are Regular and step back by ink2 colour, not weight (D68)', () {
+      expect(theme.bodySmall?.fontWeight, FontWeight.w400);
+      expect(theme.bodySmall?.color, const Color(0xFF555555));
+    });
+
+    test('Mukta text uses only Regular and the emphasis step; Bold is for amounts (D68)', () {
+      final Iterable<TextStyle> mukta = <TextStyle?>[
+        theme.titleMedium,
+        theme.titleSmall,
+        theme.bodyLarge,
+        theme.bodyMedium,
+        theme.bodySmall,
+        theme.labelLarge,
+        theme.labelMedium,
+        theme.labelSmall,
+      ].whereType<TextStyle>();
+      expect(mukta.map((TextStyle s) => s.fontWeight).toSet(), <FontWeight>{FontWeight.w400, HisaabType.emphasis});
+      expect(HisaabType.rowAmount(const Color(0xFF000000)).fontWeight, FontWeight.w700);
+    });
+
     test('titleSmall is a defined small heading: Mukta 14/20 Semibold (case study 02)', () {
       expect(theme.titleSmall?.fontFamily, HisaabType.mukta);
       expect(theme.titleSmall?.fontSize, 14);

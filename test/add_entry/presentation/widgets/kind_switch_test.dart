@@ -42,6 +42,12 @@ void main() {
       expect(_textColor(tester, 'Got'), HisaabColors.light.ink2);
     });
 
+    testWidgets('the pick is one weight step up: Semibold vs Regular (D68)', (WidgetTester tester) async {
+      await _pump(tester);
+      expect(tester.widget<Text>(find.text('Spent')).style?.fontWeight, FontWeight.w600);
+      expect(tester.widget<Text>(find.text('Got')).style?.fontWeight, FontWeight.w400);
+    });
+
     testWidgets('tapping Got reports it', (WidgetTester tester) async {
       final List<EntryKind> changes = <EntryKind>[];
       await _pump(tester, onChanged: changes.add);

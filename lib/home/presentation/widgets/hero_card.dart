@@ -1,3 +1,4 @@
+import '../../../core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/design/app_icon.dart';
@@ -35,7 +36,7 @@ class HeroCard extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final HeroCopy copy = HeroCopy.of(summary, strings: strings, money: context.money, week: week);
     final TextTheme text = Theme.of(context).textTheme;
-    final TextStyle? caption = text.labelSmall?.copyWith(color: context.colors.displayInk2, fontWeight: FontWeight.w500);
+    final TextStyle? caption = HisaabType.regular(text.labelSmall)?.copyWith(color: context.colors.displayInk2);
     final String? overText = copy.overText.toNullable();
     return Semantics(
       container: true,
@@ -91,7 +92,7 @@ class HeroCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text(copy.payday, style: caption?.copyWith(fontWeight: FontWeight.w600)),
+                          child: Text(copy.payday, style: HisaabType.emphasized(caption)),
                         ),
                       ],
                     ),

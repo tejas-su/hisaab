@@ -62,7 +62,7 @@ class CategorySpendRow extends StatelessWidget {
                           ),
                       ],
                     ),
-                    style: text.titleMedium,
+                    style: text.bodyLarge,
                   ),
                 ),
                 if (past == null) ...<Widget>[

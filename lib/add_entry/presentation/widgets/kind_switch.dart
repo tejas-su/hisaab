@@ -1,3 +1,4 @@
+import '../../../core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
@@ -56,10 +57,11 @@ class KindSwitch extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: selected ? selectedText : context.colors.ink2,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-              ),
+          // why: the pick is one weight step up and the other steps back by colour (D68).
+          style: (selected
+                  ? HisaabType.emphasized(Theme.of(context).textTheme.titleMedium)
+                  : HisaabType.regular(Theme.of(context).textTheme.titleMedium))
+              ?.copyWith(color: selected ? selectedText : context.colors.ink2),
         ),
       ),
     );

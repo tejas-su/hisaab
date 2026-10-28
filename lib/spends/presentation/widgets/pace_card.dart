@@ -1,3 +1,4 @@
+import '../../../core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -55,7 +56,7 @@ class PaceCard extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.end,
       spacing: HisaabSpacing.m,
       children: <Widget>[
-        Text(strings.spentSoFar, style: text.titleMedium?.copyWith(color: context.colors.ink2)),
+        Text(strings.spentSoFar, style: HisaabType.regular(text.titleMedium)?.copyWith(color: context.colors.ink2)),
         Text.rich(
           TextSpan(
             children: <InlineSpan>[
@@ -94,7 +95,7 @@ class PaceCard extends StatelessWidget {
         ),
         _key(
           AppIcon(below ? AppIcons.onTrack : AppIcons.alert, size: 16),
-          Text(below ? strings.belowPace : strings.abovePace, style: caption?.copyWith(color: context.colors.ink, fontWeight: FontWeight.w700)),
+          Text(below ? strings.belowPace : strings.abovePace, style: HisaabType.emphasized(caption)?.copyWith(color: context.colors.ink)),
         ),
       ],
     );

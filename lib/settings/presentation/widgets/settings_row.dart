@@ -29,7 +29,7 @@ class SettingsRow extends StatelessWidget {
                 child: AppIcon(icon),
               ),
               const SizedBox(width: HisaabSpacing.m),
-              Expanded(child: Text(label, style: Theme.of(context).textTheme.titleMedium)),
+              Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyLarge)),
               AppIcon(AppIcons.next, color: context.colors.ink2),
             ],
           ),

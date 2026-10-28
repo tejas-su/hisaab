@@ -86,7 +86,7 @@ class BillRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(bill.label, style: text.titleMedium),
+                  Text(bill.label, style: text.bodyLarge),
                   Text(when, style: text.bodySmall?.copyWith(fontSize: 14)),
                 ],
               ),

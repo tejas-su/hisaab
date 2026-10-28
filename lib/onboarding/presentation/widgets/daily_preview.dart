@@ -1,3 +1,4 @@
+import '../../../core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
@@ -29,7 +30,7 @@ class DailyPreview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(sentence, style: text.bodyLarge?.copyWith(color: context.colors.displayInk, fontWeight: FontWeight.w700)),
+          Text(sentence, style: HisaabType.emphasized(text.bodyLarge)?.copyWith(color: context.colors.displayInk)),
           const SizedBox(height: 10),
           DayBlocks(
             data: const DayBlocksData(count: previewDays, style: DayBlocksStyle.preview),

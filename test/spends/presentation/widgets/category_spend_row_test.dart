@@ -70,6 +70,13 @@ void main() {
       await pump(tester, _food(limit: 12000));
       expect(painter(tester).limitAt, isNull);
     });
+
+    testWidgets('the category name is Regular row text (D68)', (WidgetTester tester) async {
+      await pump(tester, _food());
+      final TextStyle? name = tester.widget<Text>(find.text('Food')).style;
+      expect(name?.fontWeight, FontWeight.w400);
+      expect(name?.fontSize, 16);
+    });
   });
 
   group('LimitBarPainter', () {
@@ -90,5 +97,6 @@ void main() {
         expect(painter.shouldRepaint(base), isTrue);
       }
     });
+
   });
 }

@@ -32,7 +32,7 @@ abstract final class HisaabType {
         titleSmall: _mukta(size: 14, lineHeight: 20, weight: emphasis, color: ink),
         bodyLarge: _mukta(size: 16, lineHeight: 24, weight: FontWeight.w400, color: ink),
         bodyMedium: _mukta(size: 15, lineHeight: 20, weight: FontWeight.w400, color: ink),
-        bodySmall: _mukta(size: 13, lineHeight: 18, weight: FontWeight.w500, color: ink2),
+        bodySmall: _mukta(size: 13, lineHeight: 18, weight: FontWeight.w400, color: ink2),
         labelLarge: _mukta(size: 14, lineHeight: 20, weight: FontWeight.w600, color: ink),
         labelMedium: _mukta(size: 13, lineHeight: 16, weight: FontWeight.w600, color: ink),
         labelSmall: _mukta(size: 12, lineHeight: 14, weight: FontWeight.w600, color: ink2),
