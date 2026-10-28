@@ -10,5 +10,6 @@ export 'presentation/bloc/entries_state.dart';
 export 'presentation/bloc/spends_bloc.dart';
 export 'presentation/bloc/spends_event.dart';
 export 'presentation/bloc/spends_state.dart';
+export 'presentation/cycle_label.dart';
 export 'presentation/pages/entries_page.dart';
 export 'presentation/pages/spends_page.dart';

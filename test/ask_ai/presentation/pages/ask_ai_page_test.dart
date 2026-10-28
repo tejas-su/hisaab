@@ -5,6 +5,8 @@ import 'package:expense_tracker/ask_ai/domain/ask_goal.dart';
 import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,9 +14,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fake_services.dart';
+import '../../../helpers/fixtures/ledger/categories.dart';
+import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
-const List<String> _goals = <String>['Review my month', 'Help me save', 'Make me a budget', 'Am I on track?'];
+const List<String> _goals = <String>['How did I do?', 'Where can I save?', 'What should my limits be?', 'Will my money last till payday?'];
 
 const DisplayFeature _tabletopFold = DisplayFeature(
   bounds: Rect.fromLTRB(0, 350, 841, 350),
@@ -72,7 +76,7 @@ void main() {
     testWidgets('loading shows the title only', (WidgetTester tester) async {
       await pump(tester, load: false);
       expect(find.text('Ask AI'), findsOneWidget);
-      expect(find.text('Review my month'), findsNothing);
+      expect(find.text('How did I do?'), findsNothing);
     });
 
     testWidgets('a failed load offers Try again, which loads again', (WidgetTester tester) async {
@@ -82,35 +86,35 @@ void main() {
       services.ledger.failure = null;
       await tester.tap(find.text('Try again'));
       await tester.settle();
-      expect(find.text('Review my month'), findsOneWidget);
+      expect(find.text('How did I do?'), findsOneWidget);
     });
 
     testWidgets('shows four goals, own question, both periods and the preview title', (WidgetTester tester) async {
       await pump(tester);
-      for (final String goal in <String>[..._goals, 'Ask my own question', 'This month', 'Last 3 months']) {
+      for (final String goal in <String>[..._goals, 'Ask something else', 'October', 'Aug – Oct']) {
         expect(find.text(goal), findsOneWidget);
       }
-      await scrollTo(tester, find.text('What will be sent · 6 entries'));
-      expect(find.text('What will be sent · 6 entries'), findsOneWidget);
+      await scrollTo(tester, find.text('What the AI will see · 6 entries'));
+      expect(find.text('What the AI will see · 6 entries'), findsOneWidget);
     });
 
-    testWidgets('tapping Help me save selects it', (WidgetTester tester) async {
+    testWidgets('tapping Where can I save? selects it', (WidgetTester tester) async {
       await pump(tester);
-      await tester.tap(find.text('Help me save'));
+      await tester.tap(find.text('Where can I save?'));
       await tester.settle();
       expect(
         tester.getSemantics(find.byKey(const ValueKey<String>('goal-helpMeSave'))),
-        isSemantics(label: 'Help me save', isButton: true, isSelected: true),
+        isSemantics(label: 'Where can I save?', isButton: true, isSelected: true),
       );
       expect((bloc.state as AskAiReady).choice.goal, AskGoal.helpMeSave);
     });
 
     testWidgets('the period chip and the notes switch change the choice', (WidgetTester tester) async {
       await pump(tester);
-      await tester.tap(find.text('Last 3 months'));
+      await tester.tap(find.text('Aug – Oct'));
       await tester.settle();
-      await scrollTo(tester, find.text('Hide my notes'));
-      await tester.tap(find.text('Hide my notes'));
+      await scrollTo(tester, find.text('Leave out my notes'));
+      await tester.tap(find.text('Leave out my notes'));
       await tester.settle();
       final AskAiReady state = bloc.state as AskAiReady;
       expect(state.choice.period, AskPeriod.lastThreeCycles);
@@ -119,10 +123,10 @@ void main() {
 
     testWidgets('own question with an empty field disables every action', (WidgetTester tester) async {
       await pump(tester);
-      await tester.tap(find.text('Ask my own question'));
+      await tester.tap(find.text('Ask something else'));
       await tester.settle();
       expect(find.byKey(const ValueKey<String>('own-question')), findsOneWidget);
-      for (final String action in <String>['Copy & open ChatGPT', 'Other AI', 'Copy only']) {
+      for (final String action in <String>['Copy & open ChatGPT', 'Other apps', 'Copy only']) {
         await scrollTo(tester, find.text(action));
         await tester.tap(find.text(action), warnIfMissed: false);
         await tester.settle();
@@ -133,33 +137,180 @@ void main() {
 
     testWidgets('typing a question enables the actions and ends the prompt with it', (WidgetTester tester) async {
       await pump(tester);
-      await tester.tap(find.text('Ask my own question'));
+      await tester.tap(find.text('Ask something else'));
       await tester.settle();
       await tester.enterText(find.byKey(const ValueKey<String>('own-question')), 'Can I buy a bike?');
       await tester.settle();
       await scrollTo(tester, find.text('Copy only'));
       await tester.tap(find.text('Copy only'));
       await tester.settle();
-      expect(services.handoff.copied.single, endsWith('Task: Can I buy a bike?'));
+      expect(services.handoff.copied.single, endsWith('My question: Can I buy a bike?'));
     });
 
-    testWidgets('Copy only shows "Copied. Paste it in the chat."', (WidgetTester tester) async {
+    testWidgets('Copy only shows "Copied. In the chat, long-press and tap Paste."', (WidgetTester tester) async {
       await pump(tester);
       await scrollTo(tester, find.text('Copy only'));
       await tester.tap(find.text('Copy only'));
       await tester.settle();
-      expect(find.text('Copied. Paste it in the chat.'), findsOneWidget);
+      expect(find.text('Copied. In the chat, long-press and tap Paste.'), findsOneWidget);
     });
 
-    testWidgets('Copy & open ChatGPT and Other AI hand off the prompt', (WidgetTester tester) async {
+    testWidgets('Copy & open ChatGPT and Other apps hand off the prompt', (WidgetTester tester) async {
       await pump(tester);
-      await scrollTo(tester, find.text('Other AI'));
+      await scrollTo(tester, find.text('Other apps'));
       await tester.tap(find.text('Copy & open ChatGPT'));
       await tester.settle();
-      await tester.tap(find.text('Other AI'));
+      await tester.tap(find.text('Other apps'));
       await tester.settle();
       expect(services.handoff.opened, hasLength(1));
       expect(services.handoff.shared, hasLength(1));
+    });
+
+    group('paste caption (BR-15, D74)', () {
+      void longPrompt() => services.ledger.entries.addAll(
+        List<Entry>.generate(
+          40,
+          (int i) => Entry(
+            id: 100 + i,
+            amount: Money.fromMajor(150),
+            kind: EntryKind.spent,
+            categoryId: SeedCategoryIds.food,
+            date: WorkedExample.today,
+            createdAt: WorkedExample.now,
+            note: 'Lunch',
+          ),
+        ),
+      );
+
+      testWidgets('a prompt short enough to prefill shows no caption', (WidgetTester tester) async {
+        services.ledger.entries
+          ..clear()
+          ..add(WorkedExample.entries.last);
+        services.recurring.rules = <RecurringRule>[];
+        await pump(tester);
+        expect(find.text('ChatGPT will open empty. Long-press the message box and tap Paste.'), findsNothing);
+      });
+
+      testWidgets('a long prompt says to paste right above the pinned actions', (WidgetTester tester) async {
+        longPrompt();
+        await pump(tester);
+        final Finder caption = find.byKey(const ValueKey<String>('paste-needed'));
+        expect(find.text('ChatGPT will open empty. Long-press the message box and tap Paste.'), findsOneWidget);
+        final Rect text = tester.getRect(caption);
+        final Rect key = tester.getRect(find.byKey(const ValueKey<String>('open-chatgpt')));
+        expect(text.bottom, lessThanOrEqualTo(key.top));
+        expect(key.top - text.bottom, lessThanOrEqualTo(8));
+        expect(text.left, key.left);
+        final Text style = tester.widget<Text>(caption);
+        expect(style.style?.color, HisaabColors.light.ink2);
+      });
+
+      testWidgets('then Copy & open ChatGPT shows no toast', (WidgetTester tester) async {
+        longPrompt();
+        await pump(tester);
+        await tester.tap(find.text('Copy & open ChatGPT'));
+        await tester.settle();
+        await tester.pump();
+        expect(services.handoff.opened, hasLength(1));
+        expect(find.text('Copied. In the chat, long-press and tap Paste.'), findsNothing);
+      });
+
+      for (final (String name, Size size) in <(String, Size)>[
+        ('small phone', TestWindows.smallPhone),
+        ('phone landscape', TestWindows.phoneLandscape),
+        ('foldable unfolded', TestWindows.foldableUnfolded),
+        ('tablet', TestWindows.tablet),
+      ]) {
+        testWidgets('the caption fits on a $name at 1.5× text', (WidgetTester tester) async {
+          longPrompt();
+          await pump(tester, size: size, textScale: 1.5);
+          expect(tester.takeException(), isNull);
+          expect(find.byKey(const ValueKey<String>('paste-needed')), findsOneWidget);
+        });
+      }
+    });
+
+    group('Will my money last till payday? (FR-AI-1)', () {
+      testWidgets('shows for the current cycle with a payday', (WidgetTester tester) async {
+        await pump(tester);
+        expect(find.byKey(const ValueKey<String>('goal-onTrack')), findsOneWidget);
+      });
+
+      testWidgets('is hidden once the cycle is past, leaving three goals and the own question', (WidgetTester tester) async {
+        services.clock.current = DateTime(2026, 11, 5, 9);
+        await pump(tester);
+        expect(find.text('Will my money last till payday?'), findsNothing);
+        expect(find.byKey(const ValueKey<String>('goal-onTrack')), findsNothing);
+        for (final String goal in <String>['How did I do?', 'Where can I save?', 'What should my limits be?']) {
+          expect(find.text(goal), findsOneWidget);
+        }
+        final Iterable<Divider> dividers = tester.widgetList<Divider>(
+          find.descendant(of: find.byKey(const ValueKey<String>('ask-ai-choices')), matching: find.byType(Divider)),
+        );
+        expect(dividers, hasLength(3));
+      });
+    });
+
+    group('own-question placeholder (D73)', () {
+      testWidgets('reads Ask something else, then an example while focused and empty', (WidgetTester tester) async {
+        await pump(tester);
+        TextField field() => tester.widget<TextField>(find.byKey(const ValueKey<String>('own-question')));
+        expect(field().decoration?.hintText, 'Ask something else');
+        await tester.tap(find.byKey(const ValueKey<String>('own-question')));
+        await tester.settle();
+        expect(field().decoration?.hintText, 'Like: can I afford a new phone this month?');
+        expect(find.text('Like: can I afford a new phone this month?'), findsOneWidget);
+        await tester.tapAt(tester.getTopLeft(find.byKey(const ValueKey<String>('ask-ai-back'))) + const Offset(200, 10));
+        await tester.settle();
+        expect(field().decoration?.hintText, 'Ask something else');
+      });
+
+      for (final (String name, Size size) in <(String, Size)>[
+        ('small phone', TestWindows.smallPhone),
+        ('phone landscape', TestWindows.phoneLandscape),
+        ('tablet', TestWindows.tablet),
+      ]) {
+        testWidgets('the example fits on a $name at 1.5× text', (WidgetTester tester) async {
+          await pump(tester, size: size, textScale: 1.5);
+          await tester.ensureVisible(find.byKey(const ValueKey<String>('own-question')));
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const ValueKey<String>('own-question')));
+          await tester.settle();
+          expect(tester.takeException(), isNull);
+          expect(find.text('Like: can I afford a new phone this month?'), findsOneWidget);
+        });
+      }
+    });
+
+    group('period labels (FR-AI-2)', () {
+      for (final (String name, Size size) in <(String, Size)>[
+        ('phone', TestWindows.phone),
+        ('small phone', TestWindows.smallPhone),
+        ('phone landscape', TestWindows.phoneLandscape),
+        ('foldable unfolded', TestWindows.foldableUnfolded),
+        ('foldable landscape', TestWindows.foldableLandscape),
+        ('tablet', TestWindows.tablet),
+      ]) {
+        testWidgets('name the shown cycle and the three-cycle span on a $name at 1.5× text', (WidgetTester tester) async {
+          await pump(tester, size: size, textScale: 1.5);
+          expect(tester.takeException(), isNull);
+          expect(find.descendant(of: find.byKey(const ValueKey<String>('period-thisCycle')), matching: find.text('October')), findsOneWidget);
+          expect(
+            find.descendant(of: find.byKey(const ValueKey<String>('period-lastThreeCycles')), matching: find.text('Aug – Oct')),
+            findsOneWidget,
+          );
+        });
+      }
+    });
+
+    testWidgets('the privacy note sits under the preview title as a grey caption', (WidgetTester tester) async {
+      await pump(tester);
+      await scrollTo(tester, find.text('Nothing leaves your phone until you share it.'));
+      final Rect title = tester.getRect(find.text('What the AI will see · 6 entries'));
+      final Rect note = tester.getRect(find.text('Nothing leaves your phone until you share it.'));
+      expect(note.top, greaterThanOrEqualTo(title.bottom));
+      expect(note.left, title.left);
+      expect(tester.widget<Text>(find.text('Nothing leaves your phone until you share it.')).style?.color, HisaabColors.light.ink2);
     });
 
     testWidgets('Back pops the page', (WidgetTester tester) async {
@@ -208,7 +359,7 @@ void main() {
       final Finder check = find.byKey(const ValueKey<String>('goal-check'));
       expect(check, findsOneWidget);
       expect(find.descendant(of: find.byKey(const ValueKey<String>('goal-reviewMonth')), matching: check), findsOneWidget);
-      await tester.tap(find.text('Am I on track?'));
+      await tester.tap(find.text('Will my money last till payday?'));
       await tester.settle();
       expect(find.descendant(of: find.byKey(const ValueKey<String>('goal-onTrack')), matching: check), findsOneWidget);
       expect(find.descendant(of: find.byKey(const ValueKey<String>('period-track')), matching: find.byType(AppIcon)), findsNothing);
@@ -221,7 +372,7 @@ void main() {
       );
       expect(dividers, hasLength(4));
       expect(dividers.map((Divider d) => d.indent).toSet(), <double>{74});
-      final double label = tester.getTopLeft(find.text('Help me save')).dx;
+      final double label = tester.getTopLeft(find.text('Where can I save?')).dx;
       final double card = tester.getTopLeft(find.byKey(const ValueKey<String>('ask-ai-choices'))).dx;
       expect(label - card, 74);
     });
@@ -305,10 +456,10 @@ void main() {
       final SemanticsHandle semantics = tester.ensureSemantics();
       await pump(tester);
       expect(find.bySemanticsLabel('Back'), findsOneWidget);
-      await scrollTo(tester, find.text('Hide my notes'));
+      await scrollTo(tester, find.text('Leave out my notes'));
       expect(
         tester.getSemantics(find.byKey(const ValueKey<String>('hide-notes'))),
-        isSemantics(label: 'Hide my notes', hasToggledState: true, isToggled: false),
+        isSemantics(label: 'Leave out my notes', hasToggledState: true, isToggled: false),
       );
       semantics.dispose();
     });
@@ -317,7 +468,7 @@ void main() {
       testWidgets('meets the tap-target, label and contrast guidelines in ${theme.name}', (WidgetTester tester) async {
         final SemanticsHandle handle = tester.ensureSemantics();
         await pump(tester, theme: theme);
-        await tester.tap(find.text('Help me save'));
+        await tester.tap(find.text('Where can I save?'));
         await tester.settle();
         await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
         await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
@@ -331,7 +482,7 @@ void main() {
         await pump(tester);
         final TextTheme theme = Theme.of(tester.element(find.byType(AskAiPage))).textTheme;
         final TextStyle header = tester.widget<Text>(find.text('What do you want to know?')).style!;
-        final TextStyle row = tester.widget<Text>(find.text('Help me save')).style!;
+        final TextStyle row = tester.widget<Text>(find.text('Where can I save?')).style!;
         expect(header.fontFamily, theme.titleLarge!.fontFamily);
         expect(header.fontSize, theme.titleLarge!.fontSize);
         expect(header.fontSize!, greaterThan(row.fontSize!));
@@ -339,8 +490,8 @@ void main() {
 
       testWidgets('rows are Regular body text and only the pick is Semibold', (WidgetTester tester) async {
         await pump(tester);
-        final TextStyle picked = tester.widget<Text>(find.text('Review my month')).style!;
-        final TextStyle other = tester.widget<Text>(find.text('Help me save')).style!;
+        final TextStyle picked = tester.widget<Text>(find.text('How did I do?')).style!;
+        final TextStyle other = tester.widget<Text>(find.text('Where can I save?')).style!;
         expect(other.fontWeight, FontWeight.w400);
         expect(other.fontSize, 16);
         expect(picked.fontWeight, FontWeight.w600);
@@ -356,8 +507,8 @@ void main() {
 
       testWidgets('the period pick is Semibold ink; the other is Regular grey', (WidgetTester tester) async {
         await pump(tester);
-        final TextStyle picked = tester.widget<Text>(find.text('This month')).style!;
-        final TextStyle other = tester.widget<Text>(find.text('Last 3 months')).style!;
+        final TextStyle picked = tester.widget<Text>(find.text('October')).style!;
+        final TextStyle other = tester.widget<Text>(find.text('Aug – Oct')).style!;
         expect(picked.fontWeight, FontWeight.w600);
         expect(picked.color, HisaabColors.light.ink);
         expect(other.fontWeight, FontWeight.w400);
@@ -367,7 +518,7 @@ void main() {
       testWidgets('the preview has a Semibold small heading over Regular grey text', (WidgetTester tester) async {
         await pump(tester);
         await scrollTo(tester, find.byKey(const ValueKey<String>('prompt-preview')));
-        final TextStyle title = tester.widget<Text>(find.text('What will be sent · 6 entries')).style!;
+        final TextStyle title = tester.widget<Text>(find.text('What the AI will see · 6 entries')).style!;
         final TextStyle body = tester.widget<Text>(find.textContaining('You are a friendly money coach')).style!;
         expect(title.fontWeight, FontWeight.w600);
         expect(title.fontSize, 14);

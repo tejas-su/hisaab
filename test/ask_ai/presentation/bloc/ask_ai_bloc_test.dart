@@ -9,6 +9,8 @@ import 'package:expense_tracker/ask_ai/presentation/bloc/ask_ai_event.dart';
 import 'package:expense_tracker/ask_ai/presentation/bloc/ask_ai_state.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,8 +29,11 @@ import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 
 const String _golden =
-    'You are a friendly money coach. Be specific, use my numbers, no jargon.\n'
+    'You are a friendly money coach for someone in India. Reply in simple English, under 200 words.\n'
+    'Use only the numbers below. Write amounts in ₹ with Indian grouping (₹1,25,000).\n'
+    "If there is too little data to judge, say so. Don't name specific stocks, funds, loans or apps.\n"
     'Context: income ₹45,000/month (payday 4th), currency INR, period 2026-10-04..2026-11-03, today 2026-10-26.\n'
+    'From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare.\n'
     'Spent ₹27,570, got ₹45,000. By category: Food 19,010; Home 8,200; Shopping 240; Travel 120.\n'
     'Recurring bills: Electricity 1,200 monthly on day 29; Rent 8,200 monthly on day 5.\n'
     '\n'
@@ -41,7 +46,7 @@ const String _golden =
     '2026-10-26,120,spent,Travel,Auto to office\n'
     '2026-10-26,240,spent,Shopping,Groceries\n'
     '\n'
-    'Task: Review my month. Give: 1) the 3 biggest problems 2) 3 concrete savings with ₹ amounts 3) a budget per category for next month 4) one habit to change.';
+    'Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts 2) the one change that would save the most, and how much a month 3) one habit worth keeping.';
 
 Entry _lunch(int id) => Entry(
   id: id,
@@ -58,17 +63,18 @@ void main() {
   late FakeRecurringRepository recurring;
   late FakeAiHandoff handoff;
   late FakeHaptics haptics;
+  late FakeClock clock;
   late AskAiBloc bloc;
 
-  AskAiBloc build() => AskAiBloc(
-    cycle: workedCycles.first,
+  AskAiBloc build({PayCycle? cycle}) => AskAiBloc(
+    cycle: cycle ?? workedCycles.first,
     getInput: GetPromptInput(
       ledger: ledger,
       recurring: recurring,
       settings: FakeBudgetSettingsRepository(),
       categories: FakeCategoryRepository(),
       periods: const PeriodCalculator(),
-      clock: FakeClock(WorkedExample.now),
+      clock: clock,
     ),
     handoff: handoff,
     haptics: haptics,
@@ -82,6 +88,7 @@ void main() {
     recurring = FakeRecurringRepository(WorkedExample.rules);
     handoff = FakeAiHandoff();
     haptics = FakeHaptics();
+    clock = FakeClock(WorkedExample.now);
     bloc = build();
   });
 
@@ -132,7 +139,7 @@ void main() {
     test('choosing a goal rebuilds the task line and ticks', () async {
       await bloc.dispatch(const AskAiGoalChosen(AskGoal.helpMeSave));
       expect(ready().choice.goal, AskGoal.helpMeSave);
-      expect(ready().prompt.text, endsWith('and the total I would save.'));
+      expect(ready().prompt.text, endsWith('other fixed bills or health.'));
       expect(haptics.events, <String>['tick']);
     });
 
@@ -154,14 +161,14 @@ void main() {
     test('typing a question rebuilds the task line without a tick', () async {
       await bloc.dispatch(const AskAiGoalChosen(AskGoal.ownQuestion));
       await bloc.dispatch(const AskAiQuestionChanged('Can I buy a bike?'));
-      expect(ready().prompt.text, endsWith('Task: Can I buy a bike?'));
+      expect(ready().prompt.text, endsWith('My question: Can I buy a bike?'));
       expect(haptics.events, <String>['tick']);
     });
 
     test('typing a question picks Ask my own question', () async {
       await bloc.dispatch(const AskAiQuestionChanged('Can I buy a bike?'));
       expect(ready().choice.goal, AskGoal.ownQuestion);
-      expect(ready().prompt.text, endsWith('Task: Can I buy a bike?'));
+      expect(ready().prompt.text, endsWith('My question: Can I buy a bike?'));
     });
 
     test('clearing the question keeps the goal, so the actions wait for text', () async {
@@ -171,9 +178,42 @@ void main() {
       expect(ready().choice.canSend, isFalse);
     });
 
+    test('the current cycle with a payday offers Will my money last till payday?', () async {
+      await bloc.dispatch(const AskAiGoalChosen(AskGoal.onTrack));
+      expect(ready().choice.goal, AskGoal.onTrack);
+    });
+
     test('a question longer than 200 is cut to 200', () async {
       await bloc.dispatch(AskAiQuestionChanged('a' * 250));
       expect(ready().choice.question, 'a' * 200);
+    });
+  });
+
+  group('AskAiBloc on-track goal (FR-AI-1)', () {
+    test('a past cycle falls back to the default goal', () async {
+      await bloc.close();
+      bloc = build(cycle: workedCycles[1]);
+      await bloc.dispatch(const AskAiLoadRequested());
+      await bloc.dispatch(const AskAiGoalChosen(AskGoal.onTrack));
+      expect(ready().choice.goal, const PromptChoice().goal);
+      expect(ready().prompt.text, isNot(contains('Will my money last')));
+    });
+
+    test('income with no fixed payday falls back to the default goal', () async {
+      recurring.rules = <RecurringRule>[WorkedExample.rent];
+      await bloc.close();
+      bloc = build(cycle: const PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31)));
+      await bloc.dispatch(const AskAiLoadRequested());
+      await bloc.dispatch(const AskAiGoalChosen(AskGoal.onTrack));
+      expect(ready().choice.goal, const PromptChoice().goal);
+    });
+
+    test('a reload after payday drops the pick that is no longer offered', () async {
+      await bloc.dispatch(const AskAiLoadRequested());
+      await bloc.dispatch(const AskAiGoalChosen(AskGoal.onTrack));
+      clock.current = DateTime(2026, 11, 4, 9);
+      await bloc.dispatch(const AskAiLoadRequested());
+      expect(ready().choice.goal, const PromptChoice().goal);
     });
   });
 
@@ -217,13 +257,28 @@ void main() {
       expect(haptics.events, <String>['success']);
     });
 
-    test('ChatGPT with a long prompt copies, opens chatgpt.com and toasts', () async {
+    test('a short prompt needs no paste', () async {
+      await load(short: true);
+      expect(ready().needsPaste, isFalse);
+    });
+
+    test('ChatGPT with a long prompt copies and opens chatgpt.com; the caption said to paste, so no toast', () async {
       ledger.entries.addAll(List<Entry>.generate(40, (int i) => _lunch(10 + i)));
       await load();
       final String text = ready().prompt.text;
       expect(Uri.encodeComponent(text).length, greaterThan(ChatGptLink.maxEncodedLength));
+      expect(ready().needsPaste, isTrue);
       await bloc.dispatch(const AskAiChatGptPressed());
       expect(handoff.copied, <String>[text]);
+      expect(handoff.opened, <Uri>[ChatGptLink.home]);
+      expect(ready().toasts, 0);
+    });
+
+    test('ChatGPT with a long prompt when nothing opens chatgpt.com toasts', () async {
+      ledger.entries.addAll(List<Entry>.generate(40, (int i) => _lunch(10 + i)));
+      await load();
+      handoff.openResult = false;
+      await bloc.dispatch(const AskAiChatGptPressed());
       expect(handoff.opened, <Uri>[ChatGptLink.home]);
       expect(ready().toasts, 1);
     });

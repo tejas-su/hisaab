@@ -1,4 +1,5 @@
 import 'package:expense_tracker/ask_ai/domain/entities/prompt_input.dart';
+import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/time/pay_rule.dart';
@@ -22,15 +23,34 @@ PromptInput workedPromptInput({
   List<RecurringRule>? bills,
   Option<RecurringRule>? incomeRule,
   PayRule payRule = const MonthlyOnDay(4),
+  Option<CycleSummary> summary = const Option<CycleSummary>.none(),
+  Money keepAside = Money.zero,
+  CalendarDate today = WorkedExample.today,
 }) => PromptInput(
   cycles: workedCycles,
-  today: WorkedExample.today,
+  today: today,
   incomeRule: incomeRule ?? Option<RecurringRule>.of(WorkedExample.salary),
   payRule: payRule,
   bills: bills ?? <RecurringRule>[WorkedExample.rent, WorkedExample.electricity],
   categories: categories,
   entries: entries ?? WorkedExample.entries,
+  summary: summary,
+  keepAside: keepAside,
 );
+
+/// Home's summary for the worked example (SPEC BR-4, BR-7): ₹1,430 safe today, about ₹9,300 spare.
+CycleSummary workedSummary({CycleState state = const OnTrack(), RangeForecast forecast = const LastsTillPayday(Money(930000))}) =>
+    CycleSummary(
+      cycle: workedCycles.first,
+      today: WorkedExample.today,
+      pool: Money.fromMajor(16650),
+      todayShare: Money.fromMajor(1850),
+      spentToday: Money.fromMajor(420),
+      tomorrowShare: Option<Money>.of(Money.fromMajor(2027)),
+      state: state,
+      forecast: forecast,
+      earliestEntryDate: workedCycles[1].start,
+    );
 
 /// The English seed names, as `AppLocalizations.categoryName` gives them.
 String englishName(Category category) =>

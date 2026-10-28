@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../core/design/haptics.dart';
 import '../../../core/errors/failure.dart';
@@ -100,19 +101,25 @@ class AskAiBloc extends Bloc<AskAiEvent, AskAiState> {
     }
   }
 
-  /// Copies [text] and opens ChatGPT with it; true when the user must paste it themselves.
+  /// Copies [text] and opens ChatGPT with it; true when nothing opened, so a toast must say to
+  /// paste. A prompt too long to prefill needs no toast: the screen said so before the tap.
   Future<bool> _copyAndOpen(String text) async {
     await _handoff.copy(text);
-    return ChatGptLink.prefilled(text).match(() async {
-      await _handoff.open(ChatGptLink.home);
-      return true;
-    }, (Uri link) async => !await _handoff.open(link));
+    return !await _handoff.open(ChatGptLink.prefilled(text).getOrElse(() => ChatGptLink.home));
   }
 
-  AskAiReady _ready(PromptInput input, PromptChoice choice, {int toasts = 0}) => AskAiReady(
-    input: input,
-    choice: choice,
-    prompt: PromptBuilder.build(input, choice, nameOf: _nameOf),
-    toasts: toasts,
-  );
+  AskAiReady _ready(PromptInput input, PromptChoice choice, {int toasts = 0}) {
+    final PromptChoice offered = _offered(input, choice);
+    return AskAiReady(
+      input: input,
+      choice: offered,
+      prompt: PromptBuilder.build(input, offered, nameOf: _nameOf),
+      toasts: toasts,
+    );
+  }
+
+  // why: *Will my money last till payday?* is hidden for a past cycle or income with no payday
+  // (FR-AI-1); a pick of it, or one left over from before a reload, falls back to the default.
+  static PromptChoice _offered(PromptInput input, PromptChoice choice) =>
+      choice.goal == AskGoal.onTrack && !input.offersOnTrack ? choice.copyWith(goal: const PromptChoice().goal) : choice;
 }

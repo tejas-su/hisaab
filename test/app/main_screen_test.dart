@@ -34,6 +34,8 @@ void main() {
 
   Future<void> tapAndLoad(WidgetTester tester, Finder target) async {
     await tester.ensureVisible(target);
+    // why: ensureVisible scrolls without a frame; the tap must hit the scrolled position.
+    await tester.pump();
     await tester.tap(target);
     await tester.runAsync(pumpEventQueue);
     await tester.pumpAndSettle();
@@ -73,8 +75,8 @@ void main() {
       await tapAndLoad(tester, dock('Spends'));
       await tapAndLoad(tester, find.byKey(const ValueKey<String>('ask-ai-card')));
       expect(find.byType(AskAiPage), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('What will be sent · 6 entries'), 200, scrollable: find.byType(Scrollable).last);
-      expect(find.text('What will be sent · 6 entries'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('What the AI will see · 6 entries'), 200, scrollable: find.byType(Scrollable).last);
+      expect(find.text('What the AI will see · 6 entries'), findsOneWidget);
     });
 
     testWidgets('over today, See where it went switches to Spends', (WidgetTester tester) async {

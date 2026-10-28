@@ -14,9 +14,10 @@ import 'goal_well.dart';
 
 /// The last goal row: an always-visible field for the user's own question (FR-AI-1).
 ///
-/// Tapping it or typing in it picks *Ask my own question*, so a typed question is never a
-/// hidden second step (prompt starters with "describe your own", D67). Needs an [AskAiBloc]
-/// above it. The text controller is this widget's own leaf state.
+/// Tapping it or typing in it picks *Ask something else*, so a typed question is never a
+/// hidden second step (prompt starters with "describe your own", D67). While it has focus and
+/// is empty, the placeholder turns into an example question (D73). Needs an [AskAiBloc] above
+/// it. The text controller and focus are this widget's own leaf state.
 class OwnQuestionRow extends StatefulWidget {
   const OwnQuestionRow({super.key, required this.initial, required this.selected});
 
@@ -29,16 +30,27 @@ class OwnQuestionRow extends StatefulWidget {
 
 class _OwnQuestionRowState extends State<OwnQuestionRow> {
   late final TextEditingController _controller = TextEditingController(text: widget.initial);
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_onFocusChanged);
+  }
 
   @override
   void dispose() {
+    _focus.dispose();
     _controller.dispose();
     super.dispose();
   }
 
+  void _onFocusChanged() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
     final AskAiBloc bloc = context.read<AskAiBloc>();
+    final AppLocalizations strings = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: 9),
       child: Row(
@@ -49,6 +61,7 @@ class _OwnQuestionRowState extends State<OwnQuestionRow> {
             child: TextField(
               key: const ValueKey<String>('own-question'),
               controller: _controller,
+              focusNode: _focus,
               maxLength: PromptChoice.maxQuestionLength,
               minLines: 1,
               maxLines: 3,
@@ -59,7 +72,7 @@ class _OwnQuestionRowState extends State<OwnQuestionRow> {
               onChanged: (String question) => bloc.add(AskAiQuestionChanged(question)),
               onTapOutside: (PointerDownEvent _) => FocusScope.of(context).unfocus(),
               decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).askGoalOwn,
+                hintText: _focus.hasFocus ? strings.askOwnHint : strings.askGoalOwn,
                 hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
                 counterText: '',
                 border: InputBorder.none,

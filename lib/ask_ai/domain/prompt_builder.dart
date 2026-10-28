@@ -10,8 +10,8 @@ import 'entities/prompt_input.dart';
 import 'entities/prompt_text.dart';
 import 'prompt_csv.dart';
 
-/// Turns the ledger into the Ask AI prompt (SPEC BR-15): role, context, summary, bills,
-/// entries as CSV, then the task.
+/// Turns the ledger into the Ask AI prompt (SPEC BR-15): role, context, the app's own numbers
+/// when the period holds today, summary, bills, entries as CSV, then the task.
 ///
 /// The text is English whatever the app language, since it is written for the AI, and it is
 /// byte-identical for the same input (DECISIONS D59).
@@ -21,7 +21,10 @@ abstract final class PromptBuilder {
 
   static final MoneyFormatter _money = MoneyFormatter();
 
-  static const String _role = 'You are a friendly money coach. Be specific, use my numbers, no jargon.';
+  static const String _role =
+      'You are a friendly money coach for someone in India. Reply in simple English, under 200 words.\n'
+      'Use only the numbers below. Write amounts in ₹ with Indian grouping (₹1,25,000).\n'
+      "If there is too little data to judge, say so. Don't name specific stocks, funds, loans or apps.";
 
   static const List<String> _weekdays = <String>['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -35,7 +38,14 @@ abstract final class PromptBuilder {
     final List<Entry> entries = _entriesIn(input, period);
     final _Names names = _Names(input.categories, nameOf);
     final _Draft draft = _Draft(
-      head: <String>[_role, _context(input, period), _summary(entries, names), _bills(input.bills), ''].join('\n'),
+      head: <String>[
+        _role,
+        _context(input, period),
+        ..._facts(input),
+        _summary(entries, names),
+        _bills(input.bills),
+        '',
+      ].join('\n'),
       entries: entries,
       weeks: _weeks(period),
       names: names,
@@ -68,6 +78,35 @@ abstract final class PromptBuilder {
     return 'Context: income $income, currency ${Money.zero.currency.code}, period ${period.start.toIso()}..${period.end.toIso()}, '
         'today ${input.today.toIso()}.';
   }
+
+  // why: the AI is told Home's own numbers as fact, so its answer can't contradict the hero
+  // (SPEC BR-15). Home shows no hero without income, so neither does the prompt.
+  static List<String> _facts(PromptInput input) => input.summary
+      .filter((CycleSummary summary) => summary.state is! NoIncome)
+      .match(
+        () => const <String>[],
+        (CycleSummary summary) => <String>[
+          'From my app, and correct: ${<String>[
+            'safe to spend today ${_money.format(_safeToday(summary))}',
+            ..._forecast(summary.forecast),
+            if (!input.keepAside.isZero) 'I keep aside ${_money.format(input.keepAside)} a ${_cycleWord(input.payRule)} as savings',
+          ].join('; ')}.',
+        ],
+      );
+
+  // why: as on Home's hero, an overspent day reads ₹0, never a negative amount.
+  static Money _safeToday(CycleSummary summary) => switch (summary.state) {
+    OverToday() || OverCycle() => Money.zero,
+    NoIncome() || SlowDown() || OnTrack() => summary.safeToday.isNegative ? Money.zero : summary.safeToday,
+  };
+
+  static List<String> _forecast(RangeForecast forecast) => switch (forecast) {
+    LastsTillPayday(:final Money spare) => <String>['at this pace it lasts till payday with about ${_money.format(spare)} spare'],
+    RunsOut(:final CalendarDate date) => <String>['at this pace it runs out on ${date.toIso()}'],
+    TooEarlyToForecast() => const <String>[],
+  };
+
+  static String _cycleWord(PayRule rule) => rule is WeeklyOn ? 'week' : 'month';
 
   static String _per(Frequency frequency) => switch (frequency) {
     Frequency.weekly => 'week',
@@ -152,12 +191,19 @@ abstract final class PromptBuilder {
   ].join('\n');
 
   static String _task(PromptChoice choice) => switch (choice.goal) {
-    AskGoal.reviewMonth => 'Task: Review my month. Give: 1) the 3 biggest problems 2) 3 concrete savings with ₹ amounts 3) a budget per category for next month 4) one habit to change.',
+    AskGoal.reviewMonth =>
+      'Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts '
+          '2) the one change that would save the most, and how much a month 3) one habit worth keeping.',
     AskGoal.helpMeSave =>
-      'Task: Help me save more. Give 5 specific cuts with ₹ amounts a month, easiest first, and the total I would save.',
-    AskGoal.makeBudget => 'Task: Make me a monthly budget per category that fits my income and leaves room to save. Show a table with ₹ amounts and one line on why for each.',
-    AskGoal.onTrack => 'Task: Am I on track to last until my next payday? Compare my spending pace with the days left and tell me how much I can spend each day from now.',
-    AskGoal.ownQuestion => 'Task: ${choice.question.trim()}',
+      'Task: Show me where I can save. Give 5 specific cuts, easiest first, each with how much it saves a month, '
+          "then the total. Don't cut rent, EMIs, other fixed bills or health.",
+    AskGoal.makeBudget =>
+      'Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed '
+          'bills and what I keep aside. Show a table: category, limit in ₹, one short reason.',
+    AskGoal.onTrack =>
+      "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. "
+          'Tell me which 1–2 categories are pushing my pace up and one thing to change this week.',
+    AskGoal.ownQuestion => 'My question: ${choice.question.trim()}',
   };
 
   static Money _sum(Iterable<Entry> entries, EntryKind kind) =>

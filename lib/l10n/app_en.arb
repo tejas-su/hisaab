@@ -46,8 +46,8 @@
   },
   "paceYou": "You",
   "paceSteady": "Steady pace",
-  "belowPace": "Below pace",
-  "abovePace": "Above pace",
+  "belowPace": "Spending slower",
+  "abovePace": "Spending faster",
   "paceSpoken": "{spent} spent so far of {budget}. {verdict}.",
   "@paceSpoken": {
     "description": "TalkBack sentence for the whole pace chart card",
@@ -98,13 +98,17 @@
     }
   },
   "tipsTitle": "Worth knowing",
-  "insightCategoryUp": "{category} is up {amount} from last month.",
+  "insightCategoryUp": "{category} is {amount} more than in {cycle}.",
   "@insightCategoryUp": {
+    "description": "BR-14 #1; cycle names the previous cycle, as the cycle switcher does (October, or 26 Oct – 1 Nov)",
     "placeholders": {
       "category": {
         "type": "String"
       },
       "amount": {
+        "type": "String"
+      },
+      "cycle": {
         "type": "String"
       }
     }
@@ -123,16 +127,17 @@
       }
     }
   },
-  "insightSteadiest": "{category} is your steadiest spend.",
+  "insightSteadiest": "{category} costs about the same every week.",
   "@insightSteadiest": {
+    "description": "BR-14 #3",
     "placeholders": {
       "category": {
         "type": "String"
       }
     }
   },
-  "insightLimitOffer": "Use last month's spending as limits? Each is rounded up to the next ₹500.",
-  "seeEntries": "See entries",
+  "insightLimitOffer": "Set limits from {cycle}'s spending? Each one is rounded up to the next ₹500.",
+  "seeEntries": "See {category} entries",
   "useTheseLimits": "Use these limits",
   "seeEveryEntry": "See every entry",
   "seeAll": "See all",
@@ -584,39 +589,52 @@
   "@askAiQuestion": {
     "description": "Heading above the Ask AI goal cards"
   },
-  "askGoalReview": "Review my month",
+  "askGoalReview": "How did I do?",
   "@askGoalReview": {
-    "description": "Ask AI goal card"
+    "description": "Ask AI goal row: review the period"
   },
-  "askGoalSave": "Help me save",
+  "askGoalSave": "Where can I save?",
   "@askGoalSave": {
-    "description": "Ask AI goal card"
+    "description": "Ask AI goal row: find cuts"
   },
-  "askGoalBudget": "Make me a budget",
+  "askGoalBudget": "What should my limits be?",
   "@askGoalBudget": {
-    "description": "Ask AI goal card"
+    "description": "Ask AI goal row: a limit per category for one pay cycle"
   },
-  "askGoalOnTrack": "Am I on track?",
+  "askGoalOnTrack": "Will my money last till payday?",
   "@askGoalOnTrack": {
-    "description": "Ask AI goal card"
+    "description": "Ask AI goal row; shown only for the current cycle with a payday"
   },
-  "askGoalOwn": "Ask my own question",
+  "askGoalOwn": "Ask something else",
   "@askGoalOwn": {
-    "description": "Full-width Ask AI goal card that opens a text field"
+    "description": "Placeholder of the always-visible own-question field, the last Ask AI goal row"
   },
-  "askOwnHint": "Type your question",
+  "askOwnHint": "Like: can I afford a new phone this month?",
   "@askOwnHint": {
-    "description": "Placeholder in the Ask AI own-question field"
+    "description": "Placeholder of the own-question field while it has focus and is empty"
   },
-  "askPeriodThis": "This month",
+  "askPeriodThis": "{cycle}",
   "@askPeriodThis": {
-    "description": "Ask AI period chip: the cycle Spends was showing"
+    "description": "Ask AI period segment: the cycle Spends was showing, named as the cycle switcher names it",
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
   },
-  "askPeriodThree": "Last 3 months",
+  "askPeriodThree": "{from} – {to}",
   "@askPeriodThree": {
-    "description": "Ask AI period chip: that cycle and the two before it"
+    "description": "Ask AI period segment: that cycle and the two before it, oldest to newest (Aug – Oct, or 12 Oct – 1 Nov)",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
   },
-  "askPreviewTitle": "What will be sent · {count, plural, =1{1 entry} other{{count} entries}}",
+  "askPreviewTitle": "What the AI will see · {count, plural, =1{1 entry} other{{count} entries}}",
   "@askPreviewTitle": {
     "description": "Title of the Ask AI prompt preview",
     "placeholders": {
@@ -625,7 +643,11 @@
       }
     }
   },
-  "askPreviewGrouped": "Older entries are grouped by week to fit.",
+  "askPrivacyNote": "Nothing leaves your phone until you share it.",
+  "@askPrivacyNote": {
+    "description": "Caption under the Ask AI preview title"
+  },
+  "askPreviewGrouped": "Older weeks are shown as totals to keep it short.",
   "@askPreviewGrouped": {
     "description": "Shown under the preview title when the prompt summarised old weeks to stay short"
   },
@@ -637,7 +659,7 @@
   "@askShowLess": {
     "description": "Collapses the Ask AI preview to its first lines"
   },
-  "askHideNotes": "Hide my notes",
+  "askHideNotes": "Leave out my notes",
   "@askHideNotes": {
     "description": "Switch that leaves entry notes out of the Ask AI prompt"
   },
@@ -645,7 +667,7 @@
   "@askOpenChatGpt": {
     "description": "Primary Ask AI action: copies the prompt and opens ChatGPT"
   },
-  "askOtherAi": "Other AI",
+  "askOtherAi": "Other apps",
   "@askOtherAi": {
     "description": "Ask AI action that opens the Android share sheet"
   },
@@ -653,15 +675,39 @@
   "@askCopyOnly": {
     "description": "Ask AI action that only copies the prompt"
   },
-  "askCopiedToast": "Copied. Paste it in the chat.",
+  "askCopiedToast": "Copied. In the chat, long-press and tap Paste.",
   "@askCopiedToast": {
-    "description": "Toast after the prompt was copied and the user must paste it themselves"
+    "description": "Toast after Copy only, or when nothing could open ChatGPT, so the user must paste the prompt themselves"
   },
-  "askAiCard": "Ask AI about {cycle} — get a second opinion in one tap.",
-  "@askAiCard": {
-    "description": "Text of the Ask AI card at the top of Spends; cycle is a month name such as October",
+  "askPasteNeeded": "ChatGPT will open empty. Long-press the message box and tap Paste.",
+  "@askPasteNeeded": {
+    "description": "Caption above the Ask AI actions when the prompt is too long to prefill ChatGPT"
+  },
+  "askAiCardTitle": "Ask an AI about {cycle}",
+  "@askAiCardTitle": {
+    "description": "Title of the Ask AI card at the top of Spends; cycle is the cycle shown, such as October",
     "placeholders": {
       "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "askAiCardNote": "You'll see exactly what it gets.",
+  "@askAiCardNote": {
+    "description": "Second line of the Ask AI card on Spends: the prompt is previewed before it is shared"
+  },
+  "@insightLimitOffer": {
+    "description": "BR-14 #4; cycle names the previous cycle, whose spending the limits come from",
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "@seeEntries": {
+    "description": "Insight action that opens the entries of one category",
+    "placeholders": {
+      "category": {
         "type": "String"
       }
     }

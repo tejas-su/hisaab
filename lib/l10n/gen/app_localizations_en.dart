@@ -58,10 +58,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paceSteady => 'Steady pace';
 
   @override
-  String get belowPace => 'Below pace';
+  String get belowPace => 'Spending slower';
 
   @override
-  String get abovePace => 'Above pace';
+  String get abovePace => 'Spending faster';
 
   @override
   String paceSpoken(String spent, String budget, String verdict) {
@@ -95,8 +95,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tipsTitle => 'Worth knowing';
 
   @override
-  String insightCategoryUp(String category, String amount) {
-    return '$category is up $amount from last month.';
+  String insightCategoryUp(String category, String amount, String cycle) {
+    return '$category is $amount more than in $cycle.';
   }
 
   @override
@@ -106,15 +106,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String insightSteadiest(String category) {
-    return '$category is your steadiest spend.';
+    return '$category costs about the same every week.';
   }
 
   @override
-  String get insightLimitOffer =>
-      'Use last month\'s spending as limits? Each is rounded up to the next ₹500.';
+  String insightLimitOffer(String cycle) {
+    return 'Set limits from $cycle\'s spending? Each one is rounded up to the next ₹500.';
+  }
 
   @override
-  String get seeEntries => 'See entries';
+  String seeEntries(String category) {
+    return 'See $category entries';
+  }
 
   @override
   String get useTheseLimits => 'Use these limits';
@@ -566,28 +569,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get askAiQuestion => 'What do you want to know?';
 
   @override
-  String get askGoalReview => 'Review my month';
+  String get askGoalReview => 'How did I do?';
 
   @override
-  String get askGoalSave => 'Help me save';
+  String get askGoalSave => 'Where can I save?';
 
   @override
-  String get askGoalBudget => 'Make me a budget';
+  String get askGoalBudget => 'What should my limits be?';
 
   @override
-  String get askGoalOnTrack => 'Am I on track?';
+  String get askGoalOnTrack => 'Will my money last till payday?';
 
   @override
-  String get askGoalOwn => 'Ask my own question';
+  String get askGoalOwn => 'Ask something else';
 
   @override
-  String get askOwnHint => 'Type your question';
+  String get askOwnHint => 'Like: can I afford a new phone this month?';
 
   @override
-  String get askPeriodThis => 'This month';
+  String askPeriodThis(String cycle) {
+    return '$cycle';
+  }
 
   @override
-  String get askPeriodThree => 'Last 3 months';
+  String askPeriodThree(String from, String to) {
+    return '$from – $to';
+  }
 
   @override
   String askPreviewTitle(int count) {
@@ -597,11 +604,15 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count entries',
       one: '1 entry',
     );
-    return 'What will be sent · $_temp0';
+    return 'What the AI will see · $_temp0';
   }
 
   @override
-  String get askPreviewGrouped => 'Older entries are grouped by week to fit.';
+  String get askPrivacyNote => 'Nothing leaves your phone until you share it.';
+
+  @override
+  String get askPreviewGrouped =>
+      'Older weeks are shown as totals to keep it short.';
 
   @override
   String get askShowFull => 'Show full text';
@@ -610,24 +621,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get askShowLess => 'Show less';
 
   @override
-  String get askHideNotes => 'Hide my notes';
+  String get askHideNotes => 'Leave out my notes';
 
   @override
   String get askOpenChatGpt => 'Copy & open ChatGPT';
 
   @override
-  String get askOtherAi => 'Other AI';
+  String get askOtherAi => 'Other apps';
 
   @override
   String get askCopyOnly => 'Copy only';
 
   @override
-  String get askCopiedToast => 'Copied. Paste it in the chat.';
+  String get askCopiedToast => 'Copied. In the chat, long-press and tap Paste.';
 
   @override
-  String askAiCard(String cycle) {
-    return 'Ask AI about $cycle — get a second opinion in one tap.';
+  String get askPasteNeeded =>
+      'ChatGPT will open empty. Long-press the message box and tap Paste.';
+
+  @override
+  String askAiCardTitle(String cycle) {
+    return 'Ask an AI about $cycle';
   }
+
+  @override
+  String get askAiCardNote => 'You\'ll see exactly what it gets.';
 }
 
 /// The translations for English, as used in India (`en_IN`).

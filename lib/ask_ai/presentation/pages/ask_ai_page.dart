@@ -94,10 +94,10 @@ class AskAiPage extends StatelessWidget {
           ],
         ),
       ),
-      if (state case AskAiReady(:final choice))
+      if (state is AskAiReady)
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
-          child: AskAiActions(canSend: choice.canSend),
+          child: AskAiActions(canSend: state.choice.canSend, needsPaste: state.needsPaste),
         ),
     ],
   );
@@ -105,7 +105,7 @@ class AskAiPage extends StatelessWidget {
   List<Widget> _choices(BuildContext context, AskAiState state) => switch (state) {
     AskAiLoading() => const <Widget>[],
     AskAiFailed() => <Widget>[_failed(context)],
-    AskAiReady(:final choice) => <Widget>[AskAiControls(choice: choice)],
+    AskAiReady(:final choice, :final input) => <Widget>[AskAiControls(choice: choice, input: input)],
   };
 
   Widget _failed(BuildContext context) {

@@ -16,7 +16,7 @@ void main() {
     ('steadiest', const SteadiestCategory(categoryId: SeedCategoryIds.food)),
   ];
   for (final (String name, Insight insight) in seeEntries) {
-    testWidgets('$name: See entries opens Food\'s entries', (WidgetTester tester) async {
+    testWidgets('$name: See Food entries opens Food\'s entries', (WidgetTester tester) async {
       final List<int> opened = <int>[];
       await pumpApp(
         tester,
@@ -24,13 +24,15 @@ void main() {
           body: InsightTile(
             insight: insight,
             categories: <int, Category>{for (final Category c in seedCategories) c.id: c},
+            previousCycle: 'September',
             onSeeEntries: opened.add,
             onUseLimits: (LimitOffer _) => fail('not an offer'),
           ),
         ),
       );
-      expect(find.textContaining('Food'), findsOneWidget);
-      await tester.tap(find.text('See entries'));
+      // why: the action now names the category too ("See Food entries").
+      expect(find.textContaining('Food'), findsNWidgets(2));
+      await tester.tap(find.text('See Food entries'));
       expect(opened, <int>[SeedCategoryIds.food]);
     });
   }

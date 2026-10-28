@@ -6,6 +6,7 @@ import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/time/pay_rule.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
+import 'package:expense_tracker/core/usecases/use_case.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -35,11 +36,12 @@ void main() {
   late FakeLedgerRepository ledger;
   late FakeRecurringRepository recurring;
   late FakeClock clock;
+  late FakeBudgetSettingsRepository settings;
 
   GetPromptInput useCase() => GetPromptInput(
     ledger: ledger,
     recurring: recurring,
-    settings: FakeBudgetSettingsRepository(),
+    settings: settings,
     categories: FakeCategoryRepository(),
     periods: const PeriodCalculator(),
     clock: clock,
@@ -52,6 +54,7 @@ void main() {
     ledger = FakeLedgerRepository(WorkedExample.entries);
     recurring = FakeRecurringRepository(WorkedExample.rules);
     clock = FakeClock(WorkedExample.now);
+    settings = FakeBudgetSettingsRepository();
   });
 
   group('GetPromptInput (BR-15)', () {
@@ -110,6 +113,24 @@ void main() {
       clock = FakeClock(DateTime(2027, 4, 10));
       final PromptInput input = await load(const PayCycle(start: CalendarDate(2027, 3, 31), end: CalendarDate(2027, 4, 29)));
       expect(input.cycles[1], const PayCycle(start: CalendarDate(2027, 2, 28), end: CalendarDate(2027, 3, 30)));
+    });
+
+    test("the current cycle carries Home's summary and the keep-aside", () async {
+      settings.settings = BudgetSettings(keepAside: Money.fromMajor(5000));
+      final PromptInput input = await load(_october);
+      final CycleSummary home = (await GetCycleSummary(
+        ledger: ledger,
+        recurring: recurring,
+        settings: settings,
+        periods: const PeriodCalculator(),
+        clock: clock,
+      )(const NoParams()).run()).getOrElse((Failure f) => throw StateError('unexpected $f'));
+      expect(input.summary, Option<CycleSummary>.of(home));
+      expect(input.keepAside, Money.fromMajor(5000));
+    });
+
+    test('a past cycle carries no summary', () async {
+      expect((await load(_september)).summary, const Option<CycleSummary>.none());
     });
 
     test('passes a database failure through', () async {

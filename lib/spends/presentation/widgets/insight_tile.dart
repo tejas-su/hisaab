@@ -11,13 +11,14 @@ import '../insight_copy.dart';
 
 /// One insight: a sentence and its one action (SPEC BR-14, FR-SP-5).
 ///
-/// [onSeeEntries] opens the entries of a category; [onUseLimits] accepts the limit offer, after
+/// [previousCycle] names the cycle before the one shown ("September"). [onSeeEntries] opens the entries of a category; [onUseLimits] accepts the limit offer, after
 /// which [limitsFailed] shows the save error.
 class InsightTile extends StatelessWidget {
   const InsightTile({
     super.key,
     required this.insight,
     required this.categories,
+    required this.previousCycle,
     required this.onSeeEntries,
     required this.onUseLimits,
     this.limitsFailed = false,
@@ -25,6 +26,7 @@ class InsightTile extends StatelessWidget {
 
   final Insight insight;
   final Map<int, Category> categories;
+  final String previousCycle;
   final ValueChanged<int> onSeeEntries;
   final ValueChanged<LimitOffer> onUseLimits;
   final bool limitsFailed;
@@ -34,6 +36,7 @@ class InsightTile extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextTheme text = Theme.of(context).textTheme;
     final Insight current = insight;
+    String categoryName(int id) => categories[id]?.labelIn(strings) ?? strings.categoryName('other');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -42,13 +45,14 @@ class InsightTile extends StatelessWidget {
             current,
             strings: strings,
             money: context.money,
-            categoryName: (int id) => categories[id]?.labelIn(strings) ?? strings.categoryName('other'),
+            categoryName: categoryName,
+            previousCycle: previousCycle,
           ),
           style: text.bodyLarge,
         ),
         const SizedBox(height: HisaabSpacing.s),
         HisaabChip(
-          label: InsightCopy.action(current, strings),
+          label: InsightCopy.action(current, strings, categoryName: categoryName),
           trailingIcon: AppIcons.next,
           onPressed: () => switch (current) {
             LimitOffer() => onUseLimits(current),

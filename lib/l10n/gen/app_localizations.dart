@@ -184,13 +184,13 @@ abstract class AppLocalizations {
   /// No description provided for @belowPace.
   ///
   /// In en, this message translates to:
-  /// **'Below pace'**
+  /// **'Spending slower'**
   String get belowPace;
 
   /// No description provided for @abovePace.
   ///
   /// In en, this message translates to:
-  /// **'Above pace'**
+  /// **'Spending faster'**
   String get abovePace;
 
   /// TalkBack sentence for the whole pace chart card
@@ -235,11 +235,11 @@ abstract class AppLocalizations {
   /// **'Worth knowing'**
   String get tipsTitle;
 
-  /// No description provided for @insightCategoryUp.
+  /// BR-14 #1; cycle names the previous cycle, as the cycle switcher does (October, or 26 Oct – 1 Nov)
   ///
   /// In en, this message translates to:
-  /// **'{category} is up {amount} from last month.'**
-  String insightCategoryUp(String category, String amount);
+  /// **'{category} is {amount} more than in {cycle}.'**
+  String insightCategoryUp(String category, String amount, String cycle);
 
   /// No description provided for @insightBiggestSpend.
   ///
@@ -247,23 +247,23 @@ abstract class AppLocalizations {
   /// **'Your biggest {category} spend was {amount} on {date}.'**
   String insightBiggestSpend(String category, String amount, String date);
 
-  /// No description provided for @insightSteadiest.
+  /// BR-14 #3
   ///
   /// In en, this message translates to:
-  /// **'{category} is your steadiest spend.'**
+  /// **'{category} costs about the same every week.'**
   String insightSteadiest(String category);
 
-  /// No description provided for @insightLimitOffer.
+  /// BR-14 #4; cycle names the previous cycle, whose spending the limits come from
   ///
   /// In en, this message translates to:
-  /// **'Use last month\'s spending as limits? Each is rounded up to the next ₹500.'**
-  String get insightLimitOffer;
+  /// **'Set limits from {cycle}\'s spending? Each one is rounded up to the next ₹500.'**
+  String insightLimitOffer(String cycle);
 
-  /// No description provided for @seeEntries.
+  /// Insight action that opens the entries of one category
   ///
   /// In en, this message translates to:
-  /// **'See entries'**
-  String get seeEntries;
+  /// **'See {category} entries'**
+  String seeEntries(String category);
 
   /// No description provided for @useTheseLimits.
   ///
@@ -907,64 +907,70 @@ abstract class AppLocalizations {
   /// **'What do you want to know?'**
   String get askAiQuestion;
 
-  /// Ask AI goal card
+  /// Ask AI goal row: review the period
   ///
   /// In en, this message translates to:
-  /// **'Review my month'**
+  /// **'How did I do?'**
   String get askGoalReview;
 
-  /// Ask AI goal card
+  /// Ask AI goal row: find cuts
   ///
   /// In en, this message translates to:
-  /// **'Help me save'**
+  /// **'Where can I save?'**
   String get askGoalSave;
 
-  /// Ask AI goal card
+  /// Ask AI goal row: a limit per category for one pay cycle
   ///
   /// In en, this message translates to:
-  /// **'Make me a budget'**
+  /// **'What should my limits be?'**
   String get askGoalBudget;
 
-  /// Ask AI goal card
+  /// Ask AI goal row; shown only for the current cycle with a payday
   ///
   /// In en, this message translates to:
-  /// **'Am I on track?'**
+  /// **'Will my money last till payday?'**
   String get askGoalOnTrack;
 
-  /// Full-width Ask AI goal card that opens a text field
+  /// Placeholder of the always-visible own-question field, the last Ask AI goal row
   ///
   /// In en, this message translates to:
-  /// **'Ask my own question'**
+  /// **'Ask something else'**
   String get askGoalOwn;
 
-  /// Placeholder in the Ask AI own-question field
+  /// Placeholder of the own-question field while it has focus and is empty
   ///
   /// In en, this message translates to:
-  /// **'Type your question'**
+  /// **'Like: can I afford a new phone this month?'**
   String get askOwnHint;
 
-  /// Ask AI period chip: the cycle Spends was showing
+  /// Ask AI period segment: the cycle Spends was showing, named as the cycle switcher names it
   ///
   /// In en, this message translates to:
-  /// **'This month'**
-  String get askPeriodThis;
+  /// **'{cycle}'**
+  String askPeriodThis(String cycle);
 
-  /// Ask AI period chip: that cycle and the two before it
+  /// Ask AI period segment: that cycle and the two before it, oldest to newest (Aug – Oct, or 12 Oct – 1 Nov)
   ///
   /// In en, this message translates to:
-  /// **'Last 3 months'**
-  String get askPeriodThree;
+  /// **'{from} – {to}'**
+  String askPeriodThree(String from, String to);
 
   /// Title of the Ask AI prompt preview
   ///
   /// In en, this message translates to:
-  /// **'What will be sent · {count, plural, =1{1 entry} other{{count} entries}}'**
+  /// **'What the AI will see · {count, plural, =1{1 entry} other{{count} entries}}'**
   String askPreviewTitle(int count);
+
+  /// Caption under the Ask AI preview title
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing leaves your phone until you share it.'**
+  String get askPrivacyNote;
 
   /// Shown under the preview title when the prompt summarised old weeks to stay short
   ///
   /// In en, this message translates to:
-  /// **'Older entries are grouped by week to fit.'**
+  /// **'Older weeks are shown as totals to keep it short.'**
   String get askPreviewGrouped;
 
   /// Expands the Ask AI preview to the whole prompt
@@ -982,7 +988,7 @@ abstract class AppLocalizations {
   /// Switch that leaves entry notes out of the Ask AI prompt
   ///
   /// In en, this message translates to:
-  /// **'Hide my notes'**
+  /// **'Leave out my notes'**
   String get askHideNotes;
 
   /// Primary Ask AI action: copies the prompt and opens ChatGPT
@@ -994,7 +1000,7 @@ abstract class AppLocalizations {
   /// Ask AI action that opens the Android share sheet
   ///
   /// In en, this message translates to:
-  /// **'Other AI'**
+  /// **'Other apps'**
   String get askOtherAi;
 
   /// Ask AI action that only copies the prompt
@@ -1003,17 +1009,29 @@ abstract class AppLocalizations {
   /// **'Copy only'**
   String get askCopyOnly;
 
-  /// Toast after the prompt was copied and the user must paste it themselves
+  /// Toast after Copy only, or when nothing could open ChatGPT, so the user must paste the prompt themselves
   ///
   /// In en, this message translates to:
-  /// **'Copied. Paste it in the chat.'**
+  /// **'Copied. In the chat, long-press and tap Paste.'**
   String get askCopiedToast;
 
-  /// Text of the Ask AI card at the top of Spends; cycle is a month name such as October
+  /// Caption above the Ask AI actions when the prompt is too long to prefill ChatGPT
   ///
   /// In en, this message translates to:
-  /// **'Ask AI about {cycle} — get a second opinion in one tap.'**
-  String askAiCard(String cycle);
+  /// **'ChatGPT will open empty. Long-press the message box and tap Paste.'**
+  String get askPasteNeeded;
+
+  /// Title of the Ask AI card at the top of Spends; cycle is the cycle shown, such as October
+  ///
+  /// In en, this message translates to:
+  /// **'Ask an AI about {cycle}'**
+  String askAiCardTitle(String cycle);
+
+  /// Second line of the Ask AI card on Spends: the prompt is previewed before it is shared
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll see exactly what it gets.'**
+  String get askAiCardNote;
 }
 
 class _AppLocalizationsDelegate

@@ -103,6 +103,7 @@ class SpendsPage extends StatelessWidget {
               InsightsCard(
                 insights: overview.insights,
                 categories: <int, Category>{for (final CategorySpend row in overview.rows) row.category.id: row.category},
+                previousCycle: _label(context, overview.previous),
                 onSeeEntries: (int categoryId) => onSeeEntries(overview.cycle, Option<int>.of(categoryId)),
                 onUseLimits: (LimitOffer offer) => context.read<SpendsBloc>().add(SpendsLimitsAccepted(offer)),
                 limitsFailed: limitsFailed,

@@ -84,7 +84,7 @@ void main() {
       expect(find.text('October'), findsOneWidget);
       expect(find.textContaining('₹27,570'), findsOneWidget);
       expect(find.textContaining('of ₹45,000'), findsOneWidget);
-      expect(find.text('Below pace'), findsOneWidget);
+      expect(find.text('Spending slower'), findsOneWidget);
       expect(find.text('Where it went'), findsOneWidget);
       expect(find.text('Food'), findsOneWidget);
       expect(find.text('69%'), findsOneWidget);
@@ -95,7 +95,7 @@ void main() {
     testWidgets('TalkBack reads the pace card as one sentence', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pump(tester);
-      expect(find.bySemanticsLabel('27,570 rupees spent so far of 45,000 rupees. Below pace.'), findsOneWidget);
+      expect(find.bySemanticsLabel('27,570 rupees spent so far of 45,000 rupees. Spending slower.'), findsOneWidget);
       expect(find.bySemanticsLabel('Food: 19,010 rupees, 69%'), findsOneWidget);
       handle.dispose();
     });
@@ -137,9 +137,9 @@ void main() {
       trackSeptember();
       await pump(tester);
       expect(find.text('Worth knowing'), findsOneWidget);
-      expect(find.text('Food is up ₹17,010 from last month.'), findsOneWidget);
-      await tester.ensureVisible(find.text('See entries'));
-      await tester.tap(find.text('See entries'));
+      expect(find.text('Food is ₹17,010 more than in September.'), findsOneWidget);
+      await tester.ensureVisible(find.text('See Food entries'));
+      await tester.tap(find.text('See Food entries'));
       expect(opened, <(PayCycle, Option<int>)>[(_october, const Option<int>.of(SeedCategoryIds.food))]);
       await tester.ensureVisible(find.text('Use these limits'));
       await tester.pump();
@@ -176,7 +176,7 @@ void main() {
     testWidgets('no income: the total shows without a chart', (WidgetTester tester) async {
       services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.got);
       await pump(tester);
-      expect(find.text('Below pace'), findsNothing);
+      expect(find.text('Spending slower'), findsNothing);
       expect(find.textContaining('₹27,570'), findsOneWidget);
     });
 
@@ -216,6 +216,26 @@ void main() {
       });
     });
 
+    group('pace chart height (D69)', () {
+      Size chart(WidgetTester tester) => tester.getSize(find.byKey(const ValueKey<String>('pace-chart')));
+
+      testWidgets('is half the card width on a phone', (WidgetTester tester) async {
+        await pump(tester);
+        expect(chart(tester).height, chart(tester).width / 2);
+        expect(chart(tester).height, inInclusiveRange(160, 200));
+      });
+
+      testWidgets('never drops below 160 on a 320dp phone', (WidgetTester tester) async {
+        await pump(tester, size: TestWindows.smallPhone);
+        expect(chart(tester).height, 160);
+      });
+
+      testWidgets('stops at 200 on a tablet', (WidgetTester tester) async {
+        await pump(tester, size: TestWindows.tablet);
+        expect(chart(tester).height, 200);
+      });
+    });
+
     final List<(String, Size, double, ThemeMode)> windows = <(String, Size, double, ThemeMode)>[
       ('a 320dp phone at 2× text', TestWindows.smallPhone, 2, ThemeMode.light),
       ('a phone at 1.5× text in dark mode', TestWindows.phone, 1.5, ThemeMode.dark),
@@ -227,6 +247,22 @@ void main() {
         trackSeptember();
         await pump(tester, size: size, textScale: scale, theme: theme);
         expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final (String name, Size size, double scale) in <(String, Size, double)>[
+      ('a 320dp phone at 2× text', TestWindows.smallPhone, 2),
+      ('a phone in landscape', TestWindows.phoneLandscape, 1.5),
+      ('an unfolded foldable', TestWindows.foldableUnfolded, 1.5),
+      ('a tablet', TestWindows.tablet, 1.5),
+    ]) {
+      testWidgets('the pace legend wraps inside the card on $name', (WidgetTester tester) async {
+        await pump(tester, size: size, textScale: scale);
+        final Rect card = tester.getRect(find.byType(PaceCard));
+        final Rect verdict = tester.getRect(find.text('Spending slower'));
+        expect(tester.takeException(), isNull);
+        expect(verdict.left, greaterThanOrEqualTo(card.left));
+        expect(verdict.right, lessThanOrEqualTo(card.right));
       });
     }
 

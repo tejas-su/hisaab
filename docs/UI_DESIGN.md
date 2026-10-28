@@ -289,27 +289,28 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **Ask AI card (top):**
   - A near-white card with no border, like every card, and a marigold well with an ink edge, since the AI handoff is an act (D66).
   - Shown only when the cycle has spends (DECISIONS D61).
-  - Text: "Ask AI about October — get a second opinion in one tap."
+  - Text: "Ask an AI about October" in `bodyLarge`, with "You'll see exactly what it gets." below in `bodySmall` `ink2`. TalkBack reads both as one button (D70).
 - **Pace chart:**
   - A solid `ink` line for your spending and a dotted `ink2` line for steady pace.
   - The y-axis is fixed and labelled (₹0 / ₹20K / ₹40K), avoiding Apple Card's rescaling problem.
-  - A verdict word: "Below pace" or "Above pace".
+  - Its height is half the card's width, kept between 160 and 200 (D69).
+  - A verdict: "Spending slower" or "Spending faster" (D77). The legend wraps, so the longer words never clip.
 - **Where it went:**
   - Rows sorted by amount: icon well, name, %, ₹, and an `ink` bar on a `sunk` track. Bars, not donuts: people judge length more accurately than angle.
   - If a category has a limit, the bar shows a limit tick. Overspend shows as a hatched segment past the tick, not as red.
-- **Insights:** at most 3 plain sentences, each with a next step, for example "Food is up ₹1,900 from September, mostly weekend orders. [Set a Food limit]".
+- **Insights:** at most 3 plain sentences, each with a next step, for example "Food is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
 
 ### 5.5 Ask AI
 Two layers only: the grey page and near-white cards, the same build as the Today list (D45, D67).
 1. **Header:** Back and "Ask AI". It is fixed and doesn't scroll.
 2. **"What do you want to know?" card:**
-   - The goals as one column of rows: *Review my month* · *Help me save* · *Make me a budget* · *Am I on track?*. Each row has an icon in a 42dp `sunk` well, and hairlines are indented to the text (74dp), as on Home.
-   - The last row is *Ask my own question*: an always-visible field with a pen icon. Tapping or typing in it picks it.
+   - The goals as one column of rows, phrased as the user's own questions (D71): *How did I do?* · *Where can I save?* · *What should my limits be?* · *Will my money last till payday?*. Each row has an icon in a 42dp `sunk` well, and hairlines are indented to the text (74dp), as on Home. *Will my money last till payday?* shows only for the current cycle with a payday (D72).
+   - The last row is an always-visible field with a pen icon and the placeholder *Ask something else*. While it has focus and is empty, the placeholder becomes an example: "Like: can I afford a new phone this month?" (D73). Tapping or typing in it picks it.
    - The pick: an `ink` check at the row's end and a bold label. No fill, no marigold (Apple HIG option lists).
-   - The period: *This month* (default) · *Last 3 months*, as one segmented control in the Spent | Got style, with no check.
-3. **Preview card:** "What will be sent · 142 entries" with *Show full text*, and below a hairline the **Hide my notes** switch.
-4. **Actions, pinned to the bottom:** the marigold **Copy & open ChatGPT** key, then *Other AI* (share sheet) · *Copy only*. While an own question is blank, all three are grey and disabled (D65). Only the cards between the header and the actions scroll.
-5. When the user must paste, a toast: "Copied. Paste it in the chat." That is after *Copy only*, and after *Copy & open ChatGPT* when ChatGPT can't be prefilled (D62).
+   - The period: *October* (default) · *Aug – Oct*, as one segmented control in the Spent | Got style, with no check. The segments are named by their dates, as the cycle switcher names cycles; weekly cycles read "26 Oct – 1 Nov" · "12 Oct – 1 Nov" (D76).
+3. **Preview card:** "What the AI will see · 142 entries", then "Nothing leaves your phone until you share it." as a `bodySmall` `ink2` caption, the prompt's first lines with *Show full text*, and below a hairline the **Leave out my notes** switch (D75). No "AI can be wrong" caveat.
+4. **Actions, pinned to the bottom:** the marigold **Copy & open ChatGPT** key, then *Other apps* (share sheet) · *Copy only*. While an own question is blank, all three are grey and disabled (D65). Only the cards between the header and the actions scroll.
+5. **Paste, said before the tap:** when the prompt is too long to prefill ChatGPT, "ChatGPT will open empty. Long-press the message box and tap Paste." sits as a `bodySmall` `ink2` caption directly above the actions, and no toast follows the tap. The toast "Copied. In the chat, long-press and tap Paste." stays for *Copy only* and for when nothing could open the link (D62, D74).
 6. With two panes or a tabletop fold, the header and the choices card sit in one pane, and the preview with the pinned actions in the other.
 
 ### 5.6 Settings (one level)

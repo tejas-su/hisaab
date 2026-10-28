@@ -103,6 +103,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
     );
     return SpendsOverview(
       cycle: viewed.cycle,
+      previous: viewed.previous,
       cyclesBack: viewed.cyclesBack,
       canGoBack: previous.isNotEmpty || firstLogged.filter((CalendarDate d) => !d.isAfter(viewed.previous.end)).isSome(),
       spent: _sum(current.where((Entry e) => e.kind == EntryKind.spent)),

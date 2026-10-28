@@ -10,31 +10,33 @@ import 'package:intl/date_symbol_data_local.dart';
 
 final AppLocalizations _strings = lookupAppLocalizations(const Locale('en'));
 
+String _name(int id) => id == 1 ? 'Food' : 'Travel';
+
 String _sentence(Insight insight) =>
-    InsightCopy.sentence(insight, strings: _strings, money: MoneyFormatter(), categoryName: (int id) => id == 1 ? 'Food' : 'Travel');
+    InsightCopy.sentence(insight, strings: _strings, money: MoneyFormatter(), categoryName: _name, previousCycle: 'September');
 
 void main() {
   setUpAll(() => initializeDateFormatting('en_IN'));
 
   group('InsightCopy (BR-14)', () {
     final List<(Insight, String, String)> cases = <(Insight, String, String)>[
-      (CategoryUp(categoryId: 1, rise: Money.fromMajor(1900)), 'Food is up ₹1,900 from last month.', 'See entries'),
+      (CategoryUp(categoryId: 1, rise: Money.fromMajor(1900)), 'Food is ₹1,900 more than in September.', 'See Food entries'),
       (
         BiggestSpend(categoryId: 2, amount: Money.fromMajor(1930), date: const CalendarDate(2026, 10, 31)),
         'Your biggest Travel spend was ₹1,930 on 31 Oct.',
-        'See entries',
+        'See Travel entries',
       ),
-      (const SteadiestCategory(categoryId: 1), 'Food is your steadiest spend.', 'See entries'),
+      (const SteadiestCategory(categoryId: 1), 'Food costs about the same every week.', 'See Food entries'),
       (
         LimitOffer(limits: <int, Money>{1: Money.fromMajor(10000)}),
-        "Use last month's spending as limits? Each is rounded up to the next ₹500.",
+        "Set limits from September's spending? Each one is rounded up to the next ₹500.",
         'Use these limits',
       ),
     ];
     for (final (Insight insight, String sentence, String action) in cases) {
       test('${insight.runtimeType}: "$sentence" / $action', () {
         expect(_sentence(insight), sentence);
-        expect(InsightCopy.action(insight, _strings), action);
+        expect(InsightCopy.action(insight, _strings, categoryName: _name), action);
       });
     }
   });

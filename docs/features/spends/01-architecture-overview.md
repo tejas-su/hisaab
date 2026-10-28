@@ -8,7 +8,7 @@ Spends shows where the money went in a cycle: a pace chart, a sorted category li
 ## 2. Entry point
 - The right tab of the floating dock shows `SpendsPage`; in two panes it sits beside Home.
 - *See where it went* on Home's over card switches to it (FR-HO-5).
-- *See every entry*, an insight's *See entries* and Home's *See all* push `EntriesPage` (`AppRoutes.entries`).
+- *See every entry*, an insight's *See {Cat} entries* and Home's *See all* push `EntriesPage` (`AppRoutes.entries`).
 
 ## 3. Data flow
 ```
@@ -33,13 +33,13 @@ EntriesFilterChanged / DeleteRequested / UndoRequested (same Undo flow as Home)
 | Class | File | Responsibility |
 |---|---|---|
 | `SpendsPage` | `presentation/pages/spends_page.dart` | Title, switcher, Ask AI card, pace card, *Where it went*, insights, *See every entry* |
-| `AskAiCard` | `presentation/widgets/ask_ai_card.dart` | Ink-outlined card with a marigold well; `onAskAi` opens Ask AI for the shown cycle (FR-SP-2) |
+| `AskAiCard` | `presentation/widgets/ask_ai_card.dart` | Near-white card with a marigold well, a title ("Ask an AI about October") and a quieter note; `onAskAi` opens Ask AI for the shown cycle (FR-SP-2, D70) |
 | `SpendsBloc`, `SpendsEvent`, `SpendsState` | `presentation/bloc/` | Which cycle is shown; newest request wins (`restartable()`); limits save is `droppable()` |
 | `CycleSwitcher` | `presentation/widgets/cycle_switcher.dart` | `‹ October ›`; a null callback disables an arrow |
-| `CycleLabel` | `presentation/cycle_label.dart` | Month holding most of the cycle's days; weekly cycles by dates (D52) |
+| `CycleLabel` | `presentation/cycle_label.dart` | Month holding most of the cycle's days; weekly cycles by dates (D52). `rangeOf` names a span of cycles for Ask AI's period ("Aug – Oct") and is exported from `spends.dart` (D76) |
 | `PaceCard`, `PaceChartPainter` | `presentation/widgets/` | Total, painted chart (gridlines, dotted steady line, ink line, marigold today dot), legend and verdict; one TalkBack sentence (D49) |
 | `WhereItWentCard`, `CategorySpendRow`, `LimitBarPainter` | `presentation/widgets/` | Rows by amount; bar against the biggest; limit tick, hatch past it, "₹840 past limit" |
-| `InsightsCard`, `InsightTile`, `InsightCopy` | `presentation/` | *Worth knowing*: sentence plus *See entries* or *Use these limits* (D51) |
+| `InsightsCard`, `InsightTile`, `InsightCopy` | `presentation/` | *Worth knowing*: sentence plus *See {Cat} entries* or *Use these limits* (D51); comparisons name `SpendsOverview.previous` with `CycleLabel` (D78) |
 | `EntriesPage`, `EntriesBloc`, `EntriesDay` | `presentation/` | One cycle by day, category chips, swipe delete with Undo, tap to edit |
 | `GetSpendsOverview` | `domain/usecase/get_spends_overview.dart` | Composes one cycle's `SpendsOverview` |
 | `CategoryShares` | `domain/category_shares.dart` | BR-13 largest-remainder percentages |
@@ -72,6 +72,6 @@ EntriesFilterChanged / DeleteRequested / UndoRequested (same Undo flow as Home)
 - Visuals: `docs/UI_DESIGN.md` §5.4 and §3.3 (hatch instead of red); `docs/design/mockups/06-spends.html`.
 
 ## 9. Known limitations / TODOs
-- *Set a limit* for one category has no design yet; insights offer *See entries* instead (D51).
+- *Set a limit* for one category has no design yet; insights offer *See {Cat} entries* instead (D51).
 - Insight wording says "last month" even for weekly pay cycles.
 - The Ask AI card arrives with M5.

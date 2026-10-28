@@ -199,33 +199,48 @@ The states below are evaluated in order, and the first match wins.
 
 ### BR-14 Insights (Spends)
 At most **3** are shown, chosen in priority order:
-1. **A category up at least 20% and at least ₹1,000 against the previous cycle at the same day-of-cycle.** "{Cat} is up ₹X from last month." Day-of-cycle `k` is compared with day `min(k, previous cycle length)` of the previous cycle; this matters for 28-, 30- and 31-day cycles.
+1. **A category up at least 20% and at least ₹1,000 against the previous cycle at the same day-of-cycle.** "{Cat} is ₹X more than in {previous cycle}.", where the previous cycle is named as the cycle switcher names it ("September", or "19 Oct – 25 Oct") (DECISIONS D78). Day-of-cycle `k` is compared with day `min(k, previous cycle length)` of the previous cycle; this matters for 28-, 30- and 31-day cycles.
 2. **A single entry larger than 2× that category's median entry this cycle.** "Your biggest {cat} spend was ₹X on {date}."
-3. **The cycle's steadiest category** (lowest week-to-week variance, with at least 4 entries). "{Cat} is your steadiest spend."
-4. **The limit offer** from BR-12, on the current cycle only.
+3. **The cycle's steadiest category** (lowest week-to-week variance, with at least 4 entries). "{Cat} costs about the same every week."
+4. **The limit offer** from BR-12, on the current cycle only. "Set limits from {previous cycle}'s spending? Each one is rounded up to the next ₹500."
 
 - Each rule gives at most one insight. #1 picks the biggest rise and needs a fully tracked previous cycle (the first entry saved on or before its start). #2 picks the biggest standout. #2 and #3 leave out bills posted by a rule.
 - #3 compares the spread of whole-week totals relative to their size (coefficient of variation), needs at least 2 whole weeks, and breaks ties by the bigger total (DECISIONS D50).
-- Each insight carries one action: *See entries* (#1–#3, filtered to the category) or *Use these limits* (#4). *Set a limit* waits for its own design (DECISIONS D51).
+- Each insight carries one action: *See {Cat} entries* (#1–#3, filtered to the category) or *Use these limits* (#4). *Set a limit* waits for its own design (DECISIONS D51).
 
 ### BR-15 Ask AI prompt
 - **Inputs:**
-  - Goal: Review my month / Help me save / Make me a budget / Am I on track? / Ask my own question.
+  - Goal: How did I do? / Where can I save? / What should my limits be? / Will my money last till payday? / Ask something else (the user's own question) (DECISIONS D71). *Will my money last till payday?* is offered only when the cycle shown holds today and income has a payday (not "It changes"); otherwise it is hidden, and a pick of it falls back to *How did I do?* (DECISIONS D72).
   - Period: this cycle (default) or the last 3 cycles. "This cycle" is the one Spends shows; the last 3 are it and the two before it (DECISIONS D60).
-  - "Hide my notes" switch (off by default).
+  - "Leave out my notes" switch (off by default).
 - **Output:** plain UTF-8 text in this order:
-  1. Role line.
+  1. Role, three lines:
+     ```
+     You are a friendly money coach for someone in India. Reply in simple English, under 200 words.
+     Use only the numbers below. Write amounts in ₹ with Indian grouping (₹1,25,000).
+     If there is too little data to judge, say so. Don't name specific stocks, funds, loans or apps.
+     ```
   2. Context (income, pay rule, currency, period dates).
-  3. Summary table by category (spent / limit).
-  4. Recurring bills.
-  5. Entries as CSV (`date,amount,kind,category,note`, oldest first; the note column is dropped when notes are hidden).
-  6. The task text for the chosen goal.
+  3. **Facts from the app**, only when the period holds today: "From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare; I keep aside ₹5,000 a month as savings." The numbers are Home's own (`GetCycleSummary`, BR-4 and BR-7), never recomputed (DECISIONS D79):
+     - Safe to spend today is the hero's number: ₹0 when today or the cycle is over.
+     - The forecast reads "at this pace it lasts till payday with about ₹X spare" or "at this pace it runs out on YYYY-MM-DD", and is left out while it is too early to forecast (`E < 3`). It stays for "It changes" income, as on Home.
+     - The keep-aside clause is left out when keep-aside is ₹0. It reads "a week" for weekly pay, "a month" otherwise.
+     - With no income at all (Home shows the No income card), the whole line is left out.
+  4. Summary table by category (spent / limit).
+  5. Recurring bills.
+  6. Entries as CSV (`date,amount,kind,category,note`, oldest first; the note column is dropped when notes are hidden).
+  7. The task text for the chosen goal (DECISIONS D79):
+     - How did I do?: "Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts 2) the one change that would save the most, and how much a month 3) one habit worth keeping."
+     - Where can I save?: "Task: Show me where I can save. Give 5 specific cuts, easiest first, each with how much it saves a month, then the total. Don't cut rent, EMIs, other fixed bills or health."
+     - What should my limits be?: "Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and what I keep aside. Show a table: category, limit in ₹, one short reason."
+     - Will my money last till payday?: "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. Tell me which 1–2 categories are pushing my pace up and one thing to change this week."
+     - Ask something else: "My question: {question}", trimmed.
 - **Determinism:** the same data always produces byte-identical text, so it can be checked with a golden-string test.
 - **Size guard:** if the text is over 12,000 characters, the oldest entries are summarised by week first, and the preview says so. Weeks are 7-day blocks from the period start, folded oldest first, one at a time, until the text fits (DECISIONS D64).
 - **"Copy & open ChatGPT":**
   1. Copy the text to the clipboard.
-  2. Open `https://chatgpt.com/?q=<url-encoded>` when the encoded text is ≤ 2,000 characters. Otherwise open `https://chatgpt.com/` and show the toast "Copied. Paste it in the chat." The toast also shows when nothing could open the link (DECISIONS D62).
-- **Other actions:** "Other AI" opens the Android share sheet with the text. "Copy only" copies it and shows the same toast.
+  2. Open `https://chatgpt.com/?q=<url-encoded>` when the encoded text is ≤ 2,000 characters. Otherwise open `https://chatgpt.com/`. In that case the screen already says, before the tap, "ChatGPT will open empty. Long-press the message box and tap Paste." as a caption above the actions, so no toast follows (the user has left the app). When nothing could open the link, the toast "Copied. In the chat, long-press and tap Paste." shows (DECISIONS D62, D74).
+- **Other actions:** "Other apps" opens the Android share sheet with the text. "Copy only" copies it and shows the same toast.
 - **Own question:** while it is blank, all three actions are disabled.
 
 ### BR-16 Backup, restore, export
@@ -299,24 +314,24 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - A cycle is named after the month holding most of its days, with the year when it isn't this year; a weekly cycle by its dates (DECISIONS D52).
   - Earlier is enabled while the cycle before has entries, or the app was in use before it ended.
   - An empty cycle reads "Nothing spent in October yet." and hides the chart and the list.
-- **FR-SP-2** The **Ask AI** card at the top opens FR-AI for the cycle shown. It shows only when that cycle has spends (DECISIONS D53, D61).
+- **FR-SP-2** The **Ask AI** card at the top opens FR-AI for the cycle shown. It shows only when that cycle has spends (DECISIONS D53, D61). It reads "Ask an AI about October", with "You'll see exactly what it gets." below in smaller grey text; TalkBack reads both as one button (DECISIONS D70).
 - **FR-SP-3** **Pace chart:**
   - The cumulative *Spent* line (solid ink) against the steady-pace line from (start, 0) to (end, `I − K`) (dotted).
   - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).
-  - A "Below pace" or "Above pace" verdict with a glyph.
+  - A "Spending slower" or "Spending faster" verdict with a glyph (DECISIONS D77).
   - A today marker in marigold.
   - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. Without income there is no steady line, so only the total shows (DECISIONS D49).
-  - Verdict: *Below pace* when spending so far is at or under the steady line on the same day.
+  - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day.
 - **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12).
 - **FR-SP-5** **Insights** (BR-14), with their actions.
 - **FR-SP-6** *See every entry* opens a day-grouped list with category and cycle filter chips. Swipe to delete and tap to edit, as on Home.
-  - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See entries* opens it on that category (DECISIONS D53).
+  - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See {Cat} entries* opens it on that category (DECISIONS D53).
 
 ### 4.5 Ask AI (FR-AI)
-- **FR-AI-1** The 4 goals are a single column of list rows, each with an icon, followed by an *Ask my own question* row: a 200-character text field that is always visible. Tapping or typing in it picks it. The pick shows an ink check at the row's end and a bold label, never a fill or marigold (DECISIONS D67).
-- **FR-AI-2** Period chips and the *Hide my notes* switch regenerate the preview immediately.
-- **FR-AI-3** The preview shows "What will be sent · {n} entries", the first 4 lines, and *Show full text*, which expands to the full scrollable text.
-- **FR-AI-4** The actions follow BR-15. Nothing is sent anywhere by the app itself.
+- **FR-AI-1** The goals (4, or 3 when *Will my money last till payday?* is hidden, BR-15) are a single column of list rows, each with an icon, followed by an own-question row: a 200-character text field that is always visible, with the placeholder "Ask something else". While it has focus and is empty, the placeholder reads "Like: can I afford a new phone this month?" (DECISIONS D73). Tapping or typing in it picks it. The pick shows an ink check at the row's end and a bold label, never a fill or marigold (DECISIONS D67).
+- **FR-AI-2** The period segments and the *Leave out my notes* switch regenerate the preview immediately. The segments are named by their dates, as the cycle switcher names cycles: the shown cycle ("October"), and the three cycles oldest to newest ("Aug – Oct" for monthly cycles, short month names with no year; "12 Oct – 1 Nov" for weekly ones, the oldest start to the newest end) (DECISIONS D76).
+- **FR-AI-3** The preview shows "What the AI will see · {n} entries", then the caption "Nothing leaves your phone until you share it.", then (when weeks were grouped) "Older weeks are shown as totals to keep it short.", the first 4 lines, and *Show full text*, which expands to the full scrollable text (DECISIONS D75).
+- **FR-AI-4** The actions follow BR-15: *Copy & open ChatGPT*, *Other apps* and *Copy only*. When the prompt is too long to prefill ChatGPT, the paste caption sits directly above them. Nothing is sent anywhere by the app itself.
 
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:

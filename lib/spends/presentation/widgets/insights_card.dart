@@ -8,12 +8,14 @@ import '../../domain/entities/insight.dart';
 import 'insight_tile.dart';
 import 'spends_card.dart';
 
-/// *Worth knowing*: at most 3 insights, each with one next step (SPEC FR-SP-5).
+/// *Worth knowing*: at most 3 insights, each with one next step (SPEC FR-SP-5). [previousCycle]
+/// names the cycle before the one shown, for the insights that compare with it.
 class InsightsCard extends StatelessWidget {
   const InsightsCard({
     super.key,
     required this.insights,
     required this.categories,
+    required this.previousCycle,
     required this.onSeeEntries,
     required this.onUseLimits,
     required this.limitsFailed,
@@ -21,6 +23,7 @@ class InsightsCard extends StatelessWidget {
 
   final List<Insight> insights;
   final Map<int, Category> categories;
+  final String previousCycle;
   final ValueChanged<int> onSeeEntries;
   final ValueChanged<LimitOffer> onUseLimits;
   final bool limitsFailed;
@@ -40,6 +43,7 @@ class InsightsCard extends StatelessWidget {
                 key: ValueKey<int>(index),
                 insight: insight,
                 categories: categories,
+                previousCycle: previousCycle,
                 onSeeEntries: onSeeEntries,
                 onUseLimits: onUseLimits,
                 limitsFailed: limitsFailed,

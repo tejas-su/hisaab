@@ -10,7 +10,8 @@ import '../../../l10n/gen/app_localizations.dart';
 
 /// The Ask AI card at the top of Spends (SPEC FR-SP-2): a near-white card with no border, like
 /// every card (D45), and a marigold well, since handing off to an AI is an act (UI_DESIGN §5.4).
-/// [cycleLabel] names the cycle shown.
+/// A title names [cycleLabel], the cycle shown; a quieter note below says the prompt is
+/// previewed before it is shared (D70).
 class AskAiCard extends StatelessWidget {
   const AskAiCard({super.key, required this.cycleLabel, required this.onPressed});
 
@@ -19,9 +20,11 @@ class AskAiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String text = AppLocalizations.of(context).askAiCard(cycleLabel);
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final TextTheme type = Theme.of(context).textTheme;
+    final String title = strings.askAiCardTitle(cycleLabel);
     return Pressable(
-      semanticLabel: text,
+      semanticLabel: strings.spokenPair(title, strings.askAiCardNote),
       onPressed: onPressed,
       builder: (BuildContext context, bool pressed) => Container(
         key: const ValueKey<String>('ask-ai-card-surface'),
@@ -45,7 +48,15 @@ class AskAiCard extends StatelessWidget {
               child: AppIcon(AppIcons.askAi, color: context.colors.onSignal),
             ),
             const SizedBox(width: HisaabSpacing.m),
-            Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyLarge)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: type.bodyLarge),
+                  Text(strings.askAiCardNote, style: type.bodySmall?.copyWith(color: context.colors.ink2)),
+                ],
+              ),
+            ),
           ],
         ),
       ),

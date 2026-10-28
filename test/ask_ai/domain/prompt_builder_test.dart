@@ -14,7 +14,9 @@ import '../../helpers/fixtures/ledger/categories.dart';
 import '../../helpers/fixtures/ledger/worked_example.dart';
 
 const String _golden =
-    'You are a friendly money coach. Be specific, use my numbers, no jargon.\n'
+    'You are a friendly money coach for someone in India. Reply in simple English, under 200 words.\n'
+    'Use only the numbers below. Write amounts in ₹ with Indian grouping (₹1,25,000).\n'
+    "If there is too little data to judge, say so. Don't name specific stocks, funds, loans or apps.\n"
     'Context: income ₹45,000/month (payday 4th), currency INR, period 2026-10-04..2026-11-03, today 2026-10-26.\n'
     'Spent ₹27,570, got ₹45,000. By category: Food 19,010; Home 8,200; Shopping 240; Travel 120.\n'
     'Recurring bills: Electricity 1,200 monthly on day 29; Rent 8,200 monthly on day 5.\n'
@@ -28,7 +30,7 @@ const String _golden =
     '2026-10-26,120,spent,Travel,Auto to office\n'
     '2026-10-26,240,spent,Shopping,Groceries\n'
     '\n'
-    'Task: Review my month. Give: 1) the 3 biggest problems 2) 3 concrete savings with ₹ amounts 3) a budget per category for next month 4) one habit to change.';
+    'Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts 2) the one change that would save the most, and how much a month 3) one habit worth keeping.';
 
 Entry _entry(int id, int rupees, CalendarDate date, {int categoryId = SeedCategoryIds.food, String? note}) => Entry(
   id: id,
@@ -104,7 +106,7 @@ void main() {
       ];
       final PromptText prompt = PromptBuilder.build(workedPromptInput(categories: categories), const PromptChoice(), nameOf: englishName);
       expect(
-        _lines(prompt)[2],
+        _lines(prompt)[4],
         'Spent ₹27,570, got ₹45,000. By category: Food 19,010 (limit 10,000 a pay cycle); Home 8,200; Shopping 240; Travel 120.',
       );
     });
@@ -116,7 +118,7 @@ void main() {
           _entry(2, 100, WorkedExample.today),
         ],
       );
-      expect(_lines(prompt)[2], 'Spent ₹200, got ₹0. By category: Food 100; Travel 100.');
+      expect(_lines(prompt)[4], 'Spent ₹200, got ₹0. By category: Food 100; Travel 100.');
     });
 
     test('last three cycles widens the period and the entries', () {
@@ -124,9 +126,9 @@ void main() {
         choice: const PromptChoice(period: AskPeriod.lastThreeCycles),
         entries: <Entry>[...WorkedExample.entries, _entry(7, 300, const CalendarDate(2026, 9, 10))],
       );
-      expect(_lines(prompt)[1], contains('period 2026-08-04..2026-11-03'));
+      expect(_lines(prompt)[3], contains('period 2026-08-04..2026-11-03'));
       expect(prompt.entryCount, 7);
-      expect(_lines(prompt)[7], '2026-09-10,300,spent,Food,');
+      expect(_lines(prompt)[9], '2026-09-10,300,spent,Food,');
     });
 
     test('this cycle leaves out older entries', () {
@@ -147,8 +149,8 @@ void main() {
         const PromptChoice(),
         nameOf: englishName,
       );
-      expect(_lines(prompt)[2], 'Spent ₹0, got ₹0. By category: none.');
-      expect(_lines(prompt)[3], 'Recurring bills: none.');
+      expect(_lines(prompt)[4], 'Spent ₹0, got ₹0. By category: none.');
+      expect(_lines(prompt)[5], 'Recurring bills: none.');
       expect(prompt.entryCount, 0);
     });
 
@@ -167,16 +169,99 @@ void main() {
         const PromptChoice(),
         nameOf: englishName,
       );
-      expect(_lines(prompt)[3], 'Recurring bills: Gym 500 weekly.');
+      expect(_lines(prompt)[5], 'Recurring bills: Gym 500 weekly.');
+    });
+
+    group('facts line from the app (BR-15)', () {
+      List<String> lines({
+        Option<CycleSummary> summary = const Option<CycleSummary>.none(),
+        Money keepAside = Money.zero,
+        PayRule payRule = const MonthlyOnDay(4),
+      }) => _lines(
+        PromptBuilder.build(
+          workedPromptInput(summary: summary, keepAside: keepAside, payRule: payRule),
+          const PromptChoice(),
+          nameOf: englishName,
+        ),
+      );
+
+      test("follows the context line with Home's numbers and the keep-aside", () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary()), keepAside: Money.fromMajor(5000))[4],
+          'From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare; '
+          'I keep aside ₹5,000 a month as savings.',
+        );
+      });
+
+      test('leaves out the keep-aside clause when it is ₹0', () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary()))[4],
+          'From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare.',
+        );
+      });
+
+      test('says when the money runs out at this pace', () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary(forecast: const RunsOut(CalendarDate(2026, 11, 1)))))[4],
+          'From my app, and correct: safe to spend today ₹1,430; at this pace it runs out on 2026-11-01.',
+        );
+      });
+
+      test('leaves out the forecast while it is too early to judge a pace', () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary(forecast: const TooEarlyToForecast())))[4],
+          'From my app, and correct: safe to spend today ₹1,430.',
+        );
+      });
+
+      test('reads ₹0 safe today when today is over, as Home does', () {
+        final CycleSummary over = CycleSummary(
+          cycle: workedCycles.first,
+          today: WorkedExample.today,
+          pool: Money.fromMajor(16650),
+          todayShare: Money.fromMajor(1850),
+          spentToday: Money.fromMajor(2000),
+          tomorrowShare: Option<Money>.of(Money.fromMajor(1831)),
+          state: OverToday(Money.fromMajor(150)),
+          forecast: const LastsTillPayday(Money(0)),
+          earliestEntryDate: workedCycles[1].start,
+        );
+        expect(lines(summary: Option<CycleSummary>.of(over))[4], startsWith('From my app, and correct: safe to spend today ₹0;'));
+      });
+
+      test('weekly pay keeps aside a week', () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary()), keepAside: Money.fromMajor(500), payRule: const WeeklyOn(1))[4],
+          endsWith('I keep aside ₹500 a week as savings.'),
+        );
+      });
+
+      test('irregular income keeps the forecast, as Home does', () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary()), payRule: const IrregularIncome())[4],
+          contains('lasts till payday with about ₹9,300 spare'),
+        );
+      });
+
+      test('no income on Home means no facts line', () {
+        expect(lines(summary: Option<CycleSummary>.of(workedSummary(state: const NoIncome())))[4], startsWith('Spent '));
+      });
+
+      test('a past cycle has no summary, so no facts line', () {
+        expect(lines()[4], startsWith('Spent '));
+      });
     });
 
     group('task line per goal', () {
       const Map<AskGoal, String> tasks = <AskGoal, String>{
-        AskGoal.reviewMonth: 'Task: Review my month. Give: 1) the 3 biggest problems 2) 3 concrete savings with ₹ amounts 3) a budget per category for next month 4) one habit to change.',
+        AskGoal.reviewMonth:
+            'Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts 2) the one change that would save the most, and how much a month 3) one habit worth keeping.',
         AskGoal.helpMeSave:
-            'Task: Help me save more. Give 5 specific cuts with ₹ amounts a month, easiest first, and the total I would save.',
-        AskGoal.makeBudget: 'Task: Make me a monthly budget per category that fits my income and leaves room to save. Show a table with ₹ amounts and one line on why for each.',
-        AskGoal.onTrack: 'Task: Am I on track to last until my next payday? Compare my spending pace with the days left and tell me how much I can spend each day from now.',
+            "Task: Show me where I can save. Give 5 specific cuts, easiest first, each with how much it saves a month, then the total. Don't cut rent, EMIs, other fixed bills or health.",
+        AskGoal.makeBudget:
+            'Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and what I keep aside. Show a table: category, limit in ₹, one short reason.',
+        AskGoal.onTrack:
+            "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. Tell me which 1–2 categories are pushing my pace up and one thing to change this week.",
       };
       for (final MapEntry<AskGoal, String> task in tasks.entries) {
         test('${task.key.name} ends with its task line', () {
@@ -188,7 +273,7 @@ void main() {
         final PromptText prompt = _build(
           choice: const PromptChoice(goal: AskGoal.ownQuestion, question: '  Can I buy a bike?  '),
         );
-        expect(_lines(prompt).last, 'Task: Can I buy a bike?');
+        expect(_lines(prompt).last, 'My question: Can I buy a bike?');
       });
     });
 
@@ -199,7 +284,7 @@ void main() {
           const PromptChoice(),
           nameOf: englishName,
         ),
-      )[1];
+      )[3];
 
       test('last day of the month', () {
         expect(context(const LastDayOfMonth()), startsWith('Context: income ₹45,000/month (payday last day of the month),'));

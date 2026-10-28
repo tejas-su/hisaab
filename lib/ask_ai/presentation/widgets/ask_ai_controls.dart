@@ -6,8 +6,10 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../spends/spends.dart';
 import '../../domain/ask_goal.dart';
 import '../../domain/entities/prompt_choice.dart';
+import '../../domain/entities/prompt_input.dart';
 import '../bloc/ask_ai_bloc.dart';
 import '../bloc/ask_ai_event.dart';
 import 'goal_row.dart';
@@ -18,9 +20,10 @@ import 'period_switch.dart';
 /// goal rows split by hairlines indented to the text, the own-question row last, then the
 /// period switch (D45, D67).
 ///
-/// Needs an [AskAiBloc] above it; [choice] is what is picked now.
+/// Needs an [AskAiBloc] above it; [choice] is what is picked now and [input] names the period
+/// and decides whether *Will my money last till payday?* is offered.
 class AskAiControls extends StatelessWidget {
-  const AskAiControls({super.key, required this.choice});
+  const AskAiControls({super.key, required this.choice, required this.input});
 
   /// Where row text starts inside the card: the inset, the icon well and its gap.
   static const double textInset = HisaabSpacing.gutter + GoalRow.well + HisaabSpacing.m;
@@ -28,6 +31,7 @@ class AskAiControls extends StatelessWidget {
   static const List<AskGoal> _starters = <AskGoal>[AskGoal.reviewMonth, AskGoal.helpMeSave, AskGoal.makeBudget, AskGoal.onTrack];
 
   final PromptChoice choice;
+  final PromptInput input;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +49,7 @@ class AskAiControls extends StatelessWidget {
             padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, 6),
             child: Semantics(header: true, child: Text(strings.askAiQuestion, style: Theme.of(context).textTheme.titleLarge)),
           ),
-          for (final AskGoal goal in _starters) ...<Widget>[
+          for (final AskGoal goal in _starters.where((AskGoal g) => g != AskGoal.onTrack || input.offersOnTrack)) ...<Widget>[
             GoalRow(
               key: ValueKey<String>('goal-${goal.name}'),
               label: _label(strings, goal),
@@ -63,10 +67,21 @@ class AskAiControls extends StatelessWidget {
           const SizedBox(height: HisaabSpacing.m),
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter),
-            child: PeriodSwitch(period: choice.period, onChanged: (AskPeriod period) => bloc.add(AskAiPeriodChosen(period))),
+            child: _periodSwitch(context, strings, bloc),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _periodSwitch(BuildContext context, AppLocalizations strings, AskAiBloc bloc) {
+    final String locale = context.money.locale;
+    final (String from, String to) = CycleLabel.rangeOf(input.cycles, locale: locale);
+    return PeriodSwitch(
+      period: choice.period,
+      thisCycle: strings.askPeriodThis(CycleLabel.of(input.cycles.first, locale: locale, today: input.today)),
+      lastThree: strings.askPeriodThree(from, to),
+      onChanged: (AskPeriod period) => bloc.add(AskAiPeriodChosen(period)),
     );
   }
 

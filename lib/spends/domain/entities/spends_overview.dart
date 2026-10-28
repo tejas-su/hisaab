@@ -11,6 +11,7 @@ import 'pace_series.dart';
 final class SpendsOverview extends Equatable {
   const SpendsOverview({
     required this.cycle,
+    required this.previous,
     required this.cyclesBack,
     required this.canGoBack,
     required this.spent,
@@ -21,6 +22,9 @@ final class SpendsOverview extends Equatable {
   });
 
   final PayCycle cycle;
+
+  /// The cycle before [cycle], which insights compare against (BR-14 #1, #4).
+  final PayCycle previous;
 
   /// 0 for the current cycle, 1 for the one before, and so on.
   final int cyclesBack;
@@ -50,5 +54,5 @@ final class SpendsOverview extends Equatable {
   bool get isEmpty => rows.isEmpty;
 
   @override
-  List<Object?> get props => <Object?>[cycle, cyclesBack, canGoBack, spent, budget, pace, rows, insights];
+  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, pace, rows, insights];
 }

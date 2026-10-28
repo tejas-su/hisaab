@@ -23,7 +23,8 @@ class PaceCard extends StatelessWidget {
   final Option<PaceSeries> pace;
   final bool showToday;
 
-  static const double _chartHeight = 132;
+  static const double _chartMinHeight = 160;
+  static const double _chartMaxHeight = 200;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +41,7 @@ class PaceCard extends StatelessWidget {
             _total(context, strings, series),
             if (series != null) ...<Widget>[
               const SizedBox(height: HisaabSpacing.s),
-              SizedBox(height: _chartHeight, width: double.infinity, child: CustomPaint(painter: _painter(context, series))),
+              _chart(context, series),
               const SizedBox(height: HisaabSpacing.s),
               _legend(context, strings, series.verdict),
             ],
@@ -68,6 +69,17 @@ class PaceCard extends StatelessWidget {
       ],
     );
   }
+
+  // why: a fixed height flattens the slope on wide windows; half the width keeps the gap to the
+  // steady line readable, and the cap keeps "Where it went" in view on a phone (D69).
+  Widget _chart(BuildContext context, PaceSeries series) => LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) => SizedBox(
+          key: const ValueKey<String>('pace-chart'),
+          height: (constraints.maxWidth / 2).clamp(_chartMinHeight, _chartMaxHeight),
+          width: double.infinity,
+          child: CustomPaint(painter: _painter(context, series)),
+        ),
+      );
 
   PaceChartPainter _painter(BuildContext context, PaceSeries series) => PaceChartPainter(
         series: series,

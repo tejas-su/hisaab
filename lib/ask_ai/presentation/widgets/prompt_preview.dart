@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/prompt_text.dart';
 
-/// "What will be sent": the prompt's first lines, expandable to the whole text (FR-AI-3).
+/// "What the AI will see": a privacy note, then the prompt's first lines, expandable to the
+/// whole text (FR-AI-3).
 ///
 /// It draws no card: its parent places it in one. Whether it is expanded is this widget's own
 /// leaf state.
@@ -33,6 +35,8 @@ class _PromptPreviewState extends State<PromptPreview> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(strings.askPreviewTitle(prompt.entryCount), style: text.titleSmall),
+        const SizedBox(height: HisaabSpacing.xs),
+        Text(strings.askPrivacyNote, style: text.bodySmall?.copyWith(color: context.colors.ink2)),
         if (prompt.groupedWeeks > 0) ...<Widget>[
           const SizedBox(height: HisaabSpacing.xs),
           Text(strings.askPreviewGrouped, style: text.bodySmall),

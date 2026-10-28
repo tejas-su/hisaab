@@ -52,8 +52,8 @@ void main() {
       expect(prompt.groupedWeeks, 1);
       expect(prompt.text.length, lessThanOrEqualTo(12000));
       expect(prompt.entryCount, 6);
-      expect(prompt.text.split('\n')[5], 'Earlier weeks (spent/got): 2026-10-04..2026-10-10 8,200/45,000');
-      expect(prompt.text.split('\n')[6], 'Entries (CSV):');
+      expect(prompt.text.split('\n')[7], 'Earlier weeks (spent/got): 2026-10-04..2026-10-10 8,200/45,000');
+      expect(prompt.text.split('\n')[8], 'Entries (CSV):');
       expect(_csvDates(prompt), <String>['2026-10-20', '2026-10-26', '2026-10-26', '2026-10-26']);
     });
 
@@ -80,7 +80,7 @@ void main() {
       ]);
       expect(prompt.groupedWeeks, 3);
       expect(
-        prompt.text.split('\n')[5],
+        prompt.text.split('\n')[7],
         'Earlier weeks (spent/got): 2026-10-04..2026-10-10 100/0; 2026-10-11..2026-10-17 0/0; 2026-10-18..2026-10-24 200/0',
       );
     });

@@ -5,16 +5,23 @@ import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/pressable.dart';
-import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/ask_goal.dart';
 
-/// *This month* | *Last 3 months* as one segmented control (FR-AI-2), in the Spent | Got style:
+/// The shown cycle | the last 3 cycles as one segmented control (FR-AI-2), named by their dates
+/// ("October" | "Aug – Oct") rather than "month", since cycles follow payday. Spent | Got style:
 /// equal segments on a `sunk` track, the pick raised as a near-white pill in light and an ink
 /// pill in dark (Apple HIG segmented controls, D47, D67).
 class PeriodSwitch extends StatelessWidget {
-  const PeriodSwitch({super.key, required this.period, required this.onChanged});
+  const PeriodSwitch({super.key, required this.period, required this.thisCycle, required this.lastThree, required this.onChanged});
 
   final AskPeriod period;
+
+  /// The label of [AskPeriod.thisCycle], e.g. "October".
+  final String thisCycle;
+
+  /// The label of [AskPeriod.lastThreeCycles], e.g. "Aug – Oct".
+  final String lastThree;
+
   final ValueChanged<AskPeriod> onChanged;
 
   @override
@@ -29,14 +36,13 @@ class PeriodSwitch extends StatelessWidget {
   );
 
   Widget _segment(BuildContext context, AskPeriod value) {
-    final AppLocalizations strings = AppLocalizations.of(context);
     final bool selected = value == period;
     // why: light layers alternate (D45, D47), so the pick rises out of the sunk track as a light
     // pill; in dark, where surface is darker than sunk, it stays an ink pill.
     final bool light = Theme.of(context).brightness == Brightness.light;
     final String label = switch (value) {
-      AskPeriod.thisCycle => strings.askPeriodThis,
-      AskPeriod.lastThreeCycles => strings.askPeriodThree,
+      AskPeriod.thisCycle => thisCycle,
+      AskPeriod.lastThreeCycles => lastThree,
     };
     return Pressable(
       semanticLabel: label,

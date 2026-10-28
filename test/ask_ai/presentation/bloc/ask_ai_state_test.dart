@@ -17,6 +17,14 @@ void main() {
     );
   });
 
+  test('needsPaste is false for a short prompt, true once its link would pass 2,000 chars (BR-15)', () {
+    final PromptInput input = workedPromptInput();
+    AskAiReady ready(String text) =>
+        AskAiReady(input: input, choice: const PromptChoice(), prompt: PromptText(text: text, entryCount: 0, groupedWeeks: 0));
+    expect(ready('a' * 2000).needsPaste, isFalse);
+    expect(ready('a' * 2001).needsPaste, isTrue);
+  });
+
   test('PromptText and PromptInput compare by their fields', () {
     const PromptText prompt = PromptText(text: 'a', entryCount: 3, groupedWeeks: 1);
     expect(prompt.props, <Object?>['a', 3, 1]);
@@ -29,6 +37,8 @@ void main() {
       input.bills,
       input.categories,
       input.entries,
+      input.summary,
+      input.keepAside,
     ]);
   });
 }

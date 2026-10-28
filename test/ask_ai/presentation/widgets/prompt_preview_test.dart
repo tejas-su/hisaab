@@ -16,7 +16,7 @@ void main() {
           body: SingleChildScrollView(child: PromptPreview(prompt: _prompt)),
         ),
       );
-      expect(find.text('What will be sent · 6 entries'), findsOneWidget);
+      expect(find.text('What the AI will see · 6 entries'), findsOneWidget);
       expect(find.text('one\ntwo\nthree\nfour'), findsOneWidget);
       expect(find.textContaining('five'), findsNothing);
     });
@@ -43,7 +43,7 @@ void main() {
           body: PromptPreview(prompt: PromptText(text: 'a', entryCount: 1, groupedWeeks: 0)),
         ),
       );
-      expect(find.text('What will be sent · 1 entry'), findsOneWidget);
+      expect(find.text('What the AI will see · 1 entry'), findsOneWidget);
     });
 
     testWidgets('the grouped note shows only when weeks were grouped', (WidgetTester tester) async {
@@ -53,7 +53,7 @@ void main() {
           body: SingleChildScrollView(child: PromptPreview(prompt: _prompt)),
         ),
       );
-      expect(find.text('Older entries are grouped by week to fit.'), findsNothing);
+      expect(find.text('Older weeks are shown as totals to keep it short.'), findsNothing);
       await pumpApp(
         tester,
         const Scaffold(
@@ -62,7 +62,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Older entries are grouped by week to fit.'), findsOneWidget);
+      expect(find.text('Older weeks are shown as totals to keep it short.'), findsOneWidget);
     });
   });
 }
