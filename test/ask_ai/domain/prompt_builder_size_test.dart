@@ -12,26 +12,29 @@ import '../../helpers/fixtures/ledger/categories.dart';
 import '../../helpers/fixtures/ledger/worked_example.dart';
 
 Entry _entry(int id, int rupees, CalendarDate date, {EntryKind kind = EntryKind.spent, String? note}) => Entry(
-      id: id,
-      amount: Money.fromMajor(rupees),
-      kind: kind,
-      categoryId: kind == EntryKind.got ? SeedCategoryIds.salary : SeedCategoryIds.food,
-      date: date,
-      createdAt: DateTime(date.year, date.month, date.day),
-      note: note,
-    );
+  id: id,
+  amount: Money.fromMajor(rupees),
+  kind: kind,
+  categoryId: kind == EntryKind.got ? SeedCategoryIds.salary : SeedCategoryIds.food,
+  date: date,
+  createdAt: DateTime(date.year, date.month, date.day),
+  note: note,
+);
 
 /// The worked example with [note] on its oldest entry (4 Oct), so grouping the first week drops it.
 List<Entry> _withNote(String note) => <Entry>[
-      _entry(1, 45000, const CalendarDate(2026, 10, 4), kind: EntryKind.got, note: note),
-      ...WorkedExample.entries.skip(1),
-    ];
+  _entry(1, 45000, const CalendarDate(2026, 10, 4), kind: EntryKind.got, note: note),
+  ...WorkedExample.entries.skip(1),
+];
 
 PromptText _build(List<Entry> entries, {PromptChoice choice = const PromptChoice()}) =>
     PromptBuilder.build(workedPromptInput(entries: entries), choice, nameOf: englishName);
 
-List<String> _csvDates(PromptText prompt) =>
-    prompt.text.split('\n').where((String line) => RegExp(r'^\d{4}-\d{2}-\d{2},').hasMatch(line)).map((String l) => l.substring(0, 10)).toList();
+List<String> _csvDates(PromptText prompt) => prompt.text
+    .split('\n')
+    .where((String line) => RegExp(r'^\d{4}-\d{2}-\d{2},').hasMatch(line))
+    .map((String l) => l.substring(0, 10))
+    .toList();
 
 void main() {
   group('PromptBuilder size guard (BR-15)', () {

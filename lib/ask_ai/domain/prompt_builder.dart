@@ -26,62 +26,46 @@ abstract final class PromptBuilder {
   static const List<String> _weekdays = <String>['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   /// Builds the prompt for [choice] from [input]; [nameOf] gives each category's shown name.
+  ///
+  /// When the text would pass [maxLength], the oldest weeks are grouped one at a time until it
+  /// fits, or until every week is grouped.
   static PromptText build(PromptInput input, PromptChoice choice, {required String Function(Category) nameOf}) {
     final List<PayCycle> cycles = input.cycles.take(choice.period.cycleCount).toList();
-    final CalendarDate start = cycles.last.start;
-    final CalendarDate end = cycles.first.end;
-    final List<Entry> entries =
-        input.entries.where((Entry e) => !e.date.isBefore(start) && !e.date.isAfter(end) && !e.date.isAfter(input.today)).toList()
-          ..sort((Entry a, Entry b) => a.date == b.date ? a.id.compareTo(b.id) : a.date.compareTo(b.date));
-    final Map<int, Category> categories = <int, Category>{for (final Category c in input.categories) c.id: c};
-    String name(Entry entry) => nameOf(categories[entry.categoryId]!);
-    final String head = <String>[
-      _role,
-      _context(input, start, end),
-      _summary(entries, categories, nameOf),
-      _bills(input.bills),
-      '',
-    ].join('\n');
-    final String task = _task(choice);
-    final List<PayCycle> weeks = _weeks(start, end);
-    for (int grouped = 0; ; grouped++) {
-      final CalendarDate listedFrom = grouped == 0 ? start : weeks[grouped - 1].end.addDays(1);
-      final String text = <String>[
-        head,
-        if (grouped > 0) _earlierWeeks(weeks.take(grouped), entries),
-        _entrySection(entries.where((Entry e) => !e.date.isBefore(listedFrom)), name, hideNotes: choice.hideNotes),
-        '',
-        task,
-      ].join('\n');
-      if (text.length <= maxLength || grouped == weeks.length) {
-        return PromptText(text: text, entryCount: entries.length, groupedWeeks: grouped);
-      }
-    }
+    final PayCycle period = PayCycle(start: cycles.last.start, end: cycles.first.end);
+    final List<Entry> entries = _entriesIn(input, period);
+    final _Names names = _Names(input.categories, nameOf);
+    final _Draft draft = _Draft(
+      head: <String>[_role, _context(input, period), _summary(entries, names), _bills(input.bills), ''].join('\n'),
+      entries: entries,
+      weeks: _weeks(period),
+      names: names,
+      choice: choice,
+    );
+    return Iterable<int>.generate(draft.weeks.length)
+        .map(draft.grouping)
+        .firstWhere((PromptText prompt) => prompt.text.length <= maxLength, orElse: () => draft.grouping(draft.weeks.length));
   }
+
+  /// The period's entries up to today, oldest first.
+  static List<Entry> _entriesIn(PromptInput input, PayCycle period) =>
+      input.entries.where((Entry e) => period.contains(e.date) && !e.date.isAfter(input.today)).toList()
+        ..sort((Entry a, Entry b) => a.date == b.date ? a.id.compareTo(b.id) : a.date.compareTo(b.date));
 
   // why: blocks from the period start, not calendar weeks, so the first block never straddles
   // the period's start and every grouped line covers whole days of the period (DECISIONS D64).
-  static List<PayCycle> _weeks(CalendarDate start, CalendarDate end) => <PayCycle>[
-    for (CalendarDate from = start; !from.isAfter(end); from = from.addDays(7))
-      PayCycle(start: from, end: from.addDays(6).isAfter(end) ? end : from.addDays(6)),
-  ];
+  static List<PayCycle> _weeks(PayCycle period) => Iterable<int>.generate((period.lengthInDays + 6) ~/ 7).map((int week) {
+    final CalendarDate from = period.start.addDays(week * 7);
+    final CalendarDate to = from.addDays(6);
+    return PayCycle(start: from, end: to.isAfter(period.end) ? period.end : to);
+  }).toList();
 
-  static String _earlierWeeks(Iterable<PayCycle> weeks, List<Entry> entries) {
-    final List<String> rows = weeks.map((PayCycle week) {
-      final List<Entry> inWeek = entries.where((Entry e) => week.contains(e.date)).toList();
-      return '${week.start.toIso()}..${week.end.toIso()} '
-          '${_money.digits(_sum(inWeek, EntryKind.spent))}/${_money.digits(_sum(inWeek, EntryKind.got))}';
-    }).toList();
-    return 'Earlier weeks (spent/got): ${rows.join('; ')}';
-  }
-
-  static String _context(PromptInput input, CalendarDate start, CalendarDate end) {
+  static String _context(PromptInput input, PayCycle period) {
     final String income = input.incomeRule.match(
       () => 'varies',
       (RecurringRule rule) =>
           '${_money.format(rule.amount)}/${rule.schedule.frequency == Frequency.weekly ? 'week' : 'month'} (${_payday(input.payRule)})',
     );
-    return 'Context: income $income, currency ${Money.zero.currency.code}, period ${start.toIso()}..${end.toIso()}, '
+    return 'Context: income $income, currency ${Money.zero.currency.code}, period ${period.start.toIso()}..${period.end.toIso()}, '
         'today ${input.today.toIso()}.';
   }
 
@@ -104,25 +88,25 @@ abstract final class PromptBuilder {
     return '$day$suffix';
   }
 
-  static String _summary(List<Entry> entries, Map<int, Category> categories, String Function(Category) nameOf) {
-    final Map<int, Money> spentBy = <int, Money>{};
-    for (final Entry entry in entries.where((Entry e) => e.kind == EntryKind.spent)) {
-      spentBy[entry.categoryId] = (spentBy[entry.categoryId] ?? Money.zero) + entry.amount;
-    }
+  static String _summary(List<Entry> entries, _Names names) {
+    final Map<int, Money> spentBy = entries
+        .where((Entry e) => e.kind == EntryKind.spent)
+        .fold(
+          <int, Money>{},
+          (Map<int, Money> totals, Entry e) => <int, Money>{...totals, e.categoryId: (totals[e.categoryId] ?? Money.zero) + e.amount},
+        );
     final List<String> rows =
         (spentBy.entries.toList()..sort(
               (MapEntry<int, Money> a, MapEntry<int, Money> b) =>
-                  a.value == b.value ? categories[a.key]!.sort.compareTo(categories[b.key]!.sort) : b.value.compareTo(a.value),
+                  a.value == b.value ? names.of(a.key).sort.compareTo(names.of(b.key).sort) : b.value.compareTo(a.value),
             ))
-            .map((MapEntry<int, Money> row) {
-              final Category category = categories[row.key]!;
-              final String limit = category.limit.match(() => '', (Money l) => ' (limit ${_money.digits(l)} a month)');
-              return '${nameOf(category)} ${_money.digits(row.value)}$limit';
-            })
+            .map((MapEntry<int, Money> row) => '${names.nameOf(row.key)} ${_money.digits(row.value)}${_limit(names.of(row.key))}')
             .toList();
     return 'Spent ${_money.format(_sum(entries, EntryKind.spent))}, got ${_money.format(_sum(entries, EntryKind.got))}. '
         'By category: ${rows.isEmpty ? 'none' : rows.join('; ')}.';
   }
+
+  static String _limit(Category category) => category.limit.match(() => '', (Money l) => ' (limit ${_money.digits(l)} a month)');
 
   static String _bills(List<RecurringRule> bills) {
     final List<String> rows =
@@ -137,17 +121,27 @@ abstract final class PromptBuilder {
     return 'Recurring bills: ${rows.isEmpty ? 'none' : rows.join('; ')}.';
   }
 
-  static String _entrySection(Iterable<Entry> entries, String Function(Entry) name, {required bool hideNotes}) => <String>[
+  static String _earlierWeeks(Iterable<PayCycle> weeks, List<Entry> entries) {
+    final List<String> rows = weeks.map((PayCycle week) {
+      final List<Entry> inWeek = entries.where((Entry e) => week.contains(e.date)).toList();
+      return '${week.start.toIso()}..${week.end.toIso()} '
+          '${_money.digits(_sum(inWeek, EntryKind.spent))}/${_money.digits(_sum(inWeek, EntryKind.got))}';
+    }).toList();
+    return 'Earlier weeks (spent/got): ${rows.join('; ')}';
+  }
+
+  static String _entrySection(Iterable<Entry> entries, _Names names, {required bool hideNotes}) => <String>[
     'Entries (CSV):',
     hideNotes ? 'date,amount,kind,category' : 'date,amount,kind,category,note',
-    for (final Entry e in entries)
-      <String>[
+    ...entries.map(
+      (Entry e) => <String>[
         e.date.toIso(),
         '${e.amount.floorMajor}',
         e.kind.name,
-        PromptCsv.field(name(e)),
+        PromptCsv.field(names.nameOf(e.categoryId)),
         if (!hideNotes) PromptCsv.field(e.note ?? ''),
       ].join(','),
+    ),
   ].join('\n');
 
   static String _task(PromptChoice choice) => switch (choice.goal) {
@@ -159,6 +153,44 @@ abstract final class PromptBuilder {
     AskGoal.ownQuestion => 'Task: ${choice.question.trim()}',
   };
 
-  static Money _sum(List<Entry> entries, EntryKind kind) =>
+  static Money _sum(Iterable<Entry> entries, EntryKind kind) =>
       entries.where((Entry e) => e.kind == kind).fold(Money.zero, (Money total, Entry e) => total + e.amount);
+}
+
+/// Categories by id, with the name each is shown under.
+final class _Names {
+  _Names(List<Category> categories, this._nameOf) : _byId = <int, Category>{for (final Category c in categories) c.id: c};
+
+  final Map<int, Category> _byId;
+  final String Function(Category) _nameOf;
+
+  // why: categories are a fixed seed list that never shrinks (BR-11) and entries reference them
+  // by foreign key, so every id an entry carries resolves.
+  Category of(int id) => _byId[id]!;
+
+  String nameOf(int id) => _nameOf(of(id));
+}
+
+/// One prompt being built: the lines before the CSV, the period's entries and its weeks.
+final class _Draft {
+  const _Draft({required this.head, required this.entries, required this.weeks, required this.names, required this.choice});
+
+  final String head;
+  final List<Entry> entries;
+  final List<PayCycle> weeks;
+  final _Names names;
+  final PromptChoice choice;
+
+  /// The full prompt with the [grouped] oldest weeks summarised instead of listed.
+  PromptText grouping(int grouped) {
+    final CalendarDate listedFrom = grouped == 0 ? weeks.first.start : weeks[grouped - 1].end.addDays(1);
+    final String text = <String>[
+      head,
+      if (grouped > 0) PromptBuilder._earlierWeeks(weeks.take(grouped), entries),
+      PromptBuilder._entrySection(entries.where((Entry e) => !e.date.isBefore(listedFrom)), names, hideNotes: choice.hideNotes),
+      '',
+      PromptBuilder._task(choice),
+    ].join('\n');
+    return PromptText(text: text, entryCount: entries.length, groupedWeeks: grouped);
+  }
 }

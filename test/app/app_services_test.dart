@@ -1,6 +1,9 @@
 import 'package:expense_tracker/app/app_services.dart';
+import 'package:expense_tracker/ask_ai/ask_ai.dart';
 import 'package:expense_tracker/core/db/app_database.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/usecases/use_case.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
@@ -43,6 +46,17 @@ void main() {
       expect(getIt<ApplySuggestedLimits>(), isNotNull);
       final Either<Failure, SpendsOverview> overview = await getIt<GetSpendsOverview>()(0).run();
       expect(overview.getOrElse((Failure f) => fail(f.message)).isEmpty, isTrue);
+    });
+
+    test('wires Ask AI over the ledger', () async {
+      final AppDatabase database = await openTestDatabase();
+      final GetIt getIt = GetIt.asNewInstance();
+      registerAppServices(getIt, database: database);
+      addTearDown(getIt.reset);
+
+      const PayCycle october = PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31));
+      final Either<Failure, PromptInput> input = await getIt<GetPromptInput>()(october).run();
+      expect(input.getOrElse((Failure f) => fail(f.message)).cycles.first, october);
     });
   });
 }
