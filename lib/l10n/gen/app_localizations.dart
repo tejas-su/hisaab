@@ -894,6 +894,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted {bill}'**
   String billDeleted(String bill);
+
+  /// Title of the Ask AI screen
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI'**
+  String get askAiTitle;
+
+  /// Heading above the Ask AI goal cards
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to know?'**
+  String get askAiQuestion;
+
+  /// Ask AI goal card
+  ///
+  /// In en, this message translates to:
+  /// **'Review my month'**
+  String get askGoalReview;
+
+  /// Ask AI goal card
+  ///
+  /// In en, this message translates to:
+  /// **'Help me save'**
+  String get askGoalSave;
+
+  /// Ask AI goal card
+  ///
+  /// In en, this message translates to:
+  /// **'Make me a budget'**
+  String get askGoalBudget;
+
+  /// Ask AI goal card
+  ///
+  /// In en, this message translates to:
+  /// **'Am I on track?'**
+  String get askGoalOnTrack;
+
+  /// Full-width Ask AI goal card that opens a text field
+  ///
+  /// In en, this message translates to:
+  /// **'Ask my own question'**
+  String get askGoalOwn;
+
+  /// Placeholder in the Ask AI own-question field
+  ///
+  /// In en, this message translates to:
+  /// **'Type your question'**
+  String get askOwnHint;
+
+  /// Ask AI period chip: the cycle Spends was showing
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get askPeriodThis;
+
+  /// Ask AI period chip: that cycle and the two before it
+  ///
+  /// In en, this message translates to:
+  /// **'Last 3 months'**
+  String get askPeriodThree;
+
+  /// Title of the Ask AI prompt preview
+  ///
+  /// In en, this message translates to:
+  /// **'What will be sent · {count, plural, =1{1 entry} other{{count} entries}}'**
+  String askPreviewTitle(int count);
+
+  /// Shown under the preview title when the prompt summarised old weeks to stay short
+  ///
+  /// In en, this message translates to:
+  /// **'Older entries are grouped by week to fit.'**
+  String get askPreviewGrouped;
+
+  /// Expands the Ask AI preview to the whole prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Show full text'**
+  String get askShowFull;
+
+  /// Collapses the Ask AI preview to its first lines
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get askShowLess;
+
+  /// Switch that leaves entry notes out of the Ask AI prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Hide my notes'**
+  String get askHideNotes;
+
+  /// Primary Ask AI action: copies the prompt and opens ChatGPT
+  ///
+  /// In en, this message translates to:
+  /// **'Copy & open ChatGPT'**
+  String get askOpenChatGpt;
+
+  /// Ask AI action that opens the Android share sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Other AI'**
+  String get askOtherAi;
+
+  /// Ask AI action that only copies the prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Copy only'**
+  String get askCopyOnly;
+
+  /// Toast after the prompt was copied and the user must paste it themselves
+  ///
+  /// In en, this message translates to:
+  /// **'Copied. Paste it in the chat.'**
+  String get askCopiedToast;
+
+  /// Text of the Ask AI card at the top of Spends; cycle is a month name such as October
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI about {cycle} — get a second opinion in one tap.'**
+  String askAiCard(String cycle);
 }
 
 class _AppLocalizationsDelegate

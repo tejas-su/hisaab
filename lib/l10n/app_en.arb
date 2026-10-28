@@ -575,5 +575,95 @@
         "type": "String"
       }
     }
+  },
+  "askAiTitle": "Ask AI",
+  "@askAiTitle": {
+    "description": "Title of the Ask AI screen"
+  },
+  "askAiQuestion": "What do you want to know?",
+  "@askAiQuestion": {
+    "description": "Heading above the Ask AI goal cards"
+  },
+  "askGoalReview": "Review my month",
+  "@askGoalReview": {
+    "description": "Ask AI goal card"
+  },
+  "askGoalSave": "Help me save",
+  "@askGoalSave": {
+    "description": "Ask AI goal card"
+  },
+  "askGoalBudget": "Make me a budget",
+  "@askGoalBudget": {
+    "description": "Ask AI goal card"
+  },
+  "askGoalOnTrack": "Am I on track?",
+  "@askGoalOnTrack": {
+    "description": "Ask AI goal card"
+  },
+  "askGoalOwn": "Ask my own question",
+  "@askGoalOwn": {
+    "description": "Full-width Ask AI goal card that opens a text field"
+  },
+  "askOwnHint": "Type your question",
+  "@askOwnHint": {
+    "description": "Placeholder in the Ask AI own-question field"
+  },
+  "askPeriodThis": "This month",
+  "@askPeriodThis": {
+    "description": "Ask AI period chip: the cycle Spends was showing"
+  },
+  "askPeriodThree": "Last 3 months",
+  "@askPeriodThree": {
+    "description": "Ask AI period chip: that cycle and the two before it"
+  },
+  "askPreviewTitle": "What will be sent · {count, plural, =1{1 entry} other{{count} entries}}",
+  "@askPreviewTitle": {
+    "description": "Title of the Ask AI prompt preview",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "askPreviewGrouped": "Older entries are grouped by week to fit.",
+  "@askPreviewGrouped": {
+    "description": "Shown under the preview title when the prompt summarised old weeks to stay short"
+  },
+  "askShowFull": "Show full text",
+  "@askShowFull": {
+    "description": "Expands the Ask AI preview to the whole prompt"
+  },
+  "askShowLess": "Show less",
+  "@askShowLess": {
+    "description": "Collapses the Ask AI preview to its first lines"
+  },
+  "askHideNotes": "Hide my notes",
+  "@askHideNotes": {
+    "description": "Switch that leaves entry notes out of the Ask AI prompt"
+  },
+  "askOpenChatGpt": "Copy & open ChatGPT",
+  "@askOpenChatGpt": {
+    "description": "Primary Ask AI action: copies the prompt and opens ChatGPT"
+  },
+  "askOtherAi": "Other AI",
+  "@askOtherAi": {
+    "description": "Ask AI action that opens the Android share sheet"
+  },
+  "askCopyOnly": "Copy only",
+  "@askCopyOnly": {
+    "description": "Ask AI action that only copies the prompt"
+  },
+  "askCopiedToast": "Copied. Paste it in the chat.",
+  "@askCopiedToast": {
+    "description": "Toast after the prompt was copied and the user must paste it themselves"
+  },
+  "askAiCard": "Ask AI about {cycle} — get a second opinion in one tap.",
+  "@askAiCard": {
+    "description": "Text of the Ask AI card at the top of Spends; cycle is a month name such as October",
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
   }
 }

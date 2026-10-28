@@ -1,3 +1,4 @@
+import 'package:expense_tracker/ask_ai/ask_ai.dart';
 import 'package:expense_tracker/core/design/haptics.dart';
 import 'package:expense_tracker/core/time/clock.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
@@ -17,6 +18,7 @@ import 'fakes/fake_clock.dart';
 import 'fakes/fake_haptics.dart';
 import 'fakes/fake_ledger_repository.dart';
 import 'fakes/fake_recurring_repository.dart';
+import 'fixtures/ask_ai/prompt_input.dart';
 import 'fixtures/ledger/worked_example.dart';
 
 /// In-memory stand-ins for every service, seeded with the SPEC worked example by default.
@@ -80,6 +82,22 @@ final class FakeServices {
       );
 
   /// A [SpendsBloc] over these fakes; the caller loads and closes it.
+  /// An [AskAiBloc] for the worked example's cycle over these fakes; the caller loads and closes it.
+  AskAiBloc askAiBloc() => AskAiBloc(
+        cycle: workedCycles.first,
+        getInput: GetPromptInput(
+          ledger: ledger,
+          recurring: recurring,
+          settings: settings,
+          categories: categories,
+          periods: const PeriodCalculator(),
+          clock: clock,
+        ),
+        handoff: handoff,
+        haptics: haptics,
+        nameOf: englishName,
+      );
+
   SpendsBloc spendsBloc() => SpendsBloc(
         getOverview: getSpendsOverview,
         applyLimits: ApplySuggestedLimits(categories: categories),

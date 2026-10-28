@@ -558,6 +558,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String billDeleted(String bill) {
     return 'Deleted $bill';
   }
+
+  @override
+  String get askAiTitle => 'Ask AI';
+
+  @override
+  String get askAiQuestion => 'What do you want to know?';
+
+  @override
+  String get askGoalReview => 'Review my month';
+
+  @override
+  String get askGoalSave => 'Help me save';
+
+  @override
+  String get askGoalBudget => 'Make me a budget';
+
+  @override
+  String get askGoalOnTrack => 'Am I on track?';
+
+  @override
+  String get askGoalOwn => 'Ask my own question';
+
+  @override
+  String get askOwnHint => 'Type your question';
+
+  @override
+  String get askPeriodThis => 'This month';
+
+  @override
+  String get askPeriodThree => 'Last 3 months';
+
+  @override
+  String askPreviewTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+    );
+    return 'What will be sent · $_temp0';
+  }
+
+  @override
+  String get askPreviewGrouped => 'Older entries are grouped by week to fit.';
+
+  @override
+  String get askShowFull => 'Show full text';
+
+  @override
+  String get askShowLess => 'Show less';
+
+  @override
+  String get askHideNotes => 'Hide my notes';
+
+  @override
+  String get askOpenChatGpt => 'Copy & open ChatGPT';
+
+  @override
+  String get askOtherAi => 'Other AI';
+
+  @override
+  String get askCopyOnly => 'Copy only';
+
+  @override
+  String get askCopiedToast => 'Copied. Paste it in the chat.';
+
+  @override
+  String askAiCard(String cycle) {
+    return 'Ask AI about $cycle — get a second opinion in one tap.';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

@@ -10,6 +10,7 @@ import 'pressable.dart';
 /// An outlined chip: quick-add amounts, the date and note chips, onboarding choices.
 ///
 /// [selected] fills it with ink. [detail] adds a second, quieter line (e.g. an added bill).
+/// A null [onPressed] disables it and greys its label.
 class HisaabChip extends StatelessWidget {
   const HisaabChip({
     super.key,
@@ -25,7 +26,7 @@ class HisaabChip extends StatelessWidget {
 
   final String label;
   final String? semanticLabel;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final AppIconData? icon;
   final AppIconData? trailingIcon;
   final String? detail;
@@ -36,7 +37,9 @@ class HisaabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color foreground = selected ? context.colors.background : context.colors.ink;
+    final Color foreground = selected
+        ? context.colors.background
+        : (onPressed == null ? context.colors.ink2 : context.colors.ink);
     final TextTheme text = Theme.of(context).textTheme;
     final AppIconData? leading = icon;
     final AppIconData? trailing = trailingIcon;

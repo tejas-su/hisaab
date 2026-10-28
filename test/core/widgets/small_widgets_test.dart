@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:expense_tracker/core/design/app_icons.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
+import 'package:expense_tracker/core/extensions/build_context_extensions.dart';
 import 'package:expense_tracker/core/widgets/category_tile.dart';
 import 'package:expense_tracker/core/widgets/display_card.dart';
 import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
@@ -52,6 +55,16 @@ void main() {
       );
       expect(find.bySemanticsLabel('Rent, ₹8,200 on day 5'), findsOneWidget);
       expect(find.bySemanticsLabel('Today'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('a chip without onPressed is disabled and greyed', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, const Scaffold(body: HisaabChip(label: 'Copy only', onPressed: null)));
+      expect(tester.getSemantics(find.bySemanticsLabel('Copy only')).flagsCollection.isEnabled, Tristate.isFalse);
+      final Text label = tester.widget<Text>(find.text('Copy only'));
+      final BuildContext context = tester.element(find.text('Copy only'));
+      expect(label.style?.color, context.colors.ink2);
       handle.dispose();
     });
   });

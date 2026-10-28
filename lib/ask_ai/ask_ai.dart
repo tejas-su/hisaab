@@ -8,3 +8,4 @@ export 'domain/ai_handoff.dart';
 export 'presentation/bloc/ask_ai_bloc.dart';
 export 'presentation/bloc/ask_ai_event.dart';
 export 'presentation/bloc/ask_ai_state.dart';
+export 'presentation/pages/ask_ai_page.dart';
