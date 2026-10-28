@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:expense_tracker/ask_ai/ask_ai.dart';
 import 'package:expense_tracker/ask_ai/domain/ask_goal.dart';
-import 'package:expense_tracker/ask_ai/presentation/pages/ask_ai_page.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
