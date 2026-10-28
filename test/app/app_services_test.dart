@@ -57,6 +57,7 @@ void main() {
       const PayCycle october = PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31));
       final Either<Failure, PromptInput> input = await getIt<GetPromptInput>()(october).run();
       expect(input.getOrElse((Failure f) => fail(f.message)).cycles.first, october);
+      expect(getIt<AiHandoff>(), isA<AiHandoff>());
     });
   });
 }

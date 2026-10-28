@@ -9,6 +9,7 @@ import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repo
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:get_it/get_it.dart';
 
+import 'fakes/fake_ai_handoff.dart';
 import 'fakes/fake_app_preferences_repository.dart';
 import 'fakes/fake_budget_settings_repository.dart';
 import 'fakes/fake_category_repository.dart';
@@ -31,6 +32,7 @@ final class FakeServices {
   final FakeCategoryRepository categories = FakeCategoryRepository();
   final FakeBudgetSettingsRepository settings = FakeBudgetSettingsRepository();
   final FakeHaptics haptics = FakeHaptics();
+  final FakeAiHandoff handoff = FakeAiHandoff();
   final FakeClock clock = FakeClock(WorkedExample.now);
 
   GetCycleSummary get getCycleSummary => GetCycleSummary(
