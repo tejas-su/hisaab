@@ -14,6 +14,12 @@ import '../../../helpers/pump_app.dart';
 
 const List<String> _goals = <String>['Review my month', 'Help me save', 'Make me a budget', 'Am I on track?'];
 
+const DisplayFeature _tabletopFold = DisplayFeature(
+  bounds: Rect.fromLTRB(0, 350, 841, 350),
+  type: DisplayFeatureType.fold,
+  state: DisplayFeatureState.postureHalfOpened,
+);
+
 const DisplayFeature _bookHinge = DisplayFeature(
   bounds: Rect.fromLTRB(330, 0, 343, 841),
   type: DisplayFeatureType.hinge,
@@ -196,6 +202,14 @@ void main() {
       final Rect preview = tester.getRect(find.byKey(const ValueKey<String>('prompt-preview')));
       expect(goals.right, lessThanOrEqualTo(_bookHinge.bounds.left));
       expect(preview.left, greaterThanOrEqualTo(_bookHinge.bounds.right));
+    });
+
+    testWidgets('a tabletop fold puts the controls above it and the preview below', (WidgetTester tester) async {
+      await pump(tester, size: TestWindows.foldableLandscape, displayFeatures: <DisplayFeature>[_tabletopFold]);
+      final Rect header = tester.getRect(find.byKey(const ValueKey<String>('ask-ai-back')));
+      final Rect preview = tester.getRect(find.byKey(const ValueKey<String>('prompt-preview')));
+      expect(header.bottom, lessThanOrEqualTo(_tabletopFold.bounds.top));
+      expect(preview.top, greaterThanOrEqualTo(_tabletopFold.bounds.bottom));
     });
 
     for (final (String name, Size size) in <(String, Size)>[
