@@ -22,9 +22,9 @@ Ask AI turns the user's money data into a ready-to-paste prompt for ChatGPT or a
 ## 4. Key classes
 | Class | File | Responsibility |
 |---|---|---|
-| `AskAiPage` | `lib/ask_ai/presentation/pages/ask_ai_page.dart` | Places the choices and the send panel in one pane, or in two panes / across a tabletop fold |
-| `AskAiHeader`, `AskAiControls`, `GoalCard`, `OwnQuestionField` | `lib/ask_ai/presentation/widgets/` | Back and title; goal grid with a marigold check on the selected card; period chips; the 200-character question |
-| `AskAiSendPanel`, `PromptPreview` | `lib/ask_ai/presentation/widgets/` | "What will be sent · n entries", the first 4 lines or the full text, *Hide my notes*, and the three actions |
+| `AskAiPage` | `lib/ask_ai/presentation/pages/ask_ai_page.dart` | Fixed header, scrolling cards, and pinned actions, in one pane, two panes or across a tabletop fold (D67) |
+| `AskAiHeader`, `AskAiControls`, `GoalRow`, `GoalWell`, `GoalCheck`, `OwnQuestionRow`, `PeriodSwitch` | `lib/ask_ai/presentation/widgets/` | Back and title; the choices card as Today-list rows with a check on the pick; the always-visible own-question row; the segmented period |
+| `AskAiPreviewCard`, `PromptPreview`, `AskAiActions` | `lib/ask_ai/presentation/widgets/` | One card with "What will be sent · n entries", the first 4 lines or the full text, and *Hide my notes* below a hairline; the three pinned actions |
 | `AskAiBloc`, `AskAiEvent`, `AskAiState` | `lib/ask_ai/presentation/bloc/` | Holds the choice, rebuilds the prompt, runs the hand-off |
 | `GetPromptInput` | `lib/ask_ai/domain/usecase/get_prompt_input.dart` | Loads the three cycles' data once |
 | `PromptBuilder`, `PromptCsv` | `lib/ask_ai/domain/` | Pure, deterministic BR-15 text with RFC 4180 CSV; groups the oldest 7-day blocks to stay ≤ 12,000 characters (D59, D64) |

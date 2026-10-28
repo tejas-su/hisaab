@@ -8,8 +8,9 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
-/// The Ask AI card at the top of Spends (SPEC FR-SP-2): an ink outline with a marigold well,
-/// since handing off to an AI is an act (UI_DESIGN §5.4). [cycleLabel] names the cycle shown.
+/// The Ask AI card at the top of Spends (SPEC FR-SP-2): a near-white card with no border, like
+/// every card (D45), and a marigold well, since handing off to an AI is an act (UI_DESIGN §5.4).
+/// [cycleLabel] names the cycle shown.
 class AskAiCard extends StatelessWidget {
   const AskAiCard({super.key, required this.cycleLabel, required this.onPressed});
 
@@ -23,10 +24,11 @@ class AskAiCard extends StatelessWidget {
       semanticLabel: text,
       onPressed: onPressed,
       builder: (BuildContext context, bool pressed) => Container(
+        key: const ValueKey<String>('ask-ai-card-surface'),
         padding: const EdgeInsetsDirectional.all(HisaabSpacing.gutter),
         decoration: ShapeDecoration(
           color: pressed ? context.colors.sunk : context.colors.surface,
-          shape: HisaabShapes.squircle(HisaabRadii.card, side: BorderSide(color: context.colors.ink, width: 1.5)),
+          shape: HisaabShapes.squircle(HisaabRadii.card),
         ),
         child: Row(
           children: <Widget>[

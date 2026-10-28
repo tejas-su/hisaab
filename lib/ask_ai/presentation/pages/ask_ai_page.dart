@@ -10,14 +10,16 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../bloc/ask_ai_bloc.dart';
 import '../bloc/ask_ai_event.dart';
 import '../bloc/ask_ai_state.dart';
+import '../widgets/ask_ai_actions.dart';
 import '../widgets/ask_ai_controls.dart';
 import '../widgets/ask_ai_header.dart';
-import '../widgets/ask_ai_send_panel.dart';
+import '../widgets/ask_ai_preview_card.dart';
 
 /// Ask AI: pick a goal and period, check the exact prompt, then hand it off (SPEC FR-AI).
 ///
-/// Needs an [AskAiBloc] above it. In one pane everything scrolls together; with two panes or
-/// a tabletop fold the choices and the preview sit on either side, never across the fold.
+/// Needs an [AskAiBloc] above it. The header stays fixed and the actions stay pinned to the
+/// bottom; only the cards between them scroll. With two panes or a tabletop fold, the choices
+/// and the preview sit on either side, never across the fold (D67).
 class AskAiPage extends StatelessWidget {
   const AskAiPage({super.key});
 
@@ -34,49 +36,88 @@ class AskAiPage extends StatelessWidget {
   List<Widget> _panes(BuildContext context, AskAiState state) {
     // why: Pane places its child by window coordinates, as the app shell does.
     final Size window = MediaQuery.sizeOf(context);
-    final List<Widget> choices = <Widget>[const AskAiHeader(), const SizedBox(height: HisaabSpacing.l), ..._choices(context, state)];
-    final List<Widget> send = _send(state);
+    final List<Widget> choices = _choices(context, state);
+    final List<Widget> preview = <Widget>[if (state is AskAiReady) AskAiPreviewCard(ready: state)];
     return switch (context.layout.panes) {
       SinglePane(:final Rect content) => <Widget>[
-        Pane(rect: content, windowSize: window, child: _scroll(<Widget>[...choices, ...send])),
+        Pane(
+          rect: content,
+          windowSize: window,
+          child: _column(header: true, scrolling: <Widget>[...choices, ...preview], state: state),
+        ),
       ],
       SideBySidePanes(:final Rect primary, :final Rect secondary) => <Widget>[
-        Pane(rect: primary, windowSize: window, child: _scroll(choices)),
-        Pane(rect: secondary, windowSize: window, child: _scroll(send)),
+        Pane(
+          rect: primary,
+          windowSize: window,
+          child: _column(header: true, scrolling: choices),
+        ),
+        Pane(
+          rect: secondary,
+          windowSize: window,
+          child: _column(scrolling: preview, state: state),
+        ),
       ],
       TabletopPanes(:final Rect top, :final Rect bottom) => <Widget>[
-        Pane(rect: top, windowSize: window, child: _scroll(choices)),
-        Pane(rect: bottom, windowSize: window, child: _scroll(send)),
+        Pane(
+          rect: top,
+          windowSize: window,
+          child: _column(header: true, scrolling: choices),
+        ),
+        Pane(
+          rect: bottom,
+          windowSize: window,
+          child: _column(scrolling: preview, state: state),
+        ),
       ],
     };
   }
 
+  /// A fixed [header] on top, the [scrolling] cards, and the actions pinned at the bottom when
+  /// [state] is ready.
+  Widget _column({bool header = false, required List<Widget> scrolling, AskAiState? state}) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      if (header)
+        const Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.m, HisaabSpacing.gutter, HisaabSpacing.s),
+          child: AskAiHeader(),
+        ),
+      Expanded(
+        child: ListView(
+          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+          children: <Widget>[
+            for (final (int index, Widget card) in scrolling.indexed) ...<Widget>[
+              if (index > 0) const SizedBox(height: HisaabSpacing.l),
+              card,
+            ],
+          ],
+        ),
+      ),
+      if (state case AskAiReady(:final choice))
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+          child: AskAiActions(canSend: choice.canSend),
+        ),
+    ],
+  );
+
   List<Widget> _choices(BuildContext context, AskAiState state) => switch (state) {
     AskAiLoading() => const <Widget>[],
-    AskAiFailed() => _failed(context),
+    AskAiFailed() => <Widget>[_failed(context)],
     AskAiReady(:final choice) => <Widget>[AskAiControls(choice: choice)],
   };
 
-  List<Widget> _send(AskAiState state) => switch (state) {
-    AskAiReady() => <Widget>[const SizedBox(height: HisaabSpacing.l), AskAiSendPanel(ready: state)],
-    AskAiLoading() || AskAiFailed() => const <Widget>[],
-  };
-
-  Widget _scroll(List<Widget> children) => ListView(
-    padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.m, HisaabSpacing.gutter, HisaabSpacing.xl),
-    children: children,
-  );
-
-  List<Widget> _failed(BuildContext context) {
+  Widget _failed(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    return <Widget>[
-      Text(strings.loadFailed, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2)),
-      const SizedBox(height: HisaabSpacing.m),
-      Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: HisaabChip(label: strings.tryAgain, onPressed: () => context.read<AskAiBloc>().add(const AskAiLoadRequested())),
-      ),
-    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(strings.loadFailed, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2)),
+        const SizedBox(height: HisaabSpacing.m),
+        HisaabChip(label: strings.tryAgain, onPressed: () => context.read<AskAiBloc>().add(const AskAiLoadRequested())),
+      ],
+    );
   }
 
   void _showCopied(BuildContext context) => ScaffoldMessenger.of(context)

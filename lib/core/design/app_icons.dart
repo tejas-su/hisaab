@@ -29,6 +29,11 @@ abstract final class AppIcons {
   static const AppIconData recurring = HugeIcons.strokeRoundedRepeat;
   static const AppIconData dropdown = HugeIcons.strokeRoundedArrowDown01;
   static const AppIconData check = HugeIcons.strokeRoundedTick02;
+  static const AppIconData askReview = HugeIcons.strokeRoundedAnalytics01;
+  static const AppIconData askSave = HugeIcons.strokeRoundedPiggyBank;
+  static const AppIconData askBudget = HugeIcons.strokeRoundedTarget02;
+  static const AppIconData askOnTrack = HugeIcons.strokeRoundedRoute01;
+  static const AppIconData askOwn = HugeIcons.strokeRoundedPencilEdit02;
 
   /// Category icons by the `icon_key` stored in the database (SPEC BR-11).
   static const Map<String, AppIconData> byKey = <String, AppIconData>{

@@ -158,6 +158,19 @@ void main() {
       expect(haptics.events, <String>['tick']);
     });
 
+    test('typing a question picks Ask my own question', () async {
+      await bloc.dispatch(const AskAiQuestionChanged('Can I buy a bike?'));
+      expect(ready().choice.goal, AskGoal.ownQuestion);
+      expect(ready().prompt.text, endsWith('Task: Can I buy a bike?'));
+    });
+
+    test('clearing the question keeps the goal, so the actions wait for text', () async {
+      await bloc.dispatch(const AskAiQuestionChanged('Why?'));
+      await bloc.dispatch(const AskAiQuestionChanged(''));
+      expect(ready().choice.goal, AskGoal.ownQuestion);
+      expect(ready().choice.canSend, isFalse);
+    });
+
     test('a question longer than 200 is cut to 200', () async {
       await bloc.dispatch(AskAiQuestionChanged('a' * 250));
       expect(ready().choice.question, 'a' * 200);

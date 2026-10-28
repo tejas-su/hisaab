@@ -13,6 +13,7 @@ Rules and skills are adapted from the team's `melento-nocode-flutter` setup. Whe
 | [docs/SPEC.md](docs/SPEC.md) | **Behaviour, exactly:** business rules with formulas and worked examples (BR-), screen requirements with acceptance criteria (FR-), edge cases, NFRs. Tests cite these IDs |
 | [docs/UI_DESIGN.md](docs/UI_DESIGN.md) | Design spec: Day Blocks concept, tokens, type, screens, motion, haptics, copy, accessibility, with research sources |
 | [docs/design/](docs/design/README.md) | HTML mockups matching the spec's worked example |
+| [docs/design-research/](docs/design-research/README.md) | UX/UI case studies, principles learned from other apps, and research sources. Add to it when researching a design |
 | [docs/PLAN.md](docs/PLAN.md) | Product scope, the zero-config defaults (§2), data model, architecture, milestones M0–M6 |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log; append a row when a decision changes |
 

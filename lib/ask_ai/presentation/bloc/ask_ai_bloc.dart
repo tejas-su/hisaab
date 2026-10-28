@@ -8,6 +8,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../ledger/ledger.dart';
 import '../../domain/ai_handoff.dart';
+import '../../domain/ask_goal.dart';
 import '../../domain/chat_gpt_link.dart';
 import '../../domain/entities/prompt_choice.dart';
 import '../../domain/entities/prompt_input.dart';
@@ -70,7 +71,16 @@ class AskAiBloc extends Bloc<AskAiEvent, AskAiState> {
     final String question = event.question.length > PromptChoice.maxQuestionLength
         ? event.question.substring(0, PromptChoice.maxQuestionLength)
         : event.question;
-    emit(_ready(current.input, current.choice.copyWith(question: question), toasts: current.toasts));
+    // why: the own-question field is always visible (FR-AI-1), so typing in it is the pick; an
+    // emptied field keeps the pick, which leaves the actions disabled until there is a question.
+    final AskGoal goal = question.trim().isEmpty ? current.choice.goal : AskGoal.ownQuestion;
+    emit(
+      _ready(
+        current.input,
+        current.choice.copyWith(goal: goal, question: question),
+        toasts: current.toasts,
+      ),
+    );
   }
 
   Future<void> _onHandoff(AskAiHandoffEvent event, Emitter<AskAiState> emit) async {

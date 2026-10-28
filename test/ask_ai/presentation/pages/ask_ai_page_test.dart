@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:expense_tracker/ask_ai/ask_ai.dart';
 import 'package:expense_tracker/ask_ai/domain/ask_goal.dart';
+import 'package:expense_tracker/core/design/app_icon.dart';
+import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -182,18 +184,81 @@ void main() {
       expect(find.byType(AskAiPage), findsNothing);
     });
 
-    testWidgets('goal grid and preview share one outer edge', (WidgetTester tester) async {
+    testWidgets('goals are one column of rows sharing both edges, top to bottom', (WidgetTester tester) async {
       await pump(tester);
-      final double goalsLeft = tester.getTopLeft(find.byKey(const ValueKey<String>('goal-reviewMonth'))).dx;
-      final double ownLeft = tester.getTopLeft(find.byKey(const ValueKey<String>('goal-ownQuestion'))).dx;
-      final double ownRight = tester.getTopRight(find.byKey(const ValueKey<String>('goal-ownQuestion'))).dx;
-      final double pairRight = tester.getTopRight(find.byKey(const ValueKey<String>('goal-helpMeSave'))).dx;
+      final List<Rect> rows = <String>['reviewMonth', 'helpMeSave', 'makeBudget', 'onTrack', 'ownQuestion']
+          .map((String goal) => tester.getRect(find.byKey(ValueKey<String>('goal-$goal'))))
+          .toList();
+      for (final Rect row in rows) {
+        expect(row.left, rows.first.left);
+        expect(row.right, rows.first.right);
+      }
+      for (int i = 1; i < rows.length; i++) {
+        expect(rows[i].top, greaterThanOrEqualTo(rows[i - 1].bottom));
+      }
+      expect(tester.getTopLeft(find.byKey(const ValueKey<String>('ask-ai-choices'))).dx, 20);
+    });
+
+    testWidgets('only the picked row carries the check', (WidgetTester tester) async {
+      await pump(tester);
+      final Finder check = find.byKey(const ValueKey<String>('goal-check'));
+      expect(check, findsOneWidget);
+      expect(find.descendant(of: find.byKey(const ValueKey<String>('goal-reviewMonth')), matching: check), findsOneWidget);
+      await tester.tap(find.text('Am I on track?'));
+      await tester.settle();
+      expect(find.descendant(of: find.byKey(const ValueKey<String>('goal-onTrack')), matching: check), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const ValueKey<String>('period-track')), matching: find.byType(AppIcon)), findsNothing);
+    });
+
+    testWidgets('rows are split by hairlines indented to the text, like the Today list', (WidgetTester tester) async {
+      await pump(tester);
+      final Iterable<Divider> dividers = tester.widgetList<Divider>(
+        find.descendant(of: find.byKey(const ValueKey<String>('ask-ai-choices')), matching: find.byType(Divider)),
+      );
+      expect(dividers, hasLength(4));
+      expect(dividers.map((Divider d) => d.indent).toSet(), <double>{74});
+      final double label = tester.getTopLeft(find.text('Help me save')).dx;
+      final double card = tester.getTopLeft(find.byKey(const ValueKey<String>('ask-ai-choices'))).dx;
+      expect(label - card, 74);
+    });
+
+    testWidgets('typing in the own-question row picks it', (WidgetTester tester) async {
+      await pump(tester);
+      await tester.enterText(find.byKey(const ValueKey<String>('own-question')), 'Can I buy a bike?');
+      await tester.settle();
+      expect((bloc.state as AskAiReady).choice.goal, AskGoal.ownQuestion);
+      expect(find.descendant(of: find.byKey(const ValueKey<String>('goal-ownQuestion')), matching: find.byKey(const ValueKey<String>('goal-check'))), findsOneWidget);
+    });
+
+    testWidgets('the header stays put while the content scrolls', (WidgetTester tester) async {
+      await pump(tester);
+      final Offset before = tester.getTopLeft(find.byKey(const ValueKey<String>('ask-ai-back')));
+      await tester.drag(find.byKey(const ValueKey<String>('ask-ai-choices')), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(tester.getTopLeft(find.byKey(const ValueKey<String>('ask-ai-back'))), before);
+    });
+
+    testWidgets('the actions are pinned to the bottom, visible without scrolling', (WidgetTester tester) async {
+      await pump(tester);
+      final Rect key = tester.getRect(find.byKey(const ValueKey<String>('open-chatgpt')));
+      final Rect copy = tester.getRect(find.byKey(const ValueKey<String>('copy-only')));
+      expect(copy.bottom, lessThanOrEqualTo(TestWindows.phone.height));
+      expect(copy.bottom, greaterThan(TestWindows.phone.height - 120));
+      expect(key.top, lessThan(copy.top));
+      await tester.drag(find.byKey(const ValueKey<String>('ask-ai-choices')), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.byKey(const ValueKey<String>('open-chatgpt'))), key);
+    });
+
+    testWidgets('light layers: near-white cards on the page, grey only in wells and the period track', (WidgetTester tester) async {
+      await pump(tester);
+      Color? fill(String key) => (tester.widget<Container>(find.byKey(ValueKey<String>(key))).decoration! as ShapeDecoration).color;
+      expect(fill('ask-ai-choices'), HisaabColors.light.surface);
+      expect(fill('period-track'), HisaabColors.light.sunk);
+      expect(fill('period-thisCycle'), HisaabColors.light.surface);
       await scrollTo(tester, find.byKey(const ValueKey<String>('prompt-preview')));
-      final double previewLeft = tester.getTopLeft(find.byKey(const ValueKey<String>('prompt-preview'))).dx;
-      expect(goalsLeft, 20);
-      expect(ownLeft, goalsLeft);
-      expect(ownRight, pairRight);
-      expect(previewLeft, goalsLeft);
+      expect(fill('prompt-preview'), HisaabColors.light.surface);
+      expect(tester.getTopLeft(find.byKey(const ValueKey<String>('prompt-preview'))).dx, 20);
     });
 
     testWidgets('a book-posture hinge puts the controls and the preview on either side', (WidgetTester tester) async {

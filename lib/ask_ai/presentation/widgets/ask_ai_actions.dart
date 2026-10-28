@@ -8,35 +8,24 @@ import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../bloc/ask_ai_bloc.dart';
 import '../bloc/ask_ai_event.dart';
-import '../bloc/ask_ai_state.dart';
-import 'prompt_preview.dart';
 
-/// The preview, *Hide my notes* and the three hand-off actions (FR-AI-2, FR-AI-3, FR-AI-4).
+/// The three hand-offs (FR-AI-4): the marigold *Copy & open ChatGPT*, then *Other AI* and
+/// *Copy only*. All are disabled while [canSend] is false (a blank own question).
 ///
-/// Needs an [AskAiBloc] above it. The actions are disabled while an own question is blank.
-class AskAiSendPanel extends StatelessWidget {
-  const AskAiSendPanel({super.key, required this.ready});
+/// The page pins this to the bottom so it stays in thumb reach (D67). Needs an [AskAiBloc] above it.
+class AskAiActions extends StatelessWidget {
+  const AskAiActions({super.key, required this.canSend});
 
-  final AskAiReady ready;
+  final bool canSend;
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final AskAiBloc bloc = context.read<AskAiBloc>();
-    final bool canSend = ready.choice.canSend;
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        PromptPreview(key: const ValueKey<String>('prompt-preview'), prompt: ready.prompt),
-        const SizedBox(height: HisaabSpacing.s),
-        SwitchListTile(
-          key: const ValueKey<String>('hide-notes'),
-          contentPadding: EdgeInsetsDirectional.zero,
-          title: Text(strings.askHideNotes),
-          value: ready.choice.hideNotes,
-          onChanged: (bool hide) => bloc.add(AskAiNotesHidden(hide: hide)),
-        ),
-        const SizedBox(height: HisaabSpacing.m),
         SignalKey(
           key: const ValueKey<String>('open-chatgpt'),
           label: strings.askOpenChatGpt,
@@ -45,6 +34,7 @@ class AskAiSendPanel extends StatelessWidget {
         ),
         const SizedBox(height: HisaabSpacing.s),
         Row(
+          spacing: HisaabSpacing.s,
           children: <Widget>[
             Expanded(
               child: HisaabChip(
@@ -55,7 +45,6 @@ class AskAiSendPanel extends StatelessWidget {
                 onPressed: canSend ? () => bloc.add(const AskAiOtherAiPressed()) : null,
               ),
             ),
-            const SizedBox(width: HisaabSpacing.s),
             Expanded(
               child: HisaabChip(
                 key: const ValueKey<String>('copy-only'),

@@ -313,7 +313,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See entries* opens it on that category (DECISIONS D53).
 
 ### 4.5 Ask AI (FR-AI)
-- **FR-AI-1** Goal cards in a 2×2 grid plus a full-width *Ask my own question*, which opens a 200-character text field. The selected card is ink-filled with a marigold check.
+- **FR-AI-1** The 4 goals are a single column of list rows, each with an icon, followed by an *Ask my own question* row: a 200-character text field that is always visible. Tapping or typing in it picks it. The pick shows an ink check at the row's end and a bold label, never a fill or marigold (DECISIONS D67).
 - **FR-AI-2** Period chips and the *Hide my notes* switch regenerate the preview immediately.
 - **FR-AI-3** The preview shows "What will be sent · {n} entries", the first 4 lines, and *Show full text*, which expands to the full scrollable text.
 - **FR-AI-4** The actions follow BR-15. Nothing is sent anywhere by the app itself.
