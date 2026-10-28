@@ -35,17 +35,44 @@ abstract final class PromptBuilder {
           ..sort((Entry a, Entry b) => a.date == b.date ? a.id.compareTo(b.id) : a.date.compareTo(b.date));
     final Map<int, Category> categories = <int, Category>{for (final Category c in input.categories) c.id: c};
     String name(Entry entry) => nameOf(categories[entry.categoryId]!);
-    final String text = <String>[
+    final String head = <String>[
       _role,
       _context(input, start, end),
       _summary(entries, categories, nameOf),
       _bills(input.bills),
       '',
-      _entrySection(entries, name, hideNotes: choice.hideNotes),
-      '',
-      _task(choice),
     ].join('\n');
-    return PromptText(text: text, entryCount: entries.length, groupedWeeks: 0);
+    final String task = _task(choice);
+    final List<PayCycle> weeks = _weeks(start, end);
+    for (int grouped = 0; ; grouped++) {
+      final CalendarDate listedFrom = grouped == 0 ? start : weeks[grouped - 1].end.addDays(1);
+      final String text = <String>[
+        head,
+        if (grouped > 0) _earlierWeeks(weeks.take(grouped), entries),
+        _entrySection(entries.where((Entry e) => !e.date.isBefore(listedFrom)), name, hideNotes: choice.hideNotes),
+        '',
+        task,
+      ].join('\n');
+      if (text.length <= maxLength || grouped == weeks.length) {
+        return PromptText(text: text, entryCount: entries.length, groupedWeeks: grouped);
+      }
+    }
+  }
+
+  // why: blocks from the period start, not calendar weeks, so the first block never straddles
+  // the period's start and every grouped line covers whole days of the period (DECISIONS D64).
+  static List<PayCycle> _weeks(CalendarDate start, CalendarDate end) => <PayCycle>[
+    for (CalendarDate from = start; !from.isAfter(end); from = from.addDays(7))
+      PayCycle(start: from, end: from.addDays(6).isAfter(end) ? end : from.addDays(6)),
+  ];
+
+  static String _earlierWeeks(Iterable<PayCycle> weeks, List<Entry> entries) {
+    final List<String> rows = weeks.map((PayCycle week) {
+      final List<Entry> inWeek = entries.where((Entry e) => week.contains(e.date)).toList();
+      return '${week.start.toIso()}..${week.end.toIso()} '
+          '${_money.digits(_sum(inWeek, EntryKind.spent))}/${_money.digits(_sum(inWeek, EntryKind.got))}';
+    }).toList();
+    return 'Earlier weeks (spent/got): ${rows.join('; ')}';
   }
 
   static String _context(PromptInput input, CalendarDate start, CalendarDate end) {
@@ -110,7 +137,7 @@ abstract final class PromptBuilder {
     return 'Recurring bills: ${rows.isEmpty ? 'none' : rows.join('; ')}.';
   }
 
-  static String _entrySection(List<Entry> entries, String Function(Entry) name, {required bool hideNotes}) => <String>[
+  static String _entrySection(Iterable<Entry> entries, String Function(Entry) name, {required bool hideNotes}) => <String>[
     'Entries (CSV):',
     hideNotes ? 'date,amount,kind,category' : 'date,amount,kind,category,note',
     for (final Entry e in entries)
