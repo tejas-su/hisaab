@@ -11,8 +11,6 @@ abstract final class ChatGptLink {
   /// The link that prefills [text], or [None] when its encoding is over [maxEncodedLength].
   static Option<Uri> prefilled(String text) {
     final String encoded = Uri.encodeComponent(text);
-    return encoded.length <= maxEncodedLength
-        ? Option<Uri>.of(Uri.parse('https://chatgpt.com/?q=$encoded'))
-        : const Option<Uri>.none();
+    return encoded.length <= maxEncodedLength ? Option<Uri>.of(Uri.parse('https://chatgpt.com/?q=$encoded')) : const Option<Uri>.none();
   }
 }

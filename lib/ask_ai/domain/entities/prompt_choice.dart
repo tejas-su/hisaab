@@ -4,12 +4,7 @@ import '../ask_goal.dart';
 
 /// What the user picked on the Ask AI screen (SPEC BR-15 inputs, FR-AI-1, FR-AI-2).
 final class PromptChoice extends Equatable {
-  const PromptChoice({
-    this.goal = AskGoal.reviewMonth,
-    this.period = AskPeriod.thisCycle,
-    this.hideNotes = false,
-    this.question = '',
-  });
+  const PromptChoice({this.goal = AskGoal.reviewMonth, this.period = AskPeriod.thisCycle, this.hideNotes = false, this.question = ''});
 
   /// The longest own question the field accepts (FR-AI-1).
   static const int maxQuestionLength = 200;
@@ -28,11 +23,11 @@ final class PromptChoice extends Equatable {
 
   /// Returns a copy with the given fields replaced.
   PromptChoice copyWith({AskGoal? goal, AskPeriod? period, bool? hideNotes, String? question}) => PromptChoice(
-        goal: goal ?? this.goal,
-        period: period ?? this.period,
-        hideNotes: hideNotes ?? this.hideNotes,
-        question: question ?? this.question,
-      );
+    goal: goal ?? this.goal,
+    period: period ?? this.period,
+    hideNotes: hideNotes ?? this.hideNotes,
+    question: question ?? this.question,
+  );
 
   @override
   List<Object?> get props => <Object?>[goal, period, hideNotes, question];
