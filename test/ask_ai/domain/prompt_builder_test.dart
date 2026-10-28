@@ -105,7 +105,7 @@ void main() {
       final PromptText prompt = PromptBuilder.build(workedPromptInput(categories: categories), const PromptChoice(), nameOf: englishName);
       expect(
         _lines(prompt)[2],
-        'Spent ₹27,570, got ₹45,000. By category: Food 19,010 (limit 10,000 a month); Home 8,200; Shopping 240; Travel 120.',
+        'Spent ₹27,570, got ₹45,000. By category: Food 19,010 (limit 10,000 a pay cycle); Home 8,200; Shopping 240; Travel 120.',
       );
     });
 
@@ -215,6 +215,21 @@ void main() {
           startsWith('Context: income ₹10,000/week (paid every Monday),'),
         );
       });
+
+      for (final (Frequency frequency, String per) in <(Frequency, String)>[
+        (Frequency.biweekly, '2 weeks'),
+        (Frequency.yearly, 'year'),
+      ]) {
+        test('${frequency.name} income reads per $per', () {
+          final RecurringRule income = WorkedExample.salary.copyWith(
+            schedule: Schedule(frequency: frequency, anchor: const CalendarDate(2026, 10, 4)),
+          );
+          expect(
+            context(const IrregularIncome(), income: Option<RecurringRule>.of(income)),
+            startsWith('Context: income ₹45,000/$per (no fixed payday),'),
+          );
+        });
+      }
 
       test('no income rule reads varies', () {
         expect(context(const IrregularIncome(), income: const Option<RecurringRule>.none()), startsWith('Context: income varies,'));

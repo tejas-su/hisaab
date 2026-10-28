@@ -63,11 +63,18 @@ abstract final class PromptBuilder {
     final String income = input.incomeRule.match(
       () => 'varies',
       (RecurringRule rule) =>
-          '${_money.format(rule.amount)}/${rule.schedule.frequency == Frequency.weekly ? 'week' : 'month'} (${_payday(input.payRule)})',
+          '${_money.format(rule.amount)}/${_per(rule.schedule.frequency)} (${_payday(input.payRule)})',
     );
     return 'Context: income $income, currency ${Money.zero.currency.code}, period ${period.start.toIso()}..${period.end.toIso()}, '
         'today ${input.today.toIso()}.';
   }
+
+  static String _per(Frequency frequency) => switch (frequency) {
+    Frequency.weekly => 'week',
+    Frequency.biweekly => '2 weeks',
+    Frequency.monthly => 'month',
+    Frequency.yearly => 'year',
+  };
 
   static String _payday(PayRule rule) => switch (rule) {
     MonthlyOnDay(:final int day) => 'payday ${_ordinal(day)}',
@@ -106,7 +113,7 @@ abstract final class PromptBuilder {
         'By category: ${rows.isEmpty ? 'none' : rows.join('; ')}.';
   }
 
-  static String _limit(Category category) => category.limit.match(() => '', (Money l) => ' (limit ${_money.digits(l)} a month)');
+  static String _limit(Category category) => category.limit.match(() => '', (Money l) => ' (limit ${_money.digits(l)} a pay cycle)');
 
   static String _bills(List<RecurringRule> bills) {
     final List<String> rows =
