@@ -21,16 +21,14 @@ import 'ask_ai_state.dart';
 /// Driven by the page: [AskAiLoadRequested] when it opens, a choice event per control, and an
 /// [AskAiHandoffEvent] per action button. Every choice rebuilds the prompt without reloading.
 class AskAiBloc extends Bloc<AskAiEvent, AskAiState> {
-  /// [cycle] is the one Spends was showing; [nameOf] gives each category's shown name.
+  /// The cycle is the one Spends was showing; the name function gives each category's shown name.
   AskAiBloc({
-    required PayCycle cycle,
+    required this._cycle,
     required this._getInput,
     required this._handoff,
     required this._haptics,
-    required String Function(Category) nameOf,
-  }) : _cycle = cycle,
-       _nameOf = nameOf,
-       super(const AskAiLoading()) {
+    required this._nameOf,
+  }) : super(const AskAiLoading()) {
     on<AskAiLoadRequested>(_onLoadRequested, transformer: restartable());
     on<AskAiGoalChosen>(
       (AskAiGoalChosen event, Emitter<AskAiState> emit) => _choose(emit, (PromptChoice c) => c.copyWith(goal: event.goal)),

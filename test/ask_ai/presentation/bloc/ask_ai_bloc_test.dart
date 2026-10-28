@@ -9,7 +9,6 @@ import 'package:expense_tracker/ask_ai/presentation/bloc/ask_ai_event.dart';
 import 'package:expense_tracker/ask_ai/presentation/bloc/ask_ai_state.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
