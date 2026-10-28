@@ -8,14 +8,19 @@ class BillQuestion extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Semantics(
-            header: true,
-            child: Text(question, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 30, height: 34 / 30)),
-          ),
-          ...children,
-        ],
+  // why: full width, so a short question and amount start at the gutter under the back button
+  // instead of being centred by the step's layout.
+  Widget build(BuildContext context) => SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Semantics(
+              header: true,
+              child: Text(question, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 30, height: 34 / 30)),
+            ),
+            ...children,
+          ],
+        ),
       );
 }

@@ -8,7 +8,9 @@ import 'widgets/add_key.dart';
 import 'widgets/hisaab_dock.dart';
 import '../core/widgets/pane.dart';
 
-/// The adaptive frame around Home and Spends (UI_DESIGN §13).
+/// The adaptive frame around Home and Spends (UI_DESIGN §13). Both draw their own translucent
+/// top bar behind the status bar, so no pane insets the top. Their lists fade out above the
+/// dock; content never sits behind it (D82).
 ///
 /// - One pane (phones, folded, split-screen): one screen at a time with the dock.
 /// - Two panes (tablets, landscape, book posture): Home beside Spends, split at the hinge
@@ -76,6 +78,7 @@ class _AppShellState extends State<AppShell> {
         Pane(
           rect: content,
           windowSize: window,
+          insetTop: false,
           child: Column(
             children: <Widget>[
               Expanded(child: KeyedSubtree(key: ValueKey<ShellDestination>(_selected), child: _selectedScreen)),
@@ -89,6 +92,7 @@ class _AppShellState extends State<AppShell> {
         Pane(
           rect: primary,
           windowSize: window,
+          insetTop: false,
           child: Column(
             children: <Widget>[
               Expanded(child: widget.home),
@@ -99,7 +103,7 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
         ),
-        Pane(rect: secondary, windowSize: window, child: widget.spends),
+        Pane(rect: secondary, windowSize: window, insetTop: false, child: widget.spends),
         if (showDivider)
           Positioned(
             left: primary.right,
@@ -110,7 +114,7 @@ class _AppShellState extends State<AppShell> {
       ];
 
   List<Widget> _tabletop(Rect top, Rect bottom, Size window) => <Widget>[
-        Pane(rect: top, windowSize: window, child: _selectedScreen),
+        Pane(rect: top, windowSize: window, insetTop: false, child: _selectedScreen),
         Pane(rect: bottom, windowSize: window, child: Center(child: _dock())),
       ];
 

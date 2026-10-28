@@ -59,11 +59,14 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
         (BillEditorInProgress form) => emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none())),
       );
 
+  // why: a pick only fills the name, so nothing changes under the person while they're naming the bill;
+  // Next moves on, as with a typed name (D86).
   void _onKindPicked(BillEditorKindPicked event, Emitter<BillEditorState> emit) => _whenAt(
         BillEditorStage.name,
-        (BillEditorInProgress form) => emit(
-          form.copyWith(label: event.label, kind: Option<BillKind>.of(event.kind), stage: BillEditorStage.amount),
-        ),
+        (BillEditorInProgress form) {
+          unawaited(_haptics.tick());
+          emit(form.copyWith(label: event.label, kind: Option<BillKind>.of(event.kind)));
+        },
       );
 
   /// Moves from the name to the amount (needs a name), or from the amount to the day (needs

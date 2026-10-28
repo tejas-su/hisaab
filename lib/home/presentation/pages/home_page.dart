@@ -6,6 +6,7 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/widgets/hisaab_chip.dart';
+import '../../../core/widgets/top_bar_scroll_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../bloc/home_bloc.dart';
@@ -53,13 +54,9 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) => BlocConsumer<HomeBloc, HomeState>(
         listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
         listener: _offerUndo,
-        builder: (BuildContext context, HomeState state) => ListView(
-          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.m, HisaabSpacing.gutter, HisaabSpacing.xl),
-          children: <Widget>[
-            HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
-            const SizedBox(height: 14),
-            ..._content(context, state),
-          ],
+        builder: (BuildContext context, HomeState state) => TopBarScrollView(
+          bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
+          children: _content(context, state),
         ),
       );
 

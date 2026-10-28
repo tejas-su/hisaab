@@ -52,7 +52,7 @@ The visual and interaction spec is `docs/UI_DESIGN.md`. Read the relevant sectio
 - **Icons:** Hugeicons only, through `AppIcon(AppIcons.x)`; never `Icon(Icons.*)`. A glyph Hugeicons lacks goes in `HisaabGlyphs` in Hugeicons' path format (24 grid, 1.5 stroke, round caps and joins, corners copied from a Hugeicons original), never a hand-drawn `CustomPainter`. Every icon has a visible label or a semantics label
 - **Motion:** only the spring/duration tokens in `core/design/hisaab_motion.dart`; check `HisaabMotion.reduceMotion(context)` and fall back to a 150ms crossfade
 - **Haptics:** only through `Haptics.tick()/success()/reject()/threshold()`; one effect per user event
-- **Shape:** radii from the token scale; continuous corners via `figma_squircle`. No glass or blur on any surface that shows an amount
+- **Shape:** radii from the token scale; continuous corners via Flutter's `RoundedSuperellipseBorder`. No glass or blur on any surface that shows an amount
 - **Copy:** from `AppLocalizations`; amounts from `MoneyFormatter`. Never the words "transaction", "debit/credit", "budget period", "Oops"
 - **Layout:** `EdgeInsetsDirectional` / `AlignmentDirectional`; the floating dock sits above `MediaQuery.paddingOf(context).bottom` (edge-to-edge)
 - **Alignment:** content shares one outer edge (`HisaabSpacing.gutter`) and cards one inner inset (`HisaabSpacing.gutter`); header actions sit flush with the cards' edge, and captions line up with what they label. Never put a loose `Flexible` beside an `Expanded`/`Spacer` in one `Row` (its unused share ends up as empty space at the row's end); give label columns fixed widths rather than offsets that assume a text width. New screens get a widget test asserting their shared edges

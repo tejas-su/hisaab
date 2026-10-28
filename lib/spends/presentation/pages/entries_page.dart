@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/design/app_icon.dart';
-import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/widgets/hisaab_chip.dart';
+import '../../../core/widgets/hisaab_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../bloc/entries_bloc.dart';
@@ -36,11 +35,9 @@ class EntriesPage extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: strings.back,
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const AppIcon(AppIcons.back),
-        ),
+        leadingWidth: HisaabBackButton.leadingWidth,
+        leading: const Padding(padding: HisaabBackButton.leadingPadding, child: HisaabBackButton()),
+        titleSpacing: HisaabSpacing.s,
         title: Text(strings.everyEntry),
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/design/app_icons.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/extensions/build_context_extensions.dart';
@@ -40,7 +41,7 @@ void main() {
   });
 
   group('HisaabChip', () {
-    testWidgets('selected chips are ink and speak their detail', (WidgetTester tester) async {
+    testWidgets('selected chips speak their detail', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pumpApp(
         tester,
@@ -56,6 +57,45 @@ void main() {
       expect(find.bySemanticsLabel('Rent, ₹8,200 on day 5'), findsOneWidget);
       expect(find.bySemanticsLabel('Today'), findsOneWidget);
       handle.dispose();
+    });
+
+    ShapeDecoration chipShape(WidgetTester tester, String label) => tester
+        .widget<Container>(find.descendant(of: find.widgetWithText(HisaabChip, label), matching: find.byType(Container)).first)
+        .decoration! as ShapeDecoration;
+
+    testWidgets('light: a pick is a raised surface pill with an ink edge and a check, not an ink slab (D85)', (
+      WidgetTester tester,
+    ) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})));
+      final ShapeDecoration shape = chipShape(tester, 'Rent');
+      expect(shape.color, HisaabColors.light.surface);
+      expect((shape.shape as RoundedSuperellipseBorder).side, BorderSide(color: HisaabColors.light.ink, width: 1.5));
+      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.light.ink);
+      expect(find.byType(AppIcon), findsOneWidget);
+      expect(tester.widget<AppIcon>(find.byType(AppIcon)).icon, AppIcons.check);
+    });
+
+    testWidgets('dark: a pick stays an ink pill, as the Spent | Got switch does (D47)', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})),
+        themeMode: ThemeMode.dark,
+      );
+      expect(chipShape(tester, 'Rent').color, HisaabColors.dark.ink);
+      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.dark.background);
+    });
+
+    testWidgets('a pick that already shows an icon gets no second check', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, icon: AppIcons.check, onPressed: () {})));
+      expect(find.byType(AppIcon), findsOneWidget);
+    });
+
+    testWidgets('an unpicked chip is unfilled with a hairline edge and no check', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
+      final ShapeDecoration shape = chipShape(tester, 'EMI');
+      expect(shape.color, isNull);
+      expect((shape.shape as RoundedSuperellipseBorder).side.color, HisaabColors.light.hairline);
+      expect(find.byType(AppIcon), findsNothing);
     });
 
     testWidgets('a chip without onPressed is disabled and greyed', (WidgetTester tester) async {

@@ -1,6 +1,5 @@
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/spends/presentation/widgets/ask_ai_card.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -47,7 +46,7 @@ void main() {
       final Container card = tester.widget<Container>(find.byKey(const ValueKey<String>('ask-ai-card-surface')));
       final ShapeDecoration decoration = card.decoration! as ShapeDecoration;
       expect(decoration.color, HisaabColors.light.surface);
-      expect((decoration.shape as SmoothRectangleBorder).side, BorderSide.none);
+      expect((decoration.shape as RoundedSuperellipseBorder).side, BorderSide.none);
     });
 
     testWidgets('the note is quieter: small ink2 text under the title', (WidgetTester tester) async {

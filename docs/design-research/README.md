@@ -11,6 +11,8 @@ UX/UI research for Hisaab: case studies of other apps, the principles we drew fr
 ## Case studies
 | # | Topic | Outcome |
 |---|---|---|
+| 04 | [Floating dock and pinned top bar](case-studies/04-floating-dock-and-top-bar.md) | Dock: a 32dp eased fade above a solid `bg` seat (D82), built. Top bar: solid with a hairline on scroll, no glass (D84) |
+| 03 | [Suggestion pills](case-studies/03-suggestion-pills.md) | Bill name pills as two equal columns so both edges align; list rows if the set grows (D83); picked pill restyled and pills moved under the field (D85) |
 | 02 | [Typography: weight, emphasis, hierarchy](case-studies/02-typography-hierarchy.md) | Applied app-wide (D68): Regular row titles with a Semibold pick, title-style card headers, Regular grey captions, a defined `titleSmall`, and every weight set through `HisaabType.emphasized`/`regular` |
 | 01 | [Ask AI choice screen](case-studies/01-ask-ai-choice-screen.md) | Built (D67): grouped list rows with a trailing check, an inline own-question field, a segmented period control, a fixed header and pinned actions |
 

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/design/app_icon.dart';
-import '../../../core/design/app_icons.dart';
-import '../../../l10n/gen/app_localizations.dart';
+import '../../../core/widgets/hisaab_back_button.dart';
 import '../bloc/bill_editor_bloc.dart';
 import '../bloc/bill_editor_event.dart';
 import '../bloc/bill_editor_state.dart';
@@ -33,11 +31,8 @@ class BillEditorPage extends StatelessWidget {
           },
           child: Scaffold(
             appBar: AppBar(
-              leading: IconButton(
-                tooltip: AppLocalizations.of(context).back,
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const AppIcon(AppIcons.back),
-              ),
+              leadingWidth: HisaabBackButton.leadingWidth,
+              leading: const Padding(padding: HisaabBackButton.leadingPadding, child: HisaabBackButton()),
               backgroundColor: Colors.transparent,
               elevation: 0,
               scrolledUnderElevation: 0,

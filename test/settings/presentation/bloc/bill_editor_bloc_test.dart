@@ -55,9 +55,12 @@ void main() {
       expect(bloc.state, const BillEditorInProgress());
     });
 
-    test('a chip fills the name and moves to the amount', () async {
+    test('a chip fills the name with a tick and stays on it; Next moves on (D86)', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.rent, 'Rent'));
-      expect(form(), const BillEditorInProgress(stage: BillEditorStage.amount, label: 'Rent', kind: Option<BillKind>.of(BillKind.rent)));
+      expect(form(), const BillEditorInProgress(label: 'Rent', kind: Option<BillKind>.of(BillKind.rent)));
+      expect(haptics.events, <String>['tick']);
+      await bloc.dispatch(const BillEditorNextPressed());
+      expect(form().stage, BillEditorStage.amount);
     });
 
     test('typing a name forgets the chip', () async {
@@ -87,6 +90,7 @@ void main() {
 
     test('the keypad builds the amount with a tick each, ⌫ and clear', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.phone, 'Phone'));
+      await bloc.dispatch(const BillEditorNextPressed());
       await type('3990');
       await bloc.dispatch(const BillEditorBackspacePressed());
       expect(form().rupees, 399);
@@ -97,6 +101,7 @@ void main() {
 
     test('a 10th digit is refused with a shake and the reject haptic (FR-AD-2)', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.phone, 'Phone'));
+      await bloc.dispatch(const BillEditorNextPressed());
       await type('999999999');
       await bloc.dispatch(const BillEditorKeyPressed('9'));
       expect((form().rupees, form().rejections), (999999999, 1));
@@ -110,6 +115,7 @@ void main() {
 
     test('tapping a day saves the bill and finishes with the success haptic', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.internet, 'Internet'));
+      await bloc.dispatch(const BillEditorNextPressed());
       await type('799');
       await bloc.dispatch(const BillEditorNextPressed());
       await bloc.dispatch(const BillEditorDayChosen(10));
@@ -127,6 +133,7 @@ void main() {
 
     test('nothing moves after the bill is saved', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.internet, 'Internet'));
+      await bloc.dispatch(const BillEditorNextPressed());
       await type('799');
       await bloc.dispatch(const BillEditorNextPressed());
       await bloc.dispatch(const BillEditorDayChosen(10));
@@ -137,6 +144,7 @@ void main() {
 
     test('rent saves under Home', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.rent, 'Rent'));
+      await bloc.dispatch(const BillEditorNextPressed());
       await type('8200');
       await bloc.dispatch(const BillEditorNextPressed());
       await bloc.dispatch(const BillEditorDayChosen(5));
@@ -178,6 +186,7 @@ void main() {
 
     test('back steps day → amount → name, and stays on the name', () async {
       await bloc.dispatch(const BillEditorKindPicked(BillKind.rent, 'Rent'));
+      await bloc.dispatch(const BillEditorNextPressed());
       await type('1');
       await bloc.dispatch(const BillEditorNextPressed());
       await bloc.dispatch(const BillEditorBackPressed());

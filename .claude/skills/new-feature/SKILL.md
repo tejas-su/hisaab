@@ -62,7 +62,7 @@ Check `lib/core/` first:
 | Shared UI (Keypad, AmountText, DayBlocks, SignalKey, Tray, CategoryTile) | `core/widgets/` — import; do not duplicate |
 | Logging | `core/logging/AppLogger` |
 
-Create files in `core/` **only** when logic is genuinely shared across two or more features. If `lib/core/` or a required dependency (`fpdart`, `figma_squircle`, `animations`) doesn't exist yet, say so and ask before creating or adding it.
+Create files in `core/` **only** when logic is genuinely shared across two or more features. If `lib/core/` or a required dependency (`fpdart`, `animations`) doesn't exist yet, say so and ask before creating or adding it.
 
 ## Rules for every generated file
 

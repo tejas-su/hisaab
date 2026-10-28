@@ -8,6 +8,7 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/widgets/hisaab_chip.dart';
+import '../../../core/widgets/top_bar_scroll_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../../domain/entities/category_spend.dart';
@@ -37,42 +38,35 @@ class SpendsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocBuilder<SpendsBloc, SpendsState>(
-        builder: (BuildContext context, SpendsState state) => ListView(
-          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.m, HisaabSpacing.gutter, HisaabSpacing.xl),
-          children: <Widget>[
-            _header(context, state),
-            const SizedBox(height: 14),
-            ..._content(context, state),
-          ],
+        builder: (BuildContext context, SpendsState state) => TopBarScrollView(
+          bar: _header(context, state),
+          children: _content(context, state),
         ),
       );
 
   Widget _header(BuildContext context, SpendsState state) {
     final SpendsBloc bloc = context.read<SpendsBloc>();
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: HisaabSizes.minTouchTarget + 4),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: AlignmentDirectional.centerStart,
-              child: Semantics(
-                header: true,
-                child: Text(AppLocalizations.of(context).navSpends, style: Theme.of(context).textTheme.headlineSmall),
-              ),
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Semantics(
+              header: true,
+              child: Text(AppLocalizations.of(context).navSpends, style: Theme.of(context).textTheme.headlineSmall),
             ),
           ),
-          if (state case SpendsReady(:final SpendsOverview overview)) ...<Widget>[
-            const SizedBox(width: HisaabSpacing.m),
-            CycleSwitcher(
-              label: _label(context, overview.cycle),
-              onEarlier: overview.canGoBack ? () => bloc.add(const SpendsEarlierPressed()) : null,
-              onLater: overview.isCurrent ? null : () => bloc.add(const SpendsLaterPressed()),
-            ),
-          ],
+        ),
+        if (state case SpendsReady(:final SpendsOverview overview)) ...<Widget>[
+          const SizedBox(width: HisaabSpacing.m),
+          CycleSwitcher(
+            label: _label(context, overview.cycle),
+            onEarlier: overview.canGoBack ? () => bloc.add(const SpendsEarlierPressed()) : null,
+            onLater: overview.isCurrent ? null : () => bloc.add(const SpendsLaterPressed()),
+          ),
         ],
-      ),
+      ],
     );
   }
 

@@ -134,7 +134,7 @@ Rules: no all-caps eyebrow labels, and no semibold body text.
 
 ### 3.5 Shape, depth, icons
 - **Corners:**
-  - Continuous squircle corners (`figma_squircle`, smoothing 0.6).
+  - Continuous squircle corners (Flutter `RoundedSuperellipseBorder`).
   - Radius scale: 8 (day blocks) · 12 (chips) · 16 (keys) · 22 (tiles) · 28 (cards, hero) · 36 (tray).
 - **Depth:**
   - Surfaces are layered by colour, not shadow (D45).
@@ -145,12 +145,13 @@ Rules: no all-caps eyebrow labels, and no semibold body text.
   - The marigold key has a **2px ink lip** that collapses when pressed, a nod to Braun's physical keys.
   - Trays sit over a 32% `ink` scrim.
   - There is no glass and no blur on content. Apple's Liquid Glass guidance puts glass only on navigation.
+  - **Top bars on Home and Spends are pinned and solid (D81, D84):** the wordmark row and the Spends title row stay put while the cards scroll under them. The bar is plain `bg` and reaches behind the status bar. Once content is beneath it, a `hairline` bottom edge fades in (200ms, 150ms crossfade with reduced motion), as Material 3's top app bar marks scrolled content. No blur or tint: on `bg` against `surface` cards (about 3% apart) blur reads as a smudge and smears the marigold signal. The bar is a pinned sliver, so focus and TalkBack scrolling stop items below it, never under it. `TopBarScrollView` (`lib/core/widgets/`).
 - **Icons:**
   - Hugeicons stroke-rounded only, size 24, `strokeWidth` 1.6, in `ink`.
   - The free set has no ⌫, so the keypad's delete key uses a glyph drawn in Hugeicons' format (`HisaabGlyphs.backspace`): `Keyboard`'s body height and squircle corners, a tip rounded like `Tag01`, and `CancelSquare`'s inner × (D48). A plain × would read as "close the tray" and ← as "back", which the app already uses for navigation.
   - Category icons sit in `sunk` wells and are **monochrome**. Categories are told apart by icon, word and fixed position, not colour.
   - Every icon has a label.
-  - **Header icon buttons** (Home's Settings, the tray's Back): a 40dp `sunk` well with 12 corners inside the 48dp tap target, set flush with the outer edge so the well lines up with the cards or tiles (D57). A full 48dp well outweighed the wordmark.
+  - **Header icon buttons** (Home's Settings, the tray's Back, and Back on every pushed screen): a 40dp `sunk` well with 12 corners inside the 48dp tap target, set flush with the outer edge so the well lines up with the cards or tiles (D57). A full 48dp well outweighed the wordmark. Every pushed screen (Ask AI, Settings, Fixed bills, the bill editor, Every entry) uses the one `HisaabBackButton` (D80).
 
 ### 3.6 App icon
 The wordmark shrunk to its first letter and its dot: **h•**. The ET66 has one yellow key; the icon has one yellow dot.
@@ -276,6 +277,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - The amount flies up into the title.
 - A **2×4 grid of monochrome tiles** (96dp, never scrolls, never reorders).
 - Chips: *Today ▾* · *Add a note*.
+- A picked chip anywhere in the app is a raised `surface` pill with a 1.5dp `ink` edge and a trailing check in light theme, and an `ink` pill in dark. It is never marigold and never an ink slab in light theme (D85).
 - **Tapping a tile saves:**
   1. The tile flashes to ink (120ms).
   2. The tray drops.
@@ -316,7 +318,7 @@ Two layers only: the grey page and near-white cards, the same build as the Today
 ### 5.6 Settings (one level)
 - **Money:**
   - Salary and payday
-  - Fixed bills: one card of rows (name, "Every month on day 29", amount), soonest first, with *Add a bill* above it. Tap a row to change it; swipe it away with Undo. Adding or changing asks one question per screen, like onboarding: the name (a field plus the onboarding bill chips), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
+  - Fixed bills: one card of rows (name, "Every month on day 29", amount), soonest first, with *Add a bill* above it. Tap a row to change it; swipe it away with Undo. Adding or changing asks one question per screen, like onboarding: the name (a field with the onboarding bill chips 16dp under it, in two equal-width columns that share the field's edges and narrow to what is typed; left out when changing a bill; a tap fills the field and marks the pill, and Next moves on; Next alone at the bottom, D83, D85, D86), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
   - Keep aside each month
   - My month starts on: *Payday* (default) / *1st*
 - **Categories:** rename, change icon.
@@ -383,7 +385,7 @@ One effect per event, never buzzy.
 
 ## 10. Android
 - All orientations and window sizes; never locked (§13).
-- Edge-to-edge (API 36). The dock sits above `MediaQuery.paddingOf(context).bottom`.
+- Edge-to-edge (API 36). The dock sits above `MediaQuery.paddingOf(context).bottom`, on plain `bg`; content never goes behind it. The list's bottom 32dp fades into `bg` on a smoothstep ramp (alpha 0 → .16 → .5 → .84 → 1), so cards dissolve above the dock instead of being cut off, and the fade hints there is more below. The fade lets taps through, is invisible when nothing is under it, and high contrast drops it. The last card rests fully above it (D82).
 - Predictive back: `PredictiveBackPageTransitionsBuilder` and `PopScope`. A back swipe scales the tray down.
 - Launch splash (§3.7):
   - It is native: the Android 12+ `SplashScreen` API, and a static icon below that.
@@ -409,7 +411,7 @@ One effect per event, never buzzy.
   - `CategoryTile`
   - `Tray`
   - `RangeLine`
-- Packages: `figma_squircle`, `animations`, `fl_chart` (styled to these tokens). Fonts go in `assets/fonts/`.
+- Packages: `animations`, `fl_chart` (styled to these tokens). Fonts go in `assets/fonts/`.
 
 ## 12. Research basis
 - **Concept:**

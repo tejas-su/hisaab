@@ -6,9 +6,6 @@ abstract final class HisaabRadii {
   static const double tile = 22;
   static const double card = 28;
   static const double tray = 36;
-
-  /// Corner smoothing for continuous (squircle) corners.
-  static const double smoothing = 0.6;
 }
 
 /// Spacing on a 4 dp grid.

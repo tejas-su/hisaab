@@ -47,7 +47,7 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
   | `fpdart` | `Either` / `TaskEither` errors |
   | Bundled fonts | Anek Latin and Mukta in `assets/fonts/`, with OFL licences |
 
-- `figma_squircle` and `path` are also installed. Planned later: `animations`, `fl_chart`, `share_plus`, `url_launcher`. **Ask before adding any dependency not listed in PLAN §11.**
+- `path` is also installed. Planned later: `animations`, `fl_chart`, `share_plus`, `url_launcher`. **Ask before adding any dependency not listed in PLAN §11.**
 - Commands:
 
   | Command | Purpose |

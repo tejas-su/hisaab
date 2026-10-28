@@ -22,6 +22,9 @@ abstract final class HisaabMotion {
   /// Digits rolling to a new amount.
   static const Duration numberRoll = Duration(milliseconds: 300);
 
+  /// A top bar's hairline appearing or clearing as content scrolls under it.
+  static const Duration scrollEdge = Duration(milliseconds: 200);
+
   /// The only transition used when the system asks for reduced motion.
   static const Duration reducedCrossfade = Duration(milliseconds: 150);
 

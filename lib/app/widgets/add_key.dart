@@ -14,7 +14,10 @@ class AddKey extends StatelessWidget {
   static const double maxWidth = 136;
 
   @override
+  // why: heightFactor keeps the key its own height when the dock gets a loose constraint, as in
+  // the tabletop pane's centred dock; a plain Center would stretch the dock to the pane's height.
   Widget build(BuildContext context) => Center(
+        heightFactor: 1,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: maxWidth),
           child: SignalKey(

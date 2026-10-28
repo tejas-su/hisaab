@@ -336,7 +336,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
   - Salary and payday (edits the income rule; future cycles only).
-  - Fixed bills (list, add, edit, delete rules). The list shows each bill's name, day and amount, soonest first. Adding or editing asks three questions: the name (typed, or one of the onboarding chips, which also moves on), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*; every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe or *Delete* removes a bill with Undo (BR-9).
+  - Fixed bills (list, add, edit, delete rules). The list shows each bill's name, day and amount, soonest first. Adding or editing asks three questions: the name (typed, or one of the onboarding chips, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*; every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe or *Delete* removes a bill with Undo (BR-9).
   - Keep aside each month.
   - My month starts on: *Payday* / *1st*.
 - **FR-SE-2** Categories: rename, change icon.

@@ -60,6 +60,24 @@ void main() {
       expect(find.byType(HomePage), findsOneWidget);
     });
 
+    testWidgets('phone: the screen ends at the dock, which keeps its own height (D82)', (WidgetTester tester) async {
+      await pumpApp(tester, _shell());
+      final Rect dock = tester.getRect(find.byType(HisaabDock));
+      expect(tester.getRect(find.byType(HomePage)).bottom, dock.top - 8);
+      // why: a dock that fills a loose constraint would cover the whole screen.
+      expect(dock.height, lessThan(100));
+    });
+
+    testWidgets('phone: the last card scrolls clear of the bottom fade', (WidgetTester tester) async {
+      await pumpApp(tester, _shell());
+      await tester.tap(find.descendant(of: find.byType(HisaabDock), matching: find.bySemanticsLabel('Spends')));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
+      await tester.pumpAndSettle();
+      final Finder last = find.byKey(const ValueKey<String>('see-every-entry'));
+      expect(tester.getRect(last).bottom, lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey<String>('bottom-fade'))).top));
+    });
+
     testWidgets('unfolded foldable portrait: a centred column no wider than 560 dp', (WidgetTester tester) async {
       await pumpApp(tester, _shell(), size: TestWindows.foldableUnfolded);
       final Rect home = tester.getRect(find.byType(HomePage));

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/widgets/hisaab_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../widgets/settings_row.dart';
 
@@ -21,11 +21,9 @@ class SettingsPage extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: strings.back,
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const AppIcon(AppIcons.back),
-        ),
+        leadingWidth: HisaabBackButton.leadingWidth,
+        leading: const Padding(padding: HisaabBackButton.leadingPadding, child: HisaabBackButton()),
+        titleSpacing: HisaabSpacing.s,
         title: Text(strings.settings),
         backgroundColor: Colors.transparent,
         elevation: 0,
