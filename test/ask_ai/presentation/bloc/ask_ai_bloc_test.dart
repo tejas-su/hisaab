@@ -119,6 +119,13 @@ void main() {
     });
   });
 
+  test('choices before the prompt is ready change nothing', () async {
+    await bloc.dispatch(const AskAiGoalChosen(AskGoal.helpMeSave));
+    await bloc.dispatch(const AskAiQuestionChanged('Why?'));
+    expect(bloc.state, const AskAiLoading());
+    expect(haptics.events, isEmpty);
+  });
+
   group('AskAiBloc choices (FR-AI-1, FR-AI-2)', () {
     setUp(() => bloc.dispatch(const AskAiLoadRequested()));
 
