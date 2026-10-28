@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/extensions/build_context_extensions.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/ask_goal.dart';
 import '../../domain/entities/prompt_choice.dart';
@@ -53,12 +54,13 @@ class _OwnQuestionRowState extends State<OwnQuestionRow> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.bodyLarge,
               onTap: () => bloc.add(const AskAiGoalChosen(AskGoal.ownQuestion)),
               onChanged: (String question) => bloc.add(AskAiQuestionChanged(question)),
               onTapOutside: (PointerDownEvent _) => FocusScope.of(context).unfocus(),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).askGoalOwn,
+                hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
                 counterText: '',
                 border: InputBorder.none,
                 isDense: true,

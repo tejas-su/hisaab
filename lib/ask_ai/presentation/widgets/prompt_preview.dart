@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -36,12 +37,12 @@ class _PromptPreviewState extends State<PromptPreview> {
         Text(strings.askPreviewTitle(prompt.entryCount), style: text.titleSmall),
         if (prompt.groupedWeeks > 0) ...<Widget>[
           const SizedBox(height: HisaabSpacing.xs),
-          Text(strings.askPreviewGrouped, style: text.bodySmall?.copyWith(color: context.colors.ink2)),
+          Text(strings.askPreviewGrouped, style: HisaabType.regular(text.bodySmall)?.copyWith(color: context.colors.ink2)),
         ],
         const SizedBox(height: HisaabSpacing.m),
         Text(
           _expanded ? prompt.text : prompt.text.split('\n').take(PromptPreview.collapsedLines).join('\n'),
-          style: text.bodySmall?.copyWith(color: context.colors.ink2),
+          style: HisaabType.regular(text.bodySmall)?.copyWith(color: context.colors.ink2),
         ),
         const SizedBox(height: HisaabSpacing.m),
         HisaabChip(

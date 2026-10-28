@@ -11,7 +11,7 @@ UX/UI research for Hisaab: case studies of other apps, the principles we drew fr
 ## Case studies
 | # | Topic | Outcome |
 |---|---|---|
-| 02 | [Typography: weight, emphasis, hierarchy](case-studies/02-typography-hierarchy.md) | Research plus an audit of `hisaab_type.dart`: 6 findings and 6 recommendations awaiting approval |
+| 02 | [Typography: weight, emphasis, hierarchy](case-studies/02-typography-hierarchy.md) | Approved (D68). Applied on Ask AI first: Regular rows with a Semibold pick, a title-style card header, a defined `titleSmall`, named `emphasized`/`regular` weights. Home, Spends and Settings to follow |
 | 01 | [Ask AI choice screen](case-studies/01-ask-ai-choice-screen.md) | Built (D67): grouped list rows with a trailing check, an inline own-question field, a segmented period control, a fixed header and pinned actions |
 
 ## Adding a study

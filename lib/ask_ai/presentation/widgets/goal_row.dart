@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/pressable.dart';
 import 'goal_check.dart';
@@ -34,7 +35,12 @@ class GoalRow extends StatelessWidget {
           GoalWell(icon: icon),
           const SizedBox(width: HisaabSpacing.m),
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: selected ? FontWeight.w700 : null)),
+            // why: rows are Regular body text; the pick steps up one weight, alongside the check
+            // (case study 02).
+            child: Text(
+              label,
+              style: selected ? HisaabType.emphasized(Theme.of(context).textTheme.bodyLarge) : Theme.of(context).textTheme.bodyLarge,
+            ),
           ),
           if (selected) const GoalCheck(),
         ],

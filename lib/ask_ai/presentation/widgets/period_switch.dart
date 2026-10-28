@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
+import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -53,10 +54,12 @@ class PeriodSwitch extends StatelessWidget {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: selected ? (light ? context.colors.ink : context.colors.background) : context.colors.ink2,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-          ),
+          // why: one weight step marks the pick; the other segment is Regular and steps back by
+          // colour (case study 02).
+          style: selected
+              ? HisaabType.emphasized(Theme.of(context).textTheme.bodyMedium)
+                    ?.copyWith(color: light ? context.colors.ink : context.colors.background)
+              : Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
         ),
       ),
     );

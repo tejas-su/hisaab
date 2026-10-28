@@ -36,7 +36,7 @@ class AskAiPreviewCard extends StatelessWidget {
           child: SwitchListTile(
             key: const ValueKey<String>('hide-notes'),
             contentPadding: EdgeInsetsDirectional.zero,
-            title: Text(AppLocalizations.of(context).askHideNotes),
+            title: Text(AppLocalizations.of(context).askHideNotes, style: Theme.of(context).textTheme.bodyLarge),
             value: ready.choice.hideNotes,
             onChanged: (bool hide) => context.read<AskAiBloc>().add(AskAiNotesHidden(hide: hide)),
           ),

@@ -43,7 +43,7 @@ class AskAiControls extends StatelessWidget {
         children: <Widget>[
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, 6),
-            child: Semantics(header: true, child: Text(strings.askAiQuestion, style: Theme.of(context).textTheme.titleMedium)),
+            child: Semantics(header: true, child: Text(strings.askAiQuestion, style: Theme.of(context).textTheme.titleLarge)),
           ),
           for (final AskGoal goal in _starters) ...<Widget>[
             GoalRow(

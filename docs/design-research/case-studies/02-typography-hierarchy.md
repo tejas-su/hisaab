@@ -1,6 +1,6 @@
 # Typography: weight, emphasis and hierarchy
 
-**Status:** research plus an audit of Hisaab's type scale. Nothing has changed in the code. If any recommendation is approved, it gets a `DECISIONS.md` row and a UI_DESIGN §3.4 update.
+**Status:** approved as D68. Recommendations 2–5 are applied on Ask AI first; 1 (drop weight 500) and 6 (Regular captions) change the shared theme, so they wait for the app-wide pass.
 
 ## 1. Question
 How do the major design systems show hierarchy and emphasis with type: size, weight or colour? And does Hisaab's scale (`lib/core/design/hisaab_type.dart`, UI_DESIGN §3.4) follow them?

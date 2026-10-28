@@ -9,6 +9,18 @@ abstract final class HisaabType {
 
   static const List<FontFeature> _tabular = <FontFeature>[FontFeature.tabularFigures()];
 
+  /// The one emphasis step above Regular body text: a pick, a small heading, a label.
+  ///
+  /// Hierarchy comes from size between levels and from this single weight step within a level
+  /// (docs/design-research case study 02).
+  static const FontWeight emphasis = FontWeight.w600;
+
+  /// [style] at the [emphasis] weight, for the picked row or segment; null stays null.
+  static TextStyle? emphasized(TextStyle? style) => style?.copyWith(fontWeight: emphasis);
+
+  /// [style] at Regular, for text that is de-emphasised by its `ink2` colour, not its weight.
+  static TextStyle? regular(TextStyle? style) => style?.copyWith(fontWeight: FontWeight.w400);
+
   /// Returns the text theme coloured with [ink] (primary) and [ink2] (captions).
   static TextTheme textTheme({required Color ink, required Color ink2}) => TextTheme(
         displayLarge: _anek(size: 76, lineHeight: 76, width: 85, color: ink, tracking: -0.76, tabular: true),
@@ -17,6 +29,7 @@ abstract final class HisaabType {
         headlineSmall: _anek(size: 26, lineHeight: 30, width: 100, color: ink, tracking: -0.3),
         titleLarge: _anek(size: 22, lineHeight: 28, width: 100, color: ink),
         titleMedium: _mukta(size: 16, lineHeight: 20, weight: FontWeight.w600, color: ink),
+        titleSmall: _mukta(size: 14, lineHeight: 20, weight: emphasis, color: ink),
         bodyLarge: _mukta(size: 16, lineHeight: 24, weight: FontWeight.w400, color: ink),
         bodyMedium: _mukta(size: 15, lineHeight: 20, weight: FontWeight.w400, color: ink),
         bodySmall: _mukta(size: 13, lineHeight: 18, weight: FontWeight.w500, color: ink2),

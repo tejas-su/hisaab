@@ -186,9 +186,13 @@ void main() {
 
     testWidgets('goals are one column of rows sharing both edges, top to bottom', (WidgetTester tester) async {
       await pump(tester);
-      final List<Rect> rows = <String>['reviewMonth', 'helpMeSave', 'makeBudget', 'onTrack', 'ownQuestion']
-          .map((String goal) => tester.getRect(find.byKey(ValueKey<String>('goal-$goal'))))
-          .toList();
+      final List<Rect> rows = <String>[
+        'reviewMonth',
+        'helpMeSave',
+        'makeBudget',
+        'onTrack',
+        'ownQuestion',
+      ].map((String goal) => tester.getRect(find.byKey(ValueKey<String>('goal-$goal')))).toList();
       for (final Rect row in rows) {
         expect(row.left, rows.first.left);
         expect(row.right, rows.first.right);
@@ -227,7 +231,13 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey<String>('own-question')), 'Can I buy a bike?');
       await tester.settle();
       expect((bloc.state as AskAiReady).choice.goal, AskGoal.ownQuestion);
-      expect(find.descendant(of: find.byKey(const ValueKey<String>('goal-ownQuestion')), matching: find.byKey(const ValueKey<String>('goal-check'))), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey<String>('goal-ownQuestion')),
+          matching: find.byKey(const ValueKey<String>('goal-check')),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('the header stays put while the content scrolls', (WidgetTester tester) async {
@@ -315,5 +325,55 @@ void main() {
         handle.dispose();
       });
     }
+
+    group('typography (case study 02)', () {
+      testWidgets('the card header is a title like Today, a level above the rows', (WidgetTester tester) async {
+        await pump(tester);
+        final TextTheme theme = Theme.of(tester.element(find.byType(AskAiPage))).textTheme;
+        final TextStyle header = tester.widget<Text>(find.text('What do you want to know?')).style!;
+        final TextStyle row = tester.widget<Text>(find.text('Help me save')).style!;
+        expect(header.fontFamily, theme.titleLarge!.fontFamily);
+        expect(header.fontSize, theme.titleLarge!.fontSize);
+        expect(header.fontSize!, greaterThan(row.fontSize!));
+      });
+
+      testWidgets('rows are Regular body text and only the pick is Semibold', (WidgetTester tester) async {
+        await pump(tester);
+        final TextStyle picked = tester.widget<Text>(find.text('Review my month')).style!;
+        final TextStyle other = tester.widget<Text>(find.text('Help me save')).style!;
+        expect(other.fontWeight, FontWeight.w400);
+        expect(other.fontSize, 16);
+        expect(picked.fontWeight, FontWeight.w600);
+        expect(picked.fontSize, other.fontSize);
+      });
+
+      testWidgets('the own question types as Regular body text', (WidgetTester tester) async {
+        await pump(tester);
+        final TextField field = tester.widget<TextField>(find.byKey(const ValueKey<String>('own-question')));
+        expect(field.style?.fontWeight, FontWeight.w400);
+        expect(field.style?.fontSize, 16);
+      });
+
+      testWidgets('the period pick is Semibold ink; the other is Regular grey', (WidgetTester tester) async {
+        await pump(tester);
+        final TextStyle picked = tester.widget<Text>(find.text('This month')).style!;
+        final TextStyle other = tester.widget<Text>(find.text('Last 3 months')).style!;
+        expect(picked.fontWeight, FontWeight.w600);
+        expect(picked.color, HisaabColors.light.ink);
+        expect(other.fontWeight, FontWeight.w400);
+        expect(other.color, HisaabColors.light.ink2);
+      });
+
+      testWidgets('the preview has a Semibold small heading over Regular grey text', (WidgetTester tester) async {
+        await pump(tester);
+        await scrollTo(tester, find.byKey(const ValueKey<String>('prompt-preview')));
+        final TextStyle title = tester.widget<Text>(find.text('What will be sent · 6 entries')).style!;
+        final TextStyle body = tester.widget<Text>(find.textContaining('You are a friendly money coach')).style!;
+        expect(title.fontWeight, FontWeight.w600);
+        expect(title.fontSize, 14);
+        expect(body.fontWeight, FontWeight.w400);
+        expect(body.color, HisaabColors.light.ink2);
+      });
+    });
   });
 }

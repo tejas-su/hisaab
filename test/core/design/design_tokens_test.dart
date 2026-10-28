@@ -56,6 +56,21 @@ void main() {
     test('row amounts are tabular', () {
       expect(HisaabType.rowAmount(const Color(0xFF000000)).fontFeatures, contains(const FontFeature.tabularFigures()));
     });
+
+    test('titleSmall is a defined small heading: Mukta 14/20 Semibold (case study 02)', () {
+      expect(theme.titleSmall?.fontFamily, HisaabType.mukta);
+      expect(theme.titleSmall?.fontSize, 14);
+      expect(theme.titleSmall?.height, 20 / 14);
+      expect(theme.titleSmall?.fontWeight, HisaabType.emphasis);
+    });
+
+    test('emphasized and regular change only the weight, to the two named steps', () {
+      final TextStyle body = theme.bodyLarge!;
+      expect(HisaabType.emphasized(body), body.copyWith(fontWeight: FontWeight.w600));
+      expect(HisaabType.regular(theme.bodySmall!), theme.bodySmall!.copyWith(fontWeight: FontWeight.w400));
+      expect(HisaabType.emphasized(null), isNull);
+      expect(HisaabType.regular(null), isNull);
+    });
   });
 
   group('HisaabTheme', () {
