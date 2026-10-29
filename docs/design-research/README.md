@@ -11,6 +11,7 @@ UX/UI research for Hisaab: case studies of other apps, the principles we drew fr
 ## Case studies
 | # | Topic | Outcome |
 |---|---|---|
+| 05 | [Day Block motion](case-studies/05-day-block-motion.md) | Drain after the tray closes, with a trail; fill in when Home appears; a fill cap of 0.9 once anything is spent (D91) |
 | 04 | [Floating dock and pinned top bar](case-studies/04-floating-dock-and-top-bar.md) | Dock: a 32dp eased fade above a solid `bg` seat (D82), built. Top bar: solid with a hairline on scroll, no glass (D84) |
 | 03 | [Suggestion pills](case-studies/03-suggestion-pills.md) | Bill name pills as two equal columns so both edges align; list rows if the set grows (D83); picked pill restyled and pills moved under the field (D85) |
 | 02 | [Typography: weight, emphasis, hierarchy](case-studies/02-typography-hierarchy.md) | Applied app-wide (D68): Regular row titles with a Semibold pick, title-style card headers, Regular grey captions, a defined `titleSmall`, and every weight set through `HisaabType.emphasized`/`regular` |

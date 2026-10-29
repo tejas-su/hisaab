@@ -89,26 +89,51 @@ class EntriesPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(CycleLabel.of(cycle, locale: context.money.locale, today: today), style: text.titleLarge),
-        const SizedBox(height: HisaabSpacing.m),
+        // why: the list's totals drop when a filter is on, so the header says what it is narrowed to.
         Wrap(
           spacing: HisaabSpacing.s,
-          runSpacing: HisaabSpacing.s,
+          crossAxisAlignment: WrapCrossAlignment.end,
           children: <Widget>[
-            HisaabChip(
-              key: const ValueKey<String>('filter-all'),
-              label: strings.allCategories,
-              selected: state.filter.isNone(),
-              onPressed: () => bloc.add(const EntriesFilterChanged(Option<int>.none())),
+            Text(
+              CycleLabel.of(cycle, locale: context.money.locale, today: today),
+              style: text.titleLarge,
             ),
-            for (final Category category in state.chips)
-              HisaabChip(
-                key: ValueKey<String>('filter-${category.key}'),
-                label: category.labelIn(strings),
-                selected: state.filter == Option<int>.of(category.id),
-                onPressed: () => bloc.add(EntriesFilterChanged(Option<int>.of(category.id))),
-              ),
+            ...state.filter
+                .flatMap((int id) => Option<Category>.fromNullable(state.categories[id]))
+                .match(
+                  () => const <Widget>[],
+                  (Category category) => <Widget>[
+                    Text(
+                      strings.filteredBy(category.labelIn(strings)),
+                      style: text.titleLarge?.copyWith(color: context.colors.ink2),
+                    ),
+                  ],
+                ),
           ],
+        ),
+        const SizedBox(height: HisaabSpacing.m),
+        // why: one row that scrolls, so many categories never wrap to a second row (principle 4).
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            spacing: HisaabSpacing.s,
+            children: <Widget>[
+              HisaabChip(
+                key: const ValueKey<String>('filter-all'),
+                label: strings.allCategories,
+                selected: state.filter.isNone(),
+                onPressed: () => bloc.add(const EntriesFilterChanged(Option<int>.none())),
+              ),
+              for (final Category category in state.chips)
+                HisaabChip(
+                  key: ValueKey<String>('filter-${category.key}'),
+                  label: category.labelIn(strings),
+                  selected: state.filter == Option<int>.of(category.id),
+                  onPressed: () => bloc.add(EntriesFilterChanged(Option<int>.of(category.id))),
+                ),
+            ],
+          ),
         ),
         if (state.shown.isEmpty) ...<Widget>[
           const SizedBox(height: HisaabSpacing.l),

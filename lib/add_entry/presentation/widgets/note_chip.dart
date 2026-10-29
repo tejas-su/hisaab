@@ -55,7 +55,6 @@ class _NoteChipState extends State<NoteChip> {
           labelText: strings.addNote,
           counterText: '',
           isDense: true,
-          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(HisaabRadii.chip))),
         ),
       ),
     );

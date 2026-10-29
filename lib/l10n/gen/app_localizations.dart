@@ -301,6 +301,12 @@ abstract class AppLocalizations {
   /// **'Nothing here yet.'**
   String get noEntriesHere;
 
+  /// After the cycle name on Every entry, naming the category the list is narrowed to
+  ///
+  /// In en, this message translates to:
+  /// **'· {category}'**
+  String filteredBy(String category);
+
   /// No description provided for @seeWhereItWent.
   ///
   /// In en, this message translates to:

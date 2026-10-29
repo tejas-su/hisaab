@@ -36,6 +36,14 @@ void main() {
       expect(DayBlocksMapper.of(_summary(state: OverToday(Money.fromMajor(1)), tomorrow: 100)).laterHeight, 0.4);
     });
 
+    test('any spend shows: once something is spent, today is at most 90% full (D91)', () {
+      // BR-6 worked example: ₹700 of ₹11,218 is 94% left, drawn as 90%.
+      expect(DayBlocksMapper.of(_summary(state: const OnTrack(), share: 11218, spent: 700)).todayFill, 0.9);
+      expect(DayBlocksMapper.of(_summary(state: const OnTrack(), share: 11218, spent: 0)).todayFill, 1);
+      expect(DayBlocksMapper.of(_summary(state: const OnTrack(), share: 11218, spent: 1)).todayFill, 0.9);
+      expect(DayBlocksMapper.of(_summary(state: const OnTrack(), share: 1850, spent: 1000)).todayFill, closeTo(850 / 1850, 1e-9));
+    });
+
     test('A = 0 gives an empty today and full-height later blocks', () {
       final DayBlocksData data = DayBlocksMapper.of(_summary(state: const SlowDown(), share: 0, spent: 0));
       expect((data.todayFill, data.laterHeight), (0.0, 1.0));

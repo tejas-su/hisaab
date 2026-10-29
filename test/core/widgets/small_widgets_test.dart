@@ -63,25 +63,39 @@ void main() {
         .widget<Container>(find.descendant(of: find.widgetWithText(HisaabChip, label), matching: find.byType(Container)).first)
         .decoration! as ShapeDecoration;
 
-    testWidgets('light: a pick is a raised surface pill with an ink edge and a check, not an ink slab (D85)', (
+    testWidgets('a chip rests as a hairline fill with no edge, a clear step darker than the page (D89)', (
       WidgetTester tester,
     ) async {
-      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})));
-      final ShapeDecoration shape = chipShape(tester, 'Rent');
-      expect(shape.color, HisaabColors.light.surface);
-      expect((shape.shape as RoundedSuperellipseBorder).side, BorderSide(color: HisaabColors.light.ink, width: 1.5));
-      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.light.ink);
-      expect(find.byType(AppIcon), findsOneWidget);
-      expect(tester.widget<AppIcon>(find.byType(AppIcon)).icon, AppIcons.check);
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
+      final ShapeDecoration shape = chipShape(tester, 'EMI');
+      expect(shape.color, HisaabColors.light.hairline);
+      expect((shape.shape as RoundedSuperellipseBorder).side, BorderSide.none);
+      expect(find.byType(AppIcon), findsNothing);
     });
 
-    testWidgets('dark: a pick stays an ink pill, as the Spent | Got switch does (D47)', (WidgetTester tester) async {
+    testWidgets('pressed, it keeps its fill; Pressable shrinks it instead', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
+      final TestGesture press = await tester.startGesture(tester.getCenter(find.text('EMI')));
+      await tester.pump();
+      expect(chipShape(tester, 'EMI').color, HisaabColors.light.hairline);
+      await press.up();
+    });
+
+    testWidgets('light: a pick fills ink2 with page-coloured text and check (D89)', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})));
+      expect(chipShape(tester, 'Rent').color, HisaabColors.light.ink2);
+      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.light.background);
+      final AppIcon check = tester.widget<AppIcon>(find.byType(AppIcon));
+      expect((check.icon, check.color), (AppIcons.check, HisaabColors.light.background));
+    });
+
+    testWidgets('dark: a pick fills ink2 with page-coloured text and check (D89)', (WidgetTester tester) async {
       await pumpApp(
         tester,
         Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})),
         themeMode: ThemeMode.dark,
       );
-      expect(chipShape(tester, 'Rent').color, HisaabColors.dark.ink);
+      expect(chipShape(tester, 'Rent').color, HisaabColors.dark.ink2);
       expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.dark.background);
     });
 
@@ -90,12 +104,9 @@ void main() {
       expect(find.byType(AppIcon), findsOneWidget);
     });
 
-    testWidgets('an unpicked chip is unfilled with a hairline edge and no check', (WidgetTester tester) async {
-      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
-      final ShapeDecoration shape = chipShape(tester, 'EMI');
-      expect(shape.color, isNull);
-      expect((shape.shape as RoundedSuperellipseBorder).side.color, HisaabColors.light.hairline);
-      expect(find.byType(AppIcon), findsNothing);
+    testWidgets('a disabled chip has no fill', (WidgetTester tester) async {
+      await pumpApp(tester, const Scaffold(body: HisaabChip(label: 'Copy only', onPressed: null)));
+      expect(chipShape(tester, 'Copy only').color, isNull);
     });
 
     testWidgets('a chip without onPressed is disabled and greyed', (WidgetTester tester) async {

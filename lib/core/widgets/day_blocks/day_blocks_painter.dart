@@ -22,14 +22,19 @@ final class DayBlocksColors {
 
 /// Paints the Day Blocks row (SPEC BR-6, UI_DESIGN §3.3) for an animated [data] snapshot.
 ///
-/// [assembled] runs 0→1 as the blocks slide in after onboarding; 1 means fully drawn.
+/// [assembled] runs 0→1 as the blocks slide in after onboarding; 1 means fully drawn. [trail]
+/// is how high the spent slice still shows above today's fill, faint, after a spend (D91).
 class DayBlocksPainter extends CustomPainter {
   DayBlocksPainter({
     required this.data,
     required this.colors,
     required this.moreLabel,
     this.assembled = 1,
+    this.trail = 0,
   });
+
+  /// Opacity of the marigold trail, so it reads as "just spent", not as money left.
+  static const double trailOpacity = 0.35;
 
   final DayBlocksData data;
   final DayBlocksColors colors;
@@ -37,6 +42,7 @@ class DayBlocksPainter extends CustomPainter {
   /// The "+N" label, laid out, for when not every day fits.
   final TextPainter moreLabel;
   final double assembled;
+  final double trail;
 
   static const double _stroke = 1.5;
   static const double _hatchSpacing = 6;
@@ -76,17 +82,19 @@ class DayBlocksPainter extends CustomPainter {
     switch (data.style) {
       case DayBlocksStyle.onTrack:
         canvas.drawRRect(shape, Paint()..color = colors.idle);
-        _paintFill(canvas, shape, data.todayFill);
+        _paintLevel(canvas, shape);
         _paintEdge(canvas, shape);
       case DayBlocksStyle.preview:
         canvas.drawRRect(shape, Paint()..color = colors.signal);
         _paintEdge(canvas, shape);
       case DayBlocksStyle.slowDown:
-        _paintFill(canvas, shape, data.todayFill);
+        _paintLevel(canvas, shape);
         canvas.drawRRect(shape.deflate(_stroke / 2 + _edgeInset), _outline(colors.signal));
         _paintEdge(canvas, shape);
       case DayBlocksStyle.overToday:
         _paintHatch(canvas, shape);
+        // why: the level still falling from before the overspend uncovers the hatch.
+        _paintLevel(canvas, shape);
         canvas.drawRRect(shape.deflate(_stroke / 2), _outline(colors.outline));
       case DayBlocksStyle.overCycle:
         canvas.drawRRect(shape.deflate(_stroke / 2), _outline(colors.outline));
@@ -113,7 +121,14 @@ class DayBlocksPainter extends CustomPainter {
     );
   }
 
-  void _paintFill(Canvas canvas, RRect shape, double fill) {
+  void _paintLevel(Canvas canvas, RRect shape) {
+    if (trail > data.todayFill) {
+      _paintFill(canvas, shape, trail, colors.signal.withValues(alpha: trailOpacity));
+    }
+    _paintFill(canvas, shape, data.todayFill, colors.signal);
+  }
+
+  void _paintFill(Canvas canvas, RRect shape, double fill, Color color) {
     if (fill <= 0) {
       return;
     }
@@ -122,7 +137,7 @@ class DayBlocksPainter extends CustomPainter {
     canvas
       ..save()
       ..clipRRect(shape)
-      ..drawRect(Rect.fromLTWH(outer.left, outer.bottom - height, outer.width, height), Paint()..color = colors.signal)
+      ..drawRect(Rect.fromLTWH(outer.left, outer.bottom - height, outer.width, height), Paint()..color = color)
       ..restore();
   }
 
@@ -150,6 +165,7 @@ class DayBlocksPainter extends CustomPainter {
   bool shouldRepaint(DayBlocksPainter oldDelegate) =>
       oldDelegate.data != data ||
       oldDelegate.assembled != assembled ||
+      oldDelegate.trail != trail ||
       oldDelegate.colors.signal != colors.signal ||
       oldDelegate.colors.idle != colors.idle ||
       oldDelegate.colors.outline != colors.outline ||

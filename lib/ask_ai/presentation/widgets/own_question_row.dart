@@ -76,6 +76,7 @@ class _OwnQuestionRowState extends State<OwnQuestionRow> {
                 hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
                 counterText: '',
                 border: InputBorder.none,
+                filled: false,
                 isDense: true,
                 // why: the field is the row's tap target, so it keeps the 48dp minimum (NFR-4).
                 constraints: const BoxConstraints(minHeight: HisaabSizes.minTouchTarget),

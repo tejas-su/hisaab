@@ -6,14 +6,19 @@ import '../../ledger/ledger.dart';
 abstract final class DayBlocksMapper {
   static const double _shortestLaterBlock = 0.4;
 
-  /// Today's fill is what's left of today's share; later blocks shrink with tomorrow's share
-  /// but never below 40% or above full height.
+  /// Fullest today's block draws once anything is spent today (D91).
+  static const double _fullestAfterSpend = 0.9;
+
+  /// Today's fill is what's left of today's share, capped at 90% once anything is spent so a
+  /// small spend still shows; later blocks shrink with tomorrow's share but never below 40% or
+  /// above full height.
   static DayBlocksData of(CycleSummary summary) {
     final int share = summary.todayShare.amountMinor;
+    final double fullest = summary.spentToday.amountMinor > 0 ? _fullestAfterSpend : 1;
     return DayBlocksData(
       count: summary.daysLeft,
       style: _style(summary.state),
-      todayFill: share > 0 ? (summary.safeToday.amountMinor / share).clamp(0, 1).toDouble() : 0,
+      todayFill: share > 0 ? (summary.safeToday.amountMinor / share).clamp(0, fullest).toDouble() : 0,
       laterHeight: share > 0
           ? summary.tomorrowShare.match(
               () => 1,

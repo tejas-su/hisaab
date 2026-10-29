@@ -29,7 +29,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     sunk: Color(0xFFE4E1DA),
     hairline: Color(0xFFD3D0C8),
     ink: Color(0xFF161615),
-    ink2: Color(0xFF62615C),
+    ink2: Color(0xFF585752),
     signal: Color(0xFFFFB020),
     onSignal: Color(0xFF161615),
     display: Color(0xFFFFFEFB),

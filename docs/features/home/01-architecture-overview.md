@@ -19,10 +19,13 @@ HomeLoadRequested (restartable: a newer load cancels an older one)
   → HomeReady | HomeFailed
 LedgerRepository.changes → HomeLoadRequested   after any save, delete or restore
 RecurringRepository.changes → HomeLoadRequested  after a bill is added, edited, deleted or restored
+HomeTrayOpened … HomeTrayClosed  AppRoutes.openAddTray wraps the Add tray; a HomeLoadRequested in between
+                             is held and runs once when the tray's exit ends, so the drain plays in view (D91)
 HomeDeleteRequested(entry)   emits the list without it first (Dismissible), then HomeReady.undo
 HomeWeekToggled              hero tap: flips HomeReady.showWeek (kept across reloads, not saved), tick haptic
 HomePage BlocConsumer: undo → SnackBar 6 s → HomeUndoRequested → RestoreEntry
-HeroCard: HeroCopy.of(summary, week:) words + DayBlocksMapper.of(summary) picture
+HeroCard: HeroCopy.of(summary, week:) words + DayBlocksMapper.of(summary) picture;
+          DayBlocks(fillIn: true) keyed by today: fills in on appear and on a new day, trail after a spend
 SavedYesterdayNote: summary.savedYesterday, under the hero and above the due-soon nudge
 ```
 
@@ -32,7 +35,7 @@ SavedYesterdayNote: summary.savedYesterday, under the hero and above the due-soo
 | `HomePage` | `presentation/pages/` | Header, hero by state, Today list, Undo snackbar |
 | `HomeBloc`, `HomeEvent`, `HomeState` | `presentation/bloc/` | Loads, reloads on `changes`, delete/undo, swipe haptic |
 | `HeroCopy`, `RangeWords` | `presentation/hero_copy.dart` | Every hero word and the one spoken sentence (FR-HO-7); *Today* or *This week* title, number and overspend |
-| `DayBlocksMapper` | `presentation/day_blocks_mapper.dart` | BR-6: fill, later-block height (0.4–1), style |
+| `DayBlocksMapper` | `presentation/day_blocks_mapper.dart` | BR-6: fill (at most 0.9 once anything is spent), later-block height (0.4–1), style |
 | `HeroCard`, `RangeLine`, `HeroSkeleton`, `NoIncomeCard` | `presentation/widgets/` | The display card variants |
 | `TodayList` | `presentation/widgets/` | Header with the day's total and *See all*; rows are the ledger's shared `EntryRow` (swipe to delete, tap to edit, TalkBack Delete action) |
 | `OverCard` | `presentation/widgets/over_card.dart` | Over states: what happens next, and *See where it went* unless Spends is already beside Home (FR-HO-5) |

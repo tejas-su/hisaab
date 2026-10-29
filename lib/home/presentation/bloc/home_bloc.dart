@@ -15,7 +15,8 @@ import 'home_state.dart';
 /// Owns Home's summary, due-soon nudge and Today list (SPEC FR-HO). Driven by
 /// [HomeLoadRequested] (start, resume, midnight) and by every write through
 /// [LedgerRepository.changes] and [RecurringRepository.changes]; the page adds
-/// [HomeDeleteRequested], [HomeUndoRequested] and [HomeWeekToggled].
+/// [HomeDeleteRequested], [HomeUndoRequested] and [HomeWeekToggled]. The app adds
+/// [HomeTrayOpened] and [HomeTrayClosed] around the Add tray, and reloads wait in between.
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   HomeBloc({
     required this._getCycleSummary,
@@ -30,7 +31,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }) : super(const HomeLoading()) {
     // why: every write reloads Home; a newer load cancels an older one still reading, so stale
     // numbers never land last.
-    on<HomeLoadRequested>((HomeLoadRequested event, Emitter<HomeState> emit) => _load(emit), transformer: restartable());
+    on<HomeLoadRequested>(_onLoadRequested, transformer: restartable());
+    on<HomeTrayOpened>((HomeTrayOpened event, Emitter<HomeState> emit) => _trayOpen = true);
+    on<HomeTrayClosed>(_onTrayClosed);
     on<HomeWeekToggled>(_onWeekToggled);
     on<HomeDeleteRequested>(_onDeleteRequested);
     on<HomeUndoRequested>(_onUndoRequested);
@@ -52,6 +55,29 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final Haptics _haptics;
   late final StreamSubscription<void> _changes;
   late final StreamSubscription<void> _ruleChanges;
+
+  // why: a drain behind the closing tray's scrim teaches nothing, so while the tray covers Home
+  // a reload waits for the tray to go (FR-AD-5, D91).
+  bool _trayOpen = false;
+  bool _reloadWhenTrayCloses = false;
+
+  Future<void> _onLoadRequested(HomeLoadRequested event, Emitter<HomeState> emit) async {
+    if (_trayOpen) {
+      _reloadWhenTrayCloses = true;
+      return;
+    }
+    await _load(emit);
+  }
+
+  // why: the reload joins the restartable load queue rather than running here, so it can't
+  // race a load already in flight.
+  void _onTrayClosed(HomeTrayClosed event, Emitter<HomeState> emit) {
+    _trayOpen = false;
+    if (_reloadWhenTrayCloses) {
+      _reloadWhenTrayCloses = false;
+      add(const HomeLoadRequested());
+    }
+  }
 
   /// Posts any due recurring entries, then works out today's summary, nudge and list (BR-8).
   Future<void> _load(Emitter<HomeState> emit) async {

@@ -104,6 +104,31 @@ void main() {
       expect(services.haptics.events.last, 'success');
     });
 
+    testWidgets('show completes only once the tray has fully closed (FR-AD-5, D91)', (WidgetTester tester) async {
+      bool closed = false;
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: Builder(
+            builder: (BuildContext context) => Center(
+              child: TextButton(
+                onPressed: () => AddEntryTray.show(context, bloc()).then((void _) => closed = true),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      expect((find.byType(AddEntryTray).evaluate().isNotEmpty, closed), (true, false));
+      await tester.pumpAndSettle();
+      expect((find.byType(AddEntryTray).evaluate().isEmpty, closed), (true, true));
+    });
+
     testWidgets('shows the overspend preview from the mockup (FR-AD-3)', (WidgetTester tester) async {
       await open(tester);
       await type(tester, '2450');

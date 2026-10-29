@@ -19,6 +19,9 @@ abstract final class HisaabMotion {
   /// Key press feedback.
   static const Duration press = Duration(milliseconds: 120);
 
+  /// How long the spent slice of today's block holds before it follows the level down (D91).
+  static const Duration trailHold = Duration(milliseconds: 250);
+
   /// Digits rolling to a new amount.
   static const Duration numberRoll = Duration(milliseconds: 300);
 

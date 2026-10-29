@@ -16,8 +16,9 @@ void main() {
       ('light', HisaabColors.light),
       ('dark', HisaabColors.dark),
     ]) {
-      test('$name: body text on every surface ≥ 4.5:1', () {
-        for (final Color surface in <Color>[colors.background, colors.surface, colors.sunk]) {
+      test('$name: body text on every surface and fill ≥ 4.5:1', () {
+        // why: hairline is the chip and text-field fill (D89, D90), so labels and hints sit on it too.
+        for (final Color surface in <Color>[colors.background, colors.surface, colors.sunk, colors.hairline]) {
           expect(_contrast(colors.ink, surface), greaterThanOrEqualTo(4.5));
           expect(_contrast(colors.ink2, surface), greaterThanOrEqualTo(4.5));
         }

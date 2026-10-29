@@ -174,7 +174,8 @@ abstract final class AppRoutes {
         child: BillEditorPage(onDelete: onDelete),
       );
 
-  /// Opens the Add tray from Home's [context], reusing Home's summary and categories.
+  /// Opens the Add tray from Home's [context], reusing Home's summary and categories. Home holds
+  /// its numbers until the tray has fully closed, so the drain plays in view (FR-AD-5).
   static Future<void> openAddTray(
     BuildContext context,
     GetIt getIt, {
@@ -198,6 +199,8 @@ abstract final class AppRoutes {
       editing: editing,
       kind: kind,
     );
-    return AddEntryTray.show(context, bloc);
+    final HomeBloc homeBloc = context.read<HomeBloc>()..add(const HomeTrayOpened());
+    await AddEntryTray.show(context, bloc);
+    homeBloc.add(const HomeTrayClosed());
   }
 }

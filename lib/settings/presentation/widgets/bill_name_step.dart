@@ -86,7 +86,6 @@ class _BillNameStepState extends State<BillNameStep> {
               labelText: strings.billNameLabel,
               hintText: strings.billNameHint,
               counterText: '',
-              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(HisaabRadii.chip))),
             ),
           ),
           // why: right under the field, the pills read as ways to fill it in, not as more buttons beside Next.

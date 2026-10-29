@@ -79,6 +79,24 @@ void main() {
       expect(find.byType(EntryRow), findsWidgets);
     });
 
+    testWidgets('the header names the active filter, and drops it for All (D89)', (WidgetTester tester) async {
+      await pump(tester);
+      expect(find.text('· Travel'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey<String>('filter-travel')));
+      await tester.settle();
+      expect(find.text('October'), findsOneWidget);
+      expect(find.text('· Travel'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('filter-all')));
+      await tester.settle();
+      expect(find.text('· Travel'), findsNothing);
+    });
+
+    testWidgets('the filters are one row that scrolls sideways, never a second row', (WidgetTester tester) async {
+      await pump(tester);
+      final Finder row = find.ancestor(of: find.byKey(const ValueKey<String>('filter-all')), matching: find.byType(SingleChildScrollView));
+      expect(tester.widget<SingleChildScrollView>(row.first).scrollDirection, Axis.horizontal);
+    });
+
     testWidgets('a chip with nothing left in it says so', (WidgetTester tester) async {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey<String>('filter-travel')));

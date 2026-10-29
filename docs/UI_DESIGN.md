@@ -64,7 +64,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `sunk` | `#E4E1DA` | Keys, chips, icon wells: pressed in, so darker than `bg` and `surface` |
 | `hairline` | `#D3D0C8` | 1px dividers, outlines, pressed keys |
 | `ink` | `#161615` | Text, selected states, the edge around marigold |
-| `ink2` | `#62615C` | Secondary text |
+| `ink2` | `#585752` | Secondary text; 4.70:1 on `hairline`, so labels and hints read on chip and field fills (D90) |
 | `signal` | `#FFB020` | **Today + act only.** Always sits on `ink`, or carries `ink` text |
 
 **Dark**
@@ -277,13 +277,13 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - The amount flies up into the title.
 - A **2×4 grid of monochrome tiles** (96dp, never scrolls, never reorders).
 - Chips: *Today ▾* · *Add a note*.
-- A picked chip anywhere in the app is a raised `surface` pill with a 1.5dp `ink` edge and a trailing check in light theme, and an `ink` pill in dark. It is never marigold and never an ink slab in light theme (D85).
+- Chips and text fields are fill-only, with no edges (D88, D89). A chip rests as `hairline`, shrinks to 0.97 when pressed, and a pick fills `ink2` with a `background`-coloured label and trailing check. A disabled chip has no fill. A text field is a `hairline` well, like chips, with a 1.5dp `ink2` edge only while focused; its label never floats. A pick is never marigold and never an `ink` slab.
+- Every entry: the category filters are one row that scrolls sideways, and the cycle header names the active filter ("October · Food", D89).
 - **Tapping a tile saves:**
   1. The tile flashes to ink (120ms).
   2. The tray drops.
-  3. On Home, today's block drains to its new level.
-  4. The number rolls.
-  5. Haptic: `successNotification`.
+  3. Once the tray is gone, today's block drains to its new level, leaving a trail, and the number rolls in the same frame (§6, D91).
+  4. Haptic: `successNotification`.
 - Tap path: Add → digits → Next → tile.
 
 ### 5.4 Spends
@@ -345,17 +345,24 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 
 - **Press feedback:** scale 0.97 plus the ink lip collapsing (2px → 0).
 - **Number roll:** digits roll with tabular figures over 300ms using `Cubic(0.23, 1, 0.32, 1)`.
-- **Block drain:** today's fill animates with `standard`. Rubber-band on over-drag, never a hard stop.
+- **Block drain (D91, case study 05):** teaches that today's block is a tank of today's money. One focal point at a time, no bounce:
+  1. **Wait for the tray.** Home holds its numbers while the Add tray covers it, and recomputes once the tray's exit ends. A drain behind the scrim teaches nothing.
+  2. **The level falls** on `standard` and the number roll starts in the same frame.
+  3. **A trail** of the spent slice stays as marigold at 35% opacity. After 250ms it falls to the new level on `calm`, so the size of this spend can be read. A fill that rises (a deleted or undone spend) has no trail.
+  4. **Any spend shows:** once anything is spent today, the fill is at most 0.9 (BR-6).
+  5. **Over today:** the level falls away, uncovering the hatch, and the future blocks shrink together on `standard`. No shake: it would read as an error and contradict "It happens".
+- **Fill in:** each time Home's blocks appear (at launch, coming back from Spends on a phone, and when the day changes), today's block fills from empty to its level on `calm`. It shows the block is a container.
 - **Delight scales inversely with frequency:**
 
   | Frequency | Treatment |
   |---|---|
   | Every key press | Tick haptic and press scale only |
-  | Every save | Block drain plus number roll |
+  | Every save | Block drain with its trail, plus number roll |
+  | Each time Home appears | Today's block fills in (0.55s) |
   | Daily | Blocks re-flow at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
-- **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate.
+- **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no trail and no fill in.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
 
 ## 7. Haptics (Flutter 3.47, verified)

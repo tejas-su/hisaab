@@ -185,6 +185,53 @@ void main() {
     });
   });
 
+  group('HomeBloc while the Add tray covers Home (FR-AD-5, D91)', () {
+    test('holds the numbers through a save, then reloads once the tray has closed', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      await bloc.dispatch(const HomeTrayOpened());
+      await ledger.add(EntryDraft(amount: Money.fromMajor(100), kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      await pumpEventQueue();
+      expect(ready().summary.spentToday, Money.fromMajor(420));
+
+      await bloc.dispatch(const HomeTrayClosed());
+      expect(ready().summary.spentToday, Money.fromMajor(520));
+    });
+
+    test('a tray closed without a save does not reload', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      final List<HomeState> emitted = <HomeState>[];
+      final StreamSubscription<HomeState> listening = bloc.stream.listen(emitted.add);
+      addTearDown(listening.cancel);
+
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayClosed());
+      expect(emitted, isEmpty);
+    });
+
+    test('several writes under the tray reload once', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      await bloc.dispatch(const HomeTrayOpened());
+      for (int i = 0; i < 2; i++) {
+        await ledger.add(EntryDraft(amount: Money.fromMajor(50), kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      }
+      final List<HomeState> emitted = <HomeState>[];
+      final StreamSubscription<HomeState> listening = bloc.stream.listen(emitted.add);
+      addTearDown(listening.cancel);
+
+      await bloc.dispatch(const HomeTrayClosed());
+      expect(emitted.map((HomeState s) => (s as HomeReady).summary.spentToday), <Money>[Money.fromMajor(520)]);
+    });
+
+    test('reloads on the next write once the tray has closed', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayClosed());
+      await ledger.add(EntryDraft(amount: Money.fromMajor(100), kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      await pumpEventQueue();
+      expect(ready().summary.spentToday, Money.fromMajor(520));
+    });
+  });
+
   group('HomeBloc delete and undo (BR-10)', () {
     setUp(() => bloc.dispatch(const HomeLoadRequested()));
 

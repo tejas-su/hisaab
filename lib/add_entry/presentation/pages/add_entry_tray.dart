@@ -25,22 +25,33 @@ class AddEntryTray extends StatelessWidget {
 
   /// Opens the tray over [context] with [bloc], which the tray closes when it goes away.
   ///
+  /// Completes once the tray's exit animation has ended, not when it starts to close, so Home
+  /// can hold its drain until it's in view (FR-AD-5).
+  ///
   /// On a tabletop fold the sheet keeps to the lower half (Flutter's sheets never straddle a
   /// fold), so the hero stays readable above it and the keypad sits on the flat half.
   static Future<void> show(BuildContext context, AddEntryBloc bloc) {
     final bool tabletop = context.layout.panes is TabletopPanes;
-    return showModalBottomSheet<void>(
-      context: context,
+    final NavigatorState navigator = Navigator.of(context);
+    final MaterialLocalizations localizations = MaterialLocalizations.of(context);
+    // why: showModalBottomSheet's future completes as the exit starts; the route's `completed`
+    // waits for the exit to end. These are showModalBottomSheet's own arguments.
+    final ModalBottomSheetRoute<void> route = ModalBottomSheetRoute<void>(
+      capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
+      barrierLabel: localizations.scrimLabel,
+      barrierOnTapHint: localizations.scrimOnTapHint(localizations.bottomSheetLabel),
       isScrollControlled: true,
       useSafeArea: true,
       anchorPoint: tabletop ? Offset(0, MediaQuery.sizeOf(context).height) : null,
       backgroundColor: context.colors.surface,
-      barrierColor: context.colors.ink.withValues(alpha: 0.32),
+      modalBarrierColor: context.colors.ink.withValues(alpha: 0.32),
       shape: HisaabShapes.trayTop(),
       constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop,
       builder: (BuildContext _) => BlocProvider<AddEntryBloc>(create: (BuildContext _) => bloc, child: const AddEntryTray()),
     );
+    navigator.push(route);
+    return route.completed;
   }
 
   @override

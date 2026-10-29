@@ -94,6 +94,16 @@ void main() {
   });
 
   group('HisaabTheme', () {
+    test('text fields are a hairline fill with no edge at rest and a soft ink2 edge while typing (D88, D90)', () {
+      final InputDecorationThemeData fields = HisaabTheme.light().inputDecorationTheme;
+      expect(fields.filled, isTrue);
+      expect(fields.fillColor, HisaabColors.light.hairline);
+      expect(fields.enabledBorder?.borderSide, BorderSide.none);
+      expect(fields.focusedBorder?.borderSide, BorderSide(color: HisaabColors.light.ink2, width: 1.5));
+      expect(fields.floatingLabelBehavior, FloatingLabelBehavior.never);
+      expect(HisaabTheme.dark().inputDecorationTheme.fillColor, HisaabColors.dark.hairline);
+    });
+
     test('installs the colour tokens and never uses red for errors', () {
       final ThemeData light = HisaabTheme.light();
       expect(light.extension<HisaabColors>(), HisaabColors.light);

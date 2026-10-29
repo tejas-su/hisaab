@@ -45,3 +45,13 @@ final class HomeUndoRequested extends HomeEvent {
 final class HomeSwipeThresholdReached extends HomeEvent {
   const HomeSwipeThresholdReached();
 }
+
+/// The Add tray opened over Home; Home holds its numbers until [HomeTrayClosed].
+final class HomeTrayOpened extends HomeEvent {
+  const HomeTrayOpened();
+}
+
+/// The Add tray's exit animation ended, so Home is in full view again.
+final class HomeTrayClosed extends HomeEvent {
+  const HomeTrayClosed();
+}

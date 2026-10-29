@@ -127,7 +127,8 @@ The states below are evaluated in order, and the first match wins.
 
 ### BR-6 Day Blocks geometry
 - **Number of blocks:** `D`.
-- **Today's fill:** `clamp(safeToday / A, 0, 1)`. If `A = 0`, the fill is 0.
+- **Today's fill:** `clamp(safeToday / A, 0, 1)`. If `A = 0`, the fill is 0. Once `S_today > 0`, the fill is at most `0.9`, a 4dp band on the 40dp block, so any spend shows (D91).
+  - **Worked example:** `A = 11,218`, `S_today = 700` gives `10,518 / 11,218 ≈ 0.94`, which shows as `0.9`. `S_today = 0` shows `1`.
 - **Future blocks:** height ratio `clamp(tomorrow / A, 0.4, 1)` when `A > 0`. They shrink when today is overspent, and never grow above full height. The ghost outline of full height is drawn only when the ratio is below 1.
 - **Widths:** blocks share the width equally. If that is under 6dp, render one block per day for the next 7 days plus a "+N" label. The payday flag is always last.
 
@@ -302,9 +303,8 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 - **FR-AD-5** Step 2 shows a 2×4 grid of categories for *Spent*, or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a tile saves**, then:
   1. The tile flashes (120 ms).
   2. The tray closes.
-  3. Home recomputes and today's block drains.
-  4. The hero number rolls to its new value.
-  5. The success haptic fires.
+  3. Once the tray has fully closed, Home recomputes. Today's block drains and the hero number rolls to its new value, starting in the same frame. While the tray covers Home, Home holds its last numbers (D91).
+  4. The success haptic fires.
 - **FR-AD-6** Double-taps while saving are ignored. If the save fails, the tray stays open with "Couldn't save. Try again." and nothing is lost.
 - **FR-AD-7** Back from step 2 returns to step 1 with the amount intact. Back from step 1 closes the tray without saving.
 - **FR-AD-8** Edit mode opens step 1 prefilled. Saving replaces the entry, and *Delete* is shown in step 2.
@@ -375,7 +375,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 | ID | Requirement |
 |---|---|
-| NFR-1 | Cold start to an interactive Home in ≤ 1.5 s on a 4 GB Android 10 device; Add tray opens in ≤ 150 ms; save to drained block ≤ 400 ms (Doherty threshold) |
+| NFR-1 | Cold start to an interactive Home in ≤ 1.5 s on a 4 GB Android 10 device; Add tray opens in ≤ 150 ms; the drain begins ≤ 400 ms after the save (Doherty threshold: feedback starts, D91) |
 | NFR-2 | Fully offline. No network permission is used, except opening ChatGPT through the browser (an intent, not app networking) |
 | NFR-3 | No analytics, no crash reporting that leaves the device, no ads. Logs never contain notes |
 | NFR-4 | Accessibility: WCAG AA contrast (verified in UI_DESIGN §3.2), touch targets of 48dp or more, full TalkBack coverage, 1.5× text, reduced motion |

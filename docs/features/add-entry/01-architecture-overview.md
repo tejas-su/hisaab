@@ -16,6 +16,7 @@ Step 1  KindChanged · KeyPressed · BackspacePressed · Cleared · QuickAdded  
 Step 2  DateChanged (clamped earliest..today) · NoteChanged
         CategoryPicked(id) (droppable) → AddEntrySaving (tile flashes) → SaveEntry
            Right → success haptic → AddEntryFinished → tray pops; Home reloads via changes
+           once AddEntryTray.show completes (the exit has ended; HomeTrayClosed)
            Left  → reject haptic → AddEntryEditing(failed: true)
         DeleteRequested (edit mode, droppable) → DeleteEntry → AddEntryFinished
 BackPressed: step 2 → step 1 (PopScope); step 1 → the sheet closes without saving

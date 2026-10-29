@@ -33,3 +33,9 @@ Each principle cites its source and names where it applies in Hisaab. The newest
 18. **Emphasis is a named variant of a style, never a one-off `fontWeight` override.** *Sources:* Apple emphasized weights; Fluent Strong/Stronger; Primer ("don't use arbitrary weight number values").
 19. **Sentence case, no all-caps for attention, few typefaces; keep the hierarchy when text scales.** *Sources:* Fluent 2; Apple HIG Dynamic Type.
 
+
+## Motion (case study 05)
+
+20. **Animate a change where it can be seen.** Hold the update until whatever covers it (tray, scrim) has gone, then move one focal point at a time. *Sources:* Material choreography; eBay motion playbook. *Applies to:* the drain after Add, list inserts.
+21. **A gauge needs a visible empty part to read as a gauge.** Show it filling once, and make every change visible, even a small one. *Sources:* the blind read in case study 05; Apple's gauge guidance (§3.3). *Applies to:* Day Blocks.
+22. **No bounce unless a finger threw it.** Springs start at damping 1. *Sources:* Apple WWDC18 *Designing Fluid Interfaces*, WWDC23 *Animate with springs*.

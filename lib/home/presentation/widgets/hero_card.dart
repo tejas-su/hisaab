@@ -5,6 +5,7 @@ import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/day_blocks/day_blocks.dart';
 import '../../../core/widgets/display_card.dart';
@@ -15,7 +16,8 @@ import '../hero_copy.dart';
 import 'range_line.dart';
 
 /// The hero: safe to spend today, the Day Blocks with the payday flag, and the range line
-/// (SPEC FR-HO-2). TalkBack reads it as one sentence (FR-HO-7).
+/// (SPEC FR-HO-2). TalkBack reads it as one sentence (FR-HO-7). Today's block fills in each
+/// time the card appears and on each new day (D91).
 ///
 /// [week] shows *This week*'s number instead of today's; tapping the card calls [onTap] to flip
 /// it. [assemble] slides the blocks in once, after onboarding.
@@ -78,9 +80,12 @@ class HeroCard extends StatelessWidget {
                 children: <Widget>[
                   Expanded(
                     child: DayBlocks(
+                      // why: a new day gets a fresh block that fills in again (D91).
+                      key: ValueKey<CalendarDate>(summary.today),
                       data: DayBlocksMapper.of(summary),
                       semanticLabel: copy.laterCaption,
                       assemble: assemble,
+                      fillIn: true,
                     ),
                   ),
                   const SizedBox(width: _flagGap),

@@ -144,6 +144,15 @@
   "everyEntry": "Every entry",
   "allCategories": "All",
   "noEntriesHere": "Nothing here yet.",
+  "filteredBy": "· {category}",
+  "@filteredBy": {
+    "description": "After the cycle name on Every entry, naming the category the list is narrowed to",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
   "seeWhereItWent": "See where it went",
   "overTodayCard": "{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it is a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}",
   "@overTodayCard": {

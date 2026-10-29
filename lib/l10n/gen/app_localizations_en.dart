@@ -138,6 +138,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEntriesHere => 'Nothing here yet.';
 
   @override
+  String filteredBy(String category) {
+    return '· $category';
+  }
+
+  @override
   String get seeWhereItWent => 'See where it went';
 
   @override
