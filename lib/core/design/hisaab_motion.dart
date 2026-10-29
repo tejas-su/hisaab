@@ -28,11 +28,19 @@ abstract final class HisaabMotion {
   /// A top bar's hairline appearing or clearing as content scrolls under it.
   static const Duration scrollEdge = Duration(milliseconds: 200);
 
+  /// One pass of light across the hero card, its first quarter a wait while today's block fills
+  /// (D106). It plays once, never loops.
+  static const Duration sheen = Duration(milliseconds: 1400);
+
   /// The only transition used when the system asks for reduced motion.
   static const Duration reducedCrossfade = Duration(milliseconds: 150);
 
   /// Ease-out for entering elements; nothing enters with ease-in.
   static const Curve easeOut = Cubic(0.23, 1, 0.32, 1);
+
+  /// Ease-in-out for a pass that enters and leaves (the hero sheen): it accelerates in and slows
+  /// out at the same rate, so it never crawls at either end (D106).
+  static const Curve sweep = Cubic(0.65, 0, 0.35, 1);
 
   /// Pressed keys and tiles scale to this.
   static const double pressedScale = 0.97;

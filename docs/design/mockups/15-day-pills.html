@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Day pills (proposal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Proposal: Day Blocks as day pills. Nothing here is decided or built.
+     Worked example (SPEC BR-4/6/7): cycle Sun 4 Oct to Tue 3 Nov 2026, today Mon 26 Oct, D = 9,
+     A = ₹1,850, ₹420 spent today, hero ₹1,430, today's fill 1,430 / 1,850 = 0.773. */
+  :root {
+    /* HisaabColors.light (lib/core/design/hisaab_colors.dart) */
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --control: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --displaySheen: #FFFEFCB3;
+    --clear: #F1EBE400;
+    /* Derived, not new colours: the slow-down ring sits inside the 1.5dp edge where there is one */
+    --ringW: 3px;
+    /* Mockup canvas only, not app tokens */
+    --canvas: #DDD5CB; --frame: #2B2926;
+  }
+  .dark {
+    /* HisaabColors.dark */
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --control: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --displaySheen: #F2F1EC1A;
+    --clear: #13121000;
+    --ringW: 1.5px;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 24px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 16px/20px 'Mukta', sans-serif; margin: 0 0 4px; }
+  p { margin: 0 0 8px; }
+  .lede { color: var(--ink2); max-width: 78ch; font-size: 15px; line-height: 22px; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--bg); }
+
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 8px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 48px; cursor: pointer; }
+  .controls input { width: 20px; height: 20px; accent-color: var(--ink); }
+  .controls .hint { color: var(--ink2); font-size: 13px; }
+  button.btn { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 16px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+  select { font: 400 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .stage { background: var(--bg); padding: 20px; border-radius: 20px; color: var(--ink); }
+  .stage .which { display: block; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink2); margin: -6px 0 10px; }
+
+  /* ---------- Phone ---------- */
+  .phone { width: 360px; border-radius: 28px; background: var(--bg); outline: 8px solid var(--frame); padding: 16px 20px 24px; color: var(--ink); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; height: 48px; margin-bottom: 12px; }
+  .wm { display: flex; align-items: baseline; gap: 2px; font: 600 26px/28px 'Anek Latin', sans-serif; letter-spacing: -0.4px; }
+  .wm i { width: 8px; height: 8px; border-radius: 4px; background: var(--signal); box-shadow: 0 0 0 1px var(--displayEdge); }
+  .topbar .end { display: flex; align-items: center; gap: 12px; }
+  .topbar .date { font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: flex; align-items: center; justify-content: center; color: var(--ink); }
+  .list { margin-top: 12px; border-radius: 28px; background: var(--surface); padding: 6px 0 8px; }
+  .list .head { display: flex; align-items: baseline; justify-content: space-between; padding: 8px 20px 6px; }
+  .list .head span:first-child { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .list .head b { font: 700 15px/20px 'Mukta', sans-serif; color: var(--ink2); font-feature-settings: 'tnum'; margin-left: 10px; }
+  .list .head u { font: 600 15px/20px 'Mukta', sans-serif; text-underline-offset: 3px; }
+  .item { display: flex; align-items: center; gap: 12px; padding: 9px 20px; }
+  .item .ic { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: flex; align-items: center; justify-content: center; color: var(--ink); }
+  .item .txt { display: flex; flex-direction: column; flex-grow: 1; }
+  .item .txt span:first-child { font: 400 16px/20px 'Mukta', sans-serif; }
+  .item .txt span:last-child { font: 400 13px/18px 'Mukta', sans-serif; color: var(--ink2); }
+  .item b { font: 700 17px/20px 'Mukta', sans-serif; font-feature-settings: 'tnum'; }
+  .rule { height: 1px; background: var(--hairline); margin: 0 20px 0 74px; }
+
+  /* ---------- Hero card (etched, raised; D106/D107) ---------- */
+  .hero { position: relative; width: 320px; border-radius: 28px; background: var(--display); color: var(--displayInk);
+    overflow: hidden; isolation: isolate; box-shadow: 0 10px 28px -12px var(--displayShadow); cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; transition: transform 250ms var(--spring, ease-out); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero.pressed { transform: scale(0.97); }
+  .hero:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  .etch path { fill: none; stroke: var(--displayEtch); stroke-width: 0.6; }
+  .grain { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+  .frame rect { fill: none; stroke-width: 0.6; }
+  .frame .k1 { x: 6px; y: 6px; width: calc(100% - 12px); height: calc(100% - 12px); rx: 22px; ry: 22px; stroke: var(--displayEtch); }
+  .frame .k2 { x: 10px; y: 10px; width: calc(100% - 20px); height: calc(100% - 20px); rx: 18px; ry: 18px; stroke: var(--hairline); stroke-dasharray: 4 3; }
+  .sheen { position: absolute; inset: -40% -60%; z-index: 3; pointer-events: none; transform: translateX(-70%);
+    background: linear-gradient(105deg, var(--clear) 42%, var(--displaySheen) 50%, var(--clear) 58%); }
+  .content { position: relative; z-index: 2; padding: 24px 20px; }
+  .content.copy { position: absolute; inset: 0 0 auto 0; pointer-events: none; }
+  .title { font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .amtrow { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 12px; }
+  .amount { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 76px; line-height: 76px; font-stretch: 85%;
+    font-variation-settings: 'wdth' 85; letter-spacing: -0.76px; font-feature-settings: 'tnum'; color: var(--displayInk); }
+  .amount.muted { color: var(--displayInk2); }
+  .over { font: 600 16px/20px 'Mukta', sans-serif; padding-bottom: 10px; color: var(--displayInk); }
+  .dayrow { margin-top: 24px; display: flex; align-items: flex-end; gap: 10px; }
+  .pills { position: relative; flex: 1 1 0; min-width: 0; height: 40px; }
+  .flag { min-width: 44px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--displayInk); }
+  .flag span { font: 600 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); white-space: nowrap; }
+  .caps { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; padding-right: 54px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .divider { margin-top: 20px; height: 1px; background: var(--displayEtch); }
+  .range { margin-top: 16px; display: flex; gap: 8px; align-items: center; font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .range svg { flex: none; color: var(--displayInk); }
+  .range b { font-weight: 600; color: var(--displayInk); font-feature-settings: 'tnum'; }
+  .note { display: none; margin-top: 12px; font: 400 13px/18px 'Mukta', sans-serif; color: var(--displayInk2); opacity: 0; }
+  .hero.has-note .note { display: block; }
+  .hero.compact .title, .hero.compact .amtrow, .hero.compact .divider, .hero.compact .range { display: none; }
+  .hero.compact .dayrow { margin-top: 0; }
+  /* Text at 1.5×: Mukta scales, the hero amount steps 76 → 44 (UI_DESIGN §3.4) */
+  .hero.text15 .title, .hero.text15 .range { font-size: 22.5px; line-height: 30px; }
+  .hero.text15 .amount { font-size: 44px; line-height: 44px; }
+  .hero.text15 .over { font-size: 24px; line-height: 30px; }
+  .hero.text15 .caps, .hero.text15 .flag span, .hero.text15 .more { font-size: 18px; line-height: 21px; }
+  .more { position: absolute; top: 13px; font: 600 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); opacity: 0; font-feature-settings: 'tnum'; white-space: nowrap; }
+  .span { position: absolute; left: 0; top: 42px; height: 2px; border-radius: 1px; background: var(--displayInk2); transform-origin: left center; transform: scaleX(0); }
+
+  /* ---------- One day pill: a capsule tank (radius = min(w, h) / 2) ---------- */
+  .slot { position: absolute; top: 0; height: 40px; }
+  .ghost, .pill, .pill > i { position: absolute; border-radius: 999px; }
+  .ghost { inset: 0; box-shadow: inset 0 0 0 1px var(--displayInk2); opacity: 0; }
+  .pill { left: 0; right: 0; bottom: 0; height: 100%; overflow: hidden; }
+  .pill > i { inset: 0; display: block; opacity: 0; }
+  .pill > .well { background: var(--blockIdle); }
+  /* 45° hatch, rising to the end edge, in displayInk2: 2dp lines, 6dp apart measured along the row (day_blocks_painter.dart) */
+  .pill > .hatch { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 2px, var(--clear) 2px 4.24px); }
+  /* The level: a flat top, clipped by the capsule. Never a rounded top. */
+  .pill > .level, .pill > .trail { top: auto; height: 0; border-radius: 0; background: var(--signal); opacity: 1; }
+  .pill > .trail { opacity: 0; }
+  /* A 1dp displayEdge line on the level's top: ink in light, none in dark (displayEdge is transparent) */
+  .pill > .level { box-shadow: inset 0 1px 0 var(--displayEdge); }
+  .pill > .ring { box-shadow: inset 0 0 0 var(--ringW) var(--signal); }
+  .pill > .edge { box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .pill > .outline { box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+
+  /* ---------- Sections ---------- */
+  .state { display: grid; grid-template-columns: 260px max-content max-content; justify-content: start; gap: 24px; align-items: start; margin-top: 24px; }
+  .state p, .demo p, .geo p { font-size: 14px; line-height: 20px; color: var(--ink2); max-width: 60ch; }
+  .state p b, .demo p b { color: var(--ink); font-weight: 600; }
+  .demo { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline); }
+  .demo header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .demo header > div { max-width: 640px; }
+  .demo .acts { display: flex; gap: 8px; align-items: center; }
+  .optional { margin-top: 48px; padding: 24px; border-radius: 28px; border: 2px dashed var(--ink2); }
+  .geo-out { font: 400 13px/18px 'Mukta', sans-serif; color: var(--ink2); margin-top: 10px; font-feature-settings: 'tnum'; }
+  .geo svg text { font: 400 11px 'Mukta', sans-serif; fill: var(--ink2); }
+  .geo svg .dim { stroke: var(--ink2); stroke-width: 1; fill: none; }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; background: var(--surface); border-radius: 20px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-weight: 600; }
+  td code { font-size: 13px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--hairline); }
+  ul.rejected { columns: 2; max-width: 900px; color: var(--ink2); font-size: 14px; line-height: 22px; }
+  ul.rejected b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <span class="hint">Starts from your system's prefers-reduced-motion. On, every replay shows its fallback.</span>
+  <button class="btn" id="replayAll">Replay all</button>
+</div>
+
+<h1>Day pills <span class="tag">Proposal, not agreed in SPEC</span></h1>
+<p class="lede">The hero's Day Blocks redrawn as capsules: today takes two width shares, the fill is a flat level in a capsule tank, and each everyday change has one quiet motion. Worked example from SPEC BR-4: Mon 26 Oct, 9 days to payday 4 Nov, A = ₹1,850, ₹420 spent, ₹1,430 safe today. Tokens are HisaabColors light and dark; springs are critically damped (no overshoot) at snap 0.25s, standard 0.35s and calm 0.55s. Press any card: it sinks to 0.97.</p>
+
+<!-- ================= 1. In context ================= -->
+<h2>1 · Home, in context</h2>
+<p class="lede">360dp phone, 20dp gutters, so the hero is 320dp and the pill row 226dp (content 280 − flag 44 − gap 10). Hierarchy holds: the number, then today's pill (the only colour on screen), then the range line, then the Today list.</p>
+<div class="row" id="phones"></div>
+
+<!-- ================= 2. Geometry ================= -->
+<h2>2 · Geometry</h2>
+<p class="lede">Today = 2 shares, at least 24dp. Future pills share the rest equally. Gap 6dp, 3dp above 16 days. If a future pill would be under 6dp, draw 7 pills and "+N". Height 40dp, radius = min(w, h) / 2. The level is clipped by the capsule, so its top is always flat; once anything is spent the level stops at <b>0.86</b> (BR-6 change: today 0.9), so 4dp stays clear inside the 1.5dp edge. In light a 1dp displayEdge line marks the level's top.</p>
+<div class="row geo" id="geoDiagram"></div>
+<h3 style="margin-top:24px">How the row reflows by days left</h3>
+<div class="row geo" id="geoVariants"></div>
+
+<!-- ================= 3. States ================= -->
+<h2>3 · States, light and dark</h2>
+<p class="lede">State is fill, outline, hatch and words. Marigold appears only on today's pill. Every state keeps its words: the title, the amount, the captions and the range line.</p>
+<div id="states"></div>
+
+<!-- ================= 4. Motion ================= -->
+<h2>4 · Micro animations</h2>
+<p class="lede">Each plays once per cause, never loops. Replay runs it again in light and dark. Tick Reduce motion at the top to see the fallback.</p>
+
+<article class="demo" id="m1"><header><div>
+  <h3>1 · Home appears</h3>
+  <p>Today's level rises from 0 to 0.773 on <b>calm</b>. With it, one diagonal band of <code>displaySheen</code> crosses the card: 1.4s, the first quarter a wait, then the sweep curve.</p>
+  <p><b>Reduced motion:</b> the level is there at once; no sheen.</p></div>
+  <div class="acts"><button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div></article>
+
+<article class="demo" id="m2"><header><div>
+  <h3>2 · A spend (₹300)</h3>
+  <p>After the Add tray has closed: the level falls 0.773 → 0.611 on <b>standard</b> and the number rolls ₹1,430 → ₹1,130 in the same frame. The spent slice stays as marigold at 50%, holds 500ms, then falls on <b>calm</b>.</p>
+  <p><b>Reduced motion:</b> a 150ms crossfade to the new state; no trail.</p></div>
+  <div class="acts"><button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div></article>
+
+<article class="demo" id="m3"><header><div>
+  <h3>3 · Over today</h3>
+  <p>The level falls on <b>standard</b>, uncovering the hatch, and the edge crossfades from the today edge to a <code>displayInk2</code> outline. The trail holds 500ms; as it starts to fall, the future pills shrink on <b>calm</b> and their ghost outlines appear: cause, then effect. No shake.</p>
+  <p><b>Reduced motion:</b> a 150ms crossfade to the end state.</p></div>
+  <div class="acts"><select id="overAmount" aria-label="Overspend amount"><option value="a">₹2,450 more (SPEC example): pills 0.93</option><option value="b">₹8,000 more: pills 0.56</option></select><button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div></article>
+
+<article class="demo" id="m4"><header><div>
+  <h3>4 · New day</h3>
+  <p>Midnight, Mon → Tue. Yesterday's pill loses its marigold and collapses to zero width at the start edge while it fades. The others slide and widen on <b>standard</b>, and tomorrow widens into today. Then today fills in, with the sheen (#1).</p>
+  <p><b>Reduced motion:</b> a 150ms crossfade.</p></div>
+  <div class="acts"><button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div></article>
+
+<article class="demo" id="m5"><header><div>
+  <h3>5 · The morning after an underspend</h3>
+  <p>Mon ended with ₹300 unspent. The future pills rise from 0.75 to full height, staggered start → end (40ms apart) on <b>calm</b>; the number rolls ₹1,850 → ₹1,887. The note crossfades in after the last pill lands.</p>
+  <p><b>Reduced motion:</b> a 150ms crossfade to the end state.</p></div>
+  <div class="acts"><button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div></article>
+
+<article class="demo" id="m6"><header><div>
+  <h3>6 · Payday morning</h3>
+  <p>Wed 4 Nov, a new 30-day cycle. The last day's wide pill leaves; the new cycle's pills slide in from the start edge, staggered 45ms, on <b>calm</b>, then today fills in. 30 days don't fit at 6dp each, so 7 pills and "+23".</p>
+  <p><b>Reduced motion:</b> a 150ms crossfade.</p></div>
+  <div class="acts"><button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div></article>
+
+<!-- ================= 5. Optional ================= -->
+<section class="optional">
+  <span class="tag">Needs FR-HO-2 change — not agreed</span>
+  <h2 style="margin-top:12px">Optional · Flip to This week</h2>
+  <p class="lede">FR-HO-2 says the pills stay on today when the hero flips. This option marks the week on them: tap the card and a 2dp <code>displayInk2</code> span bar draws in under the first min(7, D) pills from the start edge on <b>snap</b>; tap again and it retracts. The number rolls to A × 7 − ₹420 = ₹12,530 (Mon is the week's first day). Reduced motion: instant.</p>
+  <div class="row" id="flip"></div>
+</section>
+
+<section class="optional" aria-labelledby="oq">
+  <h2 id="oq" style="margin-top:0">Open questions</h2>
+  <ul class="lede">
+    <li><b>Underspend note copy</b> ("You saved ₹300 yesterday, so every day got ₹37 more."): the string exists as ARB <code>savedYesterday</code>, but where it sits and how long it stays needs a SPEC FR/BR.</li>
+    <li><b>"Over today · still lasts till payday"</b>: built from ARB parts, but this range line for the over-today state is not in SPEC BR-7.</li>
+    <li><b>Increased-contrast variants</b> for the new outline pairs (displayInk2 over outlines, ghost outlines, the level's top line) need entries in <code>contrast_pairs_test.dart</code> and floors for the increased-contrast theme.</li>
+  </ul>
+</section>
+
+<!-- ================= 6. Tokens ================= -->
+<h2>Token table</h2>
+<p class="lede">Every value this mockup uses. No new colour token: every fill is an existing HisaabColors role.</p>
+<div class="row">
+<table>
+  <tr><th>Colour</th><th>Light</th><th>Dark</th><th>Used for</th></tr>
+  <tr><td><code>display</code></td><td><span class="sw" style="background:#FFFEFC"></span>#FFFEFC</td><td><span class="sw" style="background:#211F1C"></span>#211F1C</td><td>Hero card</td></tr>
+  <tr><td><code>displayInk</code></td><td>#161615</td><td>#F2F1EC</td><td>Amount, over text, range emphasis, glyphs</td></tr>
+  <tr><td><code>displayInk2</code></td><td>#65605A (6.17:1)</td><td>#A7A199 (6.42:1)</td><td>Title, captions, flag date, "+N", hatch (2dp, 6 apart), every over outline (1.5dp; 6.17:1 light, 6.42:1 dark), ghost outlines (1dp), span bar</td></tr>
+  <tr><td><code>blockIdle</code></td><td>#D7CFC5 (1.53:1)</td><td>#413D38 (1.53:1)</td><td>Future pills, today's track</td></tr>
+  <tr><td><code>signal</code></td><td>#FFB020</td><td>#FFB020 (8.99:1)</td><td>Today's level, trail at 50%, slow-down ring. Today only</td></tr>
+  <tr><td><code>displayEdge</code></td><td>#161615 (17.97:1)</td><td>none</td><td>1.5dp edge on today while it shows marigold; 1dp line on the level's top</td></tr>
+  <tr><td><code>displayEtch</code></td><td>#F1EBE4</td><td>#2F2B27</td><td>Guilloché, grain, 6dp keyline, divider</td></tr>
+  <tr><td><code>hairline</code></td><td>#D7CFC5</td><td>#3A3632</td><td>Dashed 10dp keyline; dark card edge</td></tr>
+  <tr><td><code>displayShadow</code></td><td>#161615 at 18%</td><td>none</td><td>Raised hero: 10dp down, 28dp blur, −12dp</td></tr>
+  <tr><td><code>displaySheen</code></td><td>#FFFEFC at 70%</td><td>#F2F1EC at 10%</td><td>The one sheen band</td></tr>
+  <tr><td><code>clear</code></td><td>#F1EBE4 at 0%</td><td>#131210 at 0%</td><td>Hatch gaps, sheen band ends</td></tr>
+</table>
+<table>
+  <tr><th>Type, space, shape, motion</th><th>Value</th></tr>
+  <tr><td>Amount (<code>displayLarge</code>)</td><td>Anek Latin 76/76, 600, wdth 85, tnum, −0.76</td></tr>
+  <tr><td>Title (<code>bodyMedium</code>)</td><td>Mukta 15/20, 400</td></tr>
+  <tr><td>Over text (<code>titleMedium</code>)</td><td>Mukta 16/20, 600</td></tr>
+  <tr><td>Captions (<code>labelSmall</code> regular)</td><td>Mukta 12/14, 400; flag date and "+N" 600</td></tr>
+  <tr><td>Range line</td><td>Mukta 15/20, 400; emphasis 600</td></tr>
+  <tr><td>Card padding</td><td>24 top and bottom, 20 sides (etched)</td></tr>
+  <tr><td>Vertical rhythm</td><td>8 title→amount · 24 amount→pills · 6 pills→captions · 20 · divider · 16</td></tr>
+  <tr><td>Pill row</td><td>Height 40 · gap 6 (3 above 16 days) · today 2 shares, min 24 · min 6 · flag 44 + gap 10</td></tr>
+  <tr><td>Radius</td><td>Pills min(w, h)/2 · card 28 · keylines 22 and 18</td></tr>
+  <tr><td>Strokes</td><td>Edge, ring, over outlines 1.5 · ghost 1 · level top line 1 (light) · hatch 2 at 6 apart · span bar 2</td></tr>
+  <tr><td>Max fill once spent</td><td>0.86 (BR-6 change from 0.9): 4dp clear inside the edge</td></tr>
+  <tr><td>Flag column</td><td>Sizes to its date, min 44 + gap 10</td></tr>
+  <tr><td>Springs (damping 1.0)</td><td>snap 250ms · standard 350ms · calm 550ms</td></tr>
+  <tr><td>Other motion</td><td>Roll 300ms Cubic(0.23, 1, 0.32, 1) · sheen 1.4s, wait 350ms, sweep Cubic(0.65, 0, 0.35, 1) · trail hold 500ms · crossfade 150ms · stagger 40ms (#5), 45ms (#6) · press 0.97</td></tr>
+</table>
+</div>
+
+<!-- ================= 7. Rejected ================= -->
+<h2>Rejected</h2>
+<ul class="rejected">
+  <li><b>Per-pill taps:</b> 18dp targets, and the card is already one tap target (FR-HO-7).</li>
+  <li><b>Scrub gesture:</b> hidden, and it fights the scroll.</li>
+  <li><b>Pulse or glow loops:</b> motion that never ends is noise; delight scales inversely with frequency.</li>
+  <li><b>Shake on over:</b> reads as an error and contradicts "It happens".</li>
+  <li><b>Bounce or jelly:</b> springs stay at damping 1.0, no overshoot.</li>
+  <li><b>Animated hatch:</b> a moving stripe pattern is a loop and a vestibular trigger.</li>
+  <li><b>Marigold on anything but today:</b> one signal colour.</li>
+  <li><b>Confetti:</b> celebration for an everyday save cheapens it.</li>
+  <li><b>Haptic on drain:</b> the save already ticks; a second buzz for the level is noise.</li>
+</ul>
+
+<script>
+(() => {
+  // ---------- Motion tokens ----------
+  // A critically damped spring sampled into CSS linear(): x(t) = 1 − (1 + ωt)e^(−ωt), ω = 2π / response,
+  // normalised so it lands exactly at 1 when the token's duration ends. No overshoot.
+  function springEasing() {
+    const w = 2 * Math.PI, end = 1 - (1 + w) * Math.exp(-w), pts = [];
+    for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push(((1 - (1 + w * t) * Math.exp(-w * t)) / end).toFixed(4)); }
+    return 'linear(' + pts.join(', ') + ')';
+  }
+  const SPRING = CSS.supports('transition-timing-function', 'linear(0, 1)') ? springEasing() : 'cubic-bezier(.2, .8, .2, 1)';
+  document.documentElement.style.setProperty('--spring', SPRING);
+  const SNAP = { ms: 250, ease: SPRING }, STANDARD = { ms: 350, ease: SPRING }, CALM = { ms: 550, ease: SPRING };
+  const delay = (t, d) => ({ ...t, delay: d });
+  function cubic(x1, y1, x2, y2) {
+    return p => { let lo = 0, hi = 1, s = p;
+      for (let i = 0; i < 24; i++) { s = (lo + hi) / 2; const x = 3 * (1 - s) ** 2 * s * x1 + 3 * (1 - s) * s * s * x2 + s ** 3; if (x < p) lo = s; else hi = s; }
+      return 3 * (1 - s) ** 2 * s * y1 + 3 * (1 - s) * s * s * y2 + s ** 3; };
+  }
+  const ROLL = cubic(0.23, 1, 0.32, 1);
+
+  const reduceBox = document.getElementById('reduce');
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  reduceBox.checked = mq.matches;
+  mq.addEventListener('change', e => { reduceBox.checked = e.matches; });
+  const reduced = () => reduceBox.checked;
+
+  // ---------- Money: en_IN, whole rupees ----------
+  const nf = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+  const rupee = v => '₹' + nf.format(Math.max(0, Math.round(v)));
+
+  // ---------- Glyph stand-ins (the app uses Hugeicons) ----------
+  const svg = (d, sw = 1.8) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICON = {
+    check: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>'),
+    alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>'),
+    over: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
+    flag: svg('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', 1.6),
+  };
+
+  // ---------- Etch: guilloché rosette and grain (DisplayEtchPainter) ----------
+  let rosette = '';
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5; let d = '';
+    for (let i = 0; i <= 360; i++) {
+      const t = (i / 360) * Math.PI * 2, r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(1) + ' ' + (r * Math.sin(t)).toFixed(1);
+    }
+    rosette += `<path d="${d}Z"/>`;
+  }
+  const ETCH = `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${rosette}</svg>`;
+  const grainCache = {};
+  function grain(host) {
+    const colour = getComputedStyle(host).getPropertyValue('--displayEtch').trim();
+    if (!colour) return 'none';
+    if (!grainCache[colour]) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+      const g = cv.getContext('2d'); g.fillStyle = colour;
+      let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 240; i++) g.fillRect(Math.floor(rnd() * 120), Math.floor(rnd() * 120), 1, 1);
+      grainCache[colour] = `url(${cv.toDataURL()})`;
+    }
+    return grainCache[colour];
+  }
+
+  // ---------- Layout: today 2 shares (min 24), the rest equal, min 6, else 7 + "+N" ----------
+  function fit(n, W, gap) {
+    const free = W - gap * (n - 1), share = free / (n + 1);
+    const today = Math.max(2 * share, 24), other = (free - today) / (n - 1);
+    if (other < 6) return null;
+    const pills = [{ left: 0, width: today }];
+    for (let i = 1; i < n; i++) pills.push({ left: today + gap + (i - 1) * (other + gap), width: other });
+    return pills;
+  }
+  function layoutRow(D, W, labelW) {
+    if (D === 1) return { pills: [{ left: 0, width: W }], hidden: 0, gap: 0 };
+    const gap = D <= 16 ? 6 : 3;
+    const pills = fit(D, W, gap);
+    if (pills) return { pills, hidden: 0, gap };
+    const shown = fit(7, W - labelW - 6, 6);
+    return { pills: shown, hidden: D - 7, gap: 6 };
+  }
+
+  // ---------- States (SPEC worked example) ----------
+  const A = 1850;
+  const R = {
+    spare: v => ({ icon: 'check', html: `Lasts till payday · about <b>${rupee(v)} spare</b>` }),
+    lasts: { icon: 'check', html: 'Lasts till payday' },
+    slow: { icon: 'alert', html: '<b>Slow down</b> · today’s share is almost used' },
+    overToday: { icon: 'over', html: '<b>Over today</b> · still lasts till payday' },
+    overCycle: { icon: 'over', html: '<b>Over by ₹1,200</b> · payday in 9 days' },
+  };
+  const BASE = { start: 22, D: 9, style: 'onTrack', fill: 1430 / A, trail: 0, later: 1, amount: 1430, muted: false, over: '',
+    capR: '9 days to payday', flag: '4 Nov', range: R.spare(9300), week: false, note: '' };
+  const S = {
+    onTrack: BASE,
+    cap: { ...BASE, amount: 1750, fill: 0.86, range: R.spare(9700) },
+    slow: { ...BASE, style: 'slow', fill: 400 / A, amount: 400, range: R.slow },
+    overToday: { ...BASE, style: 'overToday', fill: 0, later: 1722 / A, amount: 0, muted: true, over: '₹1,020 over today', capR: 'Each day after: ₹1,722', range: R.overToday },
+    overTodayBig: { ...BASE, style: 'overToday', fill: 0, later: 1028 / A, amount: 0, muted: true, over: '₹6,570 over today', capR: 'Each day after: ₹1,028', range: R.overToday },
+    overCycle: { ...BASE, style: 'overCycle', fill: 0, amount: 0, muted: true, over: '₹1,200 over', range: R.overCycle },
+    trail: { ...BASE, amount: 1130, fill: 1130 / A, trail: 1430 / A, range: R.spare(9000) },
+    afterSpend: { ...BASE, amount: 1130, fill: 1130 / A, range: R.spare(9000) },
+    d1: { ...BASE, start: 30, D: 1, fill: 1, amount: 1640, capR: 'Payday tomorrow', range: R.lasts },
+    monEnd: { ...BASE, style: 'slow', fill: 300 / A, amount: 300, range: R.slow },
+    tue: { ...BASE, start: 23, D: 8, fill: 1, amount: 1887, capR: '8 days to payday', range: R.spare(8900) },
+    lastEnd: { ...BASE, start: 30, D: 1, fill: 500 / 1640, amount: 500, capR: 'Payday tomorrow', range: R.lasts },
+    newCycle: { ...BASE, start: 31, D: 30, fill: 1, amount: 1460, capR: '30 days to payday', flag: '4 Dec', range: R.lasts },
+  };
+  const NOTE = 'You saved ₹300 yesterday, so every day got ₹37 more.';
+
+  // ---------- Card ----------
+  function set(el, styles, t) {
+    const props = Object.keys(styles);
+    el.style.transition = t ? props.map(p => `${p.replace(/[A-Z]/g, m => '-' + m.toLowerCase())} ${t.ms}ms ${t.ease} ${t.delay || 0}ms`).join(', ') : 'none';
+    Object.assign(el.style, styles);
+  }
+  function put(el, html) { el._sid = (el._sid || 0) + 1; el.getAnimations().forEach(a => a.cancel()); el.innerHTML = html; }
+  function swap(el, html) {
+    if (el.innerHTML === html) return;
+    const id = (el._sid = (el._sid || 0) + 1);
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120 }).onfinish = () => {
+      if (el._sid !== id) return;
+      el.innerHTML = html; el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+    };
+  }
+  const rangeHTML = r => ICON[r.icon] + `<span>${r.html}</span>`;
+
+  function makeCard(host, opts = {}) {
+    const root = document.createElement('section');
+    root.className = 'hero' + (opts.compact ? ' compact' : '') + (opts.text15 ? ' text15' : '') + (opts.note ? ' has-note' : '');
+    root.tabIndex = 0;
+    root.setAttribute('role', 'button');
+    root.innerHTML = ETCH + '<div class="grain"></div><svg class="frame" aria-hidden="true"><rect class="k1"/><rect class="k2"/></svg>' +
+      '<div class="content"><div class="title"></div><div class="amtrow"><span class="amount"></span><span class="over"></span></div>' +
+      `<div class="dayrow"><div class="pills"><span class="more"></span><span class="span" aria-hidden="true"></span></div><div class="flag">${ICON.flag}<span></span></div></div>` +
+      '<div class="caps"><span>Today</span><span class="capR"></span></div><div class="divider"></div><div class="range"></div><div class="note"></div></div>' +
+      '<div class="sheen"></div>';
+    host.appendChild(root);
+    root.querySelector('.grain').style.backgroundImage = grain(host);
+    const q = s => root.querySelector(s);
+    const c = { root, content: q('.content'), title: q('.title'), amount: q('.amount'), over: q('.over'), pills: q('.pills'),
+      more: q('.more'), span: q('.span'), flag: q('.flag span'), capR: q('.capR'), caps: q('.caps'), range: q('.range'), note: q('.note'),
+      sheen: q('.sheen'), slots: new Map(), rollId: 0, state: null };
+    const down = () => root.classList.add('pressed'), up = () => root.classList.remove('pressed');
+    root.addEventListener('pointerdown', down);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(e => root.addEventListener(e, up));
+    root.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); down(); } });
+    root.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { up(); root.click(); } });
+    return c;
+  }
+
+  function makeSlot() {
+    const s = document.createElement('div');
+    s.className = 'slot';
+    s.innerHTML = '<span class="ghost"></span><div class="pill"><i class="well"></i><i class="hatch"></i><i class="trail"></i><i class="level"></i><i class="ring"></i><i class="edge"></i><i class="outline"></i></div>';
+    s.q = {}; ['ghost', 'pill', 'well', 'hatch', 'trail', 'level', 'ring', 'edge', 'outline'].forEach(k => s.q[k] = s.querySelector('.' + k));
+    return s;
+  }
+
+  const TODAY_LOOK = {
+    onTrack: { well: 1, edge: 1 },
+    slow: { ring: 1, edge: 1 },
+    overToday: { hatch: 1, outline: 1 },
+    overCycle: { outline: 1 },
+  };
+  const LAYERS = ['well', 'hatch', 'ring', 'edge', 'outline'];
+
+  // tm: null for instant, or { all, geom, look, level, trail, later, ghost, exit, enter }; 'skip' leaves a part alone.
+  function renderRow(c, st, tm) {
+    const g = k => (!tm ? null : (k in tm ? tm[k] : (tm.all ?? null)));
+    const W = c.pills.clientWidth || 226;
+    c.more.textContent = '+' + Math.max(0, st.D - 7);
+    c.caps.style.paddingRight = (c.root.querySelector('.flag').offsetWidth + 10) + 'px';
+    const L = layoutRow(st.D, W, c.more.offsetWidth || 26);
+    const keys = L.pills.map((_, i) => st.start + i);
+    for (const [k, s] of [...c.slots]) {
+      if (keys.includes(k)) continue;
+      c.slots.delete(k);
+      const t = g('exit') ?? g('geom');
+      if (!t || t === 'skip') { s.remove(); continue; }
+      set(s, { width: '0px', opacity: 0 }, t);
+      set(s.q.level, { height: '0%' }, t);
+      ['ring', 'edge'].forEach(l => set(s.q[l], { opacity: 0 }, t));
+      setTimeout(() => s.remove(), t.ms + (t.delay || 0) + 30);
+    }
+    keys.forEach((k, i) => {
+      let s = c.slots.get(k), fresh = false;
+      if (!s) { s = makeSlot(); c.pills.insertBefore(s, c.more); c.slots.set(k, s); fresh = true; }
+      s.classList.toggle('today', i === 0);
+      s.classList.toggle('later', i > 0);
+      const p = L.pills[i];
+      if (fresh && tm && tm.enter) {
+        set(s, { left: p.left + 'px', width: p.width + 'px', ...tm.enter.from }, null);
+        void s.offsetWidth;
+        set(s, { transform: 'translateX(0px)', opacity: 1 }, delay(tm.enter.t, (tm.enter.t.delay || 0) + i * tm.enter.stagger));
+      } else {
+        const t = g('geom');
+        if (t !== 'skip') set(s, { left: p.left + 'px', width: p.width + 'px', opacity: 1, transform: 'translateX(0px)' }, fresh ? null : t);
+      }
+      paintSlot(s, i, st, g, fresh && tm && tm.enter);
+    });
+    const last = L.pills[L.pills.length - 1], tMore = g('more');
+    c.more.style.left = (last.left + last.width + 6) + 'px';
+    if (tMore !== 'skip') set(c.more, { opacity: L.hidden ? 1 : 0 }, tMore);
+    const n = Math.min(7, L.pills.length), end = L.pills[n - 1];
+    c.span.style.width = (end.left + end.width) + 'px';
+    c.layout = L;
+  }
+
+  function paintSlot(s, i, st, g, entering) {
+    const today = i === 0, cyc = st.style === 'overCycle';
+    const look = today ? TODAY_LOOK[st.style] : (cyc ? { outline: 1 } : { well: 1 });
+    const pick = k => (entering ? null : g(k));
+    const tl = pick('look');
+    if (tl !== 'skip') LAYERS.forEach(k => set(s.q[k], { opacity: look[k] || 0 }, tl));
+    const lv = today && (st.style === 'onTrack' || st.style === 'slow') ? st.fill : 0;
+    const tv = entering ? 'skip' : g('level');
+    if (tv !== 'skip') set(s.q.level, { height: (lv * 100).toFixed(2) + '%' }, tv);
+    else if (entering) set(s.q.level, { height: '0%' }, null);
+    const tt = pick('trail');
+    if (tt !== 'skip') set(s.q.trail, { height: ((today ? st.trail : 0) * 100).toFixed(2) + '%', opacity: today && st.trail ? 0.5 : 0 }, tt);
+    const th = pick('later');
+    if (th !== 'skip') set(s.q.pill, { height: ((today || cyc ? 1 : st.later) * 100).toFixed(2) + '%' }, th);
+    const tg = pick('ghost');
+    if (tg !== 'skip') set(s.q.ghost, { opacity: !today && !cyc && st.later < 1 ? 1 : 0 }, tg);
+  }
+
+  function renderText(c, st) {
+    c.rollId++;
+    c.title.textContent = st.week ? 'Safe to spend this week' : 'Safe to spend today';
+    put(c.amount, rupee(st.week ? A * 7 - 420 : st.amount));
+    c.amount.style.transition = 'none';
+    c.amount.classList.toggle('muted', !!st.muted);
+    put(c.over, st.over);
+    c.over.style.display = st.over ? '' : 'none';
+    set(c.over, { opacity: 1 }, null);
+    put(c.capR, st.capR);
+    put(c.flag, st.flag);
+    put(c.range, rangeHTML(st.range));
+    c.note.textContent = NOTE;
+    set(c.note, { opacity: st.note ? 1 : 0 }, null);
+    label(c, st);
+  }
+  // TalkBack says amounts as words: "1,430 rupees", never "₹1,430".
+  const spoken = text => text.replace(/₹([\d,]+)/g, '$1 rupees');
+  function label(c, st) {
+    const tmp = document.createElement('div'); tmp.innerHTML = st.range.html;
+    c.root.setAttribute('aria-label', spoken(`${st.week ? 'Safe to spend this week' : 'Safe to spend today'}: ${rupee(st.week ? A * 7 - 420 : st.amount)}. ${st.over ? st.over + '. ' : ''}${st.capR}. ${tmp.textContent}.${st.note ? ' ' + NOTE : ''}`));
+  }
+  function render(c, st) {
+    c.state = st;
+    renderText(c, st);
+    renderRow(c, st, null);
+    set(c.span, { transform: `scaleX(${st.week ? 1 : 0})` }, null);
+  }
+  function roll(c, from, to, ms = 300) {
+    const id = ++c.rollId, t0 = performance.now();
+    const step = now => {
+      if (id !== c.rollId) return;
+      const p = Math.min(1, (now - t0) / ms);
+      c.amount.textContent = rupee(from + (to - from) * ROLL(p));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  function sheen(c) {
+    if (c.sheenAnim) c.sheenAnim.cancel();
+    c.sheenAnim = c.sheen.animate([{ transform: 'translateX(-70%)' }, { transform: 'translateX(70%)' }],
+      { duration: 1050, delay: 350, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'both' });
+  }
+  function crossfade(c, apply) {
+    const old = c.content.cloneNode(true);
+    old.classList.add('copy');
+    c.root.insertBefore(old, c.sheen);
+    apply();
+    c.content.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' });
+    old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'linear', fill: 'forwards' }).onfinish = () => old.remove();
+  }
+  const today = c => c.slots.get(c.state.start);
+
+  // ---------- Stages ----------
+  function stage(parent, dark, label) {
+    const st = document.createElement('div');
+    st.className = 'stage' + (dark ? ' dark' : '');
+    if (label) { const w = document.createElement('span'); w.className = 'which'; w.textContent = label; st.appendChild(w); }
+    parent.appendChild(st);
+    return st;
+  }
+
+  // ---------- 1. Phones ----------
+  const phoneCards = [];
+  const ICONS = {
+    settings: svg('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>', 1.6),
+    food: svg('<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/>', 1.6),
+    travel: svg('<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/>', 1.6),
+    shop: svg('<path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>', 1.6),
+  };
+  const item = (ic, t, s, a) => `<div class="item"><span class="ic">${ICONS[ic]}</span><span class="txt"><span>${t}</span><span>${s}</span></span><b>${a}</b></div>`;
+  for (const dark of [false, true]) {
+    const wrap = document.createElement('div');
+    wrap.className = dark ? 'dark' : '';
+    document.getElementById('phones').appendChild(wrap);
+    const ph = document.createElement('div');
+    ph.className = 'phone';
+    ph.innerHTML = `<div class="topbar"><span class="wm">hisaab<i aria-hidden="true"></i></span><span class="end"><span class="date">Mon, 26 Oct</span><span class="well40" aria-label="Settings">${ICONS.settings}</span></span></div><div class="host"></div>` +
+      `<div class="list"><div class="head"><span>Today<b>${rupee(420)}</b></span><u>See all</u></div>${item('food', 'Food', 'Chai &amp; samosa', rupee(60))}<div class="rule"></div>${item('travel', 'Travel', 'Auto to office', rupee(120))}<div class="rule"></div>${item('shop', 'Shopping', 'DMart', rupee(240))}</div>`;
+    wrap.appendChild(ph);
+    const c = makeCard(ph.querySelector('.host'));
+    render(c, S.onTrack);
+    phoneCards.push(c);
+  }
+
+  // ---------- 2. Geometry ----------
+  (function geometry() {
+    const host = document.getElementById('geoDiagram');
+    const W = 226, L = layoutRow(9, W, 26), k = 2, H = 40;
+    const ns = 'http://www.w3.org/2000/svg';
+    for (const dark of [false, true]) {
+      const st = stage(host, dark, dark ? 'Dark, 2×' : 'Light, 2×');
+      const w = (W + 10 + 44) * k + 40, h = 340;
+      let out = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Pill row geometry for 9 days">`;
+      const ox = 20, oy = 40;
+      const pill = (x, y, pw, ph, fill, idx) => {
+        const r = Math.min(pw, ph) / 2;
+        let s = `<clipPath id="cp${dark}${idx}"><rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="${r}"/></clipPath>`;
+        s += `<rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="${r}" style="fill:var(--blockIdle)"/>`;
+        if (fill) {
+          s += `<rect clip-path="url(#cp${dark}${idx})" x="${x}" y="${y + ph * (1 - fill)}" width="${pw}" height="${ph * fill}" style="fill:var(--signal)"/>`;
+          s += `<rect clip-path="url(#cp${dark}${idx})" x="${x}" y="${y + ph * (1 - fill)}" width="${pw}" height="2" style="fill:var(--displayEdge)"/>`;
+          s += `<rect x="${x + 1.5}" y="${y + 1.5}" width="${pw - 3}" height="${ph - 3}" rx="${r - 1.5}" style="fill:none;stroke:var(--displayEdge);stroke-width:3"/>`;
+        }
+        return s;
+      };
+      L.pills.forEach((p, i) => { out += pill(ox + p.left * k, oy, p.width * k, H * k, i === 0 ? 1430 / A : 0, i); });
+      const t0 = L.pills[0], t1 = L.pills[1];
+      const dimH = (x1, x2, y, txt) => `<path class="dim" d="M${x1} ${y - 4}v8M${x2} ${y - 4}v8M${x1} ${y}H${x2}"/><text x="${(x1 + x2) / 2}" y="${y - 8}" text-anchor="middle">${txt}</text>`;
+      out += dimH(ox, ox + t0.width * k, oy - 14, `today ${t0.width.toFixed(1)} (2 shares)`);
+      out += dimH(ox + t1.left * k, ox + (t1.left + t1.width) * k, oy + H * k + 18, `${t1.width.toFixed(1)}`);
+      out += dimH(ox + (t1.left + t1.width) * k, ox + L.pills[2].left * k, oy + H * k + 44, 'gap 6');
+      out += `<path class="dim" d="M${ox + W * k + 6} ${oy}h8M${ox + W * k + 6} ${oy + H * k}h8M${ox + W * k + 10} ${oy}V${oy + H * k}"/><text x="${ox + W * k + 16}" y="${oy + H * k / 2 + 4}">40</text>`;
+      out += `<text x="${ox}" y="${oy + H * k + 76}">Today: 35.6 × 40, r 17.8. Others: 17.8 × 40, r 8.9. Level 0.773, flat, clipped by the capsule.</text>`;
+      // 0.86 cap (BR-6 change), drawn 2× on a 24dp-wide pill: 40 × 0.14 = 5.6dp, minus the 1.5dp edge = 4.1dp clear
+      const cx = ox, cy = oy + H * k + 96, cw = 24 * k, chh = H * k, top = cy + chh * 0.14;
+      out += pill(cx, cy, cw, chh, 0.86, 'cap');
+      out += `<path class="dim" d="M${cx + cw + 6} ${cy + 1.5 * k}h6M${cx + cw + 6} ${top}h6M${cx + cw + 9} ${cy + 1.5 * k}V${top}"/><text x="${cx + cw + 18}" y="${cy + 14}">4dp clear inside the edge: cap 0.86 (BR-6 change)</text>`;
+      out += `<text x="${cx + cw + 18}" y="${cy + 30}">24dp-wide pill, 2×; light draws a 1dp displayEdge line on the level</text>`;
+      out += pill(cx + 380, cy, cw, chh, 0.06, 'low');
+      out += `<text x="${cx + 380 + cw + 12}" y="${cy + chh - 6}">Low level: flat,</text><text x="${cx + 380 + cw + 12}" y="${cy + chh + 8}">corners clipped</text>`;
+      out += '</svg>';
+      st.insertAdjacentHTML('beforeend', out);
+    }
+    const vHost = document.getElementById('geoVariants');
+    for (const D of [1, 2, 3, 9, 16, 17, 23, 24, 31]) {
+      const col = document.createElement('div');
+      vHost.appendChild(col);
+      const st = { ...BASE, D, capR: D === 1 ? 'Payday tomorrow' : `${D} days to payday` };
+      for (const dark of [false, true]) {
+        const sg = stage(col, dark);
+        sg.style.padding = '12px';
+        sg.style.marginBottom = '8px';
+        const c = makeCard(sg, { compact: true });
+        render(c, st);
+      }
+      const L = layoutRow(D, 226, 26);
+      const out = document.createElement('div');
+      out.className = 'geo-out';
+      out.textContent = `${D} day${D > 1 ? 's' : ''} · ${L.hidden ? `7 pills + "+${L.hidden}"` : `gap ${L.gap || '—'}`} · today ${L.pills[0].width.toFixed(1)}${L.pills[1] ? ` · others ${L.pills[1].width.toFixed(1)}` : ''}`;
+      col.appendChild(out);
+    }
+  })();
+
+  // ---------- 3. States ----------
+  const STATES = [
+    ['On track', 'onTrack', '<b>blockIdle</b> track, marigold level from the bottom (0.773), 1.5dp ink edge in light; dark has no edge (displayEdge is none). Future pills: solid blockIdle.'],
+    ['Any spend shows', 'cap', '₹100 spent: 1,750 / 1,850 = 0.95, shown as <b>0.86</b> (BR-6 change: today 0.9), so 4dp of track stays clear inside the 1.5dp edge. Light adds a 1dp displayEdge line on the level.'],
+    ['Spent trail', 'trail', 'Just after a ₹300 spend: the spent slice stays as <b>marigold at 50%</b> above the new level, then falls (motion #2). Still today only.'],
+    ['Slow down', 'slow', 'Under 25% of today left (₹400). No track fill: a <b>marigold ring</b> inside the edge and a thin marigold sliver at the bottom. The words say "Slow down".'],
+    ['Over today', 'overToday', 'No fill. 45° hatch in <b>displayInk2</b>, 1.5dp displayInk2 outline. Future pills shorter (1,722 / 1,850 = 0.93, never under 0.4), each with a 1dp full-height ghost outline in displayInk2.'],
+    ['Over for the cycle', 'overCycle', 'Every pill is <b>outline only</b>: 1.5dp displayInk2 (6.17:1 light, 6.42:1 dark). No marigold anywhere.'],
+    ['One day left', 'd1', 'D = 1: one wide pill; the caption says <b>"Payday tomorrow"</b>.'],
+    ['Text at 1.5×', 'onTrack15', 'Mukta at 1.5×, the amount stepped to 44 (§3.4). The flag column grows to fit its date, the captions end where it starts, and the pills share what is left.'],
+    ['The last pill', 'onTrack', 'The day before payday looks like any idle day. The <b>payday flag column and its date</b> beside it are the signifier; no extra mark on the pill.'],
+  ];
+  const statesHost = document.getElementById('states');
+  for (const [name, key, text] of STATES) {
+    const row = document.createElement('div');
+    row.className = 'state';
+    row.innerHTML = `<div><h3>${name}</h3><p>${text}</p></div>`;
+    statesHost.appendChild(row);
+    for (const dark of [false, true]) render(makeCard(stage(row, dark, dark ? 'Dark' : 'Light'), { text15: key === 'onTrack15' }), S[key === 'onTrack15' ? 'onTrack' : key]);
+  }
+
+  // ---------- 4. Demos ----------
+  const demos = [];
+  function demo(id, setup, run) {
+    const el = document.getElementById(id), pair = el.querySelector('.pair');
+    const d = { timers: [], cards: [] };
+    for (const dark of [false, true]) d.cards.push(makeCard(stage(pair, dark, dark ? 'Dark' : 'Light'), { note: id === 'm5' }));
+    d.later = (ms, fn) => d.timers.push(setTimeout(fn, ms));
+    d.reset = () => {
+      d.timers.forEach(clearTimeout); d.timers = [];
+      d.cards.forEach(c => {
+        if (c.sheenAnim) c.sheenAnim.cancel();
+        c.root.querySelectorAll('.content.copy').forEach(n => n.remove());
+        c.slots.forEach(s => s.remove()); c.slots.clear();
+        setup(c);
+      });
+    };
+    d.play = () => {
+      d.reset();
+      void pair.offsetWidth;
+      requestAnimationFrame(() => requestAnimationFrame(() => d.cards.forEach(c => run(c, d))));
+    };
+    el.querySelector('[data-replay]').addEventListener('click', d.play);
+    d.reset();
+    demos.push(d);
+    return d;
+  }
+
+  // 1. Home appears
+  const appearSetup = c => { render(c, S.onTrack); set(today(c).q.level, { height: '0%' }, null); };
+  const appearRun = c => {
+    const lv = today(c).q.level, h = (c.state.fill * 100).toFixed(2) + '%';
+    if (reduced()) { set(lv, { height: h }, null); return; }
+    set(lv, { height: h }, CALM);
+    sheen(c);
+  };
+  demo('m1', appearSetup, appearRun);
+
+  // 2. Spend ₹300
+  demo('m2', c => render(c, S.onTrack), (c, d) => {
+    if (reduced()) { crossfade(c, () => render(c, S.afterSpend)); return; }
+    const t = today(c).q.trail, to = S.afterSpend;
+    set(t, { height: (S.onTrack.fill * 100).toFixed(2) + '%', opacity: 0.5 }, null);
+    c.state = to;
+    renderRow(c, to, { all: 'skip', level: STANDARD });
+    roll(c, 1430, 1130);
+    swap(c.range, rangeHTML(to.range));
+    label(c, to);
+    d.later(500, () => set(t, { height: (to.fill * 100).toFixed(2) + '%' }, CALM));
+    d.later(500 + 560, () => set(t, { opacity: 0 }, null));
+  });
+
+  // 3. Over today
+  const overEnd = () => (document.getElementById('overAmount').value === 'b' ? S.overTodayBig : S.overToday);
+  const m3 = demo('m3', c => render(c, S.onTrack), (c, d) => {
+    const to = overEnd();
+    if (reduced()) { crossfade(c, () => render(c, to)); return; }
+    const t = today(c).q.trail;
+    set(t, { height: (S.onTrack.fill * 100).toFixed(2) + '%', opacity: 0.5 }, null);
+    c.state = to;
+    renderRow(c, to, { all: STANDARD, geom: 'skip', trail: 'skip', later: 'skip', ghost: 'skip', more: 'skip' });
+    roll(c, 1430, 0);
+    c.amount.style.transition = `color ${STANDARD.ms}ms ${SPRING}`;
+    c.amount.classList.add('muted');
+    put(c.over, to.over); c.over.style.display = '';
+    set(c.over, { opacity: 0 }, null); void c.over.offsetWidth; set(c.over, { opacity: 1 }, STANDARD);
+    swap(c.capR, to.capR);
+    swap(c.range, rangeHTML(to.range));
+    label(c, to);
+    d.later(500, () => {
+      set(t, { height: '0%' }, CALM);
+      renderRow(c, to, { all: 'skip', later: CALM, ghost: CALM });
+    });
+    d.later(500 + 560, () => set(t, { opacity: 0 }, null));
+  });
+  document.getElementById('overAmount').addEventListener('change', m3.play);
+
+  // 4. New day
+  demo('m4', c => render(c, S.monEnd), (c, d) => {
+    const to = S.tue;
+    if (reduced()) { crossfade(c, () => render(c, to)); return; }
+    c.state = to;
+    // Tomorrow becomes today: it widens on standard, gains the edge, and starts empty.
+    renderRow(c, { ...to, fill: 0 }, { all: STANDARD, more: 'skip' });
+    swap(c.amount, rupee(to.amount));
+    c.amount.style.transition = 'none'; c.amount.classList.remove('muted');
+    swap(c.capR, to.capR);
+    swap(c.range, rangeHTML(to.range));
+    label(c, to);
+    d.later(STANDARD.ms, () => { set(today(c).q.level, { height: '100%' }, CALM); sheen(c); });
+  });
+
+  // 5. Underspend morning
+  demo('m5', c => {
+    render(c, { ...S.tue, amount: 1850 });
+    c.slots.forEach((s, k) => { if (k !== c.state.start) set(s.q.pill, { height: '75%' }, null); });
+  }, (c, d) => {
+    const to = { ...S.tue, note: NOTE };
+    if (reduced()) { crossfade(c, () => render(c, to)); return; }
+    let i = 0;
+    c.slots.forEach((s, k) => { if (k !== c.state.start) { set(s.q.pill, { height: '100%' }, delay(CALM, i * 40)); i++; } });
+    roll(c, 1850, 1887);
+    label(c, to);
+    d.later(CALM.ms + (i - 1) * 40, () => set(c.note, { opacity: 1 }, STANDARD));
+  });
+
+  // 6. Payday morning
+  demo('m6', c => render(c, S.lastEnd), (c, d) => {
+    const to = S.newCycle;
+    if (reduced()) { crossfade(c, () => render(c, to)); return; }
+    c.state = to;
+    renderRow(c, to, { all: null, exit: STANDARD, more: 'skip', enter: { from: { transform: 'translateX(-16px)', opacity: 0 }, t: delay(CALM, 120), stagger: 45 } });
+    const assembled = 120 + 6 * 45 + CALM.ms;
+    set(c.more, { opacity: 0 }, null);
+    d.later(assembled - 200, () => set(c.more, { opacity: 1 }, STANDARD));
+    roll(c, 500, 1460);
+    swap(c.capR, to.capR);
+    swap(c.flag, to.flag);
+    swap(c.range, rangeHTML(to.range));
+    label(c, to);
+    d.later(assembled, () => {
+      const s = today(c);
+      LAYERS.forEach(k => set(s.q[k], { opacity: TODAY_LOOK.onTrack[k] || 0 }, null));
+      set(s.q.level, { height: '100%' }, CALM);
+      sheen(c);
+    });
+  });
+
+  // ---------- Optional flip ----------
+  for (const dark of [false, true]) {
+    const c = makeCard(stage(document.getElementById('flip'), dark, dark ? 'Dark · tap the card' : 'Light · tap the card'));
+    render(c, S.onTrack);
+    c.root.addEventListener('click', () => {
+      const week = !c.state.week, st = { ...c.state, week };
+      c.state = st;
+      const from = week ? 1430 : A * 7 - 420, to = week ? A * 7 - 420 : 1430;
+      label(c, st);
+      if (reduced()) { renderText(c, st); set(c.span, { transform: `scaleX(${week ? 1 : 0})` }, null); return; }
+      swap(c.title, week ? 'Safe to spend this week' : 'Safe to spend today');
+      roll(c, from, to);
+      set(c.span, { transform: `scaleX(${week ? 1 : 0})` }, SNAP);
+    });
+  }
+
+  // ---------- Play on load ----------
+  function replayAll() {
+    phoneCards.forEach(c => { appearSetup(c); });
+    void document.body.offsetWidth;
+    requestAnimationFrame(() => requestAnimationFrame(() => phoneCards.forEach(appearRun)));
+    demos.forEach(d => d.play());
+  }
+  document.getElementById('replayAll').addEventListener('click', replayAll);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(replayAll);
+})();
+</script>
+</body>
+</html>

@@ -37,6 +37,7 @@ SavedYesterdayNote: summary.savedYesterday, under the hero and above the due-soo
 | `HeroCopy`, `RangeWords` | `presentation/hero_copy.dart` | Every hero word and the one spoken sentence (FR-HO-7); *Today* or *This week* title, number and overspend |
 | `DayBlocksMapper` | `presentation/day_blocks_mapper.dart` | BR-6: fill (at most 0.9 once anything is spent), later-block height (0.4–1), style |
 | `HeroCard`, `RangeLine`, `HeroSkeleton`, `NoIncomeCard` | `presentation/widgets/` | The display card variants |
+| `HeroSheen`, `HeroPress` | `presentation/widgets/` | The hero's one pass of light as it appears, keyed by today, and its press scale (D106); the etch and shadow come from `DisplayCard(raised:, etched:)` in `lib/core/widgets/` |
 | `TodayList` | `presentation/widgets/` | Header with the day's total and *See all*; rows are the ledger's shared `EntryRow` (swipe to delete, tap to edit, TalkBack Delete action) |
 | `OverCard` | `presentation/widgets/over_card.dart` | Over states: what happens next, and *See where it went* unless Spends is already beside Home (FR-HO-5) |
 | `HomeHeader` | `presentation/widgets/` | Wordmark, "Mon, 26 Oct", Settings |

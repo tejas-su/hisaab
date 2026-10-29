@@ -76,6 +76,16 @@
   @keyframes fill { from { height: 0; } }
   @media (prefers-reduced-motion: reduce) { .play .sheen::before, .play .fill { animation: none; } }
 
+
+  /* More in B's family: material, no new colour */
+  .brushed { background-image: repeating-linear-gradient(0deg, rgba(211,208,200,.0) 0 2px, rgba(211,208,200,.25) 2px 3px); }
+  .emboss .amount { color: #161615; text-shadow: 0 1px 0 #FFFFFF, 0 -1px 0 rgba(22,22,21,.10); }
+  .emboss.t-light { background: linear-gradient(180deg, #FFFEFB, #F8F6F1); }
+  .watermark .wm { position: absolute; z-index: 1; right: -6px; top: -58px; font: 700 210px/1 'Anek Latin', sans-serif; font-variation-settings: 'wdth' 85; color: transparent; -webkit-text-stroke: 1px #E4E1DA; pointer-events: none; }
+  .watermark .wm i { display: inline-block; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #E4E1DA; margin-left: 4px; }
+  .micro { box-shadow: inset 0 0 0 8px var(--surface), inset 0 0 0 9px #E9E7E0, 0 10px 28px -12px rgba(22,22,21,.22); }
+  .micro .rule { position: absolute; z-index: 1; inset: 12px; border-radius: 20px; border: 1px dashed #DCD9D1; pointer-events: none; }
+
   /* Aspect comparison phones */
   .phone { width: 300px; height: 650px; border-radius: 28px; background: var(--bg); padding: 40px 14px 0; overflow: hidden; position: relative; outline: 8px solid #2B2A27; }
   .phone .bar { height: 22px; width: 70px; border-radius: 6px; background: var(--hairline); margin-bottom: 12px; }
@@ -92,10 +102,14 @@
 </head>
 <body>
 <h1>Hero card options</h1>
-<p class="lede">Case study 09 (docs/design-research/case-studies/09-hero-card.md). Same worked example in every card. Nothing here is decided: B stays inside today's rules, C reopens D46 and needs the owner's call. <button class="replay" onclick="replay()">Replay motion</button></p>
+<p class="lede">Case study 10 (docs/design-research/case-studies/10-hero-card.md). Same worked example in every card. Nothing here is decided: B stays inside today's rules, C reopens D46 and needs the owner's call. <button class="replay" onclick="replay()">Replay motion</button></p>
 
 <h2>Light theme</h2>
 <div class="row" id="light"></div>
+
+<h2>More in B's family (light; not built)</h2>
+<p class="lede">Same rule as B: material and finish, no new colour, marigold stays the only hue. Each can replace or join the guilloché.</p>
+<div class="row" id="family"></div>
 
 <h2>Dark theme</h2>
 <div class="row" id="dark"></div>
@@ -166,6 +180,8 @@
       days.appendChild(d);
     }
     if (etch) node.prepend(guilloche(etch[0], etch[1]));
+    if (cls.includes('watermark')) { const wm = document.createElement('span'); wm.className = 'wm'; wm.setAttribute('aria-hidden', 'true'); wm.innerHTML = 'h<i></i>'; node.prepend(wm); }
+    if (cls.includes('micro')) { const r = document.createElement('span'); r.className = 'rule'; node.prepend(r); }
     return node;
   }
 
@@ -180,6 +196,13 @@
       ['B / C · Dark', 'Etch in hairline, grain and the sheen. Same treatment for both options in dark.', 't-dark grain sheen', ['#F2F1EC', '.08'], true],
     ],
   };
+
+  options.family = [
+    ['D · Brushed metal', 'Fine horizontal hairlines, like Apple Card titanium or a brushed steel tiffin. Quietest of all; the sheen reads best over it.', 't-light raised brushed sheen', null, false],
+    ['E · Embossed amount', 'The amount is pressed into the card: a 1px light lip under the digits and a faint top-to-bottom tone, like raised card numbers.', 't-light raised emboss sheen', null, false],
+    ['F · Etched mark', 'The h• wordmark laser-etched large in the top end corner, as a card carries its issuer\'s mark. Brand, not decoration; nothing behind the amount.', 't-light raised watermark sheen', null, false],
+    ['G · Note border', 'An inner keyline a little in from the edge, like the frame printed round a rupee note. Pairs with the guilloché.', 't-light micro sheen', ['#B9B5AB', '.35'], false],
+  ];
 
   for (const [theme, list] of Object.entries(options)) {
     const row = document.getElementById(theme);

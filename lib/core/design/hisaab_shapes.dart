@@ -12,4 +12,10 @@ abstract final class HisaabShapes {
   static RoundedSuperellipseBorder trayTop() => const RoundedSuperellipseBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(HisaabRadii.tray)),
       );
+
+  /// The hero's lift: one soft shadow in [color], below the card and pulled in at the sides, so
+  /// the hero alone reads as raised (D106).
+  static List<BoxShadow> raised(Color color) => <BoxShadow>[
+        BoxShadow(color: color, offset: const Offset(0, 10), blurRadius: 28, spreadRadius: -12),
+      ];
 }

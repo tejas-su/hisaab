@@ -182,4 +182,53 @@ void main() {
       expect(HisaabColors.light.lerp(HisaabColors.dark, 1).focusGap, HisaabColors.dark.focusGap);
     });
   });
+
+  group('HisaabColors hero material (D106, case study 10)', () {
+    test('light: the etch is the page step and the shadow is a faint ink', () {
+      expect(HisaabColors.light.displayEtch, HisaabColors.light.background);
+      expect(HisaabColors.light.displayShadow.a, greaterThan(0));
+      expect(HisaabColors.light.displayShadow.withValues(alpha: 1), HisaabColors.light.ink);
+    });
+
+    test('dark: the etch is the sunk step and there is no shadow, the hairline edge stays', () {
+      expect(HisaabColors.dark.displayEtch, HisaabColors.dark.sunk);
+      expect(HisaabColors.dark.displayShadow.a, 0);
+    });
+
+    for (final (String name, HisaabColors colors) in <(String, HisaabColors)>[
+      ('light', HisaabColors.light),
+      ('dark', HisaabColors.dark),
+    ]) {
+      test('$name: the etch stays under 1.2:1 on the hero, so it never competes with the amount', () {
+        expect(_contrast(colors.displayEtch, colors.display), lessThan(1.2));
+      });
+
+      test('$name: the sheen is see-through, so it passes over the card without hiding it', () {
+        expect(colors.displaySheen.a, greaterThan(0));
+        expect(colors.displaySheen.a, lessThan(1));
+      });
+    }
+
+    test('light: the sheen is the card colour, a wash of light; dark: a faint ink lift', () {
+      expect(HisaabColors.light.displaySheen.withValues(alpha: 1), HisaabColors.light.display);
+      expect(HisaabColors.dark.displaySheen.withValues(alpha: 1), HisaabColors.dark.displayInk);
+      expect(HisaabColors.dark.displaySheen.a, lessThanOrEqualTo(0.15));
+    });
+
+    test('copyWith and lerp carry the hero material tokens', () {
+      final HisaabColors changed = HisaabColors.light.copyWith(
+        displayEtch: HisaabColors.dark.displayEtch,
+        displayShadow: HisaabColors.dark.displayShadow,
+        displaySheen: HisaabColors.dark.displaySheen,
+      );
+      expect(changed.displayEtch, HisaabColors.dark.displayEtch);
+      expect(changed.displayShadow, HisaabColors.dark.displayShadow);
+      expect(changed.displaySheen, HisaabColors.dark.displaySheen);
+      expect(HisaabColors.light.copyWith().displaySheen, HisaabColors.light.displaySheen);
+      final HisaabColors lerped = HisaabColors.light.lerp(HisaabColors.dark, 1);
+      expect(lerped.displayEtch, HisaabColors.dark.displayEtch);
+      expect(lerped.displayShadow, HisaabColors.dark.displayShadow);
+      expect(lerped.displaySheen, HisaabColors.dark.displaySheen);
+    });
+  });
 }

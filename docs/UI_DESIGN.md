@@ -59,36 +59,36 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 
 | Token | Hex | Use |
 |---|---|---|
-| `bg` | `#EEECE6` | App background, the lowest layer (warm grey, never `#FFF`) |
-| `surface` | `#FFFEFB` | Cards, sheets, dock: raised, so lighter than `bg` |
-| `sunk` | `#E4E1DA` | Keys, chips, icon wells: pressed in, so darker than `bg` and `surface` |
-| `hairline` | `#D3D0C8` | 1px dividers, the dock edge, pressed keys, and chip and field fills on a `surface` layer (the tray, sheets, cards; D100) |
-| `control` | `#FFFEFB` (alias of `surface`) | Chips, the Back and Settings wells and text fields at rest **on the page**: one layer up, like the cards (1.17:1 on `bg`, D100). Pressed, `sunk` |
+| `bg` | `#F1EBE4` | App background, the lowest layer (warm grey, never `#FFF`) |
+| `surface` | `#FFFEFC` | Cards, sheets, dock: raised, so lighter than `bg` |
+| `sunk` | `#E7E0D8` | Keys, chips, icon wells: pressed in, so darker than `bg` and `surface` |
+| `hairline` | `#D7CFC5` | 1px dividers, the dock edge, pressed keys, and chip and field fills on a `surface` layer (the tray, sheets, cards; D100) |
+| `control` | `#FFFEFC` (alias of `surface`) | Chips, the Back and Settings wells and text fields at rest **on the page**: one layer up, like the cards (1.17:1 on `bg`, D100). Pressed, `sunk` |
 | `ink` | `#161615` | Text, selected states, a picked chip's fill, a focused field's edge, the edge around marigold |
-| `ink2` | `#585752` | Secondary text, labels and hints; 4.70:1 on `hairline`, 7.18:1 on `control` (D90, D100) |
+| `ink2` | `#5B5650` | Secondary text, labels and hints; 4.71:1 on `hairline`, 7.20:1 on `control` (D90, D100) |
 | `signal` | `#FFB020` | **Today + act only.** Always sits on `ink`, or carries `ink` text |
 | `scrim` | `#161615` at 32% | Dims the page under the tray, sheets and dialogs |
-| `clear` | `#EEECE6` at 0% | See-through: an unselected fill, a see-through app bar, the far end of a fade. Never a bare transparent, which is black at 0% and fades through grey (D96) |
+| `clear` | `#F1EBE4` at 0% | See-through: an unselected fill, a see-through app bar, the far end of a fade. Never a bare transparent, which is black at 0% and fades through grey (D96) |
 | `focus` | `#161615` (alias of `ink`) | The keyboard and D-pad focus ring, 2dp, and nothing else (§9, D99) |
-| `focusGap` | `#EEECE6` (alias of `bg`) | The 2dp band between a control and its `focus` ring (D99) |
-| `inverse` | `#2F2E2B` | The snackbar's fill, with `bg` text (11.49:1). A charcoal, not `ink`, so it is dark without being a slab (D105) |
+| `focusGap` | `#F1EBE4` (alias of `bg`) | The 2dp band between a control and its `focus` ring (D99) |
+| `inverse` | `#312E29` | The snackbar's fill, with `bg` text (11.42:1). A charcoal, not `ink`, so it is dark without being a slab (D105) |
 
 **Dark** (D92: designed, not inverted. Each layer steps **lighter** by about the contrast its light counterpart steps.)
 
 | Token | Hex | Step |
 |---|---|---|
-| `bg` | `#121211` | the page |
-| `surface` | `#1F1F1D` | 1.14:1 on `bg` (light: 1.17) |
-| `sunk` | `#2C2C29` | 1.18:1 on `surface` (light: 1.29); keys in the tray and wells in cards |
-| `hairline` | `#373734` | 1.17:1 on `sunk`, so a pressed key shows (light: 1.18); 1.38:1 on `surface` for dividers and controls on a card |
-| `control` | `#373734` | alias of `hairline`: controls on the page, 1.57:1 on `bg` (D100) |
+| `bg` | `#131210` | the page |
+| `surface` | `#211F1C` | 1.14:1 on `bg` (light: 1.17) |
+| `sunk` | `#2F2B27` | 1.17:1 on `surface` (light: 1.30); keys in the tray and wells in cards |
+| `hairline` | `#3A3632` | 1.17:1 on `sunk`, so a pressed key shows (light: 1.18); 1.37:1 on `surface` for dividers and controls on a card |
+| `control` | `#3A3632` | alias of `hairline`: controls on the page, 1.56:1 on `bg` (D100) |
 | `ink` | `#F2F1EC` | |
-| `ink2` | `#A3A29C` | 4.67:1 on `hairline` and `control`, the chip and field fills |
+| `ink2` | `#A7A199` | 4.68:1 on `hairline` and `control`, the chip and field fills |
 | `signal` | `#FFB020` (same hue) | |
 | `scrim` | `#000000` at 40% | dims the page and keeps the tray the lighter layer (D93) |
-| `clear` | `#121211` at 0% | `bg` at 0%, as in light |
+| `clear` | `#131210` at 0% | `bg` at 0%, as in light |
 | `focus` | `#F2F1EC` | alias of `ink` (D99) |
-| `focusGap` | `#121211` | alias of `bg` (D99) |
+| `focusGap` | `#131210` | alias of `bg` (D99) |
 | `inverse` | `#F2F1EC` | alias of `ink`: the snackbar is a light pill on the dark page (D105) |
 
 **The grey scale.** The neutrals are one ordered scale per theme, and every grey role is a step on it. A state moves a set number of steps: **a press moves one step** (a `sunk` key or well presses to `hairline`; a `control` chip or well presses to `sunk`), and a pick goes to the far end of the scale (a chip's rest to an `ink` fill, D100). A role that equals another names the same step in code, so the two can't drift (D97).
@@ -97,25 +97,33 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 
 | Step | Light | Dark | Job |
 |---|---|---|---|
-| 1 `bg` | `#EEECE6` | `#121211` | The page |
-| 2 `surface` | `#FFFEFB` (1.17:1 on `bg`) | `#1F1F1D` (1.14) | Cards, the tray, sheets, the dock; the hero (`display`); in light, `control` |
-| 3 `sunk` | `#E4E1DA` (1.29 on `surface`) | `#2C2C29` (1.18) | Keys and icon wells at rest |
-| 4 `hairline` | `#D3D0C8` (1.18 on `sunk`) | `#373734` (1.17) | Dividers, a pressed key, chip and field fills on a `surface` layer; in dark, `control` |
-| 5 `blockIdle` | = `hairline` | `#3E3E3B` (1.11 on `hairline`) | Day blocks that are not today, ≥ 1.5:1 on the hero |
-| 6 `ink2` | `#585752` | `#A3A29C` | Secondary text, labels and hints, Material's `outline` |
+| 1 `bg` | `#F1EBE4` | `#131210` | The page |
+| 2 `surface` | `#FFFEFC` (1.17:1 on `bg`) | `#211F1C` (1.14) | Cards, the tray, sheets, the dock; the hero (`display`); in light, `control` |
+| 3 `sunk` | `#E7E0D8` (1.30 on `surface`) | `#2F2B27` (1.17) | Keys and icon wells at rest |
+| 4 `hairline` | `#D7CFC5` (1.18 on `sunk`) | `#3A3632` (1.17) | Dividers, a pressed key, chip and field fills on a `surface` layer; in dark, `control` |
+| 5 `blockIdle` | = `hairline` | `#413D38` (1.11 on `hairline`) | Day blocks that are not today, ≥ 1.5:1 on the hero |
+| 6 `ink2` | `#5B5650` | `#A7A199` | Secondary text, labels and hints, Material's `outline` |
 | 7 `ink` | `#161615` | `#F2F1EC` | Text, icons, a flashed tile, a picked chip, a focused field's edge; light `displayEdge` |
 
-In light the page sits *below* the card (`surface` is the lightest grey) and `sunk` presses in below both; in dark every step is lighter than the one before. Light `displayInk2` (`#62615C`) is off the scale on purpose: it stayed when `ink2` darkened (D90).
+In light the page sits *below* the card (`surface` is the lightest grey) and `sunk` presses in below both; in dark every step is lighter than the one before. Light `displayInk2` (`#65605A`) is off the scale on purpose: it stayed when `ink2` darkened (D90).
 
 Inside the hero display card, these extra tokens apply:
 
 | Token | Light | Dark |
 |---|---|---|
-| `display` | `#FFFEFB` (alias of `surface`) | `#1F1F1D` (alias of `surface`) |
+| `display` | `#FFFEFC` (alias of `surface`) | `#211F1C` (alias of `surface`) |
 | `displayInk` | `#161615` (alias of `ink`) | `#F2F1EC` (alias of `ink`) |
-| `displayInk2` | `#62615C` (its own value, D90) | `#A3A29C` (alias of `ink2`) |
-| `blockIdle` | `#D3D0C8` (alias of `hairline`; 1.53:1 on `display`) | `#3E3E3B` (1.54:1 on `display`) |
+| `displayInk2` | `#65605A` (its own value, D90) | `#A7A199` (alias of `ink2`) |
+| `blockIdle` | `#D7CFC5` (alias of `hairline`; 1.53:1 on `display`) | `#413D38` (1.53:1 on `display`) |
 | `displayEdge` | `#161615` (alias of `ink`): 1.5px edge on today's block while it shows marigold | transparent (none) |
+
+The hero's finish (D106, case study 10) adds three tokens:
+
+| Token | Light | Dark |
+|---|---|---|
+| `displayEtch` | `#F1EBE4` (alias of `bg`; 1.17:1 on `display`) | `#2F2B27` (alias of `sunk`; 1.17:1) |
+| `displayShadow` | `#161615` at 18% | transparent (the hairline edge stays) |
+| `displaySheen` | `#FFFEFC` at 70%, a wash | `#F2F1EC` at 10%, a lift |
 
 Aliases stay separate public tokens so the hero can change later without touching every card, but each one points at the same constant as the token it equals (D97).
 
@@ -123,24 +131,24 @@ Aliases stay separate public tokens so the hero can change later without touchin
 
 | Pair | Light | Dark |
 |---|---|---|
-| `ink` on `bg` · `surface` · `sunk` · `hairline` · `control` | 15.33 · 17.95 · 13.87 · 11.75 · 17.95 | 16.57 · 14.60 · 12.38 · 10.56 · 10.56 |
-| `ink2` on `bg` · `surface` · `sunk` · `hairline` · `control` | 6.13 · 7.18 · 5.55 · 4.70 · 7.18 | 7.32 · 6.45 · 5.47 · 4.67 · 4.67 |
-| `bg` label, check and detail on an `ink` pick (D100) | 15.33 | 16.57 |
-| A control off its layer: `control` on `bg` · `hairline` on `surface` (D100; `pressStep`) | 1.17 · 1.53 | 1.57 · 1.38 |
-| A pressed control: `sunk` against `control` (D97, D100; `pressStep`) | 1.29 | 1.17 |
-| A focused field's `ink` edge on `control` · `hairline` (D100) | 17.95 · 11.75 | 10.56 · 10.56 |
+| `ink` on `bg` · `surface` · `sunk` · `hairline` · `control` | 15.30 · 17.97 · 13.84 · 11.75 · 17.97 | 16.55 · 14.54 · 12.41 · 10.59 · 10.59 |
+| `ink2` on `bg` · `surface` · `sunk` · `hairline` · `control` | 6.14 · 7.20 · 5.55 · 4.71 · 7.20 | 7.31 · 6.42 · 5.48 · 4.68 · 4.68 |
+| `bg` label, check and detail on an `ink` pick (D100) | 15.30 | 16.55 |
+| A control off its layer: `control` on `bg` · `hairline` on `surface` (D100; `pressStep`) | 1.17 · 1.53 | 1.56 · 1.37 |
+| A pressed control: `sunk` against `control` (D97, D100; `pressStep`) | 1.30 | 1.17 |
+| A focused field's `ink` edge on `control` · `hairline` (D100) | 17.97 · 11.75 | 10.59 · 10.59 |
 | `onSignal` text on `signal` | 9.90 | 9.90 |
-| `displayInk2` on `display` | 6.15 | 6.45 |
-| `signal` on `display` | — (never bare: `displayEdge` is 17.95 on `display`, 9.90 on `signal`) | 9.03 |
-| `outline` (= `ink2`) on `surface` · `sunk`: the Switch's off thumb and edge (D94) | 7.18 · 5.55 | 6.45 · 5.47 |
-| Hero `ink` on `display`, both under the scrim | 8.64 | 5.89 |
-| `primaryContainer` (= `sunk`) on `primary` (= `ink`): a pressed Switch thumb (D94) | 13.87 | 12.38 |
-| Tooltip: `onInverseSurface` (= `surface`) on `inverseSurface` (= `ink`) (D95) | 17.95 | 14.60 |
-| Every other Material `onX` on `X` (D95) | ≥ 13.87 | ≥ 12.38 |
-| `focus` ring on `bg` · `surface` · `sunk` · `display` (D99) | 15.33 · 17.95 · 13.87 · 17.95 | 16.57 · 14.60 · 12.38 · 14.60 |
-| `focus` ring against a resting chip: `control` · `hairline` (D100) | 17.95 · 11.75 | 10.56 · 10.56 |
-| `focus` against `focusGap`: two tones ≥ 9:1 apart (WCAG C40) | 15.33 | 16.57 |
-| Against the control's own fill, the band that touches it: `focusGap` on an `ink` pick (D100); on marigold, `focus` in light and `focusGap` in dark | 15.33 · 9.90 | 16.57 · 10.25 |
+| `displayInk2` on `display` | 6.17 | 6.42 |
+| `signal` on `display` | — (never bare: `displayEdge` is 17.97 on `display`, 9.90 on `signal`) | 8.99 |
+| `outline` (= `ink2`) on `surface` · `sunk`: the Switch's off thumb and edge (D94) | 7.20 · 5.55 | 6.42 · 5.48 |
+| Hero `ink` on `display`, both under the scrim | 8.65 | 5.88 |
+| `primaryContainer` (= `sunk`) on `primary` (= `ink`): a pressed Switch thumb (D94) | 13.84 | 12.41 |
+| Tooltip: `onInverseSurface` (= `surface`) on `inverseSurface` (= `ink`) (D95) | 17.97 | 14.54 |
+| Every other Material `onX` on `X` (D95) | ≥ 13.84 | ≥ 12.41 |
+| `focus` ring on `bg` · `surface` · `sunk` · `display` (D99) | 15.30 · 17.97 · 13.84 · 17.97 | 16.55 · 14.54 · 12.41 · 14.54 |
+| `focus` ring against a resting chip: `control` · `hairline` (D100) | 17.97 · 11.75 | 10.59 · 10.59 |
+| `focus` against `focusGap`: two tones ≥ 9:1 apart (WCAG C40) | 15.30 | 16.55 |
+| Against the control's own fill, the band that touches it: `focusGap` on an `ink` pick (D100); on marigold, `focus` in light and `focusGap` in dark | 15.30 · 9.90 | 16.55 · 10.24 |
 
 Every row is an entry in **one list of contrast pairs**, `test/core/design/contrast_pairs_test.dart` (D98). Each entry names its foreground and background, the rule it meets and where it shows. The rule sets the floor: `text` 4.5:1 (WCAG 1.4.3), `nonText` 3:1 (WCAG 1.4.11, boundaries and graphics), `pressStep` 1.15:1 (§3.3), `idleBlock` 1.5:1, `focusTwoTone` 9:1 (the ring against its gap, WCAG C40). The list runs against every theme, and each theme has its own floor per rule, so an increased-contrast theme reuses the same list with higher floors. A new pair is one line in the list, never a one-off assertion.
 
@@ -149,7 +157,7 @@ Every row is an entry in **one list of contrast pairs**, `test/core/design/contr
 **No raw colours.** Outside `lib/core/design/`, no file names `Colors.*` or `Color(0x…)`; `test/core/design/hard_coded_colours_test.dart` reads `lib/` and fails on one. Its only exception is the `DayBlocksColors` constructor's default edge, a `const` alpha-0 value that means "no edge" and never paints. App bars are see-through through `appBarTheme` (`clear`), so Material reads the page's brightness and picks status-bar icons that contrast with it (D96).
 
 - Marigold on the light `bg` is only 1.55:1, so **marigold never sits bare on the light background**. It always appears on ink or has an ink outline or ink label.
-- **Cold-proofing:** every neutral has a slight warm tint, the motion is playful and the corners are soft (Nothing's hardware team calls this "softer and friendlier").
+- **Cold-proofing:** every neutral except `ink` is tinted toward marigold's hue (about 75° in OKLCH) at the luminance it had as a plain warm grey, so every contrast above held within 0.07 (D108), the motion is playful and the corners are soft (Nothing's hardware team calls this "softer and friendlier").
 
 ### 3.3 States with one colour
 | State | Today's block | Words + glyph |
@@ -185,7 +193,8 @@ Rules: no all-caps eyebrow labels, and no semibold body text.
   - Continuous squircle corners (Flutter `RoundedSuperellipseBorder`).
   - Radius scale: 8 (day blocks) · 12 (chips) · 16 (keys) · 22 (tiles) · 28 (cards, hero) · 36 (tray).
 - **Depth:**
-  - Surfaces are layered by colour, not shadow (D45).
+  - Surfaces are layered by colour, not shadow (D45). **One exception: the hero is the only raised card** (D106), with one soft `displayShadow` (`HisaabShapes.raised`: 10dp down, 28dp blur, pulled in 12dp), so it reads as the object on Home. No other card gets a shadow.
+  - **The hero is etched** (D106): a guilloché rosette near its top end corner, like the line work on a payment card or a rupee note, over a faint grain, both in `displayEtch` (under 1.2:1, so they never compete with the amount). Like the frame printed round a rupee note (D107), a solid keyline in `displayEtch` runs 6dp inside the edge and a dashed one in `hairline` 10dp inside (4dp dashes, 3dp gaps), each with a concentric radius, 10dp clear of the content. The hero's divider above the range line is `displayEtch` too, the quietest line. The etched card has more room: 24dp above and below its content (sides keep the shared 20dp inset), 8dp from label to amount, 24dp from amount to blocks, 20dp and 16dp around the divider. `DisplayEtch` paints it once behind a `RepaintBoundary`, mirrored in right-to-left. The loading skeleton is raised and etched too, so nothing jumps when the numbers arrive.
   - **Light theme alternates**, like IBM Carbon's light themes and Apple's grouped backgrounds: the page is grey (`bg`), a card on it is near-white (`surface`, 1.17:1), and keys or wells inside it step back to grey (`sunk`, 1.30:1 on `surface`). A higher layer is never darker than the one below it (unlike Material 3's light tonal surfaces).
   - **Dark theme steps lighter** with each layer (`bg` → `surface` → `sunk`), like Carbon's dark themes and Atlassian's elevation.
   - The hero display card is part of this: in light theme it is the near-white `surface` layer, its future days are grey blocks inside it, and today's marigold block carries a 1.5px ink edge, like the Add key. In *slow down* the marigold ring sits inside that edge.
@@ -222,10 +231,10 @@ The native Android splash, shown before Flutter draws (D41). Preview: `docs/desi
 
   | | Light | Dark |
   |---|---|---|
-  | Background | `bg` `#EEECE6` | `bg` `#121211` |
+  | Background | `bg` `#F1EBE4` | `bg` `#131210` |
   | h | `ink` `#161615` | `#F2F1EC` |
   | Today's dot | `signal` with a 1-unit `ink` outline (like the wordmark) | `signal`, no outline |
-  | Day blocks | `line` `#D3D0C8` | `#3A3A37` (1.64:1 on `bg`; the hero's `blockIdle` moved to `#3E3E3B` with D92, the splash kept its value) |
+  | Day blocks | `hairline` `#D7CFC5` | `#3D3935` (1.64:1 on `bg`; the hero's `blockIdle` moved to `#3E3E3B` with D92, the splash kept its value, warmed with D108) |
 
 - **Composition (D43):** the mark is drawn at 0.75 inside the system's 192dp mask, so tomorrow fits whole. A second trailing day would be sliced by the invisible mask edge.
 - **Optical centre (D56):** the launcher icon's nudge, scaled to 0.75 (3.41 right, 2.13 up in the 108 viewport, about 9dp and 6dp on screen), so the final h• no longer reads 13dp left and 9dp low of the screen centre. Tomorrow still clears the mask by about 1 unit at its closest corner.
@@ -402,18 +411,20 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
   4. **Any spend shows:** once anything is spent today, the fill is at most 0.9 (BR-6).
   5. **Over today:** the level falls away, uncovering the hatch, and the future blocks shrink together on `standard`. No shake: it would read as an error and contradict "It happens".
 - **Fill in:** each time Home's blocks appear (at launch, coming back from Spends on a phone, and when the day changes), today's block fills from empty to its level on `calm`. It shows the block is a container.
+- **Hero sheen (D106):** with the fill in, one diagonal band of `displaySheen` crosses the hero, like a card catching the light: `HisaabMotion.sheen` (1.4s), the first quarter a wait so the light follows the block, then the `sweep` curve (ease-in-out), so it never crawls at the end. The band slides in from wholly off the top start corner and out past the bottom end corner, so it never appears, sticks or vanishes at an edge. It never loops and never runs on a rebuild, only when the hero appears.
+- **Hero press (D106):** the whole hero sinks to 0.97 while a finger is down, then flips Today ⇄ This week on release.
 - **Delight scales inversely with frequency:**
 
   | Frequency | Treatment |
   |---|---|
   | Every key press | Tick haptic and press scale only |
   | Every save | Block drain with its trail, plus number roll |
-  | Each time Home appears | Today's block fills in (0.55s) |
+  | Each time Home appears | Today's block fills in (0.55s), and the hero's sheen crosses once (1.4s) |
   | Daily | Blocks re-flow at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
 - **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
-- **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no trail and no fill in.
+- **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no trail, no fill in and no sheen.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
 
 ## 7. Haptics (Flutter 3.47, verified)

@@ -21,6 +21,9 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.displayInk2,
     required this.blockIdle,
     required this.displayEdge,
+    required this.displayEtch,
+    required this.displayShadow,
+    required this.displaySheen,
     required this.inverse,
     required this.scrim,
     required this.clear,
@@ -30,36 +33,40 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
 
   // why: an alias names the same constant as the token it equals, so the two can't drift apart
   // (principle 27, D97). Only values that more than one token uses get a name here.
-  static const Color _lightBackground = Color(0xFFEEECE6);
-  static const Color _lightSurface = Color(0xFFFFFEFB);
-  static const Color _lightHairline = Color(0xFFD3D0C8);
+  static const Color _lightBackground = Color(0xFFF1EBE4);
+  static const Color _lightSurface = Color(0xFFFFFEFC);
+  static const Color _lightHairline = Color(0xFFD7CFC5);
   static const Color _lightInk = Color(0xFF161615);
-  static const Color _darkBackground = Color(0xFF121211);
-  static const Color _darkSurface = Color(0xFF1F1F1D);
-  static const Color _darkHairline = Color(0xFF373734);
+  static const Color _darkBackground = Color(0xFF131210);
+  static const Color _darkSurface = Color(0xFF211F1C);
+  static const Color _darkSunk = Color(0xFF2F2B27);
+  static const Color _darkHairline = Color(0xFF3A3632);
   static const Color _darkInk = Color(0xFFF2F1EC);
-  static const Color _darkInk2 = Color(0xFFA3A29C);
+  static const Color _darkInk2 = Color(0xFFA7A199);
 
   /// Light theme tokens.
   static const HisaabColors light = HisaabColors(
     background: _lightBackground,
     surface: _lightSurface,
-    sunk: Color(0xFFE4E1DA),
+    sunk: Color(0xFFE7E0D8),
     hairline: _lightHairline,
     control: _lightSurface,
     ink: _lightInk,
-    ink2: Color(0xFF585752),
+    ink2: Color(0xFF5B5650),
     signal: Color(0xFFFFB020),
     onSignal: Color(0xFF161615),
     display: _lightSurface,
     displayInk: _lightInk,
-    displayInk2: Color(0xFF62615C),
+    displayInk2: Color(0xFF65605A),
     blockIdle: _lightHairline,
     displayEdge: _lightInk,
+    displayEtch: _lightBackground,
+    displayShadow: Color(0x2E161615),
+    displaySheen: Color(0xB3FFFEFC),
     // why: a charcoal, not ink, so a short-lived bar reads as dark without being a black slab (D105).
-    inverse: Color(0xFF2F2E2B),
+    inverse: Color(0xFF312E29),
     scrim: Color(0x52161615),
-    clear: Color(0x00EEECE6),
+    clear: Color(0x00F1EBE4),
     focus: _lightInk,
     focusGap: _lightBackground,
   );
@@ -69,7 +76,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   static const HisaabColors dark = HisaabColors(
     background: _darkBackground,
     surface: _darkSurface,
-    sunk: Color(0xFF2C2C29),
+    sunk: _darkSunk,
     hairline: _darkHairline,
     control: _darkHairline,
     ink: _darkInk,
@@ -79,12 +86,16 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     display: _darkSurface,
     displayInk: _darkInk,
     displayInk2: _darkInk2,
-    blockIdle: Color(0xFF3E3E3B),
+    blockIdle: Color(0xFF413D38),
     displayEdge: Color(0x00000000),
+    displayEtch: _darkSunk,
+    // why: in dark the card already has a hairline edge; a shadow on a near-black page is invisible.
+    displayShadow: Color(0x00000000),
+    displaySheen: Color(0x1AF2F1EC),
     inverse: _darkInk,
     // why: a light scrim on a dark page lifts it above the tray, inverting the layers (D93).
     scrim: Color(0x66000000),
-    clear: Color(0x00121211),
+    clear: Color(0x00131210),
     focus: _darkInk,
     focusGap: _darkBackground,
   );
@@ -142,6 +153,18 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// alias of [ink] in light; transparent where the card is dark.
   final Color displayEdge;
 
+  /// The hero's guilloché etch and grain: an alias of [background] in light and of [sunk] in dark,
+  /// under 1.2:1 on [display] so it never competes with the amount (D106).
+  final Color displayEtch;
+
+  /// The soft shadow that makes the hero the only raised card on Home: ink at 18% in light;
+  /// transparent in dark, where the card keeps its hairline edge (D106).
+  final Color displayShadow;
+
+  /// The band of light that crosses the hero once when it appears and on each new day: the card
+  /// colour at 70% in light, a wash; ink at 10% in dark, a lift (D106).
+  final Color displaySheen;
+
   /// The snackbar's fill, the opposite of the page so it stands off any card: a warm charcoal
   /// in light, an alias of [ink] in dark. Text on it is [background] (D105).
   final Color inverse;
@@ -181,6 +204,9 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? displayInk2,
     Color? blockIdle,
     Color? displayEdge,
+    Color? displayEtch,
+    Color? displayShadow,
+    Color? displaySheen,
     Color? inverse,
     Color? scrim,
     Color? clear,
@@ -202,6 +228,9 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
         displayInk2: displayInk2 ?? this.displayInk2,
         blockIdle: blockIdle ?? this.blockIdle,
         displayEdge: displayEdge ?? this.displayEdge,
+        displayEtch: displayEtch ?? this.displayEtch,
+        displayShadow: displayShadow ?? this.displayShadow,
+        displaySheen: displaySheen ?? this.displaySheen,
         inverse: inverse ?? this.inverse,
         scrim: scrim ?? this.scrim,
         clear: clear ?? this.clear,
@@ -230,6 +259,9 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       displayInk2: mix(displayInk2, other.displayInk2),
       blockIdle: mix(blockIdle, other.blockIdle),
       displayEdge: mix(displayEdge, other.displayEdge),
+      displayEtch: mix(displayEtch, other.displayEtch),
+      displayShadow: mix(displayShadow, other.displayShadow),
+      displaySheen: mix(displaySheen, other.displaySheen),
       inverse: mix(inverse, other.inverse),
       scrim: mix(scrim, other.scrim),
       clear: mix(clear, other.clear),

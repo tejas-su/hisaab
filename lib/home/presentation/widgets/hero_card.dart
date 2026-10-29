@@ -1,4 +1,5 @@
 import '../../../core/design/hisaab_type.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/design/app_icon.dart';
@@ -13,11 +14,16 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../day_blocks_mapper.dart';
 import '../hero_copy.dart';
+import 'hero_press.dart';
+import 'hero_sheen.dart';
 import 'range_line.dart';
 
 /// The hero: safe to spend today, the Day Blocks with the payday flag, and the range line
 /// (SPEC FR-HO-2). TalkBack reads it as one sentence (FR-HO-7). Today's block fills in each
 /// time the card appears and on each new day (D91).
+///
+/// It is the only raised card on Home, etched like a payment card, and a band of light crosses
+/// it once as it appears and on each new day; it sinks a little under a finger (D106).
 ///
 /// [week] shows *This week*'s number instead of today's; tapping the card calls [onTap] to flip
 /// it. [assemble] slides the blocks in once, after onboarding.
@@ -46,79 +52,90 @@ class HeroCard extends StatelessWidget {
       onTap: onTap,
       onTapHint: week ? strings.showToday : strings.showThisWeek,
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: HeroPress(
         onTap: onTap,
-        child: DisplayCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(copy.title, style: text.bodyMedium?.copyWith(color: context.colors.displayInk2)),
-              const SizedBox(height: HisaabSpacing.xs),
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.end,
-                spacing: HisaabSpacing.m,
-                children: <Widget>[
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: AlignmentDirectional.centerStart,
-                    child: AmountText(
-                      copy.heroAmount,
-                      style: text.displayLarge?.copyWith(color: copy.muted ? context.colors.displayInk2 : context.colors.displayInk),
-                    ),
-                  ),
-                  if (overText != null)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(bottom: 10),
-                      child: Text(overText, style: text.titleMedium?.copyWith(color: context.colors.displayInk)),
-                    ),
-                ],
-              ),
-              const SizedBox(height: HisaabSpacing.l),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  Expanded(
-                    child: DayBlocks(
-                      // why: a new day gets a fresh block that fills in again (D91).
-                      key: ValueKey<CalendarDate>(summary.today),
-                      data: DayBlocksMapper.of(summary),
-                      semanticLabel: copy.laterCaption,
-                      assemble: assemble,
-                      fillIn: true,
-                    ),
-                  ),
-                  const SizedBox(width: _flagGap),
-                  SizedBox(
-                    width: _flagColumnWidth,
-                    child: Column(
-                      children: <Widget>[
-                        AppIcon(AppIcons.payday, size: 18, color: context.colors.displayInk),
-                        const SizedBox(height: 2),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(copy.payday, style: HisaabType.emphasized(caption)),
+        child: HeroSheen(
+          // why: a new day plays the sheen again, with today's block filling in (D91).
+          key: ValueKey<CalendarDate>(summary.today),
+          child: DisplayCard(
+            raised: true,
+            etched: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(copy.title, style: text.bodyMedium?.copyWith(color: context.colors.displayInk2)),
+                const SizedBox(height: HisaabSpacing.s),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: HisaabSpacing.m,
+                  children: <Widget>[
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      // why: the rolling digits repaint on their own layer, not the card's shadow and text.
+                      child: RepaintBoundary(
+                        child: AmountText(
+                          copy.heroAmount,
+                          style: text.displayLarge?.copyWith(color: copy.muted ? context.colors.displayInk2 : context.colors.displayInk),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: <Widget>[
-                  Text(strings.todayTitle, style: caption),
-                  const SizedBox(width: HisaabSpacing.s),
-                  // why: ends exactly under the last block, past which sits the flag column.
-                  Expanded(child: Text(copy.laterCaption, style: caption, textAlign: TextAlign.end)),
-                  const SizedBox(width: _flagGap + _flagColumnWidth),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Divider(color: context.colors.hairline, height: 1),
-              const SizedBox(height: HisaabSpacing.m),
-              RangeLine(words: copy.range, calm: copy.calm),
-            ],
+                    if (overText != null)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(bottom: 10),
+                        child: Text(overText, style: text.titleMedium?.copyWith(color: context.colors.displayInk)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: HisaabSpacing.xl),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Expanded(
+                      child: DayBlocks(
+                        // why: a new day gets a fresh block that fills in again (D91).
+                        key: ValueKey<CalendarDate>(summary.today),
+                        data: DayBlocksMapper.of(summary),
+                        semanticLabel: copy.laterCaption,
+                        assemble: assemble,
+                        fillIn: true,
+                      ),
+                    ),
+                    const SizedBox(width: _flagGap),
+                    SizedBox(
+                      width: _flagColumnWidth,
+                      child: Column(
+                        children: <Widget>[
+                          AppIcon(AppIcons.payday, size: 18, color: context.colors.displayInk),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(copy.payday, style: HisaabType.emphasized(caption)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: <Widget>[
+                    Text(strings.todayTitle, style: caption),
+                    const SizedBox(width: HisaabSpacing.s),
+                    // why: ends exactly under the last block, past which sits the flag column.
+                    Expanded(
+                      child: Text(copy.laterCaption, style: caption, textAlign: TextAlign.end),
+                    ),
+                    const SizedBox(width: _flagGap + _flagColumnWidth),
+                  ],
+                ),
+                const SizedBox(height: HisaabSpacing.gutter),
+                // why: the subtlest line, so the range line reads as part of the card, not a new section.
+                Divider(color: context.colors.displayEtch, height: 1),
+                const SizedBox(height: HisaabSpacing.l),
+                RangeLine(words: copy.range, calm: copy.calm),
+              ],
+            ),
           ),
         ),
       ),

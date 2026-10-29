@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab — Colour options</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Decision board for the colour retrospective (case studies 08–10, colour-proposal.md).
+     Every option is a set of tokens; every screen reads only those tokens, so options differ by colour alone.
+     Hero material (raised, guilloché, note border) is D106/D107 and the same in every option. */
+  :root { --page: #DAD7D0; --pageInk: #161615; --pageInk2: #585752; --chip: #FFFEFB; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--page); color: var(--pageInk); font-family: 'Mukta', sans-serif; }
+  h1 { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 30px; margin: 0 0 4px; }
+  h2 { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 22px; margin: 36px 0 6px; }
+  p.lede { margin: 0 0 16px; color: var(--pageInk2); max-width: 80ch; line-height: 22px; }
+  code { font-size: 12px; }
+
+  .bar { position: sticky; top: 0; z-index: 10; background: var(--page); padding: 10px 0; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; border-bottom: 1px solid #C7C3BA; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { font-size: 13px; font-weight: 700; color: var(--pageInk2); margin-right: 2px; }
+  .bar button { font: 600 14px 'Mukta', sans-serif; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #C7C3BA; background: var(--chip); color: var(--pageInk); cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--pageInk); color: var(--chip); border-color: var(--pageInk); }
+
+  .optcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+  .optcard { background: var(--chip); border-radius: 16px; padding: 12px 14px; font-size: 13px; line-height: 18px; border: 2px solid transparent; cursor: pointer; }
+  .optcard.sel { border-color: var(--pageInk); }
+  .optcard b { font-family: 'Anek Latin', sans-serif; font-size: 17px; display: block; margin-bottom: 2px; }
+  .optcard .tag { display: inline-block; margin-top: 6px; font-weight: 700; font-size: 12px; padding: 1px 8px; border-radius: 6px; background: #E4E1DA; }
+  .optcard .strip { display: flex; height: 18px; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+  .optcard .strip i { flex: 1; }
+
+  .grid { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; }
+  figure { margin: 0; width: 390px; max-width: 100%; }
+  figcaption { font-size: 14px; line-height: 18px; margin-bottom: 8px; min-height: 36px; }
+  figcaption b { font-family: 'Anek Latin', sans-serif; font-size: 18px; display: block; }
+
+  /* System tables */
+  table { border-collapse: collapse; background: var(--chip); border-radius: 14px; overflow: hidden; font-size: 13px; }
+  th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid #E4E1DA; vertical-align: middle; white-space: nowrap; }
+  th { font-weight: 700; background: #F1EFEA; }
+  .sw { display: inline-block; width: 28px; height: 20px; border-radius: 6px; vertical-align: middle; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); margin-right: 6px; }
+  .pass { font-weight: 700; } .fail { font-weight: 700; text-decoration: underline wavy; }
+  .scroll { overflow-x: auto; max-width: 100%; }
+
+  /* ===== Phone: everything below reads only --tokens ===== */
+  .phone { width: 390px; height: 844px; position: relative; overflow: hidden; border-radius: 36px; background: var(--bg); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  .phone .pad { position: absolute; inset: 0; padding: 52px 20px 0; display: flex; flex-direction: column; }
+  .anek { font-family: 'Anek Latin', sans-serif; }
+  .num { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-variation-settings: 'wdth' 85; font-feature-settings: 'tnum'; }
+  .ink2 { color: var(--ink2); }
+  .row { display: flex; align-items: center; }
+  .well { width: 42px; height: 42px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--sunk); }
+  .control { width: 44px; height: 44px; border-radius: 14px; background: var(--control); display: flex; align-items: center; justify-content: center; }
+  .card { background: var(--surface); border-radius: 28px; }
+  .divider { height: 1px; background: var(--hairline); }
+  .signalBtn { height: 58px; border-radius: 18px; background: var(--signal); border: 1.5px solid var(--signalEdge); box-shadow: 0 2px 0 var(--signalEdge); display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--onSignal); font-family: 'Anek Latin', sans-serif; font-size: 21px; font-weight: 600; }
+  .key { height: 60px; border-radius: 16px; background: var(--sunk); color: var(--ink); font-family: 'Anek Latin', sans-serif; font-size: 27px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+  .chip { height: 40px; border-radius: 12px; background: var(--chipFill); color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 15px; font-weight: 700; padding: 0 12px; }
+  .pick { background: var(--ink); color: var(--bg); }
+  svg.i { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* Dock */
+  .dock { position: absolute; left: 20px; right: 20px; bottom: 24px; height: 76px; border-radius: 30px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--hairline); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+  .dock .tab { width: 84px; height: 56px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; font-weight: 600; color: var(--ink2); }
+  .dock .tab.on { background: var(--sunk); color: var(--ink); }
+  .dock .add { width: 136px; height: 56px; margin-top: -6px; font-size: 21px; }
+
+  /* Hero: D106 raised + etched, D107 note border. Colours from --d* tokens. */
+  .hero { position: relative; overflow: hidden; isolation: isolate; border-radius: 28px; padding: 24px 20px; background: var(--display); color: var(--dInk); box-shadow: var(--dShadow); }
+  .hero > .c { position: relative; z-index: 2; }
+  .hero .k1 { position: absolute; inset: 6px; border-radius: 22px; border: 1px solid var(--dEtch); z-index: 1; pointer-events: none; }
+  .hero .k2 { position: absolute; inset: 10px; border-radius: 18px; border: 1px dashed var(--dKey); z-index: 1; pointer-events: none; }
+  .hero .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  .hero .t { font-size: 15px; font-weight: 500; line-height: 20px; color: var(--dInk2); }
+  .hero .amt { margin-top: 8px; font-size: 76px; line-height: 76px; letter-spacing: -0.8px; display: block; }
+  .days { margin-top: 24px; display: flex; align-items: flex-end; gap: 10px; }
+  .days .set { flex: 1; display: flex; gap: 6px; align-items: flex-end; }
+  .day { flex: 1; height: 40px; border-radius: 8px; background: var(--blockIdle); position: relative; overflow: hidden; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .day .fill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--signal); }
+  .day.hatch { background: repeating-linear-gradient(135deg, var(--dInk2) 0 1.5px, transparent 1.5px 6px), var(--blockIdle); }
+  .flag { width: 44px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; font-weight: 600; line-height: 14px; color: var(--dInk2); }
+  .cap { display: flex; justify-content: space-between; margin-top: 6px; padding-right: 54px; font-size: 12px; line-height: 14px; color: var(--dInk2); }
+  .range { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--dEtch); display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 20px; }
+  .range span { color: var(--dInk2); }
+  .range b { font-feature-settings: 'tnum'; }
+
+  /* Category wells (item 3). In options without hues these resolve to sunk + ink. */
+  .cat-food { --cw: var(--c-food-w); --cg: var(--c-food-g); }
+  .cat-travel { --cw: var(--c-travel-w); --cg: var(--c-travel-g); }
+  .cat-shopping { --cw: var(--c-shopping-w); --cg: var(--c-shopping-g); }
+  .cat-bills { --cw: var(--c-bills-w); --cg: var(--c-bills-g); }
+  .cat-fun { --cw: var(--c-fun-w); --cg: var(--c-fun-g); }
+  .cat-health { --cw: var(--c-health-w); --cg: var(--c-health-g); }
+  .cat-home { --cw: var(--c-home-w); --cg: var(--c-home-g); }
+  .cat-other { --cw: var(--sunk); --cg: var(--ink); }
+  .catwell { background: var(--cw); color: var(--cg); }
+  .catbar { background: var(--cg); }
+
+  /* Scrim behind sheets */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 36px 36px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; }
+  .grab { align-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--hairline); }
+</style>
+</head>
+<body>
+
+<h1>Colour options: every screen</h1>
+<p class="lede">Each option is one set of colour tokens applied to every screen; layout, type and the D106/D107 hero material stay the same. Pick an option to see all its screens, or pick a screen to compare it across options. Contrast figures in the system table are computed live in this page with the WCAG 2 formula. Worked example: ₹1,430 today, 9 days to payday, 77% of today's block left. Sources: <a href="../colour-proposal.md">colour-proposal.md</a>, case studies 08, 09 and 10.</p>
+
+<div class="bar">
+  <div class="group" id="g-view"><span>View</span></div>
+  <div class="group" id="g-theme"><span>Theme</span></div>
+  <div class="group" id="g-opt"><span>Option</span></div>
+  <div class="group" id="g-screen"><span>Screen</span></div>
+</div>
+
+<div class="optcards" id="optcards"></div>
+
+<h2 id="screens-title">Screens</h2>
+<div class="grid" id="screens"></div>
+
+<h2>Design system: <span id="sys-name"></span></h2>
+<p class="lede" id="sys-note"></p>
+<div class="scroll" id="sys-tokens"></div>
+<h2>Contrast, measured</h2>
+<div class="scroll" id="sys-contrast"></div>
+<h2>Category hues (item 3)</h2>
+<p class="lede">Only options marked “category hues” use these. Glyph on its own well; equal lightness, so colour-blind users still rely on icon, word and position (proposal §3.5).</p>
+<div class="scroll" id="sys-cats"></div>
+<h2>All options, token by token</h2>
+<div class="scroll" id="sys-all"></div>
+
+<script>
+// ---------- Tokens ----------
+const NEUTRAL_NOW = {
+  light: { bg:'#EEECE6', surface:'#FFFEFB', sunk:'#E4E1DA', hairline:'#D3D0C8', control:'#FFFEFB', chipFill:'#D3D0C8', ink:'#161615', ink2:'#585752', scrim:'rgba(22,22,21,.32)', signal:'#FFB020', onSignal:'#161615', signalEdge:'#161615', inverse:'#2F2E2B' },
+  dark:  { bg:'#121211', surface:'#1F1F1D', sunk:'#2C2C29', hairline:'#373734', control:'#373734', chipFill:'#373734', ink:'#F2F1EC', ink2:'#A3A29C', scrim:'rgba(0,0,0,.40)', signal:'#FFB020', onSignal:'#161615', signalEdge:'transparent', inverse:'#F2F1EC' },
+};
+const NEUTRAL_WARM = {
+  light: { ...NEUTRAL_NOW.light, bg:'#F1EBE4', surface:'#FFFEFC', sunk:'#E7E0D8', hairline:'#D7CFC5', control:'#FFFEFC', chipFill:'#D7CFC5', ink2:'#5B5650', inverse:'#312E29' },
+  dark:  { ...NEUTRAL_NOW.dark, bg:'#131210', surface:'#211F1C', sunk:'#2F2B27', hairline:'#3A3632', control:'#3A3632', chipFill:'#3A3632', ink2:'#A7A199' },
+};
+const SHADOW_LIGHT = '0 1px 0 rgba(22,22,21,.04), 0 10px 28px -12px rgba(22,22,21,.30)';
+// Hero (display) sets. dEtch: keyline + divider + guilloché (< 1.2:1 on display). dKey: dashed keyline.
+const HERO = {
+  nowL:  { display:'#FFFEFB', dInk:'#161615', dInk2:'#62615C', blockIdle:'#D3D0C8', displayEdge:'#161615', dEtch:'#EEECE6', dKey:'#D3D0C8', dShadow:SHADOW_LIGHT },
+  nowD:  { display:'#1F1F1D', dInk:'#F2F1EC', dInk2:'#A3A29C', blockIdle:'#3E3E3B', displayEdge:'transparent', dEtch:'#2C2C29', dKey:'#373734', dShadow:'inset 0 0 0 1px #373734' },
+  warmL: { display:'#FFFEFC', dInk:'#161615', dInk2:'#65605A', blockIdle:'#D7CFC5', displayEdge:'#161615', dEtch:'#F1EBE4', dKey:'#D7CFC5', dShadow:SHADOW_LIGHT },
+  warmD: { display:'#211F1C', dInk:'#F2F1EC', dInk2:'#A7A199', blockIdle:'#413D38', displayEdge:'transparent', dEtch:'#2F2B27', dKey:'#3A3632', dShadow:'inset 0 0 0 1px #3A3632' },
+  charL: { display:'#312E29', dInk:'#F2F1EC', dInk2:'#B5AFA7', blockIdle:'#504B45', displayEdge:'transparent', dEtch:'#3B3833', dKey:'#504B45', dShadow:SHADOW_LIGHT },
+  inkL:  { display:'#161615', dInk:'#F2F1EC', dInk2:'#A7A199', blockIdle:'#413D38', displayEdge:'transparent', dEtch:'#252422', dKey:'#413D38', dShadow:SHADOW_LIGHT },
+  marL:  { display:'#FFE9CC', dInk:'#493004', dInk2:'#6C4805', blockIdle:'#CBBDAB', displayEdge:'#161615', dEtch:'#F5DAB5', dKey:'#CBBDAB', dShadow:SHADOW_LIGHT },
+  marD:  { display:'#302617', dInk:'#FBECD9', dInk2:'#D5B993', blockIdle:'#4D4539', displayEdge:'transparent', dEtch:'#3C3121', dKey:'#4D4539', dShadow:'inset 0 0 0 1px #4D4539' },
+};
+const CATS = {
+  light: { food:['#ECEBD4','#6B6626'], travel:['#E1E9FE','#506094'], shopping:['#FAE2EC','#874E6A'], bills:['#D4F0F0','#017272'], fun:['#EEE5FA','#6F568A'], health:['#D7F0E6','#23735C'], home:['#F4E3F5','#7C527E'] },
+  dark:  { food:['#373626','#C1BE89'], travel:['#303544','#A9B9E8'], shopping:['#413037','#DEA9C1'], bills:['#243A3A','#84C9C8'], fun:['#393241','#C5B0DF'], health:['#273A33','#8DCAB4'], home:['#3D313D','#D2ACD4'] },
+};
+const CAT_NAMES = ['food','travel','shopping','bills','fun','health','home'];
+
+const OPTIONS = [
+  { id:'now', name:'Now (D106/D107)', tag:'Built', note:'Current tokens. Grey hero, raised and etched. Marigold only on today, Add, Next and the logo dot.',
+    light:[NEUTRAL_NOW.light, HERO.nowL], dark:[NEUTRAL_NOW.dark, HERO.nowD], cats:false },
+  { id:'warm', name:'Warm neutrals', tag:'Polish', note:'Every grey moved to marigold’s hue at the same luminance (proposal §2). Below a just-noticeable step; contrast floors unchanged.',
+    light:[NEUTRAL_WARM.light, HERO.warmL], dark:[NEUTRAL_WARM.dark, HERO.warmD], cats:false },
+  { id:'char', name:'Charcoal hero', tag:'Recommended', note:'Warm neutrals + the hero on inverse charcoal #312E29 in light (case study 09/10 option C). Marigold bare at 7.39:1. Reverses D46 for the light hero. Dark theme unchanged.',
+    light:[NEUTRAL_WARM.light, HERO.charL], dark:[NEUTRAL_WARM.dark, HERO.warmD], cats:false },
+  { id:'charcat', name:'Charcoal hero + category hues', tag:'Held for a test', note:'As Charcoal, plus 7 category hues on icon wells and Where-it-went bars (proposal §3). Other, salary and other income stay grey.',
+    light:[NEUTRAL_WARM.light, HERO.charL], dark:[NEUTRAL_WARM.dark, HERO.warmD], cats:true },
+  { id:'ink', name:'Ink hero', tag:'Alternative', note:'Warm neutrals + the hero on ink #161615 (proposal §5.2). Strongest figure-ground; closest to the “black slab” D46 removed.',
+    light:[NEUTRAL_WARM.light, HERO.inkL], dark:[NEUTRAL_WARM.dark, HERO.warmD], cats:false },
+  { id:'mar', name:'Marigold hero', tag:'Advised against', note:'Warm neutrals + the hero on pale marigold #FFE9CC (proposal §5.1). Card is 1.00:1 against the page; spreads the today/act colour.',
+    light:[NEUTRAL_WARM.light, HERO.marL], dark:[NEUTRAL_WARM.dark, HERO.marD], cats:false },
+];
+
+function tokens(opt, theme) {
+  const [n, h] = opt[theme];
+  const t = { ...n, ...h };
+  for (const c of CAT_NAMES) {
+    t['c-'+c+'-w'] = opt.cats ? CATS[theme][c][0] : n.sunk;
+    t['c-'+c+'-g'] = opt.cats ? CATS[theme][c][1] : n.ink;
+  }
+  return t;
+}
+const styleOf = t => Object.entries(t).map(([k, v]) => `--${k}:${v}`).join(';');
+
+// ---------- Icons (Hugeicons-style strokes, as in mockups 02–07) ----------
+const P = {
+  food:'<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/>',
+  travel:'<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/>',
+  shopping:'<path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  bills:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+  fun:'<path d="M4 20l5-13 8 8z"/><path d="M14 4l1 2M19 9l2-1M17 3v2M20 5.5l-2 1.5"/>',
+  health:'<rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M9.2 9.2l5.6 5.6"/>',
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  other:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  settings:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>',
+  alert:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  spends:'<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  next:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  fwd:'<path d="M9 5l7 7-7 7"/>',
+  del:'<path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>',
+  ai:'<path d="M4 5h16v11H9l-5 4z"/><path d="M12 7.5l.9 1.9 1.9.9-1.9.9-.9 1.9-.9-1.9-1.9-.9 1.9-.9z"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  coins:'<ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  share:'<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.5M8.2 13.2l7.6 4.5"/>',
+  recur:'<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+  note:'<path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h4"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
+};
+const ic = (k, s = 22, w) => `<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24"${w ? ` style="stroke-width:${w}"` : ''} aria-hidden="true">${P[k]}</svg>`;
+
+// Guilloché rosette (mockup 13), stroked in --dEtch's companion (--dKey) at low opacity.
+const GUILLOCHE = (() => {
+  let s = '';
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5; let d = '';
+    for (let i = 0; i <= 360; i++) {
+      const t = (i / 360) * Math.PI * 2;
+      const r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(1) + ' ' + (r * Math.sin(t)).toFixed(1);
+    }
+    s += `<path d="${d}Z" fill="none" stroke="var(--dKey)" stroke-width="0.6" opacity=".45"/>`;
+  }
+  return `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${s}</svg>`;
+})();
+
+// ---------- Shared pieces ----------
+function heroCard({ amount = '₹1,430', over = false, compact = false } = {}) {
+  const days = Array.from({ length: 9 }, (_, i) => {
+    if (i === 0) return over ? `<div class="day hatch"></div>` : `<div class="day today"><div class="fill" style="height:77%"></div></div>`;
+    const short = over && i === 1 ? ' style="height:34px"' : '';
+    return `<div class="day"${short}></div>`;
+  }).join('');
+  const range = over
+    ? `${ic('alert', 18, 1.8)}<span>₹220 over today · each day after</span><b>₹1,776</b>`
+    : `${ic('check', 18, 1.8)}<span>Lasts till payday · about</span><b>₹9,300 spare</b>`;
+  return `<section class="hero"><span class="k1"></span><span class="k2"></span>${GUILLOCHE}
+    <div class="c"><span class="t">${over ? 'Today' : 'Safe to spend today'}</span>
+    <span class="amt num">${amount}</span>
+    <div class="days"><div class="set">${days}</div><div class="flag">${ic('flag', 18)}<span>4 Nov</span></div></div>
+    <div class="cap"><span>Today</span><span>9 days to payday</span></div>
+    ${compact ? '' : `<div class="range">${range}</div>`}</div></section>`;
+}
+const header = () => `<div class="row" style="justify-content:space-between;height:44px">
+  <div class="row" style="align-items:baseline;gap:2px"><span class="anek" style="font-size:26px;font-weight:600;letter-spacing:-.4px">hisaab</span><span style="width:8px;height:8px;border-radius:4px;background:var(--signal);box-shadow:0 0 0 1px var(--signalEdge)"></span></div>
+  <div class="row" style="gap:12px"><span class="ink2" style="font-size:15px;font-weight:600">Mon, 26 Oct</span><span class="control">${ic('settings')}</span></div></div>`;
+const dock = on => `<nav class="dock">
+  <span class="tab${on === 'home' ? ' on' : ''}">${ic('home')}<span>Home</span></span>
+  <span class="signalBtn add">${ic('plus', 22, 2.2)}<span>Add</span></span>
+  <span class="tab${on === 'spends' ? ' on' : ''}">${ic('spends')}<span>Spends</span></span></nav>`;
+const entryRow = (cat, label, note, amt) => `<div class="row" style="gap:12px;padding:9px 20px">
+  <div class="well catwell cat-${cat}">${ic(cat)}</div>
+  <div style="display:flex;flex-direction:column;flex-grow:1"><span style="font-size:16px;font-weight:600;line-height:20px">${label}</span><span class="ink2" style="font-size:14px;line-height:18px">${note}</span></div>
+  <span style="font-size:17px;font-weight:700;font-feature-settings:'tnum'">${amt}</span></div>`;
+const keypad = h => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${
+  ['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<span class="key" style="height:${h}px">${k}</span>`).join('')
+}<span class="key" style="height:${h}px">${ic('del', 26)}</span></div>`;
+
+// ---------- Screens ----------
+const SCREENS = {
+  home: { name:'Home · on track', render: () => `<div class="pad">${header()}
+    <div style="margin-top:14px">${heroCard()}</div>
+    <div class="row card" style="gap:12px;margin-top:12px;padding:12px 16px;border-radius:20px">${ic('cal')}<span style="font-size:15px;line-height:20px"><b>Electricity ₹1,200</b> goes out in 3 days</span></div>
+    <div class="card" style="margin-top:12px;padding:6px 0 8px">
+      <div class="row" style="justify-content:space-between;padding:8px 20px 6px"><div class="row" style="align-items:baseline;gap:10px"><span class="anek" style="font-weight:600;font-size:22px">Today</span><span class="ink2" style="font-size:15px;font-weight:700">₹420</span></div><span style="font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px">See all</span></div>
+      ${entryRow('food','Food','Chai &amp; samosa','₹60')}<div class="divider" style="margin:0 20px 0 74px"></div>
+      ${entryRow('travel','Travel','Auto to office','₹120')}<div class="divider" style="margin:0 20px 0 74px"></div>
+      ${entryRow('shopping','Shopping','DMart','₹240')}
+    </div></div>${dock('home')}` },
+
+  over: { name:'Home · over today', render: () => `<div class="pad">${header()}
+    <div style="margin-top:14px">${heroCard({ amount:'₹0', over:true })}</div>
+    <div class="card" style="margin-top:12px;padding:16px 20px">
+      <span style="font-size:16px;font-weight:700">₹220 over today</span>
+      <p class="ink2" style="margin:4px 0 10px;font-size:15px;line-height:20px">Tomorrow’s share is a little smaller so the month still lasts.</p>
+      <span style="font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px">See where it went</span></div>
+    <div class="card" style="margin-top:12px;padding:6px 0 8px">
+      <div class="row" style="justify-content:space-between;padding:8px 20px 6px"><div class="row" style="align-items:baseline;gap:10px"><span class="anek" style="font-weight:600;font-size:22px">Today</span><span class="ink2" style="font-size:15px;font-weight:700">₹1,650</span></div></div>
+      ${entryRow('health','Health','Pharmacy','₹1,250')}<div class="divider" style="margin:0 20px 0 74px"></div>
+      ${entryRow('food','Food','Lunch','₹400')}
+    </div></div>${dock('home')}` },
+
+  onboarding: { name:'Onboarding · income', render: () => `<div class="pad" style="padding-bottom:24px">
+    <div class="row" style="gap:6px;justify-content:center"><span style="width:28px;height:6px;border-radius:3px;background:var(--ink)"></span><span style="width:12px;height:6px;border-radius:3px;background:var(--hairline)"></span><span style="width:12px;height:6px;border-radius:3px;background:var(--hairline)"></span></div>
+    <h1 class="anek" style="margin:24px 0 0;font-weight:600;font-size:30px;line-height:34px">How much money comes in each month?</h1>
+    <span class="ink2" style="margin-top:6px;font-size:15px">Your salary after tax. You can change it any time.</span>
+    <div class="row" style="margin-top:22px;gap:4px"><span class="num" style="font-size:64px;line-height:64px">₹45,000</span><span style="width:3px;height:50px;border-radius:2px;background:var(--ink)"></span></div>
+    <div class="card" style="margin-top:16px;border-radius:22px;padding:14px 16px"><span class="ink2" style="font-size:15px">That’s about <b style="color:var(--ink)">₹1,500 a day</b></span>
+      <div class="row" style="margin-top:10px;gap:3px;align-items:flex-end;height:28px">${'<span style="flex:1;height:28px;border-radius:4px;background:var(--signal);box-shadow:inset 0 0 0 1.5px var(--signalEdge)"></span>' + '<span style="flex:1;height:28px;border-radius:4px;background:var(--hairline)"></span>'.repeat(20)}<span style="flex:6"></span></div>
+      <span class="ink2" style="display:block;margin-top:8px;font-size:13px">One block for every day of the month</span></div>
+    <div style="flex-grow:1"></div>${keypad(60)}
+    <span class="signalBtn" style="margin-top:14px">Next ${ic('next', 22, 2.2)}</span></div>` },
+
+  amount: { name:'Add · amount', render: () => `<div style="position:absolute;left:20px;right:20px;top:52px">${heroCard({ compact:true })}</div><div class="scrim"></div>
+    <section class="sheet" style="top:96px">
+      <span class="grab"></span>
+      <div class="row" style="margin-top:16px;align-self:center;gap:4px;padding:4px;border-radius:16px;background:var(--hairline)"><span class="chip" style="width:112px;background:var(--surface)">Spent</span><span class="chip ink2" style="width:112px;background:transparent;font-weight:600">Got</span></div>
+      <div class="row" style="margin-top:30px;justify-content:center;gap:4px"><span class="num" style="font-size:64px;line-height:64px">₹2,450</span><span style="width:3px;height:50px;border-radius:2px;background:var(--ink)"></span></div>
+      <span class="ink2" style="align-self:center;margin-top:6px;font-size:15px">₹1,020 over today’s share · tomorrow ₹1,722</span>
+      <div style="margin-top:20px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px">${['+₹10','+₹20','+₹50','+₹100','+₹500'].map(c => `<span class="chip" style="padding:0">${c}</span>`).join('')}</div>
+      <div style="flex-grow:1"></div>${keypad(64)}
+      <span class="signalBtn" style="margin-top:14px">Next ${ic('next', 22, 2.2)}</span></section>` },
+
+  category: { name:'Add · category', render: () => `<div style="position:absolute;left:20px;right:20px;top:110px">${heroCard({ compact:true })}</div><div class="scrim"></div>
+    <section class="sheet" style="height:456px">
+      <span class="grab"></span>
+      <div class="row" style="margin-top:12px;gap:12px"><span class="control" style="background:var(--sunk)">${ic('back')}</span>
+        <div style="display:flex;flex-direction:column"><span class="num" style="font-size:32px;line-height:32px">₹2,450</span><span class="ink2" style="font-size:16px;font-weight:600">What was it for?</span></div></div>
+      <div style="margin-top:18px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">${
+        [['food','Food'],['travel','Travel'],['shopping','Shopping'],['bills','Bills'],['fun','Fun'],['health','Health'],['home','Home'],['other','Other']].map(([k, l]) =>
+          `<span class="catwell cat-${k}" style="height:96px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">${ic(k, 28)}<span style="font-size:14px;font-weight:600;color:var(--ink)">${l}</span></span>`).join('')
+      }</div>
+      <div class="row" style="margin-top:18px;gap:8px"><span class="chip" style="height:44px">${ic('cal', 20)} Today ${ic('down', 16, 2)}</span><span class="chip" style="height:44px;font-weight:600">${ic('note', 20)} Add a note</span></div>
+    </section>` },
+
+  spends: { name:'Spends', render: () => {
+    const bar = (cat, label, extra, pct, amt, w, over) => `<div style="display:flex;flex-direction:column;gap:4px;padding:6px 0" class="cat-${cat}">
+      <div class="row" style="gap:10px"><span class="catwell" style="width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center">${ic(cat, 18)}</span>
+        <span style="font-size:15px;font-weight:600;flex-grow:1">${label}${extra ? ` <span class="ink2" style="font-weight:500">· ${extra}</span>` : ''}</span>
+        ${pct ? `<span class="ink2" style="font-size:13px">${pct}</span>` : ''}<span style="font-size:15px;font-weight:700;width:64px;text-align:right;font-feature-settings:'tnum'">${amt}</span></div>
+      <div style="height:8px;border-radius:4px;background:var(--sunk);position:relative;display:flex;overflow:hidden">
+        <div class="catbar" style="width:${w}%;height:8px;${over ? '' : 'border-radius:4px'}"></div>
+        ${over ? `<div style="width:${100 - w}%;height:8px;background:repeating-linear-gradient(135deg,var(--cg) 0 2px,var(--sunk) 2px 5px)"></div><div style="position:absolute;left:${w}%;top:-2px;width:2px;height:12px;background:var(--surface)"></div>` : ''}
+      </div></div>`;
+    return `<div class="pad">
+    <div class="row" style="justify-content:space-between;height:44px"><h1 class="anek" style="margin:0;font-weight:600;font-size:30px">Spends</h1>
+      <div class="row" style="gap:2px;padding:2px;border-radius:14px;background:var(--control)"><span style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">${ic('back', 18, 2)}</span><span style="font-size:15px;font-weight:700;padding:0 4px">October</span><span class="ink2" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.5">${ic('fwd', 18, 2)}</span></div></div>
+    <div class="row card" style="margin-top:14px;gap:14px;padding:14px 16px;border-radius:24px;box-shadow:inset 0 0 0 1.5px var(--ink)">
+      <span style="width:44px;height:44px;border-radius:14px;background:var(--signal);box-shadow:inset 0 0 0 1.5px var(--signalEdge);display:flex;align-items:center;justify-content:center;color:var(--onSignal)">${ic('ai', 24)}</span>
+      <div style="display:flex;flex-direction:column;flex-grow:1"><span style="font-size:16px;font-weight:700">Ask an AI about October</span><span class="ink2" style="font-size:14px">You’ll see exactly what it gets.</span></div>${ic('fwd', 20, 2)}</div>
+    <div class="card" style="margin-top:12px;padding:14px 16px 12px">
+      <div class="row" style="justify-content:space-between;align-items:baseline"><span class="ink2" style="font-size:15px;font-weight:600">Spent so far</span><span class="ink2" style="font-size:15px"><b class="num" style="font-size:24px;color:var(--ink)">₹27,570</b> of ₹45,000</span></div>
+      <svg width="318" height="150" viewBox="0 0 318 160" style="display:block;margin-top:6px" aria-hidden="true">
+        <path d="M34 86H306M34 23H306" stroke="var(--hairline)"/><path d="M34 148H306" stroke="var(--hairline)" stroke-width="1.5"/>
+        <text x="28" y="152" text-anchor="end" font-family="Mukta" font-size="11" fill="var(--ink2)">₹0</text><text x="28" y="90" text-anchor="end" font-family="Mukta" font-size="11" fill="var(--ink2)">₹20K</text><text x="28" y="27" text-anchor="end" font-family="Mukta" font-size="11" fill="var(--ink2)">₹40K</text>
+        <path d="M34 148L306 8" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round" fill="none"/>
+        <path d="M34 148L60 131L87 122L122 111L157 101L192 86L218 72L236 63" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+        <circle cx="236" cy="63" r="5" fill="var(--signal)" stroke="var(--ink)" stroke-width="2"/>
+        <text x="236" y="51" text-anchor="middle" font-family="Mukta" font-size="12" font-weight="700" fill="var(--ink)">Today</text></svg></div>
+    <div class="card" style="margin-top:12px;padding:12px 16px 6px"><span class="anek" style="font-weight:600;font-size:21px">Where it went</span>
+      ${bar('food','Food','₹840 past limit','','₹9,840',91,true)}${bar('bills','Bills','','30%','₹8,200',83)}${bar('travel','Travel','','15%','₹4,100',42)}${bar('shopping','Shopping','','13%','₹3,600',37)}</div>
+    </div>${dock('spends')}`; } },
+
+  askai: { name:'Ask AI', render: () => {
+    const tile = (k, l, on) => `<span style="height:88px;border-radius:22px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;position:relative;${on ? 'background:var(--ink);color:var(--bg)' : 'background:var(--control);box-shadow:inset 0 0 0 1.5px var(--hairline)'}">${ic(k, 24)}<span style="font-size:15px;font-weight:700;line-height:19px">${l}</span>${on ? `<span style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:11px;background:var(--signal);color:var(--onSignal);display:flex;align-items:center;justify-content:center"><svg class="i" width="14" height="14" viewBox="0 0 24 24" style="stroke-width:3"><path d="M5 12l5 5 9-10"/></svg></span>` : ''}</span>`;
+    return `<div class="pad" style="padding-bottom:28px">
+    <div class="row" style="gap:12px;height:44px"><span class="control">${ic('back')}</span><h1 class="anek" style="margin:0;font-weight:600;font-size:30px">Ask AI</h1></div>
+    <span style="margin-top:16px;font-size:17px;font-weight:600">What do you want to know?</span>
+    <div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">${tile('search','How did I do?',true)}${tile('coins','Where can I save?')}${tile('target','What should my limits be?')}${tile('flag','Will my money last till payday?')}</div>
+    <div class="row" style="margin-top:16px;gap:8px"><span class="chip pick">October</span><span class="chip" style="background:var(--control);font-weight:600">Aug – Oct</span></div>
+    <div class="card" style="margin-top:14px;border-radius:20px;padding:12px 14px;font-size:13px;line-height:19px;display:flex;flex-direction:column;gap:2px">
+      <span class="ink2" style="font-size:12px;font-weight:700">What the AI will see · 142 entries</span><span class="ink2" style="font-size:12px">Nothing leaves your phone until you share it.</span>
+      <span>You are a friendly money coach for someone in India…</span><span>Income ₹45,000/month · payday 4th · INR</span><span>Spent ₹27,570: Food 9,840 · Bills 8,200 · Travel 4,100…</span>
+      <span style="margin-top:4px;font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px">Show full text</span></div>
+    <div style="flex-grow:1"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"><span class="chip" style="height:46px;background:var(--control)">${ic('share', 20)} Other apps</span><span class="chip" style="height:46px;background:var(--control)">${ic('copy', 20)} Copy only</span></div>
+    <span class="signalBtn" style="margin-top:12px;font-size:20px">${ic('copy', 22, 2)} Copy &amp; open ChatGPT</span></div>`; } },
+
+  settings: { name:'Settings + bills', render: () => `<div class="pad">
+    <div class="row" style="gap:12px;height:44px"><span class="control">${ic('back')}</span><h1 class="anek" style="margin:0;font-weight:600;font-size:30px">Settings</h1></div>
+    <span class="anek" style="margin:20px 0 8px 4px;font-weight:600;font-size:22px">Money</span>
+    <div class="card row" style="gap:12px;padding:12px 16px">${'<span class="well">' + ic('recur') + '</span>'}<span style="font-size:16px;font-weight:600;flex-grow:1">Fixed bills</span>${ic('fwd', 20, 2)}</div>
+    <span class="anek" style="margin:24px 0 8px 4px;font-weight:600;font-size:22px">Fixed bills</span>
+    <div class="card" style="padding:6px 0">
+      ${entryRow('home','Rent','On the 5th','₹15,000')}<div class="divider" style="margin:0 20px 0 74px"></div>
+      ${entryRow('bills','Electricity','On the 29th · in 3 days','₹1,200')}<div class="divider" style="margin:0 20px 0 74px"></div>
+      ${entryRow('fun','Netflix','On the 12th','₹649')}</div>
+    <div class="row card" style="margin-top:12px;gap:12px;padding:12px 16px;border-radius:20px;background:var(--inverse);color:var(--bg)"><span style="flex-grow:1;font-size:15px">Bill removed</span><span style="font-weight:600">Undo</span></div>
+    <span class="ink2" style="margin-top:6px;font-size:12px">↑ D105 snackbar on <code>inverse</code>, shown here so it can be compared with a charcoal hero.</span>
+    </div>` },
+
+  splash: { name:'Splash', render: () => `<div class="pad" style="align-items:center;justify-content:center">
+    <div class="row" style="align-items:baseline;gap:4px"><span class="anek" style="font-size:52px;font-weight:600;letter-spacing:-.8px">hisaab</span><span style="width:16px;height:16px;border-radius:8px;background:var(--signal);box-shadow:0 0 0 1.5px var(--signalEdge)"></span></div>
+    <span class="ink2" style="margin-top:8px;font-size:15px">How much can I spend today?</span></div>` },
+};
+
+// ---------- WCAG contrast ----------
+function lum(hex) {
+  const c = hex.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(c.substr(i, 2), 16) / 255)
+    .map(x => x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4));
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+const cr = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const isHex = v => /^#[0-9A-F]{6}$/i.test(v);
+
+// ---------- State + render ----------
+const state = { view: 'option', theme: 'light', opt: 'char', screen: 'home' };
+try { Object.assign(state, JSON.parse(localStorage.getItem('hisaab-colour-board') || '{}')); } catch (e) {}
+// A link can pin the view: #view=screen&theme=dark&screen=spends
+for (const [k, v] of new URLSearchParams(location.hash.slice(1))) if (k in state) state[k] = v;
+const save = () => { try { localStorage.setItem('hisaab-colour-board', JSON.stringify(state)); } catch (e) {} };
+
+function buttons(id, items, key) {
+  const g = document.getElementById(id);
+  g.querySelectorAll('button').forEach(b => b.remove());
+  for (const [val, label] of items) {
+    const b = document.createElement('button'); b.textContent = label; b.setAttribute('aria-pressed', state[key] === val);
+    b.onclick = () => { state[key] = val; save(); render(); }; g.appendChild(b);
+  }
+}
+const phone = (opt, screenKey) => `<div class="phone" style="${styleOf(tokens(opt, state.theme))}">${SCREENS[screenKey].render()}</div>`;
+
+function render() {
+  buttons('g-view', [['option', 'One option, all screens'], ['screen', 'One screen, all options']], 'view');
+  buttons('g-theme', [['light', 'Light'], ['dark', 'Dark']], 'theme');
+  buttons('g-opt', OPTIONS.map(o => [o.id, o.name]), 'opt');
+  buttons('g-screen', Object.entries(SCREENS).map(([k, s]) => [k, s.name]), 'screen');
+  document.getElementById('g-opt').style.display = state.view === 'option' ? '' : 'none';
+  document.getElementById('g-screen').style.display = state.view === 'screen' ? '' : 'none';
+
+  document.getElementById('optcards').innerHTML = OPTIONS.map(o => {
+    const t = tokens(o, state.theme);
+    const strip = [t.bg, t.surface, t.sunk, t.hairline, t.display, t.blockIdle, t.signal, t.ink]
+      .concat(o.cats ? CAT_NAMES.map(c => CATS[state.theme][c][1]) : []).map(c => `<i style="background:${c}"></i>`).join('');
+    return `<div class="optcard${o.id === state.opt ? ' sel' : ''}" data-id="${o.id}"><b>${o.name}</b>${o.note}<div class="strip">${strip}</div><span class="tag">${o.tag}</span></div>`;
+  }).join('');
+  document.querySelectorAll('.optcard').forEach(el => el.onclick = () => { state.opt = el.dataset.id; state.view = 'option'; save(); render(); });
+
+  const opt = OPTIONS.find(o => o.id === state.opt);
+  const grid = document.getElementById('screens');
+  if (state.view === 'option') {
+    document.getElementById('screens-title').textContent = `${opt.name}: every screen (${state.theme})`;
+    grid.innerHTML = Object.keys(SCREENS).map(k => `<figure><figcaption><b>${SCREENS[k].name}</b></figcaption>${phone(opt, k)}</figure>`).join('');
+  } else {
+    document.getElementById('screens-title').textContent = `${SCREENS[state.screen].name}: every option (${state.theme})`;
+    grid.innerHTML = OPTIONS.map(o => `<figure><figcaption><b>${o.name}</b>${o.tag}</figcaption>${phone(o, state.screen)}</figure>`).join('');
+  }
+  renderSystem(opt);
+}
+
+const ROLES = [
+  ['bg', 'The page'], ['surface', 'Cards, sheets, dock'], ['sunk', 'Keys, icon wells at rest'], ['hairline', 'Dividers, pressed keys, chips on a card'],
+  ['control', 'Chips and wells on the page'], ['ink', 'Text, icons, picks'], ['ink2', 'Secondary text'], ['signal', 'Today / act only'],
+  ['onSignal', 'Text on signal'], ['inverse', 'Snackbar (D105)'], ['display', 'Hero card fill'], ['dInk', 'Hero number'], ['dInk2', 'Hero labels, captions'],
+  ['blockIdle', 'Days that are not today'], ['displayEdge', 'Edge on today’s block'], ['dEtch', 'Hero keyline, divider, etch'], ['dKey', 'Hero dashed keyline'],
+];
+function swatch(v) { return isHex(v) ? `<span class="sw" style="background:${v}"></span><code>${v.toUpperCase()}</code>` : `<code>${v}</code>`; }
+
+function renderSystem(opt) {
+  document.getElementById('sys-name').textContent = `${opt.name} (${state.theme})`;
+  document.getElementById('sys-note').textContent = opt.note;
+  const t = tokens(opt, state.theme);
+  const now = tokens(OPTIONS[0], state.theme);
+  document.getElementById('sys-tokens').innerHTML = `<table><tr><th>Token</th><th>Role</th><th>This option</th><th>Now</th></tr>${
+    ROLES.map(([k, r]) => `<tr><td><code>${k}</code></td><td>${r}</td><td>${swatch(t[k])}</td><td>${t[k] === now[k] ? '<span class="ink2">same</span>' : swatch(now[k])}</td></tr>`).join('')}</table>`;
+
+  const pairs = [
+    ['ink', 'bg', 'text', 4.5], ['ink2', 'bg', 'text', 4.5], ['ink2', 'surface', 'text', 4.5], ['ink2', 'hairline', 'text', 4.5],
+    ['onSignal', 'signal', 'text', 4.5], ['bg', 'inverse', 'text (snackbar)', 4.5],
+    ['dInk', 'display', 'text (hero number)', 4.5], ['dInk2', 'display', 'text (hero labels)', 4.5],
+    ['blockIdle', 'display', 'idleBlock', 1.5], ['signal', 'display', 'nonText (today, bare)', 3], ['displayEdge', 'display', 'nonText (edge, when signal is not bare)', 3],
+    ['display', 'bg', 'info: hero off the page', 0], ['display', 'inverse', 'info: hero vs snackbar', 0], ['dEtch', 'display', 'info: etch must stay < 1.2', 0],
+  ];
+  document.getElementById('sys-contrast').innerHTML = `<table><tr><th>Foreground</th><th>Background</th><th>Rule</th><th>Ratio</th><th>Floor</th></tr>${
+    pairs.map(([f, b, rule, floor]) => {
+      const fv = t[f], bv = t[b];
+      if (!isHex(fv) || !isHex(bv)) return `<tr><td>${swatch(fv)} <code>${f}</code></td><td>${swatch(bv)} <code>${b}</code></td><td>${rule}</td><td colspan="2" class="ink2">not drawn in this option</td></tr>`;
+      const r = cr(fv, bv); const ok = !floor || r >= floor;
+      return `<tr><td>${swatch(fv)} <code>${f}</code></td><td>${swatch(bv)} <code>${b}</code></td><td>${rule}</td><td class="${ok ? 'pass' : 'fail'}">${r.toFixed(2)}:1</td><td>${floor ? floor + ':1' + (ok ? ' ✓' : ' ✗') : '—'}</td></tr>`;
+    }).join('')}</table>`;
+
+  const th = state.theme;
+  document.getElementById('sys-cats').innerHTML = `<table><tr><th>Category</th><th>Well</th><th>Glyph / bar</th><th>Glyph on well</th><th>Bar on sunk track</th></tr>${
+    CAT_NAMES.map(c => { const [w, g] = CATS[th][c]; const sunk = tokens(OPTIONS[1], th).sunk;
+      return `<tr><td>${c}</td><td>${swatch(w)}</td><td>${swatch(g)}</td><td>${cr(g, w).toFixed(2)}:1</td><td>${cr(g, sunk).toFixed(2)}:1</td></tr>`; }).join('')
+  }<tr><td>other, salary, other income</td><td colspan="4" class="ink2">stay neutral: sunk well, ink glyph</td></tr></table>`;
+
+  const keys = ['bg', 'surface', 'sunk', 'hairline', 'ink2', 'display', 'dInk', 'dInk2', 'blockIdle', 'displayEdge'];
+  document.getElementById('sys-all').innerHTML = `<table><tr><th>Token (${th})</th>${OPTIONS.map(o => `<th>${o.name}</th>`).join('')}</tr>${
+    keys.map(k => `<tr><td><code>${k}</code></td>${OPTIONS.map(o => `<td>${swatch(tokens(o, th)[k])}</td>`).join('')}</tr>`).join('')}</table>`;
+}
+render();
+</script>
+</body>
+</html>
