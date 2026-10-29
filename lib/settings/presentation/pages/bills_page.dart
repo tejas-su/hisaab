@@ -6,6 +6,8 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
+import '../../../core/widgets/hisaab_snackbar.dart';
+import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../bloc/bills_bloc.dart';
@@ -22,9 +24,6 @@ class BillsPage extends StatelessWidget {
   final VoidCallback onAdd;
   final ValueChanged<RecurringRule> onEdit;
 
-  /// How long Undo stays offered (SPEC BR-10).
-  static const Duration undoWindow = Duration(seconds: 6);
-
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
@@ -39,16 +38,18 @@ class BillsPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: BlocConsumer<BillsBloc, BillsState>(
-          listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
-          listener: _offerUndo,
-          builder: (BuildContext context, BillsState state) => ListView(
-            padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.xl),
-            children: <Widget>[
-              Text(strings.fixedBillsHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2)),
-              const SizedBox(height: HisaabSpacing.l),
-              ..._content(context, state),
-            ],
+        child: HisaabSnackbarHost(
+          child: BlocConsumer<BillsBloc, BillsState>(
+            listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
+            listener: _offerUndo,
+            builder: (BuildContext context, BillsState state) => ListView(
+              padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.xl),
+              children: <Widget>[
+                Text(strings.fixedBillsHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2)),
+                const SizedBox(height: HisaabSpacing.l),
+                ..._content(context, state),
+              ],
+            ),
           ),
         ),
       ),
@@ -88,14 +89,11 @@ class BillsPage extends StatelessWidget {
     }
     final AppLocalizations strings = AppLocalizations.of(context);
     final BillsBloc bloc = context.read<BillsBloc>();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          duration: undoWindow,
-          content: Text(strings.billDeleted(deleted.label)),
-          action: SnackBarAction(label: strings.undo, onPressed: () => bloc.add(BillsUndoRequested(deleted))),
-        ),
-      );
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.billDeleted(deleted.label),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(BillsUndoRequested(deleted))),
+      ),
+    );
   }
 }

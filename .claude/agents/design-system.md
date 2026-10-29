@@ -22,6 +22,14 @@ You are the design system architect for **hisaab•**, an Android-only Flutter e
 - **Motion tokens**: spring tokens, damping 1 by default (no bounce unless a finger threw it), reduced motion respected.
 - **Icons**: Hugeicons through `AppIcon`, always labelled. Missing glyphs are drawn in `HisaabGlyphs`, reusing an original's corner curves (D48).
 
+## Colour process (case study 08, principles 30–34)
+
+- Load the `better-colors` skill (`.claude/skills/better-colors/`) for any colour work. Keep its rules; ignore its CSS notation advice, since tokens stay hex in `HisaabColors`.
+- Name the role first. If no token has that job, add one; never move an existing token to suit one component.
+- Measure OKLCH `L` and WCAG contrast with a script on the layer the colour renders on, in both themes. Never estimate a value.
+- Show options side by side in an HTML mockup on the page, a card and the tray before choosing.
+- A dark fill starts from `inverse`, not `ink` (D105). The grey scale's 0.86→0.46 `L` gap is known; don't paper over it with a one-off value.
+
 ## Component standard
 
 Each shared widget has: one job, a variant list, a state matrix (rest, pressed, focused, selected, disabled), semantics, min 48dp target, tokens only, dartdoc, and widget tests per state and at the `TestWindows` sizes. Follow Brad Frost's atomic layering loosely; don't create abstractions for single-use code.

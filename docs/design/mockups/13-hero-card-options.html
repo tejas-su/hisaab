@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hero card options</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Case study 09. Worked example: ₹1,430 today, 9 days to payday, 77% of today's block left. */
+  :root {
+    --bg: #EEECE6; --surface: #FFFEFB; --hairline: #D3D0C8; --ink: #161615; --ink2: #62615C;
+    --signal: #FFB020; --charcoal: #2F2E2B; --onCharcoal: #F2F1EC; --onCharcoal2: #B0AFA9; --idleCharcoal: #4F4E4A;
+    --dBg: #121211; --dSurface: #1F1F1D; --dHairline: #373734; --dInk: #F2F1EC; --dInk2: #A3A29C; --dIdle: #3E3E3B;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 16px 64px; background: #DAD7D0; color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 20px; margin: 40px 0 4px; }
+  p.lede { margin: 0 0 20px; color: var(--ink2); max-width: 70ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .col { width: 372px; max-width: 100%; }
+  .col h3 { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .col p { font-size: 13px; line-height: 18px; color: var(--ink2); margin: 0 0 10px; min-height: 54px; }
+  .stage { padding: 20px; border-radius: 20px; background: var(--bg); }
+  .stage.dark { background: var(--dBg); }
+  button.replay { font: 600 14px 'Mukta', sans-serif; padding: 8px 16px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+
+  /* The card */
+  .hero { position: relative; overflow: hidden; border-radius: 28px; padding: 20px 20px 18px; isolation: isolate; }
+  .hero > * { position: relative; z-index: 2; }
+  .hero .title { font-size: 15px; line-height: 20px; }
+  .hero .amount { display: block; margin-top: 4px; font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 76px; line-height: 76px; font-variation-settings: 'wdth' 85; letter-spacing: -0.8px; font-feature-settings: 'tnum'; }
+  .blocks { margin-top: 16px; display: flex; align-items: flex-end; gap: 10px; }
+  .blocks .days { flex: 1; display: flex; gap: 6px; }
+  .blocks .day { flex: 1; height: 40px; border-radius: 8px; position: relative; overflow: hidden; }
+  .blocks .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 77%; background: var(--signal); }
+  .flag { width: 44px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; font-weight: 600; line-height: 14px; }
+  .cap { display: flex; justify-content: space-between; margin-top: 6px; padding-right: 54px; font-size: 12px; line-height: 14px; }
+  .range { margin-top: 14px; padding-top: 12px; border-top: 1px solid; display: flex; gap: 8px; align-items: center; font-size: 15px; line-height: 20px; }
+  .range b { font-weight: 700; font-feature-settings: 'tnum'; }
+
+  /* Light, today (D46) */
+  .t-light { background: var(--surface); color: var(--ink); }
+  .t-light .title, .t-light .cap, .t-light .flag span, .t-light .range span { color: var(--ink2); }
+  .t-light .day { background: var(--hairline); }
+  .t-light .day.today { outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
+  .t-light .range { border-color: var(--hairline); }
+  /* B adds: the only raised card on the page, and an etched pattern */
+  .t-light.raised { box-shadow: 0 1px 0 rgba(22,22,21,.04), 0 10px 28px -12px rgba(22,22,21,.22); }
+
+  /* Charcoal card */
+  .t-char { background: var(--charcoal); color: var(--onCharcoal); }
+  .t-char .title, .t-char .cap, .t-char .flag span, .t-char .range span { color: var(--onCharcoal2); }
+  .t-char .day { background: var(--idleCharcoal); }
+  .t-char .range { border-color: var(--idleCharcoal); }
+
+  /* Dark theme, today */
+  .t-dark { background: var(--dSurface); color: var(--dInk); box-shadow: inset 0 0 0 1px var(--dHairline); }
+  .t-dark .title, .t-dark .cap, .t-dark .flag span, .t-dark .range span { color: var(--dInk2); }
+  .t-dark .day { background: var(--dIdle); }
+  .t-dark .range { border-color: var(--dHairline); }
+
+  /* Etched guilloché, like banknote and card security printing: drawn by script into .etch */
+  .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  /* Grain: an feTurbulence tile, faint */
+  .grain::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  /* Sheen: one diagonal pass of light, like a card catching the light. Plays once, never loops. */
+  .sheen::before { content: ''; position: absolute; inset: -40% -60%; z-index: 3; pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.16) 50%, transparent 58%); transform: translateX(-70%); }
+  .play .sheen::before { animation: sheen 1100ms cubic-bezier(.2,.7,.2,1) 350ms 1 both; }
+  .t-light.sheen::before { background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.9) 50%, transparent 58%); mix-blend-mode: soft-light; }
+  @keyframes sheen { to { transform: translateX(70%); } }
+  /* Today's block fills in (D91) */
+  .play .fill { animation: fill 700ms cubic-bezier(.2,.8,.2,1) 150ms both; }
+  @keyframes fill { from { height: 0; } }
+  @media (prefers-reduced-motion: reduce) { .play .sheen::before, .play .fill { animation: none; } }
+
+  /* Aspect comparison phones */
+  .phone { width: 300px; height: 650px; border-radius: 28px; background: var(--bg); padding: 40px 14px 0; overflow: hidden; position: relative; outline: 8px solid #2B2A27; }
+  .phone .bar { height: 22px; width: 70px; border-radius: 6px; background: var(--hairline); margin-bottom: 12px; }
+  .phone .mini { border-radius: 22px; background: var(--surface); padding: 14px; }
+  .phone .mini .a { font: 600 54px/54px 'Anek Latin', sans-serif; font-variation-settings: 'wdth' 85; }
+  .phone .mini .b { display: flex; gap: 4px; margin-top: 12px; }
+  .phone .mini .b i { flex: 1; height: 30px; border-radius: 6px; background: var(--hairline); }
+  .phone .mini .b i:first-child { background: linear-gradient(to top, var(--signal) 77%, var(--hairline) 77%); outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
+  .phone .mini .r { margin-top: 12px; border-top: 1px solid var(--hairline); padding-top: 8px; font-size: 12px; color: var(--ink2); }
+  .phone .row-item { height: 44px; border-radius: 14px; background: var(--surface); margin-top: 8px; }
+  .col .phone p.lbl { font-size: 13px; font-weight: 600; color: var(--ink); margin: 14px 0 0; min-height: 0; }
+  .phone .dock { position: absolute; left: 14px; right: 14px; bottom: 14px; height: 56px; border-radius: 18px; background: var(--surface); }
+</style>
+</head>
+<body>
+<h1>Hero card options</h1>
+<p class="lede">Case study 09 (docs/design-research/case-studies/09-hero-card.md). Same worked example in every card. Nothing here is decided: B stays inside today's rules, C reopens D46 and needs the owner's call. <button class="replay" onclick="replay()">Replay motion</button></p>
+
+<h2>Light theme</h2>
+<div class="row" id="light"></div>
+
+<h2>Dark theme</h2>
+<div class="row" id="dark"></div>
+
+<h2>Aspect ratio: content height vs 4:5</h2>
+<p class="lede">Scaled phone at 412 × 915 (TestWindows.phone), shown at 73%; the frame is the first screen. At 4:5 the hero gains only empty space between the number and the blocks, and the Today list (hierarchy item 4) loses most of its room above the dock.</p>
+<div class="row">
+  <div class="col" style="width:auto"><h3>Today: content height</h3>
+    <div class="phone"><div class="bar"></div>
+      <div class="mini"><span style="font-size:12px;color:var(--ink2)">Safe to spend today</span><div class="a">₹1,430</div><div class="b"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="r">Lasts till payday · about ₹9,300 spare</div></div>
+      <p class="lbl">Today</p><div class="row-item"></div><div class="row-item"></div><div class="row-item"></div>
+      <div class="dock"></div></div></div>
+  <div class="col" style="width:auto"><h3>Forced 4:5</h3>
+    <div class="phone"><div class="bar"></div>
+      <div class="mini" style="aspect-ratio:4/5;display:flex;flex-direction:column"><span style="font-size:12px;color:var(--ink2)">Safe to spend today</span><div class="a">₹1,430</div><div style="flex:1"></div><div class="b"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="r">Lasts till payday · about ₹9,300 spare</div></div>
+      <p class="lbl">Today</p><div class="row-item"></div>
+      <div class="dock"></div></div></div>
+</div>
+
+<template id="card">
+  <section class="hero">
+    <span class="title">Safe to spend today</span>
+    <span class="amount">₹1,430</span>
+    <div class="blocks">
+      <div class="days"></div>
+      <div class="flag"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg><span>4 Nov</span></div>
+    </div>
+    <div class="cap"><span>Today</span><span>9 days to payday</span></div>
+    <div class="range"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/></svg><span>Lasts till payday · about</span><b>₹9,300 spare</b></div>
+  </section>
+</template>
+
+<script>
+  // Guilloché rosette: rings of a sine-modulated circle, as on banknotes and card security printing.
+  function guilloche(stroke, opacity) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '-150 -150 300 300');
+    svg.setAttribute('class', 'etch');
+    svg.setAttribute('aria-hidden', 'true');
+    for (let ring = 0; ring < 14; ring++) {
+      const base = 40 + ring * 7.5;
+      let d = '';
+      for (let i = 0; i <= 720; i++) {
+        const t = (i / 720) * Math.PI * 2;
+        const r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+        d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(2) + ' ' + (r * Math.sin(t)).toFixed(2);
+      }
+      const p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', d + 'Z');
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', stroke);
+      p.setAttribute('stroke-width', '0.6');
+      p.setAttribute('opacity', opacity);
+      svg.appendChild(p);
+    }
+    return svg;
+  }
+
+  function card(cls, etch) {
+    const node = document.getElementById('card').content.firstElementChild.cloneNode(true);
+    node.className = 'hero ' + cls;
+    const days = node.querySelector('.days');
+    for (let i = 0; i < 9; i++) {
+      const d = document.createElement('div');
+      d.className = 'day' + (i === 0 ? ' today' : '');
+      if (i === 0) { const f = document.createElement('div'); f.className = 'fill'; d.appendChild(f); }
+      days.appendChild(d);
+    }
+    if (etch) node.prepend(guilloche(etch[0], etch[1]));
+    return node;
+  }
+
+  const options = {
+    light: [
+      ['A · Today (D46)', 'Near-white surface on the warm page, 1.17:1. Same layer as every other card, so only the number\'s size says "hero".', 't-light', null, false],
+      ['B · Etched paper (inside the rules)', 'Same colours. The only raised card on Home, a faint guilloché etch in hairline, grain, and one light sheen when today\'s block fills. Marigold stays the only colour.', 't-light raised grain sheen', ['#B9B5AB', '.45'], false],
+      ['C · Charcoal card (reopens D46)', 'The card is an object: warm charcoal (inverse #2F2E2B, 11.49:1 on the page), etch and grain. Marigold today sits bare at 7.42:1. Text 12.01, captions 6.18, idle blocks 1.63.', 't-char grain sheen', ['#F2F1EC', '.10'], false],
+    ],
+    dark: [
+      ['A · Today', 'Surface with a hairline edge. Already a readout; marigold is the only light.', 't-dark', null, true],
+      ['B / C · Dark', 'Etch in hairline, grain and the sheen. Same treatment for both options in dark.', 't-dark grain sheen', ['#F2F1EC', '.08'], true],
+    ],
+  };
+
+  for (const [theme, list] of Object.entries(options)) {
+    const row = document.getElementById(theme);
+    for (const [title, text, cls, etch, dark] of list) {
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.innerHTML = '<h3></h3><p></p>';
+      col.querySelector('h3').textContent = title;
+      col.querySelector('p').textContent = text;
+      const stage = document.createElement('div');
+      stage.className = 'stage' + (dark ? ' dark' : '');
+      stage.appendChild(card(cls, etch));
+      col.appendChild(stage);
+      row.appendChild(col);
+    }
+  }
+
+  function replay() {
+    document.body.classList.remove('play');
+    void document.body.offsetWidth;
+    document.body.classList.add('play');
+  }
+  replay();
+</script>
+</body>
+</html>

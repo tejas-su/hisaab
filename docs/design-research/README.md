@@ -11,6 +11,8 @@ UX/UI research for Hisaab: case studies of other apps, the principles we drew fr
 ## Case studies
 | # | Topic | Outcome |
 |---|---|---|
+| 09 | [Colour in fintech: colour mass, category colours, a dark hero](case-studies/09-colour-in-fintech.md) | Proposed: colour mass from value, not hue (the dark end of the scale as the brand surface); a dark `inverse` hero in light, pending a blind read (reverses D46); keep the warm neutrals. Category colours: no-go for v1; at most 6 low-chroma tints, never red, green or marigold, if a 5-user search test shows a gain |
+| 08 | [Colour retrospective and the grey ramp](case-studies/08-colour-retrospective.md) | Built: `inverse` token for the snackbar (D105). Approved: role-first, measured colour process. Proposed: fill the 0.86→0.46 `L` gap in the grey ramp (separate task) |
 | 07 | [Design systems: Groww, Material 3, Primer, Radix, Atlassian, Blade](case-studies/07-design-systems-groww-material-primer-radix.md) | Proposed: set every Material role, one contrast-pair list for all themes, focus as its own token, tinted transparent token. Rejected: gain/loss colours, seed or dynamic colour, colour-blind themes |
 | 06 | [Design systems: Vercel Geist, Apple HIG, IBM Carbon](case-studies/06-design-systems-vercel-apple-ibm.md) | Proposed: increased-contrast token set, ink focus ring with a gap, state as steps of one scale, deprecate before removing. Rejected: blue focus, glass, several themes per mode |
 | 05 | [Day Block motion](case-studies/05-day-block-motion.md) | Drain after the tray closes, with a trail; fill in when Home appears; a fill cap of 0.9 once anything is spent (D91) |

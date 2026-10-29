@@ -8,6 +8,8 @@ import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
+import '../../../core/widgets/hisaab_snackbar.dart';
+import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../bloc/entries_bloc.dart';
@@ -27,9 +29,6 @@ class EntriesPage extends StatelessWidget {
   final CalendarDate today;
   final ValueChanged<Entry> onEdit;
 
-  /// How long Undo stays offered (SPEC BR-10).
-  static const Duration undoWindow = Duration(seconds: 6);
-
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
@@ -44,14 +43,16 @@ class EntriesPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: BlocConsumer<EntriesBloc, EntriesState>(
-          listenWhen: (EntriesState previous, EntriesState current) => current is EntriesReady && current.undo.isSome(),
-          listener: _offerUndo,
-          builder: (BuildContext context, EntriesState state) => switch (state) {
-            EntriesLoading() => const SizedBox.shrink(),
-            EntriesFailed() => _failed(context),
-            EntriesReady() => _list(context, state),
-          },
+        child: HisaabSnackbarHost(
+          child: BlocConsumer<EntriesBloc, EntriesState>(
+            listenWhen: (EntriesState previous, EntriesState current) => current is EntriesReady && current.undo.isSome(),
+            listener: _offerUndo,
+            builder: (BuildContext context, EntriesState state) => switch (state) {
+              EntriesLoading() => const SizedBox.shrink(),
+              EntriesFailed() => _failed(context),
+              EntriesReady() => _list(context, state),
+            },
+          ),
         ),
       ),
     );
@@ -164,14 +165,12 @@ class EntriesPage extends StatelessWidget {
     }
     final AppLocalizations strings = AppLocalizations.of(context);
     final EntriesBloc bloc = context.read<EntriesBloc>();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          duration: undoWindow,
-          content: Text(strings.entryDeleted(context.money.format(deleted.amount))),
-          action: SnackBarAction(label: strings.undo, onPressed: () => bloc.add(EntriesUndoRequested(deleted))),
-        ),
-      );
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.entryDeleted(context.money.format(deleted.amount)),
+        semanticsLabel: strings.entryDeleted(strings.spokenAmount(context.money.digits(deleted.amount))),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(EntriesUndoRequested(deleted))),
+      ),
+    );
   }
 }

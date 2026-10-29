@@ -169,7 +169,7 @@ The states below are evaluated in order, and the first match wins.
 - The amount is 1 to 999,999,999 rupees (at most 9 digits) and is stored as paise.
 - The date defaults to today. The user may pick yesterday, or a date in the current or previous cycle. Future dates are not allowed.
 - A note is optional, at most 80 characters, with whitespace trimmed.
-- **Delete** happens at once with an Undo snackbar (6 s). **Edit** reopens the tray prefilled.
+- **Delete** happens at once with an Undo snackbar (6 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled.
 - After any write, the ledger notifies listeners, and Home and Spends recompute.
 
 ### BR-11 Categories

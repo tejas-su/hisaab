@@ -71,6 +71,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `clear` | `#EEECE6` at 0% | See-through: an unselected fill, a see-through app bar, the far end of a fade. Never a bare transparent, which is black at 0% and fades through grey (D96) |
 | `focus` | `#161615` (alias of `ink`) | The keyboard and D-pad focus ring, 2dp, and nothing else (§9, D99) |
 | `focusGap` | `#EEECE6` (alias of `bg`) | The 2dp band between a control and its `focus` ring (D99) |
+| `inverse` | `#2F2E2B` | The snackbar's fill, with `bg` text (11.49:1). A charcoal, not `ink`, so it is dark without being a slab (D105) |
 
 **Dark** (D92: designed, not inverted. Each layer steps **lighter** by about the contrast its light counterpart steps.)
 
@@ -88,6 +89,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `clear` | `#121211` at 0% | `bg` at 0%, as in light |
 | `focus` | `#F2F1EC` | alias of `ink` (D99) |
 | `focusGap` | `#121211` | alias of `bg` (D99) |
+| `inverse` | `#F2F1EC` | alias of `ink`: the snackbar is a light pill on the dark page (D105) |
 
 **The grey scale.** The neutrals are one ordered scale per theme, and every grey role is a step on it. A state moves a set number of steps: **a press moves one step** (a `sunk` key or well presses to `hairline`; a `control` chip or well presses to `sunk`), and a pick goes to the far end of the scale (a chip's rest to an `ink` fill, D100). A role that equals another names the same step in code, so the two can't drift (D97).
 
@@ -191,6 +193,7 @@ Rules: no all-caps eyebrow labels, and no semibold body text.
   - The marigold key has a **2px ink lip** that collapses when pressed, a nod to Braun's physical keys.
   - Trays, sheets and dialogs sit over the `scrim` token: `ink` at 32% in light, black at 40% in dark (D93). A light scrim on the dark page would lift the page above the tray. `HisaabTheme` sets it for every sheet and dialog.
   - **Material roles** (`HisaabTheme._scheme`, D94): `outline` is `ink2`, the 3:1 boundary that Material draws on a Switch's off thumb and track; `outlineVariant` is `hairline`; `primaryContainer` is `sunk`, so a pressed or focused Switch thumb stays visible on its `ink` track; `error` is `ink`.
+  - **The snackbar (D105)** is the one inverse layer: an `inverse` pill with `bg` text, `card` radius, on the dock's gutter edges, no shadow. Undo is a Semibold word in `bg`, never marigold. It sits right above the dock or the Add key on Home, right above the pinned actions on Ask AI, and `xl` above the bottom elsewhere. `HisaabSnackbarHost` (`lib/core/widgets/`).
   - There is no glass and no blur on content. Apple's Liquid Glass guidance puts glass only on navigation.
   - **Top bars on Home and Spends are pinned and solid (D81, D84):** the wordmark row and the Spends title row stay put while the cards scroll under them. The bar is plain `bg` and reaches behind the status bar. Once content is beneath it, a `hairline` bottom edge fades in (200ms, 150ms crossfade with reduced motion), as Material 3's top app bar marks scrolled content. No blur or tint: on `bg` against `surface` cards (about 3% apart) blur reads as a smudge and smears the marigold signal. The bar is a pinned sliver, so focus and TalkBack scrolling stop items below it, never under it. `TopBarScrollView` (`lib/core/widgets/`).
 - **Icons:**
@@ -409,6 +412,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
   | Daily | Blocks re-flow at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
+- **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
 - **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no trail and no fill in.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
 
@@ -436,6 +440,7 @@ One effect per event, never buzzy.
 - State is shown by fill, outline, hatch **and** words.
 - TalkBack reads, for example: "Safe to spend today: 1,430 rupees. 9 days to payday. Lasts till payday with about 9,300 rupees spare."
 - Text scales to 1.5× with no clipping. Every colour has an increased-contrast variant (HIG).
+- **Snackbar timing (D105, WCAG 2.2.1).** A bar closes after 6 s; a touch or keyboard focus on it restarts the 6 s. With TalkBack on, a bar with Undo stays until Undo, TalkBack's Dismiss action, a newer message or leaving the page. It is a live region, so it is announced without moving focus, and an amount is spoken in rupees.
 - **Focus (D99, principle 24).** Every control is reachable by keyboard, D-pad and switch access, and Enter, Space and D-pad centre do what a tap does.
   - A focused control gets a 2dp `focus` ring outside a 2dp `focusGap` band. The ring follows the control's own squircle, with its corner radius grown so it stays concentric.
   - It shows only in Flutter's traditional highlight mode, so a touch never leaves a ring behind. It appears and goes at once, so it needs no motion token.

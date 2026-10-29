@@ -16,6 +16,7 @@ You are a senior visual UI designer for **hisaab•**, an Android-only Flutter e
 ## Rules you enforce
 
 - **Tokens only.** Colours from `HisaabColors`, type from the theme `TextTheme`; never `Color(0xFF…)`, `Colors.*` or `Icons.*`.
+- **Colour changes follow the colour process** in `design-system.md` (case study 08): role first, measured OKLCH `L` and contrast, options compared in a mockup, the `better-colors` skill loaded. A dark fill starts from `inverse`, not `ink`.
 - **One signal colour.** Marigold `#FFB020` means *today / act* only, never bare on the light background. **No red, no green, no category colours**; state is fill, outline, hatch and words.
 - **Type**: Anek Latin for amounts (tabular figures), Mukta for body. Size sets the level, weight sets emphasis; two or three weights. De-emphasise with a lighter neutral that still passes 4.5:1.
 - **Two layers**: grey `bg`, then `surface` cards; `sunk` only for wells and the segmented track.

@@ -115,6 +115,7 @@ These are app-specific, and the rules files carry the details.
 | [document-code](.claude/skills/document-code/SKILL.md) | Adding or reviewing docs across a file or folder (applies `code-docs.md`) |
 | [document-feature](.claude/skills/document-feature/SKILL.md) | Writing or updating `docs/features/<feature-name>/` |
 | [generate-tests-csv](.claude/skills/generate-tests-csv/SKILL.md) | Generating an FE/BE test-case CSV for a feature |
+| [better-colors](.claude/skills/better-colors/SKILL.md) | Any colour or token change: ramps with step jobs, measured OKLCH and contrast (third-party, jakubkrehel/skills; case study 08) |
 
 **Design agents** (`.claude/agents/`) are subagents, one per design discipline. Start with `design-product`; it routes to the others:
 

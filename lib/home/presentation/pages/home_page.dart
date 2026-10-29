@@ -6,6 +6,8 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/widgets/hisaab_chip.dart';
+import '../../../core/widgets/hisaab_snackbar.dart';
+import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../core/widgets/top_bar_scroll_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
@@ -47,16 +49,17 @@ class HomePage extends StatelessWidget {
   /// Plays the blocks-assemble entrance (after onboarding).
   final bool assemble;
 
-  /// How long Undo stays offered (SPEC BR-10).
-  static const Duration undoWindow = Duration(seconds: 6);
-
   @override
-  Widget build(BuildContext context) => BlocConsumer<HomeBloc, HomeState>(
-        listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
-        listener: _offerUndo,
-        builder: (BuildContext context, HomeState state) => TopBarScrollView(
-          bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
-          children: _content(context, state),
+  // why: the dock or the Add key sits right below Home, and its own top padding is the gap.
+  Widget build(BuildContext context) => HisaabSnackbarHost(
+        bottom: 0,
+        child: BlocConsumer<HomeBloc, HomeState>(
+          listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
+          listener: _offerUndo,
+          builder: (BuildContext context, HomeState state) => TopBarScrollView(
+            bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
+            children: _content(context, state),
+          ),
         ),
       );
 
@@ -139,15 +142,13 @@ class HomePage extends StatelessWidget {
     }
     final AppLocalizations strings = AppLocalizations.of(context);
     final HomeBloc bloc = context.read<HomeBloc>();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          duration: undoWindow,
-          content: Text(strings.entryDeleted(context.money.format(deleted.amount))),
-          action: SnackBarAction(label: strings.undo, onPressed: () => bloc.add(HomeUndoRequested(deleted))),
-        ),
-      );
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.entryDeleted(context.money.format(deleted.amount)),
+        semanticsLabel: strings.entryDeleted(strings.spokenAmount(context.money.digits(deleted.amount))),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeUndoRequested(deleted))),
+      ),
+    );
   }
 }
 

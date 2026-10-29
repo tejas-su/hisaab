@@ -21,6 +21,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.displayInk2,
     required this.blockIdle,
     required this.displayEdge,
+    required this.inverse,
     required this.scrim,
     required this.clear,
     required this.focus,
@@ -55,6 +56,8 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displayInk2: Color(0xFF62615C),
     blockIdle: _lightHairline,
     displayEdge: _lightInk,
+    // why: a charcoal, not ink, so a short-lived bar reads as dark without being a black slab (D105).
+    inverse: Color(0xFF2F2E2B),
     scrim: Color(0x52161615),
     clear: Color(0x00EEECE6),
     focus: _lightInk,
@@ -78,6 +81,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displayInk2: _darkInk2,
     blockIdle: Color(0xFF3E3E3B),
     displayEdge: Color(0x00000000),
+    inverse: _darkInk,
     // why: a light scrim on a dark page lifts it above the tray, inverting the layers (D93).
     scrim: Color(0x66000000),
     clear: Color(0x00121211),
@@ -138,6 +142,10 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// alias of [ink] in light; transparent where the card is dark.
   final Color displayEdge;
 
+  /// The snackbar's fill, the opposite of the page so it stands off any card: a warm charcoal
+  /// in light, an alias of [ink] in dark. Text on it is [background] (D105).
+  final Color inverse;
+
   /// Dims the page under a tray, sheet or dialog: ink at 32% in light, black at 40% in dark, so
   /// the raised layer is always the lighter one.
   final Color scrim;
@@ -173,6 +181,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? displayInk2,
     Color? blockIdle,
     Color? displayEdge,
+    Color? inverse,
     Color? scrim,
     Color? clear,
     Color? focus,
@@ -193,6 +202,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
         displayInk2: displayInk2 ?? this.displayInk2,
         blockIdle: blockIdle ?? this.blockIdle,
         displayEdge: displayEdge ?? this.displayEdge,
+        inverse: inverse ?? this.inverse,
         scrim: scrim ?? this.scrim,
         clear: clear ?? this.clear,
         focus: focus ?? this.focus,
@@ -220,6 +230,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       displayInk2: mix(displayInk2, other.displayInk2),
       blockIdle: mix(blockIdle, other.blockIdle),
       displayEdge: mix(displayEdge, other.displayEdge),
+      inverse: mix(inverse, other.inverse),
       scrim: mix(scrim, other.scrim),
       clear: mix(clear, other.clear),
       focus: mix(focus, other.focus),

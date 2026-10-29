@@ -56,6 +56,7 @@ enum _Swatch {
   displayInk2,
   blockIdle,
   displayEdge,
+  inverse,
   focus,
   focusGap,
   displayUnderScrim,
@@ -101,6 +102,7 @@ enum _Swatch {
       displayInk2 => c.displayInk2,
       blockIdle => c.blockIdle,
       displayEdge => c.displayEdge,
+      inverse => c.inverse,
       focus => c.focus,
       focusGap => c.focusGap,
       displayUnderScrim => Color.alphaBlend(c.scrim, c.display),
@@ -190,6 +192,7 @@ final List<_Pair> _pairs = <_Pair>[
   _pair(_Swatch.onSurface, _Swatch.schemeSurface, _Rule.text, 'Material surface'),
   _pair(_Swatch.onSurfaceVariant, _Swatch.schemeSurface, _Rule.text, 'Material surface, secondary text'),
   _pair(_Swatch.onInverseSurface, _Swatch.inverseSurface, _Rule.text, 'a Tooltip'),
+  _pair(_Swatch.background, _Swatch.inverse, _Rule.text, 'snackbar text and its Undo (D105)'),
 ];
 
 double _contrast(Color a, Color b) {

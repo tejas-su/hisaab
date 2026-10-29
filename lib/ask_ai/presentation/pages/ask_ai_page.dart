@@ -5,6 +5,8 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/layout/app_layout.dart';
 import '../../../core/widgets/hisaab_chip.dart';
+import '../../../core/widgets/hisaab_snackbar.dart';
+import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../core/widgets/pane.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../bloc/ask_ai_bloc.dart';
@@ -25,10 +27,7 @@ class AskAiPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: BlocConsumer<AskAiBloc, AskAiState>(
-      listenWhen: (AskAiState previous, AskAiState current) =>
-          previous is AskAiReady && current is AskAiReady && current.toasts > previous.toasts,
-      listener: (BuildContext context, AskAiState _) => _showCopied(context),
+    body: BlocBuilder<AskAiBloc, AskAiState>(
       builder: (BuildContext context, AskAiState state) => Stack(children: _panes(context, state)),
     ),
   );
@@ -74,7 +73,7 @@ class AskAiPage extends StatelessWidget {
   }
 
   /// A fixed [header] on top, the [scrolling] cards, and the actions pinned at the bottom when
-  /// [state] is ready.
+  /// [state] is ready, with the paste toast just above them.
   Widget _column({bool header = false, required List<Widget> scrolling, AskAiState? state}) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: <Widget>[
@@ -83,17 +82,7 @@ class AskAiPage extends StatelessWidget {
           padding: EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.m, HisaabSpacing.gutter, HisaabSpacing.s),
           child: AskAiHeader(),
         ),
-      Expanded(
-        child: ListView(
-          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
-          children: <Widget>[
-            for (final (int index, Widget card) in scrolling.indexed) ...<Widget>[
-              if (index > 0) const SizedBox(height: HisaabSpacing.l),
-              card,
-            ],
-          ],
-        ),
-      ),
+      Expanded(child: _toastsAboveActions(ready: state is AskAiReady, child: _cards(scrolling))),
       if (state is AskAiReady)
         Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
@@ -101,6 +90,33 @@ class AskAiPage extends StatelessWidget {
         ),
     ],
   );
+
+  Widget _cards(List<Widget> scrolling) => ListView(
+    padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+    children: <Widget>[
+      for (final (int index, Widget card) in scrolling.indexed) ...<Widget>[
+        if (index > 0) const SizedBox(height: HisaabSpacing.l),
+        card,
+      ],
+    ],
+  );
+
+  // why: only the column with the actions listens, so two panes show one toast, and it never covers
+  // the actions; their own top padding is the gap.
+  Widget _toastsAboveActions({required bool ready, required Widget child}) {
+    if (!ready) {
+      return child;
+    }
+    return HisaabSnackbarHost(
+      bottom: 0,
+      child: BlocListener<AskAiBloc, AskAiState>(
+        listenWhen: (AskAiState previous, AskAiState current) =>
+            previous is AskAiReady && current is AskAiReady && current.toasts > previous.toasts,
+        listener: (BuildContext context, AskAiState _) => _showCopied(context),
+        child: child,
+      ),
+    );
+  }
 
   List<Widget> _choices(BuildContext context, AskAiState state) => switch (state) {
     AskAiLoading() => const <Widget>[],
@@ -120,7 +136,6 @@ class AskAiPage extends StatelessWidget {
     );
   }
 
-  void _showCopied(BuildContext context) => ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).askCopiedToast)));
+  void _showCopied(BuildContext context) =>
+      HisaabSnackbarHost.of(context).show(HisaabSnackbar(message: AppLocalizations.of(context).askCopiedToast));
 }
