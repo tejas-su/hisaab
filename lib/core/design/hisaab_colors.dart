@@ -11,6 +11,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.surface,
     required this.sunk,
     required this.hairline,
+    required this.control,
     required this.ink,
     required this.ink2,
     required this.signal,
@@ -20,51 +21,96 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.displayInk2,
     required this.blockIdle,
     required this.displayEdge,
+    required this.scrim,
+    required this.clear,
+    required this.focus,
+    required this.focusGap,
   });
+
+  // why: an alias names the same constant as the token it equals, so the two can't drift apart
+  // (principle 27, D97). Only values that more than one token uses get a name here.
+  static const Color _lightBackground = Color(0xFFEEECE6);
+  static const Color _lightSurface = Color(0xFFFFFEFB);
+  static const Color _lightHairline = Color(0xFFD3D0C8);
+  static const Color _lightInk = Color(0xFF161615);
+  static const Color _darkBackground = Color(0xFF121211);
+  static const Color _darkSurface = Color(0xFF1F1F1D);
+  static const Color _darkHairline = Color(0xFF373734);
+  static const Color _darkInk = Color(0xFFF2F1EC);
+  static const Color _darkInk2 = Color(0xFFA3A29C);
 
   /// Light theme tokens.
   static const HisaabColors light = HisaabColors(
-    background: Color(0xFFEEECE6),
-    surface: Color(0xFFFFFEFB),
+    background: _lightBackground,
+    surface: _lightSurface,
     sunk: Color(0xFFE4E1DA),
-    hairline: Color(0xFFD3D0C8),
-    ink: Color(0xFF161615),
+    hairline: _lightHairline,
+    control: _lightSurface,
+    ink: _lightInk,
     ink2: Color(0xFF585752),
     signal: Color(0xFFFFB020),
     onSignal: Color(0xFF161615),
-    display: Color(0xFFFFFEFB),
-    displayInk: Color(0xFF161615),
+    display: _lightSurface,
+    displayInk: _lightInk,
     displayInk2: Color(0xFF62615C),
-    blockIdle: Color(0xFFD3D0C8),
-    displayEdge: Color(0xFF161615),
+    blockIdle: _lightHairline,
+    displayEdge: _lightInk,
+    scrim: Color(0x52161615),
+    clear: Color(0x00EEECE6),
+    focus: _lightInk,
+    focusGap: _lightBackground,
   );
 
-  /// Dark theme tokens, designed rather than inverted.
+  /// Dark theme tokens, designed rather than inverted: each layer steps lighter by about the
+  /// same contrast as its light counterpart (D92).
   static const HisaabColors dark = HisaabColors(
-    background: Color(0xFF121211),
-    surface: Color(0xFF1C1C1A),
-    sunk: Color(0xFF262624),
-    hairline: Color(0xFF2C2C29),
-    ink: Color(0xFFF2F1EC),
-    ink2: Color(0xFF9C9B95),
+    background: _darkBackground,
+    surface: _darkSurface,
+    sunk: Color(0xFF2C2C29),
+    hairline: _darkHairline,
+    control: _darkHairline,
+    ink: _darkInk,
+    ink2: _darkInk2,
     signal: Color(0xFFFFB020),
     onSignal: Color(0xFF161615),
-    display: Color(0xFF1C1C1A),
-    displayInk: Color(0xFFF2F1EC),
-    displayInk2: Color(0xFF9C9B95),
-    blockIdle: Color(0xFF3A3A37),
+    display: _darkSurface,
+    displayInk: _darkInk,
+    displayInk2: _darkInk2,
+    blockIdle: Color(0xFF3E3E3B),
     displayEdge: Color(0x00000000),
+    // why: a light scrim on a dark page lifts it above the tray, inverting the layers (D93).
+    scrim: Color(0x66000000),
+    clear: Color(0x00121211),
+    focus: _darkInk,
+    focusGap: _darkBackground,
   );
 
+  /// The page, the lowest layer.
   final Color background;
+
+  /// Cards, sheets, the tray and the dock: one layer above [background].
   final Color surface;
 
-  /// Pressed-in surfaces: keys, chips, icon wells.
+  /// Keys and icon wells at rest: pressed in, so darker than [surface] in light, lighter in dark.
   final Color sunk;
+
+  /// Dividers, the dock edge, the pressed fill of a [sunk] key, and the fill of a chip or field
+  /// that sits on [surface] (the Add tray, a sheet, a card), where a [control] fill would vanish
+  /// in light (D100).
   final Color hairline;
+
+  /// Chips, the Back well and text fields at rest on the page: one layer up, like the cards.
+  /// An alias of [surface] in light and of [hairline] in dark (D100).
+  ///
+  /// Only for controls on [background]; a control on [surface] uses [hairline] instead. Pressed,
+  /// it steps to [sunk].
+  final Color control;
+
+  /// Primary text and icons, the ink fill of a flashed tile and of a picked chip, and a focused
+  /// field's edge (D100).
   final Color ink;
 
-  /// Secondary text.
+  /// Secondary text, labels and hints; ≥ 4.5:1 on every fill.
   final Color ink2;
 
   /// Marigold: today's block, the Add key, the Next key.
@@ -73,17 +119,43 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// Text and icons drawn on [signal].
   final Color onSignal;
 
-  /// The hero "display" card: the light `surface` layer in light theme, a dark readout in dark.
+  /// The hero "display" card. An alias of [surface] in both themes: kept as its own token so the
+  /// hero can change layer without touching every card (D97).
   final Color display;
+
+  /// The hero's main text. An alias of [ink] in both themes (D97).
   final Color displayInk;
+
+  /// The hero's secondary text and the over-state hatch. Its own grey (#62615C) in light, which
+  /// stayed put when [ink2] darkened (D90); an alias of [ink2] in dark (D97).
   final Color displayInk2;
 
-  /// Day blocks that are not today.
+  /// Day blocks that are not today. An alias of [hairline] in light; its own step in dark, between
+  /// [hairline] and [ink2], so idle days stay ≥ 1.5:1 on the card (D92, D97).
   final Color blockIdle;
 
-  /// The edge around today's marigold block, so marigold never sits bare on a light card;
-  /// transparent where the card is dark.
+  /// The edge around today's marigold block, so marigold never sits bare on a light card: an
+  /// alias of [ink] in light; transparent where the card is dark.
   final Color displayEdge;
+
+  /// Dims the page under a tray, sheet or dialog: ink at 32% in light, black at 40% in dark, so
+  /// the raised layer is always the lighter one.
+  final Color scrim;
+
+  /// See-through: [background] at alpha 0. Use it for an unselected fill, a see-through bar and the
+  /// far end of a fade, so a colour animating to or from it stays in the page's tint instead of
+  /// passing through black, as a bare transparent black does (principle 29, D96).
+  final Color clear;
+
+  /// The keyboard and D-pad focus ring, 2dp wide, outside a [focusGap] band: an alias of [ink].
+  ///
+  /// It means focus only, never selection: a selected control keeps its look and gains the ring
+  /// (principle 24, D99). It is ≥ 3:1 on every layer a control sits on.
+  final Color focus;
+
+  /// The 2dp band between a control and its [focus] ring: an alias of [background]. The two tones
+  /// are ≥ 9:1 apart, so one of them always stands 3:1 off whatever it touches (WCAG C40, D99).
+  final Color focusGap;
 
   @override
   HisaabColors copyWith({
@@ -91,6 +163,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? surface,
     Color? sunk,
     Color? hairline,
+    Color? control,
     Color? ink,
     Color? ink2,
     Color? signal,
@@ -100,12 +173,17 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? displayInk2,
     Color? blockIdle,
     Color? displayEdge,
+    Color? scrim,
+    Color? clear,
+    Color? focus,
+    Color? focusGap,
   }) =>
       HisaabColors(
         background: background ?? this.background,
         surface: surface ?? this.surface,
         sunk: sunk ?? this.sunk,
         hairline: hairline ?? this.hairline,
+        control: control ?? this.control,
         ink: ink ?? this.ink,
         ink2: ink2 ?? this.ink2,
         signal: signal ?? this.signal,
@@ -115,6 +193,10 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
         displayInk2: displayInk2 ?? this.displayInk2,
         blockIdle: blockIdle ?? this.blockIdle,
         displayEdge: displayEdge ?? this.displayEdge,
+        scrim: scrim ?? this.scrim,
+        clear: clear ?? this.clear,
+        focus: focus ?? this.focus,
+        focusGap: focusGap ?? this.focusGap,
       );
 
   @override
@@ -128,6 +210,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       surface: mix(surface, other.surface),
       sunk: mix(sunk, other.sunk),
       hairline: mix(hairline, other.hairline),
+      control: mix(control, other.control),
       ink: mix(ink, other.ink),
       ink2: mix(ink2, other.ink2),
       signal: mix(signal, other.signal),
@@ -137,6 +220,10 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       displayInk2: mix(displayInk2, other.displayInk2),
       blockIdle: mix(blockIdle, other.blockIdle),
       displayEdge: mix(displayEdge, other.displayEdge),
+      scrim: mix(scrim, other.scrim),
+      clear: mix(clear, other.clear),
+      focus: mix(focus, other.focus),
+      focusGap: mix(focusGap, other.focusGap),
     );
   }
 }

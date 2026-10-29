@@ -116,6 +116,25 @@ These are app-specific, and the rules files carry the details.
 | [document-feature](.claude/skills/document-feature/SKILL.md) | Writing or updating `docs/features/<feature-name>/` |
 | [generate-tests-csv](.claude/skills/generate-tests-csv/SKILL.md) | Generating an FE/BE test-case CSV for a feature |
 
+**Design agents** (`.claude/agents/`) are subagents, one per design discipline. Start with `design-product`; it routes to the others:
+
+| Agent | Discipline |
+|---|---|
+| [design-product](.claude/agents/design-product.md) | Product design: problem framing, end-to-end journeys, feature scope, routing |
+| [design-ux-research](.claude/agents/design-ux-research.md) | UX research: competitive and desk research, usability tests, synthesis into `docs/design-research/` |
+| [design-ux](.claude/agents/design-ux.md) | UX design: flows, task flows, wireframes, error prevention, recovery |
+| [design-ia](.claude/agents/design-ia.md) | Information architecture: navigation, hierarchy, taxonomy, labels |
+| [design-interaction](.claude/agents/design-interaction.md) | Interaction design: patterns, states, gestures, micro-interactions, input |
+| [design-ui](.claude/agents/design-ui.md) | UI design: hierarchy, layout, spacing, colour and type use, hi-fi mockups |
+| [design-system](.claude/agents/design-system.md) | Design system: tokens, themes, shared components, governance |
+| [design-brand](.claude/agents/design-brand.md) | Brand: identity, app icon, splash, glyphs, Play Store visuals |
+| [design-motion](.claude/agents/design-motion.md) | Motion: springs, transitions, choreography, reduced motion |
+| [design-content](.claude/agents/design-content.md) | Content design and UX writing: ARB copy, voice, errors, empty states |
+| [design-accessibility](.claude/agents/design-accessibility.md) | Accessibility: WCAG 2.2 AA, TalkBack, contrast, targets, cognitive load |
+| [design-validation](.claude/agents/design-validation.md) | Prototyping and validation: mockups, test plans, design QA against the build |
+| [design-platform](.claude/agents/design-platform.md) | Android and adaptive design: window classes, foldables, insets, predictive back |
+| [design-ops](.claude/agents/design-ops.md) | DesignOps: doc sync, quality audits, handoff, process improvement |
+
 ## Testing
 
 Read [tests.md](.claude/rules/tests.md) before writing or changing any test.

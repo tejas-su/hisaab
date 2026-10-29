@@ -18,6 +18,7 @@ class SignalKey extends StatelessWidget {
   /// The tallest default; keys grow with text but never shrink below this.
   static const double minHeight = 58;
   static const double _lip = 2;
+  static const double _radius = 18;
 
   final String label;
   final AppIconData? icon;
@@ -32,6 +33,7 @@ class SignalKey extends StatelessWidget {
     return Pressable(
       semanticLabel: label,
       onPressed: onPressed,
+      focusRadius: _radius,
       builder: (BuildContext context, bool pressed) {
         final double lip = enabled && !pressed ? _lip : 0;
         return AnimatedContainer(
@@ -42,7 +44,7 @@ class SignalKey extends StatelessWidget {
           padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.l, vertical: HisaabSpacing.s),
           decoration: ShapeDecoration(
             color: enabled ? context.colors.signal : context.colors.sunk,
-            shape: HisaabShapes.squircle(18, side: BorderSide(color: enabled ? context.colors.onSignal : context.colors.hairline, width: 1.5)),
+            shape: HisaabShapes.squircle(_radius, side: BorderSide(color: enabled ? context.colors.onSignal : context.colors.hairline, width: 1.5)),
             shadows: <BoxShadow>[if (lip > 0) BoxShadow(color: context.colors.onSignal, offset: Offset(0, lip))],
           ),
           child: Row(

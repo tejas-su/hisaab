@@ -27,6 +27,7 @@ class KeypadKey extends StatelessWidget {
         semanticLabel: semanticLabel,
         onPressed: onPressed,
         onLongPress: onLongPress,
+        focusRadius: HisaabRadii.key,
         builder: (BuildContext context, bool pressed) => Container(
           constraints: BoxConstraints(minHeight: height),
           alignment: Alignment.center,

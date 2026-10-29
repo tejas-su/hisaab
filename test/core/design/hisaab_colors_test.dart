@@ -11,39 +11,9 @@ double _contrast(Color a, Color b) {
 }
 
 void main() {
-  group('HisaabColors meets WCAG AA (SPEC NFR-4)', () {
-    for (final (String name, HisaabColors colors) in <(String, HisaabColors)>[
-      ('light', HisaabColors.light),
-      ('dark', HisaabColors.dark),
-    ]) {
-      test('$name: body text on every surface and fill ≥ 4.5:1', () {
-        // why: hairline is the chip and text-field fill (D89, D90), so labels and hints sit on it too.
-        for (final Color surface in <Color>[colors.background, colors.surface, colors.sunk, colors.hairline]) {
-          expect(_contrast(colors.ink, surface), greaterThanOrEqualTo(4.5));
-          expect(_contrast(colors.ink2, surface), greaterThanOrEqualTo(4.5));
-        }
-      });
-
-      test('$name: text on the signal key ≥ 4.5:1', () {
-        expect(_contrast(colors.onSignal, colors.signal), greaterThanOrEqualTo(4.5));
-      });
-
-      test('$name: display card text ≥ 4.5:1', () {
-        expect(_contrast(colors.displayInk, colors.display), greaterThanOrEqualTo(4.5));
-        expect(_contrast(colors.displayInk2, colors.display), greaterThanOrEqualTo(4.5));
-      });
-    }
-
-    test('dark: signal on display ≥ 3:1', () {
-      expect(_contrast(HisaabColors.dark.signal, HisaabColors.dark.display), greaterThanOrEqualTo(3));
-    });
-
-    test('light: the ink edge makes today’s block ≥ 3:1 against the card and against marigold', () {
-      const HisaabColors light = HisaabColors.light;
-      expect(_contrast(light.displayEdge, light.display), greaterThanOrEqualTo(3));
-      expect(_contrast(light.displayEdge, light.signal), greaterThanOrEqualTo(3));
-    });
-
+  // why: every contrast floor lives in one list, contrast_pairs_test.dart (principle 26, D98). These
+  // two are not floors: one says an edge is absent, the other caps a ratio.
+  group('HisaabColors signal guards (UI_DESIGN §3.2)', () {
     test('dark: no edge is drawn around today’s block', () {
       expect(HisaabColors.dark.displayEdge.a, 0);
     });
@@ -65,9 +35,102 @@ void main() {
       expect(light.display, light.surface);
     });
 
+    test('the hero card’s main text and today’s edge are ink; its secondary text is its own grey (D90)', () {
+      expect(light.displayInk, light.ink);
+      expect(light.displayEdge, light.ink);
+      expect(light.displayInk2, isNot(light.ink2));
+    });
+
+    test('idle day blocks are the hairline step', () {
+      expect(light.blockIdle, light.hairline);
+    });
+
     test('sunk wells are darker than both the card and the page', () {
       expect(light.sunk.computeLuminance(), lessThan(light.background.computeLuminance()));
       expect(_contrast(light.sunk, light.surface), greaterThanOrEqualTo(1.25));
+    });
+  });
+
+  group('HisaabColors dark layers step lighter and stay apart (UI_DESIGN §3.5)', () {
+    const HisaabColors dark = HisaabColors.dark;
+
+    test('cards are lighter than the page and clearly apart from it', () {
+      expect(dark.surface.computeLuminance(), greaterThan(dark.background.computeLuminance()));
+      expect(_contrast(dark.surface, dark.background), greaterThanOrEqualTo(1.12));
+    });
+
+    test('keys and wells are lighter than the card they sit in and clearly apart from it', () {
+      expect(dark.sunk.computeLuminance(), greaterThan(dark.surface.computeLuminance()));
+      expect(_contrast(dark.sunk, dark.surface), greaterThanOrEqualTo(1.15));
+    });
+
+    test('a divider inside a card reads as a line', () {
+      expect(_contrast(dark.hairline, dark.surface), greaterThanOrEqualTo(1.35));
+    });
+
+    test('the hero card is the card layer and its text is the card text', () {
+      expect(dark.display, dark.surface);
+      expect(dark.displayInk, dark.ink);
+      expect(dark.displayInk2, dark.ink2);
+    });
+  });
+
+  group('HisaabColors states in both themes (UI_DESIGN §3.3, §3.5)', () {
+    for (final (String name, HisaabColors colors) in <(String, HisaabColors)>[
+      ('light', HisaabColors.light),
+      ('dark', HisaabColors.dark),
+    ]) {
+      test('$name: the scrim dims the page, and a tray over it stays the lighter layer', () {
+        final Color dimmed = Color.alphaBlend(colors.scrim, colors.background);
+        expect(dimmed.computeLuminance(), lessThan(colors.background.computeLuminance()));
+        expect(colors.surface.computeLuminance(), greaterThan(dimmed.computeLuminance()));
+      });
+    }
+  });
+
+  group('HisaabColors clear (principle 29)', () {
+    for (final (String name, HisaabColors colors) in <(String, HisaabColors)>[
+      ('light', HisaabColors.light),
+      ('dark', HisaabColors.dark),
+    ]) {
+      test('$name: clear is the page colour at alpha 0, so a fade to it never passes through black', () {
+        expect(colors.clear, colors.background.withAlpha(0));
+      });
+    }
+  });
+
+  group('HisaabColors focus (principle 24, D99)', () {
+    for (final (String name, HisaabColors colors) in <(String, HisaabColors)>[
+      ('light', HisaabColors.light),
+      ('dark', HisaabColors.dark),
+    ]) {
+      test('$name: the focus ring is ink and its gap is the page, so focus is never marigold', () {
+        expect(colors.focus, colors.ink);
+        expect(colors.focusGap, colors.background);
+        expect(colors.focus, isNot(colors.signal));
+      });
+    }
+  });
+
+  group('HisaabColors control (D100)', () {
+    test('light: controls on the page are the card layer, one step up from the page', () {
+      expect(HisaabColors.light.control, HisaabColors.light.surface);
+      expect(HisaabColors.light.control.computeLuminance(), greaterThan(HisaabColors.light.background.computeLuminance()));
+    });
+
+    test('dark: controls on the page are the hairline step, lighter than the page', () {
+      expect(HisaabColors.dark.control, HisaabColors.dark.hairline);
+      expect(HisaabColors.dark.control.computeLuminance(), greaterThan(HisaabColors.dark.background.computeLuminance()));
+    });
+
+    test('copyWith replaces control, and keeps it when not given', () {
+      expect(HisaabColors.light.copyWith(control: HisaabColors.dark.control).control, HisaabColors.dark.control);
+      expect(HisaabColors.light.copyWith().control, HisaabColors.light.control);
+    });
+
+    test('lerp interpolates control', () {
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 1).control, HisaabColors.dark.control);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 0).control, HisaabColors.light.control);
     });
   });
 
@@ -82,12 +145,28 @@ void main() {
       final HisaabColors same = HisaabColors.light.copyWith();
       expect(same.background, HisaabColors.light.background);
       expect(same.blockIdle, HisaabColors.light.blockIdle);
+      expect(same.clear, HisaabColors.light.clear);
+    });
+
+    test('copyWith replaces clear', () {
+      expect(HisaabColors.light.copyWith(clear: HisaabColors.dark.clear).clear, HisaabColors.dark.clear);
+    });
+
+    test('copyWith replaces focus and focusGap, and keeps them when not given', () {
+      final HisaabColors changed = HisaabColors.light.copyWith(focus: HisaabColors.dark.focus, focusGap: HisaabColors.dark.focusGap);
+      expect(changed.focus, HisaabColors.dark.focus);
+      expect(changed.focusGap, HisaabColors.dark.focusGap);
+      expect(HisaabColors.light.copyWith().focus, HisaabColors.light.focus);
+      expect(HisaabColors.light.copyWith().focusGap, HisaabColors.light.focusGap);
     });
 
     test('lerp interpolates between themes and handles null', () {
       expect(HisaabColors.light.lerp(null, 0.5), same(HisaabColors.light));
       expect(HisaabColors.light.lerp(HisaabColors.dark, 1).background, HisaabColors.dark.background);
       expect(HisaabColors.light.lerp(HisaabColors.dark, 0).surface, HisaabColors.light.surface);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 1).clear, HisaabColors.dark.clear);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 1).focus, HisaabColors.dark.focus);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 1).focusGap, HisaabColors.dark.focusGap);
     });
   });
 }

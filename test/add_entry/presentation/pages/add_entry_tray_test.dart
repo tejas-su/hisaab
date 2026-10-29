@@ -1,9 +1,11 @@
 import 'dart:ui';
 
 import 'package:expense_tracker/add_entry/add_entry.dart';
+import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/usecases/use_case.dart';
+import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -271,6 +273,73 @@ void main() {
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       handle.dispose();
+    });
+
+    for (final (ThemeMode mode, HisaabColors colors) in <(ThemeMode, HisaabColors)>[
+      (ThemeMode.light, HisaabColors.light),
+      (ThemeMode.dark, HisaabColors.dark),
+    ]) {
+      testWidgets('dims the page with the ${mode.name} scrim token (UI_DESIGN §3.5)', (WidgetTester tester) async {
+        await pumpApp(
+          tester,
+          Scaffold(
+            body: Builder(
+              builder: (BuildContext context) => Center(
+                child: TextButton(onPressed: () => AddEntryTray.show(context, bloc()), child: const Text('open')),
+              ),
+            ),
+          ),
+          themeMode: mode,
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+        expect(tester.widget<ModalBarrier>(find.byType(ModalBarrier).last).color, colors.scrim);
+      });
+    }
+  });
+
+  group('controls on the tray keep the hairline step, since a control fill is the tray in light (D100)', () {
+    Color? chipFill(WidgetTester tester, Finder chip) =>
+        (tester.widget<Container>(find.descendant(of: chip, matching: find.byType(Container)).first).decoration! as ShapeDecoration).color;
+
+    Color? fieldFill(WidgetTester tester, Finder field) =>
+        tester.widget<InputDecorator>(find.descendant(of: field, matching: find.byType(InputDecorator))).decoration.fillColor;
+
+    Iterable<Color?> everyChipFill(WidgetTester tester) =>
+        find.byType(HisaabChip).evaluate().map((Element chip) => chipFill(tester, find.byWidget(chip.widget)));
+
+    testWidgets('the quick-add chips', (WidgetTester tester) async {
+      await open(tester);
+      expect(everyChipFill(tester), isNotEmpty);
+      expect(everyChipFill(tester), everyElement(HisaabColors.light.hairline));
+    });
+
+    testWidgets('the delete chip and an entry’s open note field', (WidgetTester tester) async {
+      await open(tester, editing: Option<Entry>.of(WorkedExample.entries[3]));
+      await tester.tap(find.byKey(const ValueKey<String>('add-next')));
+      await tester.pumpAndSettle();
+      expect(chipFill(tester, find.byKey(const ValueKey<String>('delete-entry'))), HisaabColors.light.hairline);
+      expect(fieldFill(tester, find.byKey(const ValueKey<String>('note-field'))), HisaabColors.light.hairline);
+    });
+
+    testWidgets('the date and note chips, the date sheet’s chips and the calendar’s typed-date field', (WidgetTester tester) async {
+      await open(tester);
+      await type(tester, '120');
+      await tester.tap(find.byKey(const ValueKey<String>('add-next')));
+      await tester.pumpAndSettle();
+      for (final String key in <String>['date-chip', 'note-chip']) {
+        expect(chipFill(tester, find.byKey(ValueKey<String>(key))), HisaabColors.light.hairline, reason: key);
+      }
+      await tester.tap(find.byKey(const ValueKey<String>('date-chip')));
+      await tester.pumpAndSettle();
+      for (final String key in <String>['date-today', 'date-yesterday', 'date-pick']) {
+        expect(chipFill(tester, find.byKey(ValueKey<String>(key))), HisaabColors.light.hairline, reason: key);
+      }
+      await tester.tap(find.byKey(const ValueKey<String>('date-pick')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Switch to input'));
+      await tester.pumpAndSettle();
+      expect(fieldFill(tester, find.byType(InputDatePickerFormField)), HisaabColors.light.hairline);
     });
   });
 

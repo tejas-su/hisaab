@@ -36,6 +36,7 @@ class CategoryTile extends StatelessWidget {
     return Pressable(
       semanticLabel: semanticLabel,
       onPressed: onPressed,
+      focusRadius: HisaabRadii.tile,
       builder: (BuildContext context, bool pressed) => Container(
         constraints: const BoxConstraints(minHeight: HisaabSizes.tileHeight),
         padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.xs, vertical: HisaabSpacing.s),

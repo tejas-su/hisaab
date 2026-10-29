@@ -1,0 +1,139 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Every entry contrast</title><style>@font-face{font-family:Anek;src:url(../../../assets/fonts/AnekLatin-Variable.ttf)}
+@font-face{font-family:Mukta;font-weight:400;src:url(../../../assets/fonts/Mukta-Regular.ttf)}
+@font-face{font-family:Mukta;font-weight:600;src:url(../../../assets/fonts/Mukta-SemiBold.ttf)}
+@font-face{font-family:Mukta;font-weight:700;src:url(../../../assets/fonts/Mukta-Bold.ttf)}
+body{margin:0;padding:24px;background:#d9d7d1;font-family:Mukta,sans-serif;color:#161615}
+h1{font-family:Anek;font-weight:600;margin:0 0 4px}
+p.lead{margin:0 0 24px;max-width:900px}
+.opt{margin-bottom:40px}.opt h2{font-family:Anek;font-weight:600;margin:0}.opt p{margin:2px 0 12px}
+.pair{display:flex;gap:24px;flex-wrap:wrap}.col{display:flex;flex-direction:column;gap:8px}
+.ph{width:360px;padding:20px 18px 24px;border-radius:24px;box-sizing:border-box}
+.hdr{display:flex;align-items:center;gap:14px}.back{width:40px;height:40px;border-radius:12px;display:grid;place-items:center}
+.title{font-family:Anek;font-weight:600;font-size:22px}.h2{font-family:Anek;font-weight:600;font-size:20px;margin:14px 0 10px}
+.chips{display:flex;gap:6px}.chip{height:42px;padding:0 14px;border-radius:12px;display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:15px}
+.day{margin:16px 0 8px 16px;font-size:15px}.card{border-radius:24px;padding:6px 16px}
+.row{display:flex;align-items:center;gap:14px;height:56px}.well{width:40px;height:40px;border-radius:10px;display:grid;place-items:center}
+.nm{flex:1;font-size:16px}.amt{font-family:Anek;font-weight:600;font-size:17px;font-feature-settings:"tnum"}
+.div{height:1px;margin-left:54px}.lbl{font-size:13px;margin:18px 0 6px 4px}
+.field{height:48px;border-radius:12px;display:flex;align-items:center;padding:0 14px;font-size:16px;margin-bottom:8px}
+.caret{width:1.5px;height:20px;margin-left:2px}
+.ratios{font-size:13px;border-collapse:collapse}.ratios td{padding:1px 10px 1px 0}.ratios td+td{font-feature-settings:"tnum";font-weight:600}
+code{font-size:13px;background:#0001;padding:0 3px;border-radius:3px}</style></head><body>
+<p style="margin:0 0 12px;padding:8px 12px;border-radius:10px;background:#161615;color:#EEECE6;font-weight:600">Chosen: C with option 1 (D100)</p><h1>Every entry: Back, chips and fields</h1><p class="lead">Four ways to give the screen a real dark and a real light. Ratios are WCAG contrast. Tokens are the live values after D92–D99; no new token is used.</p>
+<div class="opt"><h2>A. Today (D89, D90)</h2><p>Back well <code>sunk</code>, chips rest <code>hairline</code>, pick <code>ink2</code>, fields <code>hairline</code>.</p><div class="pair"><div class="col"><div class="ph" style="background:#EEECE6;color:#161615">
+  <div class="hdr"><span class="back" style="background:#E4E1DA;color:#161615"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#585752;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#D3D0C8;color:#161615">Home</span><span class="chip" style="background:#D3D0C8;color:#161615">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#585752">₹5,000</span></div>
+  <div class="card" style="background:#FFFEFB">
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#D3D0C8"></div>
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#585752">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#D3D0C8;color:#585752">e.g. rent</div>
+  <div class="field" style="background:#D3D0C8;box-shadow:inset 0 0 0 1.5px #585752;color:#161615">Flat rent<span class="caret" style="background:#161615"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>1.11</td></tr><tr><td>Resting chip on page</td><td>1.30</td></tr><tr><td>Pick on page</td><td>6.13</td></tr><tr><td>Pick on resting chip</td><td>4.70</td></tr><tr><td>Field on its layer</td><td>1.30</td></tr><tr><td>Hint (ink2) in field</td><td>4.70</td></tr></table></div><div class="col"><div class="ph" style="background:#121211;color:#F2F1EC">
+  <div class="hdr"><span class="back" style="background:#2C2C29;color:#F2F1EC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#A3A29C;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#373734;color:#F2F1EC">Home</span><span class="chip" style="background:#373734;color:#F2F1EC">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#A3A29C">₹5,000</span></div>
+  <div class="card" style="background:#1F1F1D">
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#373734"></div>
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#A3A29C">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#373734;color:#A3A29C">e.g. rent</div>
+  <div class="field" style="background:#373734;box-shadow:inset 0 0 0 1.5px #A3A29C;color:#F2F1EC">Flat rent<span class="caret" style="background:#F2F1EC"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>1.34</td></tr><tr><td>Resting chip on page</td><td>1.57</td></tr><tr><td>Pick on page</td><td>7.32</td></tr><tr><td>Pick on resting chip</td><td>4.67</td></tr><tr><td>Field on its layer</td><td>1.57</td></tr><tr><td>Hint (ink2) in field</td><td>4.67</td></tr></table></div></div></div>
+<div class="opt"><h2>B. Ink pick</h2><p>Only two moves: the pick fills <code>ink</code>, and Back joins the chips on <code>hairline</code>. Fields unchanged, focused edge goes <code>ink</code>.</p><div class="pair"><div class="col"><div class="ph" style="background:#EEECE6;color:#161615">
+  <div class="hdr"><span class="back" style="background:#D3D0C8;color:#161615"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#161615;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#D3D0C8;color:#161615">Home</span><span class="chip" style="background:#D3D0C8;color:#161615">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#585752">₹5,000</span></div>
+  <div class="card" style="background:#FFFEFB">
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#D3D0C8"></div>
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#585752">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#D3D0C8;color:#585752">e.g. rent</div>
+  <div class="field" style="background:#D3D0C8;box-shadow:inset 0 0 0 1.5px #161615;color:#161615">Flat rent<span class="caret" style="background:#161615"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>1.30</td></tr><tr><td>Resting chip on page</td><td>1.30</td></tr><tr><td>Pick on page</td><td>15.33</td></tr><tr><td>Pick on resting chip</td><td>11.75</td></tr><tr><td>Field on its layer</td><td>1.30</td></tr><tr><td>Hint (ink2) in field</td><td>4.70</td></tr></table></div><div class="col"><div class="ph" style="background:#121211;color:#F2F1EC">
+  <div class="hdr"><span class="back" style="background:#373734;color:#F2F1EC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#F2F1EC;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#373734;color:#F2F1EC">Home</span><span class="chip" style="background:#373734;color:#F2F1EC">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#A3A29C">₹5,000</span></div>
+  <div class="card" style="background:#1F1F1D">
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#373734"></div>
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#A3A29C">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#373734;color:#A3A29C">e.g. rent</div>
+  <div class="field" style="background:#373734;box-shadow:inset 0 0 0 1.5px #F2F1EC;color:#F2F1EC">Flat rent<span class="caret" style="background:#F2F1EC"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>1.57</td></tr><tr><td>Resting chip on page</td><td>1.57</td></tr><tr><td>Pick on page</td><td>16.57</td></tr><tr><td>Pick on resting chip</td><td>10.56</td></tr><tr><td>Field on its layer</td><td>1.57</td></tr><tr><td>Hint (ink2) in field</td><td>4.67</td></tr></table></div></div></div>
+<div class="opt"><h2>C. White controls, ink pick</h2><p>Every control sits one layer up, like the cards: <code>surface</code> in light, <code>hairline</code> in dark. The pick is <code>ink</code>.</p><div class="pair"><div class="col"><div class="ph" style="background:#EEECE6;color:#161615">
+  <div class="hdr"><span class="back" style="background:#FFFEFB;color:#161615"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#161615;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#FFFEFB;color:#161615">Home</span><span class="chip" style="background:#FFFEFB;color:#161615">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#585752">₹5,000</span></div>
+  <div class="card" style="background:#FFFEFB">
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#D3D0C8"></div>
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#585752">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#FFFEFB;color:#585752">e.g. rent</div>
+  <div class="field" style="background:#FFFEFB;box-shadow:inset 0 0 0 1.5px #161615;color:#161615">Flat rent<span class="caret" style="background:#161615"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>1.17</td></tr><tr><td>Resting chip on page</td><td>1.17</td></tr><tr><td>Pick on page</td><td>15.33</td></tr><tr><td>Pick on resting chip</td><td>17.95</td></tr><tr><td>Field on its layer</td><td>1.17</td></tr><tr><td>Hint (ink2) in field</td><td>7.18</td></tr></table></div><div class="col"><div class="ph" style="background:#121211;color:#F2F1EC">
+  <div class="hdr"><span class="back" style="background:#373734;color:#F2F1EC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#F2F1EC;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#373734;color:#F2F1EC">Home</span><span class="chip" style="background:#373734;color:#F2F1EC">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#A3A29C">₹5,000</span></div>
+  <div class="card" style="background:#1F1F1D">
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#373734"></div>
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#A3A29C">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#373734;color:#A3A29C">e.g. rent</div>
+  <div class="field" style="background:#373734;box-shadow:inset 0 0 0 1.5px #F2F1EC;color:#F2F1EC">Flat rent<span class="caret" style="background:#F2F1EC"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>1.57</td></tr><tr><td>Resting chip on page</td><td>1.57</td></tr><tr><td>Pick on page</td><td>16.57</td></tr><tr><td>Pick on resting chip</td><td>10.56</td></tr><tr><td>Field on its layer</td><td>1.57</td></tr><tr><td>Hint (ink2) in field</td><td>4.67</td></tr></table></div></div></div>
+<div class="opt"><h2>D. Outline at rest, ink pick</h2><p>Resting chips and Back are a 1.5dp <code>ink2</code> outline with no fill; the pick is solid <code>ink</code>. Reverses D88's no-edges rule.</p><div class="pair"><div class="col"><div class="ph" style="background:#EEECE6;color:#161615">
+  <div class="hdr"><span class="back" style="background:transparent;box-shadow:inset 0 0 0 1.5px #585752;color:#161615"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#161615;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:transparent;box-shadow:inset 0 0 0 1.5px #585752;color:#161615">Home</span><span class="chip" style="background:transparent;box-shadow:inset 0 0 0 1.5px #585752;color:#161615">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#585752">₹5,000</span></div>
+  <div class="card" style="background:#FFFEFB">
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#D3D0C8"></div>
+    <div class="row"><span class="well" style="background:#E4E1DA"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#585752">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#FFFEFB;color:#585752">e.g. rent</div>
+  <div class="field" style="background:#FFFEFB;box-shadow:inset 0 0 0 1.5px #161615;color:#161615">Flat rent<span class="caret" style="background:#161615"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>—</td></tr><tr><td>Resting chip on page</td><td>edge 6.13</td></tr><tr><td>Pick on page</td><td>15.33</td></tr><tr><td>Pick on resting chip</td><td>15.33</td></tr><tr><td>Field on its layer</td><td>1.17</td></tr><tr><td>Hint (ink2) in field</td><td>7.18</td></tr></table></div><div class="col"><div class="ph" style="background:#121211;color:#F2F1EC">
+  <div class="hdr"><span class="back" style="background:transparent;box-shadow:inset 0 0 0 1.5px #A3A29C;color:#F2F1EC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+  <div class="h2">October</div>
+  <div class="chips"><span class="chip" style="background:#F2F1EC;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:transparent;box-shadow:inset 0 0 0 1.5px #A3A29C;color:#F2F1EC">Home</span><span class="chip" style="background:transparent;box-shadow:inset 0 0 0 1.5px #A3A29C;color:#F2F1EC">Salary</span></div>
+  <div class="day"><b>Thu, 1 Oct</b> <span style="color:#A3A29C">₹5,000</span></div>
+  <div class="card" style="background:#1F1F1D">
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div>
+    <div class="div" style="background:#373734"></div>
+    <div class="row"><span class="well" style="background:#2C2C29"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Salary</span><span class="amt">+₹5,000</span></div>
+  </div>
+  <div class="lbl" style="color:#A3A29C">Note (field, as on the bill editor)</div>
+  <div class="field" style="background:#2C2C29;color:#A3A29C">e.g. rent</div>
+  <div class="field" style="background:#2C2C29;box-shadow:inset 0 0 0 1.5px #F2F1EC;color:#F2F1EC">Flat rent<span class="caret" style="background:#F2F1EC"></span></div>
+</div>
+<table class="ratios"><tr><td>Back well on page</td><td>—</td></tr><tr><td>Resting chip on page</td><td>edge 7.32</td></tr><tr><td>Pick on page</td><td>16.57</td></tr><tr><td>Pick on resting chip</td><td>16.57</td></tr><tr><td>Field on its layer</td><td>1.34</td></tr><tr><td>Hint (ink2) in field</td><td>5.47</td></tr></table></div></div></div>
+</body></html>

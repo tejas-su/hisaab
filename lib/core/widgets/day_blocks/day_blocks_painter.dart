@@ -34,7 +34,7 @@ class DayBlocksPainter extends CustomPainter {
   });
 
   /// Opacity of the marigold trail, so it reads as "just spent", not as money left.
-  static const double trailOpacity = 0.35;
+  static const double trailOpacity = 0.5;
 
   final DayBlocksData data;
   final DayBlocksColors colors;

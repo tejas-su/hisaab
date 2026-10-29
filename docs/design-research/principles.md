@@ -39,3 +39,13 @@ Each principle cites its source and names where it applies in Hisaab. The newest
 20. **Animate a change where it can be seen.** Hold the update until whatever covers it (tray, scrim) has gone, then move one focal point at a time. *Sources:* Material choreography; eBay motion playbook. *Applies to:* the drain after Add, list inserts.
 21. **A gauge needs a visible empty part to read as a gauge.** Show it filling once, and make every change visible, even a small one. *Sources:* the blind read in case study 05; Apple's gauge guidance (§3.3). *Applies to:* Day Blocks.
 22. **No bounce unless a finger threw it.** Springs start at damping 1. *Sources:* Apple WWDC18 *Designing Fluid Interfaces*, WWDC23 *Animate with springs*.
+
+## Tokens and themes (case studies 06, 07)
+
+23. **Every colour token has four values: light, dark, and an increased-contrast value for each.** The contrast values push greys away from the background, never closer. *Sources:* Apple HIG Color and Accessibility; Flutter `highContrastTheme`. *Applies to:* `HisaabColors`, `HisaabTheme`.
+24. **Focus has its own token and never doubles as selection.** A ring with a gap, at least 3:1 on every layer, shown only for keyboard or D-pad focus and never hidden under sticky bars. A selected control keeps its look and gains the ring. *Sources:* Carbon `$focus` / `$focus-inset`; Atlassian colour; Vercel Web Interface Guidelines; WCAG 2.4.7, 2.4.13. *Applies to:* keys, tiles, chips, rows, dock, header buttons.
+25. **Set every platform role, and a role keeps one meaning in every theme.** An unset Material role inherits the nearest given colour, which here is the signal. *Sources:* Carbon Themes; Flutter `ColorScheme` API. *Applies to:* `HisaabTheme._scheme`.
+26. **Contrast pairs are one list, checked in every theme; high contrast raises the floor, not the list.** *Sources:* Primer `colorContrast.config.ts`. *Applies to:* `hisaab_colors_test.dart`, `hisaab_theme_test.dart`.
+27. **Roles point to steps of one scale.** State changes move a set number of steps (press one step), and an alias is fine only when it names the same step. *Sources:* Geist Colors; Carbon colour overview; Primer base vs functional; Radix aliasing. *Applies to:* `HisaabColors`, chips, keys, fields.
+28. **Deprecate a token before removing it, and record every alias.** *Sources:* Carbon migration FAQ; Primer token-removal check. *Applies to:* `HisaabColors`, `DECISIONS.md`.
+29. **Transparent is a token, tinted with its layer.** Fading to a bare transparent fades through black. *Sources:* Razorpay Blade `transparent`; Flutter `Color.lerp`. *Applies to:* fades, unselected fills.

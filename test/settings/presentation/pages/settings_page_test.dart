@@ -1,4 +1,6 @@
 import 'package:expense_tracker/settings/settings.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';
@@ -18,6 +20,21 @@ void main() {
       await pumpApp(tester, SettingsPage(onOpenBills: () {}), size: TestWindows.smallPhone, textScale: 2);
       expect(tester.takeException(), isNull);
     });
+
+    // why: a bare transparent bar is black at alpha 0, which Material reads as a dark bar, so it
+    // asked for white status icons on the light page (D96).
+    for (final (ThemeMode mode, Brightness icons) in <(ThemeMode, Brightness)>[
+      (ThemeMode.light, Brightness.dark),
+      (ThemeMode.dark, Brightness.light),
+    ]) {
+      testWidgets('status-bar icons contrast with the page in $mode', (WidgetTester tester) async {
+        await pumpApp(tester, SettingsPage(onOpenBills: () {}), themeMode: mode);
+        final AnnotatedRegion<SystemUiOverlayStyle> bar = tester.widget(
+          find.descendant(of: find.byType(AppBar), matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>)),
+        );
+        expect(bar.value.statusBarIconBrightness, icons);
+      });
+    }
 
     testWidgets('meets tap-target, label and contrast guidelines', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();

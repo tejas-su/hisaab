@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../ledger/ledger.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -34,6 +35,7 @@ class _NoteChipState extends State<NoteChip> {
     if (!_editing) {
       return HisaabChip(
         key: const ValueKey<String>('note-chip'),
+        onSurface: true,
         label: strings.addNote,
         icon: AppIcons.note,
         onPressed: () => setState(() => _editing = true),
@@ -55,6 +57,9 @@ class _NoteChipState extends State<NoteChip> {
           labelText: strings.addNote,
           counterText: '',
           isDense: true,
+          // why: the field sits on the Add tray's surface, where the theme's control fill would
+          // vanish in light; it keeps the hairline step, like the chips beside it (D100).
+          fillColor: context.colors.hairline,
         ),
       ),
     );

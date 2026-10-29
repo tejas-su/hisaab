@@ -26,6 +26,7 @@ class AskAiCard extends StatelessWidget {
     return Pressable(
       semanticLabel: strings.spokenPair(title, strings.askAiCardNote),
       onPressed: onPressed,
+      focusRadius: HisaabRadii.card,
       builder: (BuildContext context, bool pressed) => Container(
         key: const ValueKey<String>('ask-ai-card-surface'),
         padding: const EdgeInsetsDirectional.all(HisaabSpacing.gutter),

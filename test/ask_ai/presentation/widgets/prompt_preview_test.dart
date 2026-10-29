@@ -1,5 +1,6 @@
 import 'package:expense_tracker/ask_ai/domain/entities/prompt_text.dart';
 import 'package:expense_tracker/ask_ai/presentation/widgets/prompt_preview.dart';
+import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,6 +35,11 @@ void main() {
       await tester.tap(find.text('Show less'));
       await tester.pumpAndSettle();
       expect(find.text('one\ntwo\nthree\nfour'), findsOneWidget);
+    });
+
+    testWidgets('its chip sits on the preview card, so it keeps the hairline step (D100)', (WidgetTester tester) async {
+      await pumpApp(tester, const Scaffold(body: SingleChildScrollView(child: PromptPreview(prompt: _prompt))));
+      expect(tester.widget<HisaabChip>(find.byKey(const ValueKey<String>('show-full-text'))).onSurface, isTrue);
     });
 
     testWidgets('says 1 entry in the singular', (WidgetTester tester) async {

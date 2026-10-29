@@ -36,6 +36,7 @@ class OverCard extends StatelessWidget {
             const SizedBox(height: HisaabSpacing.m),
             HisaabChip(
               key: const ValueKey<String>('see-where-it-went'),
+              onSurface: true,
               label: strings.seeWhereItWent,
               trailingIcon: AppIcons.next,
               onPressed: seeWhereItWent,

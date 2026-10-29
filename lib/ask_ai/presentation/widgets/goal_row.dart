@@ -4,6 +4,7 @@ import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/widgets/focus_ring.dart';
 import '../../../core/widgets/pressable.dart';
 import 'goal_check.dart';
 import 'goal_well.dart';
@@ -27,6 +28,8 @@ class GoalRow extends StatelessWidget {
     semanticLabel: label,
     selected: selected,
     onPressed: onPressed,
+    // why: rows touch each other and the card's edge, so the ring is drawn inside the row.
+    focusInset: const EdgeInsets.all(FocusRing.outset),
     builder: (BuildContext context, bool pressed) => Container(
       color: pressed ? context.colors.sunk : null,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: 9),

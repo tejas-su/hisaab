@@ -10,8 +10,10 @@ import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
 import 'package:expense_tracker/core/widgets/shake.dart';
 import 'package:expense_tracker/core/widgets/wordmark.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/focus_helpers.dart';
 import '../../helpers/pump_app.dart';
 
 void main() {
@@ -63,40 +65,107 @@ void main() {
         .widget<Container>(find.descendant(of: find.widgetWithText(HisaabChip, label), matching: find.byType(Container)).first)
         .decoration! as ShapeDecoration;
 
-    testWidgets('a chip rests as a hairline fill with no edge, a clear step darker than the page (D89)', (
+    testWidgets('on the page a chip rests as a control fill with no edge, one layer up like the cards (D100)', (
       WidgetTester tester,
     ) async {
       await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
       final ShapeDecoration shape = chipShape(tester, 'EMI');
-      expect(shape.color, HisaabColors.light.hairline);
+      expect(shape.color, HisaabColors.light.control);
       expect((shape.shape as RoundedSuperellipseBorder).side, BorderSide.none);
       expect(find.byType(AppIcon), findsNothing);
     });
 
-    testWidgets('pressed, it keeps its fill; Pressable shrinks it instead', (WidgetTester tester) async {
+    testWidgets('pressed, a chip on the page steps to sunk (D97, D100)', (WidgetTester tester) async {
       await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
+      final TestGesture press = await tester.startGesture(tester.getCenter(find.text('EMI')));
+      await tester.pump();
+      expect(chipShape(tester, 'EMI').color, HisaabColors.light.sunk);
+      await press.up();
+    });
+
+    testWidgets('light: a pick fills ink with page-coloured text and check (D100)', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})));
+      expect(chipShape(tester, 'Rent').color, HisaabColors.light.ink);
+      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.light.background);
+      final AppIcon check = tester.widget<AppIcon>(find.byType(AppIcon));
+      expect((check.icon, check.color), (AppIcons.check, HisaabColors.light.background));
+    });
+
+    testWidgets('dark: a pick fills ink with page-coloured text and check (D100)', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})),
+        themeMode: ThemeMode.dark,
+      );
+      expect(chipShape(tester, 'Rent').color, HisaabColors.dark.ink);
+      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.dark.background);
+    });
+
+    testWidgets('a focused pick keeps its ink fill and gains the ring; focus is never shown as selection (D99, D100)', (
+      WidgetTester tester,
+    ) async {
+      useFocusHighlight(FocusHighlightStrategy.alwaysTraditional);
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(chipShape(tester, 'Rent').color, HisaabColors.light.ink);
+      expect(
+        focusRingPaint(find.byType(HisaabChip)),
+        paints
+          ..path(color: HisaabColors.light.focusGap)
+          ..path(color: HisaabColors.light.focus),
+      );
+    });
+
+    testWidgets('a focused chip that is not picked keeps its control fill (D99, D100)', (WidgetTester tester) async {
+      useFocusHighlight(FocusHighlightStrategy.alwaysTraditional);
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onPressed: () {})));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(chipShape(tester, 'EMI').color, HisaabColors.light.control);
+      expect(showsFocusRing(tester, find.byType(HisaabChip)), isTrue);
+    });
+
+    for (final (ThemeMode mode, HisaabColors colors) in <(ThemeMode, HisaabColors)>[
+      (ThemeMode.light, HisaabColors.light),
+      (ThemeMode.dark, HisaabColors.dark),
+    ]) {
+      testWidgets('${mode.name}: a chip on the page is control; a chip on a surface layer is hairline (D100)', (
+        WidgetTester tester,
+      ) async {
+        await pumpApp(
+          tester,
+          Scaffold(
+            body: Column(
+              children: <Widget>[
+                HisaabChip(label: 'Page', onPressed: () {}),
+                HisaabChip(label: 'Card', onSurface: true, onPressed: () {}),
+              ],
+            ),
+          ),
+          themeMode: mode,
+        );
+        expect(chipShape(tester, 'Page').color, colors.control);
+        expect(chipShape(tester, 'Card').color, colors.hairline);
+      });
+    }
+
+    testWidgets('pressed, a chip on a surface layer keeps its hairline fill and only shrinks (D100)', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'EMI', onSurface: true, onPressed: () {})));
       final TestGesture press = await tester.startGesture(tester.getCenter(find.text('EMI')));
       await tester.pump();
       expect(chipShape(tester, 'EMI').color, HisaabColors.light.hairline);
       await press.up();
     });
 
-    testWidgets('light: a pick fills ink2 with page-coloured text and check (D89)', (WidgetTester tester) async {
-      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})));
-      expect(chipShape(tester, 'Rent').color, HisaabColors.light.ink2);
-      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.light.background);
-      final AppIcon check = tester.widget<AppIcon>(find.byType(AppIcon));
-      expect((check.icon, check.color), (AppIcons.check, HisaabColors.light.background));
+    testWidgets('a pick on a surface layer is ink too (D100)', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: HisaabChip(label: 'Rent', selected: true, onSurface: true, onPressed: () {})));
+      expect(chipShape(tester, 'Rent').color, HisaabColors.light.ink);
     });
 
-    testWidgets('dark: a pick fills ink2 with page-coloured text and check (D89)', (WidgetTester tester) async {
-      await pumpApp(
-        tester,
-        Scaffold(body: HisaabChip(label: 'Rent', selected: true, onPressed: () {})),
-        themeMode: ThemeMode.dark,
-      );
-      expect(chipShape(tester, 'Rent').color, HisaabColors.dark.ink2);
-      expect(tester.widget<Text>(find.text('Rent')).style?.color, HisaabColors.dark.background);
+    testWidgets('a disabled chip on a surface layer has no fill either', (WidgetTester tester) async {
+      await pumpApp(tester, const Scaffold(body: HisaabChip(label: 'Copy only', onSurface: true, onPressed: null)));
+      expect(chipShape(tester, 'Copy only').color, isNull);
     });
 
     testWidgets('a pick that already shows an icon gets no second check', (WidgetTester tester) async {

@@ -54,6 +54,7 @@ class InsightTile extends StatelessWidget {
         HisaabChip(
           label: InsightCopy.action(current, strings, categoryName: categoryName),
           trailingIcon: AppIcons.next,
+          onSurface: true,
           onPressed: () => switch (current) {
             LimitOffer() => onUseLimits(current),
             CategoryUp(:final int categoryId) ||

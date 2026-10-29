@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../design/app_icon.dart';
 import '../design/app_icons.dart';
+import '../design/hisaab_colors.dart';
 import '../design/hisaab_dimensions.dart';
 import '../design/hisaab_shapes.dart';
 import '../extensions/build_context_extensions.dart';
@@ -9,8 +10,10 @@ import 'pressable.dart';
 
 /// An outlined chip: quick-add amounts, the date and note chips, onboarding choices.
 ///
-/// A hairline fill with no edge. [selected] fills it ink2 with page-coloured text and a trailing check (D89). [detail] adds a second, quieter line (e.g. an added bill).
-/// A null [onPressed] disables it and greys its label.
+/// A fill with no edge: [HisaabColors.control] on the page, or [HisaabColors.hairline] when
+/// [onSurface] (D100). [selected] fills it ink with page-coloured text and a trailing check (D100).
+/// [detail] adds a second, quieter line (e.g. an added bill). A null [onPressed] disables it and
+/// greys its label.
 class HisaabChip extends StatelessWidget {
   const HisaabChip({
     super.key,
@@ -22,6 +25,7 @@ class HisaabChip extends StatelessWidget {
     this.detail,
     this.selected = false,
     this.expand = false,
+    this.onSurface = false,
   });
 
   final String label;
@@ -35,6 +39,12 @@ class HisaabChip extends StatelessWidget {
   /// Fill the available width, for big onboarding choices.
   final bool expand;
 
+  /// Set when the chip sits on a [HisaabColors.surface] layer (the Add tray, a sheet, a card).
+  ///
+  /// The page's [HisaabColors.control] fill equals the surface in light, so there the chip would
+  /// vanish; it keeps the [HisaabColors.hairline] step instead and no pressed fill (D100).
+  final bool onSurface;
+
   @override
   Widget build(BuildContext context) {
     final Color foreground = _foreground(context);
@@ -46,11 +56,11 @@ class HisaabChip extends StatelessWidget {
       semanticLabel: semanticLabel ?? <String?>[label, second].whereType<String>().join(', '),
       selected: selected ? true : null,
       onPressed: onPressed,
-      builder: (BuildContext context, bool _) => Container(
+      builder: (BuildContext context, bool pressed) => Container(
         constraints: const BoxConstraints(minHeight: HisaabSizes.minTouchTarget, minWidth: HisaabSizes.minTouchTarget),
         padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.m, vertical: HisaabSpacing.xs),
         decoration: ShapeDecoration(
-          color: _fill(context),
+          color: _fill(context, pressed: pressed),
           shape: HisaabShapes.squircle(HisaabRadii.chip),
         ),
         child: Row(
@@ -76,14 +86,22 @@ class HisaabChip extends StatelessWidget {
     );
   }
 
-  // why: chips are fill-only (D88). At rest a chip is hairline, a clear step darker than the page it
-  // sits on (D89); a pick fills ink2, the heaviest chip in the row, so it reads as chosen without
-  // relying on the check (D89). Pressable's shrink shows a press. A disabled chip has no fill.
-  Color? _fill(BuildContext context) {
+  // why: chips are fill-only (D88). On the page a chip rests one layer up, on control, and a press
+  // steps it to sunk (D97, D100); on a surface layer it keeps hairline and only shrinks. A pick fills
+  // ink, the real dark of the screen, so it reads as chosen without relying on the check (D100).
+  // A disabled chip has no fill.
+  Color? _fill(BuildContext context, {required bool pressed}) {
+    final HisaabColors colors = context.colors;
     if (onPressed == null) {
       return null;
     }
-    return selected ? context.colors.ink2 : context.colors.hairline;
+    if (selected) {
+      return colors.ink;
+    }
+    if (onSurface) {
+      return colors.hairline;
+    }
+    return pressed ? colors.sunk : colors.control;
   }
 
   Color _foreground(BuildContext context) {

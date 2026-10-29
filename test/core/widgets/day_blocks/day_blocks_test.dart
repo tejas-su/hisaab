@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/design/hisaab_motion.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks_data.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks_painter.dart';
@@ -91,7 +92,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 150));
         expect(_painter(tester).data.todayFill, lessThan(0.9));
         expect(_painter(tester).trail, closeTo(0.9, 1e-9));
-        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump(HisaabMotion.trailHold);
         expect(_painter(tester).trail, inExclusiveRange(0.4, 0.9));
         await tester.pumpAndSettle();
         expect(_painter(tester).data.todayFill, closeTo(0.4, 0.01));

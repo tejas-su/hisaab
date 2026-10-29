@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/spends/domain/entities/insight.dart';
 import 'package:expense_tracker/spends/presentation/widgets/insight_tile.dart';
@@ -36,4 +37,20 @@ void main() {
       expect(opened, <int>[SeedCategoryIds.food]);
     });
   }
+
+  testWidgets('its chip sits in the insights card, so it keeps the hairline step (D100)', (WidgetTester tester) async {
+    await pumpApp(
+      tester,
+      Scaffold(
+        body: InsightTile(
+          insight: const SteadiestCategory(categoryId: SeedCategoryIds.food),
+          categories: <int, Category>{for (final Category c in seedCategories) c.id: c},
+          previousCycle: 'September',
+          onSeeEntries: (int _) {},
+          onUseLimits: (LimitOffer _) {},
+        ),
+      ),
+    );
+    expect(tester.widget<HisaabChip>(find.byType(HisaabChip)).onSurface, isTrue);
+  });
 }

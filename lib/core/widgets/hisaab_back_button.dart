@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../design/app_icon.dart';
 import '../design/app_icons.dart';
+import '../design/hisaab_colors.dart';
 import '../design/hisaab_dimensions.dart';
 import '../design/hisaab_shapes.dart';
 import '../extensions/build_context_extensions.dart';
@@ -10,6 +11,9 @@ import 'pressable.dart';
 
 /// Back for every pushed screen: a 40dp well inside the 48dp tap target, its visible edge
 /// flush with the content edge (D57, D80). Pops the current route.
+///
+/// The well is a [HisaabColors.control] fill that steps to [HisaabColors.sunk] while pressed
+/// (D97, D100); it always sits on the page.
 ///
 /// In an [AppBar], pass it as `leading` inside [HisaabBackButton.leadingPadding] with
 /// [HisaabBackButton.leadingWidth] so the well lines up with the cards' edge.
@@ -21,6 +25,8 @@ class HisaabBackButton extends StatelessWidget {
 
   /// Puts the button's start on the gutter inside an [AppBar]'s leading slot.
   static const EdgeInsetsDirectional leadingPadding = EdgeInsetsDirectional.only(start: HisaabSpacing.gutter);
+
+  static const double _wellMargin = (HisaabSizes.minTouchTarget - HisaabSizes.iconWell) / 2;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +42,8 @@ class HisaabBackButton extends StatelessWidget {
         child: Pressable(
           semanticLabel: back,
           onPressed: () => Navigator.of(context).maybePop(),
+          // why: the ring hugs the visible well, which sits at the start of the 48dp target.
+          focusInset: const EdgeInsetsDirectional.only(top: _wellMargin, end: 2 * _wellMargin, bottom: _wellMargin),
           builder: (BuildContext context, bool pressed) => Container(
             width: HisaabSizes.minTouchTarget,
             height: HisaabSizes.minTouchTarget,
@@ -46,7 +54,7 @@ class HisaabBackButton extends StatelessWidget {
               height: HisaabSizes.iconWell,
               alignment: Alignment.center,
               decoration: ShapeDecoration(
-                color: pressed ? context.colors.hairline : context.colors.sunk,
+                color: pressed ? context.colors.sunk : context.colors.control,
                 shape: HisaabShapes.squircle(HisaabRadii.chip),
               ),
               child: const AppIcon(AppIcons.back),

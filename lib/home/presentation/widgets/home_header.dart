@@ -19,6 +19,8 @@ class HomeHeader extends StatelessWidget {
   final CalendarDate? today;
   final VoidCallback onOpenSettings;
 
+  static const double _wellMargin = (HisaabSizes.minTouchTarget - HisaabSizes.iconWell) / 2;
+
   @override
   Widget build(BuildContext context) {
     final CalendarDate? day = today;
@@ -57,6 +59,8 @@ class HomeHeader extends StatelessWidget {
           key: const ValueKey<String>('open-settings'),
           semanticLabel: settings,
           onPressed: onOpenSettings,
+          // why: the ring hugs the visible well, which sits at the end of the 48dp target.
+          focusInset: const EdgeInsetsDirectional.only(start: 2 * _wellMargin, top: _wellMargin, bottom: _wellMargin),
           // why: the well is smaller than the tap area so it doesn't outweigh the wordmark; it sits
           // at the end so its visible edge stays flush with the cards.
           builder: (BuildContext context, bool pressed) => Container(
@@ -69,7 +73,7 @@ class HomeHeader extends StatelessWidget {
               height: HisaabSizes.iconWell,
               alignment: Alignment.center,
               decoration: ShapeDecoration(
-                color: pressed ? context.colors.hairline : context.colors.sunk,
+                color: pressed ? context.colors.sunk : context.colors.control,
                 shape: HisaabShapes.squircle(HisaabRadii.chip),
               ),
               child: const AppIcon(AppIcons.settings),

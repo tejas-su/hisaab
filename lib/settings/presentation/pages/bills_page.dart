@@ -34,7 +34,6 @@ class BillsPage extends StatelessWidget {
         leading: const Padding(padding: HisaabBackButton.leadingPadding, child: HisaabBackButton()),
         titleSpacing: HisaabSpacing.s,
         title: Text(strings.fixedBills),
-        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),

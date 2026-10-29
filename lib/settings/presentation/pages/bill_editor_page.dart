@@ -33,7 +33,6 @@ class BillEditorPage extends StatelessWidget {
             appBar: AppBar(
               leadingWidth: HisaabBackButton.leadingWidth,
               leading: const Padding(padding: HisaabBackButton.leadingPadding, child: HisaabBackButton()),
-              backgroundColor: Colors.transparent,
               elevation: 0,
               scrolledUnderElevation: 0,
             ),

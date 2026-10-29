@@ -49,6 +49,7 @@ class _PromptPreviewState extends State<PromptPreview> {
         const SizedBox(height: HisaabSpacing.m),
         HisaabChip(
           key: const ValueKey<String>('show-full-text'),
+          onSurface: true,
           label: _expanded ? strings.askShowLess : strings.askShowFull,
           onPressed: () => setState(() => _expanded = !_expanded),
         ),

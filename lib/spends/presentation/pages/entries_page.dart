@@ -39,7 +39,6 @@ class EntriesPage extends StatelessWidget {
         leading: const Padding(padding: HisaabBackButton.leadingPadding, child: HisaabBackButton()),
         titleSpacing: HisaabSpacing.s,
         title: Text(strings.everyEntry),
-        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),

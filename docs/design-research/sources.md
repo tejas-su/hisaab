@@ -20,6 +20,15 @@ Where to look for UX/UI evidence, what each source is good for, and its limits. 
 | [Shopify Polaris](https://polaris-react.shopify.com/design/typography) | Type tokens | The fetch failed (connection closed); retry in a browser |
 | [Lazyweb research](https://www.lazyweb.com/research/) | Counts across many apps (for example single- vs multi-select) | Small samples; treat ratios as directional |
 | [uxdesign.cc](https://uxdesign.cc/), Medium case studies | Critiques and teardowns (Duolingo, Jupiter) | Opinion pieces; some pages return 403 to fetch tools |
+| [Vercel Geist](https://vercel.com/geist/introduction) | A grey scale where each step has a job; append `.md` to any page for clean markdown | No dark values, governance or contrast on the doc pages. `design.md` is agent-facing brand rules |
+| [Vercel Web Interface Guidelines](https://vercel.com/design/guidelines) | Focus, interaction-contrast and motion checklists | Web (CSS) terms; map them to Flutter |
+| [Carbon migration FAQ and guide](https://carbondesignsystem.com/migrating/faq/) | Token deprecation and rename practice | Mapping tables are on GitHub, not on the site |
+| [Radix Colors docs](https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale) | A 12-step scale with a use for each step; pairing greys with accents; aliasing | Fetches cleanly; web-first, no governance |
+| [Primer primitives repo](https://github.com/primer/primitives) | Theme list, contrast test config, token-removal CI | Raw GitHub files fetch cleanly; primer.style pages truncate |
+| [Atlassian elevation](https://atlassian.design/foundations/elevation), [colour](https://atlassian.design/foundations/color) | Elevation levels, dark surfaces, focus vs selection | The colour page sometimes returns empty; retry |
+| [Flutter API: ColorScheme](https://api.flutter.dev/flutter/material/ColorScheme/ColorScheme.html), [MediaQueryData](https://api.flutter.dev/flutter/widgets/MediaQueryData/highContrast.html) | Real fallback behaviour of Material roles; which OS settings reach Flutter, from which API level | The implementation line is often the only place a default is stated |
+| [`@groww-tech/mint-css` on unpkg](https://app.unpkg.com/@groww-tech/mint-css@0.4.0/files/dist/fragments/allVariables.css) | Groww's actual token names and hex values | The only public MINT artefact; no docs or rationale; npmjs.com returns 403 |
+| [Razorpay Blade repo](https://github.com/razorpay/blade) | INR `Amount` decisions, per-mode tokens | The Storybook site needs JavaScript; read the raw files |
 
 ## Indian fintech
 slice, Google Pay, CRED, Jupiter and Fi have little public screen-level material. Use Mobbin in a browser, or install the app and record the screens, before citing how they do something.

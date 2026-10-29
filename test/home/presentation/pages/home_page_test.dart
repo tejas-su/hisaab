@@ -1,6 +1,8 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/design/app_icon.dart';
+import 'package:expense_tracker/core/design/hisaab_colors.dart';
+import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
@@ -12,6 +14,7 @@ import 'package:expense_tracker/home/presentation/widgets/saved_yesterday_note.d
 import 'package:expense_tracker/home/presentation/widgets/today_list.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -184,6 +187,18 @@ void main() {
       });
     });
 
+    testWidgets('the Settings well is a control on the page and steps to sunk while pressed (D97, D100)', (WidgetTester tester) async {
+      await pump(tester);
+      final Finder well = find.byKey(const ValueKey<String>('open-settings-well'));
+      Color? fill() => (tester.widget<Container>(well).decoration! as ShapeDecoration).color;
+      expect(fill(), HisaabColors.light.control);
+      final TestGesture press = await tester.startGesture(tester.getCenter(well));
+      // why: the header scrolls with the page, so tap-down waits for the press timeout.
+      await tester.pump(kPressTimeout);
+      expect(fill(), HisaabColors.light.sunk);
+      await press.up();
+    });
+
     testWidgets('Settings opens from the header', (WidgetTester tester) async {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
@@ -339,6 +354,12 @@ void main() {
         expect(find.text('It happens. The ₹1,020 is spread across the next 8 days, so each one is a little smaller.'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey<String>('see-where-it-went')));
         expect(calls, <Object>['spends']);
+      });
+
+      testWidgets('the over card’s chip sits on the card, so it keeps the hairline step (D100)', (WidgetTester tester) async {
+        await overspend();
+        await pump(tester, links: true);
+        expect(tester.widget<HisaabChip>(find.byKey(const ValueKey<String>('see-where-it-went'))).onSurface, isTrue);
       });
 
       testWidgets('over today with one day after: it comes out of tomorrow', (WidgetTester tester) async {

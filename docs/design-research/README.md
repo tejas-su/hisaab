@@ -11,6 +11,8 @@ UX/UI research for Hisaab: case studies of other apps, the principles we drew fr
 ## Case studies
 | # | Topic | Outcome |
 |---|---|---|
+| 07 | [Design systems: Groww, Material 3, Primer, Radix, Atlassian, Blade](case-studies/07-design-systems-groww-material-primer-radix.md) | Proposed: set every Material role, one contrast-pair list for all themes, focus as its own token, tinted transparent token. Rejected: gain/loss colours, seed or dynamic colour, colour-blind themes |
+| 06 | [Design systems: Vercel Geist, Apple HIG, IBM Carbon](case-studies/06-design-systems-vercel-apple-ibm.md) | Proposed: increased-contrast token set, ink focus ring with a gap, state as steps of one scale, deprecate before removing. Rejected: blue focus, glass, several themes per mode |
 | 05 | [Day Block motion](case-studies/05-day-block-motion.md) | Drain after the tray closes, with a trail; fill in when Home appears; a fill cap of 0.9 once anything is spent (D91) |
 | 04 | [Floating dock and pinned top bar](case-studies/04-floating-dock-and-top-bar.md) | Dock: a 32dp eased fade above a solid `bg` seat (D82), built. Top bar: solid with a hairline on scroll, no glass (D84) |
 | 03 | [Suggestion pills](case-studies/03-suggestion-pills.md) | Bill name pills as two equal columns so both edges align; list rows if the set grows (D83); picked pill restyled and pills moved under the field (D85) |

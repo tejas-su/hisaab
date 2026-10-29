@@ -1,0 +1,125 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Controls on cards</title><style>@font-face{font-family:Anek;src:url(../../../assets/fonts/AnekLatin-Variable.ttf)}
+@font-face{font-family:Mukta;font-weight:400;src:url(../../../assets/fonts/Mukta-Regular.ttf)}
+@font-face{font-family:Mukta;font-weight:600;src:url(../../../assets/fonts/Mukta-SemiBold.ttf)}
+body{margin:0;padding:24px;background:#d9d7d1;font-family:Mukta,sans-serif;color:#161615}
+h1{font-family:Anek;font-weight:600;margin:0 0 4px}p.lead{margin:0 0 24px;max-width:900px}
+.opt{margin-bottom:44px}.opt h2{font-family:Anek;font-weight:600;margin:0}.opt p{margin:2px 0 12px;max-width:900px}
+.pair{display:flex;gap:20px;margin-bottom:16px;align-items:flex-start}.col{display:flex;flex-direction:column}
+.ph{width:340px;height:520px;padding:18px;border-radius:24px;box-sizing:border-box;overflow:hidden}
+.cap{font-size:12px;margin-bottom:8px}
+.hdr{display:flex;align-items:center;gap:14px}.back{width:40px;height:40px;border-radius:12px;display:grid;place-items:center}
+.title{font-family:Anek;font-weight:600;font-size:22px}.h2{font-family:Anek;font-weight:600;font-size:20px;margin:12px 0 10px}
+.chips{display:flex;gap:6px;margin:12px 0}.chip{height:40px;padding:0 13px;border-radius:12px;display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:15px}
+.card{border-radius:22px;padding:4px 14px}.card.pad{padding:14px}.row{display:flex;align-items:center;gap:12px;height:54px}
+.well{width:38px;height:38px;border-radius:10px;display:grid;place-items:center}.nm{flex:1;font-size:15px}
+.amt{font-family:Anek;font-weight:600;font-size:17px}.amtbig{font-family:Anek;font-weight:600;font-size:34px;margin-left:auto}
+.tray{border-radius:24px 24px 0 0;padding:16px 16px 18px}
+.field{height:44px;border-radius:12px;display:flex;align-items:center;padding:0 14px;font-size:15px;margin-bottom:12px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.key{height:44px;border-radius:12px;display:grid;place-items:center;font-family:Anek;font-weight:600;font-size:20px}
+.ratios{font-size:13px;border-collapse:collapse}.ratios td{padding:2px 10px 2px 0}.ratios td+td{font-weight:600}
+code{font-size:12px;background:#0001;padding:0 3px;border-radius:3px}
+</style></head><body>
+<p style="margin:0 0 12px;padding:8px 12px;border-radius:10px;background:#161615;color:#EEECE6;font-weight:600">Chosen: C with option 1 (D100)</p><h1>Option C: controls on the tray and cards</h1><p class="lead">Option C puts controls on white. That works on the page but not on the white Add tray, date sheet or cards. Each row shows Every entry, a card chip and the Add tray, light then dark.</p>
+<div class="opt"><h2>C as written (why it was stopped)</h2><p>Controls are <code>control</code> everywhere. In light, white controls on the white tray and cards disappear (1.00:1).</p>
+<div class="pair"><div class="ph" style="background:#EEECE6;color:#161615">
+<div class="cap" style="color:#585752">Every entry (on the page)</div>
+<div class="hdr"><span class="back" style="background:#FFFEFB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+<div class="h2">October</div>
+<div class="chips"><span class="chip" style="background:#161615;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#FFFEFB;color:#161615">Home</span><span class="chip" style="background:#FFFEFB;color:#161615">Salary</span></div>
+<div class="card" style="background:#FFFEFB"><div class="row"><span class="well" style="background:#E4E1DA"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div></div>
+<div class="cap" style="color:#585752;margin-top:18px">Over card on Home (a chip on a card)</div>
+<div class="card pad" style="background:#FFFEFB"><div class="nm" style="margin-bottom:10px">You went ₹420 over yesterday.</div><span class="chip" style="background:#FFFEFB;color:#161615">See entries</span></div>
+</div><div class="ph" style="background:#EEECE6;color:#161615;padding:0;display:flex;flex-direction:column;justify-content:flex-end">
+<div class="cap" style="color:#585752;padding:18px 18px 0">Add tray (on <code>surface</code>)</div>
+<div style="flex:1;background:#161615;opacity:.25;margin-top:12px"></div>
+<div class="tray" style="background:#FFFEFB">
+<div class="hdr"><span class="back" style="background:#FFFEFB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="amtbig">₹250</span></div>
+<div class="chips"><span class="chip" style="background:#FFFEFB;color:#161615">+₹100</span><span class="chip" style="background:#FFFEFB;color:#161615">+₹500</span><span class="chip" style="background:#FFFEFB;color:#161615">Today</span></div>
+<div class="field" style="background:#FFFEFB;color:#585752">Add a note</div>
+<div class="keys"><span class="key" style="background:#E4E1DA">1</span><span class="key" style="background:#E4E1DA">2</span><span class="key" style="background:#E4E1DA">3</span><span class="key" style="background:#E4E1DA">4</span><span class="key" style="background:#E4E1DA">5</span><span class="key" style="background:#E4E1DA">6</span><span class="key" style="background:#E4E1DA">7</span><span class="key" style="background:#E4E1DA">8</span><span class="key" style="background:#E4E1DA">9</span></div></div></div><div class="col"><table class="ratios"><tr><td>Control on page</td><td>1.17</td></tr><tr><td>Control on tray / card</td><td>1.00</td></tr><tr><td>Pick on page</td><td>15.33</td></tr><tr><td>Hint on tray field</td><td>7.18</td></tr></table></div></div>
+<div class="pair"><div class="ph" style="background:#121211;color:#F2F1EC">
+<div class="cap" style="color:#A3A29C">Every entry (on the page)</div>
+<div class="hdr"><span class="back" style="background:#373734"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+<div class="h2">October</div>
+<div class="chips"><span class="chip" style="background:#F2F1EC;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#373734;color:#F2F1EC">Home</span><span class="chip" style="background:#373734;color:#F2F1EC">Salary</span></div>
+<div class="card" style="background:#1F1F1D"><div class="row"><span class="well" style="background:#2C2C29"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div></div>
+<div class="cap" style="color:#A3A29C;margin-top:18px">Over card on Home (a chip on a card)</div>
+<div class="card pad" style="background:#1F1F1D"><div class="nm" style="margin-bottom:10px">You went ₹420 over yesterday.</div><span class="chip" style="background:#373734;color:#F2F1EC">See entries</span></div>
+</div><div class="ph" style="background:#121211;color:#F2F1EC;padding:0;display:flex;flex-direction:column;justify-content:flex-end">
+<div class="cap" style="color:#A3A29C;padding:18px 18px 0">Add tray (on <code>surface</code>)</div>
+<div style="flex:1;background:#000;opacity:.25;margin-top:12px"></div>
+<div class="tray" style="background:#1F1F1D">
+<div class="hdr"><span class="back" style="background:#373734"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="amtbig">₹250</span></div>
+<div class="chips"><span class="chip" style="background:#373734;color:#F2F1EC">+₹100</span><span class="chip" style="background:#373734;color:#F2F1EC">+₹500</span><span class="chip" style="background:#373734;color:#F2F1EC">Today</span></div>
+<div class="field" style="background:#373734;color:#A3A29C">Add a note</div>
+<div class="keys"><span class="key" style="background:#2C2C29">1</span><span class="key" style="background:#2C2C29">2</span><span class="key" style="background:#2C2C29">3</span><span class="key" style="background:#2C2C29">4</span><span class="key" style="background:#2C2C29">5</span><span class="key" style="background:#2C2C29">6</span><span class="key" style="background:#2C2C29">7</span><span class="key" style="background:#2C2C29">8</span><span class="key" style="background:#2C2C29">9</span></div></div></div><div class="col"><table class="ratios"><tr><td>Control on page</td><td>1.57</td></tr><tr><td>Control on tray / card</td><td>1.38</td></tr><tr><td>Pick on page</td><td>16.57</td></tr><tr><td>Hint on tray field</td><td>4.67</td></tr></table></div></div>
+</div>
+<div class="opt"><h2>Option 1 (recommended): on a card, keep <code>hairline</code></h2><p>On the page: white controls, as mockup 10 C. On the tray, sheets and cards: <code>hairline</code>, as today. The pick is <code>ink</code> everywhere.</p>
+<div class="pair"><div class="ph" style="background:#EEECE6;color:#161615">
+<div class="cap" style="color:#585752">Every entry (on the page)</div>
+<div class="hdr"><span class="back" style="background:#FFFEFB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+<div class="h2">October</div>
+<div class="chips"><span class="chip" style="background:#161615;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#FFFEFB;color:#161615">Home</span><span class="chip" style="background:#FFFEFB;color:#161615">Salary</span></div>
+<div class="card" style="background:#FFFEFB"><div class="row"><span class="well" style="background:#E4E1DA"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div></div>
+<div class="cap" style="color:#585752;margin-top:18px">Over card on Home (a chip on a card)</div>
+<div class="card pad" style="background:#FFFEFB"><div class="nm" style="margin-bottom:10px">You went ₹420 over yesterday.</div><span class="chip" style="background:#D3D0C8;color:#161615">See entries</span></div>
+</div><div class="ph" style="background:#EEECE6;color:#161615;padding:0;display:flex;flex-direction:column;justify-content:flex-end">
+<div class="cap" style="color:#585752;padding:18px 18px 0">Add tray (on <code>surface</code>)</div>
+<div style="flex:1;background:#161615;opacity:.25;margin-top:12px"></div>
+<div class="tray" style="background:#FFFEFB">
+<div class="hdr"><span class="back" style="background:#D3D0C8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="amtbig">₹250</span></div>
+<div class="chips"><span class="chip" style="background:#D3D0C8;color:#161615">+₹100</span><span class="chip" style="background:#D3D0C8;color:#161615">+₹500</span><span class="chip" style="background:#D3D0C8;color:#161615">Today</span></div>
+<div class="field" style="background:#D3D0C8;color:#585752">Add a note</div>
+<div class="keys"><span class="key" style="background:#E4E1DA">1</span><span class="key" style="background:#E4E1DA">2</span><span class="key" style="background:#E4E1DA">3</span><span class="key" style="background:#E4E1DA">4</span><span class="key" style="background:#E4E1DA">5</span><span class="key" style="background:#E4E1DA">6</span><span class="key" style="background:#E4E1DA">7</span><span class="key" style="background:#E4E1DA">8</span><span class="key" style="background:#E4E1DA">9</span></div></div></div><div class="col"><table class="ratios"><tr><td>Control on page</td><td>1.17</td></tr><tr><td>Control on tray / card</td><td>1.53</td></tr><tr><td>Pick on page</td><td>15.33</td></tr><tr><td>Hint on tray field</td><td>4.70</td></tr></table></div></div>
+<div class="pair"><div class="ph" style="background:#121211;color:#F2F1EC">
+<div class="cap" style="color:#A3A29C">Every entry (on the page)</div>
+<div class="hdr"><span class="back" style="background:#373734"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+<div class="h2">October</div>
+<div class="chips"><span class="chip" style="background:#F2F1EC;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#373734;color:#F2F1EC">Home</span><span class="chip" style="background:#373734;color:#F2F1EC">Salary</span></div>
+<div class="card" style="background:#1F1F1D"><div class="row"><span class="well" style="background:#2C2C29"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div></div>
+<div class="cap" style="color:#A3A29C;margin-top:18px">Over card on Home (a chip on a card)</div>
+<div class="card pad" style="background:#1F1F1D"><div class="nm" style="margin-bottom:10px">You went ₹420 over yesterday.</div><span class="chip" style="background:#373734;color:#F2F1EC">See entries</span></div>
+</div><div class="ph" style="background:#121211;color:#F2F1EC;padding:0;display:flex;flex-direction:column;justify-content:flex-end">
+<div class="cap" style="color:#A3A29C;padding:18px 18px 0">Add tray (on <code>surface</code>)</div>
+<div style="flex:1;background:#000;opacity:.25;margin-top:12px"></div>
+<div class="tray" style="background:#1F1F1D">
+<div class="hdr"><span class="back" style="background:#373734"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="amtbig">₹250</span></div>
+<div class="chips"><span class="chip" style="background:#373734;color:#F2F1EC">+₹100</span><span class="chip" style="background:#373734;color:#F2F1EC">+₹500</span><span class="chip" style="background:#373734;color:#F2F1EC">Today</span></div>
+<div class="field" style="background:#373734;color:#A3A29C">Add a note</div>
+<div class="keys"><span class="key" style="background:#2C2C29">1</span><span class="key" style="background:#2C2C29">2</span><span class="key" style="background:#2C2C29">3</span><span class="key" style="background:#2C2C29">4</span><span class="key" style="background:#2C2C29">5</span><span class="key" style="background:#2C2C29">6</span><span class="key" style="background:#2C2C29">7</span><span class="key" style="background:#2C2C29">8</span><span class="key" style="background:#2C2C29">9</span></div></div></div><div class="col"><table class="ratios"><tr><td>Control on page</td><td>1.57</td></tr><tr><td>Control on tray / card</td><td>1.38</td></tr><tr><td>Pick on page</td><td>16.57</td></tr><tr><td>Hint on tray field</td><td>4.67</td></tr></table></div></div>
+</div>
+<div class="opt"><h2>Option 2 / 3: on a card, use <code>sunk</code></h2><p>On the page: white controls. On the tray and cards: <code>sunk</code>, the same fill as the keypad keys. Option 3 looks identical; it only differs in how the code decides (an inherited layer scope instead of a flag).</p>
+<div class="pair"><div class="ph" style="background:#EEECE6;color:#161615">
+<div class="cap" style="color:#585752">Every entry (on the page)</div>
+<div class="hdr"><span class="back" style="background:#FFFEFB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+<div class="h2">October</div>
+<div class="chips"><span class="chip" style="background:#161615;color:#EEECE6">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#FFFEFB;color:#161615">Home</span><span class="chip" style="background:#FFFEFB;color:#161615">Salary</span></div>
+<div class="card" style="background:#FFFEFB"><div class="row"><span class="well" style="background:#E4E1DA"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div></div>
+<div class="cap" style="color:#585752;margin-top:18px">Over card on Home (a chip on a card)</div>
+<div class="card pad" style="background:#FFFEFB"><div class="nm" style="margin-bottom:10px">You went ₹420 over yesterday.</div><span class="chip" style="background:#E4E1DA;color:#161615">See entries</span></div>
+</div><div class="ph" style="background:#EEECE6;color:#161615;padding:0;display:flex;flex-direction:column;justify-content:flex-end">
+<div class="cap" style="color:#585752;padding:18px 18px 0">Add tray (on <code>surface</code>)</div>
+<div style="flex:1;background:#161615;opacity:.25;margin-top:12px"></div>
+<div class="tray" style="background:#FFFEFB">
+<div class="hdr"><span class="back" style="background:#E4E1DA"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="amtbig">₹250</span></div>
+<div class="chips"><span class="chip" style="background:#E4E1DA;color:#161615">+₹100</span><span class="chip" style="background:#E4E1DA;color:#161615">+₹500</span><span class="chip" style="background:#E4E1DA;color:#161615">Today</span></div>
+<div class="field" style="background:#E4E1DA;color:#585752">Add a note</div>
+<div class="keys"><span class="key" style="background:#E4E1DA">1</span><span class="key" style="background:#E4E1DA">2</span><span class="key" style="background:#E4E1DA">3</span><span class="key" style="background:#E4E1DA">4</span><span class="key" style="background:#E4E1DA">5</span><span class="key" style="background:#E4E1DA">6</span><span class="key" style="background:#E4E1DA">7</span><span class="key" style="background:#E4E1DA">8</span><span class="key" style="background:#E4E1DA">9</span></div></div></div><div class="col"><table class="ratios"><tr><td>Control on page</td><td>1.17</td></tr><tr><td>Control on tray / card</td><td>1.29</td></tr><tr><td>Pick on page</td><td>15.33</td></tr><tr><td>Hint on tray field</td><td>5.55</td></tr></table></div></div>
+<div class="pair"><div class="ph" style="background:#121211;color:#F2F1EC">
+<div class="cap" style="color:#A3A29C">Every entry (on the page)</div>
+<div class="hdr"><span class="back" style="background:#373734"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="title">Every entry</span></div>
+<div class="h2">October</div>
+<div class="chips"><span class="chip" style="background:#F2F1EC;color:#121211">All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="chip" style="background:#373734;color:#F2F1EC">Home</span><span class="chip" style="background:#373734;color:#F2F1EC">Salary</span></div>
+<div class="card" style="background:#1F1F1D"><div class="row"><span class="well" style="background:#2C2C29"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg></span><span class="nm">Home</span><span class="amt">₹5,000</span></div></div>
+<div class="cap" style="color:#A3A29C;margin-top:18px">Over card on Home (a chip on a card)</div>
+<div class="card pad" style="background:#1F1F1D"><div class="nm" style="margin-bottom:10px">You went ₹420 over yesterday.</div><span class="chip" style="background:#2C2C29;color:#F2F1EC">See entries</span></div>
+</div><div class="ph" style="background:#121211;color:#F2F1EC;padding:0;display:flex;flex-direction:column;justify-content:flex-end">
+<div class="cap" style="color:#A3A29C;padding:18px 18px 0">Add tray (on <code>surface</code>)</div>
+<div style="flex:1;background:#000;opacity:.25;margin-top:12px"></div>
+<div class="tray" style="background:#1F1F1D">
+<div class="hdr"><span class="back" style="background:#2C2C29"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span><span class="amtbig">₹250</span></div>
+<div class="chips"><span class="chip" style="background:#2C2C29;color:#F2F1EC">+₹100</span><span class="chip" style="background:#2C2C29;color:#F2F1EC">+₹500</span><span class="chip" style="background:#2C2C29;color:#F2F1EC">Today</span></div>
+<div class="field" style="background:#2C2C29;color:#A3A29C">Add a note</div>
+<div class="keys"><span class="key" style="background:#2C2C29">1</span><span class="key" style="background:#2C2C29">2</span><span class="key" style="background:#2C2C29">3</span><span class="key" style="background:#2C2C29">4</span><span class="key" style="background:#2C2C29">5</span><span class="key" style="background:#2C2C29">6</span><span class="key" style="background:#2C2C29">7</span><span class="key" style="background:#2C2C29">8</span><span class="key" style="background:#2C2C29">9</span></div></div></div><div class="col"><table class="ratios"><tr><td>Control on page</td><td>1.57</td></tr><tr><td>Control on tray / card</td><td>1.18</td></tr><tr><td>Pick on page</td><td>16.57</td></tr><tr><td>Hint on tray field</td><td>5.47</td></tr></table></div></div>
+</div>
+</body></html>

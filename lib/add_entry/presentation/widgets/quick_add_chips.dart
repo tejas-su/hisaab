@@ -23,6 +23,7 @@ class QuickAddChips extends StatelessWidget {
           Expanded(
             child: HisaabChip(
               key: ValueKey<String>('quick-$rupees'),
+              onSurface: true,
               label: strings.quickAdd(context.money.format(Money.fromMajor(rupees))),
               semanticLabel: strings.quickAddSpoken(strings.spokenAmount('$rupees')),
               onPressed: () => onAdd(rupees),

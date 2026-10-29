@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 
 import '../core/design/hisaab_colors.dart';
 import '../core/design/hisaab_theme.dart';
+import '../core/extensions/build_context_extensions.dart';
 import '../core/layout/app_layout_scope.dart';
 import '../l10n/gen/app_localizations.dart';
 import 'app_root.dart';
@@ -52,8 +53,8 @@ class _EdgeToEdge extends StatelessWidget {
     final bool dark = Theme.of(context).extension<HisaabColors>() == HisaabColors.dark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
+        statusBarColor: context.colors.clear,
+        systemNavigationBarColor: context.colors.clear,
         systemNavigationBarContrastEnforced: false,
       ),
       child: child,

@@ -28,6 +28,7 @@ class CategoryStep extends StatelessWidget {
   final AddEntryState state;
 
   static const int _columns = 4;
+  static const double _wellMargin = (HisaabSizes.minTouchTarget - HisaabSizes.iconWell) / 2;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +65,7 @@ class CategoryStep extends StatelessWidget {
             const SizedBox(height: HisaabSpacing.s),
             Align(
               alignment: AlignmentDirectional.centerStart,
-              child: HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onPressed: () => bloc.add(const AddEntryDeleteRequested())),
+              child: HisaabChip(key: const ValueKey<String>('delete-entry'), label: strings.delete, icon: AppIcons.delete, onSurface: true, onPressed: () => bloc.add(const AddEntryDeleteRequested())),
             ),
           ],
           if (current is AddEntryEditing && current.failed) ...<Widget>[
@@ -82,6 +83,7 @@ class CategoryStep extends StatelessWidget {
             key: const ValueKey<String>('back-to-amount'),
             semanticLabel: strings.backToAmount,
             onPressed: () => bloc.add(const AddEntryBackPressed()),
+            focusInset: const EdgeInsetsDirectional.only(top: _wellMargin, end: 2 * _wellMargin, bottom: _wellMargin),
             // why: same well as Home's Settings button, at the start so it lines up with the tiles.
             builder: (BuildContext context, bool pressed) => Container(
               width: HisaabSizes.minTouchTarget,

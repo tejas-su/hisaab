@@ -7,6 +7,7 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/widgets/focus_ring.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/entry.dart';
@@ -63,7 +64,13 @@ class EntryRow extends StatelessWidget {
       ),
       child: Semantics(
         customSemanticsActions: <CustomSemanticsAction, VoidCallback>{CustomSemanticsAction(label: delete): onDelete},
-        child: InkWell(onTap: onEdit, child: _content(context, strings)),
+        child: FocusRing(
+          // why: rows fill a clipping card, so the ring is drawn inside the row; its outer corner
+          // matches the card's (D99).
+          radius: HisaabRadii.card - FocusRing.outset,
+          inset: const EdgeInsets.all(FocusRing.outset),
+          child: InkWell(onTap: onEdit, focusColor: context.colors.clear, child: _content(context, strings)),
+        ),
       ),
     );
   }

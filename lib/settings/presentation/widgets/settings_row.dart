@@ -5,6 +5,7 @@ import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/widgets/focus_ring.dart';
 
 /// One Settings entry: an icon well, its [label] and an arrow; tapping it opens [onTap]'s page.
 class SettingsRow extends StatelessWidget {
@@ -15,8 +16,17 @@ class SettingsRow extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) => FocusRing(
+        // why: the row fills a clipping card, so the ring is drawn inside it; its outer corner
+        // matches the card's (D99).
+        radius: HisaabRadii.card - FocusRing.outset,
+        inset: const EdgeInsets.all(FocusRing.outset),
+        child: _row(context),
+      );
+
+  Widget _row(BuildContext context) => InkWell(
         onTap: onTap,
+        focusColor: context.colors.clear,
         child: Padding(
           padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: HisaabSpacing.m),
           child: Row(

@@ -50,7 +50,7 @@ So people learn the idea from seeing a block part-empty, and the app hid exactly
   1. The tile flashes.
   2. The tray closes completely.
   3. Home reloads, the level falls on `standard` and the number rolls in the same frame.
-  4. A marigold trail at 35% opacity holds the spent slice for 250ms, then follows on `calm`.
+  4. A marigold trail at 50% opacity holds the spent slice for 500ms, then follows on `calm`. (First built at 35% and 250ms; the re-test below found it too faint and too brief.)
 - **Fill in:** each time Home's blocks appear (launch, back from Spends, a new day), today's block fills from empty to its level on `calm`. Once a day would need a stored "last filled" date; every appearance is simpler and still teaches.
 - **Overspend:** the level falls away, uncovering the hatch, and the future blocks shrink together. A 30ms stagger was considered and left out to keep one controller.
 - **No bounce anywhere:** the drain isn't thrown by a finger, so damping stays 1.
@@ -61,3 +61,14 @@ So people learn the idea from seeing a block part-empty, and the app hid exactly
 - The personas were simulated, not people. Re-run the panel with frame strips of the new motion. Test with real people when possible.
 - Deferring Home's reload means the Today list also updates after the tray closes. That is intended: it's the same moment.
 - The 0.9 cap overstates spending for tiny spends (₹10 of ₹11,218 shows a 10% gap). The hero number stays exact; the block only says "something was spent".
+
+## Re-test (2026-10-29)
+The same five personas saw frame strips recorded on the device: Home opening (the fill in), then a ₹1,000 save (the drain and trail). Average score 2.8 / 5, up from 2.4. Every persona now read the yellow as "money left today" after watching it drop.
+
+- **Trail too faint and too brief.** At 35% and 250ms, four of five barely saw it and one missed it. It now holds for 500ms at 50%.
+- **A part-empty block on opening worried everyone.** The test day already had ₹6,200 spent, so the fill in rose only to about 40%. All five asked why today wasn't full. This is partly the test setup (they weren't told about earlier spends), but a real user reopening the app mid-day sees the same thing. Open.
+- **The drop looks small next to the number.** ₹1,000 moved the block by 9% (of `A`, today's share) while the number fell by 20% (of what was left). The block measures against `A`, but people compare it with the number. Open.
+- **Grey future blocks read as dead or locked** (raised in both rounds). Open.
+- **"₹38,700 spare" beside "₹5,018 today" confused two personas.** Outside this study.
+- **Arjun:** the bar and the number move at once, so the eye doesn't know where to look; he suggested bar first, then number. Not changed: FR-AD-5 starts them together on purpose.
+- **Rejected again:** a "−₹1,000" label by the block (it repeats the hero and the list).

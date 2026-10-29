@@ -2,8 +2,10 @@ import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/widgets/hisaab_back_button.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/focus_helpers.dart';
 import '../../helpers/pump_app.dart';
 
 void main() {
@@ -46,19 +48,19 @@ void main() {
       expect(find.text('Open'), findsOneWidget);
     });
 
-    testWidgets('in an app bar, the 40dp sunk well sits on the gutter', (WidgetTester tester) async {
+    testWidgets('in an app bar, the 40dp control well sits on the gutter (D100)', (WidgetTester tester) async {
       await pushScreen(tester);
       expect(tester.getSize(well), const Size(40, 40));
       expect(tester.getTopLeft(well).dx, 20);
-      expect((tester.widget<Container>(well).decoration! as ShapeDecoration).color, HisaabColors.light.sunk);
+      expect((tester.widget<Container>(well).decoration! as ShapeDecoration).color, HisaabColors.light.control);
     });
 
-    testWidgets('the well darkens to hairline while pressed', (WidgetTester tester) async {
+    testWidgets('the well steps to sunk while pressed (D97, D100)', (WidgetTester tester) async {
       await pushScreen(tester);
       final TestGesture press = await tester.startGesture(tester.getCenter(well));
       // why: the tooltip's long-press competes for the pointer, so tap-down waits for the press timeout.
       await tester.pump(kPressTimeout);
-      expect((tester.widget<Container>(well).decoration! as ShapeDecoration).color, HisaabColors.light.hairline);
+      expect((tester.widget<Container>(well).decoration! as ShapeDecoration).color, HisaabColors.light.sunk);
       await press.cancel();
     });
 
@@ -71,6 +73,21 @@ void main() {
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       handle.dispose();
+    });
+  });
+
+  group('HisaabBackButton focus (D99)', () {
+    testWidgets('the ring hugs the 40dp well, not the 48dp tap target', (WidgetTester tester) async {
+      useFocusHighlight(FocusHighlightStrategy.alwaysTraditional);
+      await pumpApp(tester, const Scaffold(body: Align(alignment: AlignmentDirectional.topStart, child: HisaabBackButton())));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(
+        focusRingPaint(find.byType(HisaabBackButton)),
+        paints
+          ..path()
+          ..path(includes: <Offset>[const Offset(-2.5, 24), const Offset(42.5, 24)], excludes: <Offset>[const Offset(44, 24)]),
+      );
     });
   });
 }

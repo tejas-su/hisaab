@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
+import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -20,6 +21,7 @@ class DateChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => HisaabChip(
         key: const ValueKey<String>('date-chip'),
+        onSurface: true,
         label: _label(context),
         icon: AppIcons.calendar,
         trailingIcon: AppIcons.dropdown,
@@ -51,6 +53,7 @@ class DateChip extends StatelessWidget {
             children: <Widget>[
               HisaabChip(
                 key: const ValueKey<String>('date-today'),
+                onSurface: true,
                 label: strings.today,
                 expand: true,
                 onPressed: () => _choose(sheet, today),
@@ -58,6 +61,7 @@ class DateChip extends StatelessWidget {
               const SizedBox(height: HisaabSpacing.s),
               HisaabChip(
                 key: const ValueKey<String>('date-yesterday'),
+                onSurface: true,
                 label: strings.yesterday,
                 expand: true,
                 onPressed: () => _choose(sheet, today.addDays(-1)),
@@ -65,6 +69,7 @@ class DateChip extends StatelessWidget {
               const SizedBox(height: HisaabSpacing.s),
               HisaabChip(
                 key: const ValueKey<String>('date-pick'),
+                onSurface: true,
                 label: strings.pickDate,
                 expand: true,
                 onPressed: () => _pick(sheet),
@@ -88,12 +93,23 @@ class DateChip extends StatelessWidget {
       initialDate: _asDateTime(date),
       firstDate: _asDateTime(earliest),
       lastDate: _asDateTime(today),
+      builder: _onSurfaceFields,
     ).then((DateTime? picked) {
       navigator.pop();
       if (picked != null) {
         onChanged(CalendarDate.fromDateTime(picked));
       }
     });
+  }
+
+  // why: the picker's typed-date field sits on the dialog's surface, where the theme's control fill
+  // would vanish in light; it keeps the hairline step, like every control on a surface (D100).
+  static Widget _onSurfaceFields(BuildContext context, Widget? child) {
+    final ThemeData theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(inputDecorationTheme: theme.inputDecorationTheme.copyWith(fillColor: context.colors.hairline)),
+      child: child ?? const SizedBox.shrink(),
+    );
   }
 
   static DateTime _asDateTime(CalendarDate day) => DateTime(day.year, day.month, day.day);

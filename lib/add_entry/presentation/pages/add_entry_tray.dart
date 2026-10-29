@@ -44,7 +44,7 @@ class AddEntryTray extends StatelessWidget {
       useSafeArea: true,
       anchorPoint: tabletop ? Offset(0, MediaQuery.sizeOf(context).height) : null,
       backgroundColor: context.colors.surface,
-      modalBarrierColor: context.colors.ink.withValues(alpha: 0.32),
+      modalBarrierColor: context.colors.scrim,
       shape: HisaabShapes.trayTop(),
       constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop,
