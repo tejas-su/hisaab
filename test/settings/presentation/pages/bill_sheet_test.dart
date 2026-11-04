@@ -186,6 +186,31 @@ void main() {
       expect(recurring.updates, isEmpty);
     });
 
+    testWidgets('Save and the keyboard\'s Done both save the name', (WidgetTester tester) async {
+      await open(tester);
+      await tapRow(tester, 'name');
+      await tester.enterText(find.byKey(const ValueKey<String>('bill-sheet-name')), 'Bijli');
+      await tester.settle();
+      await tester.tap(find.byKey(const ValueKey<String>('bill-sheet-save')));
+      await tester.settle();
+      expect(recurring.updates.last.label, 'Bijli');
+      await tapRow(tester, 'name');
+      await tester.enterText(find.byKey(const ValueKey<String>('bill-sheet-name')), 'Power');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.settle();
+      expect(recurring.updates.last.label, 'Power');
+      await tester.pump(const Duration(milliseconds: 2400));
+    });
+
+    testWidgets('⌫ on the keypad drops the last digit of the amount', (WidgetTester tester) async {
+      await open(tester);
+      await tapRow(tester, 'amount');
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('Was ₹1,200'), findsOneWidget);
+      expect(find.text('₹120'), findsOneWidget);
+    });
+
     testWidgets('a hand-picked icon stays when renaming, and says so', (WidgetTester tester) async {
       await open(tester, rule: WorkedExample.electricity.copyWith(icon: const Option<BillIcon>.of(BillIcon.car)));
       await tapRow(tester, 'name');

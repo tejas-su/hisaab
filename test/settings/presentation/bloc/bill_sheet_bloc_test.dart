@@ -304,4 +304,14 @@ void main() {
       await expectLater(bloc.close(), completes);
     });
   });
+
+  test('events and outcomes compare by their fields', () {
+    expect(const BillSheetAnswerOpened(BillAnswer.day), const BillSheetAnswerOpened(BillAnswer.day));
+    expect(const BillSheetKeyPressed('5').props, <Object?>['5']);
+    expect(const BillSheetDayChosen(3).props, <Object?>[3]);
+    expect(const BillSheetNameChanged('A').props, <Object?>['A']);
+    expect(const BillSheetIconChosen(BillIcon.gas).props, <Object?>[BillIcon.gas]);
+    expect(const BillSheetStatusRequested().props, isEmpty);
+    expect(const BillSheetUnchanged().props, isEmpty);
+  });
 }
