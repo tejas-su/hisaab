@@ -14,7 +14,7 @@ import '../../../ledger/ledger.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
-import '../widgets/due_soon_note.dart';
+import '../widgets/due_soon_row.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/hero_skeleton.dart';
 import '../widgets/home_header.dart';
@@ -26,7 +26,8 @@ import '../widgets/today_list.dart';
 /// Home: how much is safe to spend today, the Day Blocks and today's entries (SPEC FR-HO).
 ///
 /// Needs a [HomeBloc] above it. [onAdd] opens the Add tray (on *Got* for "Add money"),
-/// [onEdit] opens it on an entry, and [onOpenSettings] opens Settings. [onSeeAll] opens the
+/// [onEdit] opens it on an entry, [onOpenSettings] opens Settings, and [onOpenBill] opens the
+/// due-soon bill's sheet (D118). [onSeeAll] opens the
 /// cycle's entries (FR-HO-4) and [onSeeWhereItWent] shows Spends (FR-HO-5); each is hidden when
 /// null.
 class HomePage extends StatelessWidget {
@@ -35,6 +36,7 @@ class HomePage extends StatelessWidget {
     required this.onAdd,
     required this.onEdit,
     required this.onOpenSettings,
+    required this.onOpenBill,
     this.onSeeAll,
     this.onSeeWhereItWent,
     this.assemble = false,
@@ -43,6 +45,7 @@ class HomePage extends StatelessWidget {
   final ValueChanged<EntryKind> onAdd;
   final ValueChanged<Entry> onEdit;
   final VoidCallback onOpenSettings;
+  final ValueChanged<RecurringRule> onOpenBill;
   final ValueChanged<PayCycle>? onSeeAll;
   final VoidCallback? onSeeWhereItWent;
 
@@ -53,12 +56,16 @@ class HomePage extends StatelessWidget {
   // why: the dock or the Add key sits right below Home, and its own top padding is the gap.
   Widget build(BuildContext context) => HisaabSnackbarHost(
         bottom: 0,
-        child: BlocConsumer<HomeBloc, HomeState>(
-          listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
-          listener: _offerUndo,
-          builder: (BuildContext context, HomeState state) => TopBarScrollView(
-            bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
-            children: _content(context, state),
+        child: BlocListener<HomeBloc, HomeState>(
+          listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.billUndo.isSome(),
+          listener: _offerBillUndo,
+          child: BlocConsumer<HomeBloc, HomeState>(
+            listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
+            listener: _offerUndo,
+            builder: (BuildContext context, HomeState state) => TopBarScrollView(
+              bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
+              children: _content(context, state),
+            ),
           ),
         ),
       );
@@ -70,7 +77,7 @@ class HomePage extends StatelessWidget {
         HomeFailed() => <Widget>[_failed(context)],
         HomeReady(:final CycleSummary summary) when summary.state is NoIncome => <Widget>[
             NoIncomeCard(onAddMoney: () => onAdd(EntryKind.got)),
-            ..._dueSoon(state),
+            ..._dueSoon(state, onOpenBill),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
           ],
@@ -88,7 +95,7 @@ class HomePage extends StatelessWidget {
               OverCard(summary: summary, onSeeWhereItWent: onSeeWhereItWent),
             ],
             ..._savedYesterday(summary),
-            ..._dueSoon(state),
+            ..._dueSoon(state, onOpenBill),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
           ],
@@ -102,9 +109,12 @@ class HomePage extends StatelessWidget {
         ],
       );
 
-  static List<Widget> _dueSoon(HomeReady state) => state.dueSoon.match(
+  static List<Widget> _dueSoon(HomeReady state, ValueChanged<RecurringRule> onOpenBill) => state.dueSoon.match(
         () => const <Widget>[],
-        (DueSoonBill bill) => <Widget>[const SizedBox(height: HisaabSpacing.m), DueSoonNote(bill: bill)],
+        (DueSoonBill bill) => <Widget>[
+          const SizedBox(height: HisaabSpacing.m),
+          DueSoonRow(bill: bill, onOpenBill: onOpenBill),
+        ],
       );
 
   Widget _todayList(BuildContext context, HomeReady state) {
@@ -134,6 +144,21 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: HisaabSpacing.m),
         HisaabChip(label: strings.tryAgain, onPressed: () => context.read<HomeBloc>().add(const HomeLoadRequested())),
       ],
+    );
+  }
+
+  static void _offerBillUndo(BuildContext context, HomeState state) {
+    final RecurringRule? deleted = state is HomeReady ? state.billUndo.toNullable() : null;
+    if (deleted == null) {
+      return;
+    }
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final HomeBloc bloc = context.read<HomeBloc>();
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.billDeleted(deleted.label),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeBillUndoRequested(deleted))),
+      ),
     );
   }
 

@@ -27,6 +27,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this._categories,
     required this._deleteEntry,
     required this._restoreEntry,
+    required this._deleteBill,
+    required this._restoreBill,
     required this._haptics,
   }) : super(const HomeLoading()) {
     // why: every write reloads Home; a newer load cancels an older one still reading, so stale
@@ -37,6 +39,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeWeekToggled>(_onWeekToggled);
     on<HomeDeleteRequested>(_onDeleteRequested);
     on<HomeUndoRequested>(_onUndoRequested);
+    // why: a second Delete bill while the first is being written must not delete twice.
+    on<HomeBillDeleteRequested>(_onBillDeleteRequested, transformer: droppable());
+    on<HomeBillUndoRequested>(_onBillUndoRequested);
     on<HomeSwipeThresholdReached>((HomeSwipeThresholdReached event, Emitter<HomeState> emit) => unawaited(_haptics.threshold()));
     _changes = _ledger.changes.listen((void _) => add(const HomeLoadRequested()));
     _ruleChanges = recurring.changes.listen((void _) => add(const HomeLoadRequested()));
@@ -52,6 +57,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final CategoryRepository _categories;
   final DeleteEntry _deleteEntry;
   final RestoreEntry _restoreEntry;
+  final DeleteBill _deleteBill;
+  final RestoreBill _restoreBill;
   final Haptics _haptics;
   late final StreamSubscription<void> _changes;
   late final StreamSubscription<void> _ruleChanges;
@@ -154,6 +161,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _onUndoRequested(HomeUndoRequested event, Emitter<HomeState> emit) async {
     final Either<Failure, Entry> restored = await _restoreEntry(event.entry).run();
     restored.mapLeft(_logFailure('home.undo_failed'));
+  }
+
+  /// Deletes a bill from its sheet and offers Undo; the rules' change stream reloads Home.
+  Future<void> _onBillDeleteRequested(HomeBillDeleteRequested event, Emitter<HomeState> emit) async {
+    if (state is! HomeReady) {
+      return;
+    }
+    final Either<Failure, Unit> deleted = await _deleteBill(event.rule.id).run();
+    final HomeState latest = state;
+    deleted.match(_logFailure('home.bill_delete_failed'), (Unit _) {
+      if (latest is HomeReady) {
+        emit(latest.copyWith(billUndo: Option<RecurringRule>.of(event.rule)));
+      }
+    });
+  }
+
+  /// Brings a deleted bill back; the rules' change stream reloads Home.
+  Future<void> _onBillUndoRequested(HomeBillUndoRequested event, Emitter<HomeState> emit) async {
+    final Either<Failure, Unit> restored = await _restoreBill(event.rule.id).run();
+    restored.mapLeft(_logFailure('home.bill_undo_failed'));
   }
 
   static void Function(Failure) _logFailure(String tag) =>

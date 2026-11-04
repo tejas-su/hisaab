@@ -1,0 +1,57 @@
+import 'package:expense_tracker/core/design/app_icon.dart';
+import 'package:expense_tracker/core/design/app_icons.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/home/presentation/widgets/due_soon_row.dart';
+import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/fixtures/ledger/worked_example.dart';
+import '../../../helpers/pump_app.dart';
+
+void main() {
+  final DueSoonBill electricity = DueSoonBill(rule: WorkedExample.electricity, dueDate: const CalendarDate(2026, 10, 29), daysAway: 3);
+
+  group('DueSoonRow (FR-HO-3, D118)', () {
+    testWidgets('a 56dp button with the bill\'s icon, the sentence, its date and a chevron', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule _) {})));
+      expect(tester.getSize(find.byType(DueSoonRow)).height, greaterThanOrEqualTo(56));
+      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
+      expect(find.text('Thu, 29 Oct'), findsOneWidget);
+      final List<AppIconData> glyphs = tester.widgetList<AppIcon>(find.byType(AppIcon)).map((AppIcon i) => i.icon).toList();
+      expect(glyphs, <AppIconData>[BillIcon.power.glyph, AppIcons.next]);
+    });
+
+    testWidgets('reads the sentence with the spoken amount, then that it opens the bill', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule _) {})));
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Electricity 1,200 rupees goes out in 3 days')),
+        containsSemantics(
+          label: 'Electricity 1,200 rupees goes out in 3 days',
+          hint: 'Opens the bill.',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('a tap opens its bill', (WidgetTester tester) async {
+      RecurringRule? opened;
+      await pumpApp(tester, Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule rule) => opened = rule)));
+      await tester.tap(find.byType(DueSoonRow));
+      expect(opened, WorkedExample.electricity);
+    });
+
+    testWidgets('holds at 2× text on a small phone', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule _) {})),
+        size: TestWindows.smallPhone,
+        textScale: 2,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
+}

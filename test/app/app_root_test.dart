@@ -86,6 +86,9 @@ void main() {
 
     testWidgets('tapping a row opens the tray prefilled', (WidgetTester tester) async {
       await boot(tester, FakeServices());
+      // why: the due-soon row is 56dp tall (D118), which puts this row under the dock on a phone.
+      await tester.ensureVisible(find.text('Chai & samosa'));
+      await settle(tester);
       await tester.tap(find.text('Chai & samosa'));
       await settle(tester);
       expect(find.byType(AddEntryTray), findsOneWidget);
@@ -174,6 +177,20 @@ void main() {
       await tester.tap(find.text('Undo'));
       await settle(tester);
       expect(find.text('Electricity'), findsOneWidget);
+    });
+
+    testWidgets('Home\'s due-soon row opens the bill sheet; a delete there offers Undo on Home (FR-HO-3)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.text('Electricity ₹1,200 goes out in 3 days'));
+      await settle(tester);
+      expect(find.byType(BillSheet), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-delete')));
+      await settle(tester);
+      expect(find.byType(BillSheet), findsNothing);
+      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsNothing);
+      await tester.tap(find.text('Undo'));
+      await settle(tester);
+      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
     });
 
     testWidgets('Home reloads when the app resumes (BR-8)', (WidgetTester tester) async {

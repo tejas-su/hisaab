@@ -712,6 +712,10 @@
       }
     }
   },
+  "dueSoonOpensBill": "Opens the bill.",
+  "@dueSoonOpensBill": {
+    "description": "TalkBack hint on Home's due-soon row, read after the sentence (D118)"
+  },
   "settingsMoney": "Money",
   "@settingsMoney": {
     "description": "Settings group heading for money setup"

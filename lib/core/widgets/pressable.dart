@@ -19,6 +19,7 @@ class Pressable extends StatefulWidget {
   const Pressable({
     super.key,
     required this.semanticLabel,
+    this.semanticHint,
     required this.onPressed,
     required this.builder,
     this.onLongPress,
@@ -29,6 +30,9 @@ class Pressable extends StatefulWidget {
 
   /// What a screen reader says; the child's own semantics are replaced.
   final String semanticLabel;
+
+  /// Read after the label, to say what a tap does when the label alone doesn't.
+  final String? semanticHint;
   final VoidCallback? onPressed;
   final VoidCallback? onLongPress;
 
@@ -66,6 +70,7 @@ class _PressableState extends State<Pressable> {
       enabled: _enabled,
       selected: widget.selected,
       label: widget.semanticLabel,
+      hint: widget.semanticHint,
       onTap: widget.onPressed,
       onLongPress: widget.onLongPress,
       excludeSemantics: true,

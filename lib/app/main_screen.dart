@@ -17,7 +17,7 @@ import 'widgets/resume_listener.dart';
 /// Home and Spends in the adaptive shell, both reloading on resume and at midnight (SPEC BR-8).
 ///
 /// Needs a [HomeBloc] and a [SpendsBloc] above it. [clock] times midnight; the callbacks open
-/// the Add tray, Settings and a cycle's entries.
+/// the Add tray, Settings, a bill's sheet and a cycle's entries.
 class MainScreen extends StatefulWidget {
   const MainScreen({
     super.key,
@@ -25,6 +25,7 @@ class MainScreen extends StatefulWidget {
     required this.onAdd,
     required this.onEdit,
     required this.onOpenSettings,
+    required this.onOpenBill,
     required this.onSeeEntries,
     required this.onAskAi,
     this.assemble = false,
@@ -34,6 +35,9 @@ class MainScreen extends StatefulWidget {
   final ValueChanged<EntryKind> onAdd;
   final ValueChanged<Entry> onEdit;
   final VoidCallback onOpenSettings;
+
+  /// Opens a bill's sheet from Home's due-soon row (D118).
+  final ValueChanged<RecurringRule> onOpenBill;
   final void Function(PayCycle cycle, Option<int> categoryId) onSeeEntries;
 
   /// Opens Ask AI for the cycle Spends shows (SPEC FR-SP-2).
@@ -73,6 +77,7 @@ class _MainScreenState extends State<MainScreen> {
               onAdd: widget.onAdd,
               onEdit: widget.onEdit,
               onOpenSettings: widget.onOpenSettings,
+              onOpenBill: widget.onOpenBill,
               onSeeAll: (PayCycle cycle) => widget.onSeeEntries(cycle, const Option<int>.none()),
               // why: beside Home in two panes, Spends is already on screen, so the step is hidden.
               onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,

@@ -48,6 +48,8 @@ void main() {
       categories: categories,
       deleteEntry: DeleteEntry(ledger: ledger),
       restoreEntry: RestoreEntry(ledger: ledger),
+      deleteBill: DeleteBill(recurring: recurring),
+      restoreBill: RestoreBill(recurring: recurring),
       haptics: haptics,
     );
   });
@@ -120,6 +122,8 @@ void main() {
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
         haptics: haptics,
       );
       addTearDown(withBrokenEngine.close);
@@ -154,6 +158,8 @@ void main() {
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
         haptics: haptics,
       );
       addTearDown(withBrokenNudge.close);
@@ -297,6 +303,8 @@ void main() {
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
         haptics: haptics,
       );
       addTearDown(fresh.close);
@@ -313,6 +321,51 @@ void main() {
       await bloc.dispatch(const HomeSwipeThresholdReached());
       expect(haptics.events, <String>['threshold']);
     });
+  });
+
+  group('HomeBloc bill delete and undo from the bill sheet (FR-HO-3, D118)', () {
+    setUp(() => bloc.dispatch(const HomeLoadRequested()));
+
+    test('deletes the bill, offers Undo for it, and reloads without its nudge', () async {
+      expect(ready().dueSoon.map((DueSoonBill b) => b.rule), Option<RecurringRule>.of(WorkedExample.electricity));
+      final Future<void> states = expectLater(
+        bloc.stream,
+        emitsInOrder(<Matcher>[
+          isA<HomeReady>().having((HomeReady s) => s.billUndo, 'billUndo', Option<RecurringRule>.of(WorkedExample.electricity)),
+          emitsThrough(isA<HomeReady>().having((HomeReady s) => s.dueSoon, 'dueSoon', const Option<DueSoonBill>.none())),
+        ]),
+      );
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity));
+      await states;
+      expect(recurring.stopped, contains(WorkedExample.electricity));
+      expect(ready().billUndo, const Option<RecurringRule>.none());
+    });
+
+    test('undo brings the bill back and its nudge with it', () async {
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity));
+      await bloc.dispatch(HomeBillUndoRequested(WorkedExample.electricity));
+      await pumpEventQueue();
+      expect(recurring.rules, contains(WorkedExample.electricity));
+      expect(ready().dueSoon.map((DueSoonBill b) => b.rule), Option<RecurringRule>.of(WorkedExample.electricity));
+    });
+
+    test('a failed delete offers no Undo', () async {
+      recurring.failure = DatabaseFailure('locked');
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity));
+      expect(ready().billUndo, const Option<RecurringRule>.none());
+    });
+
+    test('a failed undo is quiet', () async {
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity));
+      recurring.failure = DatabaseFailure('locked');
+      await bloc.dispatch(HomeBillUndoRequested(WorkedExample.electricity));
+      expect(bloc.state, isA<HomeReady>());
+    });
+  });
+
+  test('a bill delete does nothing before Home has loaded', () async {
+    await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity));
+    expect(recurring.stopped, isEmpty);
   });
 
   group('HomeBloc week toggle (FR-HO-2)', () {

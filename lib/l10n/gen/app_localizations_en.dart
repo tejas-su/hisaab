@@ -641,6 +641,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get dueSoonOpensBill => 'Opens the bill.';
+
+  @override
   String get settingsMoney => 'Money';
 
   @override

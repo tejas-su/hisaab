@@ -8,7 +8,7 @@ import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
 import 'package:expense_tracker/home/home.dart';
-import 'package:expense_tracker/home/presentation/widgets/due_soon_note.dart';
+import 'package:expense_tracker/home/presentation/widgets/due_soon_row.dart';
 import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
 import 'package:expense_tracker/home/presentation/widgets/home_header.dart';
 import 'package:expense_tracker/home/presentation/widgets/saved_yesterday_note.dart';
@@ -61,6 +61,7 @@ void main() {
             onAdd: (EntryKind kind) => calls.add(kind),
             onEdit: (Entry entry) => calls.add(entry),
             onOpenSettings: () => calls.add('settings'),
+            onOpenBill: calls.add,
             onSeeAll: links ? calls.add : null,
             onSeeWhereItWent: links ? () => calls.add('spends') : null,
           ),
@@ -106,6 +107,22 @@ void main() {
       expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
       expect(find.bySemanticsLabel('Electricity 1,200 rupees goes out in 3 days'), findsOneWidget);
       handle.dispose();
+    });
+
+    testWidgets('tapping the nudge opens its bill (D118)', (WidgetTester tester) async {
+      await pump(tester);
+      await tester.tap(find.byType(DueSoonRow));
+      expect(calls, <Object>[WorkedExample.electricity]);
+    });
+
+    testWidgets('a bill deleted from its sheet offers Undo, which brings it back (D118)', (WidgetTester tester) async {
+      await pump(tester);
+      await tester.runAsync(() => bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity)));
+      await tester.settle();
+      expect(find.text('Deleted Electricity'), findsOneWidget);
+      await tester.tap(find.text('Undo'));
+      await tester.settle();
+      expect(services.recurring.rules, contains(WorkedExample.electricity));
     });
 
     testWidgets('a bill due tomorrow says tomorrow', (WidgetTester tester) async {
@@ -165,7 +182,7 @@ void main() {
         await pump(tester);
         final double hero = tester.getTopLeft(find.text('Safe to spend today')).dx;
         expect(tester.getTopLeft(find.descendant(of: find.byType(TodayList), matching: find.text('Today'))).dx, hero);
-        expect(tester.getTopLeft(find.descendant(of: find.byType(DueSoonNote), matching: find.byType(AppIcon))).dx, hero);
+        expect(tester.getTopLeft(find.descendant(of: find.byType(DueSoonRow), matching: find.byType(AppIcon)).first).dx, hero);
         expect(tester.getTopLeft(find.descendant(of: find.byType(SavedYesterdayNote), matching: find.byType(AppIcon))).dx, hero);
       });
 

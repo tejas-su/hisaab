@@ -41,6 +41,26 @@ final class HomeUndoRequested extends HomeEvent {
   List<Object?> get props => <Object?>[entry];
 }
 
+/// The user tapped *Delete bill* on [rule]'s bill sheet, opened from the due-soon row (D118).
+final class HomeBillDeleteRequested extends HomeEvent {
+  const HomeBillDeleteRequested(this.rule);
+
+  final RecurringRule rule;
+
+  @override
+  List<Object?> get props => <Object?>[rule];
+}
+
+/// The user tapped Undo after deleting the bill [rule].
+final class HomeBillUndoRequested extends HomeEvent {
+  const HomeBillUndoRequested(this.rule);
+
+  final RecurringRule rule;
+
+  @override
+  List<Object?> get props => <Object?>[rule];
+}
+
 /// A row's swipe crossed the delete threshold.
 final class HomeSwipeThresholdReached extends HomeEvent {
   const HomeSwipeThresholdReached();

@@ -42,6 +42,8 @@ abstract final class AppRoutes {
               categories: getIt<CategoryRepository>(),
               deleteEntry: getIt<DeleteEntry>(),
               restoreEntry: getIt<RestoreEntry>(),
+              deleteBill: getIt<DeleteBill>(),
+              restoreBill: getIt<RestoreBill>(),
               haptics: getIt<Haptics>(),
             )..add(const HomeLoadRequested()),
           ),
@@ -63,6 +65,14 @@ abstract final class AppRoutes {
             onOpenSettings: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt)),
             ),
+            onOpenBill: (RecurringRule rule) async {
+              final HomeBloc home = context.read<HomeBloc>();
+              // why: a change reloads Home through RecurringRepository.changes; a delete goes
+              // through Home so its Undo shows there.
+              if (await openBillSheet(context, getIt, rule) case BillSheetDeleted(:final RecurringRule rule)) {
+                home.add(HomeBillDeleteRequested(rule));
+              }
+            },
             onAskAi: (PayCycle cycle) => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => askAi(getIt, cycle: cycle)),
             ),

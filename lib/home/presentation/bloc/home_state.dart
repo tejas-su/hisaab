@@ -20,7 +20,8 @@ final class HomeLoading extends HomeState {
 /// The hero for [summary] (whose state may be `NoIncome`), the due-soon nudge and today's
 /// latest entries.
 ///
-/// [undo] holds an entry just deleted, so the page can offer Undo once (SPEC BR-10).
+/// [undo] holds an entry just deleted, so the page can offer Undo once (SPEC BR-10); [billUndo]
+/// does the same for a bill deleted from its sheet (D118).
 /// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
 final class HomeReady extends HomeState {
   const HomeReady({
@@ -30,6 +31,7 @@ final class HomeReady extends HomeState {
     this.todaySpends = const <Entry>[],
     this.dueSoon = const Option<DueSoonBill>.none(),
     this.undo = const Option<Entry>.none(),
+    this.billUndo = const Option<RecurringRule>.none(),
     this.showWeek = false,
   });
 
@@ -47,10 +49,16 @@ final class HomeReady extends HomeState {
   /// The soonest bill going out within 5 days, if any (FR-HO-3).
   final Option<DueSoonBill> dueSoon;
   final Option<Entry> undo;
+  final Option<RecurringRule> billUndo;
   final bool showWeek;
 
-  /// Returns a copy with the given fields replaced; [undo] resets unless passed.
-  HomeReady copyWith({List<Entry>? todayEntries, Option<Entry> undo = const Option<Entry>.none(), bool? showWeek}) =>
+  /// Returns a copy with the given fields replaced; [undo] and [billUndo] reset unless passed.
+  HomeReady copyWith({
+    List<Entry>? todayEntries,
+    Option<Entry> undo = const Option<Entry>.none(),
+    Option<RecurringRule> billUndo = const Option<RecurringRule>.none(),
+    bool? showWeek,
+  }) =>
       HomeReady(
         summary: summary,
         todayEntries: todayEntries ?? this.todayEntries,
@@ -58,11 +66,12 @@ final class HomeReady extends HomeState {
         todaySpends: todaySpends,
         dueSoon: dueSoon,
         undo: undo,
+        billUndo: billUndo,
         showWeek: showWeek ?? this.showWeek,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, showWeek];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, showWeek];
 }
 
 /// Loading failed; a quiet message with Try again.

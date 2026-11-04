@@ -57,6 +57,8 @@ final class FakeServices {
         categories: categories,
         deleteEntry: DeleteEntry(ledger: ledger),
         restoreEntry: RestoreEntry(ledger: ledger),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
         haptics: haptics,
       );
 

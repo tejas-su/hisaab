@@ -961,6 +961,12 @@ abstract class AppLocalizations {
   /// **'{bill} {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}'**
   String billGoesOut(String bill, String amount, int days);
 
+  /// TalkBack hint on Home's due-soon row, read after the sentence (D118)
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the bill.'**
+  String get dueSoonOpensBill;
+
   /// Settings group heading for money setup
   ///
   /// In en, this message translates to:

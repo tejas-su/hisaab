@@ -32,6 +32,22 @@ void main() {
       expect(find.text('up'), findsOneWidget);
     });
 
+    testWidgets('announces a hint after its label when given one', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: Pressable(
+            semanticLabel: 'Electricity',
+            semanticHint: 'Opens the bill.',
+            onPressed: () {},
+            builder: (BuildContext _, bool _) => const SizedBox(width: 48, height: 48),
+          ),
+        ),
+      );
+      handle.dispose();
+    });
+
     testWidgets('disabled: no press state, announced as disabled', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pumpApp(
