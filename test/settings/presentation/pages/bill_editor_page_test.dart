@@ -8,7 +8,6 @@ import 'package:expense_tracker/settings/presentation/pages/bill_editor_page.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_category_repository.dart';
@@ -22,21 +21,17 @@ import '../../../helpers/pump_app.dart';
 void main() {
   late FakeRecurringRepository recurring;
   late BillEditorBloc bloc;
-  late int deletes;
 
-  BillEditorBloc build(Option<RecurringRule> editing) {
+  BillEditorBloc build() {
     final FakeClock clock = FakeClock(WorkedExample.now);
     return BillEditorBloc(
       addBill: AddBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
-      editBill: EditBill(recurring: recurring, clock: clock),
       haptics: FakeHaptics(),
-      editing: editing,
     );
   }
 
   setUp(() {
     recurring = FakeRecurringRepository(WorkedExample.rules);
-    deletes = 0;
   });
 
   tearDown(() async {
@@ -47,17 +42,16 @@ void main() {
   /// Opens the editor on top of a blank page, so saving and back can pop it.
   Future<void> open(
     WidgetTester tester, {
-    Option<RecurringRule> editing = const Option<RecurringRule>.none(),
     Size size = TestWindows.phone,
     double textScale = 1,
   }) async {
-    bloc = await tester.buildBloc(() => build(editing));
+    bloc = await tester.buildBloc(build);
     await pumpApp(tester, const Scaffold(), size: size, textScale: textScale);
     tester.state<NavigatorState>(find.byType(Navigator)).push(
       MaterialPageRoute<void>(
         builder: (BuildContext _) => BlocProvider<BillEditorBloc>.value(
           value: bloc,
-          child: BillEditorPage(onDelete: editing.isSome() ? () => deletes++ : null),
+          child: const BillEditorPage(),
         ),
       ),
     );
@@ -185,21 +179,6 @@ void main() {
     });
   });
 
-  group('BillEditorPage: changing a bill', () {
-    testWidgets('starts with the name filled in and offers Delete', (WidgetTester tester) async {
-      await open(tester, editing: Option<RecurringRule>.of(WorkedExample.electricity));
-      expect(find.widgetWithText(TextField, 'Electricity'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey<String>('delete-bill')));
-      expect(deletes, 1);
-    });
-
-    testWidgets('keeps the amount', (WidgetTester tester) async {
-      await open(tester, editing: Option<RecurringRule>.of(WorkedExample.electricity));
-      await next(tester);
-      expect(find.text('₹1,200'), findsOneWidget);
-    });
-  });
-
   for (final (String name, Size size, double scale) in <(String, Size, double)>[
     ('a 320dp phone at 2× text', TestWindows.smallPhone, 2),
     ('a phone in landscape', TestWindows.phoneLandscape, 1),
@@ -236,13 +215,6 @@ void main() {
       for (final String kind in <String>['rent', 'emi', 'phone', 'internet', 'schoolFees', 'subscriptions']) {
         expect(find.byKey(ValueKey<String>('bill-$kind')), findsOneWidget);
       }
-    });
-
-    testWidgets('are left out when changing a bill, so a tap cannot rename it by accident', (WidgetTester tester) async {
-      final RecurringRule rent = WorkedExample.rules.firstWhere((RecurringRule rule) => rule.label == 'Rent');
-      await open(tester, editing: Option<RecurringRule>.of(rent));
-      expect(find.byKey(const ValueKey<String>('bill-rent')), findsNothing);
-      expect(find.byKey(const ValueKey<String>('delete-bill')), findsOneWidget);
     });
 
     testWidgets('stay all six, with that one picked, when a bill\'s full name is typed', (WidgetTester tester) async {

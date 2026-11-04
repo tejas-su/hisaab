@@ -32,7 +32,6 @@ final class BillEditorInProgress extends BillEditorState {
     this.rejections = 0,
     this.saving = false,
     this.saveFailed = false,
-    this.isEditing = false,
   });
 
   final BillEditorStage stage;
@@ -42,9 +41,6 @@ final class BillEditorInProgress extends BillEditorState {
   final int rejections;
   final bool saving;
   final bool saveFailed;
-
-  /// Changing an existing bill rather than adding one.
-  final bool isEditing;
 
   /// Returns a copy with the given fields replaced; [saving] and [saveFailed] reset unless passed.
   BillEditorInProgress copyWith({
@@ -64,11 +60,10 @@ final class BillEditorInProgress extends BillEditorState {
         rejections: rejections ?? this.rejections,
         saving: saving,
         saveFailed: saveFailed,
-        isEditing: isEditing,
       );
 
   @override
-  List<Object?> get props => <Object?>[stage, label, kind, rupees, rejections, saving, saveFailed, isEditing];
+  List<Object?> get props => <Object?>[stage, label, kind, rupees, rejections, saving, saveFailed];
 }
 
 /// The bill is saved; the page closes.

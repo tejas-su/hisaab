@@ -128,7 +128,7 @@ abstract final class AppRoutes {
         ),
       );
 
-  /// The Fixed bills list (FR-SE-1); add and edit open the bill editor.
+  /// The Fixed bills list (FR-SE-1): Add opens the bill editor, a row opens the bill sheet.
   static Widget bills(GetIt getIt) => BlocProvider<BillsBloc>(
         create: (BuildContext _) => BillsBloc(
           getBills: getIt<GetBills>(),
@@ -142,36 +142,29 @@ abstract final class AppRoutes {
             onAdd: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => billEditor(getIt)),
             ),
-            onEdit: (RecurringRule bill) => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (BuildContext editor) => billEditor(
-                  getIt,
-                  editing: Option<RecurringRule>.of(bill),
-                  onDelete: () {
-                    Navigator.of(editor).pop();
-                    context.read<BillsBloc>().add(BillsDeleteRequested(bill));
-                  },
-                ),
-              ),
-            ),
+            onEdit: (RecurringRule bill) async {
+              final BillsBloc bills = context.read<BillsBloc>();
+              // why: a change reloads the list through RecurringRepository.changes; only a
+              // delete needs the list, which owns its Undo.
+              if (await openBillSheet(context, getIt, bill) case BillSheetDeleted(:final RecurringRule rule)) {
+                bills.add(BillsDeleteRequested(rule));
+              }
+            },
           ),
         ),
       );
 
-  /// Adds a bill, or changes [editing]; [onDelete] offers Delete when changing one.
-  static Widget billEditor(
-    GetIt getIt, {
-    Option<RecurringRule> editing = const Option<RecurringRule>.none(),
-    VoidCallback? onDelete,
-  }) =>
-      BlocProvider<BillEditorBloc>(
-        create: (BuildContext _) => BillEditorBloc(
-          addBill: getIt<AddBill>(),
-          editBill: getIt<EditBill>(),
-          haptics: getIt<Haptics>(),
-          editing: editing,
-        ),
-        child: BillEditorPage(onDelete: onDelete),
+  /// Adds a bill, one question at a time (FR-SE-1).
+  static Widget billEditor(GetIt getIt) => BlocProvider<BillEditorBloc>(
+        create: (BuildContext _) => BillEditorBloc(addBill: getIt<AddBill>(), haptics: getIt<Haptics>()),
+        child: const BillEditorPage(),
+      );
+
+  /// Opens [rule]'s bill sheet over [context] (FR-SE-1, D118) and reports what it did; the
+  /// caller deletes on [BillSheetDeleted], so its own Undo goes with it.
+  static Future<BillSheetOutcome> openBillSheet(BuildContext context, GetIt getIt, RecurringRule rule) => BillSheet.show(
+        context,
+        BillSheetBloc(rule: rule, editBill: getIt<EditBill>(), getStatus: getIt<GetBillStatus>(), haptics: getIt<Haptics>()),
       );
 
   /// Opens the Add tray from Home's [context], reusing Home's summary and categories. Home holds

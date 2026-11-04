@@ -16,13 +16,11 @@ import 'bill_question.dart';
 
 /// Step 1 of the bill editor: type a name, or tap a common bill under the field to fill it in; Next moves on.
 ///
-/// [onDelete] shows a Delete chip, when changing an existing bill; the common bills are then left out. The
-/// text field's controller is this widget's own leaf state.
+/// The text field's controller is this widget's own leaf state.
 class BillNameStep extends StatefulWidget {
-  const BillNameStep({super.key, required this.form, this.onDelete});
+  const BillNameStep({super.key, required this.form});
 
   final BillEditorInProgress form;
-  final VoidCallback? onDelete;
 
   @override
   State<BillNameStep> createState() => _BillNameStepState();
@@ -51,7 +49,6 @@ class _BillNameStepState extends State<BillNameStep> {
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final BillEditorBloc bloc = context.read<BillEditorBloc>();
-    final VoidCallback? delete = widget.onDelete;
     // why: two equal columns line up with the field and the key; at large text the labels wrap
     // unevenly, so one column keeps every pill the same height.
     final int columns = MediaQuery.textScalerOf(context).scale(_baseFontSize) > _baseFontSize * _oneColumnScale ? 1 : 2;
@@ -64,8 +61,7 @@ class _BillNameStepState extends State<BillNameStep> {
         if (widget.form.kind.isSome() || namesABill || strings.billName(kind.name).toLowerCase().startsWith(typed))
           kind,
     ];
-    // why: renaming a bill rarely needs suggestions, and a tap would replace its name.
-    final bool showPills = delete == null && kinds.isNotEmpty;
+    final bool showPills = kinds.isNotEmpty;
     return AdaptiveSplit(
       // why: the step sits under the editor's app bar, so window-coordinate panes would push Next off-screen.
       fullWindow: false,
@@ -115,10 +111,6 @@ class _BillNameStepState extends State<BillNameStep> {
                 );
               },
             ),
-          ],
-          if (delete != null) ...<Widget>[
-            const SizedBox(height: HisaabSpacing.l),
-            HisaabChip(key: const ValueKey<String>('delete-bill'), label: strings.delete, icon: AppIcons.delete, onPressed: delete),
           ],
         ],
       ),

@@ -130,6 +130,52 @@ void main() {
       expect(find.text('Water ₹300 goes out tomorrow'), findsOneWidget);
     });
 
+    Future<void> openBills(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('open-bills')));
+      await settle(tester);
+    }
+
+    testWidgets('tapping a fixed bill opens its bill sheet, not the editor (FR-SE-1 AC-1)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await openBills(tester);
+      await tester.tap(find.text('Electricity'));
+      await settle(tester);
+      expect(find.byType(BillSheet), findsOneWidget);
+      expect(find.byType(BillEditorPage), findsNothing);
+      expect(find.text('Due in 3 days'), findsOneWidget);
+    });
+
+    testWidgets('a change in the sheet shows in the list behind it (AC-4)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await openBills(tester);
+      await tester.tap(find.text('Electricity'));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-row-day')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('day-20')));
+      await settle(tester);
+      await tester.binding.handlePopRoute();
+      await settle(tester);
+      expect(find.byType(BillSheet), findsNothing);
+      expect(find.text('Every month on day 20'), findsOneWidget);
+    });
+
+    testWidgets('Delete bill in the sheet deletes it from the list with Undo (AC-6)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await openBills(tester);
+      await tester.tap(find.text('Electricity'));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-delete')));
+      await settle(tester);
+      expect(find.byType(BillSheet), findsNothing);
+      expect(find.text('Deleted Electricity'), findsOneWidget);
+      await tester.tap(find.text('Undo'));
+      await settle(tester);
+      expect(find.text('Electricity'), findsOneWidget);
+    });
+
     testWidgets('Home reloads when the app resumes (BR-8)', (WidgetTester tester) async {
       await boot(tester, FakeServices());
       await services.ledger

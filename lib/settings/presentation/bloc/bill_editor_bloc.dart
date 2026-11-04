@@ -13,23 +13,14 @@ import '../../../ledger/ledger.dart';
 import 'bill_editor_event.dart';
 import 'bill_editor_state.dart';
 
-/// Owns one fixed bill being added or changed in Settings (SPEC FR-SE-1): its name, then its
-/// amount on the keypad, then its due day, which saves. Driven by the bill editor page.
-///
-/// [editing] is the bill being changed, or none to add a new one.
+/// Owns one fixed bill being added in Settings (SPEC FR-SE-1): its name, then its amount on the
+/// keypad, then its due day, which saves. Driven by the bill editor page. Changing a bill
+/// happens in the bill sheet instead (D118).
 class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
   BillEditorBloc({
     required this._addBill,
-    required this._editBill,
     required this._haptics,
-    required this._editing,
-  }) : super(
-          _editing.match(
-            () => const BillEditorInProgress(),
-            (RecurringRule rule) =>
-                BillEditorInProgress(label: rule.label, rupees: rule.amount.floorMajor, isEditing: true),
-          ),
-        ) {
+  }) : super(const BillEditorInProgress()) {
     on<BillEditorRenamed>(_onRenamed);
     on<BillEditorKindPicked>(_onKindPicked);
     on<BillEditorNextPressed>(_onNextPressed);
@@ -50,9 +41,7 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
   }
 
   final AddBill _addBill;
-  final EditBill _editBill;
   final Haptics _haptics;
-  final Option<RecurringRule> _editing;
 
   void _onRenamed(BillEditorRenamed event, Emitter<BillEditorState> emit) => _whenAt(
         BillEditorStage.name,
@@ -91,7 +80,7 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
     }
     emit(current.copyWith(saving: true));
     final BillInput input = BillInput(label: current.label, amount: Money.fromMajor(current.rupees), dueDay: event.day);
-    final Either<Failure, RecurringRule> saved = await _save(input, current.kind).run();
+    final Either<Failure, RecurringRule> saved = await _addBill(AddBillParams(input: input, kind: current.kind)).run();
     saved.match(
       (Failure failure) {
         AppLogger.log(tag: 'bills.save_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
@@ -113,11 +102,6 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
     }
     emit(current.copyWith(stage: BillEditorStage.values[current.stage.index - 1]));
   }
-
-  TaskEither<Failure, RecurringRule> _save(BillInput input, Option<BillKind> kind) => _editing.match(
-        () => _addBill(AddBillParams(input: input, kind: kind)),
-        (RecurringRule rule) => _editBill(EditBillParams(rule: rule, input: input)),
-      );
 
   void _editAmount(Emitter<BillEditorState> emit, Option<int> Function(int rupees) edit) => _whenAt(
         BillEditorStage.amount,

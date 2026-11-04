@@ -400,7 +400,7 @@ Two layers only: the grey page and near-white cards, the same build as the Today
     - The foot: "Next goes out on {date}", then *Delete bill*, a full-width `sunk` key in the place *Save* takes on a question.
     - A question replaces the rows inside the sheet, under a compact slip (name, amount, icon): the keypad with *Save*, showing "Was ₹1,200" under the typed amount; the 1–31 grid; the name field (no pills), with a line saying whether the icon follows the name; or a 4-column grid of the 16 icons in `sunk` wells, labelled under each. Back sits top left.
     - **Picked state** (the day grid and the icon grid): the bill's current day or icon lifts one layer to `control` (as a chip on the page), its label turns Semibold, and a 6dp `ink` dot sits 6dp in from its top end corner. TalkBack announces it as selected.
-    - Bill icons sit in 40dp `sunk` wells everywhere (the slip, rows, the grid, Home's due-soon row).
+    - Bill icons sit in `sunk` icon wells everywhere: the slip, the Fixed bills rows, the grid and Home's due-soon row.
   - Keep aside each month
   - My month starts on: *Payday* (default) / *1st*
 - **Categories:** rename, change icon.

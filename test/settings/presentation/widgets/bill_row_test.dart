@@ -1,8 +1,11 @@
 import 'package:expense_tracker/settings/presentation/widgets/bill_row.dart';
+import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
+import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/focus_helpers.dart';
@@ -20,6 +23,19 @@ void main() {
       expect(name?.fontSize, 16);
       final Text when = tester.widget<Text>(find.textContaining('day 5'));
       expect(when.style?.fontWeight, FontWeight.w400);
+    });
+  });
+
+  group('BillRow icon (D118)', () {
+    testWidgets('shows the icon its name suggests', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: BillRow(bill: WorkedExample.electricity, onEdit: () {}, onDelete: () {}, onThresholdReached: () {})));
+      expect(tester.widget<AppIcon>(find.byType(AppIcon)).icon, BillIcon.power.glyph);
+    });
+
+    testWidgets('shows a hand-picked icon', (WidgetTester tester) async {
+      final RecurringRule picked = WorkedExample.rent.copyWith(icon: const Option<BillIcon>.of(BillIcon.society));
+      await pumpApp(tester, Scaffold(body: BillRow(bill: picked, onEdit: () {}, onDelete: () {}, onThresholdReached: () {})));
+      expect(tester.widget<AppIcon>(find.byType(AppIcon)).icon, BillIcon.society.glyph);
     });
   });
 

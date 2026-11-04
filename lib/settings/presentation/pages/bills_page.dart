@@ -15,9 +15,9 @@ import '../bloc/bills_event.dart';
 import '../bloc/bills_state.dart';
 import '../widgets/bills_list.dart';
 
-/// Fixed bills (SPEC FR-SE-1): the list, Add a bill, tap to edit, swipe to delete with Undo.
+/// Fixed bills (SPEC FR-SE-1): the list, Add a bill, tap to open the bill sheet, swipe to delete with Undo.
 ///
-/// Needs a [BillsBloc] above it. [onAdd] and [onEdit] open the bill editor.
+/// Needs a [BillsBloc] above it. [onAdd] opens the bill editor and [onEdit] the bill sheet.
 class BillsPage extends StatelessWidget {
   const BillsPage({super.key, required this.onAdd, required this.onEdit});
 

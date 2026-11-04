@@ -14,9 +14,7 @@ import '../widgets/bill_name_step.dart';
 /// Needs a [BillEditorBloc] above it. Back steps back through the questions, then closes the
 /// page; saving closes it too. [onDelete], given when changing a bill, offers Delete.
 class BillEditorPage extends StatelessWidget {
-  const BillEditorPage({super.key, this.onDelete});
-
-  final VoidCallback? onDelete;
+  const BillEditorPage({super.key});
 
   @override
   Widget build(BuildContext context) => BlocConsumer<BillEditorBloc, BillEditorState>(
@@ -48,7 +46,7 @@ class BillEditorPage extends StatelessWidget {
 
   Widget _step(BillEditorState state) => switch (state) {
         BillEditorSaved() => const SizedBox.expand(),
-        BillEditorInProgress(stage: BillEditorStage.name) => BillNameStep(form: state, onDelete: onDelete),
+        BillEditorInProgress(stage: BillEditorStage.name) => BillNameStep(form: state),
         BillEditorInProgress(stage: BillEditorStage.amount) => BillAmountStep(form: state),
         BillEditorInProgress(stage: BillEditorStage.day) => BillDayStep(form: state),
       };

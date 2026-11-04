@@ -21,13 +21,11 @@ void main() {
   late FakeHaptics haptics;
   late BillEditorBloc bloc;
 
-  BillEditorBloc build({Option<RecurringRule> editing = const Option<RecurringRule>.none()}) {
+  BillEditorBloc build() {
     final FakeClock clock = FakeClock(WorkedExample.now);
     return BillEditorBloc(
       addBill: AddBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
-      editBill: EditBill(recurring: recurring, clock: clock),
       haptics: haptics,
-      editing: editing,
     );
   }
 
@@ -204,31 +202,6 @@ void main() {
       await bloc.dispatch(const BillEditorNextPressed());
       bloc.add(const BillEditorDayChosen(3));
       await expectLater(bloc.close(), completes);
-    });
-  });
-
-  group('BillEditorBloc: editing', () {
-    setUp(() async {
-      await bloc.close();
-      bloc = build(editing: Option<RecurringRule>.of(WorkedExample.electricity));
-    });
-
-    test('starts on the name, prefilled with the bill', () {
-      expect(form(), const BillEditorInProgress(label: 'Electricity', rupees: 1200, isEditing: true));
-    });
-
-    test('saving changes the same bill', () async {
-      await bloc.dispatch(const BillEditorNextPressed());
-      await bloc.dispatch(const BillEditorCleared());
-      await type('1500');
-      await bloc.dispatch(const BillEditorNextPressed());
-      await bloc.dispatch(const BillEditorDayChosen(28));
-      expect(bloc.state, const BillEditorSaved());
-      expect(recurring.rules.last, WorkedExample.electricity.copyWith(
-        amount: Money.fromMajor(1500),
-        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 28)),
-        nextDue: const CalendarDate(2026, 10, 28),
-      ));
     });
   });
 

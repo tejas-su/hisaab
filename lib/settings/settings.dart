@@ -4,9 +4,12 @@ library;
 
 export 'domain/repository/app_preferences_repository.dart';
 export 'presentation/bloc/bill_editor_bloc.dart';
+export 'presentation/bloc/bill_sheet_bloc.dart';
+export 'presentation/bloc/bill_sheet_state.dart';
 export 'presentation/bloc/bills_bloc.dart';
 export 'presentation/bloc/bills_event.dart';
 export 'presentation/pages/bill_editor_page.dart';
+export 'presentation/pages/bill_sheet.dart';
 export 'presentation/pages/bills_page.dart';
 export 'presentation/pages/settings_page.dart';
 export 'di/settings_module.dart';

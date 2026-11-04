@@ -13,7 +13,7 @@ import '../../../ledger/ledger.dart';
 
 /// One fixed bill: its name, its day of the month and its amount (SPEC FR-SE-1).
 ///
-/// Tap edits it; swiping left deletes it at once (Undo comes from the page). TalkBack gets a
+/// It leads with the bill's icon (D118). Tap opens the bill sheet; swiping left deletes it at once (Undo comes from the page). TalkBack gets a
 /// Delete action, since swiping is gesture-only.
 class BillRow extends StatelessWidget {
   const BillRow({
@@ -86,7 +86,7 @@ class BillRow extends StatelessWidget {
               height: 42,
               alignment: Alignment.center,
               decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
-              child: const AppIcon(AppIcons.recurring),
+              child: AppIcon(bill.shownIcon.glyph),
             ),
             const SizedBox(width: HisaabSpacing.m),
             Expanded(
