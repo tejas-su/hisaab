@@ -1,7 +1,6 @@
 import 'package:expense_tracker/core/db/app_database.dart';
 import 'package:expense_tracker/core/db/db_schema.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/month_start.dart';
 import 'package:expense_tracker/ledger/data/datasource/budget_settings_local_data_source.dart';
 import 'package:expense_tracker/ledger/data/repository/budget_settings_repository_impl.dart';
@@ -28,18 +27,15 @@ void main() {
       );
 
   group('BudgetSettingsRepositoryImpl', () {
-    test('a fresh install follows payday with nothing kept aside', () async {
+    test('a fresh install follows payday', () async {
       expect(await repository.read().run(), Either<Failure, BudgetSettings>.right(const BudgetSettings()));
     });
 
-    test('reads month start on the 1st and a keep-aside amount', () async {
+    test('reads month start on the 1st', () async {
       await store(SettingKeys.monthStart, MonthStartValues.firstOfMonth);
-      await store(SettingKeys.keepAsideMinor, '500000');
       expect(
         await repository.read().run(),
-        Either<Failure, BudgetSettings>.right(
-          BudgetSettings(monthStart: MonthStart.firstOfMonth, keepAside: Money.fromMajor(5000)),
-        ),
+        Either<Failure, BudgetSettings>.right(const BudgetSettings(monthStart: MonthStart.firstOfMonth)),
       );
     });
 
@@ -51,8 +47,6 @@ void main() {
 
     final List<(String, String, String)> bad = <(String, String, String)>[
       ('an unknown month start', SettingKeys.monthStart, 'tuesday'),
-      ('a non-numeric keep aside', SettingKeys.keepAsideMinor, 'lots'),
-      ('a negative keep aside', SettingKeys.keepAsideMinor, '-100'),
     ];
     for (final (String name, String key, String value) in bad) {
       test('returns InvalidDataFailure for $name', () async {

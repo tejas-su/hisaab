@@ -24,7 +24,7 @@ PromptInput workedPromptInput({
   Option<RecurringRule>? incomeRule,
   PayRule payRule = const MonthlyOnDay(4),
   Option<CycleSummary> summary = const Option<CycleSummary>.none(),
-  Money keepAside = Money.zero,
+  List<RecurringRule> savings = const <RecurringRule>[],
   CalendarDate today = WorkedExample.today,
 }) => PromptInput(
   cycles: workedCycles,
@@ -35,7 +35,7 @@ PromptInput workedPromptInput({
   categories: categories,
   entries: entries ?? WorkedExample.entries,
   summary: summary,
-  keepAside: keepAside,
+  savings: savings,
 );
 
 /// Home's summary for the worked example (SPEC BR-4, BR-7): ₹1,430 safe today, about ₹9,300 spare.

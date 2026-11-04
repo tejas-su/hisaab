@@ -67,7 +67,7 @@ final class GetPromptInput implements UseCase<PromptInput, PayCycle> {
                     categories: categories,
                     entries: entries,
                     summary: summary,
-                    keepAside: settings.keepAside,
+                    savings: rules.where((RecurringRule r) => r.kind == EntryKind.saved).toList(),
                   ),
                 ),
               ),

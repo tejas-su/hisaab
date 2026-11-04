@@ -115,8 +115,8 @@ void main() {
       expect(input.cycles[1], const PayCycle(start: CalendarDate(2027, 2, 28), end: CalendarDate(2027, 3, 30)));
     });
 
-    test("the current cycle carries Home's summary and the keep-aside", () async {
-      settings.settings = BudgetSettings(keepAside: Money.fromMajor(5000));
+    test("the current cycle carries Home's summary and the savings (D120)", () async {
+      recurring.rules = <RecurringRule>[...recurring.rules, WorkedExample.rd];
       final PromptInput input = await load(_october);
       final CycleSummary home = (await GetCycleSummary(
         ledger: ledger,
@@ -126,7 +126,7 @@ void main() {
         clock: clock,
       )(const NoParams()).run()).getOrElse((Failure f) => throw StateError('unexpected $f'));
       expect(input.summary, Option<CycleSummary>.of(home));
-      expect(input.keepAside, Money.fromMajor(5000));
+      expect(input.savings, <RecurringRule>[WorkedExample.rd]);
     });
 
     test('a past cycle carries no summary', () async {

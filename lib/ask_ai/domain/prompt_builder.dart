@@ -16,6 +16,8 @@ import 'prompt_csv.dart';
 /// The text is English whatever the app language, since it is written for the AI, and it is
 /// byte-identical for the same input (DECISIONS D59).
 abstract final class PromptBuilder {
+  static const String _savingsCategory = 'savings';
+
   /// The longest text before the oldest entries are grouped by week.
   static const int maxLength = 12000;
 
@@ -90,7 +92,7 @@ abstract final class PromptBuilder {
           'From my app, and correct: ${<String>[
             'safe to spend today ${_money.format(_safeToday(summary))}',
             ..._forecast(summary),
-            if (!input.keepAside.isZero) 'I keep aside ${_money.format(input.keepAside)} a ${_cycleWord(input.payRule)} as savings',
+            ..._savings(input.savings),
           ].join('; ')}.',
         ],
       );
@@ -110,7 +112,19 @@ abstract final class PromptBuilder {
     TooEarlyToForecast() => const <String>[],
   };
 
-  static String _cycleWord(PayRule rule) => rule is WeeklyOn ? 'week' : 'month';
+  // why: the AI is told what goes into savings each month, so it never suggests cutting it as
+  // spending (D120). Soonest first, as the Savings list orders them.
+  static List<String> _savings(List<RecurringRule> savings) {
+    if (savings.isEmpty) {
+      return const <String>[];
+    }
+    final List<RecurringRule> soonest = <RecurringRule>[...savings]
+      ..sort((RecurringRule a, RecurringRule b) => a.nextDue.compareTo(b.nextDue));
+    final Money total = soonest.fold(Money.zero, (Money sum, RecurringRule r) => sum + r.amount);
+    final String each = soonest.map((RecurringRule r) => '${r.label} on the ${_ordinal(r.schedule.anchor.day)}').join(', ');
+    return <String>['I save ${_money.format(total)} a month ($each)'];
+  }
+
 
   static String _per(Frequency frequency) => switch (frequency) {
     Frequency.weekly => 'week',
@@ -188,7 +202,8 @@ abstract final class PromptBuilder {
         e.date.toIso(),
         '${e.amount.floorMajor}',
         e.kind.name,
-        PromptCsv.field(names.nameOf(e.categoryId)),
+        // why: a saving's category is hidden and not in the list, so it is named here (D120).
+        e.kind == EntryKind.saved ? _savingsCategory : PromptCsv.field(names.nameOf(e.categoryId)),
         if (!hideNotes) PromptCsv.field(e.note ?? ''),
       ].join(','),
     ),
@@ -203,7 +218,7 @@ abstract final class PromptBuilder {
           "then the total. Don't cut rent, EMIs, other fixed bills or health.",
     AskGoal.makeBudget =>
       'Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed '
-          'bills and what I keep aside. Show a table: category, limit in ₹, one short reason.',
+          'bills and savings. Show a table: category, limit in ₹, one short reason.',
     AskGoal.onTrack =>
       "Task: Will my money last ${input.endsAtMonthEnd ? 'the month' : 'till payday'}? Use the numbers from my app as correct; don't recalculate them. "
           'Tell me which 1–2 categories are pushing my pace up and one thing to change this week.',

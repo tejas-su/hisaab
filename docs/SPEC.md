@@ -255,18 +255,18 @@ At most **3** are shown, chosen in priority order:
      If there is too little data to judge, say so. Don't name specific stocks, funds, loans or apps.
      ```
   2. Context (income, pay rule, currency, period dates).
-  3. **Facts from the app**, only when the period holds today: "From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare; I keep aside ₹5,000 a month as savings." The numbers are Home's own (`GetCycleSummary`, BR-4 and BR-7), never recomputed (DECISIONS D79):
+  3. **Facts from the app**, only when the period holds today: "From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare; I save ₹5,000 a month (RD on the 10th)." The numbers are Home's own (`GetCycleSummary`, BR-4 and BR-7), never recomputed (DECISIONS D79):
      - Safe to spend today is the hero's number: ₹0 when today or the cycle is over.
      - The forecast reads "at this pace it lasts till payday with about ₹X spare" ("till month end" for a month-end cycle, D117) or "at this pace it runs out on YYYY-MM-DD", and is left out while it is too early to forecast (`E < 3`). It stays for "It changes" income, as on Home.
-     - The keep-aside clause is left out when keep-aside is ₹0. It reads "a week" for weekly pay, "a month" otherwise.
+     - The savings clause lists every active saving rule, soonest first, and their monthly total: "I save ₹5,500 a month (RD on the 10th, Chit on the 15th)". It is left out when there are none (D120).
      - With no income at all (Home shows the No income card), the whole line is left out.
   4. Summary table by category (spent / limit).
   5. Recurring bills.
-  6. Entries as CSV (`date,amount,kind,category,note`, oldest first; the note column is dropped when notes are hidden).
+  6. Entries as CSV (`date,amount,kind,category,note`, oldest first; the note column is dropped when notes are hidden). `kind` is `spent`, `got` or `saved`; a saved entry's category is `savings` (D120).
   7. The task text for the chosen goal (DECISIONS D79):
      - How did I do?: "Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts 2) the one change that would save the most, and how much a month 3) one habit worth keeping."
      - Where can I save?: "Task: Show me where I can save. Give 5 specific cuts, easiest first, each with how much it saves a month, then the total. Don't cut rent, EMIs, other fixed bills or health."
-     - What should my limits be?: "Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and what I keep aside. Show a table: category, limit in ₹, one short reason."
+     - What should my limits be?: "Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and savings. Show a table: category, limit in ₹, one short reason."
      - Will my money last till payday?: "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. Tell me which 1–2 categories are pushing my pace up and one thing to change this week."
        A month-end cycle reads "Task: Will my money last the month? …" with the same rest (D117).
      - Ask something else: "My question: {question}", trimmed.

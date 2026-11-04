@@ -92,7 +92,7 @@ abstract final class SettingKeys {
   /// Ledger-owned.
   static const String currency = 'currency';
   static const String monthStart = 'month_start';
-  /// Removed by migration 003 (D120); nothing else reads it once keep-aside is computed.
+  /// Removed by migration 003 (D120); only that migration reads it.
   static const String keepAsideMinor = 'keep_aside_minor';
 
   /// Settings-feature-owned.

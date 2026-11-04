@@ -38,7 +38,7 @@ void main() {
       input.categories,
       input.entries,
       input.summary,
-      input.keepAside,
+      input.savings,
     ]);
   });
 }

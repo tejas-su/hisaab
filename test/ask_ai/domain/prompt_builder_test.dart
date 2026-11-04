@@ -175,25 +175,41 @@ void main() {
     group('facts line from the app (BR-15)', () {
       List<String> lines({
         Option<CycleSummary> summary = const Option<CycleSummary>.none(),
-        Money keepAside = Money.zero,
+        List<RecurringRule> savings = const <RecurringRule>[],
         PayRule payRule = const MonthlyOnDay(4),
       }) => _lines(
         PromptBuilder.build(
-          workedPromptInput(summary: summary, keepAside: keepAside, payRule: payRule),
+          workedPromptInput(summary: summary, savings: savings, payRule: payRule),
           const PromptChoice(),
           nameOf: englishName,
         ),
       );
 
-      test("follows the context line with Home's numbers and the keep-aside", () {
+      test("follows the context line with Home's numbers and the savings (D120)", () {
         expect(
-          lines(summary: Option<CycleSummary>.of(workedSummary()), keepAside: Money.fromMajor(5000))[4],
+          lines(summary: Option<CycleSummary>.of(workedSummary()), savings: <RecurringRule>[WorkedExample.rd])[4],
           'From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare; '
-          'I keep aside ₹5,000 a month as savings.',
+          'I save ₹5,000 a month (RD on the 10th).',
         );
       });
 
-      test('leaves out the keep-aside clause when it is ₹0', () {
+      test('two savings are added up and listed soonest first', () {
+        final RecurringRule chit = RecurringRule(
+          id: 9,
+          label: 'Chit',
+          amount: Money.fromMajor(500),
+          kind: EntryKind.saved,
+          categoryId: 11,
+          schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 15)),
+          nextDue: const CalendarDate(2026, 11, 15),
+        );
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary()), savings: <RecurringRule>[chit, WorkedExample.rd])[4],
+          endsWith('I save ₹5,500 a month (RD on the 10th, Chit on the 15th).'),
+        );
+      });
+
+      test('leaves out the savings clause when there are none', () {
         expect(
           lines(summary: Option<CycleSummary>.of(workedSummary()))[4],
           'From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare.',
@@ -229,13 +245,6 @@ void main() {
         expect(lines(summary: Option<CycleSummary>.of(over))[4], startsWith('From my app, and correct: safe to spend today ₹0;'));
       });
 
-      test('weekly pay keeps aside a week', () {
-        expect(
-          lines(summary: Option<CycleSummary>.of(workedSummary()), keepAside: Money.fromMajor(500), payRule: const WeeklyOn(1))[4],
-          endsWith('I keep aside ₹500 a week as savings.'),
-        );
-      });
-
       test('irregular income keeps the forecast, as Home does', () {
         expect(
           lines(summary: Option<CycleSummary>.of(workedSummary()), payRule: const IrregularIncome())[4],
@@ -259,6 +268,23 @@ void main() {
       });
     });
 
+    test('a saved entry is listed as kind saved, category savings (D120)', () {
+      final PromptText prompt = _build(entries: <Entry>[
+        ...WorkedExample.entries,
+        Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: 11,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+          note: 'RD',
+        ),
+      ]);
+      expect(_lines(prompt), contains('2026-10-10,5000,saved,savings,RD'));
+    });
+
     group('task line per goal', () {
       const Map<AskGoal, String> tasks = <AskGoal, String>{
         AskGoal.reviewMonth:
@@ -266,7 +292,7 @@ void main() {
         AskGoal.helpMeSave:
             "Task: Show me where I can save. Give 5 specific cuts, easiest first, each with how much it saves a month, then the total. Don't cut rent, EMIs, other fixed bills or health.",
         AskGoal.makeBudget:
-            'Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and what I keep aside. Show a table: category, limit in ₹, one short reason.',
+            'Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and savings. Show a table: category, limit in ₹, one short reason.',
         AskGoal.onTrack:
             "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. Tell me which 1–2 categories are pushing my pace up and one thing to change this week.",
       };
