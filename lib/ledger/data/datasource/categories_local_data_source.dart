@@ -12,6 +12,9 @@ abstract interface class CategoriesLocalDataSource {
 
   /// Sets `budget_minor` for each category id in [budgetMinorById], all in one transaction.
   Future<void> setBudgets(Map<int, int> budgetMinorById);
+
+  /// The id of the category with [key], archived or not; null when there is none.
+  Future<int?> idOf(String key);
 }
 
 /// [CategoriesLocalDataSource] backed by the app's sqflite database.
@@ -42,4 +45,15 @@ final class SqfliteCategoriesLocalDataSource implements CategoriesLocalDataSourc
           );
         }
       });
+
+  @override
+  Future<int?> idOf(String key) async {
+    final List<Map<String, Object?>> rows = await _database.db.query(
+      Tables.categories,
+      columns: <String>[CategoryColumns.id],
+      where: '${CategoryColumns.key} = ?',
+      whereArgs: <Object?>[key],
+    );
+    return rows.isEmpty ? null : rows.single.intAt(CategoryColumns.id);
+  }
 }

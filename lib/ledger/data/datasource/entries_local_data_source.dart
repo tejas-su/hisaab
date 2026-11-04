@@ -25,6 +25,9 @@ abstract interface class EntriesLocalDataSource {
 
   /// The earliest `created_at` of any row, or null when there are none.
   Future<String?> firstCreatedAt();
+
+  /// The sum of every *Saved* entry and the date of the first, or `firstDate` null with none.
+  Future<({int totalMinor, String? firstDate})> savedTotal();
 }
 
 /// [EntriesLocalDataSource] backed by the app's sqflite database.
@@ -74,5 +77,17 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
     final List<Map<String, Object?>> rows =
         await _db.rawQuery('SELECT MIN(${TransactionColumns.createdAt}) AS $first FROM ${Tables.transactions}');
     return rows.single.stringOrNullAt(first);
+  }
+
+  @override
+  Future<({int totalMinor, String? firstDate})> savedTotal() async {
+    const String total = 'total';
+    const String first = 'first';
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT COALESCE(SUM(${TransactionColumns.amountMinor}), 0) AS $total, MIN(${TransactionColumns.date}) AS $first '
+      'FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ?',
+      <Object?>[EntryKindValues.saved],
+    );
+    return (totalMinor: rows.single.intAt(total), firstDate: rows.single.stringOrNullAt(first));
   }
 }

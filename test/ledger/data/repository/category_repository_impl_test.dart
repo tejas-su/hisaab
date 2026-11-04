@@ -33,6 +33,23 @@ void main() {
       expect(categories.map((Category c) => c.key), isNot(contains('fun')));
     });
 
+    test('idOf finds a hidden category (D120)', () async {
+      expect(await repository.idOf('saved').run(), Either<Failure, int>.right(11));
+    });
+
+    test('idOf finds a seed', () async {
+      expect(await repository.idOf('bills').run(), Either<Failure, int>.right(4));
+    });
+
+    test('idOf of an unknown key is InvalidDataFailure', () async {
+      expect((await repository.idOf('gift').run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+
+    test('idOf returns DatabaseFailure when the database is closed', () async {
+      await database.close();
+      expect((await repository.idOf('saved').run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
     test('returns DatabaseFailure when the database is closed', () async {
       await database.close();
       expect((await repository.all().run()).getLeft().toNullable(), isA<DatabaseFailure>());

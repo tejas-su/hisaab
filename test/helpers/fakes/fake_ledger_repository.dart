@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_draft.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
+import 'package:expense_tracker/ledger/domain/entities/saved_total.dart';
 import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
 import 'package:expense_tracker/ledger/domain/repository/ledger_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -110,6 +113,18 @@ final class FakeLedgerRepository implements LedgerRepository {
           entries.map((Entry e) => e.createdAt).fold<DateTime?>(null, (DateTime? first, DateTime at) => first == null || at.isBefore(first) ? at : first),
         ).map(CalendarDate.fromDateTime),
       );
+
+  @override
+  TaskEither<Failure, Option<SavedTotal>> savedTotal() => _run(() {
+        final List<Entry> saves = entries.where((Entry e) => e.kind == EntryKind.saved).toList();
+        if (saves.isEmpty) {
+          return const Option<SavedTotal>.none();
+        }
+        return Option<SavedTotal>.of(SavedTotal(
+          total: saves.fold(Money.zero, (Money total, Entry e) => total + e.amount),
+          since: saves.map((Entry e) => e.date).reduce((CalendarDate a, CalendarDate b) => b.isBefore(a) ? b : a),
+        ));
+      });
 
   @override
   Stream<void> get changes => _changes.stream;

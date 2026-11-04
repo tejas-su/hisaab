@@ -23,4 +23,7 @@ abstract final class SeedCategoryIds {
   static const int home = 7;
   static const int salary = 9;
   static const int otherIncome = 10;
+
+  /// The hidden `saved` category migration 003 seeds (D120).
+  static const int saved = 11;
 }

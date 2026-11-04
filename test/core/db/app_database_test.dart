@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:expense_tracker/core/db/app_database.dart';
 import 'package:expense_tracker/core/db/db_schema.dart';
 import 'package:expense_tracker/core/db/migrations/migration_001_initial.dart';
+import 'package:expense_tracker/core/db/migrations/migration_002_bill_icon.dart';
+import 'package:expense_tracker/ledger/domain/entities/category.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -59,13 +61,14 @@ void main() {
     test('is at the latest schema version', () async {
       final List<Map<String, Object?>> rows = await db().rawQuery('PRAGMA user_version');
       expect(rows.single.values.single, AppDatabase.schemaVersion);
-      expect(AppDatabase.schemaVersion, 2);
+      expect(AppDatabase.schemaVersion, 3);
     });
 
     test('seeds the fixed category list in order (SPEC BR-11)', () async {
       final List<Map<String, Object?>> rows = await db().query(
         Tables.categories,
         columns: <String>[CategoryColumns.key, CategoryColumns.kind],
+        where: '${CategoryColumns.archived} = 0',
         orderBy: '${CategoryColumns.kind} DESC, ${CategoryColumns.sort}',
       );
       expect(rows.map((Map<String, Object?> row) => row[CategoryColumns.key]).toList(), <String>[
@@ -142,6 +145,188 @@ void main() {
     });
   });
 
+  group('Schema v3 (D120)', () {
+    Future<String> oldFile(int version, Future<void> Function(Database db) fill) async {
+      final Directory dir = await Directory.systemTemp.createTemp('hisaab_db_v$version');
+      addTearDown(() => dir.delete(recursive: true));
+      final String path = p.join(dir.path, AppDatabase.fileName);
+      final Database old = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: version,
+          onConfigure: (Database db) => db.execute('PRAGMA foreign_keys = ON'),
+          onCreate: (Database db, int _) async {
+            await migration001Initial(db);
+            if (version >= 2) {
+              await migration002BillIcon(db);
+            }
+          },
+        ),
+      );
+      await fill(old);
+      await old.close();
+      return path;
+    }
+
+    Map<String, Object?> rule({required int id, required String kind, required int categoryId, String label = 'Rent', bool income = false}) =>
+        <String, Object?>{
+          RecurringColumns.id: id,
+          RecurringColumns.label: label,
+          RecurringColumns.amountMinor: income ? 4500000 : 820000,
+          RecurringColumns.kind: kind,
+          RecurringColumns.categoryId: categoryId,
+          RecurringColumns.frequency: FrequencyValues.monthly,
+          RecurringColumns.anchorDate: income ? '2026-10-04' : '2026-10-05',
+          RecurringColumns.nextDue: income ? '2026-11-04' : '2026-11-05',
+          RecurringColumns.isIncomeSource: income ? 1 : 0,
+        };
+
+    Map<String, Object?> entry({required int id, required String kind, required int categoryId, required String date, int? recurringId, String? note}) =>
+        <String, Object?>{
+          TransactionColumns.id: id,
+          TransactionColumns.amountMinor: 42000,
+          TransactionColumns.kind: kind,
+          TransactionColumns.categoryId: categoryId,
+          TransactionColumns.date: date,
+          TransactionColumns.note: note,
+          TransactionColumns.recurringId: recurringId,
+          TransactionColumns.createdAt: '2026-10-26T10:00:00',
+        };
+
+    Future<void> salaryRentAndEntries(Database db) async {
+      await db.insert(Tables.recurring, rule(id: 1, kind: EntryKindValues.got, categoryId: 9, label: 'Salary', income: true));
+      await db.insert(Tables.recurring, rule(id: 2, kind: EntryKindValues.spent, categoryId: 7));
+      await db.insert(Tables.transactions, entry(id: 1, kind: EntryKindValues.got, categoryId: 9, date: '2026-10-04', recurringId: 1));
+      await db.insert(Tables.transactions, entry(id: 2, kind: EntryKindValues.spent, categoryId: 7, date: '2026-10-05', recurringId: 2));
+      await db.insert(Tables.transactions, entry(id: 3, kind: EntryKindValues.spent, categoryId: 1, date: '2026-10-26', note: 'Chai'));
+    }
+
+    Future<void> keepAside(Database db, String value) =>
+        db.insert(Tables.settings, <String, Object?>{SettingsColumns.key: SettingKeys.keepAsideMinor, SettingsColumns.value: value});
+
+    Future<List<String>> indexNames(Database db, String table) async =>
+        (await db.rawQuery('PRAGMA index_list($table)')).map((Map<String, Object?> row) => row['name']! as String).toList();
+
+    test('upgrading a v1 database keeps ids, links and indexes', () async {
+      final String path = await oldFile(1, salaryRentAndEntries);
+      final AppDatabase upgraded = await _openOrFail(path);
+      addTearDown(upgraded.close);
+      final Database db = upgraded.db;
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 3);
+      final List<Map<String, Object?>> entries = await db.query(Tables.transactions, orderBy: TransactionColumns.id);
+      expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.id]), <int>[1, 2, 3]);
+      expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.recurringId]), <int?>[1, 2, null]);
+      expect(entries[2][TransactionColumns.note], 'Chai');
+      final List<Map<String, Object?>> rules = await db.query(Tables.recurring, orderBy: RecurringColumns.id);
+      expect(rules.map((Map<String, Object?> r) => r[RecurringColumns.id]), <int>[1, 2]);
+      expect(rules.map((Map<String, Object?> r) => r[RecurringColumns.icon]), <Object?>[null, null]);
+      expect(rules.map((Map<String, Object?> r) => r[RecurringColumns.amountMode]), <String>['fixed', 'fixed']);
+      expect((await db.rawQuery('PRAGMA foreign_key_list(${Tables.transactions})')).map((Map<String, Object?> r) => r['table']),
+          contains(Tables.recurring));
+      expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+      expect(await indexNames(db, Tables.transactions),
+          containsAll(<String>['ux_transactions_recurring_date', 'ix_transactions_date', 'ix_transactions_category_date']));
+      expect(await indexNames(db, Tables.recurring), contains('ux_recurring_one_income_source'));
+      final int again = await db.insert(
+        Tables.transactions,
+        <String, Object?>{...entry(id: 9, kind: EntryKindValues.spent, categoryId: 7, date: '2026-10-05', recurringId: 2)}..remove(TransactionColumns.id),
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      expect(await db.query(Tables.transactions, where: '${TransactionColumns.recurringId} = 2'), hasLength(1));
+      expect(again, isNot(9));
+    });
+
+    test('v3 accepts saved and card entries and save rules', () async {
+      Future<int> addEntry(String kind) => db().insert(Tables.transactions,
+          <String, Object?>{...entry(id: 0, kind: kind, categoryId: 1, date: '2026-10-26')}..remove(TransactionColumns.id));
+      Future<int> addRule(String kind, {String? mode}) => db().insert(Tables.recurring, <String, Object?>{
+            ...rule(id: 0, kind: kind, categoryId: 4)..remove(RecurringColumns.id),
+            RecurringColumns.amountMode: ?mode,
+          });
+      expect(await addEntry(EntryKindValues.saved), greaterThan(0));
+      expect(await addEntry(EntryKindValues.cardPaid), greaterThan(0));
+      await expectLater(addEntry('gift'), throwsA(isA<DatabaseException>()));
+      expect(await addRule(EntryKindValues.saved), greaterThan(0));
+      await expectLater(addRule(EntryKindValues.cardPaid), throwsA(isA<DatabaseException>()));
+      expect(await addRule(EntryKindValues.spent, mode: AmountModeValues.varies), greaterThan(0));
+      await expectLater(addRule(EntryKindValues.spent, mode: 'weekly'), throwsA(isA<DatabaseException>()));
+    });
+
+    test('recurring_skips holds one row per rule and date', () async {
+      final int id = await db().insert(Tables.recurring, rule(id: 5, kind: EntryKindValues.spent, categoryId: 4));
+      Future<int> skip() => db().insert(Tables.recurringSkips,
+          <String, Object?>{RecurringSkipColumns.recurringId: id, RecurringSkipColumns.date: '2026-11-05'});
+      expect(await skip(), greaterThan(0));
+      await expectLater(skip(), throwsA(isA<DatabaseException>()));
+    });
+
+    test('hidden categories are seeded but never listed', () async {
+      final List<Map<String, Object?>> hidden = await db().query(Tables.categories, where: '${CategoryColumns.archived} = 1');
+      expect(hidden.map((Map<String, Object?> r) => r[CategoryColumns.key]), <String>['saved', 'card_paid']);
+      expect(await db().query(Tables.categories, where: '${CategoryColumns.archived} = 0'), hasLength(10));
+      expect('saved', CategoryKeys.saved);
+    });
+
+    test('keep aside becomes a Keep aside saving on payday', () async {
+      final String path = await oldFile(1, (Database db) async {
+        await db.insert(Tables.recurring, rule(id: 1, kind: EntryKindValues.got, categoryId: 9, label: 'Salary', income: true));
+        await keepAside(db, '500000');
+      });
+      final AppDatabase upgraded = await _openOrFail(path);
+      addTearDown(upgraded.close);
+      final Map<String, Object?> saving =
+          (await upgraded.db.query(Tables.recurring, where: "${RecurringColumns.kind} = 'save'")).single;
+      final int savedId = (await upgraded.db.query(Tables.categories, where: "${CategoryColumns.key} = 'saved'")).single[CategoryColumns.id]! as int;
+      expect(saving[RecurringColumns.label], 'Keep aside');
+      expect(saving[RecurringColumns.amountMinor], 500000);
+      expect(saving[RecurringColumns.frequency], FrequencyValues.monthly);
+      expect(saving[RecurringColumns.anchorDate], '2026-10-04');
+      expect(saving[RecurringColumns.nextDue], '2026-11-04');
+      expect(saving[RecurringColumns.lastDayOfMonth], 0);
+      expect(saving[RecurringColumns.categoryId], savedId);
+      expect(await upgraded.db.query(Tables.settings, where: "${SettingsColumns.key} = '${SettingKeys.keepAsideMinor}'"), isEmpty);
+    });
+
+    test('keep aside with no monthly income goes in on the 1st', () async {
+      final String path = await oldFile(1, (Database db) => keepAside(db, '200000'));
+      final AppDatabase upgraded = await _openOrFail(path);
+      addTearDown(upgraded.close);
+      final Map<String, Object?> saving =
+          (await upgraded.db.query(Tables.recurring, where: "${RecurringColumns.kind} = 'save'")).single;
+      final String today = (await upgraded.db.rawQuery("SELECT date('now','localtime') AS d")).single['d']! as String;
+      final String nextDue = saving[RecurringColumns.nextDue]! as String;
+      expect(nextDue.endsWith('-01'), isTrue);
+      expect(saving[RecurringColumns.anchorDate], nextDue);
+      expect(nextDue.compareTo(today), greaterThanOrEqualTo(0));
+    });
+
+    test('keep aside of zero makes no rule and is removed', () async {
+      final String path = await oldFile(1, (Database db) => keepAside(db, '0'));
+      final AppDatabase upgraded = await _openOrFail(path);
+      addTearDown(upgraded.close);
+      expect(await upgraded.db.query(Tables.recurring, where: "${RecurringColumns.kind} = 'save'"), isEmpty);
+      expect(await upgraded.db.query(Tables.settings, where: "${SettingsColumns.key} = '${SettingKeys.keepAsideMinor}'"), isEmpty);
+    });
+
+    test('a failed upgrade leaves the v2 database as it was', () async {
+      final String path = await oldFile(2, (Database db) async {
+        await db.insert(Tables.recurring, rule(id: 2, kind: EntryKindValues.spent, categoryId: 7));
+        await db.insert(Tables.transactions, entry(id: 2, kind: EntryKindValues.spent, categoryId: 7, date: '2026-10-05', recurringId: 2));
+        await keepAside(db, '500000');
+        await db.execute('CREATE TABLE recurring_v3 (x INTEGER)');
+      });
+      final Either<Failure, AppDatabase> opened =
+          await AppDatabase.open(factory: databaseFactoryFfi, path: path, singleInstance: false).run();
+      expect(opened.getLeft().toNullable(), isA<DatabaseFailure>());
+      final Database raw = await databaseFactoryFfi.openDatabase(path, options: OpenDatabaseOptions(version: 2));
+      addTearDown(raw.close);
+      expect((await raw.rawQuery('PRAGMA user_version')).single.values.single, 2);
+      expect((await raw.query(Tables.transactions)).single[TransactionColumns.recurringId], 2);
+      expect(await raw.query(Tables.recurring), hasLength(1));
+      expect(await raw.query(Tables.settings, where: "${SettingsColumns.key} = '${SettingKeys.keepAsideMinor}'"), hasLength(1));
+    });
+  });
+
   group('AppDatabase on disk', () {
     test('reopening keeps data and does not re-run migrations', () async {
       final Directory dir = await Directory.systemTemp.createTemp('hisaab_db_test');
@@ -155,7 +340,7 @@ void main() {
       final AppDatabase second = await _openOrFail(path);
       addTearDown(second.close);
       expect(await second.db.query(Tables.settings, where: "${SettingsColumns.key} = 'probe'"), hasLength(1));
-      expect(await second.db.query(Tables.categories), hasLength(10));
+      expect(await second.db.query(Tables.categories), hasLength(12));
     });
 
     test('upgrading a v1 database adds an empty bill icon to each rule (D118)', () async {

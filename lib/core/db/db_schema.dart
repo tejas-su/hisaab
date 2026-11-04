@@ -4,6 +4,9 @@ abstract final class Tables {
   static const String recurring = 'recurring';
   static const String transactions = 'transactions';
   static const String settings = 'settings';
+
+  /// Months a changing bill didn't go out (schema v3, D120; used from Phase 2).
+  static const String recurringSkips = 'recurring_skips';
 }
 
 /// Columns of [Tables.categories].
@@ -47,6 +50,22 @@ abstract final class RecurringColumns {
 
   /// The bill icon the user picked (`BillIcon` value); null follows the name (D118, schema v2).
   static const String icon = 'icon';
+
+  /// How the amount behaves ([AmountModeValues]); `fixed` for every rule before schema v3 (D120).
+  static const String amountMode = 'amount_mode';
+}
+
+/// Columns of [Tables.recurringSkips].
+abstract final class RecurringSkipColumns {
+  static const String recurringId = 'recurring_id';
+  static const String date = 'date';
+}
+
+/// Stored values of [RecurringColumns.amountMode].
+abstract final class AmountModeValues {
+  static const String fixed = 'fixed';
+  static const String varies = 'varies';
+  static const String card = 'card';
 }
 
 /// Columns of [Tables.transactions] (an "entry" in the UI; never called a transaction there).
@@ -73,6 +92,7 @@ abstract final class SettingKeys {
   /// Ledger-owned.
   static const String currency = 'currency';
   static const String monthStart = 'month_start';
+  /// Removed by migration 003 (D120); nothing else reads it once keep-aside is computed.
   static const String keepAsideMinor = 'keep_aside_minor';
 
   /// Settings-feature-owned.
@@ -85,6 +105,12 @@ abstract final class SettingKeys {
 abstract final class EntryKindValues {
   static const String spent = 'out';
   static const String got = 'in';
+
+  /// Money put into a saving (schema v3, D120).
+  static const String saved = 'save';
+
+  /// A credit card bill paid; recorded, never counted (schema v3, used from Phase 2).
+  static const String cardPaid = 'card';
 }
 
 /// Stored values of [RecurringColumns.frequency].

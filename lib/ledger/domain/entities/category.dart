@@ -45,4 +45,7 @@ abstract final class CategoryKeys {
   static const String home = 'home';
   static const String bills = 'bills';
   static const String salary = 'salary';
+
+  /// The hidden category every *Saved* entry and saving rule uses; never shown (D120).
+  static const String saved = 'saved';
 }

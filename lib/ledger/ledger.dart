@@ -20,6 +20,7 @@ export 'domain/entities/ledger_setup.dart';
 export 'domain/entities/range_forecast.dart';
 export 'domain/entities/recurring_draft.dart';
 export 'domain/entities/recurring_rule.dart';
+export 'domain/entities/saved_total.dart';
 export 'domain/entities/schedule.dart';
 export 'domain/entities/spend_preview.dart';
 export 'domain/entities/week_day.dart';

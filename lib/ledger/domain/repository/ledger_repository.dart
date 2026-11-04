@@ -4,6 +4,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/time/calendar_date.dart';
 import '../entities/entry.dart';
 import '../entities/entry_draft.dart';
+import '../entities/saved_total.dart';
 
 /// Reads and writes entries (SPEC BR-10). Every successful write emits on [changes].
 abstract interface class LedgerRepository {
@@ -40,6 +41,12 @@ abstract interface class LedgerRepository {
   /// Returns [Right] with the day, or [None] for an empty ledger; or [Left] with
   /// `DatabaseFailure`, or `InvalidDataFailure` for an unreadable created time.
   TaskEither<Failure, Option<CalendarDate>> firstLoggedOn();
+
+  /// Everything ever put into savings and the day of the first saving (D120).
+  ///
+  /// Returns [Right] with the total, or [None] when nothing has been saved; or [Left] with
+  /// `DatabaseFailure`, or `InvalidDataFailure` for an unreadable date.
+  TaskEither<Failure, Option<SavedTotal>> savedTotal();
 
   /// Emits once after each successful write; never errors. Home and Spends reload on it.
   Stream<void> get changes;

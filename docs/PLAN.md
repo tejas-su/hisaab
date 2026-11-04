@@ -116,12 +116,15 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 
 | Table | Columns |
 |---|---|
-| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived |
-| `transactions` | id, amount_minor, currency, kind, category_id, date, note NULL, recurring_id NULL, created_at |
-| `recurring` | id, label, amount_minor, currency, kind, category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active |
-| `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `keep_aside_minor`. Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). The pay rule lives on the income `recurring` row (DECISIONS D20) |
+| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived. Hidden `saved` and `card_paid` rows (`archived = 1`) hold saved and card-bill entries and are never shown |
+| `transactions` | id, amount_minor, currency, kind (in/out/save/card), category_id, date, note NULL, recurring_id NULL, created_at |
+| `recurring` | id, label, amount_minor, currency, kind (in/out/save), category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active, icon NULL, amount_mode (fixed/varies/card) |
+| `recurring_skips` | recurring_id, date (primary key together): a month a changing bill didn't go out |
+| `settings` | key, value. Ledger-owned keys: `currency`, `month_start` (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). The pay rule lives on the income `recurring` row (DECISIONS D20) |
 
 Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transactions(recurring_id, date)`.
+
+Schema v3 (migration 003, D120) also holds the columns changing bills need (`amount_mode`, `recurring_skips`, the `card` kind), and moves a non-zero `keep_aside_minor` to a *Keep aside* saving rule, then deletes the key.
 
 ---
 

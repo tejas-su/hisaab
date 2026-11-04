@@ -15,4 +15,10 @@ abstract interface class CategoryRepository {
   ///
   /// Returns [Right] with [unit], or [Left] with `DatabaseFailure` (nothing is saved).
   TaskEither<Failure, Unit> setLimits(Map<int, Money> limits);
+
+  /// The id of the category with [key], including hidden ones such as `saved` (D120).
+  ///
+  /// Returns [Right] with the id, or [Left] with `InvalidDataFailure` when no category has
+  /// [key], or `DatabaseFailure` when the read fails.
+  TaskEither<Failure, int> idOf(String key);
 }

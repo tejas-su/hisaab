@@ -8,6 +8,7 @@ import 'package:expense_tracker/ledger/data/repository/ledger_repository_impl.da
 import 'package:expense_tracker/ledger/domain/entities/entry.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_draft.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
+import 'package:expense_tracker/ledger/domain/entities/saved_total.dart';
 import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -36,6 +37,31 @@ void main() {
     changes = <void>[];
     repository.changes.listen(changes.add);
     addTearDown(repository.dispose);
+  });
+
+  group('LedgerRepositoryImpl.savedTotal (D120)', () {
+    EntryDraft saved(int rupees, CalendarDate date) =>
+        EntryDraft(amount: Money.fromMajor(rupees), kind: EntryKind.saved, categoryId: 11, date: date);
+
+    test('savedTotal sums Saved entries and dates the first', () async {
+      _right(await repository.add(saved(5000, const CalendarDate(2026, 10, 10))).run());
+      _right(await repository.add(saved(500, _today)).run());
+      _right(await repository.add(_draft(rupees: 420)).run());
+      expect(
+        _right(await repository.savedTotal().run()),
+        Option<SavedTotal>.of(SavedTotal(total: Money.fromMajor(5500), since: const CalendarDate(2026, 10, 10))),
+      );
+    });
+
+    test('savedTotal is none with no saves', () async {
+      _right(await repository.add(_draft(rupees: 420)).run());
+      expect(_right(await repository.savedTotal().run()), const Option<SavedTotal>.none());
+    });
+
+    test('savedTotal returns DatabaseFailure when the database is closed', () async {
+      await database.close();
+      expect((await repository.savedTotal().run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
   });
 
   group('LedgerRepositoryImpl', () {

@@ -4,10 +4,12 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/db/db_row.dart';
 import '../../../core/errors/failure.dart';
+import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../domain/entities/entry.dart';
 import '../../domain/entities/entry_draft.dart';
+import '../../domain/entities/saved_total.dart';
 import '../../domain/failures/ledger_failures.dart';
 import '../../domain/repository/ledger_repository.dart';
 import '../datasource/entries_local_data_source.dart';
@@ -65,6 +67,15 @@ final class LedgerRepositoryImpl implements LedgerRepository {
         (String? text) => Option<String>.fromNullable(text).match(
           () => Either<Failure, Option<CalendarDate>>.right(const Option<CalendarDate>.none()),
           (String createdAt) => _dayOf(createdAt).map(Option<CalendarDate>.of),
+        ),
+      );
+
+  @override
+  TaskEither<Failure, Option<SavedTotal>> savedTotal() => dbTask(_entries.savedTotal).chainEither(
+        (({int totalMinor, String? firstDate}) row) => Option<String>.fromNullable(row.firstDate).match(
+          () => Either<Failure, Option<SavedTotal>>.right(const Option<SavedTotal>.none()),
+          (String first) => CalendarDate.parse(first)
+              .map((CalendarDate since) => Option<SavedTotal>.of(SavedTotal(total: Money(row.totalMinor), since: since))),
         ),
       );
 

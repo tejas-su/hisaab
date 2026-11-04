@@ -23,4 +23,9 @@ final class CategoryRepositoryImpl implements CategoryRepository {
   TaskEither<Failure, Unit> setLimits(Map<int, Money> limits) => dbTask(
         () => _categories.setBudgets(limits.map((int id, Money limit) => MapEntry<int, int>(id, limit.amountMinor))),
       ).map((void _) => unit);
+
+  @override
+  TaskEither<Failure, int> idOf(String key) => dbTask(() => _categories.idOf(key)).chainEither(
+        (int? id) => Option<int>.fromNullable(id).toEither<Failure>(() => InvalidDataFailure('No "$key" category')),
+      );
 }

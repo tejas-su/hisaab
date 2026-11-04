@@ -70,6 +70,15 @@ void main() {
   });
 
   group('EntryKindMapper', () {
+    test('saved round-trips as "save" (D120)', () {
+      expect(EntryKindMapper.toValue(EntryKind.saved), 'save');
+      expect(EntryKindMapper.fromValue('save'), Either<Failure, EntryKind>.right(EntryKind.saved));
+    });
+
+    test('"card" stays unknown until Phase 2', () {
+      expect(EntryKindMapper.fromValue('card').getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+
     test('round-trips both kinds', () {
       for (final EntryKind kind in EntryKind.values) {
         expect(EntryKindMapper.fromValue(EntryKindMapper.toValue(kind)), Either<Failure, EntryKind>.right(kind));

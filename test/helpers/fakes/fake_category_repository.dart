@@ -13,6 +13,9 @@ final class FakeCategoryRepository implements CategoryRepository {
   final List<Category> categories;
   Failure? failure;
 
+  /// Hidden categories by key, as migration 003 seeds them (D120).
+  Map<String, int> hidden = <String, int>{'saved': 11, 'card_paid': 12};
+
   /// Every map passed to [setLimits], in order.
   final List<Map<int, Money>> savedLimits = <Map<int, Money>>[];
 
@@ -24,6 +27,18 @@ final class FakeCategoryRepository implements CategoryRepository {
     }
     savedLimits.add(limits);
     return TaskEither<Failure, Unit>.right(unit);
+  }
+
+  @override
+  TaskEither<Failure, int> idOf(String key) {
+    final Failure? current = failure;
+    if (current != null) {
+      return TaskEither<Failure, int>.left(current);
+    }
+    final int? id = categories.where((Category c) => c.key == key).firstOrNull?.id ?? hidden[key];
+    return id == null
+        ? TaskEither<Failure, int>.left(InvalidDataFailure('No "$key" category'))
+        : TaskEither<Failure, int>.right(id);
   }
 
   @override
