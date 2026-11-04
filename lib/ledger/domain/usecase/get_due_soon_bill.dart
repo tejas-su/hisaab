@@ -40,6 +40,6 @@ final class GetDueSoonBill implements UseCase<Option<DueSoonBill>, NoParams> {
 
   static DueSoonBill _nextOf(RecurringRule rule, CalendarDate today) {
     final CalendarDate due = RecurringSchedule.firstUnpostedAfter(rule.schedule, rule.nextDue, today: today);
-    return DueSoonBill(label: rule.label, amount: rule.amount, dueDate: due, daysAway: today.daysUntil(due));
+    return DueSoonBill(rule: rule, dueDate: due, daysAway: today.daysUntil(due));
   }
 }

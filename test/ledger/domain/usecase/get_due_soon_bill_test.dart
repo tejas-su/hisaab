@@ -39,8 +39,7 @@ void main() {
         await run(),
         Option<DueSoonBill>.of(
           DueSoonBill(
-            label: 'Electricity',
-            amount: Money.fromMajor(1200),
+            rule: WorkedExample.electricity,
             dueDate: const CalendarDate(2026, 10, 29),
             daysAway: 3,
           ),
@@ -109,6 +108,10 @@ void main() {
       getDueSoon = GetDueSoonBill(recurring: recurring, clock: FakeClock(DateTime(2026, 12, 30, 9)));
       recurring.rules = <RecurringRule>[_bill(1, 500, const CalendarDate(2027, 1, 2))];
       expect((await run()).map((DueSoonBill b) => b.daysAway), const Option<int>.of(3));
+    });
+
+    test('carries the rule it came from, so Home can open its bill sheet (D118)', () async {
+      expect((await run()).map((DueSoonBill b) => b.rule), Option<RecurringRule>.of(WorkedExample.electricity));
     });
 
     test('returns the repository failure', () async {

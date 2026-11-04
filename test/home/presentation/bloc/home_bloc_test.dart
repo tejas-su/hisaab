@@ -132,7 +132,7 @@ void main() {
       expect(
         ready().dueSoon,
         Option<DueSoonBill>.of(
-          DueSoonBill(label: 'Electricity', amount: Money.fromMajor(1200), dueDate: const CalendarDate(2026, 10, 29), daysAway: 3),
+          DueSoonBill(rule: WorkedExample.electricity, dueDate: const CalendarDate(2026, 10, 29), daysAway: 3),
         ),
       );
     });
