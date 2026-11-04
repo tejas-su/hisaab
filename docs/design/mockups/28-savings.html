@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Savings (proposal)</title>
+<style>
+  /* Savings, Phase 1 (spec docs/superpowers/specs/2026-11-04-savings-and-changing-bills-design.md §5, plan Task 4 Step 2).
+     Nothing here is built yet. A saving reuses the Fixed bills list, wizard and the paper-slip sheet of mockup 27, switched
+     on the rule's kind; Put in extra is the one new screen. Every frame is drawn twice, light and dark, at 360dp.
+     Numbers follow the worked example (docs/design/README.md) with spec example 3: a ₹5,000 RD on the 10th went in
+     Sat 10 Oct, so K = 5,000, P = 11,650 and A = ₹1,294; today is Mon 26 Oct with ₹420 spent, so the hero shows ₹874.
+     Spent this cycle ₹27,150 + ₹420 = ₹27,570. Put in extra ₹500: tomorrow drops from ₹1,403 to ₹1,341, ₹62 less.
+     Copy is the plan's Task 4 defaults; lines marked draft wait for the design-content deck (28-savings-copy-deck.md).
+     Icons are hand-drawn stand-ins for Hugeicons stroke-rounded: PiggyBank (saving), Repeat (Fixed bills), and the rest. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --scrim: #16161552;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --scrim: #0000008C;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 736px; margin: 8px 0 0; }
+
+  /* Phone */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .page { position: absolute; inset: 0; padding: 12px 20px 0; display: flex; flex-direction: column; gap: 16px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; height: 48px; gap: 8px; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .topbar .mid { flex: 1; text-align: center; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .wm { font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .secHd { font: 600 22px/28px 'Anek Latin', sans-serif; padding-inline-start: 4px; margin-bottom: -8px; }
+  .hint { font-size: 15px; line-height: 20px; color: var(--ink2); margin: 0; }
+  .chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px 0 12px; border-radius: 12px; background: var(--control); font: 600 14px/20px 'Mukta', sans-serif; }
+
+  /* A card of rows: 42dp sunk wells, 20dp inset, hairlines indented to the text (74dp) */
+  .card { background: var(--surface); border-radius: 28px; padding: 8px 0; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 11px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: 16px; line-height: 22px; }
+  .row .t span { display: block; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .row .t span.draft { display: inline; font: 600 11px/14px 'Mukta', sans-serif; }
+  .page.dense { gap: 12px; }
+  .dense .row { min-height: 56px; padding-top: 7px; padding-bottom: 7px; }
+  .row b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row > svg:last-child { color: var(--ink2); }
+  .foot { display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 20px; color: var(--ink2); padding-inline-start: 4px; }
+  .foot b { color: var(--ink); font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+
+  /* Home (the hero follows mockup 25; only the list and the nudge are new) */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .tbar { display: flex; gap: 3px; height: 48px; margin-top: 20px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+  .names { display: flex; gap: 3px; height: 14px; margin-top: 4px; font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); text-align: center; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; }
+  .capRow b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rail { display: flex; align-items: center; gap: 10px; height: 18px; margin-top: 14px; }
+  .dots { flex: 1; display: flex; align-items: center; gap: 12px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .dots i.t { width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .pf svg { width: 16px; height: 16px; }
+  .nudge { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px 8px 8px; border-radius: 18px; background: var(--sunk); }
+  .nudge .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .nudge .t { flex: 1; font-size: 15px; line-height: 20px; }
+  .nudge .t b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .nudge .t span { display: block; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .nudge > svg { color: var(--ink2); }
+  .listHd { display: flex; align-items: baseline; gap: 8px; padding-inline-start: 4px; margin-bottom: -8px; }
+  .listHd .h { flex: 1; font: 600 17px/24px 'Anek Latin', sans-serif; }
+  .listHd b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd span { font: 600 14px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  /* Spends */
+  .pace { height: 128px; }
+  .pace svg { width: 100%; height: 100%; display: block; }
+  .tally { font-size: 15px; line-height: 20px; color: var(--ink2); padding-inline-start: 4px; }
+  .tally b { color: var(--ink); font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .cardHd { font: 600 17px/24px 'Anek Latin', sans-serif; padding: 12px 20px 4px; }
+  .cat { display: flex; flex-direction: column; gap: 6px; padding: 10px 20px; }
+  .cat .top { display: flex; align-items: center; gap: 12px; }
+  .cat .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .cat .n { flex: 1; font-size: 16px; line-height: 22px; }
+  .cat .pc { font-size: 13px; line-height: 18px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .cat b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
+  .track { margin-inline-start: 54px; height: 6px; border-radius: 3px; background: var(--sunk); }
+  .track i { display: block; height: 100%; border-radius: 3px; background: var(--ink); }
+
+  /* Sheet over a page */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 16px 20px; z-index: 9; }
+  .dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; }
+  .slip { position: relative; background: var(--display); color: var(--displayInk); border-radius: 20px 20px 0 0; padding: 18px 20px 14px; margin-bottom: 8px; }
+  .slip::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px;
+    background: conic-gradient(from -45deg at 50% 100%, var(--display) 0 90deg, transparent 90deg) 0 0 / 14px 100% repeat-x; }
+  .eyebrow { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .12em; color: var(--displayInk2); }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .who .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .who .nm { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .amtRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .big { font: 600 56px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .every { font-size: 15px; line-height: 22px; color: var(--displayInk2); }
+  .stamp { font: 600 12px/14px 'Anek Latin', sans-serif; letter-spacing: .1em; color: var(--displayInk2); white-space: nowrap; padding: 6px 10px; border: 2px solid var(--displayInk2); border-radius: 6px; }
+  .perf { position: relative; height: 20px; margin: 8px -20px; }
+  .perf::before { content: ''; position: absolute; left: 22px; right: 22px; top: 9px; border-top: 2px dashed var(--hairline); }
+  .perf i { position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .perf i.l { left: -8px; } .perf i.r { right: -8px; }
+  .line { display: flex; align-items: center; margin: 0 -8px; min-height: 56px; padding: 12px 8px; font-size: 16px; line-height: 22px; }
+  .line .lead { flex: 1; min-width: 12px; border-bottom: 2px dotted var(--hairline); margin: 0 8px; align-self: flex-end; transform: translateY(-13px); }
+  .line .v { font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .line > svg { width: 18px; height: 18px; margin-inline-start: 6px; color: var(--displayInk2); }
+  .slipFoot { font-size: 14px; line-height: 20px; color: var(--displayInk2); min-height: 22px; padding-top: 2px; }
+  .slipFoot b { color: var(--displayInk); font-weight: 600; }
+  .wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 56px; margin-top: 16px; border-radius: 18px; font: 600 17px/1 'Mukta', sans-serif; }
+  .wide.del { background: var(--sunk); color: var(--ink); }
+  .wide.sig { background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .stepHd { display: flex; align-items: center; min-height: 48px; margin-bottom: 8px; padding-inline-start: 4px; }
+  .stepHd .q { font: 600 19px/24px 'Anek Latin', sans-serif; }
+  .slip.compact { padding-bottom: 12px; }
+  .slip.compact .big { font-size: 48px; line-height: 52px; margin-top: 6px; }
+  .caret { display: inline-block; width: 3px; height: 40px; margin-left: 3px; vertical-align: -4px; background: var(--signal); border-radius: 2px; }
+  .preview { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; color: var(--displayInk2); min-height: 20px; }
+  .preview b { color: var(--displayInk); font-weight: 600; }
+  .preview svg { width: 16px; height: 16px; color: var(--displayInk); }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .key { height: 56px; border-radius: 16px; background: var(--sunk); font: 600 24px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<h1>Savings <span class="tag">proposal</span></h1>
+<p class="lede">Spec §5, Phase 1, drawn. A saving is a monthly rule like a bill, but it <b>goes in</b> rather than out. It is never spending: it is never a bite on today's bar, never in <i>Where it went</i>, and it is shown with the <b>piggy bank glyph and the word "Saved"</b>, never a colour. Settings gets a <b>Savings</b> row beside <i>Fixed bills</i>, and the list, the wizard and the paper-slip sheet are the bill screens of <a href="27-bill-sheet.html">mockup 27</a> switched on the rule's kind. <b>Put in extra</b> is the one new screen. Today is <b>Mon 26 Oct 2026</b>; the ₹5,000 RD on the 10th went in on Sat 10 Oct, so today's share is <b>₹1,294</b> and the hero shows <b>₹874</b>. Each frame is shown in light and dark at 360dp.</p>
+
+<div id="frames"></div>
+
+<h2>What changes, and what doesn't</h2>
+<table>
+  <tr><th>Element</th><th>How it's drawn</th><th>Why</th></tr>
+  <tr><td>Savings row (Settings)</td><td>A second <code>SettingsRow</code> in the Money card: PiggyBank in a 42dp <code>sunk</code> well, hairline indented to 74dp</td><td>One level, as §5.6. Bills and savings sit side by side because they are the same kind of rule</td></tr>
+  <tr><td>Savings list</td><td>The Fixed bills page: hint, <i>Add a saving</i> chip, one card of rows. Under the card, the footer line in <code>ink2</code> with the figure in <code>ink</code>, then the <i>Put in extra</i> chip</td><td>The footer is a record ("put in since"), never a balance. <i>Put in extra</i> is a chip, not marigold: on this page nothing is "today / act" until the keypad's Save</td></tr>
+  <tr><td>Saving slip</td><td>Mockup 27's slip: eyebrow <i>Saving</i>, PiggyBank well, the stamp <i>Put in 10 Oct</i>, three rows (no Icon row: a saving always shows the piggy bank), <i>Delete saving</i> as the full-width <code>sunk</code> key</td><td>Same object, same shape; the eyebrow and the glyph tell them apart, not colour</td></tr>
+  <tr><td>Put in extra</td><td>The sheet opens straight onto the keypad under a compact slip; the preview line takes the place of "Was ₹1,200"; Save is the one marigold key</td><td>The one consequence the user needs before saving is how much thinner later days get. Today's share is untouched (spec §3)</td></tr>
+  <tr><td>Home row</td><td>A Today-list row: PiggyBank well, <i>RD</i>, second line <i>Saved</i>, amount plain (no "+"). The list total and today's bar leave it out</td><td>A saving is not spending, so it is no bite; the word and glyph say what it is</td></tr>
+  <tr><td>Home nudge</td><td>The due-soon <code>sunk</code> row (D118) with PiggyBank in a <code>surface</code> well, the sentence, the date in <code>ink2</code>, a chevron; it opens the saving's sheet</td><td>Same slot and priority as bills (FR-HO-3)</td></tr>
+  <tr><td>Spends line</td><td>One <code>bodyMedium</code> line in <code>ink2</code>, amounts in Anek Semibold <code>ink</code>, 4dp in from the page edge like the section headers, between the pace card and <i>Where it went</i></td><td>Spent and saved side by side, so the RD never inflates spending</td></tr>
+</table>
+
+<h2>Tokens used</h2>
+<table>
+  <tr><th>Kind</th><th>Tokens</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>control</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEdge</code>, <code>displayEtch</code>, <code>blockIdle</code>, <code>scrim</code>, <code>signal</code> (hero fill, today's dot, Add, the Save key only), <code>onSignal</code>. No new colour</td></tr>
+  <tr><td>Type</td><td><code>titleLarge</code> (page titles, Money), <code>bodyLarge</code> (row labels), <code>bodyMedium</code> (hint, footer, Spends line, nudge), <code>bodySmall</code> (second lines), <code>labelLarge</code> (chips, keys' labels); Anek Latin with tabular figures for every amount; the slip's 56 / 48 amount and 12 letter-spaced eyebrow and stamp as in mockup 27</td></tr>
+  <tr><td>Spacing</td><td><code>gutter</code> 20 (page edge, row inset), <code>l</code> 16 (between blocks), <code>m</code> 12 (well to text), <code>s</code> 8, <code>xs</code> 4 (section text inset)</td></tr>
+  <tr><td>Radius</td><td><code>card</code> 28, <code>chip</code> 12 (chips, 40dp wells), 14 (42dp icon wells), <code>key</code> 16, 18 (the nudge row and the wide key, as mockup 27), 20 (slip top corners), <code>block</code> 6 / 14 for today's bar as mockup 25</td></tr>
+  <tr><td>Glyphs</td><td>PiggyBank (new <code>AppIcons.saving</code>), Repeat (Fixed bills), ArrowLeft01, ArrowRight01, Add01, Settings01, Flag, Restaurant, Car01, ShoppingBag, Home01, Delete02, Backspace</td></tr>
+</table>
+
+<h2>For you to decide</h2>
+<ul>
+  <li><b>"Fixed bills" or "Bills"?</b> Spec §5 renames the Settings row to <i>Bills</i>; the plan and this mockup keep <i>Fixed bills</i>, because Phase 1 has no changing bills yet. Drawn: <i>Fixed bills</i>, renamed in Phase 2.</li>
+  <li><b>The Home frame is a composite.</b> The <i>Saved</i> row shows on the 10th itself, and the nudge one to five days before it, so the same RD never shows both on one day. With the RD on the 10th, "on Thu" is Thu 10 Dec 2026. The hero keeps 26 Oct's numbers, since nothing in it changes.</li>
+  <li><b>Day wording.</b> The brief says "10th"; bills say "Every month on day 29". Drawn: "10th" on the slip row and "Every month on the 10th" on the list, both marked draft for the copy deck.</li>
+</ul>
+
+<script>
+const P = {
+  piggy: '<path d="M19 9.5c.9.8 1.5 1.7 1.8 2.7H22v3.3h-1.4c-.5 1-1.3 1.9-2.3 2.5V20h-2.6v-1.3h-4.4V20H8.7v-2.2C6.4 16.6 5 14.6 5 12.3c0-3.6 3.4-6.5 7.6-6.5 1.2 0 2.4.2 3.4.7L18.8 5z"/><path d="M5 11.3c-1.4 0-2.3-.8-2.3-2"/><path d="M10.5 8.6h3.6"/><path d="M16.6 11h.01"/>',
+  bill: '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/>',
+  food: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/>',
+  car: '<path d="M3 17v-4l2.2-5.5h13.6L21 13v4z"/><path d="M3 13h18"/><path d="M6 17v2.5M18 17v2.5"/>',
+  bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  back: '<path d="M15 6l-6 6 6 6"/>',
+  prev: '<path d="M14 7l-5 5 5 5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
+  bs: '<path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+};
+const ic = (k, label) => `<svg class="i" viewBox="0 0 24 24" role="img" aria-label="${label || k}">${P[k]}</svg>`;
+const draft = '<span class="draft">draft</span>';
+const dock = on => `<div class="dock"><span class="${on === 'home' ? 'on' : ''}">Home</span><span class="add">${ic('plus', 'Add')}</span><span class="${on === 'spends' ? 'on' : ''}">Spends</span></div>`;
+
+const settings = () => `<div class="page">
+  <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Settings</span></div>
+  <div class="secHd">Money</div>
+  <div class="card">
+    <div class="row"><span class="w">${ic('bill', 'Fixed bills')}</span><span class="t">Fixed bills</span>${ic('chev', 'Opens')}</div>
+    <div class="row"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">Savings</span>${ic('chev', 'Opens')}</div>
+  </div>
+</div>`;
+
+const savingsList = () => `<div class="page">
+  <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Savings</span></div>
+  <p class="hint">Money you put away on the same day every month, like an RD. Today's share already leaves room for it.</p>
+  <span class="chip">${ic('plus', 'Add')} Add a saving</span>
+  <div class="card">
+    <div class="row"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">RD<span>Every month on the 10th${draft}</span></span><b>₹5,000</b></div>
+  </div>
+  <div class="foot"><span><b>₹5,000</b> put in since Oct</span></div>
+  <span class="chip">${ic('piggy', 'Saving')} Put in extra</span>
+</div>`;
+
+const perf = '<div class="perf"><i class="l"></i><i class="r"></i></div>';
+const line = (label, v) => `<div class="line"><span>${label}</span><i class="lead"></i><span class="v">${v}</span>${ic('chev', 'Change')}</div>`;
+const savingSheet = () => `${savingsList()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="slip">
+    <div class="eyebrow">Saving</div>
+    <div class="who"><span class="w">${ic('piggy', 'Saving')}</span><span class="nm">RD</span></div>
+    <div class="amtRow"><div class="big"><span class="rs">₹</span>5,000</div><div class="stamp">Put in 10 Oct</div></div>
+    <div class="every">Every month on the 10th${draft}</div>
+    ${perf}
+    ${line('Amount', '₹5,000')}
+    ${line('Day of the month', '10th')}
+    ${line('Name', 'RD')}
+    ${perf}
+    <div class="slipFoot">Next goes in on <b>10 Nov</b></div>
+  </div>
+  <div class="wide del">${ic('trash', 'Delete')} Delete saving</div>
+</div>`;
+
+const putIn = () => `${savingsList()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="stepHd"><div class="q">How much extra are you putting in?</div></div>
+  <div class="slip compact">
+    <div class="who"><span class="w">${ic('piggy', 'Saving')}</span><span class="nm">Put in extra</span></div>
+    <div class="big"><span class="rs">₹</span>500<span class="caret"></span></div>
+    <div class="preview">${ic('info', 'Note')}<span>Each day till payday gets <b>₹62</b> less</span></div>
+  </div>
+  <div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<div class="key">${k}</div>`).join('')}<div class="key">${ic('bs', 'Delete last digit')}</div></div>
+  <div class="wide sig">Save</div>
+</div>`;
+
+const home = () => `<div class="page dense">
+  <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+  <div class="hero">
+    <div class="ttl">Safe to spend today</div>
+    <div class="amt"><span class="rs">₹</span>874</div>
+    <div class="tbar"><span class="f" style="flex:874"></span><span class="bite" style="flex:380"></span><span class="bite end" style="flex:40;min-width:4px"></span></div>
+    <div class="names"><span style="flex:874"></span><span style="flex:380">Food</span><span style="flex:40;min-width:4px"></span></div>
+    <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹1,294</b> for today</span></div>
+    <div class="rail"><span class="dots"><i class="t"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="pf">${ic('flag', 'Payday')} 4 Nov</span></div>
+    <div class="capRow"><span>Today</span><span>9 days to payday</span></div>
+  </div>
+  <div class="nudge"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">RD <b>₹5,000</b> goes in on Thu<span>Thu, 10 Dec</span></span>${ic('chev', 'Opens the saving')}</div>
+  <div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>
+  <div class="card">
+    <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Lunch<span>Food</span></span><b>₹380</b></div>
+    <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Chai<span>Food</span></span><b>₹40</b></div>
+    <div class="row"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">RD<span>Saved</span></span><b>₹5,000</b></div>
+  </div>
+</div>${dock('home')}`;
+
+const cats = [['home', 'Bills', 59, 16200], ['food', 'Food', 22, 6140], ['car', 'Travel', 10, 2830], ['bag', 'Shopping', 9, 2400]];
+const spends = () => `<div class="page">
+  <div class="topbar"><span class="well40">${ic('prev', 'September')}</span><span class="mid">October</span><span class="well40" style="opacity:.4">${ic('chev', 'November')}</span></div>
+  <div class="card pace"><svg viewBox="0 0 320 128" aria-label="Pace chart">
+    <path d="M20 112 L300 20" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+    <path d="M20 112 L60 96 L100 88 L130 70 L170 62 L210 52 L236 40" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="236" cy="40" r="4" fill="var(--ink)"/></svg></div>
+  <div class="tally">Spent <b>₹27,570</b> · Saved <b>₹5,000</b></div>
+  <div class="card">
+    <div class="cardHd">Where it went</div>
+    ${cats.map(([k, n, p, v]) => `<div class="cat"><div class="top"><span class="w">${ic(k, n)}</span><span class="n">${n} <span class="pc">${p}%</span></span><b>₹${v.toLocaleString('en-IN')}</b></div><div class="track"><i style="width:${p / 59 * 100}%"></i></div></div>`).join('')}
+  </div>
+</div>${dock('spends')}`;
+
+const FRAMES = [
+  ['1. Settings', settings, 'The Money card gains <b>Savings</b> under <i>Fixed bills</i>. Both rows are the same <code>SettingsRow</code>; only the glyph and the word differ.'],
+  ['2. The Savings list', savingsList, 'The Fixed bills page switched to <code>saved</code>. The footer counts every save since the first one (never "balance" or "worth"); it hides until something has gone in. <i>Put in extra</i> opens frame 4.'],
+  ['3. The saving sheet', savingSheet, 'Mockup 27\'s slip with three rows: a saving always shows the piggy bank, so there is no Icon row. The stamp reads <i>Put in 10 Oct</i> after it posted; within 5 days of the 10th it reads <i>In 3 days</i> or <i>Goes in tomorrow</i>. <i>Delete saving</i> is grey, with Undo.'],
+  ['4. Put in extra', putIn, 'Straight onto the keypad, no Back (it has one step). ₹500 leaves today\'s ₹874 as it is and takes ₹62 off each later day (₹1,403 → ₹1,341). At most what is left, ₹11,230. Save is the sheet\'s only marigold.'],
+  ['5. Home', home, 'A composite (see <i>For you to decide</i>). The RD row reads <i>Saved</i> with the piggy bank and no colour. It is not a bite: the bar holds only chai and lunch, and the list total stays ₹420. The nudge row opens frame 3.'],
+  ['6. Spends', spends, 'One line between the pace card and <i>Where it went</i>. The ₹5,000 is in neither the bars, the percentages nor the pace line.'],
+];
+document.getElementById('frames').innerHTML = FRAMES.map(([t, f, why]) => `<h2>${t}</h2>
+  <div class="pair">
+    <figure><div class="phone light">${f()}</div><figcaption>Light</figcaption></figure>
+    <figure><div class="phone dark">${f()}</div><figcaption>Dark</figcaption></figure>
+  </div><p class="why">${why}</p>`).join('');
+</script>
+</body>
+</html>

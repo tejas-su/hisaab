@@ -1,3 +1,5 @@
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'dart:ui';
 
 import 'package:expense_tracker/core/errors/failure.dart';
@@ -15,6 +17,7 @@ import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
+import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
@@ -254,6 +257,36 @@ void main() {
     testWidgets('the bill holds at 1.5× text on a small phone', (WidgetTester tester) async {
       await open(tester, size: TestWindows.smallPhone, textScale: 1.5);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('BillSheet: a saving (D120)', () {
+    testWidgets('a saving\'s sheet: eyebrow, 3 rows, stamp, delete', (WidgetTester tester) async {
+      ledger.entries.add(Entry(
+        id: 50,
+        amount: Money.fromMajor(5000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        date: const CalendarDate(2026, 10, 10),
+        createdAt: WorkedExample.now,
+        recurringId: WorkedExample.rd.id,
+      ));
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      await open(tester, rule: WorkedExample.rd);
+      expect(find.text('Saving'), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('bill-row-icon')), findsNothing);
+      expect(find.byKey(const ValueKey<String>('bill-row-amount')), findsOneWidget);
+      expect(find.text('Put in 10 Oct'), findsOneWidget);
+      expect(find.text('Next goes in on 10 Nov'), findsOneWidget);
+      expect(find.text('Delete saving'), findsOneWidget);
+    });
+
+    testWidgets('a saving\'s name question has no icon line', (WidgetTester tester) async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      await open(tester, rule: WorkedExample.rd);
+      await tapRow(tester, 'name');
+      expect(find.text('Every month on day 10'), findsWidgets);
+      expect(find.textContaining('icon'), findsNothing);
     });
   });
 }

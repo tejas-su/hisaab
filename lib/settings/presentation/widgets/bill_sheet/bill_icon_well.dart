@@ -4,13 +4,13 @@ import '../../../../core/design/app_icon.dart';
 import '../../../../core/design/hisaab_dimensions.dart';
 import '../../../../core/design/hisaab_shapes.dart';
 import '../../../../core/extensions/build_context_extensions.dart';
-import '../../../../ledger/ledger.dart';
+import '../../../../core/design/app_icons.dart';
 
-/// A bill's icon in a 40dp `sunk` well (D118). Decorative: the bill's name is read beside it.
+/// A bill's or saving's [glyph] in a 40dp `sunk` well (D118, D120). Decorative: the name is read beside it.
 class BillIconWell extends StatelessWidget {
-  const BillIconWell({super.key, required this.icon});
+  const BillIconWell({super.key, required this.glyph});
 
-  final BillIcon icon;
+  final AppIconData glyph;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -18,6 +18,6 @@ class BillIconWell extends StatelessWidget {
         height: HisaabSizes.iconWell,
         alignment: Alignment.center,
         decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(HisaabRadii.chip)),
-        child: AppIcon(icon.glyph, color: context.colors.displayInk),
+        child: AppIcon(glyph, color: context.colors.displayInk),
       );
 }

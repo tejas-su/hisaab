@@ -380,7 +380,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - **AC-5** Back from a question returns to the bill. Back, a swipe down or the scrim closes the sheet; unsaved typing is dropped, saved answers stay.
     - **AC-6** *Delete bill*, a full-width `sunk` key at the foot of the bill, closes the sheet and deletes the bill with Undo (D35).
     - **AC-7** A failed save keeps the question open with "Couldn't save. Try again."
-  - Keep aside each month.
+  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "goes in". The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today (FR-SE-1 *Put in extra*).
   - My month starts on: *Payday* / *1st*.
 - **FR-SE-2** Categories: rename, change icon.
 - **FR-SE-3** Look: Light / Dark / Match phone (default).

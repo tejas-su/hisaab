@@ -28,6 +28,9 @@ abstract final class AppIcons {
   static const AppIconData delete = HugeIcons.strokeRoundedDelete02;
   static const AppIconData limit = HugeIcons.strokeRoundedTarget01;
   static const AppIconData recurring = HugeIcons.strokeRoundedRepeat;
+
+  /// A saving such as an RD (D120).
+  static const AppIconData saving = HugeIcons.strokeRoundedPiggyBank;
   static const AppIconData dropdown = HugeIcons.strokeRoundedArrowDown01;
   static const AppIconData check = HugeIcons.strokeRoundedTick02;
   static const AppIconData askReview = HugeIcons.strokeRoundedAnalytics01;

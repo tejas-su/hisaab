@@ -135,22 +135,30 @@ abstract final class AppRoutes {
           onOpenBills: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt)),
           ),
+          onOpenSavings: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt, kind: EntryKind.saved)),
+          ),
         ),
       );
 
-  /// The Fixed bills list (FR-SE-1): Add opens the bill editor, a row opens the bill sheet.
-  static Widget bills(GetIt getIt) => BlocProvider<BillsBloc>(
+  /// The Fixed bills list, or Savings for [kind] *Saved* (FR-SE-1, D120): Add opens the editor,
+  /// a row opens the sheet.
+  static Widget bills(GetIt getIt, {EntryKind kind = EntryKind.spent}) => BlocProvider<BillsBloc>(
         create: (BuildContext _) => BillsBloc(
           getBills: getIt<GetBills>(),
           deleteBill: getIt<DeleteBill>(),
           restoreBill: getIt<RestoreBill>(),
           recurring: getIt<RecurringRepository>(),
           haptics: getIt<Haptics>(),
+          getSavedTotal: getIt<GetSavedTotal>(),
+          ledger: getIt<LedgerRepository>(),
+          kind: kind,
         )..add(const BillsLoadRequested()),
         child: Builder(
           builder: (BuildContext context) => BillsPage(
+            kind: kind,
             onAdd: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (BuildContext _) => billEditor(getIt)),
+              MaterialPageRoute<void>(builder: (BuildContext _) => billEditor(getIt, kind: kind)),
             ),
             onEdit: (RecurringRule bill) async {
               final BillsBloc bills = context.read<BillsBloc>();
@@ -164,9 +172,9 @@ abstract final class AppRoutes {
         ),
       );
 
-  /// Adds a bill, one question at a time (FR-SE-1).
-  static Widget billEditor(GetIt getIt) => BlocProvider<BillEditorBloc>(
-        create: (BuildContext _) => BillEditorBloc(addBill: getIt<AddBill>(), haptics: getIt<Haptics>()),
+  /// Adds a bill, or a saving for [kind] *Saved*, one question at a time (FR-SE-1, D120).
+  static Widget billEditor(GetIt getIt, {EntryKind kind = EntryKind.spent}) => BlocProvider<BillEditorBloc>(
+        create: (BuildContext _) => BillEditorBloc(addBill: getIt<AddBill>(), haptics: getIt<Haptics>(), kind: kind),
         child: const BillEditorPage(),
       );
 

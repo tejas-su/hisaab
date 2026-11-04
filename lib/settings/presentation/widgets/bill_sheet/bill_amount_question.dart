@@ -8,6 +8,8 @@ import '../../../../core/widgets/amount_display.dart';
 import '../../../../core/widgets/keypad.dart';
 import '../../../../core/widgets/signal_key.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../../ledger/presentation/rule_glyph.dart';
+import '../../../../ledger/presentation/rule_words.dart';
 import '../../bloc/bill_sheet_bloc.dart';
 import '../../bloc/bill_sheet_event.dart';
 import '../../bloc/bill_sheet_state.dart';
@@ -29,9 +31,9 @@ class BillAmountQuestion extends StatelessWidget {
     final Money typed = Money.fromMajor(state.rupees);
     final bool changed = typed != state.rule.amount;
     return BillQuestionFrame(
-      question: strings.billAmountQuestion(state.rule.label),
+      question: strings.ruleAmountQuestion(state.rule.kind, state.rule.label),
       name: state.rule.label,
-      icon: state.rule.shownIcon,
+      glyph: state.rule.glyph,
       figure: AmountDisplay(amount: typed, rejections: state.rejections),
       caption: changed
           ? strings.billWas(context.money.format(state.rule.amount))

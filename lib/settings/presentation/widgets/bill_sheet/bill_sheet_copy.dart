@@ -5,18 +5,20 @@ import '../../../../core/extensions/build_context_extensions.dart';
 import '../../../../core/time/calendar_date.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../../ledger/ledger.dart';
+import '../../../../ledger/presentation/rule_words.dart';
 
 /// The bill sheet's derived words: the stamp, short dates and icon names (SPEC BR-9, D118).
 extension BillSheetCopy on BuildContext {
-  /// The stamp's text for [status], or null when the bill has no stamp.
-  String? stampText(BillStatus status) {
+  /// The stamp's text for [status], or null when there is no stamp; a saving's [kind] says
+  /// "goes in" and "put in" (D120).
+  String? stampText(BillStatus status, {EntryKind kind = EntryKind.spent}) {
     final AppLocalizations strings = AppLocalizations.of(this);
     // why: daysAway counts from today, so the stamp needs no clock of its own.
     final CalendarDate today = status.nextDate.addDays(-status.daysAway);
     return switch (status.stamp) {
-      BillStampDue(:final int days) => strings.billStampDue(days),
-      BillStampCounted(:final CalendarDate on) when on == today => strings.billStampCountedToday,
-      BillStampCounted(:final CalendarDate on) => strings.billStampCounted(shortDate(on)),
+      BillStampDue(:final int days) => strings.ruleStampDue(kind, days),
+      BillStampCounted(:final CalendarDate on) when on == today => strings.ruleStampCountedToday(kind),
+      BillStampCounted(:final CalendarDate on) => strings.ruleStampCounted(kind, shortDate(on)),
       BillStampNone() => null,
     };
   }

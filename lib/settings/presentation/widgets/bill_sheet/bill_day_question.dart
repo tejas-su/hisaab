@@ -5,6 +5,8 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/day_of_month_grid.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../../ledger/presentation/rule_glyph.dart';
+import '../../../../ledger/presentation/rule_words.dart';
 import '../../bloc/bill_sheet_bloc.dart';
 import '../../bloc/bill_sheet_event.dart';
 import '../../bloc/bill_sheet_state.dart';
@@ -22,9 +24,9 @@ class BillDayQuestion extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final int day = state.rule.schedule.anchor.day;
     return BillQuestionFrame(
-      question: strings.billDayQuestion(state.rule.label),
+      question: strings.ruleDayQuestion(state.rule.kind, state.rule.label),
       name: state.rule.label,
-      icon: state.rule.shownIcon,
+      glyph: state.rule.glyph,
       figure: AmountText(state.rule.amount, roll: false, style: Theme.of(context).textTheme.displaySmall),
       caption: strings.billEveryMonth(day),
       saveFailed: state.saveFailed,

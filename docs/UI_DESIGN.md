@@ -401,7 +401,7 @@ Two layers only: the grey page and near-white cards, the same build as the Today
     - A question replaces the rows inside the sheet, under a compact slip (name, amount, icon): the keypad with *Save*, showing "Was ₹1,200" under the typed amount; the 1–31 grid; the name field (no pills), with a line saying whether the icon follows the name; or a 4-column grid of the 16 icons in `sunk` wells, labelled under each. Back sits top left.
     - **Picked state** (the day grid and the icon grid): the bill's current day or icon lifts one layer to `control` (as a chip on the page), its label turns Semibold, and a 6dp `ink` dot sits 6dp in from its top end corner. TalkBack announces it as selected.
     - Bill icons sit in `sunk` icon wells everywhere: the slip, the Fixed bills rows, the grid and Home's due-soon row.
-  - Keep aside each month
+  - Savings (D120, mockup [28](design/mockups/28-savings.html)): a second row under Fixed bills with the piggy-bank glyph. The list, wizard and sheet are the bill ones with a saving's words ("goes in", "put in"); the sheet drops the Icon row. Under the list, a `ink2` footer "₹5,000 put in since Oct", and a *Put in extra* chip beside *Add a saving* (never marigold; only the keypad's Save is).
   - My month starts on: *Payday* (default) / *1st*
 - **Categories:** rename, change icon.
 - **Look:** Light / Dark / Match phone (default).

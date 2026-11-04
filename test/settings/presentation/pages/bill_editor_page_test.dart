@@ -22,11 +22,12 @@ void main() {
   late FakeRecurringRepository recurring;
   late BillEditorBloc bloc;
 
-  BillEditorBloc build() {
+  BillEditorBloc build({EntryKind kind = EntryKind.spent}) {
     final FakeClock clock = FakeClock(WorkedExample.now);
     return BillEditorBloc(
       addBill: AddBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
       haptics: FakeHaptics(),
+      kind: kind,
     );
   }
 
@@ -44,8 +45,9 @@ void main() {
     WidgetTester tester, {
     Size size = TestWindows.phone,
     double textScale = 1,
+    EntryKind kind = EntryKind.spent,
   }) async {
-    bloc = await tester.buildBloc(build);
+    bloc = await tester.buildBloc(() => build(kind: kind));
     await pumpApp(tester, const Scaffold(), size: size, textScale: textScale);
     tester.state<NavigatorState>(find.byType(Navigator)).push(
       MaterialPageRoute<void>(
@@ -326,5 +328,23 @@ void main() {
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     await expectLater(tester, meetsGuideline(textContrastGuideline));
     handle.dispose();
+  });
+
+  group('BillEditorPage: adding a saving (D120)', () {
+    testWidgets('the saving questions say goes in', (WidgetTester tester) async {
+      await open(tester, kind: EntryKind.saved);
+      expect(find.text('What do you save in?'), findsOneWidget);
+      for (final String pill in <String>['rd', 'sip', 'goldScheme', 'chit']) {
+        expect(find.byKey(ValueKey<String>('saving-$pill')), findsOneWidget);
+      }
+      expect(find.byKey(const ValueKey<String>('bill-rent')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey<String>('saving-rd')));
+      await tester.settle();
+      await next(tester);
+      expect(find.text('How much goes into RD?'), findsOneWidget);
+      await keys(tester, '5000');
+      await next(tester);
+      expect(find.text('Which day does RD go in?'), findsOneWidget);
+    });
   });
 }

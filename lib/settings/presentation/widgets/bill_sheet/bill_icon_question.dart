@@ -27,7 +27,7 @@ class BillIconQuestion extends StatelessWidget {
     return BillQuestionFrame(
       question: strings.billIconQuestion(state.rule.label),
       name: state.rule.label,
-      icon: state.rule.shownIcon,
+      glyph: state.rule.shownIcon.glyph,
       figure: AmountText(state.rule.amount, roll: false, style: Theme.of(context).textTheme.displaySmall),
       caption: suggested == BillIcon.bill ? strings.billIconNoMatch : strings.billIconFromName(context.iconName(suggested)),
       saveFailed: state.saveFailed,

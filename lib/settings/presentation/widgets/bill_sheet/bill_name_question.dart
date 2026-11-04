@@ -8,6 +8,8 @@ import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/signal_key.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../../ledger/ledger.dart';
+import '../../../../ledger/presentation/rule_glyph.dart';
+import '../../../../ledger/presentation/rule_words.dart';
 import '../../bloc/bill_sheet_bloc.dart';
 import '../../bloc/bill_sheet_event.dart';
 import '../../bloc/bill_sheet_state.dart';
@@ -40,11 +42,13 @@ class _BillNameQuestionState extends State<BillNameQuestion> {
     final BillSheetBloc bloc = context.read<BillSheetBloc>();
     final BillSheetReady state = widget.state;
     final BillIcon icon = state.rule.icon.getOrElse(() => BillIcon.forName(state.draftName));
+    // why: a saving always shows the piggy bank, so its name never moves an icon (D120).
+    final bool isSaving = state.rule.kind == EntryKind.saved;
     final bool canSave = state.draftName.trim().isNotEmpty && !state.saving;
     return BillQuestionFrame(
-      question: strings.billNameQuestion,
+      question: strings.ruleNameQuestion(state.rule.kind),
       name: state.draftName,
-      icon: icon,
+      glyph: isSaving ? state.rule.glyph : icon.glyph,
       figure: AmountText(state.rule.amount, roll: false, style: Theme.of(context).textTheme.displaySmall),
       caption: strings.billEveryMonth(state.rule.schedule.anchor.day),
       saveFailed: state.saveFailed,
@@ -64,14 +68,16 @@ class _BillNameQuestionState extends State<BillNameQuestion> {
             onTapOutside: (PointerDownEvent _) => FocusScope.of(context).unfocus(),
             decoration: InputDecoration(labelText: strings.billNameLabel, counterText: ''),
           ),
-          const SizedBox(height: HisaabSpacing.s),
-          Row(
-            children: <Widget>[
-              AppIcon(icon.glyph, size: 16),
-              const SizedBox(width: 6),
-              Expanded(child: Text(_iconLine(context, state), style: Theme.of(context).textTheme.bodySmall)),
-            ],
-          ),
+          if (!isSaving) ...<Widget>[
+            const SizedBox(height: HisaabSpacing.s),
+            Row(
+              children: <Widget>[
+                AppIcon(icon.glyph, size: 16),
+                const SizedBox(width: 6),
+                Expanded(child: Text(_iconLine(context, state), style: Theme.of(context).textTheme.bodySmall)),
+              ],
+            ),
+          ],
           const SizedBox(height: HisaabSpacing.l),
           SignalKey(
             key: const ValueKey<String>('bill-sheet-save'),

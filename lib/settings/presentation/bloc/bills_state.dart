@@ -17,19 +17,29 @@ final class BillsLoading extends BillsState {
   const BillsLoading();
 }
 
-/// The bills, soonest first. [undo] holds a bill just deleted, so the page can offer Undo once.
+/// The bills (or savings), soonest first. [undo] holds one just deleted, so the page can offer
+/// Undo once; [saved] is the savings list's "put in" total, [None] for bills or before any save.
 final class BillsReady extends BillsState {
-  const BillsReady({required this.bills, this.undo = const Option<RecurringRule>.none()});
+  const BillsReady({
+    required this.bills,
+    this.undo = const Option<RecurringRule>.none(),
+    this.saved = const Option<SavedTotal>.none(),
+  });
 
   final List<RecurringRule> bills;
   final Option<RecurringRule> undo;
+  final Option<SavedTotal> saved;
 
-  /// Returns a copy with the given fields replaced; [undo] resets unless passed.
-  BillsReady copyWith({List<RecurringRule>? bills, Option<RecurringRule> undo = const Option<RecurringRule>.none()}) =>
-      BillsReady(bills: bills ?? this.bills, undo: undo);
+  /// Returns a copy with the given fields replaced; [undo] and [saved] reset unless passed.
+  BillsReady copyWith({
+    List<RecurringRule>? bills,
+    Option<RecurringRule> undo = const Option<RecurringRule>.none(),
+    Option<SavedTotal> saved = const Option<SavedTotal>.none(),
+  }) =>
+      BillsReady(bills: bills ?? this.bills, undo: undo, saved: saved);
 
   @override
-  List<Object?> get props => <Object?>[bills, undo];
+  List<Object?> get props => <Object?>[bills, undo, saved];
 }
 
 /// Loading failed; a quiet message with Try again.

@@ -664,6 +664,145 @@ class AppLocalizationsEn extends AppLocalizations {
       'No fixed bills yet. Add rent, EMI or anything that goes out every month.';
 
   @override
+  String get savings => 'Savings';
+
+  @override
+  String get savingsHint =>
+      'Money you put away on the same day every month, like an RD. It goes in by itself on its day. Today\'s share already leaves room for it.';
+
+  @override
+  String get addSaving => 'Add a saving';
+
+  @override
+  String get noSavings =>
+      'No savings added yet. Add an RD, SIP or anything you put in every month.';
+
+  @override
+  String savingName(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'rd': 'RD',
+      'sip': 'SIP',
+      'goldScheme': 'Gold scheme',
+      'chit': 'Chit',
+      'other': 'Saving',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get savingNameQuestion => 'What do you save in?';
+
+  @override
+  String get savingNameHint => 'RD, SIP, gold scheme…';
+
+  @override
+  String savingAmountQuestion(String saving) {
+    return 'How much goes into $saving?';
+  }
+
+  @override
+  String savingDayQuestion(String saving) {
+    return 'Which day does $saving go in?';
+  }
+
+  @override
+  String get savingSheetEyebrow => 'Saving';
+
+  @override
+  String get deleteSaving => 'Delete saving';
+
+  @override
+  String savingDeleted(String saving) {
+    return 'Deleted $saving';
+  }
+
+  @override
+  String savingStampDue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Goes in $days days from now',
+      one: 'Goes in tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savingStampCounted(String date) {
+    return 'Put in $date';
+  }
+
+  @override
+  String get savingStampCountedToday => 'Put in today';
+
+  @override
+  String savingNextGoesIn(String date) {
+    return 'Next goes in on $date';
+  }
+
+  @override
+  String savingSlipSpoken(String saving, String amount, int day) {
+    return '$saving, $amount, every month on day $day';
+  }
+
+  @override
+  String savingGoesIn(String saving, String amount, int days, String weekday) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'on $weekday',
+      one: 'tomorrow',
+    );
+    return '$saving $amount goes in $_temp0';
+  }
+
+  @override
+  String get dueSoonOpensSaving => 'Opens the saving.';
+
+  @override
+  String get entrySaved => 'Saved';
+
+  @override
+  String get entryPutInExtra => 'Put in extra';
+
+  @override
+  String savedSince(String amount, String month) {
+    return '$amount put in since $month';
+  }
+
+  @override
+  String get putInExtra => 'Put in extra';
+
+  @override
+  String get putInQuestion => 'How much extra are you putting in?';
+
+  @override
+  String putInEachDayLess(String end, String amount) {
+    String _temp0 = intl.Intl.selectLogic(end, {
+      'monthEnd': 'Each day till month end gets $amount less',
+      'other': 'Each day till payday gets $amount less',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String putInLastDay(String end) {
+    String _temp0 = intl.Intl.selectLogic(end, {
+      'monthEnd': 'The month ends today.',
+      'other': 'Payday\'s tomorrow.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get putInNothingLeft => 'Nothing left to put in for now.';
+
+  @override
+  String spentAndSaved(String spent, String saved) {
+    return 'Spent $spent · Saved $saved';
+  }
+
+  @override
   String billEveryMonth(int day) {
     return 'Every month on day $day';
   }

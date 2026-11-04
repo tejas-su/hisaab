@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bills_bloc.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bills_event.dart';
@@ -10,13 +12,16 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
+import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
+import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 
 void main() {
   late FakeRecurringRepository recurring;
   late FakeHaptics haptics;
   late BillsBloc bloc;
+  late FakeLedgerRepository ledger;
 
   BillsBloc build(FakeRecurringRepository repository) => BillsBloc(
         getBills: GetBills(recurring: repository),
@@ -24,9 +29,12 @@ void main() {
         restoreBill: RestoreBill(recurring: repository),
         recurring: repository,
         haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: ledger),
+        ledger: ledger,
       );
 
   setUp(() {
+    ledger = FakeLedgerRepository(WorkedExample.entries);
     recurring = FakeRecurringRepository(WorkedExample.rules);
     haptics = FakeHaptics();
     bloc = build(recurring);
@@ -146,5 +154,57 @@ void main() {
     expect(const BillsLoadRequested().props, isEmpty);
     expect(BillsDeleteRequested(WorkedExample.rent).props, <Object?>[WorkedExample.rent]);
     expect(BillsUndoRequested(WorkedExample.rent), BillsUndoRequested(WorkedExample.rent));
+  });
+
+  group('BillsBloc for savings (D120)', () {
+    late BillsBloc savings;
+
+    setUp(() {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      ledger.entries.add(Entry(
+        id: 50,
+        amount: Money.fromMajor(5000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        date: const CalendarDate(2026, 10, 10),
+        createdAt: WorkedExample.now,
+        recurringId: 4,
+      ));
+      savings = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: ledger),
+        ledger: ledger,
+        kind: EntryKind.saved,
+      );
+    });
+
+    tearDown(() => savings.close());
+
+    test('a savings list loads saving rules and the total', () async {
+      await savings.dispatch(const BillsLoadRequested());
+      expect(
+        savings.state,
+        BillsReady(
+          bills: <RecurringRule>[WorkedExample.rd],
+          saved: Option<SavedTotal>.of(SavedTotal(total: Money.fromMajor(5000), since: const CalendarDate(2026, 10, 10))),
+        ),
+      );
+    });
+
+    test('a savings list reloads when an entry changes', () async {
+      await savings.dispatch(const BillsLoadRequested());
+      await ledger.add(EntryDraft(amount: Money.fromMajor(500), kind: EntryKind.saved, categoryId: SeedCategoryIds.saved, date: WorkedExample.today)).run();
+      await pumpEventQueue();
+      expect((savings.state as BillsReady).saved.map((SavedTotal t) => t.total), Option<Money>.of(Money.fromMajor(5500)));
+    });
+
+    test('a bills list never loads a total', () async {
+      await bloc.dispatch(const BillsLoadRequested());
+      expect(ready().saved, const Option<SavedTotal>.none());
+    });
   });
 }

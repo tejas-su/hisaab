@@ -11,6 +11,7 @@ import '../../../core/widgets/amount_display.dart';
 import '../../../core/widgets/keypad.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../ledger/presentation/rule_words.dart';
 import '../bloc/bill_editor_bloc.dart';
 import '../bloc/bill_editor_event.dart';
 import '../bloc/bill_editor_state.dart';
@@ -29,7 +30,7 @@ class BillAmountStep extends StatelessWidget {
     final bool short = context.layout.heightClass == HeightClass.compact;
     return AdaptiveSplit(
       header: BillQuestion(
-        question: strings.billAmountQuestion(form.label),
+        question: strings.ruleAmountQuestion(context.read<BillEditorBloc>().kind, form.label),
         children: <Widget>[
           const SizedBox(height: 22),
           AmountDisplay(amount: Money.fromMajor(form.rupees), rejections: form.rejections),

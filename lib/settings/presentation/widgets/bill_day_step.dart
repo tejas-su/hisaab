@@ -5,6 +5,7 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/widgets/adaptive_split.dart';
 import '../../../core/widgets/day_of_month_grid.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../ledger/presentation/rule_words.dart';
 import '../bloc/bill_editor_bloc.dart';
 import '../bloc/bill_editor_event.dart';
 import '../bloc/bill_editor_state.dart';
@@ -21,7 +22,7 @@ class BillDayStep extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     return AdaptiveSplit(
       header: BillQuestion(
-        question: strings.billDayQuestion(form.label),
+        question: strings.ruleDayQuestion(context.read<BillEditorBloc>().kind, form.label),
         children: <Widget>[
           if (form.saveFailed) ...<Widget>[
             const SizedBox(height: HisaabSpacing.l),

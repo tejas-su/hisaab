@@ -9,7 +9,7 @@ void main() {
   group('SettingsPage (FR-SE)', () {
     testWidgets('shows the Money group with Fixed bills, which opens', (WidgetTester tester) async {
       int opened = 0;
-      await pumpApp(tester, SettingsPage(onOpenBills: () => opened++));
+      await pumpApp(tester, SettingsPage(onOpenBills: () => opened++, onOpenSavings: () {}));
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Money'), findsOneWidget);
       await tester.tap(find.text('Fixed bills'));
@@ -17,7 +17,7 @@ void main() {
     });
 
     testWidgets('lays out on a 320dp phone at 2× text', (WidgetTester tester) async {
-      await pumpApp(tester, SettingsPage(onOpenBills: () {}), size: TestWindows.smallPhone, textScale: 2);
+      await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () {}), size: TestWindows.smallPhone, textScale: 2);
       expect(tester.takeException(), isNull);
     });
 
@@ -28,7 +28,7 @@ void main() {
       (ThemeMode.dark, Brightness.light),
     ]) {
       testWidgets('status-bar icons contrast with the page in $mode', (WidgetTester tester) async {
-        await pumpApp(tester, SettingsPage(onOpenBills: () {}), themeMode: mode);
+        await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () {}), themeMode: mode);
         final AnnotatedRegion<SystemUiOverlayStyle> bar = tester.widget(
           find.descendant(of: find.byType(AppBar), matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>)),
         );
@@ -38,11 +38,21 @@ void main() {
 
     testWidgets('meets tap-target, label and contrast guidelines', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
-      await pumpApp(tester, SettingsPage(onOpenBills: () {}));
+      await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () {}));
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       await expectLater(tester, meetsGuideline(textContrastGuideline));
       handle.dispose();
+    });
+  });
+
+  group('SettingsPage savings (D120)', () {
+    testWidgets('Savings opens the savings list', (WidgetTester tester) async {
+      int opened = 0;
+      await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () => opened++));
+      expect(find.descendant(of: find.byKey(const ValueKey<String>('open-savings')), matching: find.text('Savings')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('open-savings')));
+      expect(opened, 1);
     });
   });
 }

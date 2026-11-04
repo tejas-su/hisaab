@@ -9,12 +9,14 @@ import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
+import '../../../ledger/presentation/rule_words.dart';
 import '../bloc/bill_editor_bloc.dart';
 import '../bloc/bill_editor_event.dart';
 import '../bloc/bill_editor_state.dart';
 import 'bill_question.dart';
 
-/// Step 1 of the bill editor: type a name, or tap a common bill under the field to fill it in; Next moves on.
+/// Step 1 of the bill editor: type a name, or tap a common bill (or saving, D120) under the field to fill it in;
+/// Next moves on.
 ///
 /// The text field's controller is this widget's own leaf state.
 class BillNameStep extends StatefulWidget {
@@ -39,10 +41,38 @@ class _BillNameStepState extends State<BillNameStep> {
   }
 
   /// Fills the field with [label] and closes the keyboard, so Next is in view.
-  void _pick(BillKind kind, String label) {
+  void _pick(BillEditorEvent picked, String label) {
     _controller.text = label;
     FocusScope.of(context).unfocus();
-    context.read<BillEditorBloc>().add(BillEditorKindPicked(kind, label));
+    context.read<BillEditorBloc>().add(picked);
+  }
+
+  /// The common bills, or for a saving the common savings, that the typed name could still become.
+  List<_Pill> _pills(AppLocalizations strings, EntryKind kind) {
+    final String typed = widget.form.label.trim().toLowerCase();
+    final List<_Pill> all = kind == EntryKind.saved
+        ? <_Pill>[
+            for (final SavingKind saving in SavingKind.values)
+              _Pill(key: 'saving-${saving.name}', label: strings.savingName(saving.name), event: BillEditorSavingPicked(saving, strings.savingName(saving.name))),
+          ]
+        : <_Pill>[
+            for (final BillKind bill in BillKind.values)
+              _Pill(
+                key: 'bill-${bill.name}',
+                label: strings.billName(bill.name),
+                event: BillEditorKindPicked(bill, strings.billName(bill.name)),
+                picked: widget.form.kind == Option<BillKind>.of(bill),
+              ),
+          ];
+    final bool namesOne = all.any((_Pill pill) => pill.label.toLowerCase() == typed);
+    // why: a pill replaces the name, so with a name typed only the ones it could still become are offered. A
+    // picked bill (shown again after Back) or a name typed in full keeps all of them.
+    final bool keepAll = widget.form.kind.isSome() || namesOne;
+    return <_Pill>[
+      for (final _Pill pill in all)
+        if (keepAll || pill.label.toLowerCase().startsWith(typed))
+          pill.copyWith(picked: pill.picked || (namesOne && typed == pill.label.toLowerCase())),
+    ];
   }
 
   @override
@@ -52,21 +82,13 @@ class _BillNameStepState extends State<BillNameStep> {
     // why: two equal columns line up with the field and the key; at large text the labels wrap
     // unevenly, so one column keeps every pill the same height.
     final int columns = MediaQuery.textScalerOf(context).scale(_baseFontSize) > _baseFontSize * _oneColumnScale ? 1 : 2;
-    final String typed = widget.form.label.trim().toLowerCase();
-    final bool namesABill = BillKind.values.any((BillKind kind) => strings.billName(kind.name).toLowerCase() == typed);
-    // why: a pill replaces the name, so with a name typed only the bills it could still become are offered. A
-    // picked bill (shown again after Back) or a name typed in full keeps all of them.
-    final List<BillKind> kinds = <BillKind>[
-      for (final BillKind kind in BillKind.values)
-        if (widget.form.kind.isSome() || namesABill || strings.billName(kind.name).toLowerCase().startsWith(typed))
-          kind,
-    ];
-    final bool showPills = kinds.isNotEmpty;
+    final List<_Pill> pills = _pills(strings, bloc.kind);
+    final bool showPills = pills.isNotEmpty;
     return AdaptiveSplit(
       // why: the step sits under the editor's app bar, so window-coordinate panes would push Next off-screen.
       fullWindow: false,
       header: BillQuestion(
-        question: strings.billNameQuestion,
+        question: strings.ruleNameQuestion(bloc.kind),
         children: <Widget>[
           const SizedBox(height: HisaabSpacing.l),
           TextField(
@@ -80,7 +102,7 @@ class _BillNameStepState extends State<BillNameStep> {
             onTapOutside: (PointerDownEvent _) => FocusScope.of(context).unfocus(),
             decoration: InputDecoration(
               labelText: strings.billNameLabel,
-              hintText: strings.billNameHint,
+              hintText: strings.ruleNameHint(bloc.kind),
               counterText: '',
             ),
           ),
@@ -94,17 +116,15 @@ class _BillNameStepState extends State<BillNameStep> {
                   spacing: HisaabSpacing.s,
                   runSpacing: HisaabSpacing.s,
                   children: <Widget>[
-                    for (final BillKind kind in kinds)
+                    for (final _Pill pill in pills)
                       SizedBox(
                         width: width,
                         child: HisaabChip(
-                          key: ValueKey<String>('bill-${kind.name}'),
-                          label: strings.billName(kind.name),
+                          key: ValueKey<String>(pill.key),
+                          label: pill.label,
                           expand: true,
-                          selected:
-                              widget.form.kind == Option<BillKind>.of(kind) ||
-                              (namesABill && typed == strings.billName(kind.name).toLowerCase()),
-                          onPressed: () => _pick(kind, strings.billName(kind.name)),
+                          selected: pill.picked,
+                          onPressed: () => _pick(pill.event, pill.label),
                         ),
                       ),
                   ],
@@ -125,4 +145,16 @@ class _BillNameStepState extends State<BillNameStep> {
       ),
     );
   }
+}
+
+/// One name pill: its test [key], its [label], the [event] a tap adds, and whether it shows [picked].
+final class _Pill {
+  const _Pill({required this.key, required this.label, required this.event, this.picked = false});
+
+  final String key;
+  final String label;
+  final BillEditorEvent event;
+  final bool picked;
+
+  _Pill copyWith({required bool picked}) => _Pill(key: key, label: label, event: event, picked: picked);
 }

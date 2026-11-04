@@ -728,6 +728,207 @@
   "fixedBillsHint": "They go out by themselves on their day. Today's share already leaves room for them.",
   "addBill": "Add a bill",
   "noBills": "No fixed bills yet. Add rent, EMI or anything that goes out every month.",
+  "savings": "Savings",
+  "@savings": {
+    "description": "Settings row and list title for money put away every month (D120)"
+  },
+  "savingsHint": "Money you put away on the same day every month, like an RD. It goes in by itself on its day. Today's share already leaves room for it.",
+  "@savingsHint": {
+    "description": "Hint under the Savings title"
+  },
+  "addSaving": "Add a saving",
+  "@addSaving": {
+    "description": "Button on the Savings list"
+  },
+  "noSavings": "No savings added yet. Add an RD, SIP or anything you put in every month.",
+  "@noSavings": {
+    "description": "Empty Savings list"
+  },
+  "savingName": "{kind, select, rd{RD} sip{SIP} goldScheme{Gold scheme} chit{Chit} other{Saving}}",
+  "@savingName": {
+    "description": "Name pill for a common saving",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "savingNameQuestion": "What do you save in?",
+  "@savingNameQuestion": {
+    "description": "First question when adding a saving"
+  },
+  "savingNameHint": "RD, SIP, gold scheme…",
+  "@savingNameHint": {
+    "description": "Hint in the saving name field"
+  },
+  "savingAmountQuestion": "How much goes into {saving}?",
+  "@savingAmountQuestion": {
+    "description": "Amount question for a saving",
+    "placeholders": {
+      "saving": {
+        "type": "String"
+      }
+    }
+  },
+  "savingDayQuestion": "Which day does {saving} go in?",
+  "@savingDayQuestion": {
+    "description": "Day question for a saving",
+    "placeholders": {
+      "saving": {
+        "type": "String"
+      }
+    }
+  },
+  "savingSheetEyebrow": "Saving",
+  "@savingSheetEyebrow": {
+    "description": "Small label at the top of a saving's sheet"
+  },
+  "deleteSaving": "Delete saving",
+  "@deleteSaving": {
+    "description": "Delete key on a saving's sheet"
+  },
+  "savingDeleted": "Deleted {saving}",
+  "@savingDeleted": {
+    "description": "Snackbar after deleting a saving",
+    "placeholders": {
+      "saving": {
+        "type": "String"
+      }
+    }
+  },
+  "savingStampDue": "{days, plural, =1{Goes in tomorrow} other{Goes in {days} days from now}}",
+  "@savingStampDue": {
+    "description": "Stamp on a saving's sheet before its day",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "savingStampCounted": "Put in {date}",
+  "@savingStampCounted": {
+    "description": "Stamp on a saving's sheet once this month's went in",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingStampCountedToday": "Put in today",
+  "@savingStampCountedToday": {
+    "description": "Stamp on a saving's sheet when it went in today"
+  },
+  "savingNextGoesIn": "Next goes in on {date}",
+  "@savingNextGoesIn": {
+    "description": "Foot of a saving's sheet",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingSlipSpoken": "{saving}, {amount}, every month on day {day}",
+  "@savingSlipSpoken": {
+    "description": "TalkBack sentence for a saving's slip",
+    "placeholders": {
+      "saving": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "savingGoesIn": "{saving} {amount} goes in {days, plural, =1{tomorrow} other{on {weekday}}}",
+  "@savingGoesIn": {
+    "description": "Home nudge before a saving's day",
+    "placeholders": {
+      "saving": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "dueSoonOpensSaving": "Opens the saving.",
+  "@dueSoonOpensSaving": {
+    "description": "TalkBack hint on the saving nudge"
+  },
+  "entrySaved": "Saved",
+  "@entrySaved": {
+    "description": "Second line of a list row for money put into a saving"
+  },
+  "entryPutInExtra": "Put in extra",
+  "@entryPutInExtra": {
+    "description": "Second line of a list row for a one-off saving"
+  },
+  "savedSince": "{amount} put in since {month}",
+  "@savedSince": {
+    "description": "Footer of the Savings list: everything put in, never what it is worth",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "putInExtra": "Put in extra",
+  "@putInExtra": {
+    "description": "Button on the Savings list for a one-off saving today"
+  },
+  "putInQuestion": "How much extra are you putting in?",
+  "@putInQuestion": {
+    "description": "Question on the Put in extra keypad"
+  },
+  "putInEachDayLess": "{end, select, monthEnd{Each day till month end gets {amount} less} other{Each day till payday gets {amount} less}}",
+  "@putInEachDayLess": {
+    "description": "Preview under the Put in extra keypad",
+    "placeholders": {
+      "end": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "putInLastDay": "{end, select, monthEnd{The month ends today.} other{Payday's tomorrow.}}",
+  "@putInLastDay": {
+    "description": "Preview on the cycle's last day",
+    "placeholders": {
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "putInNothingLeft": "Nothing left to put in for now.",
+  "@putInNothingLeft": {
+    "description": "Put in extra when nothing is left"
+  },
+  "spentAndSaved": "Spent {spent} · Saved {saved}",
+  "@spentAndSaved": {
+    "description": "Spends line above Where it went",
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "saved": {
+        "type": "String"
+      }
+    }
+  },
   "billEveryMonth": "Every month on day {day}",
   "@billEveryMonth": {
     "description": "When a fixed bill goes out",

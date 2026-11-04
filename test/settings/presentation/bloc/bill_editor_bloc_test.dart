@@ -21,11 +21,12 @@ void main() {
   late FakeHaptics haptics;
   late BillEditorBloc bloc;
 
-  BillEditorBloc build() {
+  BillEditorBloc build({EntryKind kind = EntryKind.spent}) {
     final FakeClock clock = FakeClock(WorkedExample.now);
     return BillEditorBloc(
       addBill: AddBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
       haptics: haptics,
+      kind: kind,
     );
   }
 
@@ -216,5 +217,33 @@ void main() {
     expect(const BillEditorKeyPressed('5').props, <Object?>['5']);
     expect(const BillEditorDayChosen(3).props, <Object?>[3]);
     expect(const BillEditorNextPressed().props, isEmpty);
+  });
+
+  group('BillEditorBloc: adding a saving (D120)', () {
+    test('a saving is saved with its day', () async {
+      final BillEditorBloc saving = build(kind: EntryKind.saved);
+      addTearDown(saving.close);
+      await saving.dispatch(const BillEditorSavingPicked(SavingKind.rd, 'RD'));
+      expect((saving.state as BillEditorInProgress).label, 'RD');
+      expect(haptics.events, contains('tick'));
+      await saving.dispatch(const BillEditorNextPressed());
+      for (final String key in '5000'.split('')) {
+        await saving.dispatch(BillEditorKeyPressed(key));
+      }
+      await saving.dispatch(const BillEditorNextPressed());
+      await saving.dispatch(const BillEditorDayChosen(10));
+      expect(saving.state, const BillEditorSaved());
+      final RecurringRule rule = recurring.rules.last;
+      expect((rule.label, rule.kind, rule.categoryId, rule.amount), ('RD', EntryKind.saved, SeedCategoryIds.saved, Money.fromMajor(5000)));
+    });
+
+    test('a saving pick is ignored past the name', () async {
+      final BillEditorBloc saving = build(kind: EntryKind.saved);
+      addTearDown(saving.close);
+      await saving.dispatch(const BillEditorRenamed('Gold'));
+      await saving.dispatch(const BillEditorNextPressed());
+      await saving.dispatch(const BillEditorSavingPicked(SavingKind.rd, 'RD'));
+      expect((saving.state as BillEditorInProgress).label, 'Gold');
+    });
   });
 }

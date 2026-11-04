@@ -11,9 +11,12 @@ import '../widgets/settings_row.dart';
 /// Settings (SPEC FR-SE), one level deep. Today it holds the Money group's Fixed bills, which
 /// [onOpenBills] opens; the other groups arrive with their milestones.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.onOpenBills});
+  const SettingsPage({super.key, required this.onOpenBills, required this.onOpenSavings});
 
   final VoidCallback onOpenBills;
+
+  /// Opens the Savings list (D120).
+  final VoidCallback onOpenSavings;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +44,22 @@ class SettingsPage extends StatelessWidget {
               color: context.colors.surface,
               shape: HisaabShapes.squircle(HisaabRadii.card),
               clipBehavior: Clip.antiAlias,
-              child: SettingsRow(
-                key: const ValueKey<String>('open-bills'),
-                icon: AppIcons.recurring,
-                label: strings.fixedBills,
-                onTap: onOpenBills,
+              child: Column(
+                children: <Widget>[
+                  SettingsRow(
+                    key: const ValueKey<String>('open-bills'),
+                    icon: AppIcons.recurring,
+                    label: strings.fixedBills,
+                    onTap: onOpenBills,
+                  ),
+                  Divider(height: 1, thickness: 1, indent: HisaabSpacing.gutter, color: context.colors.hairline),
+                  SettingsRow(
+                    key: const ValueKey<String>('open-savings'),
+                    icon: AppIcons.saving,
+                    label: strings.savings,
+                    onTap: onOpenSavings,
+                  ),
+                ],
               ),
             ),
           ],

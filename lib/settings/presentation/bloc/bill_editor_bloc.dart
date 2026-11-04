@@ -13,16 +13,18 @@ import '../../../ledger/ledger.dart';
 import 'bill_editor_event.dart';
 import 'bill_editor_state.dart';
 
-/// Owns one fixed bill being added in Settings (SPEC FR-SE-1): its name, then its amount on the
-/// keypad, then its due day, which saves. Driven by the bill editor page. Changing a bill
-/// happens in the bill sheet instead (D118).
+/// Owns one fixed bill, or one saving when [kind] is *Saved*, being added in Settings (SPEC
+/// FR-SE-1, D120): its name, then its amount on the keypad, then its day, which saves. Driven
+/// by the bill editor page. Changing one happens in the bill sheet instead (D118).
 class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
   BillEditorBloc({
     required this._addBill,
     required this._haptics,
+    this.kind = EntryKind.spent,
   }) : super(const BillEditorInProgress()) {
     on<BillEditorRenamed>(_onRenamed);
     on<BillEditorKindPicked>(_onKindPicked);
+    on<BillEditorSavingPicked>(_onSavingPicked);
     on<BillEditorNextPressed>(_onNextPressed);
     on<BillEditorKeyPressed>(
       (BillEditorKeyPressed event, Emitter<BillEditorState> emit) =>
@@ -43,6 +45,9 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
   final AddBill _addBill;
   final Haptics _haptics;
 
+  /// What is being added: a bill (*Spent*) or a saving (*Saved*).
+  final EntryKind kind;
+
   void _onRenamed(BillEditorRenamed event, Emitter<BillEditorState> emit) => _whenAt(
         BillEditorStage.name,
         (BillEditorInProgress form) => emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none())),
@@ -55,6 +60,14 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
         (BillEditorInProgress form) {
           unawaited(_haptics.tick());
           emit(form.copyWith(label: event.label, kind: Option<BillKind>.of(event.kind)));
+        },
+      );
+
+  void _onSavingPicked(BillEditorSavingPicked event, Emitter<BillEditorState> emit) => _whenAt(
+        BillEditorStage.name,
+        (BillEditorInProgress form) {
+          unawaited(_haptics.tick());
+          emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none()));
         },
       );
 
@@ -80,7 +93,7 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
     }
     emit(current.copyWith(saving: true));
     final BillInput input = BillInput(label: current.label, amount: Money.fromMajor(current.rupees), dueDay: event.day);
-    final Either<Failure, RecurringRule> saved = await _addBill(AddBillParams(input: input, kind: current.kind)).run();
+    final Either<Failure, RecurringRule> saved = await _addBill(AddBillParams(input: input, kind: current.kind, entryKind: kind)).run();
     saved.match(
       (Failure failure) {
         AppLogger.log(tag: 'bills.save_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});

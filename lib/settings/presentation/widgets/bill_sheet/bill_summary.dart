@@ -9,6 +9,8 @@ import '../../../../core/extensions/build_context_extensions.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../../ledger/ledger.dart';
+import '../../../../ledger/presentation/rule_glyph.dart';
+import '../../../../ledger/presentation/rule_words.dart';
 import '../../bloc/bill_sheet_bloc.dart';
 import '../../bloc/bill_sheet_event.dart';
 import '../../bloc/bill_sheet_state.dart';
@@ -21,7 +23,8 @@ import 'bill_stamp_badge.dart';
 import 'bill_wide_key.dart';
 
 /// The whole bill on its slip: head, amount and stamp, the four answer rows, the next date,
-/// then *Delete bill* (SPEC FR-SE-1 AC-2, AC-6).
+/// then *Delete bill* (SPEC FR-SE-1 AC-2, AC-6). A saving has no Icon row and says "goes in"
+/// and "put in" (D120).
 class BillSummary extends StatelessWidget {
   const BillSummary({super.key, required this.state});
 
@@ -31,8 +34,10 @@ class BillSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final RecurringRule rule = state.rule;
-    final String? stamp = state.status.map(context.stampText).toNullable();
-    final String spoken = strings.billSlipSpoken(rule.label, context.iconName(rule.shownIcon), context.spokenMoney(rule), _day(rule));
+    final String? stamp = state.status.map((BillStatus status) => context.stampText(status, kind: rule.kind)).toNullable();
+    final String spoken = _isSaving
+        ? strings.savingSlipSpoken(rule.label, context.spokenMoney(rule), _day(rule))
+        : strings.billSlipSpoken(rule.label, context.iconName(rule.shownIcon), context.spokenMoney(rule), _day(rule));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,9 +54,9 @@ class BillSummary extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Text(strings.billSheetEyebrow, style: Theme.of(context).textTheme.labelSmall),
+                    Text(strings.ruleEyebrow(rule.kind), style: Theme.of(context).textTheme.labelSmall),
                     const SizedBox(height: HisaabSpacing.m),
-                    BillHead(name: rule.label, icon: rule.shownIcon),
+                    BillHead(name: rule.label, glyph: rule.glyph),
                     const SizedBox(height: 10),
                     _amountLine(context, stamp),
                     Text(
@@ -71,7 +76,7 @@ class BillSummary extends StatelessWidget {
         const SizedBox(height: HisaabSpacing.s),
         BillWideKey(
           key: const ValueKey<String>('bill-delete'),
-          label: strings.deleteBill,
+          label: strings.ruleDelete(rule.kind),
           icon: AppIcons.delete,
           onPressed: () => context.read<BillSheetBloc>().add(const BillSheetDeleteRequested()),
         ),
@@ -80,6 +85,8 @@ class BillSummary extends StatelessWidget {
   }
 
   static int _day(RecurringRule rule) => rule.schedule.anchor.day;
+
+  bool get _isSaving => state.rule.kind == EntryKind.saved;
 
   Widget _amountLine(BuildContext context, String? stamp) => Wrap(
         alignment: WrapAlignment.spaceBetween,
@@ -100,7 +107,8 @@ class BillSummary extends StatelessWidget {
       _row(context, BillAnswer.amount, strings.billAnswerAmount, amount, spoken: context.spokenMoney(rule)),
       _row(context, BillAnswer.day, strings.billAnswerDay, '${_day(rule)}'),
       _row(context, BillAnswer.name, strings.billAnswerName, rule.label),
-      _row(context, BillAnswer.icon, strings.billAnswerIcon, icon, leading: rule.shownIcon.glyph),
+      // why: a saving always shows the piggy bank, so it has no icon to change (D120).
+      if (!_isSaving) _row(context, BillAnswer.icon, strings.billAnswerIcon, icon, leading: rule.shownIcon.glyph),
     ];
   }
 
@@ -118,7 +126,8 @@ class BillSummary extends StatelessWidget {
   Widget _foot(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextStyle? style = Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.displayInk2);
-    final String? next = state.status.map((BillStatus status) => strings.billNextGoesOut(context.shortDate(status.nextDate))).toNullable();
+    final String? next =
+        state.status.map((BillStatus status) => strings.ruleNext(state.rule.kind, context.shortDate(status.nextDate))).toNullable();
     return Semantics(
       liveRegion: true,
       child: Row(

@@ -31,6 +31,17 @@ final class BillEditorKindPicked extends BillEditorEvent {
   List<Object?> get props => <Object?>[kind, label];
 }
 
+/// The user picked the common saving [kind], shown as [label] (D120). It only fills the name.
+final class BillEditorSavingPicked extends BillEditorEvent {
+  const BillEditorSavingPicked(this.kind, this.label);
+
+  final SavingKind kind;
+  final String label;
+
+  @override
+  List<Object?> get props => <Object?>[kind, label];
+}
+
 /// The user tapped Next.
 final class BillEditorNextPressed extends BillEditorEvent {
   const BillEditorNextPressed();

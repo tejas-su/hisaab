@@ -10,6 +10,7 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/focus_ring.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
+import '../../../ledger/presentation/rule_glyph.dart';
 
 /// One fixed bill: its name, its day of the month and its amount (SPEC FR-SE-1).
 ///
@@ -86,7 +87,7 @@ class BillRow extends StatelessWidget {
               height: 42,
               alignment: Alignment.center,
               decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
-              child: AppIcon(bill.shownIcon.glyph),
+              child: AppIcon(bill.glyph),
             ),
             const SizedBox(width: HisaabSpacing.m),
             Expanded(

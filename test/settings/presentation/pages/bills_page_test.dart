@@ -1,4 +1,6 @@
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bills_bloc.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bills_event.dart';
@@ -10,7 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
+import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
+import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
@@ -19,8 +23,10 @@ void main() {
   late FakeHaptics haptics;
   late BillsBloc bloc;
   late List<Object> calls;
+  late FakeLedgerRepository ledger;
 
   setUp(() {
+    ledger = FakeLedgerRepository(WorkedExample.entries);
     recurring = FakeRecurringRepository(WorkedExample.rules);
     haptics = FakeHaptics();
     bloc = BillsBloc(
@@ -29,6 +35,8 @@ void main() {
       restoreBill: RestoreBill(recurring: recurring),
       recurring: recurring,
       haptics: haptics,
+      getSavedTotal: GetSavedTotal(ledger: ledger),
+      ledger: ledger,
     );
     calls = <Object>[];
   });
@@ -147,5 +155,83 @@ void main() {
       await expectLater(tester, meetsGuideline(textContrastGuideline));
       handle.dispose();
     });
+  });
+
+  group('BillsPage for savings (D120)', () {
+    late BillsBloc savings;
+
+    setUp(() {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      savings = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: ledger),
+        ledger: ledger,
+        kind: EntryKind.saved,
+      );
+    });
+
+    tearDown(() => savings.close());
+
+    Future<void> pumpSavings(WidgetTester tester, {Size size = TestWindows.phone}) async {
+      await tester.runAsync(() => savings.dispatch(const BillsLoadRequested()));
+      await pumpApp(
+        tester,
+        BlocProvider<BillsBloc>.value(
+          value: savings,
+          child: BillsPage(
+            kind: EntryKind.saved,
+            onAdd: () => calls.add('add'),
+            onEdit: (RecurringRule rule) => calls.add(rule),
+            onPutInExtra: () => calls.add('put-in'),
+          ),
+        ),
+        size: size,
+      );
+    }
+
+    void addPostedRd() => ledger.entries.add(Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+        ));
+
+    testWidgets('the Savings list: title, add, rows, footer, Put in extra', (WidgetTester tester) async {
+      addPostedRd();
+      await pumpSavings(tester);
+      expect(find.text('Savings'), findsOneWidget);
+      expect(find.text('Add a saving'), findsOneWidget);
+      expect(find.text('RD'), findsOneWidget);
+      expect(find.text('₹5,000 put in since Oct'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('put-in-extra')));
+      expect(calls, <Object>['put-in']);
+    });
+
+    testWidgets('no saves yet: no footer', (WidgetTester tester) async {
+      await pumpSavings(tester);
+      expect(find.textContaining('put in since'), findsNothing);
+    });
+
+    for (final Size size in <Size>[
+      TestWindows.phone,
+      TestWindows.phoneLandscape,
+      TestWindows.smallPhone,
+      TestWindows.foldableUnfolded,
+      TestWindows.foldableLandscape,
+      TestWindows.tablet,
+    ]) {
+      testWidgets('the Savings list fits ${size.width.toInt()}×${size.height.toInt()}', (WidgetTester tester) async {
+        addPostedRd();
+        await pumpSavings(tester, size: size);
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

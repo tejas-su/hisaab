@@ -1003,6 +1003,174 @@ abstract class AppLocalizations {
   /// **'No fixed bills yet. Add rent, EMI or anything that goes out every month.'**
   String get noBills;
 
+  /// Settings row and list title for money put away every month (D120)
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get savings;
+
+  /// Hint under the Savings title
+  ///
+  /// In en, this message translates to:
+  /// **'Money you put away on the same day every month, like an RD. It goes in by itself on its day. Today\'s share already leaves room for it.'**
+  String get savingsHint;
+
+  /// Button on the Savings list
+  ///
+  /// In en, this message translates to:
+  /// **'Add a saving'**
+  String get addSaving;
+
+  /// Empty Savings list
+  ///
+  /// In en, this message translates to:
+  /// **'No savings added yet. Add an RD, SIP or anything you put in every month.'**
+  String get noSavings;
+
+  /// Name pill for a common saving
+  ///
+  /// In en, this message translates to:
+  /// **'{kind, select, rd{RD} sip{SIP} goldScheme{Gold scheme} chit{Chit} other{Saving}}'**
+  String savingName(String kind);
+
+  /// First question when adding a saving
+  ///
+  /// In en, this message translates to:
+  /// **'What do you save in?'**
+  String get savingNameQuestion;
+
+  /// Hint in the saving name field
+  ///
+  /// In en, this message translates to:
+  /// **'RD, SIP, gold scheme…'**
+  String get savingNameHint;
+
+  /// Amount question for a saving
+  ///
+  /// In en, this message translates to:
+  /// **'How much goes into {saving}?'**
+  String savingAmountQuestion(String saving);
+
+  /// Day question for a saving
+  ///
+  /// In en, this message translates to:
+  /// **'Which day does {saving} go in?'**
+  String savingDayQuestion(String saving);
+
+  /// Small label at the top of a saving's sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get savingSheetEyebrow;
+
+  /// Delete key on a saving's sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saving'**
+  String get deleteSaving;
+
+  /// Snackbar after deleting a saving
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {saving}'**
+  String savingDeleted(String saving);
+
+  /// Stamp on a saving's sheet before its day
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Goes in tomorrow} other{Goes in {days} days from now}}'**
+  String savingStampDue(int days);
+
+  /// Stamp on a saving's sheet once this month's went in
+  ///
+  /// In en, this message translates to:
+  /// **'Put in {date}'**
+  String savingStampCounted(String date);
+
+  /// Stamp on a saving's sheet when it went in today
+  ///
+  /// In en, this message translates to:
+  /// **'Put in today'**
+  String get savingStampCountedToday;
+
+  /// Foot of a saving's sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Next goes in on {date}'**
+  String savingNextGoesIn(String date);
+
+  /// TalkBack sentence for a saving's slip
+  ///
+  /// In en, this message translates to:
+  /// **'{saving}, {amount}, every month on day {day}'**
+  String savingSlipSpoken(String saving, String amount, int day);
+
+  /// Home nudge before a saving's day
+  ///
+  /// In en, this message translates to:
+  /// **'{saving} {amount} goes in {days, plural, =1{tomorrow} other{on {weekday}}}'**
+  String savingGoesIn(String saving, String amount, int days, String weekday);
+
+  /// TalkBack hint on the saving nudge
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the saving.'**
+  String get dueSoonOpensSaving;
+
+  /// Second line of a list row for money put into a saving
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get entrySaved;
+
+  /// Second line of a list row for a one-off saving
+  ///
+  /// In en, this message translates to:
+  /// **'Put in extra'**
+  String get entryPutInExtra;
+
+  /// Footer of the Savings list: everything put in, never what it is worth
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} put in since {month}'**
+  String savedSince(String amount, String month);
+
+  /// Button on the Savings list for a one-off saving today
+  ///
+  /// In en, this message translates to:
+  /// **'Put in extra'**
+  String get putInExtra;
+
+  /// Question on the Put in extra keypad
+  ///
+  /// In en, this message translates to:
+  /// **'How much extra are you putting in?'**
+  String get putInQuestion;
+
+  /// Preview under the Put in extra keypad
+  ///
+  /// In en, this message translates to:
+  /// **'{end, select, monthEnd{Each day till month end gets {amount} less} other{Each day till payday gets {amount} less}}'**
+  String putInEachDayLess(String end, String amount);
+
+  /// Preview on the cycle's last day
+  ///
+  /// In en, this message translates to:
+  /// **'{end, select, monthEnd{The month ends today.} other{Payday\'s tomorrow.}}'**
+  String putInLastDay(String end);
+
+  /// Put in extra when nothing is left
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left to put in for now.'**
+  String get putInNothingLeft;
+
+  /// Spends line above Where it went
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {spent} · Saved {saved}'**
+  String spentAndSaved(String spent, String saved);
+
   /// When a fixed bill goes out
   ///
   /// In en, this message translates to:
