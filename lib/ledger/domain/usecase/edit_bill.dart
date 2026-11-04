@@ -26,8 +26,8 @@ final class EditBillParams extends Equatable {
 
 /// Changes a fixed bill from Settings; only future occurrences change (SPEC BR-9, FR-SE-1).
 ///
-/// The next date moves to the new day in the month of the old `next_due`, the first month not
-/// yet posted, so a month is never posted twice. If that day has already passed, it moves to
+/// The schedule changes only when the day does. The next date then moves to the new day in the
+/// month of the old `next_due`, the first month not yet posted, so a month is never posted twice. If that day has already passed, it moves to
 /// the next due date from today, so nothing is back-posted (DECISIONS D34).
 final class EditBill implements UseCase<RecurringRule, EditBillParams> {
   const EditBill({required this._recurring, required this._clock});
@@ -43,6 +43,11 @@ final class EditBill implements UseCase<RecurringRule, EditBillParams> {
           .flatMap((BillInput input) => _recurring.update(_edited(params.rule, input)));
 
   RecurringRule _edited(RecurringRule rule, BillInput input) {
+    // why: an edit that keeps the day must not touch the schedule, or a stale next_due (the
+    // engine hasn't run yet) would skip a month that is still owed (FR-SE-1 AC-4).
+    if (input.dueDay == rule.schedule.anchor.day) {
+      return rule.copyWith(label: input.label, amount: input.amount, icon: input.icon);
+    }
     final CalendarDate today = _clock.today();
     final Schedule schedule =
         Schedule(frequency: Frequency.monthly, anchor: RecurringSchedule.monthlyAnchor(input.dueDay, near: today));

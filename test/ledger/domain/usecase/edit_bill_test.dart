@@ -73,6 +73,13 @@ void main() {
       expect((rule.amount, rule.nextDue), (Money.fromMajor(1350), const CalendarDate(2026, 11, 30)));
     });
 
+    test('an edit that keeps the day never moves a stale next date (FR-SE-1 AC-4)', () async {
+      final RecurringRule stale = WorkedExample.electricity.copyWith(nextDue: const CalendarDate(2026, 9, 29));
+      recurring.rules = <RecurringRule>[stale];
+      final RecurringRule rule = await edited(params(stale, rupees: 1350, day: 29));
+      expect((rule.amount, rule.nextDue, rule.schedule), (Money.fromMajor(1350), const CalendarDate(2026, 9, 29), stale.schedule));
+    });
+
     test('saves a picked icon, and none clears it (D118)', () async {
       final RecurringRule picked = await edited(params(WorkedExample.rent, day: 5, icon: const Option<BillIcon>.of(BillIcon.society)));
       expect(picked.icon, const Option<BillIcon>.of(BillIcon.society));
