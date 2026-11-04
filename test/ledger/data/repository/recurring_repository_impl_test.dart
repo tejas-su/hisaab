@@ -147,6 +147,24 @@ void main() {
       expect(right(await repository.activeRules().run()).last.nextDue, rule.nextDue);
     });
 
+    test('a save rule posts a Saved entry named after it (D120)', () async {
+      final RecurringRule rd = right(await repository.add(RecurringDraft(
+        label: 'RD',
+        amount: Money.fromMajor(5000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 10)),
+        nextDue: const CalendarDate(2026, 10, 10),
+      )).run());
+      right(await repository.post(RecurringPosting(
+        occurrences: <Occurrence>[Occurrence(rule: rd, date: const CalendarDate(2026, 10, 10))],
+        nextDueByRuleId: <int, CalendarDate>{rd.id: const CalendarDate(2026, 11, 10)},
+      )).run());
+      final Map<String, Object?> row = (await database.db.query(Tables.transactions, where: "${TransactionColumns.kind} = 'save'")).single;
+      expect(row[TransactionColumns.note], 'RD');
+      expect(row[TransactionColumns.recurringId], rd.id);
+    });
+
     test('returns DatabaseFailure when the database is closed', () async {
       await database.close();
       expect((await repository.activeRules().run()).getLeft().toNullable(), isA<DatabaseFailure>());

@@ -58,6 +58,31 @@ void main() {
       expect(posting.nextDueByRuleId, <int, CalendarDate>{7: const CalendarDate(2026, 10, 30)});
     });
 
+    test('a deleted RD for this month is never re-posted: its next date has moved on', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      expect(await postDue(const NoParams()).run(), Either<Failure, int>.right(0));
+    });
+
+    test('saves catch up once each after weeks away (E-g)', () async {
+      recurring.rules = <RecurringRule>[
+        RecurringRule(
+          id: WorkedExample.rd.id,
+          label: 'RD',
+          amount: WorkedExample.rd.amount,
+          kind: EntryKind.saved,
+          categoryId: WorkedExample.rd.categoryId,
+          schedule: WorkedExample.rd.schedule,
+          nextDue: const CalendarDate(2026, 10, 10),
+        ),
+      ];
+      postDue = PostDueRecurring(recurring: recurring, clock: FakeClock(DateTime(2026, 11, 26, 9)));
+      await postDue(const NoParams()).run();
+      final RecurringPosting posting = recurring.postings.single;
+      expect(posting.occurrences.map((Occurrence o) => o.date).toList(),
+          <CalendarDate>[const CalendarDate(2026, 10, 10), const CalendarDate(2026, 11, 10)]);
+      expect(posting.nextDueByRuleId, <int, CalendarDate>{4: const CalendarDate(2026, 12, 10)});
+    });
+
     test('posts an occurrence due today', () async {
       recurring.rules = <RecurringRule>[
         RecurringRule(

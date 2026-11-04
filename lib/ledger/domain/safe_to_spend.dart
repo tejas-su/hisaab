@@ -5,6 +5,7 @@ import '../../core/time/calendar_date.dart';
 import 'entities/cycle_inputs.dart';
 import 'entities/cycle_state.dart';
 import 'entities/cycle_summary.dart';
+import 'entities/put_in_preview.dart';
 import 'entities/range_forecast.dart';
 import 'entities/spend_preview.dart';
 import 'entities/week_day.dart';
@@ -35,7 +36,7 @@ abstract final class SafeToSpend {
     final int daysLeft = inputs.cycle.daysLeftFrom(inputs.today);
     final Money pool = _pool(inputs);
     final Money share = _share(pool, daysLeft);
-    final Money remaining = pool - inputs.spentToday;
+    final Money remaining = pool - inputs.spentToday - inputs.savedExtraToday;
     final RangeForecast forecast = _forecast(inputs, remaining, daysLeft);
     return CycleSummary(
       cycle: inputs.cycle,
@@ -51,6 +52,7 @@ abstract final class SafeToSpend {
       savedYesterday: yesterday.flatMap((CycleInputs before) => _savedYesterday(before, daysLeft)),
       week: week,
       endsAtMonthEnd: endsAtMonthEnd,
+      savedExtraToday: inputs.savedExtraToday,
     );
   }
 
@@ -66,8 +68,20 @@ abstract final class SafeToSpend {
     }
     return OverTodayShare(
       over: Money.zero - left,
-      tomorrow: _laterShare(summary.pool - spentAfter, summary.daysLeft),
+      tomorrow: _laterShare(summary.remaining - amount, summary.daysLeft),
     );
+  }
+
+  /// Previews putting [amount] into savings today against [summary] (D120): each later day
+  /// gets the difference in tomorrow's share, or [PaydayTomorrow] on the cycle's last day.
+  static PutInPreview previewPutIn(CycleSummary summary, Money amount) {
+    final int daysLeft = summary.daysLeft;
+    if (daysLeft <= 1) {
+      return const PaydayTomorrow();
+    }
+    final Money before = _floorShare(summary.remaining, daysLeft - 1);
+    final Money after = _floorShare(summary.remaining - amount, daysLeft - 1);
+    return EachDayLess(before - after);
   }
 
   static Money _pool(CycleInputs inputs) =>

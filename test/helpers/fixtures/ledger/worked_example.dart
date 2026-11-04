@@ -44,6 +44,17 @@ abstract final class WorkedExample {
     nextDue: const CalendarDate(2026, 10, 29),
   );
 
+  /// A ₹5,000 RD on the 10th, already posted this cycle (D120). Not in [rules]; tests add it.
+  static final RecurringRule rd = RecurringRule(
+    id: 4,
+    label: 'RD',
+    amount: Money.fromMajor(5000),
+    kind: EntryKind.saved,
+    categoryId: SeedCategoryIds.saved,
+    schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 10)),
+    nextDue: const CalendarDate(2026, 11, 10),
+  );
+
   static List<RecurringRule> get rules => <RecurringRule>[salary, rent, electricity];
 
   /// I = ₹45,000; S_prev = ₹27,150 (₹8,200 rent + ₹18,950 typed); S_today = ₹420.

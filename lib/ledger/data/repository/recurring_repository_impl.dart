@@ -7,6 +7,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../domain/entities/entry_draft.dart';
+import '../../domain/entities/entry_kind.dart';
 import '../../domain/entities/ledger_setup.dart';
 import '../../domain/entities/occurrence.dart';
 import '../../domain/entities/recurring_draft.dart';
@@ -99,8 +100,14 @@ final class RecurringRepositoryImpl implements RecurringRepository {
 
   Either<Failure, EntryModel> _validatedModel(Occurrence occurrence) {
     final RecurringRule rule = occurrence.rule;
-    final EntryDraft draft =
-        EntryDraft(amount: rule.amount, kind: rule.kind, categoryId: rule.categoryId, date: occurrence.date);
+    // why: a saving's entry carries its rule's name, so the Today row can say "RD" (D120).
+    final EntryDraft draft = EntryDraft(
+      amount: rule.amount,
+      kind: rule.kind,
+      categoryId: rule.categoryId,
+      date: occurrence.date,
+      note: rule.kind == EntryKind.saved ? rule.label : null,
+    );
     return EntryValidator.validate(draft, today: occurrence.date).map(
       (EntryDraft valid) => EntryMapper.toModel(valid, createdAt: _clock.now(), recurringId: rule.id),
     );

@@ -25,6 +25,7 @@ final class CycleSummary extends Equatable {
     this.savedYesterday = const Option<YesterdaySaving>.none(),
     this.week = const <WeekDay>[],
     this.endsAtMonthEnd = false,
+    this.savedExtraToday = Money.zero,
   });
 
   final PayCycle cycle;
@@ -61,6 +62,12 @@ final class CycleSummary extends Equatable {
   /// ends at month end and has no payday to count down to (BR-1; DECISIONS D116).
   final bool endsAtMonthEnd;
 
+  /// Money put in extra today; it thins the days after today, never today's share (D120).
+  final Money savedExtraToday;
+
+  /// What is left for the rest of the cycle after today's spending and today's extras (BR-4).
+  Money get remaining => pool - spentToday - savedExtraToday;
+
   /// `D`: days left including today (BR-2).
   int get daysLeft => cycle.daysLeftFrom(today);
 
@@ -77,5 +84,5 @@ final class CycleSummary extends Equatable {
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week, endsAtMonthEnd];
+      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week, endsAtMonthEnd, savedExtraToday];
 }

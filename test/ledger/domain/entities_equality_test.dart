@@ -38,7 +38,10 @@ void main() {
         cycle: const PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3)),
         today: WorkedExample.today,
         income: Money.zero,
-        keepAside: Money.zero,
+        savingsDue: Money.zero,
+        savedBefore: Money.zero,
+        savedByRuleToday: Money.zero,
+        savedExtraToday: Money.zero,
         billsDue: Money.zero,
         billsPostedToday: Money.zero,
         spentBefore: Money.zero,
@@ -46,7 +49,7 @@ void main() {
         paceSpentBefore: Money.zero,
         hasIncomeRule: false,
       );
-      expect(inputs.props, hasLength(10));
+      expect(inputs.props, hasLength(13));
     });
 
     test('forecasts without data', () {

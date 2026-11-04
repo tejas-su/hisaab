@@ -12,6 +12,8 @@ import 'package:expense_tracker/ledger/domain/entities/entry.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/range_forecast.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
+import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
 import 'package:expense_tracker/ledger/domain/entities/week_day.dart';
 import 'package:expense_tracker/ledger/domain/entities/yesterday_saving.dart';
 import 'package:expense_tracker/ledger/domain/usecase/get_cycle_summary.dart';
@@ -120,8 +122,8 @@ void main() {
       expect(result.state, const NoIncome());
     });
 
-    test('keep aside reduces the pool', () async {
-      settings.settings = BudgetSettings(keepAside: Money.fromMajor(1650));
+    test('money saved earlier in the cycle reduces the pool (D120)', () async {
+      addEntry(1650, const CalendarDate(2026, 10, 10), kind: EntryKind.saved);
       expect((await summary()).pool, Money.fromMajor(15000));
     });
 
@@ -137,6 +139,66 @@ void main() {
         expect(result.getLeft().toNullable(), isA<DatabaseFailure>());
       });
     }
+  });
+
+  group('GetCycleSummary — savings (D120)', () {
+    RecurringRule rdOn(int day, CalendarDate nextDue) => RecurringRule(
+          id: WorkedExample.rd.id,
+          label: WorkedExample.rd.label,
+          amount: WorkedExample.rd.amount,
+          kind: EntryKind.saved,
+          categoryId: WorkedExample.rd.categoryId,
+          schedule: Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, day)),
+          nextDue: nextDue,
+        );
+
+    test('an RD posted on the 10th leaves ₹1,294 for today', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      addEntry(5000, const CalendarDate(2026, 10, 10), kind: EntryKind.saved, recurringId: WorkedExample.rd.id);
+      final CycleSummary s = await summary();
+      expect(s.pool, Money.fromMajor(11650));
+      expect(s.todayShare, Money.fromMajor(1294));
+      expect(s.safeToday, Money.fromMajor(874));
+      expect(s.spentToday, Money.fromMajor(420));
+    });
+
+    test('the pool doesn\'t move on the RD\'s day', () async {
+      setToday(const CalendarDate(2026, 10, 25));
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, rdOn(26, const CalendarDate(2026, 10, 26))];
+      expect((await summary()).pool, Money.fromMajor(11650));
+      setToday(const CalendarDate(2026, 10, 26));
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, rdOn(26, const CalendarDate(2026, 11, 26))];
+      addEntry(5000, const CalendarDate(2026, 10, 26), kind: EntryKind.saved, recurringId: WorkedExample.rd.id);
+      expect((await summary()).pool, Money.fromMajor(11650));
+    });
+
+    test('₹500 put in today: share ₹1,294, tomorrow ₹1,341', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      addEntry(5000, const CalendarDate(2026, 10, 10), kind: EntryKind.saved, recurringId: WorkedExample.rd.id);
+      addEntry(500, WorkedExample.today, kind: EntryKind.saved);
+      final CycleSummary s = await summary();
+      expect(s.todayShare, Money.fromMajor(1294));
+      expect(s.tomorrowShare, Option<Money>.of(Money.fromMajor(1341)));
+      expect(s.spentToday, Money.fromMajor(420));
+      expect(s.spentThisWeek, Money.fromMajor(420));
+    });
+
+    test('an RD posted today was still to come yesterday (BR-8)', () async {
+      setToday(const CalendarDate(2026, 10, 27));
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, rdOn(27, const CalendarDate(2026, 11, 27))];
+      addEntry(5000, const CalendarDate(2026, 10, 27), kind: EntryKind.saved, recurringId: WorkedExample.rd.id);
+      expect(
+        (await summary()).savedYesterday,
+        Option<YesterdaySaving>.of(YesterdaySaving(saved: Money.fromMajor(874), eachDayMore: Money.fromMajor(109))),
+      );
+    });
+
+    test('deleting this month\'s posted RD gives its money back and nothing re-posts it', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      final CycleSummary s = await summary();
+      expect(s.pool, Money.fromMajor(16650));
+      expect(s.todayShare, Money.fromMajor(1850));
+    });
   });
 
   group('GetCycleSummary — bills on their day (D119)', () {

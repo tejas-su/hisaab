@@ -94,12 +94,18 @@ P = I − K − B − S_prev − R_t
 | Symbol | Meaning |
 |---|---|
 | `I` | All *Got* entries dated within the cycle, posted recurring income included |
-| `K` | Keep-aside amount, 0 if off |
+| `K` | Set aside for savings, computed: `R + Sv_before + Sv_rule_today` (D120) |
+| `R` | Saving occurrences due in `(t, end]` and not yet posted |
+| `Sv_before` | *Saved* entries dated within `[start, t − 1]`, by a rule or put in extra |
+| `Sv_rule_today` | *Saved* entries dated `t` that a saving rule posted |
+| `Sv_extra_today` | *Saved* entries dated `t` with no rule (*Put in extra*); they leave `A` fixed and thin the later days (BR-4) |
 | `B` | Recurring *Spent* occurrences due in `(t, end]` (after today, within the cycle) and not yet posted |
 | `S_prev` | All *Spent* entries dated within `[start, t − 1]`, bills included |
 | `R_t` | *Spent* entries dated `t` that a recurring rule posted (bills due today) |
 
 A bill posted on its own day comes out of the pool (`R_t`), not out of today's share: until today it sat in `B`, so the share was already sized for it (DECISIONS D119). Example: rent ₹15,000 posts today, nothing spent yet, `B = 0`, `S_prev = 27,150`: `P = 45,000 − 15,000 − 27,150 = 2,850` and `A = floor(2,850 / 9) = ₹316`. The hero shows ₹316, not ₹0 and "over today".
+
+**One rule for everything a rule posts:** it is set aside before its day (`B` for bills, `R` for savings) and comes out of the pool on its day, never out of today's share. Worked example 3 (D120): a ₹5,000 RD went in on the 10th, so `K = 5,000`, `P = 45,000 − 5,000 − 1,200 − 27,150 = 11,650` and `A = floor(11,650 / 9) = ₹1,294`; with ₹420 spent the hero shows ₹874. On the RD's own day `P` doesn't move: yesterday's `R` becomes today's `Sv_rule_today`.
 
 ### BR-4 Today's share and safe to spend
 ```
@@ -107,8 +113,10 @@ A          = max(0, floor(P / D))      // fixed for the whole of day t
 S_today    = Spent entries dated t that no recurring rule posted
 safeToday  = A − S_today               // hero shows max(0, safeToday)
 overToday  = max(0, S_today − A)
-tomorrow   = floor((P − S_today) / (D − 1))   // only when D > 1
+remaining  = P − S_today − Sv_extra_today
+tomorrow   = floor(remaining / (D − 1))   // only when D > 1
 ```
+- A *Put in extra* leaves today's `A` fixed and thins the later days: ₹500 put in with ₹420 spent gives `remaining = 10,730` and `tomorrow = floor(10,730 / 8) = ₹1,341` against ₹1,403 without it, so "Each day till payday gets ₹62 less" (D120).
 - `A` does **not** change as the user spends during the day. Only `safeToday` changes. Saving an entry dated in the past changes `S_prev`, and entering or changing a bill dated today changes `R_t`; either way `A` is recomputed.
 - **Worked example:**
   - Inputs: `I = 45,000`, `K = 0`, `B = 1,200` (electricity due Thu 29 Oct), `S_prev = 27,150`.
@@ -123,7 +131,7 @@ The states below are evaluated in order, and the first match wins.
 | # | State | Condition | Hero | Today's bar and dot (BR-6) |
 |---|---|---|---|---|
 | 1 | **No income** | `I = 0` and no recurring income | Onboarding prompt | — |
-| 2 | **Over for the cycle** | `P − S_today < 0` | `₹0`, plus "Over by ₹X this cycle" where `X = S_today − P` | Bar hatched past the share tick; every rail dot outlined |
+| 2 | **Over for the cycle** | `remaining < 0` | `₹0`, plus "Over by ₹X this cycle" where `X = −remaining` | Bar hatched past the share tick; every rail dot outlined |
 | 3 | **Over today** | `S_today > A` | `₹0`, plus "₹X over today" | Bar hatched past the share tick; today's dot hatched |
 | 4 | **Slow down** | `safeToday < 0.25 × A`, **or** the forecast (BR-7) runs out before `end` | `safeToday` | The yellow drawn as a marigold outline; today's dot a marigold ring |
 | 5 | **On track** | Otherwise | `safeToday` | Solid marigold, draining |
@@ -154,7 +162,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - `V_prev` is the *Spent* entries in `[start, t − 1]` that were **not** posted by a recurring rule.
   - `E = t − start` is the number of whole days elapsed before today.
 - **Hidden** when `E < 3`, since there is too little history. In that case the line reads "Lasts till payday" when `A > 0`.
-- **Spare at payday:** `spare = P − S_today − pace × (D − 1)`. It is rounded **to the nearest ₹100** and always prefixed with "about", because it is a forecast, not a promise.
+- **Spare at payday:** `spare = remaining − pace × (D − 1)`; the pace counts *Spent* only. It is rounded **to the nearest ₹100** and always prefixed with "about", because it is a forecast, not a promise.
 - **Messages:**
   - `spare ≥ 0`: "Lasts till payday · about ₹{spare} spare".
   - A month-end cycle says "month end" for "payday" throughout: "Lasts till month end", "still lasts till month end", and "new month in {D} days" for over the cycle (D116).
@@ -170,7 +178,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - **Example:** in the worked example nothing was spent on Sun 25 Oct, when `A = 16,650 / 10 = ₹1,665`. So `X = ₹1,665` and `Y = floor(1,665 / 9) = ₹185`, which matches `1,850 − 1,665`.
 
 ### BR-9 Recurring engine
-- Each rule has: `amountMinor`, kind (*Spent*/*Got*), category, frequency (weekly / every 2 weeks / monthly / yearly), anchor date, `next_due` and `active`.
+- Each rule has: `amountMinor`, kind (*Spent*/*Got*/*Saved*; a *Saved* rule's entry carries the rule's name as its note, D120), category, frequency (weekly / every 2 weeks / monthly / yearly), anchor date, `next_due` and `active`.
 - **On every app start and resume**, for each active rule, while `next_due ≤ t`:
   1. Insert the entry dated `next_due`.
   2. Advance `next_due` by one period, with monthly rules clamped as in BR-1.
@@ -403,6 +411,10 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E16 | Foldable opened into book posture while the app is running | Re-lays out into two panes split at the fold, with no data or state loss |
 | E17 | Tabletop posture | Content above the fold, controls below it |
 | E18 | App in a 412×400dp split-screen window | Compact layout; every control still reachable |
+| E19 | A saving's day is the 29th–31st | Clamped to the month's last day, as in BR-1 (D120) |
+| E20 | A saving bigger than everything left | `P < 0`: Over for the cycle, as E5 |
+| E21 | App closed for weeks with an RD | Each missed month posts once, dated on its day (BR-9, E7) |
+| E22 | The RD posted, and the user also logs the bank debit as *Spent* | Not prevented; the RD row on Today and the due-soon line are the cues (case study 17 risk) |
 
 ---
 

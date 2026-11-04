@@ -10,7 +10,10 @@ final class CycleInputs extends Equatable {
     required this.cycle,
     required this.today,
     required this.income,
-    required this.keepAside,
+    required this.savingsDue,
+    required this.savedBefore,
+    required this.savedByRuleToday,
+    required this.savedExtraToday,
     required this.billsDue,
     required this.billsPostedToday,
     required this.spentBefore,
@@ -25,8 +28,22 @@ final class CycleInputs extends Equatable {
   /// `I`: every *Got* entry dated in the cycle.
   final Money income;
 
-  /// `K`: money kept aside this cycle.
-  final Money keepAside;
+  /// `R`: saving occurrences due after today within the cycle, not yet posted (D120).
+  final Money savingsDue;
+
+  /// *Saved* entries from the cycle start to yesterday, by a rule or put in extra (D120).
+  final Money savedBefore;
+
+  /// *Saved* entries dated today that a saving rule posted (D120).
+  final Money savedByRuleToday;
+
+  /// *Saved* entries dated today with no rule (*Put in extra*). They leave today's share fixed
+  /// and thin the days after it, like an overspend (spec §3, D120).
+  final Money savedExtraToday;
+
+  /// `K`, computed: everything set aside for savings this cycle up to the start of today
+  /// (spec §3, D120). A saving is reserved before its day and comes out of the pool on it.
+  Money get keepAside => savingsDue + savedBefore + savedByRuleToday;
 
   /// `B`: recurring *Spent* occurrences due after today within the cycle, not yet posted.
   final Money billsDue;
@@ -49,5 +66,5 @@ final class CycleInputs extends Equatable {
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, income, keepAside, billsDue, billsPostedToday, spentBefore, spentToday, paceSpentBefore, hasIncomeRule];
+      <Object?>[cycle, today, income, savingsDue, savedBefore, savedByRuleToday, savedExtraToday, billsDue, billsPostedToday, spentBefore, spentToday, paceSpentBefore, hasIncomeRule];
 }
