@@ -148,13 +148,13 @@ S_today = Spent entries dated t with recurring_id unset
 - **Privacy:** the notification body names a bill. Lock-screen visibility is private, and the text has no amount and no note (NFR privacy; never log notes).
 - **The Add flow stays untouched.** Bill confirmation lives in the bill sheet. Never add a "bill" toggle to the Add tray.
 
-## Proposed principles (to add to `principles.md` under a new "Bills and reminders (case study 18)" section, numbered 57 onwards after case study 16's)
+## Principles (appended to `principles.md` as 60–63)
 - **A known date with an unknown amount waits for the amount; it is never posted as a guess.** Reserve an estimate until the real amount is entered or skipped. *Sources:* Actual Budget schedules (approve manually); YNAB scheduled transactions; Chronicle *Amount Due Varies*. *Applies to:* changing bills, BR-3 `B`.
 - **Count money once, at the moment of choice.** A card purchase is spending; paying the card is not. *Sources:* YNAB credit card handling; Monarch transfers; Realbyte transfers; Soman 2001. *Applies to:* credit card bills, any future "account" idea.
 - **A reminder is a bonus; the in-app line is the guarantee.** Design so nothing breaks if the notification never arrives. *Sources:* dontkillmyapp; Android alarms (inexact, Doze, reboot). *Applies to:* bill reminders, any scheduled nudge.
 - **One notification per thing, opened by its tap, with no action that repeats the tap; ask permission at the moment it helps.** *Sources:* Material notifications pattern; Apple HIG Notifications; Android notification permission. *Applies to:* bill reminders.
 
-## New sources (to add to `sources.md`)
+## Sources (added to `sources.md`)
 - [Actual Budget docs](https://actualbudget.org/docs/schedules): fetches cleanly; the clearest auto-vs-approve schedule spec.
 - [YNAB support `.md`](https://support.ynab.com/en_us/scheduled-transactions-a-guide-BygrAIFA9.md): already listed for colours; it works for scheduled transactions and credit cards too.
 - [Monarch help](https://help.monarch.com/hc/en-us/articles/360048393292) and [Realbyte help](https://help.realbyteapps.com/hc/en-us/articles/360043392253-How-to-settle-credit-card-payments): both return **403**, so read them in a browser.

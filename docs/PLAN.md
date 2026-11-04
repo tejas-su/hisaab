@@ -33,7 +33,7 @@ Every setting the user must think about is friction. The app decides; power user
 | Edit recurring rule | Applies to future entries; past entries untouched. No dialog. | — |
 | Over budget | Shown as "₹1,200 over" in words, never "-₹1,200" and never red | — |
 | Paise | Whole rupees only: no decimal key, never displayed (stored as minor units) | — |
-| Savings goal | Off. Optional "Keep aside every month" amount, subtracted from spendable | Toggle |
+| Savings | *Savings* in Settings: monthly savings (RD, SIP…) set aside before their day and recorded on it; *Put in extra* for one-offs (D120) | List in Settings |
 
 ---
 

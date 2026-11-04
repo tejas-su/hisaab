@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/month_start.dart';
@@ -102,5 +103,35 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  group('PutInSheet failures (D120)', () {
+    testWidgets('a failed load says so', (WidgetTester tester) async {
+      ledger.failure = DatabaseFailure('x');
+      await open(tester);
+      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('put-in-save')), findsNothing);
+    });
+
+    testWidgets('⌫ and long-press clear reach the bloc', (WidgetTester tester) async {
+      await open(tester);
+      await keys(tester, '50');
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('₹5'), findsOneWidget);
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('₹5'), findsNothing);
+    });
+
+    testWidgets('a failed save says so and stays open', (WidgetTester tester) async {
+      await open(tester);
+      await keys(tester, '500');
+      ledger.failure = DatabaseFailure('x');
+      await tester.tap(find.byKey(const ValueKey<String>('put-in-save')));
+      await tester.settle();
+      expect(find.byType(PutInSheet), findsOneWidget);
+      expect(find.textContaining('Try again'), findsOneWidget);
+    });
   });
 }

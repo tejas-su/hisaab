@@ -168,4 +168,23 @@ void main() {
       expect(bloc.state, isA<PutInExtraFailed>());
     });
   });
+
+  group('PutInExtra events and states compare by their fields', () {
+    test('events', () {
+      expect(const PutInExtraKeyPressed('5'), const PutInExtraKeyPressed('5'));
+      expect(const PutInExtraKeyPressed('5'), isNot(const PutInExtraKeyPressed('6')));
+      expect(const PutInExtraLoadRequested(), const PutInExtraLoadRequested());
+      expect(const PutInExtraBackspacePressed(), const PutInExtraBackspacePressed());
+      expect(const PutInExtraCleared(), const PutInExtraCleared());
+      expect(const PutInExtraSavePressed(), const PutInExtraSavePressed());
+    });
+
+    test('states and previews', () {
+      final Failure failure = DatabaseFailure('x');
+      expect(PutInExtraFailed(failure), PutInExtraFailed(failure));
+      expect(const PutInExtraLoading(), isNot(const PutInExtraDone()));
+      expect(const PaydayTomorrow(), const PaydayTomorrow());
+      expect(const PaydayTomorrow().props, isEmpty);
+    });
+  });
 }

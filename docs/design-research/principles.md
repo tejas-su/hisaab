@@ -97,3 +97,16 @@ Each principle cites its source and names where it applies in Hisaab. The newest
 ## Changing a fixed bill (case study 16)
 
 56. **Create in steps, change in place.** A wizard that helps someone create a thing should not be the only way to change it. To change one answer, show the whole item with a Change control per answer, open only that question, and save it alone. Never make the user re-confirm answers they didn't touch. *Sources:* DWP "Add another thing"; GovStack check answers; Infowise forms (wizard on create only); PatternFly wizard vs progressive form. *Applies to:* fixed bills, and any future editor for a thing first made in steps (categories, onboarding answers).
+
+## Savings (case study 17)
+
+57. **Saving is reserved before its day and recorded on it, never counted as spending.** Take it out of "safe to spend" ahead of time, show it as its own kind of row on the day, and keep it out of spending charts, pace and over-states. *Sources:* Simple Safe-to-Spend Goals; Simplifi's plan formula; Copilot goals; Monefy and Monzo user complaints; case study 17. *Applies to:* BR-3, Home's Today list, Spends.
+58. **Label and separate a saving, but never make breaking it feel like failure.** Naming and partitioning raise saving; guilt and streaks bring the what-the-hell effect. Skipping is a quiet undo, with no behind-state and no count. *Sources:* Soman & Cheema 2011; Thaler 1999; Cochran & Tesser 1996 (as cited); Copilot's "behind" (counter-example); principle 48. *Applies to:* savings rows, skip, any goal idea.
+59. **One source of truth for every total.** Any saved or spent total is computed from the same entries as the hero, never kept as a second balance. *Sources:* Monzo "left to spend" threads; Monarch goals vs Cash Flow reports; Goodbudget's manual mirroring. *Applies to:* Spends' summary line, the Savings list total.
+
+## Bills and reminders (case study 18)
+
+60. **A known date with an unknown amount waits for the amount; it is never posted as a guess.** Reserve an estimate until the real amount is entered or skipped. *Sources:* Actual Budget schedules (approve manually); YNAB scheduled transactions; Chronicle *Amount Due Varies*. *Applies to:* changing bills, BR-3 `B`.
+61. **Count money once, at the moment of choice.** A card purchase is spending; paying the card is not. *Sources:* YNAB credit card handling; Monarch transfers; Realbyte transfers; Soman 2001. *Applies to:* credit card bills, any future "account" idea.
+62. **A reminder is a bonus; the in-app line is the guarantee.** Design so nothing breaks if the notification never arrives. *Sources:* dontkillmyapp; Android alarms (inexact, Doze, reboot). *Applies to:* bill reminders, any scheduled nudge.
+63. **One notification per thing, opened by its tap, with no action that repeats the tap; ask permission at the moment it helps.** *Sources:* Material notifications pattern; Apple HIG Notifications; Android notification permission. *Applies to:* bill reminders.

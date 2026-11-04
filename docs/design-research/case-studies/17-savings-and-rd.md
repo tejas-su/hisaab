@@ -211,12 +211,12 @@ Over for the cycle (BR-5 #2): remaining < 0 // prevented for saves by the keypad
 - **Vocabulary is unvalidated** for Hindi-first and low-literacy users ("saved", "put in", "RD").
 - **Scope creep.** Requests for targets, interest and maturity will follow. Section "Not in it" is the line to hold.
 
-## Proposed principles (for `principles.md`, not yet appended)
+## Principles (appended to `principles.md` as 57–59)
 - **Saving is reserved before its day and recorded on it, never counted as spending.** Take it out of "safe to spend" ahead of time, show it as its own kind of row on the day, and keep it out of spending charts, pace and over-states. *Sources:* Simple Safe-to-Spend Goals; Simplifi's plan formula; Copilot goals; Monefy and Monzo user complaints; this study. *Applies to:* BR-3, Home's Today list, Spends.
 - **Label and separate a saving, but never make breaking it feel like failure.** Naming and partitioning raise saving; guilt and streaks bring the what-the-hell effect. Skipping is a quiet undo, with no behind-state and no count. *Sources:* Soman & Cheema 2011; Thaler 1999; Cochran & Tesser 1996 (as cited); Copilot's "behind" (counter-example); principle 48. *Applies to:* savings rows, skip, any goal idea.
 - **One source of truth for every total.** Any saved or spent total is computed from the same entries as the hero, never kept as a second balance. *Sources:* Monzo "left to spend" threads; Monarch goals vs Cash Flow reports; Goodbudget's manual mirroring. *Applies to:* Spends' summary line, the Savings list total.
 
-## Sources to add to `sources.md` (not yet added)
+## Sources (added to `sources.md`)
 | Source | Good for | Limits |
 |---|---|---|
 | [Copilot help](https://help.copilot.money/en/articles/11471870-savings-with-copilot), [Quicken Simplifi blog](https://quicken.com/blog/?p=3185), [YNAB `.md` support](https://support.ynab.com/en_us/transfer-transactions-a-guide-HJOsZz4Jj.md) | How goals and transfers stay out of spending | Fetch cleanly; marketing tone on Quicken's blog |
