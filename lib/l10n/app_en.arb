@@ -758,6 +758,157 @@
       }
     }
   },
+  "billSheetEyebrow": "Fixed bill",
+  "@billSheetEyebrow": {
+    "description": "Small heading at the top of the bill sheet (D118)"
+  },
+  "billStampDue": "{days, plural, =1{Due tomorrow} other{Due in {days} days}}",
+  "@billStampDue": {
+    "description": "Stamp on a bill that goes out within 5 days",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "billStampCounted": "Counted {date}",
+  "@billStampCounted": {
+    "description": "Stamp on a bill the app counted as spent this month, e.g. \"Counted 5 Oct\"",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billStampCountedToday": "Counted today",
+  "@billStampCountedToday": {
+    "description": "Stamp on a bill the app counted as spent today"
+  },
+  "billAnswerAmount": "Amount",
+  "@billAnswerAmount": {
+    "description": "Bill sheet row label"
+  },
+  "billAnswerDay": "Day of the month",
+  "@billAnswerDay": {
+    "description": "Bill sheet row label"
+  },
+  "billAnswerName": "Name",
+  "@billAnswerName": {
+    "description": "Bill sheet row label"
+  },
+  "billAnswerIcon": "Icon",
+  "@billAnswerIcon": {
+    "description": "Bill sheet row label"
+  },
+  "billChangeSpoken": "Change {answer}, {value}",
+  "@billChangeSpoken": {
+    "description": "Screen-reader label of a bill sheet row, e.g. \"Change Amount, ₹1,200\"",
+    "placeholders": {
+      "answer": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "billNextGoesOut": "Next goes out on {date}",
+  "@billNextGoesOut": {
+    "description": "Bill sheet footer, e.g. \"Next goes out on 29 Oct\"",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billSaved": "Saved.",
+  "@billSaved": {
+    "description": "Bill sheet footer for 2.4 s after an answer is saved"
+  },
+  "deleteBill": "Delete bill",
+  "@deleteBill": {
+    "description": "Full-width key at the foot of the bill sheet"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Key that saves the open answer"
+  },
+  "billWas": "Was {amount}",
+  "@billWas": {
+    "description": "Under the typed amount when it differs from the saved one",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "billIconQuestion": "Pick an icon for {bill}",
+  "@billIconQuestion": {
+    "description": "Title of the icon question on the bill sheet, e.g. \"Pick an icon for Electricity\"",
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  },
+  "billIconFromName": "From the name: {icon}",
+  "@billIconFromName": {
+    "description": "Under the bill on the icon question: the icon its name suggests",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "billIconNoMatch": "No icon matches the name",
+  "@billIconNoMatch": {
+    "description": "Under the bill on the icon question when the name suggests none"
+  },
+  "billNameIconFollows": "Icon from the name: {icon}",
+  "@billNameIconFollows": {
+    "description": "Under the name field: the icon will follow the typed name",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "billNameIconKept": "Icon stays {icon}. Change it on the bill.",
+  "@billNameIconKept": {
+    "description": "Under the name field when the user picked the icon by hand",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "billIconName": "{icon, select, home{Home} power{Power} phone{Phone} internet{Internet} loan{Loan} card{Card} tv{TV & apps} school{School} water{Water} gas{Gas} insurance{Insurance} help{House help} milk{Milk} society{Society} car{Car} other{Bill}}",
+  "@billIconName": {
+    "description": "Name of a bill icon, by its stored value; \"bill\" falls to other",
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
+  "billSlipSpoken": "{bill}, {icon}, {amount}, every month on day {day}",
+  "@billSlipSpoken": {
+    "description": "Screen-reader label of the bill on the bill sheet",
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      },
+      "icon": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "askAiTitle": "Ask AI",
   "@askAiTitle": {
     "description": "Title of the Ask AI screen"

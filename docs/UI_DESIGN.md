@@ -395,11 +395,11 @@ Two layers only: the grey page and near-white cards, the same build as the Today
   - **The bill sheet (FR-SE-1, D118, mockup [27](design/mockups/27-bill-sheet.html)):** tapping a row (or Home's due-soon row) raises a sheet that looks like a paper bill. Changing never pushes a page.
     - The slip is `display` paper, flat (D106: only the hero is raised), with 20dp top corners and a torn bottom edge of 14dp × 8dp teeth.
     - Head: the "Fixed bill" eyebrow, the name, and the bill's icon in a `sunk` well. Then a dashed `hairline` perforation with 16dp half-circle notches cut at both edges.
-    - The amount line: the amount in Anek with tabular figures, "Every month on day N" under it, and the stamp. The stamp is straight (not rotated), `displayInk2` text in a 2dp `displayInk2` edge with 6 corners, its right edge on the value column. It lands with a squash (scale 1.25 → 1) 260 ms after the sheet opens, on the spring tokens; with reduced motion it fades in over 150 ms.
+    - The amount line: the amount in Anek with tabular figures, "Every month on day N" under it, and the stamp. The stamp is straight (not rotated), letter-spaced `displayInk2` text written as in the copy (never upper-cased) in a 2dp `displayInk2` edge with 6 corners, its right edge on the value column. It lands with a squash (scale 1.25 → 1) 260 ms after the sheet opens, on the spring tokens; with reduced motion it fades in over 150 ms.
     - Four rows, Amount, Day of the month, Name, Icon, each a label, a dotted leader in `hairline`, the value, and a chevron; 56dp tall. A saved row flashes `sunk` once.
-    - The foot: "Next goes out {date}", then *Delete bill*, a full-width `sunk` key in the place *Save* takes on a question.
+    - The foot: "Next goes out on {date}", then *Delete bill*, a full-width `sunk` key in the place *Save* takes on a question.
     - A question replaces the rows inside the sheet, under a compact slip (name, amount, icon): the keypad with *Save*, showing "Was ₹1,200" under the typed amount; the 1–31 grid; the name field (no pills), with a line saying whether the icon follows the name; or a 4-column grid of the 16 icons in `sunk` wells, labelled under each. Back sits top left.
-    - **The day grid's picked state** is the D88 pick (lifted to `surface`, ink check) plus a 4dp `ink` dot under the number.
+    - **Picked state** (the day grid and the icon grid): the bill's current day or icon lifts one layer to `control` (as a chip on the page), its label turns Semibold, and a 6dp `ink` dot sits 6dp in from its top end corner. TalkBack announces it as selected.
     - Bill icons sit in 40dp `sunk` wells everywhere (the slip, rows, the grid, Home's due-soon row).
   - Keep aside each month
   - My month starts on: *Payday* (default) / *1st*

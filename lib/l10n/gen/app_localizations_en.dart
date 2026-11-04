@@ -682,6 +682,115 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get billSheetEyebrow => 'Fixed bill';
+
+  @override
+  String billStampDue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Due in $days days',
+      one: 'Due tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String billStampCounted(String date) {
+    return 'Counted $date';
+  }
+
+  @override
+  String get billStampCountedToday => 'Counted today';
+
+  @override
+  String get billAnswerAmount => 'Amount';
+
+  @override
+  String get billAnswerDay => 'Day of the month';
+
+  @override
+  String get billAnswerName => 'Name';
+
+  @override
+  String get billAnswerIcon => 'Icon';
+
+  @override
+  String billChangeSpoken(String answer, String value) {
+    return 'Change $answer, $value';
+  }
+
+  @override
+  String billNextGoesOut(String date) {
+    return 'Next goes out on $date';
+  }
+
+  @override
+  String get billSaved => 'Saved.';
+
+  @override
+  String get deleteBill => 'Delete bill';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String billWas(String amount) {
+    return 'Was $amount';
+  }
+
+  @override
+  String billIconQuestion(String bill) {
+    return 'Pick an icon for $bill';
+  }
+
+  @override
+  String billIconFromName(String icon) {
+    return 'From the name: $icon';
+  }
+
+  @override
+  String get billIconNoMatch => 'No icon matches the name';
+
+  @override
+  String billNameIconFollows(String icon) {
+    return 'Icon from the name: $icon';
+  }
+
+  @override
+  String billNameIconKept(String icon) {
+    return 'Icon stays $icon. Change it on the bill.';
+  }
+
+  @override
+  String billIconName(String icon) {
+    String _temp0 = intl.Intl.selectLogic(icon, {
+      'home': 'Home',
+      'power': 'Power',
+      'phone': 'Phone',
+      'internet': 'Internet',
+      'loan': 'Loan',
+      'card': 'Card',
+      'tv': 'TV & apps',
+      'school': 'School',
+      'water': 'Water',
+      'gas': 'Gas',
+      'insurance': 'Insurance',
+      'help': 'House help',
+      'milk': 'Milk',
+      'society': 'Society',
+      'car': 'Car',
+      'other': 'Bill',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String billSlipSpoken(String bill, String icon, String amount, int day) {
+    return '$bill, $icon, $amount, every month on day $day';
+  }
+
+  @override
   String get askAiTitle => 'Ask AI';
 
   @override

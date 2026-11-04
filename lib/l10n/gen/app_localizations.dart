@@ -1027,6 +1027,132 @@ abstract class AppLocalizations {
   /// **'Deleted {bill}'**
   String billDeleted(String bill);
 
+  /// Small heading at the top of the bill sheet (D118)
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed bill'**
+  String get billSheetEyebrow;
+
+  /// Stamp on a bill that goes out within 5 days
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Due tomorrow} other{Due in {days} days}}'**
+  String billStampDue(int days);
+
+  /// Stamp on a bill the app counted as spent this month, e.g. "Counted 5 Oct"
+  ///
+  /// In en, this message translates to:
+  /// **'Counted {date}'**
+  String billStampCounted(String date);
+
+  /// Stamp on a bill the app counted as spent today
+  ///
+  /// In en, this message translates to:
+  /// **'Counted today'**
+  String get billStampCountedToday;
+
+  /// Bill sheet row label
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get billAnswerAmount;
+
+  /// Bill sheet row label
+  ///
+  /// In en, this message translates to:
+  /// **'Day of the month'**
+  String get billAnswerDay;
+
+  /// Bill sheet row label
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get billAnswerName;
+
+  /// Bill sheet row label
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get billAnswerIcon;
+
+  /// Screen-reader label of a bill sheet row, e.g. "Change Amount, ₹1,200"
+  ///
+  /// In en, this message translates to:
+  /// **'Change {answer}, {value}'**
+  String billChangeSpoken(String answer, String value);
+
+  /// Bill sheet footer, e.g. "Next goes out on 29 Oct"
+  ///
+  /// In en, this message translates to:
+  /// **'Next goes out on {date}'**
+  String billNextGoesOut(String date);
+
+  /// Bill sheet footer for 2.4 s after an answer is saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saved.'**
+  String get billSaved;
+
+  /// Full-width key at the foot of the bill sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Delete bill'**
+  String get deleteBill;
+
+  /// Key that saves the open answer
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// Under the typed amount when it differs from the saved one
+  ///
+  /// In en, this message translates to:
+  /// **'Was {amount}'**
+  String billWas(String amount);
+
+  /// Title of the icon question on the bill sheet, e.g. "Pick an icon for Electricity"
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an icon for {bill}'**
+  String billIconQuestion(String bill);
+
+  /// Under the bill on the icon question: the icon its name suggests
+  ///
+  /// In en, this message translates to:
+  /// **'From the name: {icon}'**
+  String billIconFromName(String icon);
+
+  /// Under the bill on the icon question when the name suggests none
+  ///
+  /// In en, this message translates to:
+  /// **'No icon matches the name'**
+  String get billIconNoMatch;
+
+  /// Under the name field: the icon will follow the typed name
+  ///
+  /// In en, this message translates to:
+  /// **'Icon from the name: {icon}'**
+  String billNameIconFollows(String icon);
+
+  /// Under the name field when the user picked the icon by hand
+  ///
+  /// In en, this message translates to:
+  /// **'Icon stays {icon}. Change it on the bill.'**
+  String billNameIconKept(String icon);
+
+  /// Name of a bill icon, by its stored value; "bill" falls to other
+  ///
+  /// In en, this message translates to:
+  /// **'{icon, select, home{Home} power{Power} phone{Phone} internet{Internet} loan{Loan} card{Card} tv{TV & apps} school{School} water{Water} gas{Gas} insurance{Insurance} help{House help} milk{Milk} society{Society} car{Car} other{Bill}}'**
+  String billIconName(String icon);
+
+  /// Screen-reader label of the bill on the bill sheet
+  ///
+  /// In en, this message translates to:
+  /// **'{bill}, {icon}, {amount}, every month on day {day}'**
+  String billSlipSpoken(String bill, String icon, String amount, int day);
+
   /// Title of the Ask AI screen
   ///
   /// In en, this message translates to:
