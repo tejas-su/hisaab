@@ -36,7 +36,11 @@ class IncomeStep extends StatelessWidget {
           ],
         ],
       ),
-      controls: AmountControls(bloc: context.read<OnboardingBloc>(), canContinue: hasAmount),
+      controls: AmountControls(
+        bloc: context.read<OnboardingBloc>(),
+        canContinue: hasAmount,
+        note: strings.incomePrivacy,
+      ),
     );
   }
 }

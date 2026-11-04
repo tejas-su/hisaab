@@ -22,13 +22,15 @@ abstract final class SafeToSpend {
   ///
   /// [spentThisWeek] and [week] are passed through for the *This week* view (FR-HO-2, BR-6a).
   /// [yesterday] holds the inputs as they stood yesterday, when yesterday is in the same cycle; it
-  /// drives the "you saved ₹X yesterday" note (BR-8).
+  /// drives the "you saved ₹X yesterday" note (BR-8). [endsAtMonthEnd] is passed through for the
+  /// hero's month-end wording (D116).
   static CycleSummary compute(
     CycleInputs inputs, {
     required CalendarDate earliestEntryDate,
     Money spentThisWeek = Money.zero,
     Option<CycleInputs> yesterday = const Option<CycleInputs>.none(),
     List<WeekDay> week = const <WeekDay>[],
+    bool endsAtMonthEnd = false,
   }) {
     final int daysLeft = inputs.cycle.daysLeftFrom(inputs.today);
     final Money pool = _pool(inputs);
@@ -48,6 +50,7 @@ abstract final class SafeToSpend {
       spentThisWeek: spentThisWeek,
       savedYesterday: yesterday.flatMap((CycleInputs before) => _savedYesterday(before, daysLeft)),
       week: week,
+      endsAtMonthEnd: endsAtMonthEnd,
     );
   }
 

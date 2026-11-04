@@ -5,7 +5,10 @@ import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/widgets/display_card.dart';
 import 'package:expense_tracker/core/widgets/amount_text.dart';
 import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
+import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
 import 'package:expense_tracker/core/widgets/display_etch.dart';
+import 'package:expense_tracker/core/widgets/today_bar/today_bar.dart';
+import 'package:expense_tracker/core/widgets/today_bar/today_bar_data.dart';
 import 'package:expense_tracker/core/widgets/week_bars/week_bars.dart';
 import 'package:expense_tracker/core/widgets/week_bars/week_letters.dart';
 import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
@@ -46,13 +49,13 @@ void main() {
       expect(taps, 1);
     });
 
-    testWidgets('breathes: roomy gaps between the label, amount, blocks and range line, and a quiet divider (D107)', (
+    testWidgets('breathes: roomy gaps between the label, amount, today\'s bar and range line, and a quiet divider (D107)', (
       WidgetTester tester,
     ) async {
       await pumpApp(tester, HeroCard(summary: _summary(const CalendarDate(2026, 10, 26)), onTap: () {}));
       double top(Finder f) => tester.getRect(f).top;
       double bottom(Finder f) => tester.getRect(f).bottom;
-      final Finder blocks = find.byType(DayBlocks);
+      final Finder blocks = find.byType(TodayBar);
       final Finder divider = find.descendant(of: find.byType(HeroCard), matching: find.byType(Divider));
       expect(top(blocks) - bottom(find.textContaining('₹1,430')), greaterThanOrEqualTo(24));
       expect(top(divider) - bottom(find.text('9 days to payday')), 20);
@@ -111,28 +114,38 @@ void main() {
       expect(find.textContaining('Tue was ₹460 over its share'), findsOneWidget);
     });
 
-    testWidgets('the card grows by 48dp for the bars, only in This week', (WidgetTester tester) async {
-      // why: on Home the hero sits in a scrolling column, so it takes its own height.
-      Widget atTop({bool week = false}) =>
-          SingleChildScrollView(child: HeroCard(summary: thursday(), onTap: () {}, week: week));
-      await pumpApp(tester, atTop());
-      final double today = tester.getSize(find.byType(DisplayCard)).height;
-      await pumpApp(tester, atTop(week: true));
-      final double week = tester.getSize(find.byType(DisplayCard)).height;
-      await pumpApp(tester, atTop());
-      expect(week - today, 48);
-      expect(tester.getSize(find.byType(DisplayCard)).height, today, reason: 'flipping back gives the room back');
-    });
+    for (final double scale in <double>[1, 2]) {
+      testWidgets('the card keeps one height in both modes, at ${scale}x text (D114)', (WidgetTester tester) async {
+        // why: on Home the hero sits in a scrolling column, so it takes its own height.
+        Widget atTop({bool week = false}) =>
+            SingleChildScrollView(child: HeroCard(summary: thursday(), onTap: () {}, week: week));
+        await pumpApp(tester, atTop(), textScale: scale);
+        final double today = tester.getSize(find.byType(DisplayCard)).height;
+        await pumpApp(tester, atTop(week: true), textScale: scale);
+        expect(tester.getSize(find.byType(DisplayCard)).height, today);
+      });
+    }
 
-    testWidgets('the bars are 88dp tall and share the blocks\' left and right edges', (WidgetTester tester) async {
-      await pumpApp(tester, HeroCard(summary: thursday(), onTap: () {}));
-      final Rect blocks = tester.getRect(find.byType(DayBlocks));
+    testWidgets('the bars are 64dp tall and share today\'s bar\'s left and right edges (D114)', (WidgetTester tester) async {
       await pumpApp(tester, HeroCard(summary: thursday(), onTap: () {}, week: true));
       final Rect bars = tester.getRect(find.byType(WeekBars));
-      expect(bars.height, 88);
-      expect(bars.left, blocks.left);
-      expect(bars.right, blocks.right);
+      final Rect bar = tester.getRect(find.byType(TodayBar));
+      expect(bars.height, 64);
+      expect(bars.left, bar.left);
+      expect(bars.right, bar.right);
       expect(tester.getRect(find.byType(WeekLetters)).width, bars.width);
+    });
+
+    testWidgets('only the shown mode is visible; the days rail is there in both', (WidgetTester tester) async {
+      double opacityOf(String key) => tester
+          .widget<AnimatedOpacity>(find.ancestor(of: find.byKey(ValueKey<String>(key)), matching: find.byType(AnimatedOpacity)).first)
+          .opacity;
+      await pumpApp(tester, HeroCard(summary: thursday(), onTap: () {}, week: true));
+      expect((opacityOf('hero-today-rows'), opacityOf('hero-week-rows')), (0.0, 1.0));
+      expect(find.byType(DaysRail), findsOneWidget);
+      await pumpApp(tester, HeroCard(summary: thursday(), onTap: () {}));
+      expect((opacityOf('hero-today-rows'), opacityOf('hero-week-rows')), (1.0, 0.0));
+      expect(find.byType(DaysRail), findsOneWidget);
     });
 
     testWidgets('with reduced motion the card changes size at once', (WidgetTester tester) async {
@@ -146,6 +159,38 @@ void main() {
     testWidgets('it holds at 1.5× text on a small phone', (WidgetTester tester) async {
       await pumpApp(tester, HeroCard(summary: thursday(), onTap: () {}, week: true), textScale: 1.5, size: const Size(320, 568));
       expect(tester.takeException(), isNull);
+    });
+  });
+  group('HeroCard — Today\'s bar (BR-6, D114)', () {
+    Entry spend(int id, int rupees, int category) => Entry(
+          id: id,
+          amount: Money.fromMajor(rupees),
+          kind: EntryKind.spent,
+          categoryId: category,
+          date: const CalendarDate(2026, 10, 26),
+          createdAt: DateTime(2026, 10, 26, 8 + id),
+        );
+
+    testWidgets('says what was spent and today\'s share under the bar', (WidgetTester tester) async {
+      await pumpApp(tester, HeroCard(summary: _summary(const CalendarDate(2026, 10, 26)), onTap: () {}));
+      expect(find.text('₹420 spent'), findsOneWidget);
+      expect(find.text('of ₹1,850 for today'), findsOneWidget);
+      expect(tester.getRect(find.text('of ₹1,850 for today')).right, tester.getRect(find.byType(TodayBar)).right);
+    });
+
+    testWidgets('each spend is a bite named by its category, or Other when it has none', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        HeroCard(
+          summary: _summary(const CalendarDate(2026, 10, 26)),
+          onTap: () {},
+          spends: <Entry>[spend(1, 40, 1), spend(2, 380, 99)],
+          categories: const <int, Category>{1: Category(id: 1, key: 'food', iconKey: 'food', kind: EntryKind.spent, sort: 0)},
+        ),
+      );
+      final TodayBar bar = tester.widget<TodayBar>(find.byType(TodayBar));
+      expect(bar.data.bites.map((TodayBite b) => b.label), <String>['Food', 'Other']);
+      expect(bar.fillIn, isTrue);
     });
   });
 }

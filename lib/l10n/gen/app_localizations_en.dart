@@ -172,7 +172,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String overCycleCardMonthEnd(String date) {
+    return 'It happens. This month\'s money is used up. It starts again on $date.';
+  }
+
+  @override
+  String overCycleCardWeek(String date) {
+    return 'It happens. This week\'s money is used up. It starts again on payday, $date.';
+  }
+
+  @override
   String get safeToSpendThisWeek => 'Safe to spend this week';
+
+  @override
+  String todayBarSpent(String amount) {
+    return '$amount spent';
+  }
+
+  @override
+  String todayBarOfShare(String amount) {
+    return 'of $amount for today';
+  }
 
   @override
   String weekSpent(String amount) {
@@ -256,6 +276,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String daysLeftInMonth(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left this month',
+      one: 'Last day of the month',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String spokenAmount(String amount) {
     return '$amount rupees';
   }
@@ -325,7 +356,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get incomeQuestion => 'How much money comes in each month?';
 
   @override
-  String get incomeHint => 'Your salary after tax. You can change it any time.';
+  String get incomeHint =>
+      'Pay, business, pension or family money. If it changes, a low month is a safe guess.';
+
+  @override
+  String get incomePrivacy =>
+      'It stays on this phone. The app never uses the internet.';
 
   @override
   String dailyPreview(String amount) {
@@ -333,13 +369,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dailyPreviewCaption => 'One block for every day of the month';
+  String get dailyPreviewCaption => 'Every day gets its own share';
 
   @override
   String get paydayQuestion => 'When does it come?';
 
   @override
-  String get paydayHint => 'Your month runs from one payday to the next.';
+  String get paydayHint =>
+      'Your month runs from one payday to the next. No fixed day? Pick It changes.';
 
   @override
   String get payFirstOfMonth => '1st of the month';
@@ -413,6 +450,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lastsTillPayday => 'Lasts till payday';
 
   @override
+  String get lastsTillMonthEnd => 'Lasts till month end';
+
+  @override
   String aboutSpare(String amount) {
     return 'about $amount spare';
   }
@@ -440,8 +480,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stillLasts => 'still lasts till payday';
 
   @override
+  String get stillLastsMonthEnd => 'still lasts till month end';
+
+  @override
   String overBy(String amount) {
     return 'Over by $amount';
+  }
+
+  @override
+  String newMonthIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'new month in $count days',
+      one: 'new month tomorrow',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -77,6 +77,15 @@ void main() {
       expect(ready().todayEntries, hasLength(HomeBloc.todayListLimit));
     });
 
+    test('keeps every Spent entry dated today for the hero\'s bites, oldest first, past the list\'s 5 (BR-6)', () async {
+      for (int i = 0; i < 4; i++) {
+        await ledger.add(EntryDraft(amount: Money.fromMajor(10), kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      }
+      await ledger.add(EntryDraft(amount: Money.fromMajor(500), kind: EntryKind.got, categoryId: 1, date: WorkedExample.today)).run();
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().todaySpends.map((Entry e) => e.id), <int>[4, 5, 6, 1000, 1001, 1002, 1003]);
+    });
+
     test('runs the recurring engine before working out today (BR-8)', () async {
       recurring.rules = <RecurringRule>[
         RecurringRule(

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Fixed Day Blocks (proposal)</title>
+<style>
+  /* Proposal: the hero's Day Blocks (BR-6) as 4 or 5 fixed bars instead of one block per day left. Nothing here is decided or built.
+     Dates follow mockups 19–21: payday Sat 7 Nov 2026. 3 days = today Wed 4 Nov; 9 days = Thu 29 Oct; 16 days = Thu 22 Oct; 28 days = Sat 10 Oct.
+     A = ₹1,850 in every case so the states compare; spends: on track ₹420, slow down ₹1,500, over today ₹2,300.
+     Phones are 360dp: 16dp page gutter, 20dp card padding, 44dp flag + 10dp gap, so the row is 234dp. Copy marked draft needs design-content. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650;
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 24px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .tag.soft { background: none; color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
+  .controls legend { float: left; font: 600 13px/20px 'Mukta', sans-serif; color: var(--canvasInk2); margin-inline-end: 4px; }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(328px, 360px)); gap: 16px; margin-top: 16px; }
+  .phone { background: var(--bg); color: var(--ink); border-radius: 24px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .phone > .cap { font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink2); display: flex; justify-content: space-between; gap: 8px; }
+  .phone > .cap b { color: var(--ink); }
+  .note { font-size: 13px; line-height: 19px; color: var(--ink2); margin: 0; }
+  .note b { color: var(--ink); font-weight: 600; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); box-shadow: inset 0 0 0 1px var(--displayInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+
+  /* Hero, as hero_card.dart */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amtRow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
+  .amt.muted { color: var(--displayInk2); }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .overTxt { font: 600 18px/24px 'Mukta', sans-serif; padding-bottom: 10px; }
+  .rows { margin-top: 24px; }
+  .barRow { display: flex; align-items: flex-end; gap: 10px; }
+  .flag { width: 44px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .flag svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .row { flex: 1; position: relative; height: 40px; min-width: 0; }
+  .caps { position: relative; height: 18px; margin-top: 6px; margin-inline-end: 54px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .caps span { position: absolute; top: 0; text-align: center; white-space: nowrap; }
+  .caps span.t { color: var(--displayInk); font-weight: 600; }
+  .caps span.l { text-align: left; }
+  .caps span.r { text-align: right; }
+  .hero hr { border: 0; height: 1px; background: var(--displayEtch); margin: 16px 0 14px; }
+  .range { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; }
+  .range .dot { width: 18px; height: 18px; border-radius: 9px; box-shadow: inset 0 0 0 1.6px var(--displayInk); flex: none; margin-top: 2px; }
+  .range span { color: var(--displayInk2); }
+
+  /* Blocks */
+  .b { position: absolute; bottom: 0; border-radius: 8px; background: var(--blockIdle); overflow: hidden; }
+  .b.ghost { background: none; box-shadow: inset 0 0 0 1.5px var(--blockIdle); }
+  .b.today { box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .b.out { background: none; box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .b .f { position: absolute; inset: auto 0 0 0; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); transition: height 520ms cubic-bezier(.2,1.25,.4,1); }
+  .b.slow { background: var(--blockIdle); box-shadow: inset 0 0 0 3px var(--signal), inset 0 0 0 4.5px var(--displayEdge); }
+  body.dark .b.slow { box-shadow: inset 0 0 0 3px var(--signal); }
+  .b.slow .f { height: 4px !important; box-shadow: none; }
+  .b.hatch { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.6px, var(--display) 1.6px 4.5px); box-shadow: inset 0 0 0 1.5px var(--displayInk); }
+  .b.later .f { display: none; }
+  .tiny { position: absolute; inset: 0; display: grid; place-items: center; font: 600 13px/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; color: var(--displayInk); }
+  /* the stack: the days not drawn, as cards behind one another */
+  .stack { position: absolute; bottom: 0; }
+  .stack i { position: absolute; border-radius: 8px; background: var(--display); box-shadow: inset 0 0 0 1.5px var(--blockIdle); }
+  .stack i.front { background: var(--blockIdle); box-shadow: none; }
+  .gaugeCap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .cmp td:first-child { font-weight: 600; white-space: nowrap; }
+
+  table { border-collapse: collapse; margin-top: 16px; font-size: 14px; line-height: 20px; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  .wrap { overflow-x: auto; }
+  ol li, ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark</label>
+  <fieldset><legend>Days left</legend>
+    <label><input type="radio" name="d" value="3"> 3</label>
+    <label><input type="radio" name="d" value="9" checked> 9</label>
+    <label><input type="radio" name="d" value="16"> 16</label>
+    <label><input type="radio" name="d" value="28"> 28</label>
+  </fieldset>
+  <fieldset><legend>Today</legend>
+    <label><input type="radio" name="s" value="on" checked> On track</label>
+    <label><input type="radio" name="s" value="slow"> Slow down</label>
+    <label><input type="radio" name="s" value="over"> Over today</label>
+  </fieldset>
+  <fieldset><legend>Bars</legend>
+    <label><input type="radio" name="n" value="5" checked> 5</label>
+    <label><input type="radio" name="n" value="4"> 4</label>
+  </fieldset>
+</div>
+
+<h1>Day Blocks, as 4 or 5 fixed bars <span class="tag soft">proposal</span></h1>
+<p class="lede">The owner's brief: the Day Blocks don't look good. Redesign them with <b>4 or 5 fixed bars</b>. Today they draw <b>one block per day left</b> (BR-6). In a 234dp row that means 40dp blocks at 5 days, 21dp at 9, 11dp at 16, and at 28 a fall back to 7 blocks and "+21". The row changes shape every day of the cycle and only looks right near payday. Every option below draws the <b>same 4 or 5 bars all cycle</b>, and the payday flag stays where it is. Try the switches above; 9 days on track is the spec's worked example.</p>
+
+<div class="grid" id="options"></div>
+
+<h2>Side by side</h2>
+<div class="wrap"><table class="cmp">
+  <tr><th></th><th>Now (BR-6)</th><th>F1 · Next days + a stack</th><th>F2 · Big today + a stack</th><th>F3 · Today as a 5-bar gauge</th></tr>
+  <tr><td>Bars</td><td>One per day left (7 + "+N" when too thin)</td><td>4–5 days, then a stack holding the rest</td><td>Today at double width, 3–4 later days, then a stack</td><td>4–5 bars, all of them today</td></tr>
+  <tr><td>Block width, 9 → 28 days</td><td>21dp → 11dp → collapses</td><td><b>Same all cycle</b> (about 34dp with 5 bars)</td><td>Same all cycle (today about 70dp)</td><td>Same all cycle (about 42dp)</td></tr>
+  <tr><td>Days left shown by</td><td>Counting blocks</td><td>The blocks plus "+N" on the stack</td><td>The blocks plus "+N" on the stack</td><td>Words only ("9 days")</td></tr>
+  <tr><td>Today's drain</td><td>In a thin block (11–21dp)</td><td>In a 34dp block</td><td><b>In a 70dp block</b>, easy to see</td><td>Bar by bar, like a phone battery</td></tr>
+  <tr><td>Keeps the Day Blocks idea</td><td>Yes</td><td>Yes: each block is still a day</td><td>Yes</td><td><b>No</b>: bars stop being days (UI_DESIGN's core concept)</td></tr>
+  <tr><td>Labels</td><td>"Today … 8 more days"</td><td>Weekday under each block</td><td>Weekday under each block</td><td>"Today … 9 days to payday"</td></tr>
+  <tr><td>Change size</td><td>—</td><td>Small: layout always takes the collapsed path, at 4–5; plus the stack and labels</td><td>Small–medium: uneven widths, and the trail and fill-in move to a wide block</td><td>Large: new painter, new states, spec and UI_DESIGN rewrite</td></tr>
+</table></div>
+
+<h2>Recommendation <span class="tag">F2, 5 bars</span></h2>
+<p class="lede"><b>F2 · Big today, three later days and a stack.</b> Today is the only block that changes during the day. At double width its marigold drain, the 50% trail (D91), the slow-down sliver and the hatch are all big enough to read at a glance. The three later blocks still say "every day gets a share", and they shrink together when today is overspent (BR-6). The stack says how many more days without counting slivers. All five bars are the same size on day 1 and on day 28, so the hero looks the same every morning. Under 5 days, the stack goes first and then the later blocks, so the last day is one wide block next to the flag. <b>F1</b> is the close second if a wide today feels too loud: it changes the least code. <b>F3</b> is the clearest gauge, but it drops "a block is a day". That idea is the hero's whole concept, so it's shown only for comparison.</p>
+
+<h2>Plan, if F2 is picked</h2>
+<ol>
+  <li><b>Docs first:</b> rewrite SPEC BR-6 "Number of blocks" and "Widths". There are always <code>min(D, 4)</code> day blocks plus a stack of <code>D − 4</code> when <code>D > 4</code>, and today takes two slots' width. Update UI_DESIGN §5.2, mockup README and a DECISIONS row. The "under 6dp" collapse rule goes away. → verify: SPEC, UI_DESIGN and this page agree.</li>
+  <li><b>Layout, test first:</b> <code>DayBlocksLayout.of</code> returns fixed slots: today 2 units, later blocks 1 unit, stack 1 unit, 6dp gaps, and the same slot widths for every <code>D ≥ 5</code>. → verify: <code>day_blocks_layout_test</code> at <code>D</code> = 1, 2, 4, 5, 6, 28, 31 and at every <code>TestWindows</code> width. No block goes under 24dp at 320dp.</li>
+  <li><b>Data:</b> <code>DayBlocksData</code> keeps <code>count</code>, and the stack count is derived from it. The mapper doesn't change, since <code>todayFill</code> and <code>laterHeight</code> still come from BR-6. → verify: the existing mapper tests pass unchanged.</li>
+  <li><b>Painter:</b> draw today wide, the later blocks and the stack (two offset outlines behind an idle card, with "+N" in Anek Latin tabular). States: the later blocks <i>and</i> the stack shrink to <code>laterHeight</code> with the ghost outline. In over-cycle, everything is outlined. → verify: painter tests per state. The trail and fill-in tests are re-measured on the wide block.</li>
+  <li><b>Labels and TalkBack:</b> the caption row becomes "Today" under today, short weekday names under the later blocks, and nothing under the stack. The hero's spoken sentence keeps "N more days". → verify: a11y tests, plus labels fit at 320dp with text at 200%. Past 1.3× scale, fall back to the current two captions.</li>
+  <li><b>Motion:</b> at midnight the stack deals the next day into the row (slide left on <code>standard</code>, "+N" rolls down by 1), and reduced motion crossfades. The assemble on first launch deals out the five slots. → verify: replay on a device, with Reduce motion on and off.</li>
+  <li><b>Done:</b> <code>flutter analyze</code> clean, <code>flutter test</code> green, <code>scripts/changed_lines_coverage.sh</code> ≥ 90%, and checked on the moto g45 at 9 and 28 days with <code>FakeClock</code>. Existing tests that assert one block per day need the owner's OK to change.</li>
+</ol>
+
+<h3>Open questions for the owner</h3>
+<ul>
+  <li><b>F2, F1 or F3?</b> Is a double-width today too loud next to the ₹ amount?</li>
+  <li><b>4 or 5 bars?</b> At 360dp, 5 gives 34dp later blocks; 4 gives 44dp but only two later days. The 5 / 4 switch shows both.</li>
+  <li><b>Weekday names under the blocks?</b> They add dates to the hero (mockup 19's D1 idea), or the captions could stay as "Today … 8 more days".</li>
+</ul>
+
+<script>
+const FLAG = '<svg viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>';
+const ROW = 234, GAP = 6, A = 1850;
+const TODAY = { 3: new Date(2026, 10, 4), 9: new Date(2026, 9, 29), 16: new Date(2026, 9, 22), 28: new Date(2026, 9, 10) };
+const SPENT = { on: 420, slow: 1500, over: 2300 };
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const wd = (D, i) => new Date(TODAY[D].getTime() + i * 864e5).toLocaleDateString('en-IN', { weekday: 'short' });
+
+function st() {
+  const D = +document.querySelector('input[name=d]:checked').value;
+  const s = document.querySelector('input[name=s]:checked').value;
+  const n = +document.querySelector('input[name=n]:checked').value;
+  const spent = SPENT[s];
+  const left = A - spent;
+  let fill = Math.max(0, Math.min(1, left / A));
+  if (spent > 0) fill = Math.min(fill, 0.9);
+  const tomorrow = D > 1 ? (A * D - spent) / (D - 1) : A;
+  const later = Math.max(0.4, Math.min(1, tomorrow / A));
+  return { D, s, n, spent, left, fill, later };
+}
+
+function todayBlock(x, w, c) {
+  if (c.s === 'over') return `<div class="b hatch" style="left:${x}px;width:${w}px;height:40px"></div>`;
+  if (c.s === 'slow') return `<div class="b slow" style="left:${x}px;width:${w}px;height:40px"><div class="f"></div></div>`;
+  return `<div class="b today" style="left:${x}px;width:${w}px;height:40px"><div class="f" style="height:${(c.fill * 100).toFixed(1)}%"></div></div>`;
+}
+function laterBlock(x, w, c) {
+  const h = 40 * c.later;
+  const ghost = c.later < 1 ? `<div class="b ghost" style="left:${x}px;width:${w}px;height:40px"></div>` : '';
+  return ghost + `<div class="b" style="left:${x}px;width:${w}px;height:${h}px"></div>`;
+}
+function stackTile(x, w, c, more) {
+  const h = 40 * c.later, o = 4;
+  return `<div class="stack" style="left:${x}px;width:${w}px;height:${h}px">
+    <i style="left:${o * 2}px;right:0;bottom:${o * 2}px;height:${h - o * 2}px"></i>
+    <i style="left:${o}px;right:${o}px;bottom:${o}px;height:${h - o * 2}px"></i>
+    <i class="front" style="left:0;right:${o * 2}px;bottom:0;height:${h - o * 2}px"></i>
+    <div class="tiny" style="right:${o * 2}px;top:${o * 2}px">+${more}</div></div>`;
+}
+function hero(c, rows, caps, range) {
+  const amount = c.s === 'over' ? '0' : inr(c.left).slice(1);
+  const over = c.s === 'over' ? `<div class="overTxt">${inr(c.spent - A)} over today</div>` : '';
+  return `<div class="hero"><div class="ttl">Safe to spend today</div>
+    <div class="amtRow"><div class="amt ${c.s === 'over' ? 'muted' : ''}"><span class="rs">₹</span>${amount}</div>${over}</div>
+    <div class="rows"><div class="barRow"><div class="row">${rows}</div><div class="flag">${FLAG}7 Nov</div></div>
+    <div class="caps">${caps}</div></div><hr>
+    <div class="range"><i class="dot"></i><div>${range}</div></div></div>`;
+}
+const rangeText = c => c.s === 'over' ? `Later days get ${inr(c.later * A)} each · <span>to stay on track</span>` : 'Lasts till payday · <span>about ₹9,300 spare</span>';
+const card = (cap, tag, body, note) => `<div class="phone"><div class="cap"><b>${cap}</b><span>${tag}</span></div>${body}<p class="note">${note}</p></div>`;
+const cap = (x, w, text, cls = '') => `<span class="${cls}" style="left:${x}px;width:${w}px">${text}</span>`;
+
+function now(c) {
+  let count = c.D, gap = count <= 16 ? 6 : 3, w = (ROW - gap * (count - 1)) / count, more = 0;
+  if (w < 6) { more = count - 7; count = 7; gap = 6; w = (ROW - 30 - gap * 7) / 7; }
+  let html = '';
+  for (let i = 0; i < count; i++) html += i === 0 ? todayBlock(0, w, c) : laterBlock(i * (w + gap), w, c);
+  if (more) html += `<div class="tiny" style="left:${count * (w + gap)}px;width:30px;font-size:13px">+${more}</div>`;
+  const caps = cap(0, 60, 'Today', 'l') + cap(ROW - 120, 120, `${c.D - 1} more days`, 'r');
+  return card('Now · one block per day', `${w.toFixed(0)}dp blocks`, hero(c, html, caps, rangeText(c)),
+    c.D >= 28 ? 'At 28 days the blocks would be under 6dp, so the row already falls back to 7 blocks and "+21". The row looks different on every day of the cycle.' : `At ${c.D} days each block is ${w.toFixed(0)}dp. The width changes every morning; today's drain is hard to see under about 24dp.`);
+}
+
+function f1(c) {
+  const days = Math.min(c.D, c.n), more = c.D - days, slots = c.n + (c.D > c.n ? 1 : 0);
+  const fixedSlots = c.n + 1;
+  const w = (ROW - GAP * (fixedSlots - 1)) / fixedSlots;
+  let html = '', caps = '';
+  for (let i = 0; i < days; i++) {
+    const x = i * (w + GAP);
+    html += i === 0 ? todayBlock(x, w, c) : laterBlock(x, w, c);
+    caps += cap(x - 8, w + 16, i === 0 ? 'Today' : wd(c.D, i), i === 0 ? 't' : '');
+  }
+  if (more > 0) html += stackTile(days * (w + GAP), w, c, more);
+  return card('F1 · Next days, then a stack', 'close second', hero(c, html, caps, rangeText(c)),
+    `<b>${c.n} day blocks of ${w.toFixed(0)}dp, then a stack holding the other ${Math.max(0, more)} days.</b> The width never changes. Weekdays under the blocks say which day is which. At midnight the stack deals the next day into the row. ${c.D <= c.n ? 'With ' + c.D + ' days left the stack is gone and the remaining slots are left empty.' : ''}`);
+}
+
+function f2(c) {
+  const later = c.n - 2; // today counts as two slots
+  const units = c.n + 1; // today (2) + later + stack (1)
+  const w = (ROW - GAP * (units - 2)) / units;
+  const tw = w * 2 + GAP;
+  const laterShown = Math.min(Math.max(c.D - 1, 0), later);
+  const more = c.D - 1 - laterShown;
+  let html = todayBlock(0, tw, c), caps = cap(0, tw, 'Today', 't');
+  for (let i = 0; i < laterShown; i++) {
+    const x = tw + GAP + i * (w + GAP);
+    html += laterBlock(x, w, c);
+    caps += cap(x - 8, w + 16, wd(c.D, i + 1));
+  }
+  if (more > 0) html += stackTile(tw + GAP + later * (w + GAP), w, c, more);
+  return card('F2 · Big today, then a stack', 'recommended', hero(c, html, caps, rangeText(c)),
+    `<b>Today is ${tw.toFixed(0)}dp wide</b>, so its drain, sliver and hatch read at a glance. Then ${later} later days of ${w.toFixed(0)}dp and a stack of ${Math.max(0, more)} more. Every bar is the same size on day 1 and on day 28.`);
+}
+
+function f3(c) {
+  const w = (ROW - GAP * (c.n - 1)) / c.n;
+  const per = 1 / c.n;
+  let html = '';
+  const level = c.s === 'over' ? 0 : c.left / A;
+  for (let i = 0; i < c.n; i++) {
+    const x = i * (w + GAP);
+    if (c.s === 'over') { html += `<div class="b hatch" style="left:${x}px;width:${w}px;height:40px"></div>`; continue; }
+    const part = Math.max(0, Math.min(1, (level - i * per) / per));
+    if (c.s === 'slow' && i === 0) { html += `<div class="b slow" style="left:${x}px;width:${w}px;height:40px"><div class="f"></div></div>`; continue; }
+    html += `<div class="b ${part > 0 ? 'today' : ''}" style="left:${x}px;width:${w}px;height:40px"><div class="f" style="height:${(part * 100).toFixed(1)}%;${part === 0 ? 'box-shadow:none' : ''}"></div></div>`;
+  }
+  const caps = cap(0, 60, 'Today', 'l t') + cap(ROW - 140, 140, `${c.D} days to payday`, 'r');
+  return card('F3 · Today as a gauge', 'wildcard', hero(c, html, caps, rangeText(c)),
+    `<b>All ${c.n} bars are today</b>, each worth ${inr(A / c.n)}, and they empty from the right like a phone battery. It is the clearest drain, but days left are only in words, so "a block is a day" is lost.`);
+}
+
+function render() {
+  const c = st();
+  document.getElementById('options').innerHTML = [now(c), f2(c), f1(c), f3(c)].join('');
+}
+document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+document.querySelectorAll('.controls input[type=radio]').forEach(r => r.addEventListener('change', render));
+render();
+</script>
+</body>
+</html>

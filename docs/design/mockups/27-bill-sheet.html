@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Bill sheet (proposal)</title>
+<style>
+  /* Proposal for case study 16 (docs/design-research/case-studies/16-bill-edit-flow.md). Nothing here is built yet.
+     Changing a fixed bill moves from the three-question wizard to a sheet that looks like a paper bill: the whole bill
+     first, one Change row per answer, each answer saved on its own. Home's due-soon line opens the same sheet.
+     Round 2 (owner): the stamp sits on the amount line, straight, right edge on the value column; Delete is a full-width
+     key in the same place as Save; each bill gets an icon, picked from the name, which the user can change.
+     Numbers follow the worked example in docs/design/README.md: today Mon 26 Oct 2026, cycle from Sun 4 Oct,
+     Electricity ₹1,200 due Thu 29 Oct (last posted 29 Sep). Day changes follow D34. Copy marked draft needs design-content.
+     Icons are hand-drawn stand-ins for the Hugeicons stroke-rounded glyphs named in ICONS below. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --pick: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #161615; --onInverse: #F2F1EC;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650;
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --pick: #3A3A37;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b { color: var(--canvasInk); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--canvasInk2); box-shadow: inset 0 0 0 1px var(--canvasInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+  .controls { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+  .controls button { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1.5px solid var(--canvasInk); background: none; color: var(--canvasInk); cursor: pointer; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+  td svg.i { width: 18px; height: 18px; vertical-align: -4px; color: var(--canvasInk); }
+
+  .try { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 16px; }
+  .try ol { margin: 0; padding-inline-start: 20px; max-width: 46ch; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(306px, 306px)); gap: 24px 16px; margin-top: 16px; }
+  .gallery figure { margin: 0; }
+  .gallery figcaption { font-size: 13px; line-height: 19px; color: var(--canvasInk2); margin-top: 8px; max-width: 306px; }
+  .gallery figcaption b { color: var(--canvasInk); font-weight: 600; }
+  .gallery .phone { zoom: 0.85; pointer-events: none; }
+
+  /* Phone */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  @media (max-width: 420px) { .try > .phone { zoom: 0.85; } }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+
+  /* Home (simplified; the hero follows mockup 25) */
+  .home { position: absolute; inset: 0; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; height: 48px; gap: 8px; }
+  .topbar .ttl { flex: 1; font: 600 20px/24px 'Anek Latin', sans-serif; }
+  .wm { font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 72px/72px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .hero .bar { display: flex; gap: 4px; height: 40px; margin-top: 20px; }
+  .hero .bar .f { flex: 77; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 12px 6px 6px 12px; }
+  .hero .bar .b { flex: 23; background: var(--blockIdle); border-radius: 6px 12px 12px 6px; }
+  .hero .cap { font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 8px; }
+  .dueNow { display: flex; gap: 8px; font-size: 15px; line-height: 22px; color: var(--ink2); padding: 0 4px; }
+  .dueNow svg { width: 18px; height: 18px; margin-top: 2px; }
+  .due { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px 8px 8px; border-radius: 18px; background: var(--sunk); width: 100%; transition: background 120ms; }
+  .due:active, .due.pressed { background: var(--hairline); }
+  .due .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; }
+  .due .t { flex: 1; font-size: 15px; line-height: 20px; }
+  .due .t b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .due .t span { display: block; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .listHd { font: 600 17px/24px 'Anek Latin', sans-serif; margin-top: 4px; }
+  .entry { display: flex; justify-content: space-between; font-size: 16px; line-height: 22px; padding: 10px 4px; border-bottom: 1px solid var(--hairline); }
+  .entry b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  body.dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  /* Fixed bills list (Settings), with each bill's icon */
+  .hint { font-size: 15px; line-height: 22px; color: var(--ink2); margin: 0; }
+  .addChip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px 0 12px; border-radius: 16px; background: var(--sunk); font: 600 15px/20px 'Mukta', sans-serif; }
+  .card { background: var(--surface); border-radius: 24px; padding: 8px 0; }
+  .brow { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 16px; }
+  .brow + .brow::before { content: ''; position: absolute; top: 0; left: 70px; right: 16px; height: 1px; background: var(--hairline); }
+  .brow .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .brow .t { flex: 1; font-size: 17px; line-height: 22px; }
+  .brow .t span { display: block; font-size: 14px; line-height: 18px; color: var(--ink2); }
+  .brow b { font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 92px; min-height: 52px; border-radius: 16px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; font-size: 15px; z-index: 5; }
+  .snack button { font: 600 15px/20px 'Mukta', sans-serif; padding: 12px; color: var(--onInverse); }
+
+  /* Sheet */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity 240ms ease; z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 96%; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 16px 20px; transform: translateY(105%); transition: transform 420ms cubic-bezier(.2,1.12,.4,1); z-index: 9; }
+  body.dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .sheet { transform: none; }
+  body.reduce .sheet { transition: none; }
+  body.reduce .scrim { transition: opacity 150ms linear; }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; }
+
+  /* The bill: a paper slip with a torn bottom edge */
+  .slip { position: relative; background: var(--display); color: var(--displayInk); border-radius: 20px 20px 0 0; padding: 18px 20px 14px; margin-bottom: 8px; }
+  .slip::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px;
+    background: conic-gradient(from -45deg at 50% 100%, var(--display) 0 90deg, transparent 90deg) 0 0 / 14px 100% repeat-x; }
+  .eyebrow { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--displayInk2); }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .who .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .who .nm { font: 600 22px/28px 'Anek Latin', sans-serif; overflow-wrap: anywhere; }
+  /* the amount line: the figure, and the stamp on the same line, right edge on the value column */
+  .amtRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .big { font: 600 56px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .every { font-size: 15px; line-height: 22px; color: var(--displayInk2); }
+  .every b { color: var(--displayInk); font-weight: 600; }
+  .stamp { font: 600 12px/14px 'Anek Latin', sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--displayInk2); white-space: nowrap;
+    padding: 6px 10px; border: 2px solid var(--displayInk2); border-radius: 8px; }
+  .opening .stamp { animation: thump 420ms cubic-bezier(.3,1.6,.5,1) 260ms both; }
+  @keyframes thump { 0% { transform: scale(1.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  body.reduce .opening .stamp { animation: fade 150ms linear both; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .perf { position: relative; height: 20px; margin: 8px -20px; }
+  .perf::before { content: ''; position: absolute; left: 22px; right: 22px; top: 9px; border-top: 2px dashed var(--hairline); }
+  .perf i { position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .perf i.l { left: -8px; } .perf i.r { right: -8px; }
+  .line { display: flex; align-items: center; width: calc(100% + 16px); margin: 0 -8px; min-height: 48px; padding: 12px 8px; border-radius: 12px; font-size: 16px; line-height: 22px; transition: background 120ms; }
+  .line:active, .line.pressed { background: var(--sunk); }
+  .line .lead { flex: 1; min-width: 12px; border-bottom: 2px dotted var(--hairline); margin: 0 8px; align-self: flex-end; transform: translateY(-9px); }
+  .line .v { display: inline-flex; align-items: center; gap: 6px; font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; max-width: 160px; overflow: hidden; white-space: nowrap; }
+  .line .v svg { width: 18px; height: 18px; }
+  .line > svg { width: 18px; height: 18px; margin-inline-start: 6px; color: var(--displayInk2); }
+  .line.flash { animation: flash 1400ms ease-out; }
+  @keyframes flash { 0%, 30% { background: var(--sunk); } 100% { background: transparent; } }
+  .foot { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; color: var(--displayInk2); padding-top: 2px; min-height: 22px; }
+  .foot b { color: var(--displayInk); font-weight: 600; }
+  .foot svg { width: 16px; height: 16px; color: var(--displayInk); }
+  /* the one full-width key at the bottom of every sheet view: Save (signal) on a question, Delete (sunk) on the bill */
+  .wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 56px; margin-top: 16px; border-radius: 18px; font: 600 17px/1 'Mukta', sans-serif; }
+  .wide.del { background: var(--sunk); color: var(--ink); }
+  .wide.del:active { background: var(--hairline); }
+  .wide.sig { background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .wide.sig:disabled { background: var(--sunk); color: var(--ink2); box-shadow: none; cursor: default; }
+
+  /* One question inside the sheet */
+  .stepHd { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-bottom: 8px; }
+  .stepHd .q { font: 600 19px/24px 'Anek Latin', sans-serif; }
+  .slip.compact { padding-bottom: 12px; }
+  .slip.compact .big { font-size: 48px; line-height: 52px; margin-top: 6px; }
+  .caret { display: inline-block; width: 3px; height: 40px; margin-left: 3px; vertical-align: -4px; background: var(--signal); border-radius: 2px; animation: blink 1s steps(1) infinite; }
+  body.reduce .caret { animation: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .was { font-size: 14px; line-height: 20px; color: var(--displayInk2); min-height: 20px; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .key { height: 56px; border-radius: 16px; background: var(--sunk); font: 600 24px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .key:active { background: var(--hairline); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 16px; }
+  .day { min-height: 48px; border-radius: 14px; background: var(--sunk); font: 400 18px/1 'Anek Latin', sans-serif; display: grid; place-items: center; position: relative; font-variant-numeric: tabular-nums; }
+  .day:active, .tile:active { background: var(--hairline); }
+  /* new state: the bill's current day or icon lifts one step with an ink dot, as a picked chip (D88) */
+  .day.on, .tile.on { background: var(--pick); font-weight: 600; }
+  .day.on::after, .tile.on::after { content: ''; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 3px; background: var(--ink); }
+  .field { display: block; width: 100%; min-height: 56px; margin-top: 16px; border-radius: 16px; background: var(--sunk); border: 0; box-shadow: inset 0 0 0 1.5px var(--ink2); padding: 0 16px; font: 400 18px/1 'Mukta', sans-serif; color: var(--ink); outline: none; }
+  .helper { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; color: var(--ink2); margin: 8px 4px 0; min-height: 20px; }
+  .helper svg { width: 16px; height: 16px; color: var(--ink); }
+  .kbd { height: 190px; margin: 12px -16px -20px; background: var(--sunk); display: grid; place-items: center; font-size: 13px; color: var(--ink2); }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .tile { position: relative; min-height: 68px; border-radius: 16px; background: var(--sunk); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 2px; font: 600 12px/14px 'Mukta', sans-serif; text-align: center; }
+  .tile svg { width: 22px; height: 22px; }
+</style>
+</head>
+<body>
+
+<h1>Bill sheet <span class="tag">proposal</span></h1>
+<p class="lede">Case study 16, drawn, round 2. Tap a bill (from <b>Home's due-soon line</b> or from <b>Settings › Fixed bills</b>) and a sheet rises holding the bill itself: a paper slip with a torn edge, a perforation and a stamp. Each answer has its own row, and tapping one opens just that question and saves it alone. This round: <b>the stamp sits on the amount line</b>, <b>Delete is a full-width key where Save sits</b>, and <b>every bill gets an icon</b>, picked from its name, which you can change. Today is <b>Mon 26 Oct 2026</b>.</p>
+
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark</label>
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <button id="reset">Reset the demo</button>
+</div>
+
+<h2>Try it</h2>
+<div class="try">
+  <div class="phone" id="live"></div>
+  <ol>
+    <li>Tap <b>Electricity ₹1,200 goes out in 3 days</b>. The sheet rises and the stamp lands beside the amount.</li>
+    <li>Tap <b>Name</b> and type <b>Airtel fibre</b>, <b>Gas cylinder</b> or <b>Netflix</b>. The icon on the slip follows as you type. Press <b>Save</b>.</li>
+    <li>Tap <b>Icon</b> and pick another one. From then on, renaming keeps your pick. Picking the one the name suggests (the tile with "From the name" under it) goes back to following the name.</li>
+    <li>Tap <b>Amount</b>, type <b>1350</b> and press <b>Save</b>. The first key replaces the old amount.</li>
+    <li>Tap <b>Day of the month</b>. Pick <b>20</b> and D34 moves it to Fri 20 Nov, so the stamp goes and the due line leaves Home.</li>
+    <li><b>Delete bill</b> closes the sheet and offers Undo. Close with the scrim or Esc.</li>
+  </ol>
+</div>
+
+<h2>Every screen</h2>
+<div class="gallery" id="gallery"></div>
+
+<h2>Bill icons</h2>
+<p>Sixteen glyphs, all in the free Hugeicons stroke-rounded set, each with a label (icons always carry one). The name picks the icon on the fly: the first group whose word appears in the name wins, and the groups are checked top to bottom, so "Car EMI" is a loan and "Airtel fibre" is internet. With no match, the bill keeps today's <i>Bill</i> glyph. The six onboarding pills map straight across: Rent → Home, EMI → Loan, Phone → Phone, Internet → Internet, School fees → School, Subscriptions → TV &amp; apps.</p>
+<table id="iconTable"><tr><th>Icon</th><th>Hugeicons glyph</th><th>Words in the name that pick it<span class="draft">draft</span></th></tr></table>
+
+<h2>What makes it a bill</h2>
+<table>
+  <tr><th>Element</th><th>How it's drawn</th><th>Why</th></tr>
+  <tr><td>Paper slip</td><td><code>display</code> fill, 20dp top corners, flat, on the sheet's <code>bg</code></td><td>The hero's paper. It stays flat because the hero is the only raised card (D106)</td></tr>
+  <tr><td>Torn edge</td><td>14dp zigzag teeth, 8dp deep</td><td>Reads as "a slip torn off" with no words</td></tr>
+  <tr><td>Perforation</td><td>2dp dashed <code>hairline</code> with two 16dp punched notches</td><td>Splits <i>what the bill is</i> from <i>what you can change</i></td></tr>
+  <tr><td>Dotted leaders</td><td>2dp dotted <code>hairline</code> from label to value</td><td>The printed-bill row. The eye runs straight from "Amount" to "₹1,200"</td></tr>
+  <tr><td>Stamp</td><td>12dp Anek Latin caps in a 2dp <code>displayInk2</code> box, <b>straight</b>, on the amount line, vertically centred on the figure, its right edge on the rows' value column. It lands with a squash 260ms after the sheet opens (a fade with reduced motion). It wraps under the figure for a 9-digit amount</td><td>Round 1's tilted corner stamp lined up with nothing. Here it shares an edge with the chevrons and a centre line with the amount it describes: <b>Due in 3 days</b>, <b>Counted 5 Oct</b>, or no stamp</td></tr>
+  <tr><td>Delete bill</td><td>A full-width 56dp <code>sunk</code> key under the slip, with icon and label</td><td>Every sheet view now ends with one full-width key in the same place: marigold <i>Save</i> on a question, grey <i>Delete bill</i> on the bill. It's grey, not red, as everywhere (no red). Undo makes it safe</td></tr>
+</table>
+
+<h2>Notes for the build</h2>
+<ul>
+  <li><b>Data:</b> <code>recurring_rules</code> gains <code>icon TEXT NULL</code> in a migration. Null means "follow the name". A pure <code>BillIcon.forName(String)</code> in the ledger domain holds the word table, written test-first: "Car EMI" → loan, "Airtel fibre" → internet, "Light bill" → power, no match → bill, case and spaces ignored.</li>
+  <li><b>Where the icon shows:</b> the slip, the <i>Fixed bills</i> rows (today all use <code>AppIcons.recurring</code>), Home's due-soon row and the Add wizard's name step (live, as here). Entries posted by a bill keep their category's icon; the bill's icon is the bill's alone.</li>
+  <li><b>No colour:</b> icons are <code>ink</code> in <code>sunk</code> wells. Telling bills apart comes from shape, not hue (no category colours).</li>
+  <li><b>TalkBack:</b> the slip reads "Electricity, power, ₹1,200, every month on day 29, due in 3 days". Rows read "Change icon, Power". Tiles read "Power, picked, from the name".</li>
+  <li><b>Reuse:</b> the amount, day and name questions are today's step widgets with a <i>Save</i> label. The icon question is new (<code>BillIconStep</code>, a 4×4 grid like the category tiles). The slip is a new shared <code>BillSlip</code>.</li>
+</ul>
+
+<h2>For you to decide</h2>
+<ul>
+  <li><b>Decided: "Counted", not "Paid".</b> Nobody marks a bill as paid. The engine counts it on its day (BR-9) and can't know the money left, so the stamp says what the app did. "Count it today" for early payers is held until someone reports the gap.</li>
+  <li><b>Hindi and regional words in the table</b> (bijli, kiraya, doodh, bai)? Users type names in Latin script, and these are cheap to add. Drawn: included.</li>
+  <li><b>Sixteen icons enough?</b> More means a scrolling grid. I'd rather keep 16 and let <i>Bill</i> cover the rest.</li>
+</ul>
+
+<script>
+const P = {
+  bill: '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/>',
+  power: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  internet: '<path d="M2.5 9a14 14 0 0 1 19 0"/><path d="M5.5 12.5a9.5 9.5 0 0 1 13 0"/><path d="M8.7 16a5 5 0 0 1 6.6 0"/><path d="M12 19.5h.01"/>',
+  loan: '<path d="M3 9l9-5 9 5"/><path d="M4 9h16"/><path d="M6 9v8M10 9v8M14 9v8M18 9v8"/><path d="M3 20h18"/>',
+  card: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h3"/>',
+  school: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v5"/>',
+  tv: '<rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+  water: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  gas: '<path d="M12 3c.8 3 5 5 5 10a5 5 0 0 1-10 0c0-2.6 1.6-3.8 2-6 1 1 2 2.2 2 3.4C11 7.6 11.2 5 12 3z"/>',
+  insurance: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  help: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  milk: '<path d="M9 3h6"/><path d="M9.5 3v3L7 10v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V10l-2.5-4V3"/><path d="M7 13h10"/>',
+  society: '<path d="M4 21V4h11v17"/><path d="M15 9h5v12"/><path d="M2 21h20"/><path d="M8 8h3M8 12h3M8 16h3"/>',
+  car: '<path d="M3 17v-4l2.2-5.5h13.6L21 13v4z"/><path d="M3 13h18"/><path d="M6 17v2.5M18 17v2.5"/><path d="M7 15h.01M17 15h.01"/>',
+};
+// key, label, Hugeicons glyph, words. Checked top to bottom: the first group with a word in the name wins.
+const ICONS = [
+  ['loan', 'Loan', 'Bank', ['emi', 'loan', 'mortgage']],
+  ['card', 'Card', 'CreditCard', ['credit card', 'card']],
+  ['power', 'Power', 'Flash', ['electricity', 'electric', 'power', 'light bill', 'bijli', 'bescom', 'msedcl', 'tneb']],
+  ['internet', 'Internet', 'Wifi01', ['internet', 'wifi', 'wi-fi', 'broadband', 'fibre', 'fiber', 'act', 'hathway']],
+  ['phone', 'Phone', 'SmartPhone01', ['phone', 'mobile', 'recharge', 'jio', 'airtel', 'vi', 'vodafone', 'bsnl', 'postpaid']],
+  ['tv', 'TV & apps', 'Tv01', ['subscription', 'subscriptions', 'netflix', 'prime', 'hotstar', 'spotify', 'youtube', 'ott', 'dth', 'tata play', 'cable', 'tv']],
+  ['school', 'School', 'School', ['school', 'fees', 'tuition', 'college', 'coaching', 'class']],
+  ['water', 'Water', 'Droplet', ['water', 'paani']],
+  ['gas', 'Gas', 'Fire', ['gas', 'cylinder', 'lpg', 'png', 'indane']],
+  ['insurance', 'Insurance', 'Shield01', ['insurance', 'lic', 'policy', 'premium']],
+  ['help', 'House help', 'User', ['maid', 'bai', 'cook', 'driver', 'nanny', 'didi', 'help']],
+  ['milk', 'Milk', 'MilkBottle', ['milk', 'doodh', 'dairy']],
+  ['society', 'Society', 'Building03', ['society', 'maintenance', 'apartment']],
+  ['home', 'Home', 'Home01', ['rent', 'kiraya', 'house', 'pg']],
+  ['car', 'Car', 'Car01', ['car', 'bike', 'parking']],
+  ['bill', 'Bill', 'Repeat', []],
+];
+// the grid shows them in a calmer order: Bill first, then the most common
+const GRID = ['bill', 'home', 'power', 'phone', 'internet', 'loan', 'card', 'tv', 'school', 'water', 'gas', 'insurance', 'help', 'milk', 'society', 'car'];
+const LABEL = Object.fromEntries(ICONS.map(i => [i[0], i[1]]));
+const svg = (k, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24">${P[k]}</svg>`;
+function infer(name) {
+  const t = ' ' + name.toLowerCase().replace(/[^a-z0-9-]+/g, ' ').trim() + ' ';
+  for (const [k, , , words] of ICONS) if (words.some(w => t.includes(' ' + w + ' '))) return k;
+  return 'bill';
+}
+const iconOf = b => b.icon || infer(b.name);
+
+const I = {
+  chev: '<svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
+  back: '<svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
+  trash: '<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg>',
+  check: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  bs: '<svg class="i" viewBox="0 0 24 24"><path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg>',
+  info: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+  gear: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+};
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const T0 = new Date(2026, 9, 26), CYCLE = new Date(2026, 9, 4);
+const n = v => new Intl.NumberFormat('en-IN').format(v);
+const inr = v => '₹' + n(v);
+const dim = (y, m) => new Date(y, m + 1, 0).getDate();
+const on = (y, m, d) => new Date(y, m, Math.min(d, dim(y, m)));
+const away = d => Math.round((d - T0) / 864e5);
+const fmt = d => `${WD[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`;
+const short = d => `${d.getDate()} ${MON[d.getMonth()]}`;
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const inDays = d => d === 0 ? 'today' : d === 1 ? 'tomorrow' : `in ${d} days`;
+
+const freshBills = () => [
+  { id: 1, name: 'Electricity', amount: 1200, day: 29, next: new Date(2026, 9, 29), last: new Date(2026, 8, 29), icon: null },
+  { id: 4, name: 'Maid', amount: 3000, day: 1, next: new Date(2026, 10, 1), last: new Date(2026, 9, 1), icon: null },
+  { id: 2, name: 'Rent', amount: 18000, day: 5, next: new Date(2026, 10, 5), last: new Date(2026, 9, 5), icon: null },
+  { id: 3, name: 'Airtel', amount: 999, day: 12, next: new Date(2026, 10, 12), last: new Date(2026, 9, 12), icon: null },
+];
+// D34: the new day in the month of the old next date, or the next date from today if that has passed;
+// a date of today is posted at once (D33), so the next one is a month on.
+function moveDay(b, day) {
+  b.day = day;
+  let d = on(b.next.getFullYear(), b.next.getMonth(), day);
+  if (d < T0) { d = on(2026, 9, day); if (d < T0) d = on(2026, 10, day); }
+  if (+d === +T0) { b.last = d; d = on(2026, 10, day); }
+  b.next = d;
+}
+function stampOf(b) {
+  const d = away(b.next);
+  if (d >= 1 && d <= 5) return d === 1 ? 'Due tomorrow' : `Due in ${d} days`;
+  if (b.last >= CYCLE) return +b.last === +T0 ? 'Counted today' : `Counted ${short(b.last)}`;
+  return '';
+}
+const dueBill = bills => bills.filter(b => { const d = away(b.next); return d >= 1 && d <= 5; }).sort((a, b) => a.next - b.next)[0];
+
+/* ---------- views ---------- */
+function homeHTML(s, variant) {
+  if (variant === 'list') return listHTML(s);
+  const b = dueBill(s.bills);
+  let due = '';
+  if (b && variant === 'now') {
+    due = `<div class="dueNow">${I.info}<span>${esc(b.name)} ${inr(b.amount)} goes out ${inDays(away(b.next))}</span></div>`;
+  } else if (b) {
+    due = `<button class="due${s.pressDue ? ' pressed' : ''}" data-act="openBill" data-id="${b.id}" aria-label="${esc(b.name)} ${inr(b.amount)} goes out ${inDays(away(b.next))}. Opens the bill.">
+      <span class="w">${svg(iconOf(b))}</span>
+      <span class="t">${esc(b.name)} <b>${inr(b.amount)}</b> goes out ${inDays(away(b.next))}<span>${fmt(b.next)}</span></span>${I.chev}</button>`;
+  }
+  return `<div class="home">
+    <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${I.gear}</span></div>
+    <div class="hero"><div class="ttl">Today</div><div class="amt"><span class="rs">₹</span>1,430</div>
+      <div class="bar"><span class="f"></span><span class="b"></span></div><div class="cap">₹420 spent of ₹1,850 · 9 days to payday</div></div>
+    ${due}
+    <div class="listHd">Today</div>
+    <div class="entry"><span>Food · chai</span><b>₹40</b></div>
+    <div class="entry"><span>Food · lunch</span><b>₹380</b></div>
+  </div>
+  ${snackHTML(s)}
+  <div class="dock"><span>Home</span><span class="add">${I.plus}</span><span>Spends</span></div>`;
+}
+const snackHTML = s => s.snack ? `<div class="snack"><span>Deleted ${esc(s.snack.bill.name)}</span><button data-act="undo">Undo</button></div>` : '';
+function listHTML(s) {
+  const rows = [...s.bills].sort((a, b) => a.next - b.next).map(b => `<button class="brow" data-act="openBill" data-id="${b.id}">
+    <span class="w">${svg(iconOf(b))}</span><span class="t">${esc(b.name)}<span>Every month on day ${b.day}</span></span><b>${inr(b.amount)}</b></button>`).join('');
+  return `<div class="home">
+    <div class="topbar"><span class="well40">${I.back}</span><span class="ttl">Fixed bills</span></div>
+    <p class="hint">Money that goes out every month on its own.<span class="draft">draft</span></p>
+    <span class="addChip">${I.plus} Add a bill</span>
+    <div class="card">${rows}</div>
+  </div>${snackHTML(s)}`;
+}
+const perf = '<div class="perf"><i class="l"></i><i class="r"></i></div>';
+const who = (name, icon) => `<div class="who"><span class="w" data-live="icon">${svg(icon)}</span><span class="nm" data-live="name">${esc(name)}</span></div>`;
+function line(k, label, valHTML, spoken, s) {
+  return `<button class="line${s.saved === k ? ' flash' : ''}${s.pressRow === k ? ' pressed' : ''}" data-act="open" data-k="${k}" aria-label="Change ${label.toLowerCase()}, ${esc(spoken)}">
+    <span>${label}</span><i class="lead"></i><span class="v">${valHTML}</span>${I.chev}</button>`;
+}
+function summaryHTML(b, s) {
+  const st = stampOf(b), d = away(b.next), ic = iconOf(b);
+  const foot = s.saved ? `${I.check}<span><b>Saved.</b> Next goes out ${fmt(b.next)}</span>` : `<span>Next goes out <b>${fmt(b.next)}</b> · ${inDays(d)}</span>`;
+  return `<div class="handle"></div>
+  <div class="slip" aria-label="${esc(b.name)}, ${LABEL[ic].toLowerCase()}, ${inr(b.amount)}, every month on day ${b.day}${st ? ', ' + st.toLowerCase() : ''}">
+    <div class="eyebrow">Fixed bill</div>
+    ${who(b.name, ic)}
+    <div class="amtRow"><div class="big"><span class="rs">₹</span>${n(b.amount)}</div>${st ? `<div class="stamp">${st}</div>` : ''}</div>
+    <div class="every">Every month on day ${b.day}</div>
+    ${perf}
+    ${line('amount', 'Amount', inr(b.amount), inr(b.amount), s)}
+    ${line('day', 'Day of the month', b.day, String(b.day), s)}
+    ${line('name', 'Name', esc(b.name), b.name, s)}
+    ${line('icon', 'Icon', `${svg(ic)}${LABEL[ic]}`, LABEL[ic], s)}
+    ${perf}
+    <div class="foot">${foot}</div>
+  </div>
+  <button class="wide del" data-act="delete">${I.trash} Delete bill</button>`;
+}
+const stepHd = q => `<div class="handle"></div><div class="stepHd"><button class="well40" data-act="back" aria-label="Back">${I.back}</button><div class="q">${q}</div></div>`;
+function amountHTML(b, s) {
+  const v = +s.typed || 0;
+  return `${stepHd(`How much is ${esc(b.name)}?`)}
+  <div class="slip compact">${who(b.name, iconOf(b))}
+    <div class="big"><span class="rs">₹</span>${n(v)}<span class="caret"></span></div>
+    <div class="was">${v !== b.amount ? `Was ${inr(b.amount)}` : 'Every month on day ' + b.day}</div></div>
+  <div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<button class="key" data-act="key" data-k="${k}">${k}</button>`).join('')}
+    <button class="key" data-act="bs" aria-label="Delete last digit">${I.bs}</button></div>
+  <button class="wide sig" data-act="saveAmount"${v > 0 ? '' : ' disabled'}>Save</button>`;
+}
+function dayHTML(b) {
+  let cells = '';
+  for (let d = 1; d <= 31; d++) cells += `<button class="day${d === b.day ? ' on' : ''}" data-act="day" data-k="${d}" aria-label="${d}${d === b.day ? ', picked' : ''}">${d}</button>`;
+  return `${stepHd(`Which day does ${esc(b.name)} go out?`)}
+  <div class="slip compact">${who(b.name, iconOf(b))}
+    <div class="big"><span class="rs">₹</span>${n(b.amount)}</div>
+    <div class="every">Every month on day <b>${b.day}</b></div></div>
+  <div class="days">${cells}</div>`;
+}
+function helperHTML(b, name) {
+  if (b.icon) return `${svg(b.icon)}<span>Icon stays ${LABEL[b.icon]}. Change it on the bill.</span>`;
+  const k = infer(name);
+  return k === 'bill' ? `${svg('bill')}<span>No icon matches the name yet</span>` : `${svg(k)}<span>Icon from the name: ${LABEL[k]}</span>`;
+}
+function nameHTML(b, s) {
+  const ic = b.icon || infer(s.draftName);
+  return `${stepHd(`What's the bill called?`)}
+  <div class="slip compact">${who(s.draftName, ic)}
+    <div class="big"><span class="rs">₹</span>${n(b.amount)}</div>
+    <div class="every">Every month on day ${b.day}</div></div>
+  <input class="field" id="nameField" maxlength="40" value="${esc(s.draftName)}" aria-label="Name">
+  <div class="helper" data-live="helper">${helperHTML(b, s.draftName)}</div>
+  <button class="wide sig" data-act="saveName"${s.draftName.trim() ? '' : ' disabled'}>Save</button>
+  <div class="kbd">keyboard</div>`;
+}
+function iconHTML(b) {
+  const cur = iconOf(b), guess = infer(b.name);
+  const tiles = GRID.map(k => `<button class="tile${k === cur ? ' on' : ''}" data-act="pickIcon" data-k="${k}" aria-label="${LABEL[k]}${k === cur ? ', picked' : ''}${k === guess ? ', from the name' : ''}">
+    ${svg(k)}<span>${LABEL[k]}</span></button>`).join('');
+  return `${stepHd(`Pick an icon for ${esc(b.name)}`)}
+  <div class="slip compact">${who(b.name, cur)}
+    <div class="big"><span class="rs">₹</span>${n(b.amount)}</div>
+    <div class="every">${guess === 'bill' ? 'No icon matches the name' : `From the name: <b>${LABEL[guess]}</b>`}</div></div>
+  <div class="tiles">${tiles}</div>`;
+}
+function sheetHTML(s) {
+  const b = s.bills.find(x => x.id === s.billId);
+  if (!b) return '';
+  return ({ amount: amountHTML, day: dayHTML, name: nameHTML, icon: iconHTML })[s.view]?.(b, s) ?? summaryHTML(b, s);
+}
+function phoneHTML(s, variant) {
+  return `<div class="layer${s.view !== 'home' ? ' open' : ''}"><div class="homeWrap">${homeHTML(s, variant)}</div><div class="scrim"></div><div class="sheet">${sheetHTML(s)}</div></div>`;
+}
+
+/* ---------- live phone ---------- */
+const live = document.getElementById('live');
+let S;
+const base = () => ({ bills: freshBills(), view: 'home', billId: 1, typed: '', fresh: true, draftName: '', saved: null, snack: null });
+function reset() {
+  S = base();
+  live.innerHTML = `<div class="layer"><div class="homeWrap">${homeHTML(S)}</div><div class="scrim" data-act="close"></div><div class="sheet"></div></div>`;
+}
+function draw() {
+  const layer = live.firstElementChild;
+  const wasOpen = layer.classList.contains('open');
+  layer.querySelector('.homeWrap').innerHTML = homeHTML(S);
+  const sheet = layer.querySelector('.sheet');
+  if (S.view !== 'home') sheet.innerHTML = sheetHTML(S);
+  if (S.view !== 'home' && !wasOpen) { sheet.classList.add('opening'); setTimeout(() => sheet.classList.remove('opening'), 900); }
+  layer.classList.toggle('open', S.view !== 'home');
+  const f = document.getElementById('nameField');
+  if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+}
+let snackTimer, savedTimer;
+live.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const b = S.bills.find(x => x.id === S.billId);
+  switch (t.dataset.act) {
+    case 'openBill': S.billId = +t.dataset.id; S.view = 'summary'; S.saved = null; S.snack = null; break;
+    case 'open':
+      S.view = t.dataset.k; S.saved = null;
+      if (S.view === 'amount') { S.typed = String(b.amount); S.fresh = true; }
+      if (S.view === 'name') S.draftName = b.name;
+      break;
+    case 'key': {
+      const next = ((S.fresh ? '' : S.typed) + t.dataset.k).replace(/^0+/, '');
+      S.fresh = false;
+      if (next.length <= 7) S.typed = next;
+      break;
+    }
+    case 'bs': S.typed = S.fresh ? '' : S.typed.slice(0, -1); S.fresh = false; break;
+    case 'saveAmount': if (+S.typed > 0) { const ch = +S.typed !== b.amount; b.amount = +S.typed; done(ch ? 'amount' : null); } return;
+    case 'day': { const d = +t.dataset.k; const ch = d !== b.day; if (ch) moveDay(b, d); done(ch ? 'day' : null); return; }
+    case 'saveName': { const v = S.draftName.trim(); if (v) { const ch = v !== b.name; b.name = v; done(ch ? 'name' : null); } return; }
+    case 'pickIcon': {
+      const k = t.dataset.k, before = iconOf(b);
+      b.icon = k === infer(b.name) ? null : k; // picking the name's own icon goes back to following the name
+      done(k !== before ? 'icon' : null); return;
+    }
+    case 'back': S.view = S.view === 'summary' ? 'home' : 'summary'; break;
+    case 'close': S.view = 'home'; break;
+    case 'delete': {
+      const idx = S.bills.indexOf(b);
+      S.bills.splice(idx, 1); S.snack = { bill: b, idx }; S.view = 'home';
+      clearTimeout(snackTimer); snackTimer = setTimeout(() => { S.snack = null; draw(); }, 5000);
+      break;
+    }
+    case 'undo': if (S.snack) { S.bills.splice(S.snack.idx, 0, S.snack.bill); S.snack = null; } break;
+  }
+  draw();
+});
+function done(field) {
+  S.view = 'summary'; S.saved = field; draw();
+  clearTimeout(savedTimer);
+  if (field) savedTimer = setTimeout(() => { if (S.view === 'summary' && S.saved) { S.saved = null; draw(); } }, 2400);
+}
+live.addEventListener('input', e => {
+  if (e.target.id !== 'nameField') return;
+  S.draftName = e.target.value;
+  const b = S.bills.find(x => x.id === S.billId);
+  live.querySelector('.slip [data-live="name"]').textContent = S.draftName;
+  live.querySelector('.slip [data-live="icon"]').innerHTML = svg(b.icon || infer(S.draftName));
+  live.querySelector('[data-live="helper"]').innerHTML = helperHTML(b, S.draftName);
+  live.querySelector('[data-act="saveName"]').disabled = !S.draftName.trim();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.view !== 'home') { S.view = S.view === 'summary' ? 'home' : 'summary'; draw(); }
+});
+
+/* ---------- gallery ---------- */
+function shot(caption, state, variant) {
+  const s = Object.assign(base(), state);
+  if (s.mut) s.mut(s.bills);
+  return `<figure><div class="phone">${phoneHTML(s, variant)}</div><figcaption>${caption}</figcaption></figure>`;
+}
+document.getElementById('gallery').innerHTML = [
+  shot('<b>1. Home today.</b> The due-soon line is a grey note, and there\'s no way into the bill from here.', {}, 'now'),
+  shot('<b>2. Home, proposed.</b> The same sentence as a 56dp <code>sunk</code> row, with the bill\'s own icon, the date and a chevron. One tap opens the bill.', { pressDue: true }),
+  shot('<b>3. The bill.</b> The stamp sits on the amount line, straight, its right edge on the value column. Four rows to change, and one full-width <i>Delete bill</i> key where <i>Save</i> sits on every question.', { view: 'summary', pressRow: 'amount' }),
+  shot('<b>4. Change the amount.</b> You write on the bill: the slip\'s figure is the input, and "Was ₹1,200" keeps the old one in view.', { view: 'amount', typed: '1350', fresh: false }),
+  shot('<b>5. Saved.</b> Back on the bill, the changed row flashes once and the footer says "Saved." for 2.4s. The <code>tick</code> haptic plays. Nothing moves.', { view: 'summary', saved: 'amount', mut: bs => { bs[0].amount = 1350; } }),
+  shot('<b>6. Change the day.</b> Today\'s grid with the current day picked. Tapping a day saves.', { view: 'day' }),
+  shot('<b>7. Rename, icon follows.</b> Typing "Airtel fibre" swaps the slip\'s icon to Internet as you type, and the line under the field says why.', { view: 'name', billId: 3, draftName: 'Airtel fibre' }),
+  shot('<b>8. Pick an icon.</b> Sixteen labelled tiles. The current one is picked, and the slip says which one the name suggests. Tapping a tile saves, like the day grid.', { view: 'icon' }),
+  shot('<b>9. A bill already counted.</b> Rent, posted 5 Oct: <b>Counted 5 Oct</b> on the amount line, and the Home icon from the name.', { view: 'summary', billId: 2 }),
+  shot('<b>10. Fixed bills, with icons.</b> Each row shows its bill\'s icon instead of the same repeat glyph, so the list scans by shape. Tapping a row opens the same sheet.', {}, 'list'),
+  shot('<b>11. Deleted.</b> The sheet closes, the due line goes and Undo is offered.', { snack: { bill: freshBills()[0], idx: 0 }, mut: bs => bs.splice(0, 1) }),
+].join('');
+
+document.getElementById('iconTable').insertAdjacentHTML('beforeend', GRID.map(k => {
+  const [, label, glyph, words] = ICONS.find(i => i[0] === k);
+  return `<tr><td>${svg(k)} ${label}</td><td><code>strokeRounded${glyph}</code></td><td>${words.length ? words.join(', ') : 'none: the fallback'}</td></tr>`;
+}).join(''));
+
+/* ---------- controls ---------- */
+document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+document.getElementById('reduce').addEventListener('change', e => document.body.classList.toggle('reduce', e.target.checked));
+document.getElementById('reset').addEventListener('click', reset);
+if (matchMedia('(prefers-color-scheme: dark)').matches) { document.getElementById('dark').checked = true; document.body.classList.add('dark'); }
+reset();
+</script>
+</body>
+</html>

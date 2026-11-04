@@ -17,17 +17,19 @@ Every decision below traces to research (§12). Colours, fonts and formatting we
 
 ## 1. The concept
 
-> **Your month's money, cut into one block per day until payday. Today's block is the one that glows. Spend from it, and it drains.**
+> **Your month's money, cut into one share per day until payday. Today's share is a bar that glows. Everything you buy takes a bite out of it.**
+
+(Until D114 each day was drawn as a block; [mockups 22–25](design/mockups/25-today-bar-and-rail.html) show why today became a bar and the days a rail of dots.)
 
 Why this concept:
 
 - **A child can count it.** Children reason better with countable pieces than with ratios, and a chocolate bar cut into pieces needs no explanation.
 - **It answers both questions in one picture:**
-  - *How much today?* The size of today's block.
-  - *Will it last?* The number of blocks before payday.
+  - *How much today?* The yellow left in today's bar.
+  - *Will it last?* The dots on the rail before payday.
 - **Nobody owns it.** No major money app uses a day strip or day blocks. Rings are Apple's, and pace charts belong to Copilot and Monzo.
 - **It follows the safer-spending research.** Showing the exact amount left for the whole month raised spending 26–33% (University of Arizona / Think Forward). Hisaab's hero shows **today's share**, and the month total stays secondary.
-- **It is honest, as Rams asks.** If you spend less today, tomorrow's block grows; if you overspend, tomorrow's block shrinks. Nothing is hidden.
+- **It is honest, as Rams asks.** Every spend is a bite you can see, and the range line says what it does to the days after. Nothing is hidden.
 
 The range line underneath borrows from electric cars. EV drivers trust a range display that says where you will arrive and with how much left. Hisaab writes "Lasts till payday · about ₹9,300 spare", payday being the destination. It is labelled as a forecast and smoothed, so it never jitters.
 
@@ -115,7 +117,7 @@ Inside the hero display card, these extra tokens apply:
 | `displayInk` | `#161615` (alias of `ink`) | `#F2F1EC` (alias of `ink`) |
 | `displayInk2` | `#65605A` (its own value, D90) | `#A7A199` (alias of `ink2`) |
 | `blockIdle` | `#D7CFC5` (alias of `hairline`; 1.53:1 on `display`) | `#413D38` (1.53:1 on `display`) |
-| `displayEdge` | `#161615` (alias of `ink`): 1.5px edge on today's block while it shows marigold | transparent (none) |
+| `displayEdge` | `#161615` (alias of `ink`): 1.5px edge on today's yellow and today's dot while they show marigold | transparent (none) |
 
 The hero's finish (D106, case study 10) adds three tokens:
 
@@ -160,12 +162,12 @@ Every row is an entry in **one list of contrast pairs**, `test/core/design/contr
 - **Cold-proofing:** every neutral except `ink` is tinted toward marigold's hue (about 75° in OKLCH) at the luminance it had as a plain warm grey, so every contrast above held within 0.07 (D108), the motion is playful and the corners are soft (Nothing's hardware team calls this "softer and friendlier").
 
 ### 3.3 States with one colour
-| State | Today's block | Words + glyph |
+| State | Today's bar and dot | Words + glyph |
 |---|---|---|
-| On track | Solid marigold, draining from the top as you spend | "Lasts till payday · about ₹9,300 spare" with a check glyph |
-| Slow down (< 25% of today left, or the forecast falls short of payday) | Marigold **outline** with a thin marigold sliver | "Slow down · at this pace it runs out 22 Nov" with an alert glyph |
-| Over today | Empty block with a diagonal hatch in `displayInk2`; **tomorrow's block is visibly shorter** | "₹220 over today · each day after ₹1,776" |
-| Over for the cycle | All blocks empty and outlined | "Over by ₹1,200 · payday in 4 days" + "See where it went" |
+| On track | Solid marigold yellow, a bite taken from it with each spend; today's dot marigold | "Lasts till payday · about ₹9,300 spare" with a check glyph |
+| Slow down (< 25% of today left, or the forecast falls short of payday) | The yellow drawn as a marigold **outline**; today's dot a marigold ring | "Slow down · at this pace it runs out 22 Nov" with an alert glyph |
+| Over today | No yellow; a share tick, and a diagonal hatch in `displayInk2` past it; today's dot hatched | "₹220 over today · each day after ₹1,776" |
+| Over for the cycle | As over today, and every later rail dot outlined | "Over by ₹1,200 · payday in 4 days" + "See where it went" |
 
 These rules come from the iOS battery (colour appears only when the state is unusual), Apple's gauge guidance (change the fill at thresholds and label the ends) and Oura (number plus a verdict word).
 
@@ -191,7 +193,7 @@ Rules: no all-caps eyebrow labels, and no semibold body text.
 ### 3.5 Shape, depth, icons
 - **Corners:**
   - Continuous squircle corners (Flutter `RoundedSuperellipseBorder`).
-  - Radius scale: 8 (day blocks) · 12 (chips) · 16 (keys) · 22 (tiles) · 28 (cards, hero) · 36 (tray).
+  - Radius scale: 8 (today's bar, week bars) · 12 (chips) · 16 (keys) · 22 (tiles) · 28 (cards, hero) · 36 (tray).
 - **Depth:**
   - Surfaces are layered by colour, not shadow (D45). **One exception: the hero is the only raised card** (D106), with one soft `displayShadow` (`HisaabShapes.raised`: 10dp down, 28dp blur, pulled in 12dp), so it reads as the object on Home. No other card gets a shadow.
   - **The hero is etched** (D106): a guilloché rosette near its top end corner, like the line work on a payment card or a rupee note, over a faint grain, both in `displayEtch` (under 1.2:1, so they never compete with the amount). Like the frame printed round a rupee note (D107), a solid keyline in `displayEtch` runs 6dp inside the edge and a dashed one in `hairline` 10dp inside (4dp dashes, 3dp gaps), each with a concentric radius, 10dp clear of the content. The hero's divider above the range line is `displayEtch` too, the quietest line. The etched card has more room: 24dp above and below its content (sides keep the shared 20dp inset), 8dp from label to amount, 24dp from amount to blocks, 20dp and 16dp around the divider. `DisplayEtch` paints it once behind a `RepaintBoundary`, mirrored in right-to-left. The loading skeleton is raised and etched too, so nothing jumps when the numbers arrive.
@@ -283,10 +285,12 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 ### 5.1 Onboarding: 3 questions
 1. **"How much money comes in each month?"**
    - The keypad is open from the start.
-   - A live preview underneath turns the amount into blocks: "That's about **₹1,500 a day**", and the day blocks appear one by one as you type. This is the rare, bold delight moment.
-2. **"When does it come?"** Big chips: *1st of the month* · *Last day* · *Pick a date* · *Every week* · *It changes*.
+   - The hint names the money, not a job: "Pay, business, pension or family money. If it changes, a low month is a safe guess." Only about a quarter of Indian workers are salaried, so "salary" would leave most users out (D116; mockup [26](design/mockups/26-income-for-everyone.html)).
+   - Between the keypad and Next: a lock and "It stays on this phone. The app never uses the internet.", centred, `bodyMedium` in `ink2`. It answers the moment the question feels intrusive.
+   - A live preview underneath turns the amount into blocks: "That's about **₹1,500 a day**", and the day blocks appear one by one as you type. Its caption is "Every day gets its own share" (`bodyMedium`, `displayInk2`). This is the rare, bold delight moment.
+2. **"When does it come?"** Big chips: *1st of the month* · *Last day* · *Pick a date* · *Every week* · *It changes*. The hint ends "No fixed day? Pick It changes." so shop owners, freelancers and daily earners know which chip is theirs.
 3. **"Any fixed bills?"** Chips for Rent · EMI · Phone · Internet · School fees · Subscriptions, plus a big **Skip**.
-4. **Done.** The hero card assembles: blocks slide in, today's block lights up marigold, and `successNotification` fires.
+4. **Done.** The hero card assembles: today's bar fills marigold, the rail's dots arrive one by one, and `successNotification` fires.
 
 ### 5.2 Home
 ```
@@ -294,7 +298,10 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
  ┌────────────────────────────────────────┐   "display" card
  │ Safe to spend today                    │
  │ ₹1,430                                 │   Anek 76 · wdth 85
- │ ▇ ▆ ▆ ▆ ▆ ▆ ▆ ▆ ▆              ⚑ 4 Nov │   today = marigold, 8 more days
+ │ ███████████████████████▒▒▒▒▒▒▒▒░ ░     │   yellow = left; bites = today's spends
+ │ ₹420 spent          of ₹1,850 for today │
+ │ ● · · · · · · · ·              ⚑ 4 Nov │   days rail: today + 8 more
+ │ Today                 9 days to payday │
  │ ✓ Lasts till payday · about ₹9,300 spare│
  └────────────────────────────────────────┘
  ⓘ Electricity ₹1,200 goes out in 3 days
@@ -308,17 +315,19 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 
 - **Hierarchy:**
   1. The hero number.
-  2. Today's glowing block.
+  2. Today's bar.
   3. The range line.
   4. The Today list.
-- **Day blocks:**
-  - One block per day from today to payday.
-  - Width is shared equally, with a minimum of 6dp. The gap is 6dp for 16 days or fewer, and 3dp above that.
-  - Height is 40dp. Today is first, on the left.
-  - A flag with the payday date closes the row.
+- **Today's bar (BR-6, D114, mockup 25):**
+  - 48dp tall, the card's full inner width, radius 8 (`HisaabRadii.block`).
+  - The marigold yellow is what's left of today's share, from the start edge, with the 1.5dp `displayEdge` in light. Each *Spent* entry today is a `blockIdle` bite, 3dp apart, the first at the end edge and the newest beside the yellow; bites under 4dp merge. Category names sit under bites wide enough for them, in `displayInk2`.
+  - Over today the bar spans what was spent: a 2dp `displayInk` share tick cut from the card by a `display` notch, and a `displayInk2` hatch past it.
+  - Captions under it: "₹420 spent" and "of ₹1,850 for today".
+- **Days rail:** one dot per day left, today's 10dp and marigold, the rest 6dp `blockIdle` (shrinking to fit at 28–31 days on small phones), then ⚑ and the payday date. "Today" and "9 days to payday" sit under it. It is the same in both modes. A month-end cycle (*It changes*, or month start on the 1st) has no payday: the caption reads "6 days left this month", the flag shows the 1st of the next month, and the range line says "Lasts till month end" (D116).
+- **One height:** the bar block and the week block (BR-6a) share one cell in a `HeroModeStack`; the card takes the taller, so it never resizes.
 - **Tap the hero** to flip between *Today* and *This week*. Monzo users found a daily figure meaningless when they don't spend every day.
-- **This week (BR-6a, D111, case study 15):** seven bars, Mon–Sun, take the Day Blocks' width; the card grows 48dp so they are 88dp tall (W2: *Today* never pays for it). Past days are `displayInk2` with a 2dp `displayInk` share tick each, cut from the card by a `display` notch, and hatched above it; a past ₹0 day is a 2dp baseline line. Today is marigold with the 1.5dp `displayEdge` in light, plus its tick. Days to come are 6dp `blockIdle` stubs; days outside the cycle draw nothing. The captions become the weekday letters (today Semibold), the flag stays, and the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" with the alert glyph (the check when every day is within its share).
-- **When you underspend:** the next morning the blocks grow, the number rolls up, and a one-line note appears: "You saved ₹300 yesterday, so every day got ₹35 more."
+- **This week (BR-6a, D111, D114, case study 15):** seven bars, Mon–Sun, take today's bar's place at the card's full width, 64dp tall (D114 drops D111's 48dp growth). Past days are `displayInk2` with a 2dp `displayInk` share tick each, cut from the card by a `display` notch, and hatched above it; a past ₹0 day is a 2dp baseline line. Today is marigold with the 1.5dp `displayEdge` in light, plus its tick. Days to come are 6dp `blockIdle` stubs; days outside the cycle draw nothing. The weekday letters (today Semibold) sit under them, the days rail stays, and the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" with the alert glyph (the check when every day is within its share).
+- **When you underspend:** the next morning the number rolls up, and a one-line note appears: "You saved ₹300 yesterday, so every day got ₹35 more."
 - **Empty Today:** "Nothing spent today. Tap Add when you do."
 
 ### 5.3 Add: one tray, two steps
@@ -342,7 +351,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **Tapping a tile saves:**
   1. The tile flashes to ink (120ms).
   2. The tray drops.
-  3. Once the tray is gone, today's block drains to its new level, leaving a trail, and the number rolls in the same frame (§6, D91).
+  3. Once the tray is gone, today's yellow pulls back, uncovering the new bite, and the number rolls in the same frame (§6, D91, D114).
   4. Haptic: `successNotification`.
 - Tap path: Add → digits → Next → tile.
 
@@ -379,7 +388,7 @@ Two layers only: the grey page and near-white cards, the same build as the Today
 
 ### 5.6 Settings (one level)
 - **Money:**
-  - Salary and payday
+  - Money coming in (D116)
   - Fixed bills: one card of rows (name, "Every month on day 29", amount), soonest first, with *Add a bill* above it. Tap a row to change it; swipe it away with Undo. Adding or changing asks one question per screen, like onboarding: the name (a field with the onboarding bill chips 16dp under it, in two equal-width columns that share the field's edges and narrow to what is typed; left out when changing a bill; a tap fills the field and marks the pill, and Next moves on; Next alone at the bottom, D83, D85, D86), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
   - Keep aside each month
   - My month starts on: *Payday* (default) / *1st*
@@ -401,34 +410,32 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 | Token | Response · damping | Stiffness | Use |
 |---|---|---|---|
 | `snap` | 0.25s · 1.0 | 632 | Key press release, chips, toggles |
-| `standard` | 0.35s · 1.0 | 322 | Tray height change, tabs, block drain, list insert |
+| `standard` | 0.35s · 1.0 | 322 | Tray height change, tabs, the bite, list insert |
 | `flick` | 0.40s · 0.8 | 247 | Tray thrown open or closed **by gesture only** |
-| `calm` | 0.55s · 1.0 | 130 | Onboarding blocks assembling, the morning "blocks grow" |
+| `calm` | 0.55s · 1.0 | 130 | The hero assembling after onboarding, today's bar filling in |
 
 - **Press feedback:** scale 0.97 plus the ink lip collapsing (2px → 0).
 - **Number roll:** digits roll with tabular figures over 300ms using `Cubic(0.23, 1, 0.32, 1)`.
-- **Block drain (D91, case study 05):** teaches that today's block is a tank of today's money. One focal point at a time, no bounce:
-  1. **Wait for the tray.** Home holds its numbers while the Add tray covers it, and recomputes once the tray's exit ends. A drain behind the scrim teaches nothing.
-  2. **The level falls** on `standard` and the number roll starts in the same frame.
-  3. **A trail** of the spent slice stays as marigold at 50% opacity. After 500ms it falls to the new level on `calm`, so the size of this spend can be read. A fill that rises (a deleted or undone spend) has no trail.
-  4. **Any spend shows:** once anything is spent today, the fill is at most 0.9 (BR-6).
-  5. **Over today:** the level falls away, uncovering the hatch, and the future blocks shrink together on `standard`. No shake: it would read as an error and contradict "It happens".
-- **Fill in:** each time Home's blocks appear (at launch, coming back from Spends on a phone, and when the day changes), today's block fills from empty to its level on `calm`. It shows the block is a container.
+- **Bite (D91, D114):** teaches that today's bar is today's money, and each spend eats into it. One focal point at a time, no bounce:
+  1. **Wait for the tray.** Home holds its numbers while the Add tray covers it, and recomputes once the tray's exit ends. A bite behind the scrim teaches nothing.
+  2. **The yellow pulls back** on `standard`, uncovering the new bite beside it, and the number roll starts in the same frame. The uncovered bite replaces D91's 50% trail: its size is the size of the spend.
+  3. **Over today:** the bar rescales to what was spent and the hatch appears past the tick. No shake: it would read as an error and contradict "It happens".
+- **Fill in:** each time Home's hero appears (at launch, coming back from Spends on a phone, and when the day changes), the yellow grows from empty to its level on `calm`. It shows the bar is a container.
 - **Hero sheen (D106):** with the fill in, one diagonal band of `displaySheen` crosses the hero, like a card catching the light: `HisaabMotion.sheen` (1.4s), the first quarter a wait so the light follows the block, then the `sweep` curve (ease-in-out), so it never crawls at the end. The band slides in from wholly off the top start corner and out past the bottom end corner, so it never appears, sticks or vanishes at an edge. It never loops and never runs on a rebuild, only when the hero appears.
 - **Hero press (D106):** the whole hero sinks to 0.97 while a finger is down, then flips Today ⇄ This week on release.
-- **Today ⇄ This week (D111):** the rows crossfade in 150ms while the card grows or shrinks 48dp over `HisaabMotion.resize` (350ms, `easeOut`, matching `standard`), and the bars rise from the baseline on `standard`, today's first, each column 7% later per day away. With reduced motion the card takes its size at once and only the crossfade plays. (Not built: today's block travelling into its weekday's column; case study 15.)
+- **Today ⇄ This week (D111, D114):** the bar block and the week block crossfade in 150ms in a card that keeps its size; the days rail does not move. The bars rise from the baseline on `standard`, today's first, each column 7% later per day away, each time *This week* appears. With reduced motion only the crossfade plays. (Not built: the rail's today dot sliding off at midnight; today's bar travelling into its weekday's column; case study 15.)
 - **Delight scales inversely with frequency:**
 
   | Frequency | Treatment |
   |---|---|
   | Every key press | Tick haptic and press scale only |
-  | Every save | Block drain with its trail, plus number roll |
-  | Each time Home appears | Today's block fills in (0.55s), and the hero's sheen crosses once (1.4s) |
-  | Daily | Blocks re-flow at midnight |
+  | Every save | A bite uncovered beside the yellow, plus number roll |
+  | Each time Home appears | Today's bar fills in (0.55s), and the hero's sheen crosses once (1.4s) |
+  | Daily | The rail loses a dot at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
 - **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
-- **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no trail, no fill in and no sheen.
+- **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no fill in and no sheen.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
 
 ## 7. Haptics (Flutter 3.47, verified)
@@ -484,7 +491,7 @@ One effect per event, never buzzy.
 - `core/layout/`: `AppLayout.resolve` and `AppLayoutScope` (§13).
 - `core/design/haptics.dart`: `Haptics.tick()`, `.success()`, `.reject()`, `.threshold()`.
 - `core/widgets/`:
-  - `DayBlocks` (`CustomPainter`: N blocks, today fill level, state, payday flag)
+  - `TodayBar` (`CustomPainter`: the yellow, bites, share tick and hatch) and `DaysRail` (dots, payday flag, captions); `DayBlocks` stays only for onboarding's preview
   - `HeroDisplay`
   - `SignalKey` (marigold with ink lip)
   - `Keypad`

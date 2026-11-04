@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Today without blocks (proposal)</title>
+<style>
+  /* Proposal: replace the Day Blocks in the hero's Today mode (BR-6). The owner rejected mockup 22's fixed blocks and likes the
+     This week bars (BR-6a, D111), so T1 brings that bar language to Today mode. Nothing here is decided or built.
+     Dates follow mockups 19–22: payday Sat 7 Nov 2026, cycle from Wed 7 Oct. 3 days = today Wed 4 Nov; 9 = Thu 29 Oct; 28 = Sat 10 Oct.
+     A = ₹1,850 so the states compare; today's spend: on track ₹420, slow down ₹1,500, over today ₹2,300. Past days are illustrative,
+     except 9 days, which is BR-6a's worked example (Mon ₹1,240, Tue ₹2,310 against ₹1,850, Wed ₹980).
+     Phones are 360dp: the bar row is 234dp beside the 44dp flag. Copy marked draft needs design-content. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650;
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 24px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .tag.soft { background: none; color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
+  .controls legend { float: left; font: 600 13px/20px 'Mukta', sans-serif; color: var(--canvasInk2); margin-inline-end: 4px; }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(328px, 360px)); gap: 16px; margin-top: 16px; }
+  .phone { background: var(--bg); color: var(--ink); border-radius: 24px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .phone > .cap { font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink2); display: flex; justify-content: space-between; gap: 8px; }
+  .phone > .cap b { color: var(--ink); }
+  .note { font-size: 13px; line-height: 19px; color: var(--ink2); margin: 0; }
+  .note b { color: var(--ink); font-weight: 600; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); box-shadow: inset 0 0 0 1px var(--displayInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+
+  /* Hero, as hero_card.dart */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amtRow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
+  .amt.muted { color: var(--displayInk2); }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .overTxt { font: 600 18px/24px 'Mukta', sans-serif; padding-bottom: 10px; }
+  .rows { margin-top: 24px; }
+  .barRow { display: flex; align-items: flex-end; gap: 10px; }
+  .flag { width: 44px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .flag svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .row { flex: 1; position: relative; min-width: 0; }
+  .caps { position: relative; height: 18px; margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .caps.pad { margin-inline-end: 54px; }
+  .caps span { position: absolute; top: 0; text-align: center; white-space: nowrap; }
+  .caps span.t { color: var(--displayInk); font-weight: 600; }
+  .caps span.l { text-align: left; }
+  .caps span.r { text-align: right; }
+  .hero hr { border: 0; height: 1px; background: var(--displayEtch); margin: 16px 0 14px; }
+  .range { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; }
+  .range .dot { width: 18px; height: 18px; border-radius: 9px; box-shadow: inset 0 0 0 1.6px var(--displayInk); flex: none; margin-top: 2px; }
+  .range span { color: var(--displayInk2); }
+  .num { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Bars, as week_bars_painter.dart */
+  .x { position: absolute; bottom: 0; }
+  .solid { background: var(--displayInk2); border-radius: 6px 6px 3px 3px; }
+  .sig { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .room { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 6px 6px 0 0; }
+  .ghost { box-shadow: inset 0 0 0 1.5px var(--blockIdle); border-radius: 6px 6px 3px 3px; }
+  .ghost.soon { background: repeating-linear-gradient(0deg, transparent 0 0, transparent 100%); }
+  .hatch { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.6px, var(--display) 1.6px 4.5px); box-shadow: inset 0 0 0 1.5px var(--displayInk2); border-radius: 6px 6px 0 0; }
+  .tick { height: 2px; margin-bottom: -1px; background: var(--displayInk); box-shadow: 0 0 0 1px var(--display); }
+  .zero { height: 2px; border-radius: 1px; background: var(--displayInk2); }
+  .idle { background: var(--blockIdle); }
+  .slowRing { box-shadow: inset 0 0 0 3px var(--signal), inset 0 0 0 4.5px var(--displayEdge); background: var(--blockIdle); }
+  body.dark .slowRing { box-shadow: inset 0 0 0 3px var(--signal); }
+  .lbl { position: absolute; font: 600 12px/14px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; color: var(--displayInk2); white-space: nowrap; text-align: center; }
+  .lbl.t { color: var(--displayInk); }
+
+  /* T3 forecast strip */
+  .strip { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-inline-end: -20px; padding-inline-end: 20px; }
+  .strip::-webkit-scrollbar { display: none; }
+  .day { flex: none; width: 52px; border-radius: 14px; background: var(--sunk); padding: 8px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .day.t { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); color: var(--displayInk); width: 64px; }
+  .day.t.slow { background: var(--sunk); box-shadow: inset 0 0 0 3px var(--signal), inset 0 0 0 4.5px var(--displayEdge); }
+  .day.t.over { background: repeating-linear-gradient(135deg, var(--blockIdle) 0 1.6px, var(--display) 1.6px 4.5px); box-shadow: inset 0 0 0 1.5px var(--displayInk); }
+  .day.pay { background: none; box-shadow: inset 0 0 0 1.5px var(--displayInk); }
+  .day .w { font-size: 12px; line-height: 14px; color: var(--displayInk2); }
+  .day.t .w { color: var(--displayInk); font-weight: 600; }
+  .day .d { font: 600 18px/20px 'Anek Latin', sans-serif; }
+  .day .a { font: 600 12px/14px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; color: var(--displayInk2); }
+  .day.t .a { color: var(--displayInk); }
+  .day svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  table { border-collapse: collapse; margin-top: 16px; font-size: 14px; line-height: 20px; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  .wrap { overflow-x: auto; }
+  ol li, ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark</label>
+  <fieldset><legend>Days left</legend>
+    <label><input type="radio" name="d" value="3"> 3</label>
+    <label><input type="radio" name="d" value="9" checked> 9</label>
+    <label><input type="radio" name="d" value="28"> 28</label>
+  </fieldset>
+  <fieldset><legend>Today</legend>
+    <label><input type="radio" name="s" value="on" checked> On track</label>
+    <label><input type="radio" name="s" value="slow"> Slow down</label>
+    <label><input type="radio" name="s" value="over"> Over today</label>
+  </fieldset>
+</div>
+
+<h1>Today, without the blocks <span class="tag soft">proposal</span></h1>
+<p class="lede">The owner rejected mockup 22's fixed blocks: blocks just don't do the job. The <b>This week bars do</b>. They have a real height, a tick for "your share" and a stripe for "over", and they can be read like any chart. So these four directions drop the block row. <b>T1</b> uses the week bars' own language for Today mode. T2–T4 are different shapes, shown for contrast. All four keep the hero amount, the payday flag, the range line and the rule of one signal colour.</p>
+
+<div class="grid" id="options"></div>
+
+<h2>Side by side</h2>
+<div class="wrap"><table>
+  <tr><th></th><th>T1 · One week chart</th><th>T2 · Fuel bar</th><th>T3 · Money forecast</th><th>T4 · Stairs to payday</th></tr>
+  <tr><td>What it shows</td><td>This week: past days spent, today's room left, and days to come with their share</td><td>Only today: left vs spent of today's share</td><td>Today and each day to come, with its share in ₹</td><td>The whole pot until payday, one step per day; the top step is today</td></tr>
+  <tr><td>Same as This week</td><td><b>Yes, the same chart</b>; tapping only swaps the sentence and the bars' emphasis</td><td>No</td><td>No</td><td>No</td></tr>
+  <tr><td>Days left</td><td>Within this week, plus the flag and the range line</td><td>Words only</td><td>Columns you scroll, ending at the ⚑ day</td><td>Count of steps; a gapless shape, so it works at 28 days</td></tr>
+  <tr><td>Today's drain</td><td>Marigold room shrinking above the grey spent, up to the tick</td><td>Clearest: a long horizontal bar</td><td>Today's tile goes from marigold to outline to stripes</td><td>The marigold top step thins</td></tr>
+  <tr><td>Overspend</td><td>Stripes above the tick, as in This week; days to come shrink</td><td>Stripes past the end</td><td>Later amounts drop ("₹1,794")</td><td>Every step after today drops</td></tr>
+  <tr><td>Height</td><td>88dp: the card is 48dp taller in both modes</td><td>About 40dp, the same as now</td><td>About 76dp</td><td>About 64dp</td></tr>
+  <tr><td>Risk</td><td>Taller hero all the time; Today list starts lower</td><td>Loses "every day gets a share"</td><td>Horizontal scroll inside a tappable card; tiles look like buttons</td><td>A new metaphor to learn; abstract for first users</td></tr>
+</table></div>
+
+<h2>Recommendation <span class="tag">T1</span></h2>
+<p class="lede"><b>One week chart for both modes.</b> The owner already likes it, so the hero can use one chart instead of two. Every bar means the same thing everywhere. <b>Grey height = spent</b>, the <b>tick = that day's share</b>, and <b>stripes = over</b>. Today adds one thing: <b>marigold room</b> from what's spent up to the tick, which is exactly the hero amount. Days still to come are outlines at the share they'll get, so overspending today visibly lowers them (BR-6's shrinking later blocks, in bar form). Tapping still switches to the week sentence, but the chart stays put: no swap, no crossfade, no resize. The cost is height. The card is 88dp of bars all the time, so the Today list starts 48dp lower. That's the W3 option D111 turned down; it is worth taking again now that the blocks are going.</p>
+
+<h2>Plan, if T1 is picked</h2>
+<ol>
+  <li><b>Docs first:</b> SPEC BR-6 becomes "Today's chart": BR-6a's bars plus today's marigold room (<code>clamp(A − S_today, 0, A)</code> stacked on today's spent) and outlined days to come at tomorrow's share. FR-HO-2: the tap swaps only the sentence and today's emphasis. UI_DESIGN §5.2, mockups README, and a DECISIONS row that supersedes D111's W2 and BR-6's blocks. → verify: the docs agree with this page.</li>
+  <li><b>Data, test first:</b> <code>WeekBarsMapper</code> gives each day still to come in the cycle a <code>share</code> (tomorrow's <code>A</code>, as BR-6's later height), and gives today <code>room</code>. → verify: tests for on track, slow down, over today and over cycle (no room; days to come at 0 draw as stubs), ₹0 spent, and payday mid-week.</li>
+  <li><b>Painter:</b> <code>WeekBarsPainter</code> draws room (marigold with the edge) and future outlines. The stub kind goes away. → verify: painter tests per kind, at the <code>TestWindows</code> sizes.</li>
+  <li><b>Hero:</b> drop <code>DayBlocks</code> from Today mode, and drop the resize and crossfade from <code>HeroCard</code>. The letters row stays in both modes. → verify: <code>hero_card_test</code>, <code>home_page_test</code>. Tests asserting blocks or the 48dp growth need the owner's OK.</li>
+  <li><b>Motion and a11y:</b> today's room drains on <code>standard</code> with the number roll, and the D91 trail moves to the room. TalkBack keeps the hero sentence. → verify: on a device with Reduce motion on and off.</li>
+  <li><b>Clean-up:</b> the <code>day_blocks/</code> widget stays only if onboarding's preview still uses it. Otherwise I'll mention it as removable, not delete it unasked.</li>
+  <li><b>Done:</b> <code>flutter analyze</code>, <code>flutter test</code>, <code>scripts/changed_lines_coverage.sh</code> ≥ 90%, and the moto g45 at 3, 9 and 28 days.</li>
+</ol>
+
+<h3>Open questions</h3>
+<ul>
+  <li><b>Is a permanently taller hero OK</b> (+48dp)? If not, T1 can run at 64dp (+24dp), and the bars are still readable.</li>
+  <li><b>Monday problem:</b> on a Monday T1 shows one real bar and six outlines. A rolling window (3 days back, today, 3 ahead) would always be full, but then This week stops being a calendar week.</li>
+</ul>
+
+<script>
+const FLAG = '<svg viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>';
+const ROW = 234, A = 1850, DAY = 864e5;
+const PAYDAY = new Date(2026, 10, 7), START = new Date(2026, 9, 7);
+const TODAY = { 3: new Date(2026, 10, 4), 9: new Date(2026, 9, 29), 28: new Date(2026, 9, 10) };
+const PAST = { // spent, share
+  '2026-10-26': [1240, 1850], '2026-10-27': [2310, 1850], '2026-10-28': [980, 1800],
+  '2026-11-02': [760, 1850], '2026-11-03': [1450, 1850],
+  '2026-10-07': [1100, 1850], '2026-10-08': [640, 1880], '2026-10-09': [2050, 1850],
+};
+const SPENT = { on: 420, slow: 1500, over: 2300 };
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const add = (d, n) => new Date(d.getTime() + n * DAY);
+const wd = (d, f = 'short') => d.toLocaleDateString('en-IN', { weekday: f });
+
+function st() {
+  const D = +document.querySelector('input[name=d]:checked').value;
+  const s = document.querySelector('input[name=s]:checked').value;
+  const spent = SPENT[s], left = A - spent;
+  // why: BR-6 caps later days at today's share, so underspending today never draws bigger days ahead.
+  const tomorrow = D > 1 ? Math.min(A, (A * D - spent) / (D - 1)) : 0;
+  return { D, s, spent, left, tomorrow, today: TODAY[D] };
+}
+function hero(c, rows, range) {
+  const amount = c.s === 'over' ? '0' : inr(c.left).slice(1);
+  const over = c.s === 'over' ? `<div class="overTxt">${inr(c.spent - A)} over today</div>` : '';
+  return `<div class="hero"><div class="ttl">Safe to spend today</div>
+    <div class="amtRow"><div class="amt ${c.s === 'over' ? 'muted' : ''}"><span class="rs">₹</span>${amount}</div>${over}</div>
+    <div class="rows">${rows}</div><hr><div class="range"><i class="dot"></i><div>${range}</div></div></div>`;
+}
+const flagCol = '<div class="flag">' + FLAG + '7 Nov</div>';
+const range = c => c.s === 'over' ? `Later days get ${inr(c.tomorrow)} each · <span>to stay on track</span>` : 'Lasts till payday · <span>about ₹9,300 spare</span>';
+const card = (cap, tag, body, note) => `<div class="phone"><div class="cap"><b>${cap}</b><span>${tag}</span></div>${body}<p class="note">${note}</p></div>`;
+const pc = v => (v * 100).toFixed(1) + '%';
+
+/* T1: the week chart in Today mode */
+function t1(c) {
+  const H = 88, gap = 6, w = (ROW - gap * 6) / 7;
+  const mon = add(c.today, -((c.today.getDay() + 6) % 7));
+  const cols = [];
+  for (let i = 0; i < 7; i++) {
+    const d = add(mon, i);
+    if (d < START || d >= PAYDAY) cols.push({ d, kind: 'none' });
+    else if (key(d) === key(c.today)) cols.push({ d, kind: 'today', spent: c.spent, share: A });
+    else if (d < c.today) { const p = PAST[key(d)] || [900, 1850]; cols.push({ d, kind: 'past', spent: p[0], share: p[1] }); }
+    else cols.push({ d, kind: 'future', share: c.tomorrow });
+  }
+  const top = Math.max(...cols.flatMap(x => [x.spent || 0, x.share || 0]));
+  const y = v => (v / top) * H;
+  let html = '';
+  cols.forEach((x, i) => {
+    const l = i * (w + gap);
+    const at = (cls, b, h, extra = '') => `<div class="x ${cls}" style="left:${l}px;width:${w}px;bottom:${b}px;height:${h}px;${extra}"></div>`;
+    if (x.kind === 'none') return;
+    if (x.kind === 'future') { html += at('ghost', 0, y(x.share)); return; }
+    const solid = Math.min(x.spent, x.share);
+    html += x.spent === 0 ? at('zero', 0, 2) : at('solid', 0, y(solid));
+    if (x.spent > x.share) html += at('hatch', y(x.share), y(x.spent - x.share));
+    if (x.kind === 'today' && x.spent < x.share) html += at(c.s === 'slow' ? 'room' : 'room', y(x.spent), y(x.share - x.spent), 'border-radius:6px 6px 0 0');
+    html += `<div class="x tick" style="left:${l - 2}px;width:${w + 4}px;bottom:${y(x.share)}px"></div>`;
+  });
+  const caps = cols.map((x, i) => `<span class="${x.kind === 'today' ? 't' : ''}" style="left:${i * (w + gap)}px;width:${w}px">${x.d.toLocaleDateString('en-IN', { weekday: 'narrow' })}</span>`).join('');
+  const lblToday = cols.findIndex(x => x.kind === 'today');
+  const rows = `<div class="barRow"><div class="row" style="height:${H}px">${html}</div>${flagCol}</div><div class="caps pad">${caps}</div>`;
+  return card('T1 · One week chart, both modes', 'recommended', hero(c, rows, range(c)),
+    `Grey = spent, tick = that day's share, stripes = over, as in This week. <b>Today adds marigold room</b> from spent up to the tick: that's the ₹${c.s === 'over' ? '0' : inr(c.left).slice(1)} above. Days to come are outlines at the share they'll get${c.s === 'over' ? ', and they have dropped because today went over' : ''}. Tap swaps only the sentence.`);
+}
+
+/* T2: fuel bar */
+function t2(c) {
+  const W = 288, H = 28;
+  const leftW = c.s === 'over' ? 0 : (c.left / A) * W;
+  let bar = `<div class="x idle" style="left:0;bottom:0;width:${W}px;height:${H}px;border-radius:14px"></div>`;
+  if (c.s === 'over') {
+    bar += `<div class="x hatch" style="left:0;bottom:0;width:${W}px;height:${H}px;border-radius:14px"></div>`;
+  } else if (c.s === 'slow') {
+    bar += `<div class="x slowRing" style="left:0;bottom:0;width:${W}px;height:${H}px;border-radius:14px"></div><div class="x sig" style="left:6px;bottom:6px;width:${Math.max(leftW - 6, 8)}px;height:${H - 12}px;border-radius:8px;box-shadow:none"></div>`;
+  } else {
+    bar += `<div class="x sig" style="left:0;bottom:0;width:${leftW}px;height:${H}px;border-radius:14px"></div>`;
+  }
+  const caps = `<span class="l" style="left:0;width:150px">${inr(c.spent)} spent</span><span class="r" style="right:0;width:150px">of ${inr(A)} for today</span>`;
+  const run = `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:13px;line-height:18px;color:var(--displayInk2)"><span>${c.D === 1 ? 'Last day' : `${c.D} days to payday`} · ${inr(c.s === 'over' ? c.tomorrow : A)} a day</span><span style="display:flex;align-items:center;gap:4px;color:var(--displayInk);font-weight:600"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>7 Nov</span></div>`;
+  const rows = `<div class="row" style="height:${H}px">${bar}</div><div class="caps">${caps}</div>${run}`;
+  return card('T2 · Fuel bar for today', 'option', hero(c, rows, range(c)),
+    '<b>One long bar: today\'s share</b>, marigold for what\'s left, draining from the right. Days left move to words. It\'s the clearest drain, but "every day gets the same share" is no longer drawn.');
+}
+
+/* T3: money forecast, weather-app style */
+function t3(c) {
+  const tiles = [];
+  for (let i = 0; i < c.D; i++) {
+    const d = add(c.today, i);
+    const amt = i === 0 ? (c.s === 'over' ? '₹0' : inr(c.left)) : inr(c.tomorrow);
+    const cls = i === 0 ? `t ${c.s === 'slow' ? 'slow' : c.s === 'over' ? 'over' : ''}` : '';
+    tiles.push(`<div class="day ${cls}"><span class="w">${i === 0 ? 'Today' : wd(d)}</span><span class="d">${d.getDate()}</span><span class="a">${amt}</span></div>`);
+  }
+  tiles.push(`<div class="day pay"><span class="w">${wd(PAYDAY)}</span>${FLAG}<span class="a" style="color:var(--displayInk)">Payday</span></div>`);
+  const rows = `<div class="strip">${tiles.join('')}</div>`;
+  return card('T3 · Money forecast', 'option', hero(c, rows, range(c)),
+    `<b>Like a weather forecast:</b> one tile per day until payday, each with what it gets. Scroll sideways to see them all${c.D > 4 ? ` (${c.D + 1} tiles)` : ''}. Overspend today and every later tile drops. A scroll inside a tappable card fights the tap to switch modes.`);
+}
+
+/* T4: stairs to payday */
+function t4(c) {
+  const H = 64, W = ROW;
+  const pot = A * c.D;
+  const w = W / c.D;
+  let html = '';
+  for (let i = 0; i < c.D; i++) {
+    const l = i * w;
+    if (i === 0) {
+      const base = c.tomorrow * (c.D - 1);
+      const bh = (base / pot) * H, sh = (A / pot) * H;
+      html += `<div class="x idle" style="left:${l}px;width:${w}px;bottom:0;height:${bh}px;border-radius:6px 0 0 3px"></div>`;
+      if (c.s === 'over') html += `<div class="x hatch" style="left:${l}px;width:${w}px;bottom:${bh}px;height:${sh}px"></div>`;
+      else html += `<div class="x ${c.s === 'slow' ? 'slowRing' : 'sig'}" style="left:${l}px;width:${w}px;bottom:${bh}px;height:${Math.max((c.left / pot) * H, 3)}px;border-radius:6px 6px 0 0"></div>`;
+    } else {
+      const left = c.tomorrow * (c.D - i);
+      html += `<div class="x idle" style="left:${l}px;width:${w + (i < c.D - 1 ? .5 : 0)}px;bottom:0;height:${(left / pot) * H}px;border-radius:${i === c.D - 1 ? '0 6px 3px 0' : '0'}"></div>`;
+    }
+  }
+  const caps = `<span class="l t" style="left:0;width:60px">Today</span><span class="r" style="right:0;width:160px">${c.D - 1} steps down to payday</span>`;
+  const rows = `<div class="barRow"><div class="row" style="height:${H}px">${html}</div>${flagCol}</div><div class="caps pad">${caps}</div>`;
+  return card('T4 · Stairs to payday', 'wildcard', hero(c, rows, range(c)),
+    `<b>The whole pot until payday</b>, one step per day, falling to the ⚑. The top of today's step, in marigold, is today's to spend. Steps touch, so even 28 days reads as one shape. <b>The catch:</b> today is only 1/${c.D} of the height, so its marigold step is ${(64 / c.D).toFixed(0)}dp tall. The drain is hard to see, the same flaw as thin blocks, turned on its side.`);
+}
+
+function render() {
+  const c = st();
+  document.getElementById('options').innerHTML = [t1(c), t2(c), t3(c), t4(c)].join('');
+}
+document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+document.querySelectorAll('.controls input[type=radio]').forEach(r => r.addEventListener('change', render));
+render();
+</script>
+</body>
+</html>

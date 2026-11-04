@@ -188,7 +188,43 @@
       }
     }
   },
+  "overCycleCardMonthEnd": "It happens. This month's money is used up. It starts again on {date}.",
+  "@overCycleCardMonthEnd": {
+    "description": "Over-cycle card for a calendar-month cycle, which has no payday; date is the 1st of the next month (D116)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "overCycleCardWeek": "It happens. This week's money is used up. It starts again on payday, {date}.",
+  "@overCycleCardWeek": {
+    "description": "Over-cycle card for a weekly pay cycle (D116)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "safeToSpendThisWeek": "Safe to spend this week",
+  "todayBarSpent": "{amount} spent",
+  "@todayBarSpent": {
+    "description": "Hero caption under today's bar, at its start: what was spent today (BR-6)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "todayBarOfShare": "of {amount} for today",
+  "@todayBarOfShare": {
+    "description": "Hero caption under today's bar, at its end: today's share (BR-6)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "weekSpent": "Spent {amount} this week",
   "@weekSpent": {
     "description": "Hero range slot in This week (BR-6a)",
@@ -319,6 +355,15 @@
       }
     }
   },
+  "daysLeftInMonth": "{count, plural, =1{Last day of the month} other{{count} days left this month}}",
+  "@daysLeftInMonth": {
+    "description": "Days rail caption for a calendar-month cycle; count includes today, like daysToPayday (D116)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "spokenAmount": "{amount} rupees",
   "@spokenAmount": {
     "description": "Screen-reader form of an amount; amount is digits with Indian grouping, e.g. 1,430",
@@ -378,7 +423,14 @@
     }
   },
   "incomeQuestion": "How much money comes in each month?",
-  "incomeHint": "Your salary after tax. You can change it any time.",
+  "incomeHint": "Pay, business, pension or family money. If it changes, a low month is a safe guess.",
+  "@incomeHint": {
+    "description": "Onboarding step 1 hint; names sources, not jobs, so it fits non-salaried users (D116)"
+  },
+  "incomePrivacy": "It stays on this phone. The app never uses the internet.",
+  "@incomePrivacy": {
+    "description": "Caption under the onboarding income keypad, beside a lock icon (D116)"
+  },
   "dailyPreview": "That's about {amount} a day",
   "@dailyPreview": {
     "description": "Rough daily share while typing income (amount ÷ 30)",
@@ -388,9 +440,9 @@
       }
     }
   },
-  "dailyPreviewCaption": "One block for every day of the month",
+  "dailyPreviewCaption": "Every day gets its own share",
   "paydayQuestion": "When does it come?",
-  "paydayHint": "Your month runs from one payday to the next.",
+  "paydayHint": "Your month runs from one payday to the next. No fixed day? Pick It changes.",
   "payFirstOfMonth": "1st of the month",
   "payLastDay": "Last day",
   "payPickDate": "Pick a date",
@@ -448,9 +500,13 @@
   "todayTitle": "Today",
   "todayList": "Today",
   "lastsTillPayday": "Lasts till payday",
+  "lastsTillMonthEnd": "Lasts till month end",
+  "@lastsTillMonthEnd": {
+    "description": "Range line for a calendar-month cycle, which has no payday (D116)"
+  },
   "aboutSpare": "about {amount} spare",
   "@aboutSpare": {
-    "description": "Forecast: money left at payday, rounded to ₹100",
+    "description": "Forecast: money left at the end of the cycle (payday or month end), rounded to ₹100",
     "placeholders": {
       "amount": {
         "type": "String"
@@ -477,11 +533,21 @@
   "shareAlmostUsed": "today's share is almost used",
   "overToday": "Over today",
   "stillLasts": "still lasts till payday",
+  "stillLastsMonthEnd": "still lasts till month end",
   "overBy": "Over by {amount}",
   "@overBy": {
     "placeholders": {
       "amount": {
         "type": "String"
+      }
+    }
+  },
+  "newMonthIn": "{count, plural, =1{new month tomorrow} other{new month in {count} days}}",
+  "@newMonthIn": {
+    "description": "Over-cycle detail for a calendar-month cycle (D116)",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },

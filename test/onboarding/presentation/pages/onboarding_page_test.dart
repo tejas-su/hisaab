@@ -87,6 +87,34 @@ void main() {
       expect(find.text('₹45'), findsNothing);
     });
 
+    testWidgets('the income question names money, not salary, and says it stays on the phone (D116)', (WidgetTester tester) async {
+      await pump(tester);
+      expect(find.text('Pay, business, pension or family money. If it changes, a low month is a safe guess.'), findsOneWidget);
+      expect(find.text('It stays on this phone. The app never uses the internet.'), findsOneWidget);
+      await tapKeys(tester, '45000');
+      expect(find.text('Every day gets its own share'), findsOneWidget);
+
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      expect(find.text('Your month runs from one payday to the next. No fixed day? Pick It changes.'), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('privacy-note')), findsNothing);
+    });
+
+    testWidgets('a bill amount has no privacy note', (WidgetTester tester) async {
+      await pump(tester);
+      await tapKeys(tester, '45000');
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('payday-date')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('day-4')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-rent')));
+      await settle(tester);
+      expect(find.text('How much is Rent?'), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('privacy-note')), findsNothing);
+    });
+
     testWidgets('three questions to Home: income, payday, a bill, Done', (WidgetTester tester) async {
       await pump(tester);
       expect(find.text('How much money comes in each month?'), findsOneWidget);

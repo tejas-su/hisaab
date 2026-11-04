@@ -105,6 +105,11 @@ void main() {
       final CycleSummary result = await summary();
       expect(result.cycle, const PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31)));
       expect(result.earliestEntryDate, const CalendarDate(2026, 9, 1));
+      expect(result.endsAtMonthEnd, isTrue);
+    });
+
+    test('a payday cycle does not end at month end (D116)', () async {
+      expect((await summary()).endsAtMonthEnd, isFalse);
     });
 
     test('no salary rule: calendar month, and no income is the NoIncome state (E10)', () async {

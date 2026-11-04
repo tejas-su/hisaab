@@ -28,7 +28,7 @@ Tests should cite the ID they cover.
 - One currency (INR) and English text. The code is ready for other locales and currencies (PLAN §5).
 - Recurring income and recurring bills.
 - Manual expenses and manual income ("Got").
-- Daily "safe to spend", Day Blocks, the range forecast, Spends insights, and the Ask AI export.
+- Daily "safe to spend", today's bar and the days rail, the range forecast, Spends insights, and the Ask AI export.
 - Optional category limits, local backup/restore and CSV export.
 
 ### 1.2 Not in v1
@@ -55,8 +55,10 @@ Tests should cite the ID they cover.
 | **Cycle** | The run of calendar days the user's money must last. It starts on payday by default |
 | **Today's share** (`A`) | The amount the user can spend today without hurting later days. It is fixed for the day |
 | **Safe to spend today** | Today's share minus what was spent today. This is the hero number |
-| **Day Blocks** | One block per day left in the cycle. Today's block drains as you spend |
+| **Today's bar** | Today's share as one bar: the yellow is what's left, and each thing bought today is a bite out of it (BR-6) |
+| **Days rail** | One dot per day left in the cycle, today's first, ending at the payday flag (BR-6) |
 | **Range line** | A forecast sentence: does the money last until payday at the current pace? |
+| **Month end** | The end of a cycle that follows the calendar month (*It changes*, or month start on the 1st). It has no payday, so the rail, range line and over card name the month end instead (DECISIONS D116) |
 | **Keep aside** | Optional money set aside each cycle and never counted as spendable |
 
 ---
@@ -117,26 +119,32 @@ tomorrow   = floor((P − S_today) / (D − 1))   // only when D > 1
 ### BR-5 States
 The states below are evaluated in order, and the first match wins.
 
-| # | State | Condition | Hero | Today's block |
+| # | State | Condition | Hero | Today's bar and dot (BR-6) |
 |---|---|---|---|---|
 | 1 | **No income** | `I = 0` and no recurring income | Onboarding prompt | — |
-| 2 | **Over for the cycle** | `P − S_today < 0` | `₹0`, plus "Over by ₹X this cycle" where `X = S_today − P` | All blocks empty and outlined |
-| 3 | **Over today** | `S_today > A` | `₹0`, plus "₹X over today" | Hatched; future blocks shorter |
-| 4 | **Slow down** | `safeToday < 0.25 × A`, **or** the forecast (BR-7) runs out before `end` | `safeToday` | Marigold outline with a sliver |
+| 2 | **Over for the cycle** | `P − S_today < 0` | `₹0`, plus "Over by ₹X this cycle" where `X = S_today − P` | Bar hatched past the share tick; every rail dot outlined |
+| 3 | **Over today** | `S_today > A` | `₹0`, plus "₹X over today" | Bar hatched past the share tick; today's dot hatched |
+| 4 | **Slow down** | `safeToday < 0.25 × A`, **or** the forecast (BR-7) runs out before `end` | `safeToday` | The yellow drawn as a marigold outline; today's dot a marigold ring |
 | 5 | **On track** | Otherwise | `safeToday` | Solid marigold, draining |
 
-### BR-6 Day Blocks geometry
-- **Number of blocks:** `D`.
-- **Today's fill:** `clamp(safeToday / A, 0, 1)`. If `A = 0`, the fill is 0. Once `S_today > 0`, the fill is at most `0.9`, a 4dp band on the 40dp block, so any spend shows (D91).
-  - **Worked example:** `A = 11,218`, `S_today = 700` gives `10,518 / 11,218 ≈ 0.94`, which shows as `0.9`. `S_today = 0` shows `1`.
-- **Future blocks:** height ratio `clamp(tomorrow / A, 0.4, 1)` when `A > 0`. They shrink when today is overspent, and never grow above full height. The ghost outline of full height is drawn only when the ratio is below 1.
-- **Widths:** blocks share the width equally. If that is under 6dp, render one block per day for the next 7 days plus a "+N" label. The payday flag is always last.
+### BR-6 Today's bar and the days rail
+Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.html)).
+- **Today's bar:** one bar, the hero's full inner width, 48dp tall.
+  - **Span:** `max(A, S_today)`. While `S_today ≤ A` the bar is today's share.
+  - **The yellow** (marigold) runs from the start edge: `clamp(A − S_today, 0, A) / span`. It is the hero amount.
+  - **Bites:** each *Spent* entry dated today is a `blockIdle` piece of `amount / span`, the first saved at the end edge and each later one next to the yellow, 3dp apart. A bite narrower than 4dp merges with its neighbours. A bite wide enough for its category name has the name under it.
+  - **Over today** (`S_today > A`): no yellow. A 2dp `displayInk` tick marks `A / span`, and everything past it is hatched in `displayInk2`.
+  - **States (BR-5):** slow down draws the yellow as a marigold outline; over today and over for the cycle draw the hatch. With `A = 0` and nothing spent, the bar is empty.
+  - **Worked example:** `A = 1,850`, chai ₹40 then lunch ₹380. The yellow is `1,430 / 1,850 ≈ 77%`; lunch (20.5%) sits next to it and chai (2.2%, about 6dp) at the end. After ₹1,080 groceries and ₹800 cab, `S_today = 2,300`: the span is ₹2,300, the tick sits at `1,850 / 2,300 ≈ 80%`, and the last 20% is hatched.
+- **Captions:** "₹420 spent" at the start and "of ₹1,850 for today" at the end, under the bar.
+- **Days rail:** one dot per day left (`D`), today first at 10dp, the others 6dp `blockIdle` (smaller, down to 2dp, when they would be closer than 2dp apart), then the payday flag with its date. Today's dot: marigold (on track), a marigold ring (slow down), hatched (over today, over for the cycle). Over for the cycle also outlines every later dot. Captions: "Today" and "{D} days to payday" (on the last day, "1 day to payday"). A month-end cycle reads "{D} days left this month" ("Last day of the month" when `D = 1`) and its flag shows the 1st of the next month (D116).
+- **Same height in both modes:** the bar with its names and captions, and the week bars with their letters (BR-6a), are laid out in one cell; the card takes the taller, so tapping between *Today* and *This week* never resizes it. The days rail sits under that cell in both modes.
 
 ### BR-6a Week bars (*This week*)
 - **Days:** Monday to Sunday. Monday (or the cycle start, if later) to today each get a bar; days still to come in the cycle get a stub; days before the cycle start or from payday on get nothing.
 - **Each past day's share `A_d`** is that day *as it stood*, with the ledger as it is now: entries dated on or before `d`; bills posted after `d` still counted in `B`; income dated after `d` not yet in `I` (BR-3, BR-4; the same rebuild as BR-8's yesterday). A back-dated entry changes that day and the days after it.
 - **Each bar** fills to the day's *Spent* total. A tick marks `A_d`; any spend above it is hatched, never red. Today's bar is marigold; past bars are `displayInk2`.
-- **Scale:** zero at the bottom; the tallest spend or share in the week reaches the top (88dp).
+- **Scale:** zero at the bottom; the tallest spend or share in the week reaches the top (64dp, the card's full inner width; D114).
 - **Words:** the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" (the most-over day, then "and N more days"), "Today is ₹220 over its share" when today is the most over, or "· every day within its share". A day exactly at its share is within it.
 - **Worked example:** today Thu 29 Oct. Spent Mon ₹1,240, Tue ₹2,310, Wed ₹980, Thu ₹420 so far. With Tue's `A_d = 1,850`, Tue's ₹460 above its tick is hatched and the sentence names it.
 
@@ -148,6 +156,7 @@ The states below are evaluated in order, and the first match wins.
 - **Spare at payday:** `spare = P − S_today − pace × (D − 1)`. It is rounded **to the nearest ₹100** and always prefixed with "about", because it is a forecast, not a promise.
 - **Messages:**
   - `spare ≥ 0`: "Lasts till payday · about ₹{spare} spare".
+  - A month-end cycle says "month end" for "payday" throughout: "Lasts till month end", "still lasts till month end", and "new month in {D} days" for over the cycle (D116).
   - `spare < 0`: "At this pace it runs out on {date}", where `date = t + floor((P − S_today) / pace) + 1` days.
 - **Worked example:** `V_prev = 27,150 − 8,200 = 18,950`, `E = 22`, `pace ≈ 861.4`. Then `spare = 16,650 − 420 − 861.4 × 8 ≈ 9,339`, which displays as "about ₹9,300 spare".
 
@@ -266,24 +275,24 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 ### 4.1 Onboarding (FR-ON)
 - **FR-ON-1** A fresh install opens onboarding. A finished onboarding never shows again unless the user resets the app.
-- **FR-ON-2** Step 1 asks "How much money comes in each month?" with the keypad open.
-  - Given 45000 is typed, then the preview reads "That's about ₹1,500 a day". This is `floor(amount / 30)`, for the preview only.
+- **FR-ON-2** Step 1 asks "How much money comes in each month?" with the keypad open. The hint names money, not a job, so it fits salaried, self-employed, gig, pension and family money alike: "Pay, business, pension or family money. If it changes, a low month is a safe guess." Between the keypad and Next, a lock and "It stays on this phone. The app never uses the internet." (DECISIONS D116).
+  - Given 45000 is typed, then the preview reads "That's about ₹1,500 a day", captioned "Every day gets its own share". This is `floor(amount / 30)`, for the preview only.
   - Next is enabled only when the amount is greater than 0.
-- **FR-ON-3** Step 2 asks "When does it come?" with five chips: *1st of the month*, *Last day*, *Pick a date* (day 1–31), *Every week* (weekday), *It changes*. Selecting a chip advances.
+- **FR-ON-3** Step 2 asks "When does it come?" with five chips: *1st of the month*, *Last day*, *Pick a date* (day 1–31), *Every week* (weekday), *It changes*. The hint reads "Your month runs from one payday to the next. No fixed day? Pick It changes." Selecting a chip advances.
 - **FR-ON-4** Step 3, "Any fixed bills?", offers chips (Rent, EMI, Phone, Internet, School fees, Subscriptions) that each open a mini keypad and a due day. **Skip** is always visible.
-- **FR-ON-5** Finishing creates the income rule, any bill rules and the seed categories in one transaction. It then runs the recurring engine, lands on Home with the "blocks assemble" motion and fires the success haptic.
+- **FR-ON-5** Finishing creates the income rule, any bill rules and the seed categories in one transaction. It then runs the recurring engine, lands on Home with the "assemble" motion (today's bar fills and the rail's dots arrive one by one) and fires the success haptic.
 - **FR-ON-6** If the user leaves mid-onboarding, it resumes at the same step.
 
 ### 4.2 Home (FR-HO)
 - **FR-HO-1** Shows the wordmark, today's date (`EEE, d MMM`, e.g. "Mon, 26 Oct") and a Settings button.
 - **FR-HO-2** **Hero card:**
   - "Safe to spend today" with the hero amount (BR-4/BR-5).
-  - Day Blocks (BR-6), with the "Today" and "{D} days to payday" captions and the payday flag date.
+  - Today's bar with its captions, then the days rail with "Today", "{D} days to payday" and the payday flag date (BR-6).
   - The range line (BR-7).
   - Tapping the hero toggles *Today* ↔ *This week*. *This week* shows `A × min(7, D) − (spent since the start of the week, Monday)`, and the toggle lasts for the session only.
     - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37).
     - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
-    - The Day Blocks give way to the week bars (BR-6a) and their captions to the weekday letters; the payday flag stays. The card grows 48dp for the bars, only in *This week*. The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
+    - Today's bar and its captions give way to the week bars and weekday letters (BR-6a), in a 150ms crossfade; the days rail and its flag stay. The card's height never changes between the two (BR-6, D114). The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
 - **FR-HO-3** **Due-soon nudge** (BR-9), when applicable.
 - **FR-HO-4** **Today list:**
   - The header shows today's total and *See all*.
@@ -292,7 +301,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Empty state: "Nothing spent today. Tap Add when you do."
 - **FR-HO-5** **Over states** (BR-5 #2 and #3) show a calm card with one next step, *See where it went*, which opens Spends.
   - Over today: "It happens. The ₹220 is spread across the next 3 days, so each one is a little smaller." (with one day after today: "comes out of tomorrow"). On the last day `A = P`, so any overspend is over for the cycle.
-  - Over for the cycle: "It happens. This month's money is used up. It starts again on payday, 4 Nov."
+  - Over for the cycle: "It happens. This month's money is used up. It starts again on payday, 4 Nov." A weekly cycle says "This week's money"; a month-end cycle drops "payday": "…It starts again on 1 Nov." (D116)
   - The step is hidden when Spends is already beside Home in two panes (DECISIONS D54).
 - **FR-HO-6** The dock offers Home · **Add** · Spends. Add opens the tray (FR-AD).
 - **FR-HO-7** The hero card is announced as one TalkBack node (UI_DESIGN §9).
@@ -329,7 +338,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).
   - A "Spending slower" or "Spending faster" verdict with a glyph (DECISIONS D77).
   - A today marker in marigold.
-  - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. Without income there is no steady line, so only the total shows (DECISIONS D49).
+  - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. When spending runs far past `I − K`, the step moves up the same ladder so at most 4 labels sit above ₹0 (₹3,000 with ₹5,00,000 spent gives ₹0 / ₹2L / ₹4L). Without income there is no steady line, so only the total shows (DECISIONS D49, D115).
   - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day.
 - **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "past limit") (D110).
 - **FR-SP-5** **Insights** (BR-14), with their actions.
@@ -344,7 +353,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
-  - Salary and payday (edits the income rule; future cycles only).
+  - Money coming in (edits the income rule; future cycles only; D116).
   - Fixed bills (list, add, edit, delete rules). The list shows each bill's name, day and amount, soonest first. Adding or editing asks three questions: the name (typed, or one of the onboarding chips, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*; every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe or *Delete* removes a bill with Undo (BR-9).
   - Keep aside each month.
   - My month starts on: *Payday* / *1st*.

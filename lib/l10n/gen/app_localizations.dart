@@ -337,11 +337,35 @@ abstract class AppLocalizations {
   /// **'It happens. This month\'s money is used up. It starts again on payday, {date}.'**
   String overCycleCard(String date);
 
+  /// Over-cycle card for a calendar-month cycle, which has no payday; date is the 1st of the next month (D116)
+  ///
+  /// In en, this message translates to:
+  /// **'It happens. This month\'s money is used up. It starts again on {date}.'**
+  String overCycleCardMonthEnd(String date);
+
+  /// Over-cycle card for a weekly pay cycle (D116)
+  ///
+  /// In en, this message translates to:
+  /// **'It happens. This week\'s money is used up. It starts again on payday, {date}.'**
+  String overCycleCardWeek(String date);
+
   /// No description provided for @safeToSpendThisWeek.
   ///
   /// In en, this message translates to:
   /// **'Safe to spend this week'**
   String get safeToSpendThisWeek;
+
+  /// Hero caption under today's bar, at its start: what was spent today (BR-6)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String todayBarSpent(String amount);
+
+  /// Hero caption under today's bar, at its end: today's share (BR-6)
+  ///
+  /// In en, this message translates to:
+  /// **'of {amount} for today'**
+  String todayBarOfShare(String amount);
 
   /// Hero range slot in This week (BR-6a)
   ///
@@ -432,6 +456,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 day to payday} other{{count} days to payday}}'**
   String daysToPayday(int count);
+
+  /// Days rail caption for a calendar-month cycle; count includes today, like daysToPayday (D116)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Last day of the month} other{{count} days left this month}}'**
+  String daysLeftInMonth(int count);
 
   /// Screen-reader form of an amount; amount is digits with Indian grouping, e.g. 1,430
   ///
@@ -529,11 +559,17 @@ abstract class AppLocalizations {
   /// **'How much money comes in each month?'**
   String get incomeQuestion;
 
-  /// No description provided for @incomeHint.
+  /// Onboarding step 1 hint; names sources, not jobs, so it fits non-salaried users (D116)
   ///
   /// In en, this message translates to:
-  /// **'Your salary after tax. You can change it any time.'**
+  /// **'Pay, business, pension or family money. If it changes, a low month is a safe guess.'**
   String get incomeHint;
+
+  /// Caption under the onboarding income keypad, beside a lock icon (D116)
+  ///
+  /// In en, this message translates to:
+  /// **'It stays on this phone. The app never uses the internet.'**
+  String get incomePrivacy;
 
   /// Rough daily share while typing income (amount ÷ 30)
   ///
@@ -544,7 +580,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailyPreviewCaption.
   ///
   /// In en, this message translates to:
-  /// **'One block for every day of the month'**
+  /// **'Every day gets its own share'**
   String get dailyPreviewCaption;
 
   /// No description provided for @paydayQuestion.
@@ -556,7 +592,7 @@ abstract class AppLocalizations {
   /// No description provided for @paydayHint.
   ///
   /// In en, this message translates to:
-  /// **'Your month runs from one payday to the next.'**
+  /// **'Your month runs from one payday to the next. No fixed day? Pick It changes.'**
   String get paydayHint;
 
   /// No description provided for @payFirstOfMonth.
@@ -661,7 +697,13 @@ abstract class AppLocalizations {
   /// **'Lasts till payday'**
   String get lastsTillPayday;
 
-  /// Forecast: money left at payday, rounded to ₹100
+  /// Range line for a calendar-month cycle, which has no payday (D116)
+  ///
+  /// In en, this message translates to:
+  /// **'Lasts till month end'**
+  String get lastsTillMonthEnd;
+
+  /// Forecast: money left at the end of the cycle (payday or month end), rounded to ₹100
   ///
   /// In en, this message translates to:
   /// **'about {amount} spare'**
@@ -703,11 +745,23 @@ abstract class AppLocalizations {
   /// **'still lasts till payday'**
   String get stillLasts;
 
+  /// No description provided for @stillLastsMonthEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'still lasts till month end'**
+  String get stillLastsMonthEnd;
+
   /// No description provided for @overBy.
   ///
   /// In en, this message translates to:
   /// **'Over by {amount}'**
   String overBy(String amount);
+
+  /// Over-cycle detail for a calendar-month cycle (D116)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{new month tomorrow} other{new month in {count} days}}'**
+  String newMonthIn(int count);
 
   /// No description provided for @paydayIn.
   ///

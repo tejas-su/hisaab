@@ -72,6 +72,7 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
                     (CalendarDate _) => _yesterday(day, today, entries, billsDue: billsDue),
                   ),
                   week: _week(day, today, entries, billsDue: billsDue),
+                  endsAtMonthEnd: _periods.endsAtMonthEnd(rule: payRule, monthStart: settings.monthStart),
                 ),
               ),
         );

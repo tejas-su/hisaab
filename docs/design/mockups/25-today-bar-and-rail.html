@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Today bar and days rail (proposal)</title>
+<style>
+  /* Proposal: the owner picked mockup 24's B1 (bites) with the days rail, and asked that Today and This week be the same
+     height so the hero never resizes. Nothing here is built yet.
+     Layout: one 88dp chart slot where Today's bar and the week bars overlap (sized to the larger, like an IndexedStack),
+     then the days rail with the payday flag, shared by both modes; the range line is stacked the same way.
+     Dates follow mockups 19–24: payday Sat 7 Nov 2026, cycle from Wed 7 Oct; A = ₹1,850.
+     Today's spends: on track chai ₹40 + lunch ₹380; slow down + groceries ₹1,080; over today + cab ₹800.
+     9 days left uses BR-6a's worked example for the week (Mon ₹1,240, Tue ₹2,310 against ₹1,850, Wed ₹980). Copy marked draft needs design-content. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650;
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 24px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .tag.soft { background: none; color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
+  .controls legend { float: left; font: 600 13px/20px 'Mukta', sans-serif; color: var(--canvasInk2); margin-inline-end: 4px; }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+  .controls button { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1.5px solid var(--canvasInk); background: none; color: var(--canvasInk); cursor: pointer; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(328px, 360px)); gap: 16px; margin-top: 16px; }
+  .phone { background: var(--bg); color: var(--ink); border-radius: 24px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .phone > .cap { font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink2); display: flex; justify-content: space-between; gap: 8px; }
+  .phone > .cap b { color: var(--ink); }
+  .note { font-size: 13px; line-height: 19px; color: var(--ink2); margin: 0; }
+  .note b { color: var(--ink); font-weight: 600; }
+  .measure { font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink); }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); box-shadow: inset 0 0 0 1px var(--displayInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+
+  /* Hero */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); cursor: pointer; user-select: none; }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amtRow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
+  .amt.muted { color: var(--displayInk2); }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .overTxt { font: 600 18px/24px 'Mukta', sans-serif; padding-bottom: 10px; }
+  /* the two modes share one cell, so the card takes the larger and never resizes */
+  .stack { display: grid; }
+  .stack > * { grid-area: 1 / 1; transition: opacity 200ms ease; }
+  .stack > .off { opacity: 0; visibility: hidden; }
+  body.reduce .stack > * { transition: opacity 150ms linear; }
+  .slot { margin-top: 24px; height: 88px; position: relative; }
+  .capRow { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .capRow b { color: var(--displayInk); font-weight: 600; font-family: 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .hero hr { border: 0; height: 1px; background: var(--displayEtch); margin: 16px 0 14px; }
+  .range { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; }
+  .range .dot { width: 18px; height: 18px; border-radius: 9px; box-shadow: inset 0 0 0 1.6px var(--displayInk); flex: none; margin-top: 2px; }
+  .range span { color: var(--displayInk2); }
+  .p { position: absolute; }
+  .anim { transition: left 620ms cubic-bezier(.2,1.25,.4,1), width 620ms cubic-bezier(.2,1.25,.4,1), bottom 620ms cubic-bezier(.2,1.25,.4,1), height 620ms cubic-bezier(.2,1.25,.4,1); }
+  body.reduce .anim { transition: none; }
+
+  /* Today bar (B1) */
+  .tbar { position: relative; height: 48px; }
+  .tbar .fill { top: 0; bottom: 0; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .fill.slow { box-shadow: inset 0 0 0 3px var(--signal), inset 0 0 0 4.5px var(--displayEdge); background: var(--blockIdle); }
+  body.dark .tbar .fill.slow { box-shadow: inset 0 0 0 3px var(--signal); }
+  .tbar .bite { top: 0; bottom: 0; border-radius: 6px; background: var(--blockIdle); }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+  .tbar .bite.new { box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .tbar .over { top: 0; bottom: 0; border-radius: 6px 14px 14px 6px; background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.6px, var(--display) 1.6px 4.5px); box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .tbar .tick { top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--displayInk); box-shadow: 0 0 0 1px var(--display); }
+  .tbar .empty { inset: 0; border-radius: 14px; background: var(--blockIdle); }
+  .names { position: relative; height: 14px; margin: 4px 0 4px; }
+  .names span { position: absolute; top: 0; font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); white-space: nowrap; transform: translateX(-50%); }
+
+  /* Week bars, as week_bars_painter.dart */
+  .wk { position: relative; height: 64px; }
+  .wk .solid { bottom: 0; background: var(--displayInk2); border-radius: 6px 6px 3px 3px; }
+  .wk .solid.today { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .wk .hatch { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.6px, var(--display) 1.6px 4.5px); box-shadow: inset 0 0 0 1.5px var(--displayInk2); border-radius: 6px 6px 0 0; }
+  .wk .tick { height: 2px; margin-bottom: -1px; background: var(--displayInk); box-shadow: 0 0 0 1px var(--display); }
+  .wk .stub { bottom: 0; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .wk .zero { bottom: 0; height: 2px; border-radius: 1px; background: var(--displayInk2); }
+  .letters { position: relative; height: 18px; margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .letters span { position: absolute; top: 0; text-align: center; }
+  .letters span.t { color: var(--displayInk); font-weight: 600; }
+
+  /* Days rail, shared by both modes */
+  .rail { margin-top: 14px; }
+  .railRow { display: flex; align-items: center; gap: 10px; height: 18px; }
+  .dots { flex: 1; position: relative; height: 10px; }
+  .dots i { position: absolute; top: 2px; width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .dots i.t { top: 0; width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dots i.t.h { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.4px, var(--display) 1.4px 3.6px); box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .dots i.wkd { background: var(--displayInk2); }
+  .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; color: var(--displayInk); }
+  svg.f { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .railCap { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; padding-inline-end: 64px; }
+
+  table { border-collapse: collapse; margin-top: 16px; font-size: 14px; line-height: 20px; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  .wrap { overflow-x: auto; }
+  ol li, ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark</label>
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <fieldset><legend>Days left</legend>
+    <label><input type="radio" name="d" value="3"> 3</label>
+    <label><input type="radio" name="d" value="9" checked> 9</label>
+    <label><input type="radio" name="d" value="28"> 28</label>
+  </fieldset>
+  <fieldset><legend>Today</legend>
+    <label><input type="radio" name="s" value="on" checked> On track</label>
+    <label><input type="radio" name="s" value="slow"> Slow down</label>
+    <label><input type="radio" name="s" value="over"> Over today</label>
+  </fieldset>
+  <button id="spend" type="button">Spend ₹300</button>
+</div>
+
+<h1>Today bar and days rail <span class="tag soft">proposal</span></h1>
+<p class="lede">The owner picked <b>B1 · Bites</b> with the <b>days rail</b> (mockup 24), and asked that <b>Today and This week be the same height</b> so the card never resizes. So the hero has <b>one 88dp chart slot</b>, where Today's bar and the week bars take turns, and <b>one days rail</b> under it that stays put in both modes. The rail also holds the payday flag, so the week bars get the full width. <b>Tap the first hero</b> to switch modes; the line under it measures the card each time.</p>
+
+<div class="grid" id="options"></div>
+
+<h2>Geometry</h2>
+<div class="wrap"><table>
+  <tr><th>Part</th><th>Today</th><th>This week</th></tr>
+  <tr><td>Chart slot</td><td colspan="2">88dp in both modes; both are laid out and the slot takes the larger (an <code>IndexedStack</code>), so text scaling can't make one mode taller</td></tr>
+  <tr><td>Inside the slot</td><td>Bar 48dp · 4 · spend names 14dp · 4 · caption 18dp = 88</td><td>Bars 64dp (was 88) · 6 · letters 18dp = 88</td></tr>
+  <tr><td>Width</td><td colspan="2">The whole card width (288dp at 360). The flag moves to the rail, so the week bars gain the 54dp the flag column took</td></tr>
+  <tr><td>Days rail</td><td colspan="2">14 · dots 18dp row with ⚑ date · 4 · caption 18dp. Identical in both modes; it never changes on tap</td></tr>
+  <tr><td>Range line</td><td colspan="2">Both sentences are laid out in one cell, so a two-line sentence in one mode reserves two lines in the other</td></tr>
+  <tr><td>Switch</td><td colspan="2">The slot and range line crossfade (200ms; 150ms with reduced motion). The amount, the rail and the card's edges don't move</td></tr>
+</table></div>
+
+<h2>Plan</h2>
+<ol>
+  <li><b>Docs first.</b> SPEC: BR-6 becomes <i>Today's bar</i>:
+    <ul>
+      <li>Track <code>A</code>, yellow <code>clamp(A − S_today, 0, A)</code>.</li>
+      <li>One bite per <i>Spent</i> entry dated today, newest next to the yellow. Bites under 4dp merge.</li>
+      <li>Over today: the bar spans <code>S_today</code>, with a tick at <code>A</code> and stripes past it.</li>
+      <li>BR-5's states: slow down is a marigold ring on the yellow.</li>
+    </ul>
+    Also in SPEC: a new rule for the <i>days rail</i> (one dot per day left; today marigold, or striped when over). BR-6a bars are 64dp. FR-HO-2: the card never resizes. UI_DESIGN §5.2, the mockups README and a DECISIONS row that supersedes the Day Blocks and D111's 48dp growth. → verify: SPEC, UI_DESIGN and this page agree.</li>
+  <li><b><code>TodayBarMapper</code>, test first:</b> yellow, bites, tick, over. → verify: ₹0 spent, exactly <code>A</code>, over by more than <code>A</code>, <code>A = 0</code>, 30 tiny spends merging, and a back-dated entry leaving today.</li>
+  <li><b><code>DaysRailMapper</code>, test first:</b> dot count, and today's state. → verify: 1, 3, 9, 28, 31 days, a payday on the 29th–31st, and a year-crossing cycle.</li>
+  <li><b>Widgets:</b> <code>TodayBar</code> and <code>DaysRail</code> in <code>lib/core/widgets/</code>, with <code>CustomPainter</code>s and tokens only. <code>WeekBars</code> loses the flag column and gets 64dp. → verify: painter geometry tests at every <code>TestWindows</code> size; the rail's dots keep 6dp at 31 days and 320dp.</li>
+  <li><b>Hero:</b> replace <code>_resizing</code> and the <code>AnimatedSwitcher</code> with a fixed-size stack and a crossfade, and put the rail under it. → verify: a test that the hero's height is equal in both modes at text scale 1.0 and 2.0; <code>hero_card_test</code>, <code>home_page_test</code>. Tests asserting Day Blocks or the 48dp growth need the owner's OK.</li>
+  <li><b>Motion and haptics:</b>
+    <ul>
+      <li>When the Add tray closes, the new bite grows from 0 beside the yellow on <code>standard</code>, while the number rolls.</li>
+      <li>At midnight, today's dot slides off the rail and the next dot grows into today.</li>
+      <li>Reduced motion draws everything at once.</li>
+    </ul>
+    → verify: on the moto g45, with Reduce motion on and off.</li>
+  <li><b>Copy (design-content):</b> "₹420 spent in 2", "of ₹1,850 for today", "Today", "8 more days", "Last day". TalkBack keeps the hero sentence and reads the spends as "chai 40 rupees, lunch 380 rupees". → verify: ARB, banned words, <code>flutter gen-l10n</code>.</li>
+  <li><b>Done:</b> <code>flutter analyze</code>, <code>flutter test</code>, <code>scripts/changed_lines_coverage.sh</code> ≥ 90%. The onboarding preview and splash blocks are a separate step.</li>
+</ol>
+
+<script>
+const FLAGSVG = '<svg class="f" viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>';
+const W = 288, A = 1850, DAY = 864e5;
+const PAYDAY = new Date(2026, 10, 7), START = new Date(2026, 9, 7);
+const TODAY = { 3: new Date(2026, 10, 4), 9: new Date(2026, 9, 29), 28: new Date(2026, 9, 10) };
+const PAST = {
+  '2026-10-26': [1240, 1850], '2026-10-27': [2310, 1850], '2026-10-28': [980, 1800],
+  '2026-11-02': [760, 1850], '2026-11-03': [1450, 1850],
+  '2026-10-07': [1100, 1850], '2026-10-08': [640, 1880], '2026-10-09': [2050, 1850],
+};
+const BASE = { on: [40, 380], slow: [40, 380, 1080], over: [40, 380, 1080, 800] };
+const NAMES = ['chai', 'lunch', 'groceries', 'cab'];
+let extra = [], prev = {}, week = { live: false };
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const add = (d, n) => new Date(d.getTime() + n * DAY);
+
+function st() {
+  const D = +document.querySelector('input[name=d]:checked').value;
+  const s0 = document.querySelector('input[name=s]:checked').value;
+  const spends = BASE[s0].concat(extra);
+  const spent = spends.reduce((a, b) => a + b, 0), left = A - spent;
+  const s = left < 0 ? 'over' : left < 0.25 * A ? 'slow' : 'on';
+  const tomorrow = D > 1 ? Math.min(A, (A * D - spent) / (D - 1)) : 0;
+  return { D, s, spends, spent, left, tomorrow, today: TODAY[D] };
+}
+function el(id, cls, left, width, style = '') {
+  const p = prev[id] || { left: left + width, width: 0 };
+  return `<div class="p anim ${cls}" data-id="${id}" data-l="${left}" data-w="${width}" style="left:${p.left}px;width:${p.width}px;${style}"></div>`;
+}
+
+function todaySlot(c, pfx) {
+  const GAP = 3, scale = Math.max(A, c.spent), px = v => (v / scale) * W;
+  let html = '', x = W, names = '';
+  c.spends.forEach((v, i) => {
+    const w = Math.max(px(v) - GAP, 3);
+    x -= w;
+    const isNew = i === c.spends.length - 1 && extra.length > 0;
+    html += el(`${pfx}b${i}`, 'bite' + (isNew ? ' new' : '') + (i === 0 ? ' end' : ''), x, w);
+    if (w > 40 && (c.spent <= A || x + w / 2 < px(A))) names += `<span style="left:${x + w / 2}px">${NAMES[i] || inr(v)}</span>`;
+    x -= GAP;
+  });
+  if (c.s === 'over') {
+    const t = px(A);
+    html += el(`${pfx}o`, 'over', t + 2, W - t - 2) + `<i class="p tick" style="left:${t}px"></i>`;
+  } else {
+    html = el(`${pfx}f`, 'fill' + (c.s === 'slow' ? ' slow' : ''), 0, Math.max(0, x)) + html;
+  }
+  return `<div class="slot"><div class="tbar">${html}</div><div class="names">${names}</div>
+    <div class="capRow"><span><b>${inr(c.spent)}</b> spent in ${c.spends.length}</span><span>of ${inr(A)} for today</span></div></div>`;
+}
+
+function weekDays(c) {
+  const mon = add(c.today, -((c.today.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = add(mon, i);
+    if (d < START || d >= PAYDAY) return { d, kind: 'none' };
+    if (key(d) === key(c.today)) return { d, kind: 'today', spent: c.spent, share: A };
+    if (d < c.today) { const p = PAST[key(d)] || [900, 1850]; return { d, kind: 'past', spent: p[0], share: p[1] }; }
+    return { d, kind: 'future' };
+  });
+}
+function weekSlot(c, pfx) {
+  const H = 64, gap = 6, w = (W - gap * 6) / 7, cols = weekDays(c);
+  const top = Math.max(...cols.flatMap(x => [x.spent || 0, x.share || 0]));
+  const y = v => (v / top) * H;
+  let html = '';
+  cols.forEach((x, i) => {
+    const l = i * (w + gap);
+    if (x.kind === 'none') return;
+    if (x.kind === 'future') { html += `<i class="p stub" style="left:${l}px;width:${w}px"></i>`; return; }
+    const solid = Math.min(x.spent, x.share);
+    html += x.spent === 0 ? `<i class="p zero" style="left:${l}px;width:${w}px"></i>`
+      : `<div class="p anim solid ${x.kind === 'today' ? 'today' : ''}" style="left:${l}px;width:${w}px;height:${y(solid)}px"></div>`;
+    if (x.spent > x.share) html += `<div class="p hatch" style="left:${l}px;width:${w}px;bottom:${y(x.share)}px;height:${y(x.spent - x.share)}px"></div>`;
+    html += `<i class="p tick" style="left:${l - 2}px;width:${w + 4}px;bottom:${y(x.share)}px"></i>`;
+  });
+  const letters = cols.map((x, i) => `<span class="${x.kind === 'today' ? 't' : ''}" style="left:${i * (w + gap)}px;width:${w}px">${x.d.toLocaleDateString('en-IN', { weekday: 'narrow' })}</span>`).join('');
+  return `<div class="slot"><div class="wk">${html}</div><div class="letters">${letters}</div></div>`;
+}
+
+function rail(c, isWeek) {
+  const RW = W - 64, n = c.D, step = n > 1 ? (RW - 10) / (n - 1) : 0;
+  let dots = '';
+  for (let i = 0; i < n; i++) dots += i === 0
+    ? `<i class="t ${c.s === 'over' ? 'h' : ''}" style="left:0"></i>`
+    : `<i style="left:${10 + (i - 1) * step + (step - 6) / 2}px"></i>`;
+  const more = c.D === 1 ? 'Last day' : `${c.D - 1} more day${c.D === 2 ? '' : 's'}`;
+  return `<div class="rail"><div class="railRow"><div class="dots">${dots}</div><span class="pf">${FLAGSVG}7 Nov</span></div>
+    <div class="railCap"><span>Today</span><span>${more}</span></div></div>`;
+}
+
+function weekSentence(c) {
+  const cols = weekDays(c).filter(x => x.kind === 'past' || x.kind === 'today');
+  const total = cols.reduce((s, x) => s + x.spent, 0);
+  const over = cols.filter(x => x.spent > x.share);
+  if (!over.length) return `Spent ${inr(total)} this week · <span>every day within its share</span>`;
+  const m = over.reduce((a, b) => (b.spent - b.share) > (a.spent - a.share) ? b : a);
+  const who = m.kind === 'today' ? 'Today is' : `${m.d.toLocaleDateString('en-IN', { weekday: 'short' })} was`;
+  return `Spent ${inr(total)} this week · <span>${who} ${inr(m.spent - m.share)} over${over.length > 1 ? ` and ${over.length - 1} more` : ''}</span>`;
+}
+function todaySentence(c) {
+  return c.s === 'over' ? `Later days get ${inr(c.tomorrow)} each · <span>to stay on track</span>` : 'Lasts till payday · <span>about ₹9,300 spare</span>';
+}
+
+function hero(c, mode, pfx, id = '') {
+  const amount = c.s === 'over' ? '0' : inr(c.left).slice(1);
+  const over = c.s === 'over' ? `<div class="overTxt">${inr(-c.left)} over today</div>` : '';
+  const w = mode === 'week';
+  return `<div class="hero" ${id ? `id="${id}"` : ''}><div class="ttl">Safe to spend today</div>
+    <div class="amtRow"><div class="amt ${c.s === 'over' ? 'muted' : ''}"><span class="rs">₹</span>${amount}</div>${over}</div>
+    <div class="stack"><div class="${w ? 'off' : ''}" data-mode="today">${todaySlot(c, pfx + 't')}</div><div class="${w ? '' : 'off'}" data-mode="week">${weekSlot(c, pfx + 'w')}</div></div>
+    ${rail(c, w)}<hr>
+    <div class="stack"><div class="range ${w ? 'off' : ''}" data-mode="today"><i class="dot"></i><div>${todaySentence(c)}</div></div>
+      <div class="range ${w ? '' : 'off'}" data-mode="week"><i class="dot"></i><div>${weekSentence(c)}</div></div></div></div>`;
+}
+const card = (cap, tag, body, note) => `<div class="phone"><div class="cap"><b>${cap}</b><span>${tag}</span></div>${body}<p class="note">${note}</p></div>`;
+
+function render() {
+  const c = st();
+  document.getElementById('options').innerHTML = [
+    card('Tap to switch', week.live ? 'This week' : 'Today', hero(c, week.live ? 'week' : 'today', 'L', 'live') + '<div class="measure" id="m"></div>',
+      '<b>Tap the card.</b> The slot and the sentence crossfade; the amount, the rail and the card\'s edges stay where they are.'),
+    card('Today', 'B1 bites', hero(c, 'today', 'A', 'hT'),
+      c.s === 'over' ? '<b>Over today:</b> the bar spans what was spent, the tick marks today\'s share, and the part past it is striped. Today\'s rail dot is striped too.' : '<b>Yellow is what\'s left</b>, and each grey chunk is one thing bought today. Press Spend ₹300 to see a bite land.'),
+    card('This week', 'bars at 64dp', hero(c, 'week', 'B', 'hW'),
+      'The same bars as today\'s This week (D111), at 64dp and full width now that the flag lives on the rail.'),
+  ].join('');
+  document.getElementById('live').addEventListener('click', () => {
+    week.live = !week.live;
+    document.querySelectorAll('#live [data-mode]').forEach(n => n.classList.toggle('off', (n.dataset.mode === 'week') !== week.live));
+    document.querySelector('.phone .cap span').textContent = week.live ? 'This week' : 'Today';
+    measure();
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('[data-id]').forEach(n => {
+      const l = +n.dataset.l, w = +n.dataset.w;
+      n.style.left = l + 'px'; n.style.width = w + 'px';
+      prev[n.dataset.id] = { left: l, width: w };
+    });
+    measure();
+  }));
+}
+function measure() {
+  const t = document.getElementById('hT').offsetHeight, w = document.getElementById('hW').offsetHeight, l = document.getElementById('live').offsetHeight;
+  document.getElementById('m').textContent = `Card height: Today ${t}px · This week ${w}px · this card ${l}px ${t === w && w === l ? '✓ equal' : '✗ differ'}`;
+}
+document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+document.getElementById('reduce').addEventListener('change', e => document.body.classList.toggle('reduce', e.target.checked));
+document.querySelectorAll('input[name=d]').forEach(r => r.addEventListener('change', render));
+document.querySelectorAll('input[name=s]').forEach(r => r.addEventListener('change', () => { extra = []; prev = {}; render(); }));
+document.getElementById('spend').addEventListener('click', () => { extra.push(300); render(); });
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { document.getElementById('reduce').checked = true; document.body.classList.add('reduce'); }
+render();
+</script>
+</body>
+</html>

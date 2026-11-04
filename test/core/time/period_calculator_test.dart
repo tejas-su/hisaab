@@ -102,8 +102,31 @@ void main() {
     });
   });
 
+  group('PeriodCalculator.endsAtMonthEnd — which cycles have no payday (SPEC BR-1, D116)', () {
+    const List<PayRule> paydayRules = <PayRule>[MonthlyOnDay(4), MonthlyOnDay(1), LastDayOfMonth(), WeeklyOn(DateTime.friday)];
+    for (final PayRule rule in paydayRules) {
+      test('$rule with month start on payday ends at payday', () {
+        expect(calculator.endsAtMonthEnd(rule: rule, monthStart: MonthStart.payday), isFalse);
+      });
+      test('$rule with month start on the 1st ends at month end', () {
+        expect(calculator.endsAtMonthEnd(rule: rule, monthStart: MonthStart.firstOfMonth), isTrue);
+      });
+    }
+
+    test('"It changes" ends at month end', () {
+      expect(calculator.endsAtMonthEnd(rule: const IrregularIncome(), monthStart: MonthStart.payday), isTrue);
+      expect(calculator.endsAtMonthEnd(rule: const IrregularIncome(), monthStart: MonthStart.firstOfMonth), isTrue);
+    });
+  });
+
   group('PayCycle', () {
     const PayCycle october = PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3));
+
+    test('only a weekly cycle is a week (BR-1: monthly cycles are 28–31 days)', () {
+      expect(cycle(const CalendarDate(2026, 10, 26), const WeeklyOn(DateTime.friday)).isWeek, isTrue);
+      expect(october.isWeek, isFalse);
+      expect(cycle(const CalendarDate(2027, 2, 10), const IrregularIncome()).isWeek, isFalse);
+    });
 
     test('BR-2: days left counts today', () {
       expect(october.daysLeftFrom(const CalendarDate(2026, 10, 26)), 9);

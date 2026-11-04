@@ -39,7 +39,7 @@ class DailyPreview extends StatelessWidget {
             assemble: true,
           ),
           const SizedBox(height: HisaabSpacing.s),
-          Text(strings.dailyPreviewCaption, style: text.bodySmall?.copyWith(color: context.colors.displayInk2)),
+          Text(strings.dailyPreviewCaption, style: text.bodyMedium?.copyWith(color: context.colors.displayInk2)),
         ],
       ),
     );

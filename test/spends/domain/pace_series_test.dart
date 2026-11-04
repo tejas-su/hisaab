@@ -100,5 +100,22 @@ void main() {
       final PaceSeries far = _series(<Entry>[_spent(61000, const CalendarDate(2026, 10, 10))]);
       expect(far.axisLabels.last, Money.fromMajor(60000));
     });
+
+    // Regression: the step came from the budget alone, so a large overspend drew one label per
+    // step all the way up (₹1 budget, ₹1L spent → 1,00,001 labels), which hung the app.
+    final List<(int, int, int, List<int>)> overspends = <(int, int, int, List<int>)>[
+      (3000, 500000, 200000, <int>[0, 200000, 400000]),
+      (1, 100000, 50000, <int>[0, 50000, 100000]),
+      (45000, 99999999, 20000000, <int>[0, 20000000, 40000000, 60000000, 80000000]),
+      (45000, 81000, 20000, <int>[0, 20000, 40000, 60000, 80000]),
+      (45000, 101000, 50000, <int>[0, 50000, 100000]),
+    ];
+    for (final (int budget, int spent, int step, List<int> labels) in overspends) {
+      test('₹$budget budget, ₹$spent spent: at most 4 steps, every ₹$step', () {
+        final PaceSeries series = _series(<Entry>[_spent(spent, const CalendarDate(2026, 10, 10))], budget: budget);
+        expect(series.axisStep, Money.fromMajor(step));
+        expect(series.axisLabels, labels.map(Money.fromMajor).toList());
+      });
+    }
   });
 }

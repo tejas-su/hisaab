@@ -6,7 +6,7 @@ import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
-import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
+import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
 import 'package:expense_tracker/home/home.dart';
 import 'package:expense_tracker/home/presentation/widgets/due_soon_note.dart';
 import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
@@ -175,16 +175,16 @@ void main() {
         expect(tester.getTopLeft(well).dx, tester.getTopLeft(find.text('Safe to spend today')).dx);
       });
 
-      testWidgets('"N days to payday" ends where the last block ends', (WidgetTester tester) async {
+      testWidgets('"N days to payday" ends where the rail\'s dots end, a gap before the flag (D114)', (WidgetTester tester) async {
         await pump(tester);
-        expect(tester.getTopRight(find.text('9 days to payday')).dx, tester.getTopRight(find.byType(DayBlocks)).dx);
+        final Finder flag = find.descendant(of: find.byType(DaysRail), matching: find.byType(AppIcon));
+        expect(tester.getTopRight(find.text('9 days to payday')).dx, tester.getTopLeft(flag).dx - DaysRail.flagGap);
       });
 
-      testWidgets('the payday flag sits centred in a 44dp column at the card\'s content edge', (WidgetTester tester) async {
+      testWidgets('the payday flag\'s date ends on the card\'s content edge (D114)', (WidgetTester tester) async {
         await pump(tester);
-        final double flagCentre = tester.getCenter(find.text('4 Nov')).dx;
         final double cardContentRight = tester.getTopRight(find.byType(HeroCard)).dx - 20;
-        expect(flagCentre, closeTo(cardContentRight - 22, 0.5));
+        expect(tester.getTopRight(find.text('4 Nov')).dx, cardContentRight);
       });
     });
 
@@ -285,8 +285,8 @@ void main() {
         await tester.settle();
         expect(find.text('Safe to spend this week'), findsOneWidget);
         expect(find.text('₹12,530'), findsOneWidget);
-        expect(find.byType(WeekBars), findsOneWidget, reason: 'the weekday bars take the blocks\' place (BR-6a)');
-        expect(find.text('9 days to payday'), findsNothing);
+        expect(find.byType(WeekBars), findsOneWidget, reason: 'the weekday bars take today\'s bar\'s place (BR-6a)');
+        expect(find.text('9 days to payday'), findsOneWidget, reason: 'the days rail stays in both modes (D114)');
         await tester.tap(find.byType(HeroCard));
         await tester.settle();
         expect(find.text('Safe to spend today'), findsOneWidget);

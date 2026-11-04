@@ -77,6 +77,8 @@ class HomePage extends StatelessWidget {
         HomeReady(:final CycleSummary summary) => <Widget>[
             HeroCard(
               summary: summary,
+              spends: state.todaySpends,
+              categories: state.categories,
               week: state.showWeek,
               onTap: () => context.read<HomeBloc>().add(const HomeWeekToggled()),
               assemble: assemble,

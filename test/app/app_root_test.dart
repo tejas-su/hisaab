@@ -5,7 +5,7 @@ import 'package:expense_tracker/app/widgets/startup_failure_view.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
+import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
 import 'package:expense_tracker/ledger/domain/entities/occurrence.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
@@ -39,7 +39,7 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
-    testWidgets('finishing onboarding lands on Home with the blocks assembling', (WidgetTester tester) async {
+    testWidgets('finishing onboarding lands on Home with the hero assembling', (WidgetTester tester) async {
       await boot(tester, FakeServices(onboardingDone: false, entries: <Entry>[], rules: <RecurringRule>[]));
       for (final String key in <String>['4', '5', '0', '0', '0']) {
         await tester.tap(find.byKey(ValueKey<String>('keypad-$key')));
@@ -52,7 +52,7 @@ void main() {
       await tester.tap(find.text('Skip'));
       await settle(tester);
       expect(find.byType(AppShell), findsOneWidget);
-      expect(tester.widget<DayBlocks>(find.byType(DayBlocks)).assemble, isTrue);
+      expect(tester.widget<DaysRail>(find.byType(DaysRail)).assemble, isTrue);
     });
 
     testWidgets('a returning user goes straight to Home, in en_IN', (WidgetTester tester) async {

@@ -30,8 +30,9 @@ final class PaceSeries extends Equatable {
         .fold(<int>[], (List<int> sums, int day) => <int>[...sums, (sums.isEmpty ? 0 : sums.last) + day])
         .map((int minor) => Money(minor, currency: budget.currency))
         .toList();
+    final Money top = cumulative.last > budget ? cumulative.last : budget;
     return Option<PaceSeries>.of(
-      PaceSeries(cycleDays: cycle.lengthInDays, spentByDay: cumulative, budget: budget, axisStep: _niceStep(budget)),
+      PaceSeries(cycleDays: cycle.lengthInDays, spentByDay: cumulative, budget: budget, axisStep: _niceStep(budget, top)),
     );
   }
 
@@ -44,7 +45,8 @@ final class PaceSeries extends Equatable {
   /// `I − K`: the money the cycle has to spend.
   final Money budget;
 
-  /// Gap between y-axis labels: a third of [budget] rounded up to 1, 2 or 5 × 10ⁿ rupees.
+  /// Gap between y-axis labels: a third of [budget] rounded up to 1, 2 or 5 × 10ⁿ rupees, raised
+  /// up the same ladder when needed so at most 4 steps sit above ₹0 (D115).
   final Money axisStep;
 
   /// Total spent up to the as-of day.
@@ -69,14 +71,18 @@ final class PaceSeries extends Equatable {
         for (int minor = 0; minor <= top.amountMinor; minor += axisStep.amountMinor) Money(minor, currency: budget.currency),
       ];
 
-  static Money _niceStep(Money budget) {
+  // why: a step from the budget alone drew one label per step up to a big overspend (₹1 budget,
+  // ₹1L spent gave 1,00,001 labels) and hung the app; the second floor keeps 5 labels at most.
+  static Money _niceStep(Money budget, Money top) {
     final int perMajor = budget.currency.minorPerMajor;
     final int third = (budget.amountMinor + 3 * perMajor - 1) ~/ (3 * perMajor);
+    final int fifthOfTop = top.amountMinor ~/ (5 * perMajor) + 1;
+    final int floor = third > fifthOfTop ? third : fifthOfTop;
     int magnitude = 1;
-    while (magnitude * 10 <= third) {
+    while (magnitude * 10 <= floor) {
       magnitude *= 10;
     }
-    final int step = <int>[1, 2, 5, 10].map((int m) => m * magnitude).firstWhere((int s) => s >= third);
+    final int step = <int>[1, 2, 5, 10].map((int m) => m * magnitude).firstWhere((int s) => s >= floor);
     return Money(step * perMajor, currency: budget.currency);
   }
 

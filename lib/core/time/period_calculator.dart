@@ -21,6 +21,11 @@ final class PeriodCalculator {
     };
   }
 
+  /// Whether cycles for [rule] and [monthStart] follow the calendar month, so they end at month end
+  /// rather than the day before a payday (BR-1; DECISIONS D116).
+  bool endsAtMonthEnd({required PayRule rule, required MonthStart monthStart}) =>
+      monthStart == MonthStart.firstOfMonth || rule is IrregularIncome;
+
   PayCycle _monthly(CalendarDate today, CalendarDate Function(int year, int month) paydayIn) {
     final CalendarDate thisMonth = paydayIn(today.year, today.month);
     final CalendarDate start = thisMonth.isAfter(today) ? _shiftMonth(today, -1, paydayIn) : thisMonth;

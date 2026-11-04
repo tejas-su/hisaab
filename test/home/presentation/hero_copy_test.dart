@@ -22,9 +22,11 @@ CycleSummary _summary({
   CalendarDate today = const CalendarDate(2026, 10, 26),
   int spentThisWeek = 420,
   List<WeekDay> week = const <WeekDay>[],
+  PayCycle cycle = const PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3)),
+  bool endsAtMonthEnd = false,
 }) =>
     CycleSummary(
-      cycle: const PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3)),
+      cycle: cycle,
       today: today,
       pool: Money.fromMajor(16650),
       todayShare: Money.fromMajor(share),
@@ -35,6 +37,23 @@ CycleSummary _summary({
       earliestEntryDate: const CalendarDate(2026, 9, 4),
       spentThisWeek: Money.fromMajor(spentThisWeek),
       week: week,
+      endsAtMonthEnd: endsAtMonthEnd,
+    );
+
+/// A calendar-month cycle ("It changes", or month start on the 1st): Mon 26 Oct is 6 days from the end.
+CycleSummary _monthEnd({
+  required CycleState state,
+  RangeForecast forecast = const TooEarlyToForecast(),
+  CalendarDate today = const CalendarDate(2026, 10, 26),
+  Option<Money> tomorrow = const Option<Money>.none(),
+}) =>
+    _summary(
+      state: state,
+      forecast: forecast,
+      today: today,
+      tomorrow: tomorrow,
+      cycle: const PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31)),
+      endsAtMonthEnd: true,
     );
 
 WeekDay _day(int october, {required int spent, int share = 1850}) =>
@@ -127,6 +146,41 @@ void main() {
 
     test('compares by value', () {
       expect(_copy(_summary(state: const OnTrack())), _copy(_summary(state: const OnTrack())));
+    });
+  });
+
+  group('HeroCopy — month-end cycles have no payday (D116)', () {
+    test('on track: days left this month and lasts till month end, shown and spoken', () {
+      final HeroCopy copy = _copy(_monthEnd(state: const OnTrack(), forecast: LastsTillPayday(Money.fromMajor(9300))));
+      expect(copy.laterCaption, '6 days left this month');
+      expect(copy.range, const RangeWords('Lasts till month end', 'about ₹9,300 spare'));
+      expect(copy.payday, '1 Nov');
+      expect(
+        copy.spoken,
+        'Safe to spend today: 1,430 rupees. 6 days left this month. Lasts till month end, about 9,300 rupees spare.',
+      );
+    });
+
+    test('too early to forecast just says it lasts till month end', () {
+      expect(_copy(_monthEnd(state: const OnTrack())).range, const RangeWords('Lasts till month end'));
+    });
+
+    test('the last day of the month says so', () {
+      final HeroCopy copy = _copy(_monthEnd(state: OverToday(Money.fromMajor(5)), today: const CalendarDate(2026, 10, 31)));
+      expect(copy.laterCaption, 'Last day of the month');
+    });
+
+    test('over today still lasts till month end', () {
+      final HeroCopy copy = _copy(_monthEnd(state: OverToday(Money.fromMajor(220)), tomorrow: Option<Money>.of(Money.fromMajor(1776))));
+      expect(copy.range, const RangeWords('Over today', 'still lasts till month end'));
+    });
+
+    test('over for the cycle counts down to the new month', () {
+      expect(_copy(_monthEnd(state: OverCycle(Money.fromMajor(2000)))).range, const RangeWords('Over by ₹2,000', 'new month in 6 days'));
+      expect(
+        _copy(_monthEnd(state: OverCycle(Money.fromMajor(1)), today: const CalendarDate(2026, 10, 31))).range.detail,
+        'new month tomorrow',
+      );
     });
   });
 

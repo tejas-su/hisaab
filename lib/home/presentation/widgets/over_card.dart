@@ -49,9 +49,17 @@ class OverCard extends StatelessWidget {
 
   String _words(BuildContext context, AppLocalizations strings) => switch (summary.state) {
         OverToday(:final over) => strings.overTodayCard(context.money.format(over), summary.daysLeft - 1),
-        OverCycle() || NoIncome() || SlowDown() || OnTrack() => strings.overCycleCard(
+        OverCycle() || NoIncome() || SlowDown() || OnTrack() => _overCycleWords(strings)(
             DateFormat('d MMM', context.money.locale)
                 .format(DateTime(summary.payday.year, summary.payday.month, summary.payday.day)),
           ),
       };
+
+  /// The over-cycle sentence for how this cycle ends: month end, a weekly payday or a monthly one (D116).
+  String Function(String) _overCycleWords(AppLocalizations strings) {
+    if (summary.endsAtMonthEnd) {
+      return strings.overCycleCardMonthEnd;
+    }
+    return summary.cycle.isWeek ? strings.overCycleCardWeek : strings.overCycleCard;
+  }
 }

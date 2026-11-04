@@ -98,6 +98,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                         summary: summary,
                         todayEntries: entries.take(todayListLimit).toList(),
                         categories: <int, Category>{for (final Category c in categories) c.id: c},
+                        todaySpends: entries.reversed.where((Entry e) => e.kind == EntryKind.spent).toList(),
                         dueSoon: dueSoon,
                       ),
                     ),

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Income for everyone (proposal)</title>
+<style>
+  /* Proposal: two tiers of onboarding copy so hisaab isn't salary-only. Nothing here is built.
+     Every app string is verbatim from 26-income-copy-deck.md (design-content); this page adds no app copy.
+     Tokens are lib/core/design/hisaab_colors.dart as of mockup 25 (01 and 08 predate the warm palette).
+     Worked example (deck): today Mon 26 Oct 2026. Monthly ₹45,000 on the 4th: 9 days, flag 4 Nov.
+     Weekly ₹10,000 on Fridays. It changes ₹30,000 low month: calendar month, 6 days left, flag 1 Nov. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --control: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; --fw: 360px;
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --control: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  body.w320 { --fw: 320px; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; overflow-x: hidden; }
+  @media (max-width: 400px) { body { padding: 0 8px 64px; } }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3.sec { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 28px 0 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); margin: 4px 0; }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; overflow-wrap: anywhere; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); white-space: nowrap; }
+  .tag.soft { background: none; color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .tag.hatch { background: repeating-linear-gradient(135deg, var(--canvasInk) 0 2px, var(--canvas) 2px 5px); color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .tag.hatch span { background: var(--canvas); padding: 0 4px; border-radius: 4px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .legend li { display: flex; gap: 8px; align-items: center; font-size: 14px; line-height: 20px; color: var(--canvasInk2); margin: 0; }
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 4px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; align-items: center; gap: 0 12px; flex-wrap: wrap; }
+  .controls legend { float: left; font: 600 13px/20px 'Mukta', sans-serif; color: var(--canvasInk2); margin-inline-end: 4px; }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 8px; width: min(var(--fw), 100%); }
+  .col > .cap { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .col > .cap b { color: var(--canvasInk); }
+  .opt { font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
+  .lines { font-size: 12px; line-height: 17px; color: var(--canvasInk2); margin: 0; }
+  .lines b { color: var(--canvasInk); font-weight: 600; }
+
+  /* Phone: one onboarding step, no status bar */
+  .phone { background: var(--bg); color: var(--ink); border-radius: 28px; padding: 24px 20px 20px; display: flex; flex-direction: column; min-height: 760px; width: 100%; overflow: hidden; }
+  .phone.short { min-height: 0; }
+  .prog { display: flex; gap: 6px; justify-content: center; }
+  .prog i { width: 12px; height: 6px; border-radius: 3px; background: var(--hairline); }
+  .prog i.on { width: 28px; background: var(--ink); }
+  .q { margin: 24px 0 0; font: 600 30px/34px 'Anek Latin', sans-serif; letter-spacing: -0.3px; }
+  .hint { margin: 6px 0 0; font-size: 15px; line-height: 20px; color: var(--ink2); max-width: none; }
+  .entry { margin-top: 22px; display: flex; align-items: center; gap: 4px; }
+  .entry span { font: 600 60px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.6px; }
+  .entry i { width: 3px; height: 46px; border-radius: 2px; background: var(--ink); }
+  .preview { margin-top: 16px; border-radius: 22px; background: var(--display); color: var(--displayInk); padding: 14px 16px; }
+  .preview .s { font-size: 16px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .blocks { margin-top: 10px; display: flex; gap: 3px; align-items: flex-end; height: 28px; }
+  .blocks i { flex: 1; height: 28px; border-radius: 4px; background: var(--blockIdle); min-width: 0; }
+  .blocks i.t { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .blocks.week i { border-radius: 6px; }
+  .preview .c { display: block; margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .grow { flex-grow: 1; min-height: 16px; }
+  .keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .keypad span { height: 56px; border-radius: 16px; background: var(--sunk); display: flex; align-items: center; justify-content: center; font: 400 26px/1 'Anek Latin', sans-serif; }
+  .privacy { display: flex; gap: 8px; align-items: flex-start; justify-content: center; margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--ink2); text-align: start; }
+  .privacy svg { flex: none; margin-top: 1px; }
+  .next { margin-top: 12px; height: 58px; border-radius: 18px; background: var(--signal); border: 1.5px solid var(--onSignal); box-shadow: 0 2px 0 var(--onSignal); display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--onSignal); font: 600 21px/1 'Anek Latin', sans-serif; }
+  svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .chips { display: flex; flex-direction: column; gap: 8px; }
+  .chip { min-height: 48px; padding: 4px 12px; border-radius: 12px; background: var(--control); display: flex; flex-direction: column; justify-content: center; }
+  .chip .l { font-size: 15px; line-height: 20px; font-weight: 600; }
+  .chip .d { font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .chip.big { min-height: 64px; padding: 8px 16px; }
+  .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .days span { height: 44px; border-radius: 12px; background: var(--control); display: flex; align-items: center; justify-content: center; font: 400 17px/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .short2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .short2 .chip { align-items: center; }
+
+  /* Home hero (mockup 25's today bar and days rail) */
+  .home { background: var(--bg); color: var(--ink); border-radius: 28px; padding: 16px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 24px 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amt { margin-top: 8px; font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .tbar { margin-top: 24px; display: flex; gap: 3px; height: 48px; }
+  .tbar .y { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; min-width: 0; }
+  .tbar .b { background: var(--blockIdle); border-radius: 6px; min-width: 3px; }
+  .tbar .b.end { border-radius: 6px 14px 14px 6px; }
+  .names { display: flex; gap: 3px; height: 14px; margin: 4px 0; font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .names span { text-align: center; min-width: 3px; overflow: hidden; white-space: nowrap; }
+  .capRow { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .capRow b { color: var(--displayInk); font-weight: 600; font-family: 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rail { margin-top: 14px; }
+  .railRow { display: flex; align-items: center; gap: 10px; height: 18px; }
+  .dots { flex: 1; display: flex; align-items: center; justify-content: space-between; height: 10px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .dots i.t { width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; color: var(--displayInk); white-space: nowrap; }
+  .railCap { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; }
+  .hero hr { border: 0; height: 1px; background: var(--displayEtch); margin: 20px 0 16px; }
+  .range { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; }
+  .range .ok { width: 18px; height: 18px; border-radius: 9px; box-shadow: inset 0 0 0 1.6px var(--displayInk); flex: none; margin-top: 2px; display: flex; align-items: center; justify-content: center; }
+  .range span { color: var(--displayInk2); }
+
+  /* Cards, settings, tray */
+  .card { background: var(--surface); color: var(--ink); border-radius: 28px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .card .body { font-size: 16px; line-height: 24px; margin: 0; max-width: none; }
+  .btn { align-self: flex-start; min-height: 48px; padding: 0 16px; border-radius: 12px; background: var(--hairline); display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+  .list { background: var(--surface); color: var(--ink); border-radius: 28px; padding: 4px 0; }
+  .li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; min-height: 56px; position: relative; }
+  .li + .li::before { content: ''; position: absolute; top: 0; left: 20px; right: 0; height: 1px; background: var(--hairline); }
+  .li .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .li .t1 { font-size: 16px; line-height: 24px; }
+  .li .t2 { font-size: 13px; line-height: 18px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .li svg { color: var(--ink2); }
+  .secLbl { font: 600 14px/20px 'Mukta', sans-serif; color: var(--ink2); padding: 4px 20px 0; }
+  .tray { background: var(--surface); color: var(--ink); border-radius: 36px 36px 0 0; padding: 10px 20px 24px; display: flex; flex-direction: column; }
+  .grab { align-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--hairline); }
+  .seg { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 16px; background: var(--sunk); }
+  .seg span { height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .seg span.on { background: var(--surface); font-weight: 600; }
+  body.dark .seg span.on { background: var(--ink); color: var(--bg); }
+  .tiles { margin-top: 16px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .tile { height: 96px; border-radius: 22px; background: var(--sunk); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; text-align: center; }
+  .tile svg { width: 28px; height: 28px; }
+  .tile span { font-size: 14px; font-weight: 600; line-height: 18px; }
+
+  .wrap { overflow-x: auto; max-width: 100%; }
+  table { border-collapse: collapse; margin-top: 16px; font-size: 14px; line-height: 20px; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  .strings td:first-child { white-space: normal; }
+  ol li { margin-bottom: 8px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark</label>
+  <fieldset><legend>Phone</legend>
+    <label><input type="radio" name="fw" value="360" checked> 360dp</label>
+    <label><input type="radio" name="fw" value="320"> 320dp (smallPhone)</label>
+  </fieldset>
+  <fieldset><legend>Tier 2 step 2</legend>
+    <label><input type="radio" name="v" value="month" checked> Every month</label>
+    <label><input type="radio" name="v" value="week"> Every week</label>
+    <label><input type="radio" name="v" value="low"> It changes</label>
+    <label><input type="radio" name="v" value="all"> All three</label>
+  </fieldset>
+</div>
+
+<h1>Income for everyone <span class="tag soft">proposal</span></h1>
+<p class="lede">Only about <b>24% of Indian workers are salaried</b> (PLFS 2025), but onboarding says "Your salary after tax", Settings says "Salary and payday" and the Got tile is "Salary".</p>
+<p class="lede">Two tiers fix it: <b>Tier 1</b> changes copy only; <b>Tier 2</b> asks <i>when</i> first, so the amount question can fit the answer. Both add a <b>month-end variant</b> for cycles with no payday. All app copy is verbatim from the content deck (<code>26-income-copy-deck.md</code>).</p>
+<ul class="legend">
+  <li><span class="tag soft">Now</span> what ships today</li>
+  <li><span class="tag">Tier 1</span> copy only, flow unchanged</li>
+  <li><span class="tag hatch"><span>Tier 2</span></span> steps swapped, three chips</li>
+  <li><span class="opt">optional</span> the deck offers it as an option</li>
+</ul>
+
+<h2>1 · Onboarding</h2>
+
+<h3 class="sec"><span class="tag soft">Now</span> Amount, then five chips</h3>
+<div class="row" id="rowNow"></div>
+
+<h3 class="sec"><span class="tag">Tier 1</span> Same flow, new hints and a privacy caption</h3>
+<div class="row" id="rowT1"></div>
+
+<h3 class="sec"><span class="tag hatch"><span>Tier 2</span></span> When first, then the amount it asks for</h3>
+<div class="row" id="rowT2"></div>
+
+<h2>2 · Downstream (both tiers)</h2>
+<p class="lede">The variant follows the <b>cycle</b>, not the pay rule (deck principle 3): a cycle that ends on the last day of its month gets the month-end copy. Same day, same share; only the rail and the words change.</p>
+
+<h3 class="sec">Home hero · payday vs month end</h3>
+<div class="row" id="rowHero"></div>
+
+<h3 class="sec">Range line and hero over-states</h3>
+<div class="wrap"><table class="strings">
+  <tr><th>State</th><th>Payday (today)</th><th>Month end (new key)</th></tr>
+  <tr><td>Rail caption</td><td>9 days to payday</td><td>6 days left this month <code>daysLeftInMonth</code></td></tr>
+  <tr><td>Rail caption, D = 1</td><td>1 day to payday</td><td>Last day of the month</td></tr>
+  <tr><td>On track</td><td>Lasts till payday · about ₹9,300 spare</td><td>Lasts till month end · about ₹9,300 spare <code>lastsTillMonthEnd</code></td></tr>
+  <tr><td>Over today</td><td>Over today · still lasts till payday</td><td>Over today · still lasts till month end <code>stillLastsMonthEnd</code></td></tr>
+  <tr><td>Over for the cycle</td><td>Over by ₹2,000 · payday in 9 days</td><td>Over by ₹2,000 · new month in 6 days <code>newMonthIn</code></td></tr>
+</table></div>
+
+<h3 class="sec">Over-for-the-cycle card · three variants</h3>
+<div class="row" id="rowOver"></div>
+
+<h3 class="sec">Settings · "Money coming in"</h3>
+<div class="row" id="rowSettings"></div>
+
+<h3 class="sec">Got tiles · "Money in"</h3>
+<div class="row" id="rowGot"></div>
+
+<h2>3 · What each tier changes</h2>
+<div class="wrap"><table>
+  <tr><th>Tier</th><th>What changes</th><th>Taps added</th><th>Docs that would change</th></tr>
+  <tr><td>Tier 1</td><td>Copy only. Step 1 hint names four sources and gives the low-month advice; a privacy caption; preview caption drops "block". Step 2 hint gives a way out to <i>It changes</i>, with an optional sublabel. Settings row, Got tiles and month-end variants as in §2.</td><td>0 (flow unchanged)</td><td>FR-ON-2 / FR-ON-3 copy; FR-SE-1 row name; BR-11 Got names; BR-6 rail caption and BR-7 range line get the month-end variant; SPEC glossary gains <i>month end</i>. D72 only if the goal is shown to month-end users. ARB: <code>incomeHint</code>, <code>incomePrivacy</code> (new), <code>dailyPreviewCaption</code>, <code>paydayHint</code>, <code>payItChangesNote</code> (new, optional), <code>settingsIncome</code> (new), <code>settingsIncomeValue</code> (new, optional), <code>categoryName</code> (salary, other_income optional), <code>daysLeftInMonth</code>, <code>lastsTillMonthEnd</code>, <code>stillLastsMonthEnd</code>, <code>newMonthIn</code>, <code>overCycleCardMonthEnd</code>, <code>overCycleCardWeek</code>, <code>askGoalLastsMonth</code> (only if D72 changes), <code>aboutSpare</code> description</td></tr>
+  <tr><td>Tier 2</td><td>Step order swapped: when (3 chips with sublabels) → amount worded for the answer → bills. Weekly amount asked directly. Low-month advice on the amount screen of <i>It changes</i>. Plus everything downstream from Tier 1.</td><td>+1 for <i>1st</i> and <i>Last day</i> (now one chip, then Every month → shortcut); 0 for a picked date, weekly and It changes. Derived from the flow; the deck doesn't count taps</td><td>FR-ON-2 and FR-ON-3 rewritten; <b>D26 superseded</b> (no ×12÷52); <b>D27</b> affected by the low-month guess (open question 2); a new DECISIONS row; all Tier 1 downstream docs. ARB: <code>paydayQuestion</code>, <code>payEveryMonth</code>, <code>payEveryMonthSub</code>, <code>payEveryWeekSub</code>, <code>payItChangesSub</code>, <code>pickPaydayQuestion</code>, <code>payFirstOfMonth</code> (short), <code>incomeQuestionWeek</code>, <code>incomeQuestionLow</code>, <code>incomeHintMonth</code>, <code>incomeHintWeek</code>, <code>incomeHintLow</code>, <code>incomePrivacy</code>, <code>dailyPreviewCaption</code>, and the month-end keys</td></tr>
+</table></div>
+
+<h2>4 · Open questions for the owner</h2>
+<p class="lede">From the deck, §5.</p>
+<ol>
+  <li><b>Which tier?</b> Tier 2 asks the weekly amount directly (this removes D26's ×12÷52 rounding) and gives irregular users the low-month advice at the right moment. It is a flow change (FR-ON-2/3) and needs a DECISIONS row. Tier 1 is copy only.</li>
+  <li><b>D27 and "low month".</b> For <i>It changes</i>, the step-2 answer becomes a real <i>Got</i> entry dated the 1st. If the user then logs real money as it comes in, it adds on top of the guess and the share is inflated. Should the low-month entry be labelled (for example a note "Starting guess"), or should the advice say "Add more as it comes" instead?</li>
+  <li><b>Month start = 1st.</b> Salaried users with this setting see "days to payday" on a cycle that ends at month end, which is a bug today. Do we key the month-end variants on the cycle (the deck's recommendation) rather than the pay rule?</li>
+  <li><b>Ask AI goal (D72).</b> Show "Will my money last the month?" to month-end users instead of hiding the goal?</li>
+  <li><b>"Extra money"</b> for <code>other_income</code>: rename it with "Money in", or leave it alone?</li>
+  <li><b>Weekly preview rounding.</b> "about ₹1,428 a day" looks exact next to "about". Floor to ₹10 ("about ₹1,420") for the preview only? This is a SPEC FR-ON-2 call.</li>
+  <li><b>Weekly users and "month" in Settings.</b> <i>Keep aside each month</i> and <i>My month starts on</i> mean little on a weekly cycle. Leave them for now, or hide the second one for weekly users?</li>
+</ol>
+
+<script>
+const ICON = {
+  next: '<svg class="i" style="width:22px;height:22px;stroke-width:2.2" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  del: '<svg class="i" style="width:26px;height:26px" viewBox="0 0 24 24"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/></svg>',
+  lock: '<svg class="i" style="width:16px;height:16px" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>',
+  flag: '<svg class="i" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>',
+  check: '<svg class="i" style="width:12px;height:12px;stroke-width:2.2" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  chev: '<svg class="i" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
+  arrow: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  moneyIn: '<svg class="i" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M12 2.5v7M9 7l3 3 3-3M16 14.5h2"/></svg>',
+  extra: '<svg class="i" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2.5"/><path d="M3 9h18M12 9v11M12 9c-1.5-3-5-4-5-1.5S10 9 12 9c2 0 5 0 5-1.5S13.5 6 12 9"/></svg>',
+};
+
+const prog = n => `<div class="prog" aria-label="Step ${n} of 3">${[1, 2, 3].map(i => `<i class="${i === n ? 'on' : ''}"></i>`).join('')}</div>`;
+const keypad = () => `<div class="keypad" aria-hidden="true">${['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<span>${k}</span>`).join('')}<span>${ICON.del}</span></div>`;
+const next = () => `<div class="next">Next ${ICON.next}</div>`;
+function blocks(n) {
+  let h = '<i class="t"></i>';
+  for (let i = 1; i < n; i++) h += '<i></i>';
+  return `<div class="blocks ${n <= 7 ? 'week' : ''}" aria-hidden="true">${h}</div>`;
+}
+// m: { step, q, hint, amount, perDay, days, caption, privacy }
+function amountStep(m) {
+  return `<div class="phone">${prog(m.step)}
+    <h3 class="q" data-m="title" data-est="${m.qEst || 2}">${m.q}</h3>
+    <p class="hint" data-m="hint" data-est="${m.hintEst}">${m.hint}</p>
+    <div class="entry"><span>${m.amount}</span><i></i></div>
+    <div class="preview"><span class="s">That's about ${m.perDay} a day</span>${blocks(m.days)}<span class="c" data-m="caption" data-est="1">${m.caption}</span></div>
+    <div class="grow"></div>${keypad()}
+    ${m.privacy ? `<div class="privacy" data-m="privacy" data-est="2">${ICON.lock}<span>It stays on this phone. The app never uses the internet.</span></div>` : ''}
+    ${next()}</div>`;
+}
+function chipsStep(m) {
+  const chips = m.chips.map(c => `<div class="chip ${m.big ? 'big' : ''}"><span class="l">${c[0]}</span>${c[1] ? `<span class="d" data-m="sublabel" data-est="${c[2] || 1}">${c[1]}${c[3] ? ' <span class="opt">optional</span>' : ''}</span>` : ''}</div>`).join('');
+  return `<div class="phone">${prog(m.step)}
+    <h3 class="q" data-m="title" data-est="${m.qEst || 1}">${m.q}</h3>
+    ${m.hint ? `<p class="hint" data-m="hint" data-est="${m.hintEst}">${m.hint}</p>` : ''}
+    <div class="grow"></div><div class="chips">${chips}</div></div>`;
+}
+function dateStep() {
+  let d = '';
+  for (let i = 1; i <= 31; i++) d += `<span>${i}</span>`;
+  return `<div class="phone">${prog(1)}
+    <h3 class="q" data-m="title" data-est="1–2">Which date does it come?</h3>
+    <div class="grow"></div>
+    <div class="short2"><div class="chip"><span class="l">1st</span></div><div class="chip"><span class="l">Last day</span></div></div>
+    <div class="days" aria-hidden="true">${d}</div></div>`;
+}
+const col = (cap, body, extra = '') => `<div class="col"><div class="cap">${cap}</div>${body}<p class="lines"></p>${extra}</div>`;
+
+const MONTH = { amount: '₹45,000', perDay: '₹1,500', days: 31 };
+const NOW_CHIPS = [['1st of the month'], ['Last day'], ['Pick a date'], ['Every week'], ['It changes']];
+
+function renderOnboarding() {
+  document.getElementById('rowNow').innerHTML =
+    col('<b>Step 1</b> · amount', amountStep({ step: 1, q: 'How much money comes in each month?', hint: 'Your salary after tax. You can change it any time.', hintEst: 2, caption: 'One block for every day of the month', ...MONTH })) +
+    col('<b>Step 2</b> · five chips', chipsStep({ step: 2, q: 'When does it come?', hint: 'Your month runs from one payday to the next.', hintEst: 2, chips: NOW_CHIPS }));
+
+  document.getElementById('rowT1').innerHTML =
+    col('<b>Step 1</b> · new hint, privacy caption, new preview caption', amountStep({ step: 1, q: 'How much money comes in each month?', hint: 'Pay, business, pension or family money. If it changes, a low month is a safe guess.', hintEst: 3, caption: 'Every day gets its own share', privacy: true, ...MONTH })) +
+    col('<b>Step 2</b> · same five chips, new hint', chipsStep({ step: 2, q: 'When does it come?', hint: 'Your month runs from one payday to the next. No fixed day? Pick It changes.', hintEst: 3,
+      chips: [['1st of the month'], ['Last day'], ['Pick a date'], ['Every week'], ['It changes', 'Your month runs from the 1st to the last day', 2, true]] }));
+
+  const v = document.querySelector('input[name=v]:checked').value;
+  const T2 = {
+    month: col('<b>Step 2</b> · after <i>Every month</i>', amountStep({ step: 2, q: 'How much comes in each month?', hint: 'Count what reaches you. A guess is fine.', hintEst: 1, caption: 'Every day gets its own share', privacy: true, ...MONTH })),
+    week: col('<b>Step 2</b> · after <i>Every week</i>', amountStep({ step: 2, q: 'How much comes in each week?', hint: 'Count what reaches you. A guess is fine.', hintEst: 1, caption: 'Every day gets its own share', privacy: true, amount: '₹10,000', perDay: '₹1,428', days: 7 })),
+    low: col('<b>Step 2</b> · after <i>It changes</i>', amountStep({ step: 2, q: 'How much comes in a low month?', hint: 'Think of a slow month, not a good one. That keeps each day safe.', hintEst: 2, caption: 'Every day gets its own share', privacy: true, amount: '₹30,000', perDay: '₹1,000', days: 31 })),
+  };
+  document.getElementById('rowT2').innerHTML =
+    col('<b>Step 1</b> · three chips with sublabels, no hint', chipsStep({ step: 1, q: 'When does your money come in?', qEst: 2, big: true,
+      chips: [['Every month', 'Salary, pension or family money'], ['Every week', 'Weekly payouts or wages'], ['It changes', 'Shop, tuition or daily work']] })) +
+    col('<b>Step 1b</b> · after <i>Every month</i> (weekday picker unchanged)', dateStep()) +
+    (v === 'all' ? T2.month + T2.week + T2.low : T2[v]);
+}
+
+function hero(m) {
+  const bites = m.bites.map((b, i) => `<span class="b ${i === m.bites.length - 1 ? 'end' : ''}" style="flex:${b[1]} 1 0"></span>`).join('');
+  const names = m.bites.map(b => `<span style="flex:${b[1]} 1 0">${b[1] >= 300 ? b[0] : ''}</span>`).join('');
+  let dots = '<i class="t"></i>';
+  for (let i = 1; i < m.days; i++) dots += '<i></i>';
+  return `<div class="home"><section class="hero" aria-label="Safe to spend today">
+    <div class="ttl">Safe to spend today</div>
+    <div class="amt"><span class="rs">₹</span>${m.left}</div>
+    <div class="tbar" aria-hidden="true"><span class="y" style="flex:${m.leftN} 1 0"></span>${bites}</div>
+    <div class="names" aria-hidden="true"><span style="flex:${m.leftN} 1 0"></span>${names}</div>
+    <div class="capRow"><span><b>${m.spent}</b> spent</span><span>of ₹1,850 for today</span></div>
+    <div class="rail"><div class="railRow"><div class="dots">${dots}</div><span class="pf">${ICON.flag}${m.flag}</span></div>
+      <div class="railCap"><span>Today</span><span data-m="rail caption" data-est="1">${m.cap}</span></div></div>
+    <hr><div class="range"><i class="ok">${ICON.check}</i><div data-m="range line" data-est="1">${m.line} · <span>about ₹9,300 spare</span></div></div>
+  </section></div>`;
+}
+function renderDownstream() {
+  document.getElementById('rowHero').innerHTML =
+    col('<b>Payday</b> · monthly on the 4th · 9 days', hero({ left: '1,430', leftN: 1430, spent: '₹420', bites: [['lunch', 380], ['chai', 40]], days: 9, flag: '4 Nov', cap: '9 days to payday', line: 'Lasts till payday' })) +
+    col('<b>Month end</b> · It changes, or month starts on the 1st · 6 days', hero({ left: '1,500', leftN: 1500, spent: '₹350', bites: [['lunch', 310], ['chai', 40]], days: 6, flag: '1 Nov', cap: '6 days left this month', line: 'Lasts till month end' }),
+      '<p class="lines">₹1,500 follows the deck\'s TalkBack example. Flag glyph kept; its spoken label becomes "New month, 1 November".</p>');
+
+  const over = (body, key) => `<div class="home"><div class="card"><p class="body" data-m="card" data-est="">${body}</p><span class="btn">See where it went ${ICON.arrow}</span></div></div>`;
+  document.getElementById('rowOver').innerHTML =
+    col('<b>Month</b> · payday user (today, <code>overCycleCard</code>)', over('It happens. This month\'s money is used up. It starts again on payday, 4 Nov.')) +
+    col('<b>Month end</b> · <code>overCycleCardMonthEnd</code>', over('It happens. This month\'s money is used up. It starts again on 1 Nov.')) +
+    col('<b>Week</b> · <code>overCycleCardWeek</code> (fix)', over('It happens. This week\'s money is used up. It starts again on payday, 30 Oct.'));
+
+  const row = (t1, t2, opt) => `<div class="li"><div class="tx"><span class="t1">${t1}</span>${t2 ? `<span class="t2">${t2}${opt ? ' <span class="opt">optional</span>' : ''}</span>` : ''}</div>${ICON.chev}</div>`;
+  document.getElementById('rowSettings').innerHTML =
+    col('<b>Now</b>', `<div class="home"><div class="list">${row('Salary and payday')}${row('Fixed bills')}${row('Keep aside each month')}${row('My month starts on')}</div></div>`) +
+    col('<b>Tier 1 and 2</b> · <code>settingsIncome</code> + <code>settingsIncomeValue</code>', `<div class="home"><div class="list">${row('Money coming in', '₹45,000 a month · day 4', true)}${row('Fixed bills')}${row('Keep aside each month')}${row('My month starts on')}</div>
+      <div class="list">${row('Money coming in', '₹45,000 a month · day 4', true)}${row('Money coming in', '₹10,000 a week · Friday', true)}${row('Money coming in', 'About ₹30,000 a month · it changes', true)}</div></div>`,
+      '<p class="lines">Second card: the subtitle for each pay rule (<code>select</code> on month / week / other).</p>');
+
+  const tray = (a, b, optB) => `<div class="home" style="padding-bottom:0"><div class="tray"><span class="grab"></span>
+    <div class="seg"><span>Spent</span><span class="on">Got</span></div>
+    <div class="tiles"><div class="tile">${ICON.moneyIn}<span>${a}</span></div><div class="tile">${ICON.extra}<span>${b}</span></div></div></div></div>`;
+  document.getElementById('rowGot').innerHTML =
+    col('<b>Now</b>', tray('Salary', 'Other income')) +
+    col('<b>Tier 1 and 2</b> · <i>Extra money</i> <span class="opt">optional</span> · stored keys stay <code>salary</code>, <code>other_income</code>', tray('Money in', 'Extra money'));
+}
+
+function measure() {
+  document.querySelectorAll('.col').forEach(c => {
+    const out = c.querySelector('p.lines');
+    const parts = [...c.querySelectorAll('[data-m]')].map(n => {
+      const lh = parseFloat(getComputedStyle(n).lineHeight);
+      const lines = Math.round(n.getBoundingClientRect().height / lh);
+      const est = n.dataset.est;
+      return `${n.dataset.m} <b>${lines}</b>${est ? ` (deck ${est})` : ''}`;
+    });
+    const wide = [...c.querySelectorAll('.phone, .home')].some(p => p.scrollWidth > p.clientWidth + 1);
+    out.innerHTML = parts.length ? `Lines at ${c.getBoundingClientRect().width.toFixed(0)}px: ${parts.join(' · ')}${wide ? ' · <b>overflows</b>' : ''}` : '';
+  });
+}
+function render() { renderOnboarding(); renderDownstream(); requestAnimationFrame(measure); }
+document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+document.querySelectorAll('input[name=fw]').forEach(r => r.addEventListener('change', e => { document.body.classList.toggle('w320', e.target.value === '320'); requestAnimationFrame(measure); }));
+document.querySelectorAll('input[name=v]').forEach(r => r.addEventListener('change', render));
+addEventListener('resize', () => requestAnimationFrame(measure));
+document.fonts.ready.then(measure);
+// why: #w320, #dark and #all (any order) preset the controls, for screenshots and links.
+const h = location.hash;
+if (h.includes('w320')) { document.body.classList.add('w320'); document.querySelector('input[name=fw][value="320"]').checked = true; }
+if (h.includes('dark')) { document.body.classList.add('dark'); document.getElementById('dark').checked = true; }
+if (h.includes('all')) document.querySelector('input[name=v][value=all]').checked = true;
+render();
+</script>
+</body>
+</html>

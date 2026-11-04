@@ -17,6 +17,7 @@ abstract final class AppIcons {
   static const AppIconData onTrack = HugeIcons.strokeRoundedCheckmarkCircle02;
   static const AppIconData alert = HugeIcons.strokeRoundedAlertCircle;
   static const AppIconData info = HugeIcons.strokeRoundedInformationCircle;
+  static const AppIconData privacy = HugeIcons.strokeRoundedLock;
   static const AppIconData back = HugeIcons.strokeRoundedArrowLeft01;
   static const AppIconData next = HugeIcons.strokeRoundedArrowRight02;
   static const AppIconData backspace = HisaabGlyphs.backspace;

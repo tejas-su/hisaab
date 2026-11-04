@@ -15,6 +15,9 @@ final class PayCycle extends Equatable {
   /// Total days in the cycle.
   int get lengthInDays => start.daysUntil(end) + 1;
 
+  /// Whether this is a weekly pay cycle; by BR-1 only weekly pay gives a 7-day cycle.
+  bool get isWeek => lengthInDays == DateTime.daysPerWeek;
+
   /// Days left including [today] (SPEC BR-2); 1 on the last day.
   int daysLeftFrom(CalendarDate today) => today.daysUntil(end) + 1;
 

@@ -27,6 +27,7 @@ final class HomeReady extends HomeState {
     required this.summary,
     required this.todayEntries,
     required this.categories,
+    this.todaySpends = const <Entry>[],
     this.dueSoon = const Option<DueSoonBill>.none(),
     this.undo = const Option<Entry>.none(),
     this.showWeek = false,
@@ -36,6 +37,9 @@ final class HomeReady extends HomeState {
 
   /// At most [HomeBloc.todayListLimit] entries dated today, newest first (FR-HO-4).
   final List<Entry> todayEntries;
+
+  /// Every *Spent* entry dated today, oldest first, for the hero's bites (BR-6).
+  final List<Entry> todaySpends;
 
   /// Every category by id, to label the rows.
   final Map<int, Category> categories;
@@ -51,13 +55,14 @@ final class HomeReady extends HomeState {
         summary: summary,
         todayEntries: todayEntries ?? this.todayEntries,
         categories: categories,
+        todaySpends: todaySpends,
         dueSoon: dueSoon,
         undo: undo,
         showWeek: showWeek ?? this.showWeek,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, dueSoon, undo, showWeek];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, showWeek];
 }
 
 /// Loading failed; a quiet message with Try again.

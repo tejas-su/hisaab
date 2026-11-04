@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Fuel bar finishes (proposal)</title>
+<style>
+  /* Proposal: mockup 23's T2 fuel bar replaces the Day Blocks in the hero's Today mode. The owner found T1 too much to hold
+     in mind and T2 right but plain, so each finish keeps ONE idea (today's share, draining) and adds character, not information.
+     Nothing here is decided or built. Dates follow mockups 19–23: payday Sat 7 Nov 2026; A = ₹1,850.
+     Today's spends: on track chai ₹40 + lunch ₹380; slow down + groceries ₹1,080; over today + cab ₹800. "Spend ₹300" adds one.
+     The hero's inner width at 360dp is 288dp. Copy marked draft needs design-content. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --displaySheen: #FFFFFF73;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650;
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --displaySheen: #FFFFFF40;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 24px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .tag.soft { background: none; color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
+  .controls legend { float: left; font: 600 13px/20px 'Mukta', sans-serif; color: var(--canvasInk2); margin-inline-end: 4px; }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+  .controls button { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1.5px solid var(--canvasInk); background: none; color: var(--canvasInk); cursor: pointer; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(328px, 360px)); gap: 16px; margin-top: 16px; }
+  .phone { background: var(--bg); color: var(--ink); border-radius: 24px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .phone > .cap { font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink2); display: flex; justify-content: space-between; gap: 8px; }
+  .phone > .cap b { color: var(--ink); }
+  .note { font-size: 13px; line-height: 19px; color: var(--ink2); margin: 0; }
+  .note b { color: var(--ink); font-weight: 600; }
+
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amtRow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
+  .amt.muted { color: var(--displayInk2); }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .overTxt { font: 600 18px/24px 'Mukta', sans-serif; padding-bottom: 10px; }
+  .gauge { margin-top: 24px; position: relative; }
+  .capRow { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .capRow b { color: var(--displayInk); font-weight: 600; }
+  .num { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .runway { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .runway .pf { display: flex; align-items: center; gap: 4px; color: var(--displayInk); font-weight: 600; }
+  svg.f { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .hero hr { border: 0; height: 1px; background: var(--displayEtch); margin: 16px 0 14px; }
+  .range { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 22px; }
+  .range .dot { width: 18px; height: 18px; border-radius: 9px; box-shadow: inset 0 0 0 1.6px var(--displayInk); flex: none; margin-top: 2px; }
+  .range span { color: var(--displayInk2); }
+
+  /* shared bar parts */
+  .track { position: relative; background: var(--blockIdle); overflow: hidden; }
+  .track.slow { box-shadow: inset 0 0 0 3px var(--signal), inset 0 0 0 4.5px var(--displayEdge); }
+  body.dark .track.slow { box-shadow: inset 0 0 0 3px var(--signal); }
+  .p { position: absolute; top: 0; bottom: 0; }
+  .fill { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .hatch { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.6px, var(--display) 1.6px 4.5px); }
+  .anim { transition: left 620ms cubic-bezier(.2,1.25,.4,1), width 620ms cubic-bezier(.2,1.25,.4,1); }
+  body.reduce .anim { transition: none; }
+
+  /* B1 bites */
+  .b1 .track { height: 36px; border-radius: 12px; background: none; overflow: visible; }
+  .b1 .bite { border-radius: 6px; background: var(--blockIdle); }
+  .b1 .bite.new { box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .b1 .bite.end { border-radius: 6px 12px 12px 6px; }
+  .b1 .fill { border-radius: 12px; }
+  .b1 .over { border-radius: 6px; box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .b1 .tick { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--displayInk); box-shadow: 0 0 0 1px var(--display); }
+  .b1 .bl { position: absolute; top: 42px; font: 600 11px/14px 'Anek Latin', sans-serif; color: var(--displayInk2); white-space: nowrap; transform: translateX(-50%); }
+
+  /* B2 gauge */
+  .b2 .track { height: 28px; border-radius: 14px; }
+  .b2 .fill { border-radius: 14px; }
+  .b2 .needle { position: absolute; top: -6px; height: 40px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--displayInk); box-shadow: 0 0 0 1.5px var(--display); }
+  .b2 .ruler { position: relative; height: 12px; margin-top: 6px; }
+  .b2 .ruler i { position: absolute; top: 0; width: 1.5px; background: var(--displayInk2); }
+  .b2 .rl { display: flex; justify-content: space-between; font: 600 12px/14px 'Anek Latin', sans-serif; color: var(--displayInk2); font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  /* B3 tank */
+  .b3 svg.tank { display: block; overflow: visible; }
+
+  /* days rail (optional, any finish) */
+  .rail { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .rail .dots { flex: 1; position: relative; height: 10px; }
+  .rail .dots i { position: absolute; top: 2px; width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .rail .dots i.t { top: 0; width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .rail .dots i.t.h { background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.4px, var(--display) 1.4px 3.6px); box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .rail .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .railCap { font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; }
+
+  table { border-collapse: collapse; margin-top: 16px; font-size: 14px; line-height: 20px; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  .wrap { overflow-x: auto; }
+  ol li, ul li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark</label>
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <label><input type="checkbox" id="rail"> Days rail</label>
+  <fieldset><legend>Days left</legend>
+    <label><input type="radio" name="d" value="3"> 3</label>
+    <label><input type="radio" name="d" value="9" checked> 9</label>
+    <label><input type="radio" name="d" value="28"> 28</label>
+  </fieldset>
+  <fieldset><legend>Today</legend>
+    <label><input type="radio" name="s" value="on" checked> On track</label>
+    <label><input type="radio" name="s" value="slow"> Slow down</label>
+    <label><input type="radio" name="s" value="over"> Over today</label>
+  </fieldset>
+  <button id="spend" type="button">Spend ₹300</button>
+</div>
+
+<h1>Fuel bar, with character <span class="tag soft">proposal</span></h1>
+<p class="lede">The owner's verdict on mockup 23: T1 asks too much ("many things going around"), and the <b>fuel bar is right but plain</b>. So every finish here keeps <b>one idea</b>: one bar, today's share, draining as you spend. The character comes from the bar's form and its motion, not from more numbers. Press <b>Spend ₹300</b> to see each one react, and turn on <b>Days rail</b> to see the one optional extra.</p>
+
+<div class="grid" id="options"></div>
+
+<h2>Side by side</h2>
+<div class="wrap"><table>
+  <tr><th></th><th>Plain (23 · T2)</th><th>B1 · Bites</th><th>B2 · Gauge</th><th>B3 · Tank</th></tr>
+  <tr><td>The one idea</td><td>A bar that drains</td><td>Each thing you buy takes a bite out of today</td><td>A fuel gauge with a needle</td><td>Liquid that sloshes down</td></tr>
+  <tr><td>Where character comes from</td><td>—</td><td>Your own spends become visible shapes; a new bite slides in</td><td>Ruler ticks and a needle; a familiar car-dashboard object</td><td>A wave edge and a slosh that settles; the most alive</td></tr>
+  <tr><td>Extra to read</td><td>Nothing</td><td>Nothing required; the bites can be counted at a glance</td><td>₹0 / half / full labels</td><td>Nothing</td></tr>
+  <tr><td>Over today</td><td>Stripes</td><td>The bar rescales to what's spent; a tick marks the share; bites past it are striped</td><td>Needle at ₹0, bar striped</td><td>Empty tank, striped</td></tr>
+  <tr><td>Risk</td><td>Plain</td><td>Many tiny spends (₹10 chai × 12) become slivers; bites under 4dp merge into one</td><td>Can look like a settings slider someone could drag</td><td>A wave can look childish; it must stay still once settled</td></tr>
+  <tr><td>Build</td><td>—</td><td>Painter plus today's entry list (Home already has it)</td><td>Painter only</td><td>Painter plus a spring-driven wave</td></tr>
+</table></div>
+
+<h2>Recommendation <span class="tag">B1 · Bites</span></h2>
+<p class="lede"><b>Each spend takes a bite.</b> It is still just a bar, so a five-year-old reads it as "yellow is what I can still spend". But it isn't plain, because it shows the user's own day. Chai is a nibble, groceries are a big chunk, and the newest bite slides in next to the yellow as the number rolls down. That is the moment the bar comes alive, and it ties the Add flow to the hero without adding a word. Over today reuses the week bars' language (tick = share, stripes = over), so This week still feels related. <b>Days rail: leave it off</b> by default. The range line already says "Lasts till payday", and the rail is the first thing to cut if the hero feels busy again.</p>
+
+<h2>Plan, if B1 is picked</h2>
+<ol>
+  <li><b>Docs first:</b> rewrite SPEC BR-6 as "Today's bar". The track is <code>A</code>; the yellow is <code>clamp(A − S_today, 0, A)</code>; each <i>Spent</i> entry dated today is a bite in entry order, newest next to the yellow, and bites under 4dp merge. Over: scale to <code>S_today</code>, with a tick at <code>A</code> and stripes past it. BR-5's states map onto it (slow down = marigold ring). Update UI_DESIGN §5.2 and FR-HO-2. Mockup README and a DECISIONS row supersede the Day Blocks (D-numbers that define them). → verify: the docs agree with this page.</li>
+  <li><b>Mapper, test first:</b> <code>TodayBarMapper.of(summary, todaysEntries)</code> gives <code>yellow</code> 0–1, <code>bites</code> as 0–1 widths, <code>tick</code> and <code>over</code>. → verify: ₹0 spent (all yellow), exactly <code>A</code> (no yellow, no stripes), over by more than <code>A</code>, <code>A = 0</code>, 30 tiny spends merging, and an entry back-dated away from today removing its bite.</li>
+  <li><b>Painter and widget:</b> a <code>TodayBar</code> in <code>lib/core/widgets/today_bar/</code>, 36dp high, the blocks' radius, tokens only. → verify: painter geometry tests at the <code>TestWindows</code> widths.</li>
+  <li><b>Motion and haptics:</b> after the Add tray closes, the new bite grows from 0 next to the yellow on <code>standard</code>, while the yellow shrinks and the number rolls. The D91 trail becomes the new bite's outline fading in. With reduced motion it is drawn at once. → verify: on a device with Reduce motion on and off.</li>
+  <li><b>Hero:</b> swap <code>DayBlocks</code> for <code>TodayBar</code> in Today mode. The captions become "₹420 spent · of ₹1,850 for today" and the range line stays. TalkBack keeps the hero sentence. This week (D111) is unchanged. → verify: <code>hero_card_test</code>, <code>home_page_test</code>, and a11y tests. Tests asserting blocks need the owner's OK.</li>
+  <li><b>Leftovers:</b> onboarding's preview and the splash also draw blocks. They're mentioned here, not changed in the same step.</li>
+  <li><b>Done:</b> <code>flutter analyze</code>, <code>flutter test</code>, <code>scripts/changed_lines_coverage.sh</code> ≥ 90%, and the moto g45.</li>
+</ol>
+
+<script>
+const FLAGSVG = '<svg class="f" viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>';
+const W = 288, A = 1850;
+const BASE = { on: [40, 380], slow: [40, 380, 1080], over: [40, 380, 1080, 800] };
+const NAMES = ['chai', 'lunch', 'groceries', 'cab'];
+let extra = [], prev = {}, lastLevel = {}, waveRuns = {};
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+
+function st() {
+  const D = +document.querySelector('input[name=d]:checked').value;
+  const s0 = document.querySelector('input[name=s]:checked').value;
+  const spends = BASE[s0].concat(extra);
+  const spent = spends.reduce((a, b) => a + b, 0);
+  const left = A - spent;
+  const s = left < 0 ? 'over' : left < 0.25 * A ? 'slow' : 'on';
+  return { D, s, spends, spent, left, level: Math.max(0, left) / A, rail: document.getElementById('rail').checked };
+}
+function hero(c, body) {
+  const amount = c.s === 'over' ? '0' : inr(c.left).slice(1);
+  const over = c.s === 'over' ? `<div class="overTxt">${inr(-c.left)} over today</div>` : '';
+  const tomorrow = c.D > 1 ? Math.min(A, (A * c.D - c.spent) / (c.D - 1)) : 0;
+  const rng = c.s === 'over' ? `Later days get ${inr(tomorrow)} each · <span>to stay on track</span>` : 'Lasts till payday · <span>about ₹9,300 spare</span>';
+  return `<div class="hero"><div class="ttl">Safe to spend today</div>
+    <div class="amtRow"><div class="amt ${c.s === 'over' ? 'muted' : ''}"><span class="rs">₹</span>${amount}</div>${over}</div>
+    ${body}${foot(c)}<hr><div class="range"><i class="dot"></i><div>${rng}</div></div></div>`;
+}
+function foot(c) {
+  if (!c.rail) return `<div class="runway"><span>${c.D === 1 ? 'Last day before payday' : `${c.D} days to payday`}</span><span class="pf">${FLAGSVG}7 Nov</span></div>`;
+  const RW = W - 64, n = c.D, step = n > 1 ? (RW - 10) / (n - 1) : 0;
+  let dots = '';
+  for (let i = 0; i < n; i++) dots += i === 0 ? `<i class="t ${c.s === 'over' ? 'h' : ''}" style="left:0"></i>` : `<i style="left:${10 + (i - 1) * step + (step - 6) / 2}px"></i>`;
+  return `<div class="rail"><div class="dots">${dots}</div><span class="pf">${FLAGSVG}7 Nov</span></div><div class="railCap">${c.D === 1 ? 'Last day' : `Today, then ${c.D - 1} more days`}</div>`;
+}
+const card = (id, cap, tag, body, note) => `<div class="phone ${id}"><div class="cap"><b>${cap}</b><span>${tag}</span></div>${body}<p class="note">${note}</p></div>`;
+// el(): an animated box; it starts at its last drawn position and moves to the new one.
+function el(id, cls, left, width, extraStyle = '', inner = '') {
+  const p = prev[id] || { left: left + width, width: 0 };
+  return `<div class="p anim ${cls}" data-id="${id}" data-l="${left}" data-w="${width}" style="left:${p.left}px;width:${p.width}px;${extraStyle}">${inner}</div>`;
+}
+
+function plain(c) {
+  const lw = c.level * W;
+  const inner = c.s === 'over'
+    ? el('pl-h', 'hatch', 0, W, 'border-radius:14px')
+    : el('pl-f', 'fill', 0, lw, 'border-radius:14px');
+  const body = `<div class="gauge"><div class="track ${c.s === 'slow' ? 'slow' : ''}" style="height:28px;border-radius:14px">${inner}</div>
+    <div class="capRow"><span>${inr(c.spent)} spent</span><span>of ${inr(A)} for today</span></div></div>`;
+  return card('pl', 'Plain · 23\'s T2', 'for reference', hero(c, body), 'What the owner liked, and found plain.');
+}
+
+function b1(c) {
+  const GAP = 3, scale = Math.max(A, c.spent), px = v => (v / scale) * W;
+  let html = '', x = W, labels = '';
+  // first spend sits at the far right; each later one lands next to the yellow
+  c.spends.forEach((v, i) => {
+    const w = Math.max(px(v) - GAP, 3);
+    x -= w;
+    const isNew = i === c.spends.length - 1 && extra.length > 0;
+    html += el('b1-' + i, 'bite' + (isNew ? ' new' : '') + (i === 0 ? ' end' : ''), x, w);
+    if (w > 34 && c.s !== 'over') labels += `<span class="bl" style="left:${x + w / 2}px">${NAMES[i] || inr(v)}</span>`;
+    x -= GAP;
+  });
+  if (c.s !== 'over') html = el('b1-f', 'fill', 0, Math.max(0, x), 'border-radius:12px 6px 6px 12px') + html;
+  else {
+    const t = px(A);
+    html += el('b1-o', 'hatch over', t + 2, W - t - 2, 'top:0;bottom:0;opacity:.9');
+    html += `<i class="tick" style="left:${t}px"></i>`;
+  }
+  const body = `<div class="gauge b1"><div class="track" style="margin-bottom:${labels ? 20 : 0}px">${html}${labels}</div>
+    <div class="capRow"><span><b class="num">${inr(c.spent)}</b> spent in ${c.spends.length}</span><span>of ${inr(A)} for today</span></div></div>`;
+  return card('b1', 'B1 · Bites', 'recommended', hero(c, body),
+    c.s === 'over'
+      ? '<b>Over today:</b> the bar now spans what was spent, the tick marks today\'s share, and the part past it is striped. That\'s the same language as This week.'
+      : '<b>Each spend is a bite</b> out of today\'s bar: chai is a nibble, lunch is a chunk. The newest lands next to the yellow. Press Spend ₹300.');
+}
+
+function b2(c) {
+  const lw = c.level * W;
+  let inner = c.s === 'over' ? el('b2-h', 'hatch', 0, W, 'border-radius:14px') : el('b2-f', 'fill', 0, lw, 'border-radius:14px');
+  let ticks = '';
+  for (let i = 0; i <= 20; i++) {
+    const big = i % 10 === 0, mid = i % 5 === 0;
+    ticks += `<i style="left:${Math.min(i / 20 * W, W - 1.5)}px;height:${big ? 10 : mid ? 7 : 4}px"></i>`;
+  }
+  const np = prev['b2-n'] ? prev['b2-n'].left : lw;
+  const needle = `<div class="p anim needle" data-id="b2-n" data-l="${c.s === 'over' ? 0 : lw}" data-w="3" style="left:${np}px;width:3px"></div>`;
+  const body = `<div class="gauge b2"><div style="position:relative"><div class="track ${c.s === 'slow' ? 'slow' : ''}">${inner}</div>${needle}</div>
+    <div class="ruler">${ticks}</div><div class="rl"><span>₹0</span><span>${inr(A / 2)}</span><span>${inr(A)}</span></div></div>`;
+  return card('b2', 'B2 · Gauge', 'option', hero(c, body),
+    '<b>A fuel gauge:</b> a ruler under the bar and a needle at the level. It reads like a car dashboard; the needle swings and settles when you spend.');
+}
+
+function b3(c) {
+  const H = 40;
+  const svg = `<svg class="tank" id="tank" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <defs><clipPath id="tc"><rect x="0" y="0" width="${W}" height="${H}" rx="14"/></clipPath>
+      <pattern id="hp" width="4.5" height="4.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4.5" height="4.5" fill="var(--display)"/><rect width="1.6" height="4.5" fill="var(--displayInk2)"/></pattern></defs>
+    <g clip-path="url(#tc)"><rect width="${W}" height="${H}" fill="${c.s === 'over' ? 'url(#hp)' : 'var(--blockIdle)'}"/>
+      <path id="liq" fill="var(--signal)" stroke="var(--displayEdge)" stroke-width="1.5"/>
+      <path id="sheen" fill="none" stroke="var(--displaySheen)" stroke-width="3" stroke-linecap="round"/></g>
+    <rect x=".75" y=".75" width="${W - 1.5}" height="${H - 1.5}" rx="13.25" fill="none" stroke="${c.s === 'slow' ? 'var(--signal)' : 'transparent'}" stroke-width="${c.s === 'slow' ? 3 : 0}"/></svg>`;
+  const body = `<div class="gauge b3">${svg}<div class="capRow"><span>${inr(c.spent)} spent</span><span>of ${inr(A)} for today</span></div></div>`;
+  return card('b3', 'B3 · Tank', 'option', hero(c, body),
+    '<b>Liquid in a tank:</b> the right edge is a soft wave that sloshes when you spend and goes still in about a second. A sheen line sits on top.');
+}
+
+function drawWave(level, amp, phase) {
+  const liq = document.getElementById('liq'), sheen = document.getElementById('sheen');
+  if (!liq) return;
+  const H = 40, x0 = level * W;
+  if (x0 <= 0.5) { liq.setAttribute('d', ''); sheen.setAttribute('d', ''); return; }
+  let d = `M -2 -2 L ${x0} -2`;
+  for (let y = 0; y <= H + 2; y += 2) d += ` L ${x0 + Math.sin(y / 7 + phase) * amp} ${y}`;
+  d += ` L -2 ${H + 2} Z`;
+  liq.setAttribute('d', d);
+  sheen.setAttribute('d', x0 > 30 ? `M 12 7 L ${Math.max(14, x0 - 14)} 7` : '');
+}
+function animateTank(level) {
+  const from = lastLevel.b3 ?? level;
+  lastLevel.b3 = level;
+  const reduce = document.body.classList.contains('reduce');
+  const id = (waveRuns.b3 = (waveRuns.b3 || 0) + 1);
+  if (reduce || from === level) { drawWave(level, 1.5, 0); return; }
+  const t0 = performance.now();
+  (function frame(t) {
+    if (waveRuns.b3 !== id) return;
+    const k = Math.min(1, (t - t0) / 1100);
+    const ease = 1 - Math.pow(1 - k, 3);
+    const amp = 1.5 + 6 * Math.exp(-4 * k) * Math.abs(Math.cos(k * 9));
+    drawWave(from + (level - from) * ease, amp, k * 10);
+    if (k < 1) requestAnimationFrame(frame); else drawWave(level, 1.5, 10);
+  })(t0);
+}
+
+function render() {
+  const c = st();
+  document.getElementById('options').innerHTML = [plain(c), b1(c), b2(c), b3(c)].join('');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('[data-id]').forEach(n => {
+      const l = +n.dataset.l, w = +n.dataset.w;
+      n.style.left = l + 'px'; n.style.width = w + 'px';
+      prev[n.dataset.id] = { left: l, width: w };
+    });
+  }));
+  animateTank(c.level);
+}
+document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+document.getElementById('reduce').addEventListener('change', e => document.body.classList.toggle('reduce', e.target.checked));
+document.getElementById('rail').addEventListener('change', render);
+document.querySelectorAll('input[name=d]').forEach(r => r.addEventListener('change', render));
+document.querySelectorAll('input[name=s]').forEach(r => r.addEventListener('change', () => { extra = []; prev = {}; render(); }));
+document.getElementById('spend').addEventListener('click', () => { extra.push(300); render(); });
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { document.getElementById('reduce').checked = true; document.body.classList.add('reduce'); }
+render();
+</script>
+</body>
+</html>

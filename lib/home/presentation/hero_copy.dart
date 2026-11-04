@@ -52,7 +52,8 @@ final class HeroCopy extends Equatable {
     String shown(Money amount) => money.format(amount);
     String spokenAmount(Money amount) => strings.spokenAmount(money.digits(amount));
     final _Headline headline = week ? _Headline.week(summary, strings) : _Headline.today(summary, strings);
-    final String days = strings.daysToPayday(summary.daysLeft);
+    final _EndWords end = _EndWords.of(summary, strings);
+    final String days = end.daysLeft(summary.daysLeft);
     final String laterSpoken = _laterCaption(summary, strings, spokenAmount).getOrElse(() => days);
     final WeekCopy weekShown = WeekCopy(summary, strings: strings, amount: shown, locale: money.locale);
     final WeekCopy weekSpoken = WeekCopy(summary, strings: strings, amount: spokenAmount, locale: money.locale);
@@ -62,14 +63,14 @@ final class HeroCopy extends Equatable {
       muted: headline.muted,
       overText: headline.overText(shown),
       laterCaption: _laterCaption(summary, strings, shown).getOrElse(() => days),
-      range: week ? weekShown.range : _range(summary, strings, shown, date),
+      range: week ? weekShown.range : _range(summary, strings, end, shown, date),
       calm: week ? weekShown.calm : summary.state is OnTrack && summary.forecast is! RunsOut,
       payday: date(summary.payday),
       spoken: strings.heroSpoken(
         headline.title,
         spokenAmount(headline.amount),
         week ? weekSpoken.spokenDays ?? laterSpoken : laterSpoken,
-        _join(strings, week ? weekSpoken.range : _range(summary, strings, spokenAmount, date)),
+        _join(strings, week ? weekSpoken.range : _range(summary, strings, end, spokenAmount, date)),
       ),
     );
   }
@@ -86,7 +87,7 @@ final class HeroCopy extends Equatable {
   /// "₹220 over today" (or "over this week") next to the ₹0, in the over states.
   final Option<String> overText;
 
-  /// Right-hand caption under the blocks: days to payday, or each later day's share.
+  /// Right-hand caption under the blocks: days to payday (or left this month), or each later day's share.
   final String laterCaption;
   final RangeWords range;
 
@@ -106,19 +107,20 @@ final class HeroCopy extends Equatable {
   static RangeWords _range(
     CycleSummary summary,
     AppLocalizations strings,
+    _EndWords end,
     String Function(Money) amount,
     String Function(CalendarDate) date,
   ) {
     final RangeForecast forecast = summary.forecast;
     final String? runsOut = forecast is RunsOut ? strings.runsOutOnLower(date(forecast.date)) : null;
     return switch (summary.state) {
-      OverCycle(:final Money over) => RangeWords(strings.overBy(amount(over)), strings.paydayIn(summary.daysLeft)),
-      OverToday() => RangeWords(strings.overToday, runsOut ?? strings.stillLasts),
+      OverCycle(:final Money over) => RangeWords(strings.overBy(amount(over)), end.countdown(summary.daysLeft)),
+      OverToday() => RangeWords(strings.overToday, runsOut ?? end.stillLasts),
       SlowDown() => RangeWords(strings.slowDown, runsOut ?? strings.shareAlmostUsed),
       NoIncome() || OnTrack() => switch (forecast) {
-          LastsTillPayday(:final Money spare) => RangeWords(strings.lastsTillPayday, strings.aboutSpare(amount(spare))),
+          LastsTillPayday(:final Money spare) => RangeWords(end.lastsTill, strings.aboutSpare(amount(spare))),
           RunsOut(date: final CalendarDate day) => RangeWords(strings.runsOutOn(date(day))),
-          TooEarlyToForecast() => RangeWords(strings.lastsTillPayday),
+          TooEarlyToForecast() => RangeWords(end.lastsTill),
         },
     };
   }
@@ -171,3 +173,30 @@ final class _Headline {
 
 /// How far over, and the words that say it.
 typedef _Over = (Money, String Function(String));
+
+/// How the cycle's end is named: payday, or month end for a calendar-month cycle (D116).
+final class _EndWords {
+  const _EndWords({required this.daysLeft, required this.countdown, required this.lastsTill, required this.stillLasts});
+
+  factory _EndWords.of(CycleSummary summary, AppLocalizations strings) => summary.endsAtMonthEnd
+      ? _EndWords(
+          daysLeft: strings.daysLeftInMonth,
+          countdown: strings.newMonthIn,
+          lastsTill: strings.lastsTillMonthEnd,
+          stillLasts: strings.stillLastsMonthEnd,
+        )
+      : _EndWords(
+          daysLeft: strings.daysToPayday,
+          countdown: strings.paydayIn,
+          lastsTill: strings.lastsTillPayday,
+          stillLasts: strings.stillLasts,
+        );
+
+  /// "9 days to payday" or "6 days left this month".
+  final String Function(int) daysLeft;
+
+  /// "payday in 9 days" or "new month in 6 days".
+  final String Function(int) countdown;
+  final String lastsTill;
+  final String stillLasts;
+}
