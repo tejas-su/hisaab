@@ -329,7 +329,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **Tap the hero** to flip between *Today* and *This week*. Monzo users found a daily figure meaningless when they don't spend every day.
 - **This week (BR-6a, D111, D114, case study 15):** seven bars, Mon–Sun, take today's bar's place at the card's full width, 64dp tall (D114 drops D111's 48dp growth). Past days are `displayInk2` with a 2dp `displayInk` share tick each, cut from the card by a `display` notch, and hatched above it; a past ₹0 day is a 2dp baseline line. Today is marigold with the 1.5dp `displayEdge` in light, plus its tick. Days to come are 6dp `blockIdle` stubs; days outside the cycle draw nothing. The weekday letters (today Semibold) sit under them, the days rail stays, and the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" with the alert glyph (the check when every day is within its share).
 - **Due-soon row (FR-HO-3, D118):** a `sunk` row at least 56dp tall under the hero: the bill's icon in a well, the sentence, the date under it in `ink2`, and a chevron. A tap opens the bill sheet over Home.
-- **When you underspend:** the next morning the number rolls up, and a one-line note appears: "You saved ₹300 yesterday, so every day got ₹35 more."
+- **When you underspend:** the next morning the number rolls up, and a one-line note appears: "Yesterday was ₹300 under its share, so every day got ₹35 more." (never "saved", D121)
 - **Empty Today:** "Nothing spent today. Tap Add when you do."
 
 ### 5.3 Add: one tray, two steps

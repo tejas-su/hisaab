@@ -326,7 +326,7 @@
       }
     }
   },
-  "savedYesterday": "You saved {amount} yesterday, so every day got {more} more.",
+  "savedYesterday": "Yesterday was {amount} under its share, so every day got {more} more.",
   "@savedYesterday": {
     "description": "Home's morning note after an underspend (SPEC BR-8)",
     "placeholders": {
@@ -338,7 +338,7 @@
       }
     }
   },
-  "savedYesterdayOnly": "You saved {amount} yesterday.",
+  "savedYesterdayOnly": "Yesterday was {amount} under its share.",
   "@savedYesterdayOnly": {
     "description": "Home's morning note when the saving adds under one rupee to each day",
     "placeholders": {

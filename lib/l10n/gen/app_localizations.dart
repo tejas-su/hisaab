@@ -442,13 +442,13 @@ abstract class AppLocalizations {
   /// Home's morning note after an underspend (SPEC BR-8)
   ///
   /// In en, this message translates to:
-  /// **'You saved {amount} yesterday, so every day got {more} more.'**
+  /// **'Yesterday was {amount} under its share, so every day got {more} more.'**
   String savedYesterday(String amount, String more);
 
   /// Home's morning note when the saving adds under one rupee to each day
   ///
   /// In en, this message translates to:
-  /// **'You saved {amount} yesterday.'**
+  /// **'Yesterday was {amount} under its share.'**
   String savedYesterdayOnly(String amount);
 
   /// No description provided for @daysToPayday.

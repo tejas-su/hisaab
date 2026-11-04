@@ -8,7 +8,7 @@ import '../../../core/money/money.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 
-/// The morning note under the hero: "You saved ₹300 yesterday, so every day got ₹33 more"
+/// The morning note under the hero: "Yesterday was ₹300 under its share, so every day got ₹33 more"
 /// (SPEC BR-8, UI_DESIGN §5.2). Drops the second half when each day gets under ₹1 more.
 class SavedYesterdayNote extends StatelessWidget {
   const SavedYesterdayNote({super.key, required this.saving});

@@ -336,8 +336,8 @@ void main() {
       testWidgets('nothing spent yesterday: the note shows the saving and what each day gained', (WidgetTester tester) async {
         final SemanticsHandle handle = tester.ensureSemantics();
         await pump(tester);
-        expect(find.text('You saved ₹1,665 yesterday, so every day got ₹185 more.'), findsOneWidget);
-        expect(find.bySemanticsLabel('You saved 1,665 rupees yesterday, so every day got 185 rupees more.'), findsOneWidget);
+        expect(find.text('Yesterday was ₹1,665 under its share, so every day got ₹185 more.'), findsOneWidget);
+        expect(find.bySemanticsLabel('Yesterday was 1,665 rupees under its share, so every day got 185 rupees more.'), findsOneWidget);
         handle.dispose();
       });
 
@@ -346,7 +346,7 @@ void main() {
             .add(EntryDraft(amount: Money.fromMajor(1660), kind: EntryKind.spent, categoryId: 1, date: const CalendarDate(2026, 10, 25)))
             .run();
         await pump(tester);
-        expect(find.text('You saved ₹5 yesterday.'), findsOneWidget);
+        expect(find.text('Yesterday was ₹5 under its share.'), findsOneWidget);
       });
 
       testWidgets('no note after overspending yesterday', (WidgetTester tester) async {

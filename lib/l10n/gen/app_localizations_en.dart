@@ -256,12 +256,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String savedYesterday(String amount, String more) {
-    return 'You saved $amount yesterday, so every day got $more more.';
+    return 'Yesterday was $amount under its share, so every day got $more more.';
   }
 
   @override
   String savedYesterdayOnly(String amount) {
-    return 'You saved $amount yesterday.';
+    return 'Yesterday was $amount under its share.';
   }
 
   @override

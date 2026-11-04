@@ -174,7 +174,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 - If the date changed, `A` is recomputed. The "you saved ₹X yesterday" note appears if yesterday's `S_today < A`.
   - **Saved:** `X = A_yesterday − S_yesterday`, where `A_yesterday` is rebuilt from the ledger as it stood yesterday: *Got* entries dated up to yesterday, and bills posted today still counted in `B`.
   - **Each day more:** `Y = floor(X / D)`, with `D` counted from today. With nothing else changed, today's `A` is exactly `A_yesterday + X / D`, so the note credits only the underspend (DECISIONS D38).
-  - The note reads "You saved ₹{X} yesterday, so every day got ₹{Y} more." When `Y < ₹1` it reads "You saved ₹{X} yesterday." It shows all day. It never shows on the cycle's first day, since yesterday belongs to the previous cycle. It also never shows when the first entry was saved today, since the app wasn't tracking yesterday (DECISIONS D38).
+  - The note reads "Yesterday was ₹{X} under its share, so every day got ₹{Y} more." When `Y < ₹1` it reads "Yesterday was ₹{X} under its share." It never says "saved", which means only money put into a saving (D121). It shows all day. It never shows on the cycle's first day, since yesterday belongs to the previous cycle. It also never shows when the first entry was saved today, since the app wasn't tracking yesterday (DECISIONS D38).
   - **Example:** in the worked example nothing was spent on Sun 25 Oct, when `A = 16,650 / 10 = ₹1,665`. So `X = ₹1,665` and `Y = floor(1,665 / 9) = ₹185`, which matches `1,850 − 1,665`.
 
 ### BR-9 Recurring engine
