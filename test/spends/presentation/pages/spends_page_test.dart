@@ -290,4 +290,29 @@ void main() {
       expect(find.byKey(const ValueKey<String>('ask-ai-card')), findsNothing);
     });
   });
+
+  group('SpendsPage savings (D120)', () {
+    testWidgets('the Spent · Saved line sits above Where it went', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      services.ledger.entries.add(Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+          note: 'RD',
+        ));
+      await pump(tester);
+      final Finder line = find.text('Spent ₹27,570 · Saved ₹5,000');
+      expect(line, findsOneWidget);
+      expect(tester.getTopLeft(line).dy, lessThan(tester.getTopLeft(find.text('Where it went')).dy));
+    });
+
+    testWidgets('no saves: no line', (WidgetTester tester) async {
+      await pump(tester);
+      expect(find.textContaining('Saved'), findsNothing);
+    });
+  });
 }

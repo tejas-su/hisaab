@@ -23,6 +23,7 @@ import '../widgets/cycle_switcher.dart';
 import '../widgets/insights_card.dart';
 import '../widgets/pace_card.dart';
 import '../widgets/spends_card.dart';
+import '../widgets/spent_saved_line.dart';
 import '../widgets/where_it_went_card.dart';
 
 /// Spends: where a cycle's money went, its pace and a few insights (SPEC FR-SP).
@@ -91,6 +92,10 @@ class SpendsPage extends StatelessWidget {
             const SizedBox(height: HisaabSpacing.m),
             PaceCard(spent: overview.spent, pace: overview.pace, showToday: overview.isCurrent),
             const SizedBox(height: HisaabSpacing.m),
+            if (!overview.saved.isZero) ...<Widget>[
+              SpentSavedLine(key: const ValueKey<String>('spent-saved'), spent: overview.spent, saved: overview.saved),
+              const SizedBox(height: HisaabSpacing.s),
+            ],
             WhereItWentCard(rows: overview.rows),
             if (overview.insights.isNotEmpty) ...<Widget>[
               const SizedBox(height: HisaabSpacing.m),

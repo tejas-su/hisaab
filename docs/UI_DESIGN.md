@@ -374,6 +374,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - A row with a limit says what is left: "Food · ₹200 left", "Bills · ₹0 left", or "Shopping · ₹840 past limit" (D110).
   - When a bar is hatched, one key line closes the card: a hatch swatch and "Striped part is over the limit." in `bodySmall` (D110).
 - **Insights:** at most 3 plain sentences, each with a next step, for example "Food is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
+- **Spent and saved (D120, mockup 28):** when the cycle has saves, one `bodyMedium` `ink2` line, "Spent ₹27,570 · Saved ₹5,000", sits above *Where it went*, aligned with the card titles. Saves never appear in the bars, pace or insights.
 
 ### 5.5 Ask AI
 Two layers only: the grey page and near-white cards, the same build as the Today list (D45, D67).

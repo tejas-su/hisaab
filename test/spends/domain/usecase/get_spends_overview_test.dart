@@ -97,9 +97,52 @@ void main() {
       expect(result.insights, isEmpty);
     });
 
-    test('keep aside comes off the budget', () async {
-      settings.settings = BudgetSettings(keepAside: Money.fromMajor(5000));
-      expect((await overview()).budget, Money.fromMajor(40000));
+    test('savings come off the budget and are counted apart (D120)', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      ledger.entries.add(Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+          note: 'RD',
+        ));
+      final SpendsOverview result = await overview();
+      expect((result.budget, result.saved, result.spent), (Money.fromMajor(40000), Money.fromMajor(5000), Money.fromMajor(27570)));
+    });
+
+    test('an RD still to come this cycle is reserved but not yet saved', () async {
+      recurring.rules = <RecurringRule>[
+        ...WorkedExample.rules,
+        WorkedExample.rd.copyWith(
+          schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 9, 30)),
+          nextDue: const CalendarDate(2026, 10, 30),
+        ),
+      ];
+      final SpendsOverview result = await overview();
+      expect((result.budget, result.saved), (Money.fromMajor(40000), Money.zero));
+    });
+
+    test('saves never reach the rows, the pace or the insights', () async {
+      final SpendsOverview before = await overview();
+      ledger.entries.add(Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+          note: 'RD',
+        ));
+      final SpendsOverview after = await overview();
+      expect(after.rows, before.rows);
+      expect(after.insights, before.insights);
+      expect(after.spent, before.spent);
+      // why: the pace's spending line ignores saves; only its budget line moves, as budget does (D120).
+      expect(after.pace.toNullable()?.spentByDay, before.pace.toNullable()?.spentByDay);
     });
 
     test('no income: no pace chart, rows still show', () async {

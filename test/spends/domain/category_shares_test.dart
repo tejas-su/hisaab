@@ -34,6 +34,21 @@ void main() {
       expect(rows.first.spent, Money.fromMajor(9840));
     });
 
+    test('Saved entries are not spending (D120)', () {
+      final List<CategorySpend> rows = CategoryShares.of(<Entry>[
+        _spent(1, 60, SeedCategoryIds.food),
+        Entry(
+          id: 2,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: DateTime(2026, 10, 10),
+        ),
+      ], seedCategories);
+      expect(rows.map((CategorySpend r) => r.category.key), <String>['food']);
+    });
+
     test('adds up several entries in one category', () {
       final List<CategorySpend> rows =
           CategoryShares.of(<Entry>[_spent(1, 60, SeedCategoryIds.food), _spent(2, 40, SeedCategoryIds.food)], seedCategories);
