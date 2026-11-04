@@ -27,7 +27,7 @@ void main() {
       await pumpApp(tester, Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule _) {})));
       expect(
         tester.getSemantics(find.bySemanticsLabel('Electricity 1,200 rupees goes out in 3 days')),
-        containsSemantics(
+        isSemantics(
           label: 'Electricity 1,200 rupees goes out in 3 days',
           hint: 'Opens the bill.',
           isButton: true,
