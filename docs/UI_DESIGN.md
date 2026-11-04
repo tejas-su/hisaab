@@ -317,6 +317,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - Height is 40dp. Today is first, on the left.
   - A flag with the payday date closes the row.
 - **Tap the hero** to flip between *Today* and *This week*. Monzo users found a daily figure meaningless when they don't spend every day.
+- **This week (BR-6a, D111, case study 15):** seven bars, Mon–Sun, take the Day Blocks' width; the card grows 48dp so they are 88dp tall (W2: *Today* never pays for it). Past days are `displayInk2` with a 2dp `displayInk` share tick each, cut from the card by a `display` notch, and hatched above it; a past ₹0 day is a 2dp baseline line. Today is marigold with the 1.5dp `displayEdge` in light, plus its tick. Days to come are 6dp `blockIdle` stubs; days outside the cycle draw nothing. The captions become the weekday letters (today Semibold), the flag stays, and the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" with the alert glyph (the check when every day is within its share).
 - **When you underspend:** the next morning the blocks grow, the number rolls up, and a one-line note appears: "You saved ₹300 yesterday, so every day got ₹35 more."
 - **Empty Today:** "Nothing spent today. Tap Add when you do."
 
@@ -359,6 +360,8 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **Where it went:**
   - Rows sorted by amount: icon well, name, %, ₹, and an `ink` bar on a `sunk` track. Bars, not donuts: people judge length more accurately than angle.
   - If a category has a limit, the bar shows a limit tick. Overspend shows as a hatched segment past the tick, not as red.
+  - A row with a limit says what is left: "Food · ₹200 left", "Bills · ₹0 left", or "Shopping · ₹840 past limit" (D110).
+  - When a bar is hatched, one key line closes the card: a hatch swatch and "Striped part is over the limit." in `bodySmall` (D110).
 - **Insights:** at most 3 plain sentences, each with a next step, for example "Food is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
 
 ### 5.5 Ask AI
@@ -413,6 +416,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 - **Fill in:** each time Home's blocks appear (at launch, coming back from Spends on a phone, and when the day changes), today's block fills from empty to its level on `calm`. It shows the block is a container.
 - **Hero sheen (D106):** with the fill in, one diagonal band of `displaySheen` crosses the hero, like a card catching the light: `HisaabMotion.sheen` (1.4s), the first quarter a wait so the light follows the block, then the `sweep` curve (ease-in-out), so it never crawls at the end. The band slides in from wholly off the top start corner and out past the bottom end corner, so it never appears, sticks or vanishes at an edge. It never loops and never runs on a rebuild, only when the hero appears.
 - **Hero press (D106):** the whole hero sinks to 0.97 while a finger is down, then flips Today ⇄ This week on release.
+- **Today ⇄ This week (D111):** the rows crossfade in 150ms while the card grows or shrinks 48dp over `HisaabMotion.resize` (350ms, `easeOut`, matching `standard`), and the bars rise from the baseline on `standard`, today's first, each column 7% later per day away. With reduced motion the card takes its size at once and only the crossfade plays. (Not built: today's block travelling into its weekday's column; case study 15.)
 - **Delight scales inversely with frequency:**
 
   | Frequency | Treatment |

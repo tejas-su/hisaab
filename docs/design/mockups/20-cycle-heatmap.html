@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Cycle heatmap options (proposal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Proposal: the owner's "something like GitHub, a heatmap style of expenditure". Nothing here is decided or built.
+     Dates and numbers as mockup 19: payday Sat 7 Nov 2026, so the cycle runs Wed 7 Oct to Fri 6 Nov (31 days).
+     Today is Thu 29 Oct (9 days left), Thu 22 Oct (16) or Sat 10 Oct (28). A = ₹1,850, ₹420 spent today, ₹1,430 left.
+     Past spends are made up; each is read against a ₹1,850 share to keep the example simple. */
+  :root {
+    /* HisaabColors.light (lib/core/design/hisaab_colors.dart) */
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --control: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --displaySheen: #FFFEFCB3;
+    --clear: #F1EBE400;
+    /* Proposed for E2 only (measured below; not app tokens) */
+    --r1: #B5AEA7; --r2: #98928A; --r3: #7D7870; --r4: #65605A;
+    /* Mockup canvas only, not app tokens */
+    --canvas: #DDD5CB;
+  }
+  .dark {
+    /* HisaabColors.dark */
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --control: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --displaySheen: #F2F1EC1A;
+    --clear: #13121000;
+    --r1: #575450; --r2: #6F6C67; --r3: #898580; --r4: #A7A199;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { overflow-x: clip; }
+  body { margin: 0; padding: 0 24px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 56px 0 4px; }
+  h3 { font: 600 18px/24px 'Mukta', sans-serif; margin: 0 0 4px; }
+  h4 { font: 600 14px/20px 'Mukta', sans-serif; margin: 0 0 2px; }
+  p { margin: 0 0 8px; }
+  code { font-size: 13px; overflow-wrap: anywhere; }
+  .lede { color: var(--ink2); max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede b, li b, .dotis b { color: var(--ink); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--bg); vertical-align: 2px; }
+  .tag.ghost { background: none; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink2); }
+
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 8px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 48px; cursor: pointer; }
+  .controls input { width: 20px; height: 20px; accent-color: var(--ink); }
+  button.btn { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 16px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+  button.btn:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  select { font: 400 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
+  body.only-light .themed.dark, body.only-dark .themed:not(.dark) { display: none; }
+
+  .opt { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--hairline); }
+  .dotis { font: 400 16px/22px 'Mukta', sans-serif; color: var(--ink); margin: 4px 0 8px; max-width: 82ch; }
+  .pc { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 24px; max-width: 1100px; margin-bottom: 12px; }
+  .pc ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 20px; color: var(--ink2); }
+  .pc li { margin-bottom: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .stage { position: relative; background: var(--bg); padding: 20px; border-radius: 20px; color: var(--ink); }
+  .which { display: block; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink2); margin: -6px 0 10px; }
+  .state { margin-top: 20px; }
+  .state > p, .demo p { font-size: 14px; line-height: 20px; color: var(--ink2); max-width: 90ch; }
+  .state > p b, .demo p b { color: var(--ink); font-weight: 600; }
+  .demo { margin-top: 20px; padding: 16px 0 0; border-top: 1px dashed var(--hairline); }
+  .demo header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .demo header > div { max-width: 720px; flex: 1 1 280px; }
+  .ver { margin-top: 32px; padding: 24px; border-radius: 28px; border: 2px dashed var(--ink2); }
+
+  /* ---------- Key under each Section 1 card ---------- */
+  .key { margin-top: 12px; width: 320px; max-width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 8px; }
+  .key div { display: flex; flex-direction: column; gap: 2px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--ink2); }
+  .key svg { display: block; overflow: visible; }
+
+  /* ---------- Hero card (etched, raised), as mockups 17 and 19 and hero_card.dart ---------- */
+  .hero { position: relative; width: 320px; border-radius: 28px; background: var(--display); color: var(--displayInk);
+    overflow: hidden; isolation: isolate; box-shadow: 0 10px 28px -12px var(--displayShadow); cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; transition: transform 250ms var(--spring, ease-out); flex: none; }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero.pressed { transform: scale(0.97); }
+  .hero:focus-visible, .scard:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  .etch path { fill: none; stroke: var(--displayEtch); stroke-width: 0.6; }
+  .grain { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+  .frame rect { fill: none; stroke-width: 0.6; }
+  .frame .k1 { x: 6px; y: 6px; width: calc(100% - 12px); height: calc(100% - 12px); rx: 22px; ry: 22px; stroke: var(--displayEtch); }
+  .frame .k2 { x: 10px; y: 10px; width: calc(100% - 20px); height: calc(100% - 20px); rx: 18px; ry: 18px; stroke: var(--hairline); stroke-dasharray: 4 3; }
+  .content { position: relative; z-index: 2; padding: 24px 20px; }
+  .content.copy { position: absolute; inset: 0 0 auto 0; pointer-events: none; }
+  .title { font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .amtrow { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 12px; }
+  .amount { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 76px; line-height: 76px; height: 76px; font-stretch: 85%;
+    font-variation-settings: 'wdth' 85; letter-spacing: -0.76px; font-feature-settings: 'tnum'; color: var(--displayInk); white-space: nowrap; }
+  .amount.muted { color: var(--displayInk2); }
+  .over { font: 600 16px/20px 'Mukta', sans-serif; padding-bottom: 10px; color: var(--displayInk); }
+  .grid { margin-top: 20px; height: 124px; }
+  .grid > svg { display: block; width: 280px; height: 124px; overflow: visible; }
+  .caps { margin-top: 8px; display: flex; justify-content: space-between; gap: 8px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .caps b { font-weight: 600; color: var(--displayInk); font-feature-settings: 'tnum'; }
+  .divider { margin-top: 20px; height: 1px; background: var(--displayEtch); }
+  .range { margin-top: 16px; display: flex; gap: 8px; align-items: center; font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .range svg { flex: none; color: var(--displayInk); }
+  .range b { font-weight: 600; color: var(--displayInk); font-feature-settings: 'tnum'; }
+  .note { display: none; margin-top: 12px; font: 400 13px/18px 'Mukta', sans-serif; color: var(--displayInk2); opacity: 0; }
+  .has-note .note { display: block; }
+
+  /* ---------- P2: the "This cycle" card on Spends (a plain surface card, no etch) ---------- */
+  .scard { position: relative; width: 320px; border-radius: 28px; background: var(--surface); color: var(--ink); overflow: hidden; flex: none; }
+  .scard .content { padding: 20px; }
+  .scard .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .scard .head span:first-child { font: 600 21px/26px 'Anek Latin', sans-serif; }
+  .scard .head span:last-child { font: 400 13px/18px 'Mukta', sans-serif; color: var(--ink2); white-space: nowrap; }
+  .scard .grid { margin-top: 12px; }
+  .scard .caps { font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .scard .caps b { color: var(--ink); }
+  .scard .legend { margin-top: 8px; display: flex; gap: 16px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--ink2); }
+  .scard .legend span { display: flex; align-items: center; gap: 6px; }
+
+  /* ---------- SVG paint classes: every fill is a HisaabColors role ---------- */
+  .f-idle { fill: var(--blockIdle); } .f-sig { fill: var(--signal); } .f-ink2 { fill: var(--displayInk2); } .f-disp { fill: var(--display); }
+  .f-r1 { fill: var(--r1); } .f-r2 { fill: var(--r2); } .f-r3 { fill: var(--r3); } .f-r4 { fill: var(--r4); }
+  .s-ink2, .s-edge, .s-sig, .s-idle { fill: none; }
+  .s-ink2 { stroke: var(--displayInk2); } .s-edge { stroke: var(--displayEdge); } .s-sig { stroke: var(--signal); } .s-idle { stroke: var(--blockIdle); }
+  text.lb { font: 400 12px 'Mukta', sans-serif; fill: var(--displayInk2); }
+  text.lb.on { font-weight: 600; fill: var(--displayInk); }
+  .glyph { color: var(--displayInk); }
+
+  /* ---------- Phone frames (Section 2) ---------- */
+  .phone { position: relative; width: 360px; height: 780px; background: var(--bg); color: var(--ink); border-radius: 28px; overflow: hidden; flex: none;
+    box-shadow: 0 0 0 1px var(--hairline); font-family: 'Mukta', sans-serif; }
+  .phone .sb { height: 24px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink); }
+  .phone .top { height: 56px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+  .wm { display: flex; align-items: baseline; gap: 2px; font: 600 26px/28px 'Anek Latin', sans-serif; letter-spacing: -0.4px; }
+  .wm i { width: 8px; height: 8px; border-radius: 4px; background: var(--signal); box-shadow: 0 0 0 1px var(--ink); }
+  .dark .wm i { box-shadow: none; }
+  .top .right { display: flex; align-items: center; gap: 12px; font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .well { width: 44px; height: 44px; border-radius: 14px; background: var(--control); display: flex; align-items: center; justify-content: center; color: var(--ink); }
+  .phone .body { padding: 8px 20px 0; display: flex; flex-direction: column; gap: 12px; }
+  .listhead { display: flex; align-items: baseline; justify-content: space-between; margin-top: 8px; }
+  .listhead span:first-child { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .listhead em { font: 700 15px/20px 'Mukta', sans-serif; font-style: normal; color: var(--ink2); margin-left: 8px; font-feature-settings: 'tnum'; }
+  .listhead a { font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .list { background: var(--surface); border-radius: 20px; }
+  .li { display: flex; align-items: center; gap: 12px; padding: 8px 20px; min-height: 56px; position: relative; }
+  .li + .li::before { content: ''; position: absolute; top: 0; left: 72px; right: 0; height: 1px; background: var(--hairline); }
+  .li .iw { width: 40px; height: 40px; border-radius: 12px; background: var(--sunk); display: flex; align-items: center; justify-content: center; color: var(--ink); flex: none; }
+  .li .tx { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+  .li .tx b { font: 600 15px/20px 'Mukta', sans-serif; } .li .tx span { font: 400 13px/18px 'Mukta', sans-serif; color: var(--ink2); }
+  .li .amt { font: 700 15px/20px 'Mukta', sans-serif; font-feature-settings: 'tnum'; }
+  .dock { position: absolute; left: 20px; right: 20px; bottom: 20px; height: 76px; border-radius: 30px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+  .dock .tab { width: 84px; height: 56px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dock .tab.on { background: var(--sunk); color: var(--ink); }
+  .dock .add { width: 128px; height: 56px; border-radius: 18px; background: var(--signal); box-shadow: inset 0 0 0 1.5px #161615; color: #161615;
+    display: flex; align-items: center; justify-content: center; gap: 6px; font: 600 21px/24px 'Anek Latin', sans-serif; }
+  .dark .dock .add { box-shadow: none; }
+  .sphead { display: flex; justify-content: space-between; align-items: center; height: 56px; padding: 0 20px; }
+  .sphead > span { font: 600 30px/32px 'Anek Latin', sans-serif; }
+  .switch { display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 14px; background: var(--sunk); font: 700 15px/20px 'Mukta', sans-serif; }
+  .switch i { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--ink); }
+  .switch i.off { color: var(--ink2); opacity: .5; }
+  .askai { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 24px; background: var(--surface); }
+  .askai .aw { width: 44px; height: 44px; border-radius: 14px; background: var(--signal); box-shadow: inset 0 0 0 1.5px #161615; color: #161615; display: flex; align-items: center; justify-content: center; flex: none; }
+  .dark .askai .aw { box-shadow: none; }
+  .askai b { display: block; font: 600 16px/20px 'Mukta', sans-serif; } .askai span { font: 400 13px/18px 'Mukta', sans-serif; color: var(--ink2); }
+  .pace { border-radius: 28px; background: var(--surface); padding: 16px 20px; height: 180px; }
+  .pace .ph { display: flex; justify-content: space-between; font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .pace .ph b { font: 600 24px/24px 'Anek Latin', sans-serif; font-stretch: 85%; font-variation-settings: 'wdth' 85; color: var(--ink); font-feature-settings: 'tnum'; }
+
+  /* ---------- Tables ---------- */
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; background: var(--surface); border-radius: 20px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-weight: 600; }
+  table.cmp td { max-width: 260px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--hairline); }
+
+  @media (max-width: 480px) {
+    body { padding: 0 8px 64px; }
+    .stage { padding: 20px 12px; }
+    .ver { padding: 16px 0 0; border: 0; border-top: 2px dashed var(--ink2); border-radius: 0; }
+    h1 { font-size: 24px; line-height: 28px; }
+    .phone { margin: 0 -8px; border-radius: 0; }
+    .phonelabel { padding: 0 4px; }
+    table, thead, tbody, tr, th, td { display: block; width: 100%; max-width: 100% !important; }
+    table tr:first-child { display: none; }
+    td[data-h]::before { content: attr(data-h); display: block; font-weight: 600; color: var(--ink); }
+    tr { border-bottom: 2px solid var(--hairline); }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <label>Theme <select id="theme" aria-label="Theme"><option value="both">Light and dark</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+  <button class="btn" id="replayAll">Replay all</button>
+</div>
+
+<h1>Cycle heatmap options <span class="tag">Proposal, not agreed in SPEC</span></h1>
+<p class="lede">The owner's idea: <b>"something like GitHub itself, a heatmap style of expenditure"</b>. The grid is GitHub's: <b>a column is a week, a row is a weekday</b> (Mon at the top, M W F on the start side), with each week's Monday date above its column. It holds the <b>whole pay cycle</b>, so it is always 7 rows (124dp with its labels) whatever the cycle length. Past days are history, today is the one marigold cell (with the 1.5dp <code>displayEdge</code> ink edge in light) and drains as you spend, future days are idle cells running to the <b>⚑ payday cell</b>, and days outside the cycle are <b>not drawn at all</b> (Mon 5, Tue 6 Oct and Sun 8 Nov). No red, no green, no streak counts, no per-cell taps.</p>
+<p class="lede"><b>Numbers.</b> As mockup 19: payday Sat 7 Nov, so the cycle is <b>Wed 7 Oct to Fri 6 Nov</b> (31 days, 5 week columns). Today is <b>Thu 29 Oct</b> (9 days left), <b>Thu 22 Oct</b> (16) or <b>Sat 10 Oct</b> (28). A = ₹1,850, ₹420 spent today, so ₹1,430 is left. Past spends are made up and read against a ₹1,850 share. The example has 3 over days (Fri 9, Sat 17, Fri 23), 2 days at ₹0 (Tue 13, Tue 27) and 3 days with no entry (the Sundays 11, 18 and 25).</p>
+<p class="lede"><b>A gap in the data.</b> The app has no record that tells <b>"spent ₹0"</b> from <b>"didn't log"</b>: both are a day with no entries. Every option below draws them differently, but shipping that needs a new rule (an "I spent nothing" mark, or "Home was opened that evening"). See the open questions at the end.</p>
+
+<!-- ================= 1. Encoding ================= -->
+<section id="s1">
+<h2>1 · Cell encoding for past days</h2>
+<p class="lede">Each option inside the etched hero (placement P1) at <b>16 days left, Thu 22 Oct</b>: 15 past days, today, 15 future days and the flag. The key under each card names every cell kind. E1k is my adjustment of E1, added because E1 gives the fill two opposite meanings in one grid.</p>
+<div id="encodings"></div>
+</section>
+
+<!-- ================= 2. Placement ================= -->
+<section id="s2">
+<h2>2 · Placement</h2>
+<p class="lede">Each placement in a full 360dp phone, at <b>9 days left, Thu 29 Oct</b>, with the surrounding screen. All use E1k. The dock's Add key and the wordmark dot are the screen's other marigolds, as built (they mean <i>act</i> and the brand).</p>
+<div id="placements"></div>
+</section>
+
+<!-- ================= 3. Motion ================= -->
+<section id="s3">
+<h2>3 · Recommended: P2 + E1k, states and motion</h2>
+<p class="lede">The <b>"This cycle" card on Spends</b>, with the hero left as mockup 19's V1 dot ledger. States first, then six motions, each with its own Replay. Springs are critically damped (snap 250, standard 350, calm 550ms, no overshoot); the amount rides the same spring as the cell; the drained cell lands with a 3% squash. With Reduce motion on, every replay is a 150ms crossfade to the end state.</p>
+<div id="motion"></div>
+</section>
+
+<!-- ================= 4. Compare ================= -->
+<section id="s4">
+<h2>4 · Compare</h2>
+<h3 style="margin-top:16px">Encodings</h3>
+<table class="cmp">
+  <tr><th></th><th>E1 · mini block, spent</th><th>E1k · mini block, kept (recommended)</th><th>E2 · grey ramp</th><th>E3 · dot size</th><th>E4 · under / over / not logged</th></tr>
+  <tr><th>Can a 5-year-old read it?</th>
+    <td data-h="E1">"Taller grey = spent more." Yes, but today's yellow gets <b>shorter</b> as you spend while every grey bar got <b>taller</b>: two rules in one picture.</td>
+    <td data-h="E1k">"Every bar is that day's money: yellow is today's, grey is what was left." <b>One rule</b> for the whole grid, the same as Day Blocks.</td>
+    <td data-h="E2">Needs a legend: "darker = more". The four greys are hard to tell apart one by one.</td>
+    <td data-h="E3">"Bigger dot = more spent." Easy, but dot area is judged poorly (a 2× dot looks 1.5×).</td>
+    <td data-h="E4">Easiest: "lines mean over, an empty box means you didn't write it down."</td></tr>
+  <tr><th>Contrast (light · dark)</th>
+    <td data-h="E1">Pass. <code>blockIdle</code> on <code>display</code> 1.53 · 1.53; <code>displayInk2</code> fill and hatch on <code>blockIdle</code> 4.04 · 4.21; outline on <code>display</code> 6.17 · 6.42.</td>
+    <td data-h="E1k">Pass, as E1. Today against a kept cell: 3.40 in light; <b>1.40 in dark</b> (hue only), so the bold column date carries "today" there.</td>
+    <td data-h="E2"><b>Fails</b>: five tones from <code>blockIdle</code> to <code>displayInk2</code> step 1.42 · 1.43 (each step under 1.5). Passing needs <code>ink</code> as the top step (1.85 · 1.76), which makes a big day a black square.</td>
+    <td data-h="E3">Pass. Dot and 1.5dp ring on <code>blockIdle</code> 4.04 · 4.21. Small dots (under 3dp) are below a useful size.</td>
+    <td data-h="E4">Pass, as E1.</td></tr>
+  <tr><th>Shame risk</th>
+    <td data-h="E1">Medium: the biggest days are the darkest bars. Over is a hatch, lighter than a full bar, so it isn't the blackest mark.</td>
+    <td data-h="E1k">Low: a big day is a <b>nearly empty</b> cell, over adds a light hatch. Nothing dark marks a spend.</td>
+    <td data-h="E2">High in light: "more" is darker, the GitHub reading of "better" flipped into "worse".</td>
+    <td data-h="E3">Medium: a big dot is a blot.</td>
+    <td data-h="E4">Lowest, but over is the only mark, so the picture is a map of overs.</td></tr>
+  <tr><th>Streak risk</th>
+    <td data-h="E1">Low.</td>
+    <td data-h="E1k">Medium: a ₹0 day is the fullest cell, so a run of them can read as a chain. Mitigation: no count, no word, no motion on them.</td>
+    <td data-h="E2">Low.</td>
+    <td data-h="E3">Low.</td>
+    <td data-h="E4">High: "no hatch this week" becomes the game (a clean row = a perfect week).</td></tr>
+  <tr><th>Paint cost · new tokens</th>
+    <td data-h="E1">Up to 37 rounded rects and one hatch shader · none.</td>
+    <td data-h="E1k">As E1 · none.</td>
+    <td data-h="E2">As E1 · <b>4 greys × 2 themes</b> (colour process owed, and they fail).</td>
+    <td data-h="E3">Rects plus circles · none.</td>
+    <td data-h="E4">Lowest · none.</td></tr>
+</table>
+
+<h3 style="margin-top:24px">Placements (all with E1k)</h3>
+<table class="cmp">
+  <tr><th></th><th>P1 · heatmap is the hero picture</th><th>P2 · hero keeps the dot ledger; heatmap on Spends (recommended)</th><th>P3 · hero with the past collapsed</th></tr>
+  <tr><th>What it answers</th>
+    <td data-h="P1">Both: look forward (today, days to payday) and look back (every past day), on every open.</td>
+    <td data-h="P2">Home looks forward (V1). Spends looks back, where "where did it go" already lives, and the cycle switcher shows earlier cycles too.</td>
+    <td data-h="P3">Look forward, plus the calendar weeks. Only today's week keeps its history.</td></tr>
+  <tr><th>Can a 5-year-old read it?</th>
+    <td data-h="P1">Mostly: the yellow cell and the flag read at once. Counting days left is easy (weeks, principle 50), but 22 cells of history compete with the number.</td>
+    <td data-h="P2">Home: as V1. Spends: yes, with the three-word legend.</td>
+    <td data-h="P3">Yes: outlines are "gone", grey is "to come".</td></tr>
+  <tr><th>Fixed height (dp)</th>
+    <td data-h="P1">Grid 124, picture 166 with gaps and caption (V1's row is 84): <b>hero 375 vs 293, +82</b>. On a 360 × 780 phone the Today list keeps under 3 of its rows above the dock (V1: 4).</td>
+    <td data-h="P2">Home unchanged (293). The Spends card is <b>250</b>; Ask AI and the pace chart move down by 262.</td>
+    <td data-h="P3">As P1: 375, +82 for mostly blank outlines.</td></tr>
+  <tr><th>Contrast</th>
+    <td data-h="P1" colspan="3">All pass in light. In dark, today against a kept cell is 1.40 (hue only); the bold column date and the caption carry it. P3's faded past is a 1dp <code>blockIdle</code> outline (1.53, decoration, not information).</td></tr>
+  <tr><th>Shame risk</th>
+    <td data-h="P1">Highest: the overs sit on Home every morning, on the screen you open to spend.</td>
+    <td data-h="P2">Low: history only when you go looking, next to the pace chart's words.</td>
+    <td data-h="P3">Low: past weeks carry no history.</td></tr>
+  <tr><th>Streak risk</th>
+    <td data-h="P1">Medium: a daily look at a grid invites "keep the row clean".</td>
+    <td data-h="P2">Low: seen weekly, not daily.</td>
+    <td data-h="P3">Low.</td></tr>
+  <tr><th>Paint cost</th>
+    <td data-h="P1" colspan="2">One <code>CustomPainter</code>, up to 37 cells; cache the past and future in a <code>Picture</code> and repaint only today's cell per frame, inside the existing <code>RepaintBoundary</code>.</td>
+    <td data-h="P3">As P1, slightly cheaper (outlines).</td></tr>
+  <tr><th>New tokens</th>
+    <td data-h="P1" colspan="3">None. New sizes: cell 12dp tall, 4dp gaps, 16dp gutter for M W F, cell width shared (49.6dp at 5 weeks, 40.8 at 6). P2 uses <code>blockIdle</code> and <code>displayEdge</code> off the hero, so their docs widen from "hero" to "day cells".</td></tr>
+  <tr><th>Conflicts with SPEC / UI_DESIGN</th>
+    <td data-h="P1"><b>FR-HO-2</b> and <b>BR-6</b> (D blocks from today, the "Today" caption); <b>UI_DESIGN §1</b> (blocks until payday) and <b>§5.2</b> (hierarchy, height); <b>D7</b> rejected a pace chart on Home, and history on Home is close to it; case study 12's B kept the past off Home to avoid shame.</td>
+    <td data-h="P2"><b>FR-SP-2</b> (Ask AI card "at the top") and <b>UI_DESIGN §5.4</b> order; FR-SP-3 already has a marigold today marker, so Spends gets two today marks (same meaning). Needs a new <b>FR-SP</b> row and a <b>BR</b> for ₹0 vs not logged.</td>
+    <td data-h="P3">As P1: <b>FR-HO-2</b>, <b>BR-6</b>, <b>§5.2</b>; keeps §1's look-forward concept.</td></tr>
+</table>
+<p class="lede" style="margin-top:16px"><b>Recommendation: P2 + E1k.</b> The hero keeps answering "how much today?" in 293dp (19's V1), and the GitHub grid lives on Spends as "This cycle", where looking back belongs and where the switcher already pages through earlier cycles. E1k gives every cell one meaning, the day's money, so today's marigold settles into history at the same level and simply cools to grey. <b>Ranking:</b> P2 › P3 › P1; E1k › E1 › E4 › E3 › E2. If the owner wants the grid on Home, P3 is the version to test: it keeps history off the first screen, but costs 82dp for what V1 says in 84.</p>
+<p class="lede"><b>Open questions.</b> (1) How does the app know a day was ₹0 rather than not logged? An "I spent nothing" mark adds a tap (outside the Add flow, but still a prompt); "Home was opened that evening" is a guess. Without one, merge them and draw both as not logged. (2) At 12dp tall, a ₹60 spend moves today's level 0.4dp; D91's 0.9 cap makes any spend a 1.2dp band. Enough? (3) Blind-read E1k against E1 with 5 people: "what does a tall grey bar mean?"</p>
+</section>
+
+<h2>Token table</h2>
+<p class="lede">Every value this mockup uses. Every fill is a HisaabColors role except E2's four proposed greys.</p>
+<div class="row">
+<table>
+  <tr><th>Colour</th><th>Light</th><th>Dark</th><th>Used for</th></tr>
+  <tr><td data-h="Colour"><code>display</code> (= <code>surface</code>)</td><td data-h="Light"><span class="sw" style="background:#FFFEFC"></span>#FFFEFC</td><td data-h="Dark"><span class="sw" style="background:#211F1C"></span>#211F1C</td><td data-h="Used for">Hero card and P2 card; inside of not-logged and over-today cells</td></tr>
+  <tr><td data-h="Colour"><code>displayInk</code></td><td data-h="Light">#161615</td><td data-h="Dark">#F2F1EC</td><td data-h="Used for">Amount, today's column date (SemiBold), flag glyph</td></tr>
+  <tr><td data-h="Colour"><code>displayInk2</code></td><td data-h="Light">#65605A (6.17:1; 4.04 on <code>blockIdle</code>)</td><td data-h="Dark">#A7A199 (6.42; 4.21)</td><td data-h="Used for">Title, captions, M W F, column dates, flag date; E1/E1k fill, E3 dot and ring, the 1dp hatch 3.5dp apart, 1dp not-logged outline and its 2.5dp dot, 1.5dp over-today edge, the ghost outline of a shorter future day</td></tr>
+  <tr><td data-h="Colour"><code>blockIdle</code></td><td data-h="Light">#D7CFC5 (1.53:1)</td><td data-h="Dark">#413D38 (1.53:1)</td><td data-h="Used for">Every cell's track, future days, E4's under days; P3's 1dp faded outline</td></tr>
+  <tr><td data-h="Colour"><code>signal</code></td><td data-h="Light" colspan="2">#FFB020</td><td data-h="Used for">Today's cell only, its 50% trail, the slow-down ring</td></tr>
+  <tr><td data-h="Colour"><code>displayEdge</code></td><td data-h="Light">#161615</td><td data-h="Dark">none</td><td data-h="Used for">1.5dp edge round today's cell, 1.5dp outside it</td></tr>
+  <tr><td data-h="Colour">E2 ramp (proposed)</td><td data-h="Light">#B5AEA7 · #98928A · #7D7870 · #65605A (OKLCH L 0.755 · 0.663 · 0.575 · 0.492)</td><td data-h="Dark">#575450 · #6F6C67 · #898580 · #A7A199 (L 0.447 · 0.532 · 0.619 · 0.712)</td><td data-h="Used for">E2 only. Each step 1.42 (light), 1.43 (dark) from the last: fails 1.5</td></tr>
+  <tr><td data-h="Colour"><code>bg</code>, <code>surface</code>, <code>sunk</code>, <code>hairline</code>, <code>control</code>, <code>ink</code>, <code>ink2</code>, <code>displayEtch</code>, <code>displayShadow</code>, <code>displaySheen</code></td><td data-h="Light" colspan="2">As built</td><td data-h="Used for">Phone screens, list rows, wells, dock, the hero's etch, grain, keylines and shadow</td></tr>
+</table>
+<table>
+  <tr><th>Type, space, shape, motion</th><th>Value</th></tr>
+  <tr><td data-h="Item">Hero</td><td data-h="Value">Anek Latin 76 tnum, wdth 85 / Mukta 15 title, 16 SemiBold over, 15 range, 13 note</td></tr>
+  <tr><td data-h="Item">Grid labels</td><td data-h="Value">Mukta 12; today's column date SemiBold <code>displayInk</code>, the rest Regular <code>displayInk2</code>. Baseline 11dp, in a 16dp band above the cells. M W F in a 16dp gutter (12 + 4)</td></tr>
+  <tr><td data-h="Item">Cells</td><td data-h="Value">12dp tall, radius 3, 4dp gaps both ways; width = (280 − 16 − 4 × (weeks − 1)) ÷ weeks, so the last column ends on the text edge. Today's edge sits 1.5dp outside its cell and may hang 2.25dp into the inset. Grid 124dp for any cycle</td></tr>
+  <tr><td data-h="Item">P2 card</td><td data-h="Value">320 wide, radius 28, 20dp inset; title Anek 21/26 SemiBold, dates Mukta 13, caption 13/18, legend 12/14, 8dp and 12dp gaps; 250dp tall</td></tr>
+  <tr><td data-h="Item">Springs (damping 1.0)</td><td data-h="Value">snap 250 · standard 350 · calm 550 · <code>land</code> 3% squash, 260ms</td></tr>
+  <tr><td data-h="Item">Staggers</td><td data-h="Value">Fill in: 60ms per week column, 200ms each. Trail: 50% marigold, follows after 500ms on calm. Ripple: 20ms per day, 300ms each. Payday: out 40ms per column, in 400 ÷ weeks ms apart, 80ms each</td></tr>
+  <tr><td data-h="Item">Other</td><td data-h="Value">Crossfade 150 · press 0.97</td></tr>
+</table>
+</div>
+
+<script>
+(() => {
+  const CW = 280, G = 16, GX = 4, CH = 12, GY = 4, LH = 16, GH = LH + 7 * CH + 6 * GY;
+  // ---------- Motion tokens (as mockup 19) ----------
+  const W2 = 2 * Math.PI, SEND = 1 - (1 + W2) * Math.exp(-W2);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const spring = p => (p <= 0 ? 0 : p >= 1 ? 1 : (1 - (1 + W2 * p) * Math.exp(-W2 * p)) / SEND);
+  const seg = (t, s, d) => clamp((t - s) / d, 0, 1);
+  const lerp = (a, b, e) => a + (b - a) * e;
+  if (CSS.supports('transition-timing-function', 'linear(0, 1)')) {
+    const pts = []; for (let i = 0; i <= 40; i++) pts.push(spring(i / 40).toFixed(4));
+    document.documentElement.style.setProperty('--spring', 'linear(' + pts.join(', ') + ')');
+  }
+  const LZ = 0.85, LW = 2 * Math.PI / 0.2, LWD = LW * Math.sqrt(1 - LZ * LZ);
+  const landRaw = s => Math.exp(-LZ * LW * s) * Math.sin(LWD * s);
+  let LPEAK = 0; for (let s = 0; s < 0.2; s += 0.0005) LPEAK = Math.max(LPEAK, landRaw(s));
+  const landSy = ms => (ms < 0 || ms >= 260 ? 1 : 1 - 0.03 * landRaw(ms / 1000) / LPEAK);
+
+  const qs = new URLSearchParams(location.search);
+  const reduceBox = document.getElementById('reduce');
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  reduceBox.checked = qs.has('reduce') ? qs.get('reduce') === '1' : mq.matches;
+  mq.addEventListener('change', e => { reduceBox.checked = e.matches; });
+  const reduced = () => reduceBox.checked;
+  const themeSel = document.getElementById('theme');
+  const applyTheme = v => { document.body.classList.toggle('only-light', v === 'light'); document.body.classList.toggle('only-dark', v === 'dark'); };
+  themeSel.addEventListener('change', e => applyTheme(e.target.value));
+  if (qs.get('theme')) { themeSel.value = qs.get('theme'); applyTheme(qs.get('theme')); }
+
+  // ---------- Money: en_IN, whole rupees ----------
+  const nf = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+  const rupee = v => '₹' + nf.format(Math.max(0, Math.round(v)));
+  const spk = v => nf.format(Math.max(0, Math.round(v))) + ' rupees';
+  const f1 = v => +(+v).toFixed(2);
+
+  // ---------- Glyph stand-ins (the app uses Hugeicons) ----------
+  const svgI = (d, sw = 1.8, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICON = {
+    check: svgI('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>'),
+    alert: svgI('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>'),
+    over: svgI('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
+    gear: svgI('<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>', 1.6, 20),
+    food: svgI('<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/>', 1.6, 20),
+    travel: svgI('<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/>', 1.6, 20),
+    shop: svgI('<path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>', 1.6, 20),
+    home: svgI('<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>', 1.6, 22),
+    spends: svgI('<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>', 1.6, 22),
+    plus: svgI('<path d="M12 5v14M5 12h14"/>', 2.2, 22),
+    prev: svgI('<path d="M15 5l-7 7 7 7"/>', 2), next: svgI('<path d="M9 5l7 7-7 7"/>', 2),
+    ai: svgI('<path d="M4 5h16v11H9l-5 4z"/><path d="M12 7.5l.9 1.9 1.9.9-1.9.9-.9 1.9-.9-1.9-1.9-.9 1.9-.9z"/>', 1.6, 24),
+  };
+  const FLAG = 'M5 21V4M5 4h11l-2 4 2 4H5';
+
+  // ---------- Etch: guilloché rosette and grain (as mockups 17 and 19) ----------
+  let rosette = '';
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5; let d = '';
+    for (let i = 0; i <= 360; i += 2) {
+      const t = (i / 360) * Math.PI * 2, r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(1) + ' ' + (r * Math.sin(t)).toFixed(1);
+    }
+    rosette += `<path d="${d}Z"/>`;
+  }
+  const ETCH = `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${rosette}</svg>`;
+  const grainCache = {};
+  function grain(host) {
+    const colour = getComputedStyle(host).getPropertyValue('--displayEtch').trim();
+    if (!colour) return 'none';
+    if (!grainCache[colour]) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+      const g = cv.getContext('2d'); g.fillStyle = colour;
+      let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 240; i++) g.fillRect(Math.floor(r() * 120), Math.floor(r() * 120), 1, 1);
+      grainCache[colour] = `url(${cv.toDataURL()})`;
+    }
+    return grainCache[colour];
+  }
+
+  // ---------- Dates ----------
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const keyOf = d => Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const WDL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MOL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const mondayOf = d => addDays(d, -((d.getDay() + 6) % 7));
+  const CYC = { start: new Date(2026, 9, 7), pay: new Date(2026, 10, 7) };
+  const CYC2 = { start: new Date(2026, 10, 7), pay: new Date(2026, 11, 7) };
+  const dm = d => `${d.getDate()} ${MO[d.getMonth()]}`;
+  const dmL = d => `${d.getDate()} ${MOL[d.getMonth()]}`;
+  const lastDay = cy => addDays(cy.pay, -1);
+
+  // Made-up spends (₹; null = no entry that day)
+  const SP = { '2026-10-07': 1200, '2026-10-08': 1650, '2026-10-09': 2900, '2026-10-10': 600, '2026-10-11': null, '2026-10-12': 1100, '2026-10-13': 0,
+    '2026-10-14': 450, '2026-10-15': 1780, '2026-10-16': 900, '2026-10-17': 2300, '2026-10-18': null, '2026-10-19': 1300, '2026-10-20': 250,
+    '2026-10-21': 1500, '2026-10-22': 1050, '2026-10-23': 1950, '2026-10-24': 700, '2026-10-25': null, '2026-10-26': 1400, '2026-10-27': 0, '2026-10-28': 1550 };
+  const SP_FRI = { ...SP, '2026-10-29': 1550 };
+  const SP_LAST = { ...SP_FRI, '2026-10-30': 1700, '2026-10-31': 2100, '2026-11-01': null, '2026-11-02': 900, '2026-11-03': 1400, '2026-11-04': 0, '2026-11-05': 1650 };
+  const PSHARE = 1850;
+
+  // ---------- States ----------
+  const R = {
+    spare: v => ({ icon: 'check', html: `Lasts till payday · about <b>${rupee(v)} spare</b>`, say: `lasts till payday with about ${spk(v)} spare` }),
+    lasts: { icon: 'check', html: 'Lasts till payday', say: 'lasts till payday' },
+    slow: { icon: 'alert', html: '<b>Slow down</b> · today’s share is almost used', say: 'today’s share is almost used' },
+    overToday: { icon: 'over', html: '<b>Over today</b> · still lasts till payday', say: 'still lasts till payday' },
+  };
+  const NOTE = 'You saved ₹300 yesterday, so every day got ₹37 more.';
+  function S(D, o = {}) {
+    const cy = o.cy || CYC;
+    const st = { cy, D, today: addDays(cy.pay, -D), style: 'onTrack', left: 1430, share: 1850, later: 1, each: 0, over: '', spends: SP,
+      range: D === 9 ? R.spare(9300) : R.lasts, note: false, ...o };
+    if (st.style === 'overToday') Object.assign(st, { left: 0, over: '₹1,020 over today', each: 1722, later: 1722 / 1850, range: R.overToday });
+    if (st.style === 'slow' && !o.range) st.range = R.slow;
+    return st;
+  }
+  const ST = { on9: S(9), on16: S(16), on28: S(28), over9: S(9, { style: 'overToday' }), slow9: S(9, { style: 'slow', left: 400 }) };
+  const SPENT9 = S(9, { left: 1130, range: R.spare(9000) });
+  const THU_END = S(9, { style: 'slow', left: 300 });
+  const FRI = S(8, { left: 1887, share: 1887, spends: SP_FRI, range: R.spare(8900) });
+  const FRI_START = { ...FRI, left: 1850, share: 1850 }, FRI_NOTE = { ...FRI, note: true };
+  const LAST = S(1, { left: 500, share: 1640, spends: SP_LAST });
+  const NEW = S(30, { cy: CYC2, left: 1460, share: 1460, spends: {}, range: R.lasts });
+
+  // ---------- Words ----------
+  const capR = st => (st.style === 'overToday' ? `Each day after: ${rupee(st.each)}` : st.D === 1 ? 'Payday tomorrow' : `${st.D} days to payday`);
+  function history(st) {
+    let within = 0, zero = 0, over = 0, none = 0;
+    for (let d = st.cy.start; keyOf(d) < keyOf(st.today); d = addDays(d, 1)) {
+      const v = st.spends[iso(d)];
+      if (v === null || v === undefined) none++; else if (v > PSHARE) over++; else { within++; if (v === 0) zero++; }
+    }
+    const n = within + over + none;
+    if (!n) return 'first day of the cycle';
+    const parts = [`${within} within their share${zero ? ` (${zero} with nothing spent)` : ''}`];
+    if (over) parts.push(`${over} over`); if (none) parts.push(`${none} not logged`);
+    return `${n} days so far: ${parts.join(', ')}`;
+  }
+  function heroSentence(st, P) {
+    const p = st.cy.pay, when = `${WDL[p.getDay()]} ${dmL(p)}`;
+    const days = st.D === 1 ? `payday is tomorrow, ${when}` : `${st.D} days to payday, ${when}`;
+    const head = st.style === 'overToday' ? `Over today by 1,020 rupees, so each day after gets ${spk(st.each)}`
+      : st.style === 'slow' ? `Slow down, ${spk(st.left)} left to spend today` : `Safe to spend today ${spk(st.left)}`;
+    return `${head}; ${days}${P === 'P1' ? '; this cycle, ' + history(st) : ''}; ${st.range.say}${st.note ? '; you saved 300 rupees yesterday, so every day got 37 rupees more' : ''}.`;
+  }
+  function cardSentence(st) {
+    const tail = st.style === 'overToday' ? `today 1,020 rupees over, so each day after gets ${spk(st.each)}` : `today ${spk(st.left)} left`;
+    return `This cycle, ${dmL(st.cy.start)} to ${dmL(lastDay(st.cy))}: ${history(st)}; ${tail}; ${st.D === 1 ? 'payday tomorrow' : st.D + ' days to payday'}${st.note ? '; you saved 300 rupees yesterday, so every day got 37 rupees more' : ''}.`;
+  }
+
+  // ---------- Grid layout: whole cycle, a column per week ----------
+  function frame(c, st) {
+    const m0 = mondayOf(st.cy.start), weeks = Math.round((keyOf(mondayOf(st.cy.pay)) - keyOf(m0)) / 7) + 1;
+    const cw = (CW - G - (weeks - 1) * GX) / weeks, tk = keyOf(st.today), pk = keyOf(st.cy.pay);
+    const cells = [];
+    for (let d = st.cy.start; keyOf(d) <= pk; d = addDays(d, 1)) {
+      const k = keyOf(d), col = Math.floor((k - keyOf(m0)) / 7), row = (d.getDay() + 6) % 7;
+      const kind = k < tk ? 'past' : k === tk ? 'today' : k < pk ? 'future' : 'flag';
+      const v = st.spends[iso(d)];
+      cells.push({ key: 'c' + k, date: d, col, row, kind, v: v === undefined ? null : v, x: G + col * (cw + GX), y: LH + row * (CH + GY), w: cw, h: CH,
+        op: 1, sc: 1, pulse: 0, sy: 1, level: kind === 'today' ? clamp(st.left / st.share, 0, 1) : 0, trail: null, edge: 1, over: st.style === 'overToday' ? 1 : 0,
+        ring: st.style === 'slow' ? 1 : 0, cool: 0, ratio: kind === 'future' ? clamp(st.later, 0.4, 1) : 1, faded: c.cfg.P === 'P3' && kind === 'past' && col < Math.floor((tk - keyOf(m0)) / 7) });
+    }
+    const todayCol = Math.floor((tk - keyOf(m0)) / 7);
+    const labels = Array.from({ length: weeks }, (_, i) => {
+      const mon = addDays(m0, i * 7), prev = addDays(mon, -7);
+      return { key: 'l' + keyOf(mon), col: i, x: G + i * (cw + GX), text: i === 0 || mon.getMonth() !== prev.getMonth() ? dm(mon) : String(mon.getDate()), on: i === todayCol, op: 1 };
+    });
+    return { cells, labels, amt: [st.left, st.left, 1], st };
+  }
+  const cp = F => ({ ...F, cells: F.cells.map(x => ({ ...x })), labels: F.labels.map(x => ({ ...x })) });
+
+  // ---------- Drawing ----------
+  const rr = (x, y, w, h, r) => { r = Math.max(0, Math.min(r, w / 2, h / 2)); return `M${f1(x + r)} ${f1(y)}H${f1(x + w - r)}A${f1(r)} ${f1(r)} 0 0 1 ${f1(x + w)} ${f1(y + r)}V${f1(y + h - r)}A${f1(r)} ${f1(r)} 0 0 1 ${f1(x + w - r)} ${f1(y + h)}H${f1(x + r)}A${f1(r)} ${f1(r)} 0 0 1 ${f1(x)} ${f1(y + h - r)}V${f1(y + r)}A${f1(r)} ${f1(r)} 0 0 1 ${f1(x + r)} ${f1(y)}Z`; };
+  // A fill from the bottom: bottom corners follow the cell; the top is square until it nears the top.
+  function rb(x, y, w, h, fh, r = 3) {
+    if (fh <= 0.05) return '';
+    if (fh >= h - r) return rr(x, y + h - fh, w, fh, Math.min(r, fh / 2));
+    const t = y + h - fh, rb2 = Math.min(r, fh);
+    return `M${f1(x)} ${f1(t)}H${f1(x + w)}V${f1(y + h - rb2)}A${f1(rb2)} ${f1(rb2)} 0 0 1 ${f1(x + w - rb2)} ${f1(y + h)}H${f1(x + rb2)}A${f1(rb2)} ${f1(rb2)} 0 0 1 ${f1(x)} ${f1(y + h - rb2)}Z`;
+  }
+  const P = (d, cls, op = 1, extra = '') => (d && op > 0.01 ? `<path d="${d}" class="${cls}"${op < 0.99 ? ` opacity="${f1(op)}"` : ''}${extra}/>` : '');
+  const HATCH = id => `url(#h${id})`;
+  // One past day, by encoding
+  function past(E, id, x, y, w, h, v) {
+    const base = P(rr(x, y, w, h, 3), 'f-idle');
+    if (v === null) {
+      if (E === 'E3' || E === 'E4') return P(rr(x + 0.5, y + 0.5, w - 1, h - 1, 2.5), 's-ink2', 1, ' stroke-width="1"');
+      return P(rr(x + 0.5, y + 0.5, w - 1, h - 1, 2.5), 's-ink2', 1, ' stroke-width="1"') + `<circle cx="${f1(x + w / 2)}" cy="${f1(y + h / 2)}" r="1.25" class="f-ink2"/>`;
+    }
+    const f = v / PSHARE, hatch = `<path d="${rr(x, y, w, h, 3)}" fill="${HATCH(id)}"/>`;
+    if (f > 1) {
+      if (E === 'E3') return base + `<circle cx="${f1(x + w / 2)}" cy="${f1(y + h / 2)}" r="4.25" class="s-ink2" stroke-width="1.5"/>`;
+      return base + hatch;
+    }
+    if (E === 'E1') return base + P(rb(x, y, w, h, h * f), 'f-ink2');
+    if (E === 'E1k') return base + P(rb(x, y, w, h, h * (1 - f)), 'f-ink2');
+    if (E === 'E2') return v === 0 ? base : P(rr(x, y, w, h, 3), 'f-r' + clamp(Math.ceil(f * 4), 1, 4));
+    if (E === 'E3') return base + (v > 0 ? `<circle cx="${f1(x + w / 2)}" cy="${f1(y + h / 2)}" r="${f1(Math.max(1, 5 * Math.sqrt(f)))}" class="f-ink2"/>` : '');
+    return base; // E4: under share
+  }
+  function cellSvg(c, k) {
+    const E = c.cfg.E, id = c.id, cx = k.x + k.w / 2, cyb = k.y + k.h;
+    const tf = [];
+    if (k.sc !== 1 || k.pulse) { const s = k.sc * (1 + 0.15 * k.pulse); tf.push(`translate(${f1(cx)} ${f1(k.y + k.h / 2)}) scale(${s.toFixed(4)}) translate(${f1(-cx)} ${f1(-(k.y + k.h / 2))})`); }
+    if (k.sy !== 1) tf.push(`translate(0 ${f1(cyb)}) scale(1 ${k.sy.toFixed(4)}) translate(0 ${f1(-cyb)})`);
+    let s = `<g${k.op < 0.99 ? ` opacity="${f1(k.op)}"` : ''}${tf.length ? ` transform="${tf.join(' ')}"` : ''}>`;
+    const { x, y, w, h } = k;
+    if (k.kind === 'past' && k.faded) s += P(rr(x + 0.5, y + 0.5, w - 1, h - 1, 2.5), 's-idle', 1, ' stroke-width="1"');
+    else if (k.kind === 'past') s += past(E, id, x, y, w, h, k.v);
+    else if (k.kind === 'future') {
+      if (k.ratio >= 0.999) s += P(rr(x, y, w, h, 3), 'f-idle');
+      else s += P(rb(x, y, w, h, h * k.ratio), 'f-idle') + P(rr(x + 0.5, y + 0.5, w - 1, h - 1, 2.5), 's-ink2', clamp((1 - k.ratio) * 20, 0, 1), ' stroke-width="1"');
+    } else if (k.kind === 'flag') {
+      s += `<svg x="${f1(x)}" y="${f1(y)}" width="12" height="12" viewBox="0 0 24 24" class="glyph" aria-hidden="true"><path d="${FLAG}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      s += `<text class="lb" x="${f1(x + 13)}" y="${f1(y + 10)}" style="font-weight:600">${dm(k.date)}</text>`;
+    } else { // today
+      const live = 1 - k.cool, ov = k.over;
+      if (k.cool > 0.01) s += `<g${k.cool < 0.99 ? ` opacity="${f1(k.cool)}"` : ''}>${past(E, id, x, y, w, h, k.v)}</g>`;
+      if (live > 0.01) {
+        let t = P(rr(x, y, w, h, 3), 'f-idle', 1 - ov) + P(rb(x, y, w, h, h * k.level), 'f-sig', 1 - ov);
+        if (k.trail !== null && k.trail > k.level + 0.001) t += P(`M${f1(x)} ${f1(y + h - h * k.trail)}H${f1(x + w)}V${f1(y + h - h * k.level)}H${f1(x)}Z`, 'f-sig', 0.5 * (1 - ov));
+        if (ov > 0.01) t += P(rr(x, y, w, h, 3), 'f-disp', ov) + `<path d="${rr(x, y, w, h, 3)}" fill="${HATCH(id)}"${ov < 0.99 ? ` opacity="${f1(ov)}"` : ''}/>` + P(rr(x + 0.75, y + 0.75, w - 1.5, h - 1.5, 2.25), 's-ink2', ov, ' stroke-width="1.5"');
+        if (k.ring > 0.01) t += P(rr(x + 0.75, y + 0.75, w - 1.5, h - 1.5, 2.25), 's-sig', k.ring * (1 - ov), ' stroke-width="1.5"');
+        t += P(rr(x - 1.5, y - 1.5, w + 3, h + 3, 4.5), 's-edge', k.edge * (1 - ov), ' stroke-width="1.5"');
+        s += live < 0.99 ? `<g opacity="${f1(live)}">${t}</g>` : t;
+      }
+    }
+    return s + '</g>';
+  }
+  function svgOf(c, F) {
+    let s = `<defs><pattern id="h${c.id}" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="3.5" class="f-ink2"/></pattern></defs>`;
+    [['M', 0], ['W', 2], ['F', 4]].forEach(([l, r]) => { s += `<text class="lb" x="0" y="${f1(LH + r * (CH + GY) + 10)}">${l}</text>`; });
+    for (const l of F.labels) if (l.op > 0.01) s += `<text class="lb${l.on ? ' on' : ''}" x="${f1(l.x)}" y="11"${l.op < 0.99 ? ` opacity="${f1(l.op)}"` : ''}>${l.text}</text>`;
+    for (const k of F.cells) if (k.op > 0.01) s += cellSvg(c, k);
+    return s;
+  }
+  // Cells end on the 280dp text edge; only today's 1.5dp edge may hang 2.25dp past it, into the card's 20dp inset (an outline, like a focus ring).
+  const rightEdge = F => Math.max(...F.cells.map(k => k.x + k.w));
+
+  // ---------- Cards ----------
+  const allCards = [];
+  let cardId = 0;
+  const rangeHTML = r => ICON[r.icon] + `<span>${r.html}</span>`;
+  function put(el, html) { el._sid = (el._sid || 0) + 1; el.getAnimations().forEach(a => a.cancel()); el.innerHTML = html; }
+  function swap(el, html) {
+    if (el.innerHTML === html) return;
+    const id = (el._sid = (el._sid || 0) + 1);
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120 }).onfinish = () => {
+      if (el._sid !== id) return;
+      el.innerHTML = html; el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+    };
+  }
+  function makeCard(host, cfg) {
+    const root = document.createElement('section');
+    root.tabIndex = 0;
+    const isHero = cfg.P !== 'P2';
+    if (isHero) {
+      root.className = 'hero' + (cfg.note ? ' has-note' : '');
+      root.setAttribute('role', 'button');
+      root.innerHTML = ETCH + '<div class="grain"></div><svg class="frame" aria-hidden="true"><rect class="k1"/><rect class="k2"/></svg>' +
+        '<div class="content"><div class="title">Safe to spend today</div><div class="amtrow"><span class="amount"></span><span class="over"></span></div>' +
+        '<div class="grid"><svg aria-hidden="true"></svg></div><div class="caps"><span class="capL"></span><span class="capR"></span></div><div class="divider"></div><div class="range"></div><div class="note"></div></div>';
+    } else {
+      root.className = 'scard' + (cfg.note ? ' has-note' : '');
+      root.setAttribute('role', 'img');
+      root.innerHTML = '<div class="content"><div class="head"><span>This cycle</span><span class="dates"></span></div>' +
+        '<div class="grid"><svg aria-hidden="true"></svg></div><div class="caps"><span class="capL">Today <b class="samt"></b><span class="tail"></span></span><span class="capR"></span></div>' +
+        `<div class="legend" aria-hidden="true"><span><svg width="16" height="12">${P(rr(0, 0, 16, 12, 3), 'f-idle') + P(rb(0, 0, 16, 12, 7), 'f-ink2')}</svg>Kept</span>` +
+        `<span><svg width="16" height="12"><defs><pattern id="lgh${cardId + 1}" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="3.5" class="f-ink2"/></pattern></defs>${P(rr(0, 0, 16, 12, 3), 'f-idle')}<path d="${rr(0, 0, 16, 12, 3)}" fill="url(#lgh${cardId + 1})"/></svg>Over</span>` +
+        `<span><svg width="16" height="12">${P(rr(0.5, 0.5, 15, 11, 2.5), 's-ink2', 1, ' stroke-width="1"')}<circle cx="8" cy="6" r="1.25" class="f-ink2"/></svg>Not logged</span></div>` +
+        '<div class="note"></div></div>';
+    }
+    host.appendChild(root);
+    if (isHero) root.querySelector('.grain').style.backgroundImage = grain(host);
+    const q = s => root.querySelector(s);
+    const c = { id: ++cardId, cfg, root, isHero, content: q('.content'), amount: q('.amount') || q('.samt'), over: q('.over'), tail: q('.tail'), dates: q('.dates'), svg: q('.grid > svg'),
+      capL: isHero ? q('.capL') : null, capR: q('.capR'), range: q('.range'), note: q('.note'), raf: 0 };
+    if (isHero) {
+      const down = () => root.classList.add('pressed'), up = () => root.classList.remove('pressed');
+      root.addEventListener('pointerdown', down);
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(e => root.addEventListener(e, up));
+      root.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); down(); } });
+      root.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') up(); });
+    }
+    allCards.push(c);
+    return c;
+  }
+  const tailText = st => (st.style === 'overToday' ? ' left · <b>₹1,020 over</b>' : ' left');
+  const sentence = (c, st) => (c.isHero ? heroSentence(st, c.cfg.P) : cardSentence(st));
+  function setAmount(c, [a, b, e]) { const v = e >= 1 ? b : lerp(a, b, e); c.amount.textContent = rupee(v); c.amount.dataset.v = rupee(v); }
+  function paint(c, F) { c.F = F; c.svg.innerHTML = svgOf(c, F); setAmount(c, F.amt); }
+  function renderText(c, st) {
+    if (c.isHero) {
+      c.amount.classList.toggle('muted', st.style === 'overToday');
+      put(c.over, st.over); c.over.style.display = st.over ? '' : 'none';
+      put(c.capL, capR(st)); put(c.capR, ''); put(c.range, rangeHTML(st.range));
+    } else { put(c.dates, `${dm(st.cy.start)} – ${dm(lastDay(st.cy))}`); put(c.tail, tailText(st)); put(c.capR, capR(st)); }
+    c.note.textContent = NOTE; c.note.getAnimations().forEach(a => a.cancel()); c.note.style.opacity = st.note ? 1 : 0;
+    c.root.setAttribute('aria-label', sentence(c, st));
+  }
+  function textTo(c, st) {
+    if (c.isHero) { swap(c.capL, capR(st)); swap(c.range, rangeHTML(st.range)); }
+    else { swap(c.dates, `${dm(st.cy.start)} – ${dm(lastDay(st.cy))}`); swap(c.tail, tailText(st)); swap(c.capR, capR(st)); }
+    c.root.setAttribute('aria-label', sentence(c, st));
+  }
+  function stop(c) { cancelAnimationFrame(c.raf); c.raf = 0; c.root.querySelectorAll('.content.copy').forEach(n => n.remove()); c.content.getAnimations().forEach(a => a.cancel()); }
+  function render(c, st) { stop(c); renderText(c, st); paint(c, frame(c, st)); c.st = st; }
+  function crossfade(c, apply) {
+    const old = c.content.cloneNode(true);
+    old.classList.add('copy');
+    old.querySelectorAll('[id]').forEach(n => { n.id = 'z' + n.id; });
+    old.querySelectorAll('[fill]').forEach(n => { const v = n.getAttribute('fill'); if (v.startsWith('url(#')) n.setAttribute('fill', v.replace('url(#', 'url(#z')); });
+    apply();
+    c.root.appendChild(old);
+    c.content.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' });
+    old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'linear', fill: 'forwards' }).onfinish = () => old.remove();
+  }
+  function stage(parent, dark, label) {
+    const st = document.createElement('div');
+    st.className = 'stage themed' + (dark ? ' dark' : '');
+    const w = document.createElement('span'); w.className = 'which'; w.textContent = label + (dark ? ' · dark' : ' · light'); st.appendChild(w);
+    parent.appendChild(st);
+    return st;
+  }
+  const staticCards = [];
+  function pair(parent, cfg, st, label, after) {
+    for (const dark of [false, true]) { const sg = stage(parent, dark, label); const c = makeCard(sg, cfg); render(c, st); staticCards.push(c); if (after) after(sg, c); }
+  }
+
+  // ---------- Key: every cell kind, drawn by the real painter ----------
+  function keyHTML(c) {
+    const w = 49.6, items = [['Spent ₹450', 450], ['Spent ₹1,780', 1780], ['Over', 2900], ['Spent ₹0', 0], ['Not logged', null]];
+    const one = (label, inner) => `<div><svg width="${w}" height="12" aria-hidden="true">${inner}</svg>${label}</div>`;
+    let s = `<svg width="0" height="0" style="position:absolute"><defs><pattern id="h${c.id}k" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="3.5" class="f-ink2"/></pattern></defs></svg>`;
+    for (const [l, v] of items) s += one(l, past(c.cfg.E, c.id + 'k', 0, 0, w, 12, v));
+    s += one('Today', P(rr(0, 0, w, 12, 3), 'f-idle') + P(rb(0, 0, w, 12, 12 * 1430 / 1850), 'f-sig') + P(rr(-1.5, -1.5, w + 3, 15, 4.5), 's-edge', 1, ' stroke-width="1.5"'));
+    s += one('Future day', P(rr(0, 0, w, 12, 3), 'f-idle'));
+    s += one('Payday', `<svg x="0" y="0" width="12" height="12" viewBox="0 0 24 24" class="glyph"><path d="${FLAG}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><text class="lb" x="13" y="10" style="font-weight:600">7 Nov</text>`);
+    return s;
+  }
+
+  // ---------- Motion (on the P2 card, E1k) ----------
+  const T = F => F.cells.find(k => k.kind === 'today');
+  const DEMOS = {
+    fill: { title: 'Fill in (Spends appears)', start: () => ST.on9, end: () => ST.on9,
+      text: 'The cycle lays down <b>week by week</b> from the left, like a calendar being dealt: each column fades and grows from 85% on <b>standard</b>, 60ms apart, with its date. Then today\'s cell fills from the bottom on <b>calm</b> and "₹1,430" counts up on the same spring.',
+      setup: F => { F.cells.forEach(k => { k.op = 0; }); F.labels.forEach(l => { l.op = 0; }); T(F).level = 0; F.amt = [0, 0, 1]; return F; },
+      at: (c, t, x) => {
+        const F = cp(x.S1), n = F.labels.length, t1 = n * 60 + 150;
+        F.cells.forEach(k => { const e = spring(seg(t, k.col * 60, 200)); k.op = e; k.sc = 0.85 + 0.15 * e; });
+        F.labels.forEach(l => { l.op = spring(seg(t, l.col * 60, 200)); });
+        const e = spring(seg(t, t1, 550)); T(F).level = T(x.S1).level * e; F.amt = [0, x.S1.st.left, e]; return F;
+      },
+      events: () => [], dur: x => x.S1.labels.length * 60 + 150 + 550 + 100 },
+    spend: { title: 'Spend ₹300', start: () => ST.on9, end: () => SPENT9,
+      text: 'After the Add tray closes, today\'s level falls from 77% to 61% on <b>standard</b> and "₹1,430" rolls to "₹1,130" in the same frames. The spent slice stays as a <b>50% marigold trail</b> and follows after 500ms on <b>calm</b> (D91). The cell lands with a <b>3% squash</b> from its base.',
+      at: (c, t, x) => {
+        const F = cp(x.S1), tc = T(F), L0 = T(x.S0).level, L1 = tc.level, e = spring(seg(t, 0, 350));
+        tc.level = lerp(L0, L1, e); tc.trail = lerp(L0, L1, spring(seg(t, 500, 550))); tc.sy = landSy(t - 350);
+        F.amt = [1430, 1130, e]; return F;
+      },
+      events: () => [[0, (c, x) => textTo(c, x.end)]], dur: () => 500 + 550 + 100 },
+    over: { title: 'Over today (₹2,450 more)', start: () => ST.on9, end: () => ST.over9,
+      text: 'The level runs to empty on <b>standard</b> with its trail, and the amount to ₹0. Then today <b>turns to the hatch</b> inside a <code>displayInk2</code> edge (<b>standard</b>). At +350ms each future cell <b>settles to 93%</b> on <b>calm</b>, inside a ghost outline: ₹1,722 a day after (BR-6). A plain dim was briefed, but any dim takes <code>blockIdle</code> under its 1.5:1 floor, so the cells get shorter instead. Cause, then effect.',
+      at: (c, t, x) => {
+        const F = cp(x.S1), tc = T(F), L0 = T(x.S0).level, e = spring(seg(t, 0, 350)), tA = 1050, tB = 1400;
+        tc.level = lerp(L0, 0, e); tc.trail = lerp(L0, 0, spring(seg(t, 500, 550))); tc.sy = landSy(t - 350);
+        tc.over = spring(seg(t, tA, 350)); tc.edge = 1;
+        const eB = spring(seg(t, tB, 550)); F.cells.forEach(k => { if (k.kind === 'future') k.ratio = lerp(1, clamp(x.end.later, 0.4, 1), eB); });
+        F.amt = [1430, 0, e]; return F;
+      },
+      events: () => [[0, (c, x) => textTo(c, x.end)]], dur: () => 1400 + 550 + 150 },
+    newday: { title: 'New day (Thu 29 → Fri 30)', start: () => THU_END, end: () => FRI,
+      text: 'Midnight. Thursday ended with ₹300 left (slow down). Its cell <b>cools</b>: marigold, ring and edge fade on <b>calm</b> while its kept level (16%) fades in as grey, <b>at the same height</b>. Nothing moves: the day simply becomes history. From +300ms Friday\'s edge arrives and its marigold <b>rises from the base</b> on <b>calm</b>; the amount rides it ₹300 → ₹1,887.',
+      at: (c, t, x) => {
+        const F = cp(x.S1), thu = F.cells.find(k => k.key === T(x.S0).key), fri = T(F), e1 = spring(seg(t, 0, 550)), e2 = spring(seg(t, 300, 350)), e3 = spring(seg(t, 450, 550));
+        Object.assign(thu, { kind: 'today', level: T(x.S0).level, ring: 1, edge: 1, over: 0, cool: e1 });
+        if (t < 300) Object.assign(fri, { kind: 'future', ratio: 1 }); else Object.assign(fri, { edge: e2, level: fri.level * e3 });
+        F.amt = [300, 1887, e3]; return F;
+      },
+      events: () => [[300, (c, x) => textTo(c, x.end)]], dur: () => 450 + 550 + 150 },
+    grow: { title: 'Underspend morning', start: () => FRI_START, end: () => FRI_NOTE,
+      text: 'Thursday kept ₹300, so every day left gets ₹37 more. That is 2% of a cell, which a 12dp cell cannot show, so the <b>future cells ripple</b> in date order (each grows 15% and settles, 20ms apart) while the amount rides the wave ₹1,850 → ₹1,887. Then the note fades in and says it in words.',
+      at: (c, t, x) => {
+        const F = cp(x.S1); let j = 0;
+        F.cells.forEach(k => { if (k.kind === 'future') { k.pulse = Math.sin(Math.PI * seg(t, j * 20, 300)); j++; } });
+        F.amt = [1850, 1887, spring(seg(t, 0, j * 20 + 300))]; return F;
+      },
+      events: (c, x) => { const n = x.S1.cells.filter(k => k.kind === 'future').length; return [[n * 20 + 300, c2 => c2.note.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, fill: 'forwards' })]]; },
+      dur: x => x.S1.cells.filter(k => k.kind === 'future').length * 20 + 300 + 500 },
+    payday: { title: 'Payday (Fri 6 → Sat 7 Nov)', start: () => LAST, end: () => NEW,
+      text: 'The old cycle <b>clears</b> column by column from the left (40ms apart, 150ms each). The new cycle, Sat 7 Nov to Sun 6 Dec, needs <b>6 week columns</b>, so the cells come back narrower (40.8dp) but the grid keeps its <b>7 rows and 124dp</b>. It lays down column by column (400 ÷ 6ms apart, 80ms each) with its dates; the flag is now Mon 7 Dec. Then today lights on <b>calm</b>, ₹500 → ₹1,460.',
+      at: (c, t, x) => {
+        const old = x.S0.cells.map(k => ({ ...k, key: 'o' + k.key, op: 1 - seg(t, k.col * 40, 150) }));
+        const oldL = x.S0.labels.map(l => ({ ...l, key: 'o' + l.key, op: 1 - seg(t, l.col * 40, 150) }));
+        const F = cp(x.S1), n = F.labels.length, stg = 400 / n, e3 = spring(seg(t, 780, 550));
+        F.cells.forEach(k => { k.op = spring(seg(t, 350 + k.col * stg, 80)); });
+        F.labels.forEach(l => { l.op = spring(seg(t, 350 + l.col * stg, 80)); });
+        T(F).level = T(x.S1).level * e3;
+        return { cells: [...old, ...F.cells], labels: [...oldL, ...F.labels], amt: t < 780 ? [500, 500, 1] : [500, 1460, e3], st: x.S1.st };
+      },
+      events: () => [[350, (c, x) => textTo(c, x.end)]], dur: () => 780 + 550 + 150 },
+  };
+
+  const demos = [];
+  function demo(parent, cfg, key, label) {
+    const D = DEMOS[key];
+    const el = document.createElement('article');
+    el.className = 'demo';
+    el.innerHTML = `<header><div><h4>${label} · ${D.title}</h4><p>${D.text}</p></div><button class="btn" data-replay>Replay</button></header><div class="row"></div>`;
+    parent.appendChild(el);
+    const row = el.querySelector('.row');
+    const d = { id: key, D, cards: [] };
+    for (const dark of [false, true]) d.cards.push(makeCard(stage(row, dark, D.title.split(' (')[0]), { ...cfg, note: key === 'grow' }));
+    d.reset = () => d.cards.forEach(c => { render(c, D.start()); if (D.setup) paint(c, D.setup(frame(c, D.start()))); });
+    d.play = () => {
+      d.reset();
+      const token = (d.token = (d.token || 0) + 1);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (token !== d.token) return;
+        d.cards.forEach(c => {
+          if (reduced()) { crossfade(c, () => render(c, D.end())); return; }
+          const x = { S0: frame(c, D.start()), S1: frame(c, D.end()), end: D.end() };
+          const evs = D.events(c, x), fired = new Set(), dur = D.dur(x), t0 = performance.now();
+          const step = now => {
+            const t = now - t0;
+            evs.forEach(([tm, fn], i) => { if (t >= tm && !fired.has(i)) { fired.add(i); fn(c, x); } });
+            if (t >= dur) { c.raf = 0; renderText(c, x.end); paint(c, x.S1); c.st = x.end; return; }
+            paint(c, D.at(c, t, x)); c.raf = requestAnimationFrame(step);
+          };
+          c.raf = requestAnimationFrame(step);
+        });
+      }));
+    };
+    d.check = () => d.cards.flatMap((c, i) => check(c, D.end()).map(e => `${d.id}${i ? ' dark' : ''}: ${e}`));
+    el.querySelector('[data-replay]').addEventListener('click', d.play);
+    d.reset();
+    demos.push(d);
+  }
+  // After a demo ends, the card must match a plain render of the end state.
+  function check(c, st) {
+    const errs = [], F = frame(c, st);
+    const norm = (html, svg) => { const el = svg ? document.createElementNS('http://www.w3.org/2000/svg', 'svg') : document.createElement('div'); el.innerHTML = html; return el.innerHTML; };
+    if (c.raf) errs.push('still running');
+    if (c.svg.innerHTML !== norm(svgOf(c, F), true)) errs.push('grid differs from the end state');
+    if (c.amount.dataset.v !== rupee(st.left)) errs.push(`amount ${c.amount.dataset.v} ≠ ${rupee(st.left)}`);
+    if (c.capR.textContent !== (c.isHero ? '' : capR(st))) errs.push(`caption "${c.capR.textContent}"`);
+    if (!c.isHero && c.tail.innerHTML !== norm(tailText(st))) errs.push('tail');
+    if (!c.isHero && c.dates.textContent !== `${dm(st.cy.start)} – ${dm(lastDay(st.cy))}`) errs.push('dates ' + c.dates.textContent);
+    if (!!st.note !== (+getComputedStyle(c.note).opacity > 0.99)) errs.push('note opacity');
+    if (c.root.getAttribute('aria-label') !== sentence(c, st)) errs.push('TalkBack sentence');
+    if (c.root.querySelector('.content.copy')) errs.push('crossfade copy left');
+    if (rightEdge(F) > CW + 0.5) errs.push(`grid overflows ${f1(rightEdge(F))} > ${CW}`);
+    return errs;
+  }
+
+  // ---------- Phones (Section 2) ----------
+  const DOCK = on => `<nav class="dock" aria-label="Main"><span class="tab${on === 'home' ? ' on' : ''}">${ICON.home}Home</span><span class="add">${ICON.plus}Add</span><span class="tab${on === 'spends' ? ' on' : ''}">${ICON.spends}Spends</span></nav>`;
+  function homePhone(parent, dark, cfg, label) {
+    const wrap = document.createElement('div'); wrap.className = 'themed' + (dark ? ' dark' : '');
+    wrap.innerHTML = `<span class="which phonelabel" style="margin:0 0 10px">${label}${dark ? ' · dark' : ' · light'}</span>`;
+    const ph = document.createElement('div'); ph.className = 'phone' + (dark ? ' dark' : '');
+    ph.innerHTML = `<div class="sb"><span>9:41</span><span>▮▮ 82%</span></div><div class="top"><div class="wm">hisaab<i aria-hidden="true"></i></div><div class="right">Thu, 29 Oct<span class="well" aria-label="Settings">${ICON.gear}</span></div></div><div class="body"></div>${DOCK('home')}`;
+    wrap.appendChild(ph); parent.appendChild(wrap);
+    const body = ph.querySelector('.body');
+    const c = makeCard(body, cfg); render(c, ST.on9); staticCards.push(c);
+    body.insertAdjacentHTML('beforeend', `<div class="listhead"><span>Today<em>₹420</em></span><a>See all</a></div><div class="list">` +
+      [['food', 'Food', 'Chai &amp; samosa', '₹60'], ['travel', 'Travel', 'Auto to office', '₹120'], ['shop', 'Shopping', 'DMart', '₹240']].map(([i, n, t, a]) =>
+        `<div class="li"><span class="iw">${ICON[i]}</span><span class="tx"><b>${n}</b><span>${t}</span></span><span class="amt">${a}</span></div>`).join('') + '</div>');
+  }
+  function spendsPhone(parent, dark, label) {
+    const wrap = document.createElement('div'); wrap.className = 'themed' + (dark ? ' dark' : '');
+    wrap.innerHTML = `<span class="which phonelabel" style="margin:0 0 10px">${label}${dark ? ' · dark' : ' · light'}</span>`;
+    const ph = document.createElement('div'); ph.className = 'phone' + (dark ? ' dark' : '');
+    ph.innerHTML = `<div class="sb"><span>9:41</span><span>▮▮ 82%</span></div><div class="sphead"><span>Spends</span><span class="switch"><i>${ICON.prev}</i>October<i class="off">${ICON.next}</i></span></div><div class="body"></div>${DOCK('spends')}`;
+    wrap.appendChild(ph); parent.appendChild(wrap);
+    const body = ph.querySelector('.body');
+    const c = makeCard(body, { P: 'P2', E: 'E1k' }); render(c, ST.on9); staticCards.push(c);
+    body.insertAdjacentHTML('beforeend', `<div class="askai"><span class="aw">${ICON.ai}</span><span style="flex:1 1 0;min-width:0"><b>Ask an AI about October</b><span>You'll see exactly what it gets.</span></span>${ICON.next}</div>` +
+      '<div class="pace"><div class="ph"><span>Spent so far</span><b>₹27,570</b></div><svg width="280" height="120" viewBox="0 0 280 120" aria-hidden="true" style="display:block;margin-top:8px"><path d="M0 116H280" stroke="var(--hairline)" stroke-width="1.5"/><path d="M0 116L280 8" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round" fill="none"/><path d="M0 116L40 104L80 94L120 84L160 72L200 58" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/></svg></div>');
+  }
+
+  // ---------- Build ----------
+  function build() {
+    const ENC = [
+      { E: 'E1', title: 'E1 · Mini block, filled by what was spent', tag: 'As briefed',
+        is: '<b>One cell = one day; the grey bar is how much of that day\'s share was spent.</b> Over: a full cell with the hatch. No entry: an outlined empty cell with a small dot. ₹0: an empty idle cell.',
+        pros: ['Shape carries the amount (bar height), so it works without colour and in greyscale.', 'Over is a texture, lighter overall than a full bar, so the biggest day is not the blackest mark.', 'No entry and ₹0 look clearly different: a hollow box with a dot vs a plain idle cell.'],
+        cons: ['<b>The fill means two opposite things</b>: today\'s marigold is money <i>left</i> and gets shorter; every grey bar is money <i>spent</i> and got taller.', 'A ₹0 day is an idle cell, the same as a future day; only today\'s position tells them apart.', 'The heaviest bars are the biggest spends: a mild "bad day" reading.'],
+        kid: '"Tall grey means a lot was spent." Then: "so why does the yellow one get shorter when I spend?"' },
+      { E: 'E1k', title: 'E1k · Mini block, filled by what was kept', tag: 'Recommended',
+        is: '<b>One cell = one day\'s money; the grey bar is what was left at midnight.</b> Today\'s marigold drains and, at midnight, the same level cools to grey. Over: an empty cell with the hatch. ₹0: a full bar. No entry: as E1.',
+        pros: ['<b>One meaning for every cell</b>, the same as Day Blocks: a bar is money. Today becomes history at the same height.', 'A big day is a nearly <b>empty</b> cell, not a dark one, so a spend never leaves a black mark.', 'Over still reads by the hatch alone, and the hatch is already the app\'s "over" (BR-5).'],
+        cons: ['A ₹0 day is the fullest, darkest cell, so a run of them can look like a chain (streak risk; keep it wordless and still).', 'A day that used its whole share looks like a future day (idle); position tells them apart.', 'In dark, today (marigold) against a kept bar (<code>displayInk2</code>) is 1.40:1, hue only; the bold column date carries "today".'],
+        kid: '"Every bar is a day\'s money. The yellow one is today\'s. Grey is what was left." One rule, and it matches the hero.' },
+      { E: 'E2', title: 'E2 · A 4-step grey ramp, like GitHub', tag: 'Fails contrast',
+        is: '<b>One cell = one day, shaded by how much of its share went</b>: ₹0 is <code>blockIdle</code>, then four greys up to <code>displayInk2</code> by quarter. Over: idle with the hatch. No entry: as E1.',
+        pros: ['The most GitHub-like: instantly a "heatmap".', 'Calm from a distance; no shapes inside cells.'],
+        cons: ['<b>Contrast fails</b>: five tones from <code>blockIdle</code> to <code>displayInk2</code> step only <b>1.42:1</b> (light) and <b>1.43</b> (dark), under the 1.5 idle/step floor. Reaching 1.5 needs <code>ink</code> on top (1.85 per step), and then a big day is a black square.', '<b>Only lightness carries the amount</b>: no shape, so the level is colour-only. The words (TalkBack, the caption) and the hatch for over are all that carry meaning without it.', 'Needs four new greys per theme. In dark, "more spent" is <b>lighter</b>: a big day glows.'],
+        kid: '"Darker is more." But four greys side by side: "which one is darker?"' },
+      { E: 'E3', title: 'E3 · Dot size', tag: 'Readable',
+        is: '<b>One cell = one day; the dot\'s area is how much of the share went.</b> Over: a 1.5dp ring at full size. ₹0: no dot. No entry: an outlined cell with nothing in it.',
+        pros: ['Shape carries the amount, so it works without colour.', 'The ring for over is a clear, light mark: an empty full dot.', 'Echoes the hisaab• dot and mockup 19\'s dot ledger.'],
+        cons: ['Area is misjudged (a dot with twice the area looks ~1.5× bigger); small spends are sub-3dp specks.', 'In a 49 × 12dp cell the dot is at most 10dp, so the cell is mostly empty idle: the grid looks like a dotted ruler.', 'Today\'s drain (a level) and the past (a dot) are two different pictures.'],
+        kid: '"Big dot, lots spent; ring means too much." Fair, but small and medium dots blur.' },
+      { E: 'E4', title: 'E4 · Under, over or not logged', tag: 'Calmest',
+        is: '<b>One cell = one day, in three states</b>: under its share (idle fill, ₹0 included), over (hatched), not logged (outlined).',
+        pros: ['Calmest and least judging: most days look the same.', 'Nothing to learn but two marks.', 'Cheapest to paint.'],
+        cons: ['Throws away the amount: ₹100 and ₹1,800 look the same.', 'A past "under" day is identical to a future day.', '<b>Streak bait</b>: with over as the only mark, "a clean row" becomes the goal, the perfect week this app avoids.'],
+        kid: '"Lines mean too much, an empty box means you forgot." The easiest, and the most like a scorecard.' },
+    ];
+    const host1 = document.getElementById('encodings');
+    for (const m of ENC) {
+      const art = document.createElement('article'); art.className = 'opt'; art.id = m.E;
+      art.innerHTML = `<h3>${m.title} <span class="tag${m.tag === 'Recommended' ? '' : ' ghost'}">${m.tag}</span></h3><p class="dotis">${m.is}</p>
+        <div class="pc"><div><h4>Pros</h4><ul>${m.pros.map(p => `<li>${p}</li>`).join('')}</ul></div><div><h4>Cons</h4><ul>${m.cons.map(p => `<li>${p}</li>`).join('')}</ul></div><div><h4>To a 5-year-old</h4><ul><li>${m.kid}</li></ul></div></div><div class="row"></div>`;
+      host1.appendChild(art);
+      pair(art.querySelector('.row'), { P: 'P1', E: m.E }, ST.on16, '16 days · Thu 22 Oct', (sg, c) => {
+        const k = document.createElement('div'); k.className = 'key'; k.innerHTML = keyHTML(c); sg.appendChild(k);
+      });
+    }
+
+    const host2 = document.getElementById('placements');
+    const PL = [
+      { P: 'P1', title: 'P1 · The heatmap is the hero\'s picture', tag: 'Look back on Home',
+        is: 'The amount, then the grid, then the range line. The grid replaces the Day Blocks row; the caption keeps "9 days to payday".',
+        pros: ['The whole cycle at a glance: where you are in the month, and the payday cell.', 'Weeks group the days left (principle 50): "this week and next week" counts faster than 9 in a row.', 'One tap target, one TalkBack sentence (it adds a history summary).'],
+        cons: ['<b>Hero 375dp vs 293 (+82)</b>: under 3 Today rows show above the dock, against 4 with V1.', '<b>History on Home every morning</b>: three over days greet you before today\'s number. Inform-never-shame wants this on demand.', 'It is closest to the pace chart that D7 kept off Home.'] },
+      { P: 'P2', title: 'P2 · Hero keeps the dot ledger; the heatmap is "This cycle" on Spends', tag: 'Recommended',
+        is: 'Home stays mockup 19\'s V1. Spends opens with the grid in a plain surface card, then Ask AI, then the pace chart. (Home not shown: it is 19\'s V1, unchanged.)',
+        pros: ['Each screen answers one question: Home "how much today?", Spends "how did it go?".', 'The cycle switcher pages the grid back through earlier cycles: real GitHub-style history.', 'Spends has room for a three-word legend (Kept, Over, Not logged), which a 5-year-old needs.'],
+        cons: ['Pushes Ask AI below the fold\'s middle and conflicts with FR-SP-2 ("at the top").', 'Two today marks on Spends (the grid and the pace chart\'s marker), both marigold, both "today".', 'Owner\'s idea becomes a second-screen feature, not the hero.'] },
+      { P: 'P3', title: 'P3 · Hero as P1, but the past is collapsed', tag: 'Home, no history',
+        is: 'Only today\'s week (with its own past days) and the future weeks show; earlier weeks fade to 1dp <code>blockIdle</code> outlines.',
+        pros: ['Keeps the look-forward hero and the calendar\'s weeks; no old overs on Home.', 'The faded weeks still say "this much of the cycle is behind you".'],
+        cons: ['<b>Same +82dp as P1</b>, mostly to draw outlines: V1 says the same in 84dp.', 'The faded outline is close to "not logged" (a darker outline with a dot).', 'Today\'s week still shows Mon to Wed, so a little history stays.'] },
+    ];
+    for (const m of PL) {
+      const art = document.createElement('article'); art.className = 'opt'; art.id = m.P;
+      art.innerHTML = `<h3>${m.title} <span class="tag${m.tag === 'Recommended' ? '' : ' ghost'}">${m.tag}</span></h3><p class="dotis">${m.is}</p>
+        <div class="pc"><div><h4>Pros</h4><ul>${m.pros.map(p => `<li>${p}</li>`).join('')}</ul></div><div><h4>Cons</h4><ul>${m.cons.map(p => `<li>${p}</li>`).join('')}</ul></div></div><div class="row"></div>`;
+      host2.appendChild(art);
+      const row = art.querySelector('.row');
+      for (const dark of [false, true]) {
+        if (m.P === 'P2') spendsPhone(row, dark, 'Spends, 9 days'); else homePhone(row, dark, { P: m.P, E: 'E1k' }, 'Home, 9 days');
+      }
+    }
+
+    const host3 = document.getElementById('motion');
+    const cfg = { P: 'P2', E: 'E1k' };
+    const ver = document.createElement('div'); ver.className = 'ver'; ver.id = 'rec'; host3.appendChild(ver);
+    ver.innerHTML = '<h3>P2 + E1k · "This cycle" <span class="tag">Recommended</span></h3><p class="lede">One <code>role="img"</code> node with one sentence, no tap per cell (and none on the card in this proposal). The 7 rows never change; only the week count and today\'s place do.</p>';
+    const STATES = [
+      ['On track', 'Today\'s marigold is 77% full (₹1,430 of ₹1,850) inside the 1.5dp ink edge in light. Past bars are what each day kept; three hatched overs, two full ₹0 days, three hollow Sundays.', [['9 days · Thu 29 Oct', ST.on9], ['16 days · Thu 22 Oct', ST.on16], ['28 days · Sat 10 Oct', ST.on28]]],
+      ['Slow down and over today', 'Slow down: a marigold ring inside the ink edge, 22% left. Over today: the hatch in a <code>displayInk2</code> edge, and every future cell 93% tall inside a ghost outline (₹1,722 a day after).', [['Slow down · 9 days', ST.slow9], ['Over today · 9 days', ST.over9]]],
+      ['1 day left, and a new cycle', 'Fri 6 Nov: one future-free week, today, then the flag. Sat 7 Nov: the next cycle needs six week columns, so cells narrow to 40.8dp; the height stays 124dp.', [['1 day · Fri 6 Nov', LAST], ['New cycle · Sat 7 Nov', NEW]]],
+    ];
+    for (const [name, text, list] of STATES) {
+      const box = document.createElement('div'); box.className = 'state';
+      box.innerHTML = `<h4>${name}</h4><p>${text}</p><div class="row"></div>`;
+      ver.appendChild(box);
+      for (const [l, s] of list) pair(box.querySelector('.row'), cfg, s, l);
+    }
+    ver.insertAdjacentHTML('beforeend', '<h4 style="margin-top:28px" id="motionhead">Motion</h4>');
+    ['fill', 'spend', 'over', 'newday', 'grow', 'payday'].forEach((k, i) => demo(ver, cfg, k, `M${i + 1}`));
+  }
+
+  function replayAll() { demos.forEach(d => d.play()); }
+  document.getElementById('replayAll').addEventListener('click', replayAll);
+  window.__demos = demos;
+  window.__replayAll = replayAll;
+  window.__staticCheck = () => staticCards.flatMap((c, i) => check(c, c.st).map(e => `static ${c.cfg.P} ${c.cfg.E} ${c.st.D}d #${i}: ${e}`));
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { build(); window.__ready = true; replayAll(); });
+})();
+</script>
+</body>
+</html>

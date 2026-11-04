@@ -6,6 +6,7 @@ import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import 'cycle_state.dart';
 import 'range_forecast.dart';
+import 'week_day.dart';
 import 'yesterday_saving.dart';
 
 /// Today's answer to "how much can I safely spend?" for one cycle (SPEC BR-2 to BR-7).
@@ -22,6 +23,7 @@ final class CycleSummary extends Equatable {
     required this.earliestEntryDate,
     this.spentThisWeek = Money.zero,
     this.savedYesterday = const Option<YesterdaySaving>.none(),
+    this.week = const <WeekDay>[],
   });
 
   final PayCycle cycle;
@@ -51,6 +53,9 @@ final class CycleSummary extends Equatable {
   /// yesterday was in the previous cycle (BR-8).
   final Option<YesterdaySaving> savedYesterday;
 
+  /// Monday (or the cycle start, if later) to today, oldest first, each as it stood (BR-6a).
+  final List<WeekDay> week;
+
   /// `D`: days left including today (BR-2).
   int get daysLeft => cycle.daysLeftFrom(today);
 
@@ -67,5 +72,5 @@ final class CycleSummary extends Equatable {
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday];
+      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week];
 }

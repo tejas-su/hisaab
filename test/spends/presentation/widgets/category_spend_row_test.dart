@@ -71,6 +71,36 @@ void main() {
       expect(painter(tester).limitAt, isNull);
     });
 
+    testWidgets('under its limit: "₹1,000 left" sits beside the name, and the share stays', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pump(tester, _food(spent: 4000, limit: 5000), biggest: 9840);
+      expect(find.textContaining('₹1,000 left'), findsOneWidget);
+      expect(find.text('36%'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Food: 4,000 rupees, 36%, limit 5,000 rupees, 1,000 rupees left'),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('exactly at its limit: "₹0 left", with no hatch', (WidgetTester tester) async {
+      await pump(tester, _food(spent: 5000, limit: 5000), biggest: 9840);
+      expect(find.textContaining('₹0 left'), findsOneWidget);
+      expect(find.textContaining('past limit'), findsNothing);
+      expect(painter(tester).fill, closeTo(painter(tester).limitAt!, 1e-9));
+    });
+
+    testWidgets('a limit beyond the biggest bar is still said in words', (WidgetTester tester) async {
+      await pump(tester, _food(limit: 12000));
+      expect(find.textContaining('₹2,160 left'), findsOneWidget);
+    });
+
+    testWidgets('without a limit there are no limit words', (WidgetTester tester) async {
+      await pump(tester, _food());
+      expect(find.textContaining('left'), findsNothing);
+      expect(find.textContaining('past limit'), findsNothing);
+    });
+
     testWidgets('the category name is Regular row text (D68)', (WidgetTester tester) async {
       await pump(tester, _food());
       final TextStyle? name = tester.widget<Text>(find.text('Food')).style;

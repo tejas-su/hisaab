@@ -12,6 +12,7 @@ import 'package:expense_tracker/ledger/domain/entities/entry.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/range_forecast.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/ledger/domain/entities/week_day.dart';
 import 'package:expense_tracker/ledger/domain/entities/yesterday_saving.dart';
 import 'package:expense_tracker/ledger/domain/usecase/get_cycle_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -165,6 +166,98 @@ void main() {
     test('Got entries never count as spent', () async {
       addEntry(900, WorkedExample.today, kind: EntryKind.got);
       expect((await summary()).spentThisWeek, Money.fromMajor(420));
+    });
+  });
+
+  group('GetCycleSummary — week days as they stood (BR-6a)', () {
+    Future<Money> shareOn(CalendarDate day) async {
+      setToday(day);
+      return (await summary()).todayShare;
+    }
+
+    test('worked example, a Monday: the week is today alone, with its share and spending', () async {
+      expect((await summary()).week, <WeekDay>[
+        WeekDay(date: WorkedExample.today, spent: Money.fromMajor(420), share: Money.fromMajor(1850)),
+      ]);
+    });
+
+    test('each past day keeps the share it had on that day, and its own spending', () async {
+      addEntry(2310, const CalendarDate(2026, 10, 27));
+      addEntry(980, const CalendarDate(2026, 10, 28));
+      final List<Money> shares = <Money>[
+        await shareOn(const CalendarDate(2026, 10, 26)),
+        await shareOn(const CalendarDate(2026, 10, 27)),
+        await shareOn(const CalendarDate(2026, 10, 28)),
+      ];
+      setToday(const CalendarDate(2026, 10, 28));
+      final List<WeekDay> week = (await summary()).week;
+      expect(week.map((WeekDay d) => d.date), const <CalendarDate>[
+        CalendarDate(2026, 10, 26),
+        CalendarDate(2026, 10, 27),
+        CalendarDate(2026, 10, 28),
+      ]);
+      expect(week.map((WeekDay d) => d.share), shares);
+      expect(week.map((WeekDay d) => d.spent), <Money>[Money.fromMajor(420), Money.fromMajor(2310), Money.fromMajor(980)]);
+    });
+
+    test('the last day is today, matching the hero', () async {
+      setToday(const CalendarDate(2026, 10, 28));
+      final CycleSummary result = await summary();
+      expect(result.week.last, WeekDay(date: result.today, spent: result.spentToday, share: result.todayShare));
+    });
+
+    test('a bill posted after a past day was still due on it', () async {
+      final Money monday = await shareOn(WorkedExample.today);
+      setToday(const CalendarDate(2026, 10, 29));
+      addEntry(1200, const CalendarDate(2026, 10, 29), recurringId: WorkedExample.electricity.id);
+      recurring.rules = <RecurringRule>[
+        WorkedExample.salary,
+        WorkedExample.rent,
+        RecurringRule(
+          id: WorkedExample.electricity.id,
+          label: WorkedExample.electricity.label,
+          amount: WorkedExample.electricity.amount,
+          kind: WorkedExample.electricity.kind,
+          categoryId: WorkedExample.electricity.categoryId,
+          schedule: WorkedExample.electricity.schedule,
+          nextDue: const CalendarDate(2026, 11, 29),
+        ),
+      ];
+      expect((await summary()).week.first.share, monday);
+    });
+
+    test('money that came in after a past day was not part of its share', () async {
+      final Money monday = await shareOn(WorkedExample.today);
+      addEntry(900, const CalendarDate(2026, 10, 27), kind: EntryKind.got);
+      setToday(const CalendarDate(2026, 10, 28));
+      expect((await summary()).week.first.share, monday);
+    });
+
+    test('a back-dated entry changes that day and the days after it, not the days before', () async {
+      setToday(const CalendarDate(2026, 10, 28));
+      final List<WeekDay> before = (await summary()).week;
+      addEntry(600, const CalendarDate(2026, 10, 27));
+      final List<WeekDay> after = (await summary()).week;
+      expect(after[0], before[0]);
+      expect(after[1].spent, before[1].spent + Money.fromMajor(600));
+      expect(after[2].share, isNot(before[2].share));
+    });
+
+    test('a week across a month end runs Monday to today', () async {
+      setToday(const CalendarDate(2026, 11, 1));
+      expect((await summary()).week.map((WeekDay d) => d.date), <CalendarDate>[
+        for (int i = 0; i < 7; i++) const CalendarDate(2026, 10, 26).addDays(i),
+      ]);
+    });
+
+    test('a week that began in the last cycle starts at the cycle start', () async {
+      setToday(const CalendarDate(2026, 10, 4));
+      expect((await summary()).week.map((WeekDay d) => d.date), const <CalendarDate>[CalendarDate(2026, 10, 4)]);
+    });
+
+    test('entries dated after today are not in the week', () async {
+      addEntry(500, const CalendarDate(2026, 10, 27));
+      expect((await summary()).week.map((WeekDay d) => d.date), const <CalendarDate>[WorkedExample.today]);
     });
   });
 

@@ -14,6 +14,7 @@ import '../entities/cycle_summary.dart';
 import '../entities/entry.dart';
 import '../entities/entry_kind.dart';
 import '../entities/recurring_rule.dart';
+import '../entities/week_day.dart';
 import '../pay_rule_schedule.dart';
 import '../recurring_schedule.dart';
 import '../repository/budget_settings_repository.dart';
@@ -70,6 +71,7 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
                   yesterday: _trackedYesterday(firstLogged, today).flatMap(
                     (CalendarDate _) => _yesterday(day, today, entries, billsDue: billsDue),
                   ),
+                  week: _week(day, today, entries, billsDue: billsDue),
                 ),
               ),
         );
@@ -82,7 +84,7 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
 
   // why: entries are loaded from the cycle start, so a week begun last cycle counts this cycle's days only.
   static Money _spentThisWeek(List<Entry> entries, CalendarDate today) {
-    final CalendarDate monday = today.addDays(DateTime.monday - today.weekday);
+    final CalendarDate monday = _mondayOf(today);
     return _sum(
       entries
           .where((Entry e) => e.kind == EntryKind.spent && !e.date.isBefore(monday) && !e.date.isAfter(today))
@@ -90,19 +92,40 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
     );
   }
 
-  // why: rebuilds the day as it stood yesterday. Bills the engine posted today were still due
-  // then, and money that came in today hadn't arrived yet (BR-8).
   static Option<CycleInputs> _yesterday(_DayTotals day, CalendarDate today, List<Entry> entries, {required Money billsDue}) {
     final CalendarDate yesterday = today.addDays(-1);
     if (!day.cycle.contains(yesterday)) {
       return const Option<CycleInputs>.none();
     }
-    final Money postedToday = _sum(
-      entries.where((Entry e) => e.date == today && e.kind == EntryKind.spent && e.recurringId != null).map((Entry e) => e.amount),
-    );
-    final List<Entry> before = entries.where((Entry e) => !e.date.isAfter(yesterday)).toList();
-    return Option<CycleInputs>.of(day.inputs(yesterday, before, billsDue: billsDue + postedToday));
+    return Option<CycleInputs>.of(_asItStood(day, yesterday, entries, billsDue: billsDue));
   }
+
+  // why: a week begun last cycle starts at this cycle's start, as `_spentThisWeek` counts it (FR-HO-2).
+  static List<WeekDay> _week(_DayTotals day, CalendarDate today, List<Entry> entries, {required Money billsDue}) {
+    final CalendarDate monday = _mondayOf(today);
+    final CalendarDate first = monday.isBefore(day.cycle.start) ? day.cycle.start : monday;
+    return <WeekDay>[
+      for (CalendarDate date = first; !date.isAfter(today); date = date.addDays(1))
+        _weekDay(_asItStood(day, date, entries, billsDue: billsDue)),
+    ];
+  }
+
+  static WeekDay _weekDay(CycleInputs inputs) =>
+      WeekDay(date: inputs.today, spent: inputs.spentToday, share: SafeToSpend.shareOn(inputs));
+
+  // why: rebuilds [date] as it stood then, with the ledger as it is now. Bills the engine posted
+  // after [date] were still due on it, and money that came in after it hadn't arrived (BR-8, BR-6a).
+  static CycleInputs _asItStood(_DayTotals day, CalendarDate date, List<Entry> entries, {required Money billsDue}) {
+    final Money postedSince = _sum(
+      entries
+          .where((Entry e) => e.date.isAfter(date) && e.kind == EntryKind.spent && e.recurringId != null)
+          .map((Entry e) => e.amount),
+    );
+    final List<Entry> upTo = entries.where((Entry e) => !e.date.isAfter(date)).toList();
+    return day.inputs(date, upTo, billsDue: billsDue + postedSince);
+  }
+
+  static CalendarDate _mondayOf(CalendarDate day) => day.addDays(DateTime.monday - day.weekday);
 
   // why: BR-3 `B` covers occurrences after today only.
   static Iterable<Money> _billsAfter(RecurringRule rule, CalendarDate today, PayCycle cycle) {

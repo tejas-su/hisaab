@@ -32,6 +32,9 @@ abstract final class HisaabMotion {
   /// (D106). It plays once, never loops.
   static const Duration sheen = Duration(milliseconds: 1400);
 
+  /// A size change that only a curve can drive (`AnimatedSize`): the hero growing for its week
+  /// bars. It matches [standard]'s response.
+  static const Duration resize = Duration(milliseconds: 350);
   /// The only transition used when the system asks for reduced motion.
   static const Duration reducedCrossfade = Duration(milliseconds: 150);
 

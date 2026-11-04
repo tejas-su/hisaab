@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Day Blocks finishes (proposal)</title>
+<style>
+  /* Proposal: eight material finishes for the Day Blocks as built. Nothing here is decided or built.
+     Geometry is lib/core/widgets/day_blocks/day_blocks_layout.dart exactly: a 226dp row (280 inner − 10 gap − 44 flag column),
+     40dp tall, radius 8 (HisaabRadii.block), 6dp gaps (3dp above 16 blocks), and below a 6dp block only 7 blocks plus "+N".
+     Worked example (SPEC BR-4/6/7): today Mon 26 Oct 2026, payday Wed 4 Nov, D = 9, A = ₹1,850, ₹420 spent, hero ₹1,430. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 500; src: url(../../../assets/fonts/Mukta-Medium.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    /* HisaabColors.light (lib/core/design/hisaab_colors.dart) */
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --displaySheen: #FFFEFCB3;
+    --clear: #F1EBE400;
+    /* New tokens proposed here (see the token table) */
+    --signalDeep: #EBA002; --signalLift: #FEC675; --blockShade: #1616152E; --blockSide: #C5BCB2;
+    /* Role map, not a colour: the line that draws today's engraving (4) and the vessel wall (5) */
+    --todayLine: var(--displayEdge);
+    /* Mockup canvas only, not an app token */
+    --canvas: #DDD5CB;
+  }
+  .dark {
+    /* HisaabColors.dark */
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --displaySheen: #F2F1EC1A;
+    --clear: #13121000;
+    --signalDeep: #EBA002; --signalLift: #FEC675; --blockShade: #00000066; --blockSide: #332D25;
+    --todayLine: var(--blockIdle);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; padding: 0 24px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 16px/20px 'Mukta', sans-serif; margin: 0; }
+  p { margin: 0 0 8px; }
+  code { font-size: 0.92em; overflow-wrap: anywhere; }
+  .lede { color: var(--ink2); max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede b { color: var(--ink); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--bg); vertical-align: 3px; }
+
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 8px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 48px; cursor: pointer; }
+  .controls input { width: 20px; height: 20px; accent-color: var(--ink); }
+  button.btn { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 16px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+  button.btn:focus-visible, .seg button:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  select { font: 400 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
+
+  /* ---------- Grid of finishes: each cell is 344 wide at minimum, so a 320dp hero fits a 360dp page ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(344px, 1fr)); gap: 16px; margin-top: 16px; }
+  .fin { background: var(--bg); color: var(--ink); border-radius: 20px; padding: 16px 12px 14px; min-width: 0; }
+  .fin header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 0 8px; }
+  .fin header p { margin: 2px 0 0; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .seg { flex: none; display: inline-flex; padding: 2px; border-radius: 12px; background: var(--sunk); }
+  .seg button { font: 600 12px/16px 'Mukta', sans-serif; min-height: 40px; min-width: 48px; padding: 0 8px; border: 0; border-radius: 10px; background: none; color: var(--ink2); cursor: pointer; }
+  .seg button[aria-pressed=true] { background: var(--surface); color: var(--ink); }
+  .fin .heroWrap { display: flex; justify-content: center; margin-top: 12px; }
+  .fin footer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-top: 12px; padding: 0 8px; }
+  .fin footer .moment { flex: 1 1 180px; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .fin footer .moment b { color: var(--ink); font-weight: 600; }
+  .fin .status { padding: 6px 8px 0; font: 600 12px/16px 'Mukta', sans-serif; color: var(--ink2); min-height: 22px; }
+  .fin .status .tk { font-weight: 400; }
+  .fin .status .tk.on { font-weight: 600; color: var(--ink); }
+
+  /* ---------- Hero card (etched, raised) as in mockup 17 and hero_card.dart ---------- */
+  .hero { position: relative; width: 320px; flex: none; border-radius: 28px; background: var(--display); color: var(--displayInk);
+    overflow: hidden; isolation: isolate; box-shadow: 0 10px 28px -12px var(--displayShadow); cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; transition: transform 250ms var(--spring, ease-out); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero.pressed { transform: scale(0.97); }
+  .hero:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  .etch path { fill: none; stroke: var(--displayEtch); stroke-width: 0.6; }
+  .grain { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+  .frame rect { fill: none; stroke-width: 0.6; }
+  .frame .k1 { x: 6px; y: 6px; width: calc(100% - 12px); height: calc(100% - 12px); rx: 22px; ry: 22px; stroke: var(--displayEtch); }
+  .frame .k2 { x: 10px; y: 10px; width: calc(100% - 20px); height: calc(100% - 20px); rx: 18px; ry: 18px; stroke: var(--hairline); stroke-dasharray: 4 3; }
+  .sheen { position: absolute; inset: -40% -60%; z-index: 3; pointer-events: none; transform: translateX(-70%);
+    background: linear-gradient(105deg, var(--clear) 42%, var(--displaySheen) 50%, var(--clear) 58%); }
+  .content { position: relative; z-index: 2; padding: 24px 20px; }
+  .content.copy { position: absolute; inset: 0 0 auto 0; pointer-events: none; }
+  .title { font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .f8 .title { letter-spacing: 0.06em; } /* 8 · new type token: titleTracked */
+  .amtrow { margin-top: 8px; display: flex; align-items: flex-end; }
+  .amount { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 76px; line-height: 76px; height: 76px; font-stretch: 85%;
+    font-variation-settings: 'wdth' 85; letter-spacing: -0.76px; font-feature-settings: 'tnum'; color: var(--displayInk); white-space: nowrap; display: flex; }
+  /* 6 · odometer: each digit is a drum in a 76dp window; the mask darkens nothing, it fades the glyph ends like a curved drum */
+  .drum { display: inline-block; height: 76px; overflow: hidden; position: relative;
+    -webkit-mask-image: linear-gradient(#0008, #000 22%, #000 78%, #0008); mask-image: linear-gradient(#0008, #000 22%, #000 78%, #0008); }
+  .drum > span { display: flex; flex-direction: column; will-change: transform; }
+  .drum > span > i { font-style: normal; height: 76px; }
+  .dayrow { margin-top: 24px; display: flex; align-items: flex-end; gap: 10px; }
+  .units { position: relative; flex: none; width: 226px; height: 40px; }
+  .units > svg { position: absolute; left: 0; top: 0; width: 226px; height: 40px; overflow: visible; }
+  .more { font: 600 12px/14px 'Mukta', sans-serif; fill: var(--displayInk2); }
+  .flag { width: 44px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--displayInk); }
+  .flag span { font: 600 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); white-space: nowrap; }
+  .caps { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; padding-right: 54px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .divider { margin-top: 20px; height: 1px; background: var(--displayEtch); }
+  .range { margin-top: 16px; display: flex; gap: 8px; align-items: center; font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .range svg { flex: none; color: var(--displayInk); }
+  .range b { font-weight: 600; color: var(--displayInk); font-feature-settings: 'tnum'; }
+
+  /* ---------- Bottom tables ---------- */
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; background: var(--surface); border-radius: 20px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-weight: 600; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--hairline); }
+  .tables { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+
+  @media (max-width: 480px) {
+    body { padding: 0 8px 64px; }
+    h1 { font-size: 24px; line-height: 28px; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    table, tbody, tr, td, th { display: block; width: 100%; }
+    table tr.head { display: none; }
+    td[data-h]::before { content: attr(data-h); display: block; font-weight: 600; color: var(--ink); }
+    tr { border-bottom: 2px solid var(--hairline); }
+    td { border-bottom: 0; padding: 6px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <label>Theme <select id="theme" aria-label="Theme for every card"><option value="">Per card</option><option value="light">All light</option><option value="dark">All dark</option></select></label>
+  <label>Days <select id="days" aria-label="Days to payday"><option value="9">9</option><option value="25">25 (narrowest, 6.2dp)</option><option value="28">28 (7 + "+21")</option></select></label>
+  <button class="btn" id="replayAll">Replay all</button>
+</div>
+
+<h1>Day Blocks finishes <span class="tag">Proposal, not agreed in SPEC</span></h1>
+<p class="lede">The blocks as built, with the same count, widths, gaps, heights and radius 8; <b>only the material changes</b>, and each finish gets one signature moment. The aim is <b>calm and premium</b>: a watch dial, not a toy. Marigold sits only on today, inside the 1.5dp ink <code>displayEdge</code> in light. Nothing is red or green. Springs are critically damped; the two settles that dip once (5 and 6) bend D44 and are marked. Each card opens in its on-track look. <b>Replay</b> plays its moment; with Reduce motion on, the same Replay is a 150ms crossfade to the same end state. Press a card for the 0.97 sink.</p>
+
+<div class="grid" id="grid"></div>
+
+<h2>Compare</h2>
+<p class="lede">At 28 days the built layout collapses to 7 blocks (about 23dp wide) plus "+21", so 28 is easy. <b>The real stress case is 24 to 25 days</b>, where every block shows at 6.2 to 6.5dp with 3dp gaps; set Days to 25 to see it.</p>
+<div class="tables">
+<table class="cmp">
+  <tr class="head"><th>Finish</th><th>Premium feel it aims for</th><th>Flutter paint cost</th><th>Legible at 28 (and 25) days?</th><th>New tokens</th></tr>
+  <tr><td data-h="Finish"><b>1 · Inset wells</b></td><td data-h="Feel">Applied indices on a watch dial; today is the one raised index</td><td data-h="Paint cost">Low to medium: one linear gradient per block, one <code>MaskFilter.blur</code> shadow on today only</td><td data-h="Legible">Yes. At 6dp the well shade reads as a darker cap; today stays raised</td><td data-h="Tokens"><code>blockShade</code></td></tr>
+  <tr><td data-h="Finish"><b>2 · Lit from within</b></td><td data-h="Feel">A lume pip, or an Apple Card glow held inside the glass</td><td data-h="Paint cost">Low: three gradients and one radial, today only</td><td data-h="Legible">Yes; only today changes, and at 6dp the glow is just a lighter top</td><td data-h="Tokens"><code>signalDeep</code>, <code>signalLift</code></td></tr>
+  <tr><td data-h="Finish"><b>3 · Ceramic</b></td><td data-h="Feel">A ceramic bezel: hard glaze, soft contact shadow</td><td data-h="Paint cost">Medium: a gradient and a blurred shadow per block; the glint repaints the whole row on every sheen frame (cache the shadows in a <code>Picture</code>)</td><td data-h="Legible">Partly. At 3dp gaps the contact shadows join into one band</td><td data-h="Tokens"><code>blockShade</code></td></tr>
+  <tr><td data-h="Finish"><b>4 · Engraved</b></td><td data-h="Feel">Engine-turned plate; the days are cut into the card like the guilloché</td><td data-h="Paint cost">Low: strokes only; the draw-in is <code>PathMetric.extractPath</code></td><td data-h="Legible">Weakest. A 1dp line at 1.53:1 says less than a fill; the inner line drops below 12dp wide</td><td data-h="Tokens">None</td></tr>
+  <tr><td data-h="Finish"><b>5 · Liquid</b></td><td data-h="Feel">A lab vessel or a fuel gauge; physical, but only in today</td><td data-h="Paint cost">Low: one cubic path and one streak, today only</td><td data-h="Legible">Yes for the row; the meniscus vanishes under about 10dp wide</td><td data-h="Tokens">Motion: <code>meniscus</code> settle (bends D44)</td></tr>
+  <tr><td data-h="Finish"><b>6 · Mechanical counter</b></td><td data-h="Feel">A chronograph totaliser: the number is a part, and it clicks</td><td data-h="Paint cost">Medium: a <code>ClipRect</code> + <code>Transform</code> per digit, a <code>ShaderMask</code> for the drum; blocks get one gradient each</td><td data-h="Legible">Yes; the bevel is 1dp and adds nothing at 6dp</td><td data-h="Tokens"><code>blockShade</code>; motion: <code>detent</code> (bends D44)</td></tr>
+  <tr><td data-h="Finish"><b>7 · Depth stack</b></td><td data-h="Feel">Stacked chips or tiles on a desk; tactile and present</td><td data-h="Paint cost">Medium to high: an extra side RRect and a blurred shadow per block, and the new-day slide animates every block</td><td data-h="Legible">No at 25 days: sides and long shadows smear across 3dp gaps. Fine at 9 and at the collapsed 28</td><td data-h="Tokens"><code>blockSide</code>, <code>blockShade</code>, <code>signalDeep</code></td></tr>
+  <tr><td data-h="Finish"><b>8 · Quiet luxury</b></td><td data-h="Feel">A Dieter Rams or Grand Seiko dial: almost nothing, done precisely</td><td data-h="Paint cost">Low: one 0.5dp stroke per block and two gradients on today</td><td data-h="Legible">Yes; the keyline drops below 12dp wide, leaving today's block as built</td><td data-h="Tokens"><code>signalDeep</code>, <code>signalLift</code>; type: <code>titleTracked</code>; motion: <code>sweep</code></td></tr>
+</table>
+
+<table>
+  <tr class="head"><th>Token</th><th>Light</th><th>Dark</th><th>Used for</th></tr>
+  <tr><td data-h="Token"><code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEtch</code>, <code>hairline</code>, <code>displayShadow</code>, <code>clear</code></td><td data-h="Light" colspan="2">As the hero</td><td data-h="Used for">Card, amount, captions, guilloché, frame, divider; 4's floor (<code>displayEtch</code>) and inner line (<code>hairline</code>); 8's keyline (<code>displayEtch</code>)</td></tr>
+  <tr><td data-h="Token"><code>blockIdle</code></td><td data-h="Light"><span class="sw" style="background:#D7CFC5"></span>#D7CFC5 (1.53:1)</td><td data-h="Dark"><span class="sw" style="background:#413D38"></span>#413D38 (1.53:1)</td><td data-h="Used for">Every block body; 4's engraved outline; 5's vessel wall in dark</td></tr>
+  <tr><td data-h="Token"><code>signal</code></td><td data-h="Light" colspan="2"><span class="sw" style="background:#FFB020"></span>#FFB020, OKLCH 0.813 0.165 75.0</td><td data-h="Used for">Today's level; the 50% trail. Today only</td></tr>
+  <tr><td data-h="Token"><code>displayEdge</code></td><td data-h="Light">#161615, 1.5dp</td><td data-h="Dark">none</td><td data-h="Used for">Around today in light; 4's drawn line in light</td></tr>
+  <tr><td data-h="Token"><code>displaySheen</code></td><td data-h="Light">#FFFEFC at 70%</td><td data-h="Dark">#F2F1EC at 10%</td><td data-h="Used for">The sheen; reused for block highlights (1, 2, 3, 5, 6)</td></tr>
+  <tr><td data-h="Token">New token: <code>signalDeep</code></td><td data-h="Light" colspan="2"><span class="sw" style="background:#EBA002"></span>#EBA002, OKLCH 0.760 0.160 75.3 (max in-gamut chroma at that L)</td><td data-h="Used for">The base of today's gradient (2, 8), today's side (7)</td></tr>
+  <tr><td data-h="Token">New token: <code>signalLift</code></td><td data-h="Light" colspan="2"><span class="sw" style="background:#FEC675"></span>#FEC675, OKLCH 0.860 0.118 75.3</td><td data-h="Used for">The top of today's glow (2, 8)</td></tr>
+  <tr><td data-h="Token">New token: <code>blockShade</code></td><td data-h="Light">#161615 at 18% (the <code>displayShadow</code> value)</td><td data-h="Dark">#000000 at 40%</td><td data-h="Used for">Well shade (1), contact and drop shadows (1, 3, 7), bevel (6). Dark needs it because <code>displayShadow</code> is clear there</td></tr>
+  <tr><td data-h="Token">New token: <code>blockSide</code></td><td data-h="Light"><span class="sw" style="background:#C5BCB2"></span>#C5BCB2, L 0.800</td><td data-h="Dark"><span class="sw" style="background:#332D25"></span>#332D25, L 0.300</td><td data-h="Used for">7's extruded side, one step darker than <code>blockIdle</code> (L 0.858 / 0.362)</td></tr>
+  <tr><td data-h="Token">Type</td><td data-h="Light" colspan="2">Anek Latin 600 76 tnum (amount); Mukta 15, 12; new <code>titleTracked</code>: Mukta 15 at +0.06em (8)</td><td data-h="Used for">As the hero</td></tr>
+  <tr><td data-h="Token">Space and shape</td><td data-h="Light" colspan="2">Card 320, padding 24/20, radius 28; row 226 × 40, gap 6 (3 above 16), radius 8; flag 44, gap 10; 24 / 6 / 20 / 16 vertical</td><td data-h="Used for">Unchanged from the build</td></tr>
+  <tr><td data-h="Token">Motion</td><td data-h="Light" colspan="2">snap 250 · standard 350 · calm 550 (damping 1.0) · trail hold 500 · crossfade 150 · sheen 1,050 after 350 · new <code>sweep</code> 1,600 (8) · new <code>detent</code> 160 per step, damping 0.6 (6) · new <code>meniscus</code> damping 0.55, 300ms period (5)</td><td data-h="Used for">The moments; 5 and 6 settle past their mark once (bend D44)</td></tr>
+</table>
+</div>
+
+<script>
+(() => {
+  const UW = 226, H = 40, R = 8, A = 1850, F0 = 1430 / A, F1 = 1130 / A;
+
+  // ---------- Motion tokens: critically damped spring, ω = 2π, normalised to land at 1 ----------
+  const W2 = 2 * Math.PI, SEND = 1 - (1 + W2) * Math.exp(-W2);
+  const spring = p => (p >= 1 ? 1 : p <= 0 ? 0 : (1 - (1 + W2 * p) * Math.exp(-W2 * p)) / SEND);
+  if (CSS.supports('transition-timing-function', 'linear(0, 1)')) {
+    const pts = []; for (let i = 0; i <= 40; i++) pts.push(spring(i / 40).toFixed(4));
+    document.documentElement.style.setProperty('--spring', 'linear(' + pts.join(', ') + ')');
+  }
+  // One settle past the mark, then still (bends D44): an underdamped step, damping z, forced to 1 at the end.
+  const settle = (z, cycles) => p => {
+    if (p <= 0) return 0; if (p >= 1) return 1;
+    const wn = 2 * Math.PI * cycles, wd = wn * Math.sqrt(1 - z * z);
+    return 1 - Math.exp(-z * wn * p) * (Math.cos(wd * p) + (z / Math.sqrt(1 - z * z)) * Math.sin(wd * p));
+  };
+  const detentE = settle(0.6, 1.6);
+  const sheenE = p => { p = clamp(p, 0, 1); return p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; };
+  // `sweep`: nearly constant speed, like a sweep hand, with soft ends.
+  const sweepE = p => { p = clamp(p, 0, 1); return p - 0.35 * Math.sin(2 * Math.PI * p) / (2 * Math.PI); };
+  const seg = (t, start, ms) => clamp((t - start) / ms, 0, 1);
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const n2 = v => +(+v).toFixed(2);
+
+  const reduceBox = document.getElementById('reduce');
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  reduceBox.checked = mq.matches;
+  mq.addEventListener('change', e => { reduceBox.checked = e.matches; });
+  const reduced = () => reduceBox.checked;
+
+  // ---------- Money: en_IN, whole rupees ----------
+  const nf = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+  const rupee = v => '₹' + nf.format(Math.max(0, Math.round(v)));
+
+  // ---------- Glyph stand-ins (the app uses Hugeicons) ----------
+  const svgI = (d, sw = 1.8) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICON = { check: svgI('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>'), flag: svgI('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', 1.6) };
+
+  // ---------- Etch: guilloché rosette and grain (as mockup 17) ----------
+  let rosette = '';
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5; let d = '';
+    for (let i = 0; i <= 360; i++) {
+      const t = (i / 360) * Math.PI * 2, r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(1) + ' ' + (r * Math.sin(t)).toFixed(1);
+    }
+    rosette += `<path d="${d}Z"/>`;
+  }
+  const ETCH = `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${rosette}</svg>`;
+  const grainCache = {};
+  function grain(host) {
+    const colour = getComputedStyle(host).getPropertyValue('--displayEtch').trim();
+    if (!grainCache[colour]) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+      const g = cv.getContext('2d'); g.fillStyle = colour;
+      let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 240; i++) g.fillRect(Math.floor(r() * 120), Math.floor(r() * 120), 1, 1);
+      grainCache[colour] = `url(${cv.toDataURL()})`;
+    }
+    return grainCache[colour];
+  }
+
+  // ---------- Layout: a port of DayBlocksLayout.of ----------
+  const measureCtx = document.createElement('canvas').getContext('2d');
+  function rowLayout(count) {
+    const gap = count <= 16 ? 6 : 3, bw = (UW - gap * (count - 1)) / count;
+    if (bw >= 6) return { blocks: Array.from({ length: count }, (_, i) => ({ x: i * (bw + gap), w: bw })), hidden: 0 };
+    measureCtx.font = '600 12px Mukta';
+    const label = `+${count - 7}`, lw = measureCtx.measureText(label).width, vw = (UW - lw - 6 * 7) / 7;
+    const blocks = Array.from({ length: 7 }, (_, i) => ({ x: i * (vw + 6), w: vw }));
+    return { blocks, hidden: count - 7, label, labelX: 6 * (vw + 6) + vw + 6 };
+  }
+  function rr(x, y, w, h, r = R) {
+    if (w <= 0.2 || h <= 0.2) return '';
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    const [X, Y, W, Hh, Rr] = [x, y, w, h, r].map(n2);
+    return `M${n2(X + Rr)} ${Y}H${n2(X + W - Rr)}A${Rr} ${Rr} 0 0 1 ${n2(X + W)} ${n2(Y + Rr)}V${n2(Y + Hh - Rr)}A${Rr} ${Rr} 0 0 1 ${n2(X + W - Rr)} ${n2(Y + Hh)}H${n2(X + Rr)}A${Rr} ${Rr} 0 0 1 ${X} ${n2(Y + Hh - Rr)}V${n2(Y + Rr)}A${Rr} ${Rr} 0 0 1 ${n2(X + Rr)} ${Y}Z`;
+  }
+  const inset = (b, d, y = 0, h = H) => rr(b.x + d, y + d, b.w - 2 * d, h - 2 * d, R - d);
+  const st = (prop, v, op) => `style="${prop}:var(--${v})${op !== undefined ? `;${prop === 'stop-color' ? 'stop-opacity' : 'opacity'}:${n2(op)}` : ''}"`;
+  const fillP = (d, v, op) => d ? `<path d="${d}" ${st('fill', v, op)}/>` : '';
+  const strokeP = (d, v, w, extra = '') => d ? `<path d="${d}" fill="none" style="stroke:var(--${v});stroke-width:${w}" ${extra}/>` : '';
+  const vgrad = (id, stops) => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map(([o, v, op]) => `<stop offset="${o}" ${st('stop-color', v, op)}/>`).join('')}</linearGradient>`;
+  const levelRect = (b, f) => `<rect x="${n2(b.x)}" y="${n2(H - H * f)}" width="${n2(b.w)}" height="${n2(H * f)}"`;
+  const edge = b => strokeP(inset(b, 0.75), 'displayEdge', 1.5);
+  // Today's level with the D91 trail at 50%, clipped to today's shape.
+  function level(c, b, p, colour = 'signal') {
+    let s = `<g clip-path="url(#tc${c.id})">`;
+    if (p.trail > p.fill + 0.001) s += levelRect(b, p.trail) + ` ${st('fill', 'signal', 0.5)}/>`;
+    if (p.fill > 0) s += levelRect(b, p.fill) + ` ${st('fill', colour)}/>`;
+    return s + '</g>';
+  }
+  const todayClip = (c, b) => `<clipPath id="tc${c.id}"><path d="${rr(b.x, 0, b.w, H)}"/></clipPath>`;
+  const more = lay => lay.hidden ? `<text class="more" x="${n2(lay.labelX)}" y="${H / 2 + 4}">${lay.label}</text>` : '';
+
+  // ---------- The eight finishes: draw(c, p) returns the row's SVG ----------
+  const FIN = {};
+
+  // 1 · Inset wells
+  FIN[1] = {
+    name: 'Inset wells', desc: 'Each day is a recessed index on a dial; future days are matte, set in. Today is raised out of its well.',
+    moment: 'Card appears', momentText: 'Today <b>rises out of its well</b> on <b>calm</b> (the shade lifts, its shadow grows), then fills to ₹1,430 as the number counts up.',
+    dur: 1000,
+    at: (t, D) => { const r = spring(seg(t, 0, 550)), f = spring(seg(t, 300, 550)); return { ...rest(D), rise: r, fill: F0 * f, amount: 1430 * f }; },
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks, r = p.rise;
+      let s = `<defs>${vgrad('w' + id, [[0, 'blockShade', 1], [0.4, 'blockShade', 0]])}${vgrad('h' + id, [[0, 'displaySheen'], [0.45, 'displaySheen', 0]])}
+        <filter id="d${id}" x="-50%" y="-30%" width="200%" height="170%"><feDropShadow dx="0" dy="${n2(1.5 * r)}" stdDeviation="${n2(0.4 + 1.1 * r)}" style="flood-color:var(--blockShade);flood-opacity:${n2(r)}"/></filter>${todayClip(c, t0)}</defs>`;
+      const well = b => fillP(rr(b.x, 0, b.w, H), 'blockIdle') + `<path d="${rr(b.x, 0, b.w, H)}" fill="url(#w${id})"/>`;
+      later.forEach(b => { s += well(b); });
+      s += well(t0);
+      const sc = 0.92 + 0.08 * r, cx = t0.x + t0.w / 2;
+      s += `<g transform="translate(${n2(cx)} ${n2(H + 1.5 * (1 - r))}) scale(${n2(sc)}) translate(${n2(-cx)} ${-H})"><g filter="url(#d${id})">${fillP(rr(t0.x, 0, t0.w, H), 'blockIdle')}${level(c, t0, p)}</g>`;
+      s += `<path d="${rr(t0.x, 0, t0.w, H)}" fill="url(#h${id})" style="opacity:${n2(r)}"/>`;
+      s += `<path d="${rr(t0.x, 0, t0.w, H)}" fill="url(#w${id})" style="opacity:${n2(1 - r)}"/>${edge(t0)}</g>`;
+      return s + more(lay);
+    },
+  };
+
+  // 2 · Lit from within
+  FIN[2] = {
+    name: 'Lit from within', desc: 'Today glows softly from inside: deeper marigold at the base, lighter at the top, a faint inner highlight. Others are matte.',
+    moment: 'A ₹300 spend', momentText: 'The level drops on <b>standard</b> with the number; <b>the inner light dims a little and settles back</b> on <b>calm</b>; the 50% trail holds 500ms, then drains.',
+    dur: 1100, spend: true,
+    at: (t, D) => {
+      const e = spring(seg(t, 0, 350)), back = spring(seg(t, 350, 550)), tr = spring(seg(t, 500, 550));
+      return { ...rest(D), fill: lerp(F0, F1, e), trail: t <= 0 ? 0 : lerp(F0, F1, tr), amount: lerp(1430, 1130, e), glow: 1 - 0.4 * e + 0.4 * back, range: spendRange(D) };
+    },
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks, g = p.glow, y = H - H * p.fill;
+      let s = `<defs>${vgrad('lb' + id, [[0.45, 'signalDeep', 0], [1, 'signalDeep', 1]])}${vgrad('lt' + id, [[0, 'signalLift', 0.9 * g], [0.6, 'signalLift', 0]])}
+        <radialGradient id="lc${id}" cx="0.5" cy="0.62" r="0.55"><stop offset="0" ${st('stop-color', 'signalLift', 0.55 * g)}/><stop offset="1" ${st('stop-color', 'signalLift', 0)}/></radialGradient>${todayClip(c, t0)}</defs>`;
+      later.forEach(b => { s += fillP(rr(b.x, 0, b.w, H), 'blockIdle'); });
+      s += fillP(rr(t0.x, 0, t0.w, H), 'blockIdle') + level(c, t0, p);
+      if (p.fill > 0) {
+        s += `<g clip-path="url(#tc${id})">${levelRect(t0, p.fill)} fill="url(#lb${id})"/>${levelRect(t0, p.fill)} fill="url(#lt${id})"/>${levelRect(t0, p.fill)} fill="url(#lc${id})"/>`;
+        s += `<path d="M${n2(t0.x + 3)} ${n2(y + 1.2)}H${n2(t0.x + t0.w - 3)}" style="stroke:var(--displaySheen);stroke-width:1;opacity:${n2(g)}" stroke-linecap="round"/></g>`;
+      }
+      return s + edge(t0) + more(lay);
+    },
+  };
+
+  // 3 · Ceramic
+  FIN[3] = {
+    name: 'Ceramic', desc: 'A glazed top highlight and a soft contact shadow under every block, like a ceramic bezel.',
+    moment: 'The glint', momentText: 'The card\'s sheen crosses once (1,050ms after 350) and <b>catches each block\'s glaze in turn</b>, left to right.',
+    dur: 1400, sheen: true,
+    at: (t, D) => ({ ...rest(D), sheen: sheenE(seg(t, 350, 1050)) }),
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks;
+      // The sheen's band centre, in row coordinates (card 320, sheen layer 220% wide, row starts 20dp in).
+      const sx = p.sheen == null ? -999 : 160 + (-0.7 + 1.4 * p.sheen) * 704 - 20;
+      let s = `<defs>${vgrad('g' + id, [[0, 'displaySheen', 0.95], [0.34, 'displaySheen', 0]])}<filter id="b${id}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="1.1"/></filter>${todayClip(c, t0)}</defs>`;
+      lay.blocks.forEach(b => { s += `<ellipse cx="${n2(b.x + b.w / 2)}" cy="${H - 0.5}" rx="${n2(Math.max(1, b.w / 2 - 1))}" ry="1.8" ${st('fill', 'blockShade')} filter="url(#b${id})"/>`; });
+      const glaze = b => {
+        const gl = Math.exp(-Math.pow((b.x + b.w / 2 - sx) / 12, 2));
+        return `<path d="${rr(b.x, 0, b.w, H)}" fill="url(#g${id})"/>` + (gl > 0.01 ? fillP(rr(b.x + 2.5, 2, b.w - 5, Math.min(9, H / 4), 3), 'displaySheen', gl) : '');
+      };
+      later.forEach(b => { s += fillP(rr(b.x, 0, b.w, H), 'blockIdle') + glaze(b); });
+      s += fillP(rr(t0.x, 0, t0.w, H), 'blockIdle') + level(c, t0, p) + glaze(t0) + edge(t0);
+      return s + more(lay);
+    },
+  };
+
+  // 4 · Engraved
+  FIN[4] = {
+    name: 'Engraved', desc: 'Future days are cut into the card in the guilloché\'s line language: a 1dp groove, a fine inner line. Today is filled.',
+    moment: 'Card appears', momentText: 'Today\'s outline <b>is engraved</b> (the inner line follows 150ms behind), then <b>marigold pours in</b> on <b>calm</b> as the number counts up.',
+    dur: 1250,
+    at: (t, D) => { const f = spring(seg(t, 650, 550)); return { ...rest(D), draw: sheenE(seg(t, 0, 600)), draw2: sheenE(seg(t, 150, 600)), body: seg(t, 550, 150), fill: F0 * f, amount: 1430 * f }; },
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks;
+      let s = `<defs>${todayClip(c, t0)}</defs>`;
+      later.forEach(b => {
+        s += `<path d="${inset(b, 0.5)}" style="fill:var(--displayEtch);stroke:var(--blockIdle);stroke-width:1"/>`;
+        if (b.w >= 12) s += strokeP(inset(b, 2.5), 'hairline', 0.6);
+      });
+      s += fillP(rr(t0.x, 0, t0.w, H), 'blockIdle', p.body);
+      if (t0.w >= 12) s += strokeP(inset(t0, 2.5), 'hairline', 0.6, `pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="${n2(1 - p.draw2)}"`);
+      s += level(c, t0, p);
+      s += strokeP(inset(t0, 0.75), 'todayLine', 1.5, `pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="${n2(1 - p.draw)}"`);
+      return s + more(lay);
+    },
+  };
+
+  // 5 · Liquid with meniscus
+  FIN[5] = {
+    name: 'Liquid', desc: 'Today is a clear vessel with a glass streak; the marigold has a tiny curved meniscus. Others are matte.',
+    moment: 'A ₹300 spend', momentText: 'The level drains on <b>standard</b> with the number; <b>the meniscus deepens, then settles once</b> (one small dip, never a loop: bends D44); the 50% trail holds, then drains.',
+    dur: 1300, spend: true,
+    at: (t, D) => {
+      const e = spring(seg(t, 0, 350)), tr = spring(seg(t, 500, 550));
+      const s = (t - 350) / 1000, damped = s <= 0 ? e : Math.exp(-0.55 * 20.9 * s) * Math.cos(17.5 * s);
+      return { ...rest(D), fill: lerp(F0, F1, e), trail: t <= 0 ? 0 : lerp(F0, F1, tr), amount: lerp(1430, 1130, e), men: t >= 1300 ? 1.2 : 1.2 + 2 * damped, range: spendRange(D) };
+    },
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks, x = t0.x, w = t0.w, y0 = H - H * p.fill, m = w >= 10 ? p.men : 0;
+      let s = `<defs>${todayClip(c, t0)}</defs>`;
+      later.forEach(b => { s += fillP(rr(b.x, 0, b.w, H), 'blockIdle'); });
+      s += fillP(rr(x, 0, w, H), 'displayEtch');
+      s += `<g clip-path="url(#tc${id})">`;
+      if (p.trail > p.fill + 0.001) s += levelRect(t0, p.trail) + ` ${st('fill', 'signal', 0.5)}/>`;
+      if (p.fill > 0) s += `<path d="M${n2(x)} ${n2(y0 - m)}C${n2(x + w * 0.3)} ${n2(y0 + m * 0.35)} ${n2(x + w * 0.7)} ${n2(y0 + m * 0.35)} ${n2(x + w)} ${n2(y0 - m)}V${H}H${n2(x)}Z" ${st('fill', 'signal')}/>`;
+      s += '</g>' + fillP(rr(x + 3, 4, 1.6, H - 8, 0.8), 'displaySheen');
+      return s + strokeP(inset(t0, 0.75), 'todayLine', 1.5) + more(lay);
+    },
+  };
+
+  // 6 · Mechanical counter
+  FIN[6] = {
+    name: 'Mechanical counter', desc: 'The amount is an odometer on drums with faint drum shading; each block has a 1dp machined bevel.',
+    moment: 'A ₹300 spend', momentText: 'The level steps down in <b>three detents</b> of ₹100, 160ms apart; each clicks (<code>selectionClick</code>) and settles once (bends D44); the hundreds drum rolls 4, 3, 2, 1. The 50% trail drains after.',
+    dur: 1200, spend: true, odometer: true,
+    at: (t, D) => {
+      let k = 0, ticks = 0;
+      for (let i = 0; i < 3; i++) { if (t >= i * 160 && t > 0) ticks++; k += detentE(seg(t, i * 160, 160)); }
+      const tr = spring(seg(t, 600, 550));
+      return { ...rest(D), fill: F0 - k * 100 / A, trail: t <= 0 ? 0 : lerp(F0, F1, tr), amount: t >= 1200 ? 1130 : 1430 - 100 * k, odo: k, ticks, range: spendRange(D) };
+    },
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks;
+      let s = `<defs>${vgrad('v' + id, [[0, 'displaySheen', 1], [0.06, 'displaySheen', 0], [0.92, 'blockShade', 0], [1, 'blockShade', 0.7]])}${todayClip(c, t0)}</defs>`;
+      later.forEach(b => { s += fillP(rr(b.x, 0, b.w, H), 'blockIdle') + `<path d="${rr(b.x, 0, b.w, H)}" fill="url(#v${id})"/>`; });
+      s += fillP(rr(t0.x, 0, t0.w, H), 'blockIdle') + level(c, t0, p) + `<path d="${rr(t0.x, 0, t0.w, H)}" fill="url(#v${id})"/>` + edge(t0);
+      return s + more(lay);
+    },
+  };
+
+  // 7 · Depth stack
+  FIN[7] = {
+    name: 'Depth stack', desc: 'Blocks are 2dp-thick tiles with a soft long shadow toward the bottom end; today stands 3dp proud.',
+    moment: 'A new day', momentText: 'Yesterday\'s tile <b>sinks back into the card</b> and fades on <b>standard</b>; the row slides one place on <b>calm</b>; the new today <b>steps forward</b>, then fills.',
+    dur: 1450, newDay: true,
+    at: (t, D) => {
+      const sink = spring(seg(t, 0, 350)), slide = spring(seg(t, 250, 550)), fwd = spring(seg(t, 700, 350)), f = spring(seg(t, 900, 550));
+      return { ...rest(D), sink, slide, fwd, fill: F0 * f, yFill: 300 / A, amount: lerp(300, 1430, f), cap: slide < 0.5 ? caption(D + 1) : caption(D), D0: D + 1 };
+    },
+    draw(c, p, lay) {
+      const id = c.id, D = c.D;
+      const L1 = rowLayout(D + 1), L0 = lay;
+      const inMoment = p.slide !== undefined && p.slide < 1;
+      let s = `<defs><filter id="sf${id}" x="-60%" y="-40%" width="260%" height="200%"><feDropShadow dx="2" dy="2.5" stdDeviation="1.6" style="flood-color:var(--blockShade)"/></filter>
+        <filter id="st${id}" x="-60%" y="-40%" width="260%" height="200%"><feDropShadow dx="${n2(2 + (p.fwd ?? 1))}" dy="${n2(2.5 + 1.5 * (p.fwd ?? 1))}" stdDeviation="${n2(1.6 + 0.8 * (p.fwd ?? 1))}" style="flood-color:var(--blockShade)"/></filter>`;
+      const tile = (b, e, filt, face, extra = '') => `<g filter="url(#${filt})" ${extra}>${fillP(rr(b.x, e, b.w, H), face === 'today' ? 'signalDeep' : 'blockSide')}${fillP(rr(b.x, 0, b.w, H), 'blockIdle')}</g>`;
+      // Blocks after today, sliding from their old slot (i + 1 of L1) to their new slot (i of L0).
+      const slots = L0.blocks.map((b, i) => {
+        if (!inMoment) return b;
+        const from = L1.blocks[i + 1] || { x: UW, w: b.w };
+        return { x: lerp(from.x, b.x, p.slide), w: lerp(from.w, b.w, p.slide) };
+      });
+      const t0 = slots[0];
+      s += todayClip(c, t0) + '</defs>';
+      for (let i = slots.length - 1; i >= 1; i--) s += tile(slots[i], 2, 'sf' + id);
+      if (inMoment || p.sink !== undefined && p.sink < 1) {
+        const y = L1.blocks[0], k = p.sink, cx = y.x + y.w / 2;
+        s += `<g style="opacity:${n2(1 - k)}" transform="translate(${n2(cx)} ${H}) scale(${n2(1 - 0.06 * k)}) translate(${n2(-cx)} ${-H})">${tile(y, 3 * (1 - k), 'st' + id, 'today')}`;
+        s += `<g clip-path="url(#ty${id})"><rect x="${n2(y.x)}" y="${n2(H - H * p.yFill)}" width="${n2(y.w)}" height="${n2(H * p.yFill)}" ${st('fill', 'signal')}/></g>${strokeP(rr(y.x + 0.75, 0.75, y.w - 1.5, H + 3 * (1 - k) - 1.5, R - 0.75), 'displayEdge', 1.5)}</g>`;
+        s = s.replace('</defs>', `<clipPath id="ty${id}"><path d="${rr(y.x, 0, y.w, H)}"/></clipPath></defs>`);
+      }
+      // The incoming today is tomorrow's tile until it steps forward: 2dp → 3dp, a longer shadow, then the edge.
+      const fwd = p.fwd ?? 1, e = 2 + fwd;
+      s += tile(t0, e, 'st' + id, p.fill > 0.02 ? 'today' : '') + level(c, t0, p);
+      s += `<g style="opacity:${n2(fwd)}">${strokeP(rr(t0.x + 0.75, 0.75, t0.w - 1.5, H + e - 1.5, R - 0.75), 'displayEdge', 1.5)}</g>`;
+      return s + more(lay);
+    },
+  };
+
+  // 8 · Quiet luxury
+  FIN[8] = {
+    name: 'Quiet luxury', desc: 'The blocks as built, refined: a 0.5dp etched keyline inside each future block, an optical gradient on today, a tracked label.',
+    moment: 'Card appears', momentText: 'A slow, even fill on the new <code>sweep</code> token (1,600ms, near-constant speed, like a sweep hand) with <b>the sheen crossing in step</b>.',
+    dur: 1700, sheen: true,
+    at: (t, D) => { const q = sweepE(seg(t, 0, 1600)); return { ...rest(D), fill: F0 * q, amount: 1430 * q, sheen: sheenE(seg(t, 0, 1600)) }; },
+    draw(c, p, lay) {
+      const id = c.id, [t0, ...later] = lay.blocks;
+      let s = `<defs>${vgrad('o' + id, [[0, 'signalLift', 0.45], [0.5, 'signalLift', 0], [0.5, 'signalDeep', 0], [1, 'signalDeep', 0.35]])}${todayClip(c, t0)}</defs>`;
+      later.forEach(b => { s += fillP(rr(b.x, 0, b.w, H), 'blockIdle'); if (b.w >= 12) s += strokeP(inset(b, 1.5), 'displayEtch', 0.5); });
+      s += fillP(rr(t0.x, 0, t0.w, H), 'blockIdle') + level(c, t0, p);
+      if (p.fill > 0) s += `<g clip-path="url(#tc${id})">${levelRect(t0, p.fill)} fill="url(#o${id})"/></g>`;
+      return s + edge(t0) + more(lay);
+    },
+  };
+
+  // ---------- States ----------
+  const caption = D => D === 1 ? 'Payday tomorrow' : `${D} days to payday`;
+  const restRange = D => D === 9 ? 'Lasts till payday · about <b>₹9,300 spare</b>' : 'Lasts till payday';
+  const spendRange = D => D === 9 ? 'Lasts till payday · about <b>₹9,000 spare</b>' : 'Lasts till payday';
+  const rest = D => ({ fill: F0, trail: 0, amount: 1430, cap: caption(D), range: restRange(D), sheen: null, rise: 1, glow: 1, draw: 1, draw2: 1, body: 1, men: 1.2, odo: 0, ticks: 0 });
+
+  // ---------- Cards ----------
+  const grid = document.getElementById('grid');
+  const cards = [];
+  function makeCard(k) {
+    const f = FIN[k], fin = document.createElement('article');
+    fin.className = 'fin';
+    fin.innerHTML = `<header><div><h3>${k} · ${f.name}</h3><p>${f.desc}</p></div>
+      <div class="seg" role="group" aria-label="${f.name} theme"><button aria-pressed="true" data-t="light">Light</button><button aria-pressed="false" data-t="dark">Dark</button></div></header>
+      <div class="heroWrap"><section class="hero f${k}" tabindex="0" role="img">${ETCH}<div class="grain"></div><svg class="frame" aria-hidden="true"><rect class="k1"/><rect class="k2"/></svg>
+      <div class="content"><div class="title">Safe to spend today</div><div class="amtrow"><span class="amount"></span></div>
+      <div class="dayrow"><div class="units"><svg aria-hidden="true"></svg></div><div class="flag">${ICON.flag}<span>4 Nov</span></div></div>
+      <div class="caps"><span>Today</span><span class="capR"></span></div><div class="divider"></div><div class="range"></div></div><div class="sheen"></div></section></div>
+      <div class="status" aria-live="polite"></div>
+      <footer><span class="moment"><b>${f.moment}:</b> ${f.momentText}</span><button class="btn">Replay</button></footer>`;
+    grid.appendChild(fin);
+    const q = s => fin.querySelector(s);
+    const c = { id: k, k, f, fin, hero: q('.hero'), content: q('.content'), amount: q('.amount'), svg: q('.units > svg'), capR: q('.capR'),
+      range: q('.range'), sheen: q('.sheen'), status: q('.status'), D: 9, p: null, raf: 0, dark: false };
+    q('footer .btn').addEventListener('click', () => play(c));
+    fin.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setDark(c, b.dataset.t === 'dark')));
+    const down = () => c.hero.classList.add('pressed'), up = () => c.hero.classList.remove('pressed');
+    c.hero.addEventListener('pointerdown', down);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(e => c.hero.addEventListener(e, up));
+    cards.push(c);
+    return c;
+  }
+  function setDark(c, dark) {
+    c.dark = dark;
+    c.fin.classList.toggle('dark', dark);
+    c.fin.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.t === 'dark') === dark)));
+    c.hero.querySelector('.grain').style.backgroundImage = grain(c.fin);
+  }
+  function odometer(c, p) {
+    // Digits of the start amount; only the hundreds drum moves (₹1,430 → ₹1,130 never borrows).
+    const hundreds = 4 - p.odo, digits = ['1', ',', null, '3', '0'];
+    if (!c.amount.querySelector('.drum')) {
+      c.amount.innerHTML = '<span>₹</span>' + digits.map(d => d === null ? '<span class="drum"><span>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<i>${n}</i>`).join('') + '</span></span>' : `<span class="drum"><span><i>${d}</i></span></span>`).join('');
+      c.amount.querySelectorAll('.drum').forEach((el, i) => { if (digits[i] === ',') el.style.webkitMaskImage = el.style.maskImage = 'none'; });
+    }
+    const strip = c.amount.querySelectorAll('.drum')[2].firstChild;
+    strip.style.transform = `translateY(${n2(-hundreds * 76)}px)`;
+    c.amount.setAttribute('aria-label', rupee(p.amount));
+  }
+  function apply(c, p) {
+    c.p = p;
+    if (c.f.odometer) odometer(c, p); else c.amount.textContent = rupee(p.amount);
+    c.capR.textContent = p.cap;
+    c.range.innerHTML = ICON.check + `<span>${p.range}</span>`;
+    c.sheen.style.transform = `translateX(${p.sheen == null ? -70 : n2(-70 + 140 * p.sheen)}%)`;
+    c.svg.innerHTML = c.f.draw(c, p, rowLayout(c.D));
+    c.hero.setAttribute('aria-label', `Safe to spend today: ${Math.round(p.amount)} rupees. ${p.cap}.`);
+    const ticks = c.f.odometer ? ` · haptic: ${[0, 1, 2].map(i => `<span class="tk${i < p.ticks ? ' on' : ''}">tick</span>`).join(' · ')}` : '';
+    c.status.innerHTML = (c.state === 'end' ? (c.f.spend ? 'End: ₹300 spent, ₹1,130 left' : c.f.newDay ? `End: new day, ${caption(c.D)}` : 'End: on track, ₹1,430')
+      : c.state === 'play' ? 'Playing…' : 'On track, ₹1,430') + ticks;
+  }
+  function cancel(c) { cancelAnimationFrame(c.raf); c.hero.querySelectorAll('.content.copy').forEach(n => n.remove()); c.content.getAnimations().forEach(a => a.cancel()); }
+  function renderRest(c) { cancel(c); c.state = 'rest'; apply(c, rest(c.D)); }
+  function crossfade(c, apply2) {
+    const old = c.content.cloneNode(true);
+    old.classList.add('copy');
+    old.innerHTML = old.innerHTML.replace(/id="/g, 'id="z').replace(/url\(#/g, 'url(#z');
+    c.hero.insertBefore(old, c.sheen);
+    apply2();
+    c.content.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' });
+    old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'linear', fill: 'forwards' }).onfinish = () => old.remove();
+  }
+  function play(c) {
+    cancel(c);
+    const f = c.f, D = c.D;
+    c.state = 'play';
+    apply(c, f.at(0, D));
+    if (reduced()) {
+      // Reduced motion: the start state, then one 150ms crossfade to the end state. No sheen, no settle.
+      c.state = 'end';
+      crossfade(c, () => apply(c, { ...f.at(f.dur, D), sheen: null }));
+      return;
+    }
+    const t0 = performance.now();
+    const step = now => {
+      const t = Math.min(now - t0, f.dur);
+      if (t >= f.dur) c.state = 'end';
+      apply(c, f.at(t, D));
+      if (t < f.dur) c.raf = requestAnimationFrame(step);
+    };
+    c.raf = requestAnimationFrame(step);
+  }
+
+  for (let k = 1; k <= 8; k++) makeCard(k);
+
+  // ---------- Controls (and ?theme=dark&days=25&reduce=1 for screenshots) ----------
+  const qs = new URLSearchParams(location.search);
+  const themeSel = document.getElementById('theme'), daysSel = document.getElementById('days');
+  if (qs.get('theme')) themeSel.value = qs.get('theme');
+  if (qs.get('days')) daysSel.value = qs.get('days');
+  if (qs.get('reduce') === '1') reduceBox.checked = true;
+  const applyTheme = () => { if (themeSel.value) cards.forEach(c => setDark(c, themeSel.value === 'dark')); };
+  themeSel.addEventListener('change', applyTheme);
+  daysSel.addEventListener('change', () => cards.forEach(c => { c.D = +daysSel.value; renderRest(c); }));
+  document.getElementById('replayAll').addEventListener('click', () => cards.forEach(play));
+  cards.forEach(c => { setDark(c, false); c.D = +daysSel.value; });
+  applyTheme();
+  const start = () => cards.forEach(renderRest);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(start);
+  start();
+
+  // Test hook for headless checks: the expected end state of each moment.
+  window.hisaabFinishes = {
+    cards, play: i => play(cards[i]), reduce: on => { reduceBox.checked = on; },
+    expected: i => { const c = cards[i]; return c.f.at(c.f.dur, c.D); },
+    shown: i => { const c = cards[i]; return { p: c.p, amount: c.f.odometer ? c.amount.getAttribute('aria-label') : c.amount.textContent, cap: c.capR.textContent, copies: c.hero.querySelectorAll('.content.copy').length, state: c.state }; },
+  };
+})();
+</script>
+</body>
+</html>

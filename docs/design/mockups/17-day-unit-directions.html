@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Day unit directions (proposal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Proposal: the four day-unit directions of case study 12 (docs/design-research/case-studies/12-day-unit-references.md).
+     Nothing here is decided or built. Worked example (SPEC BR-4/6/7): cycle Sun 4 Oct to Tue 3 Nov 2026, payday Wed 4 Nov,
+     today Mon 26 Oct, D = 9, A = ₹1,850, ₹420 spent today, hero ₹1,430. The 28-day cards move "today" to Wed 7 Oct with
+     the same daily share, so only the count changes. */
+  :root {
+    /* HisaabColors.light (lib/core/design/hisaab_colors.dart) */
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --control: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --displaySheen: #FFFEFCB3;
+    --clear: #F1EBE400;
+    --ringW: 3px;
+    /* Mockup canvas only, not app tokens */
+    --canvas: #DDD5CB;
+  }
+  .dark {
+    /* HisaabColors.dark */
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --control: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --displaySheen: #F2F1EC1A;
+    --clear: #13121000;
+    --ringW: 1.5px;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 24px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 16px/20px 'Mukta', sans-serif; margin: 0 0 4px; }
+  p { margin: 0 0 8px; }
+  .lede { color: var(--ink2); max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede b { color: var(--ink); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--bg); vertical-align: 3px; }
+  .tag.ghost { background: none; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink2); }
+
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 8px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 48px; cursor: pointer; }
+  .controls input { width: 20px; height: 20px; accent-color: var(--ink); }
+  .controls .hint { color: var(--ink2); font-size: 13px; }
+  button.btn { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 16px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+  button.btn.ghost { background: none; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink2); }
+  select { font: 400 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+  .tabs [role=tab] { font: 600 15px/20px 'Mukta', sans-serif; min-height: 48px; padding: 12px 20px; border-radius: 14px; border: 0; cursor: pointer; background: var(--hairline); color: var(--ink); }
+  .tabs [role=tab][aria-selected=true] { background: var(--ink); color: var(--bg); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .ov { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+  .ov > div { width: 360px; }
+  .ov > div > p { font-size: 14px; line-height: 20px; color: var(--ink2); }
+  .ov.only-light .stage.dark, .ov.only-dark .stage:not(.dark) { display: none; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .stage { position: relative; background: var(--bg); padding: 20px; border-radius: 20px; color: var(--ink); }
+  .stage .which { display: block; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink2); margin: -6px 0 10px; }
+
+  /* ---------- Hero card (etched, raised) ---------- */
+  .hero { position: relative; width: 320px; border-radius: 28px; background: var(--display); color: var(--displayInk);
+    overflow: hidden; isolation: isolate; box-shadow: 0 10px 28px -12px var(--displayShadow); cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; transition: transform 250ms var(--spring, ease-out); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero.pressed { transform: scale(0.97); }
+  .hero:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  .etch path { fill: none; stroke: var(--displayEtch); stroke-width: 0.6; }
+  .grain { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+  .frame rect { fill: none; stroke-width: 0.6; }
+  .frame .k1 { x: 6px; y: 6px; width: calc(100% - 12px); height: calc(100% - 12px); rx: 22px; ry: 22px; stroke: var(--displayEtch); }
+  .frame .k2 { x: 10px; y: 10px; width: calc(100% - 20px); height: calc(100% - 20px); rx: 18px; ry: 18px; stroke: var(--hairline); stroke-dasharray: 4 3; }
+  .sheen { position: absolute; inset: -40% -60%; z-index: 3; pointer-events: none; transform: translateX(-70%);
+    background: linear-gradient(105deg, var(--clear) 42%, var(--displaySheen) 50%, var(--clear) 58%); }
+  .content { position: relative; z-index: 2; padding: 24px 20px; }
+  .content.copy { position: absolute; inset: 0 0 auto 0; pointer-events: none; }
+  .title { font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .amtrow { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 12px; }
+  .amount { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 76px; line-height: 76px; font-stretch: 85%;
+    font-variation-settings: 'wdth' 85; letter-spacing: -0.76px; font-feature-settings: 'tnum'; color: var(--displayInk); }
+  .amount.muted { color: var(--displayInk2); }
+  .over { font: 600 16px/20px 'Mukta', sans-serif; padding-bottom: 10px; color: var(--displayInk); }
+  .dayrow { margin-top: 24px; display: flex; align-items: center; gap: 10px; }
+  .units { position: relative; flex: 1 1 0; min-width: 0; height: 40px; }
+  .units > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+  .flag { min-width: 44px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--displayInk); }
+  .flag span { font: 600 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); white-space: nowrap; }
+  .hero.dB .flag { display: none; }
+  .caps { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .hero.dB .caps span:first-child { display: none; }
+  .divider { margin-top: 20px; height: 1px; background: var(--displayEtch); }
+  .range { margin-top: 16px; display: flex; gap: 8px; align-items: center; font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .range svg { flex: none; color: var(--displayInk); }
+  .range b { font-weight: 600; color: var(--displayInk); font-feature-settings: 'tnum'; }
+  .note { display: none; margin-top: 12px; font: 400 13px/18px 'Mukta', sans-serif; color: var(--displayInk2); opacity: 0; }
+  .hero.has-note .note { display: block; }
+  .hero.quiz .caps, .hero.quiz .range, .hero.quiz .divider, .hero.quiz .flag span { visibility: hidden; }
+
+  /* ---------- SVG paint classes: every fill is a HisaabColors role ---------- */
+  .f-idle { fill: var(--blockIdle); } .f-sig { fill: var(--signal); } .f-ink2 { fill: var(--displayInk2); } .f-ink { fill: var(--displayInk); }
+  .f-edge { fill: var(--displayEdge); }
+  .s-edge, .s-ring, .s-ink2, .s-sig { fill: none; }
+  .s-edge { stroke: var(--displayEdge); } .s-ring { stroke: var(--signal); stroke-width: calc(var(--ringW) * 2); } .s-ink2 { stroke: var(--displayInk2); } .s-sig { stroke: var(--signal); }
+  text.wd { font: 400 12px 'Mukta', sans-serif; fill: var(--displayInk2); }
+  text.wd.on { font-weight: 600; fill: var(--displayInk); }
+  text.fd { font: 600 12px 'Mukta', sans-serif; font-feature-settings: 'tnum'; fill: var(--displayInk); }
+
+  /* ---------- Home's Today list, to show B's push-down ---------- */
+  .todaylist { margin-top: 16px; width: 320px; background: var(--surface); border-radius: 20px; padding: 8px 0; }
+  .todaylist .hd { display: flex; justify-content: space-between; padding: 8px 20px; font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink); }
+  .todaylist .it { display: flex; justify-content: space-between; margin-left: 20px; padding: 10px 20px 10px 0; border-top: 1px solid var(--hairline); font: 400 15px/20px 'Mukta', sans-serif; color: var(--ink); }
+  .todaylist b, .todaylist .hd span:last-child { font: 600 15px/20px 'Anek Latin', sans-serif; font-feature-settings: 'tnum'; }
+  .ruler { margin-top: 8px; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink2); }
+
+  /* ---------- Sections ---------- */
+  .state { margin-top: 24px; }
+  .state p, .demo p { font-size: 14px; line-height: 20px; color: var(--ink2); max-width: 90ch; }
+  .state p b, .demo p b { color: var(--ink); font-weight: 600; }
+  .demo { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline); }
+  .demo header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .demo header > div { max-width: 720px; }
+  .demo .acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .demo.show { border: 2px dashed var(--ink2); border-radius: 28px; padding: 20px 24px 24px; margin-top: 24px; }
+  .panel { margin-top: 8px; }
+  .boxed { margin-top: 48px; padding: 24px; border-radius: 28px; border: 2px dashed var(--ink2); }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; background: var(--surface); border-radius: 20px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-weight: 600; }
+  td code { font-size: 13px; }
+  table.cmp td { max-width: 300px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--hairline); }
+  .quizbox { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 12px; }
+  .quizbox .stage { min-width: 360px; min-height: 330px; }
+  .quizbox .answer { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .quizbox .verdict { margin-top: 8px; font: 600 15px/20px 'Mukta', sans-serif; }
+  .dial-amt { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 40px; font-stretch: 85%; font-variation-settings: 'wdth' 85; font-feature-settings: 'tnum'; fill: var(--displayInk); }
+  .rejected ol { max-width: 70ch; font-size: 15px; line-height: 22px; color: var(--ink2); }
+  .rejected ol b { color: var(--ink); }
+
+  @media (max-width: 480px) {
+    body { padding: 0 8px 64px; }
+    .stage { padding: 20px 12px; }
+    .ov > div { width: 344px; }
+    h1 { font-size: 24px; line-height: 28px; }
+    table { display: block; max-width: 100%; overflow-x: auto; }
+    .quizbox .stage { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <span class="hint">Starts from your system's prefers-reduced-motion. On, every replay shows its 150ms crossfade fallback.</span>
+  <button class="btn" id="replayAll">Replay all</button>
+</div>
+
+<h1>Day unit directions <span class="tag">Proposal, not agreed in SPEC</span></h1>
+<p class="lede">The four directions from case study 12, so you can pick one. <b>A · Dot ledger</b> is the case study's top pick, <b>C · Glass and road</b> its fallback, <b>B · Blister card</b> third, and <b>D · Day dial</b> is shown only to say why not. Marigold sits only on today, with the 1.5dp <code>displayEdge</code> ink edge in light. Everything else is grey: state is fill, outline, hatch or checker, and words. No red, no green. Springs are critically damped (snap 250, standard 350, calm 550ms, no overshoot); the number rides the same spring as the level; a spend lands with a 3% squash. Press any card for the 0.97 sink.</p>
+
+<!-- ================= 1. Overview ================= -->
+<h2>1 · Side by side</h2>
+<p class="lede">On track, 9 days (Mon 26 Oct) and 28 days (Wed 7 Oct), light and dark. Each card fills in on load.</p>
+<p><label>Show <select id="ovTheme" aria-label="Overview theme"><option value="both">Light and dark</option><option value="light">Light only</option><option value="dark">Dark only</option></select></label></p>
+<div class="ov" id="side"></div>
+
+<!-- ================= 2. Detail tabs ================= -->
+<h2>2 · Each direction</h2>
+<p class="lede">The signature moment first, then the states at 9 and 28 days (plus 1 day left) in light and dark, then every animation with its own Replay.</p>
+<div class="tabs" role="tablist" aria-label="Direction">
+  <button role="tab" id="tab-A" aria-controls="panel-A" aria-selected="true">A · Dot ledger</button>
+  <button role="tab" id="tab-B" aria-controls="panel-B" aria-selected="false">B · Blister card</button>
+  <button role="tab" id="tab-C" aria-controls="panel-C" aria-selected="false">C · Glass and road</button>
+  <button role="tab" id="tab-D" aria-controls="panel-D" aria-selected="false">D · Day dial</button>
+</div>
+<section class="panel" role="tabpanel" id="panel-A" aria-labelledby="tab-A"></section>
+<section class="panel" role="tabpanel" id="panel-B" aria-labelledby="tab-B" hidden></section>
+<section class="panel" role="tabpanel" id="panel-C" aria-labelledby="tab-C" hidden></section>
+<section class="panel rejected" role="tabpanel" id="panel-D" aria-labelledby="tab-D" hidden>
+  <h2 style="margin-top:24px">D · Day dial <span class="tag ghost">Rejected: why</span></h2>
+  <p class="lede">A ring of ticks around the amount, today a marigold wedge at 12 o'clock, payday a gap with the flag. One static card, no animation.</p>
+  <div class="row" id="dialRow"></div>
+  <h3 style="margin-top:20px">Rejected: why</h3>
+  <ol>
+    <li><b>Rings are rejected</b> (D7: "Apple-owned, angle reads poorly"; Cleveland and McGill, UI_DESIGN §12).</li>
+    <li><b>31 ticks on a circle have no start or end to count from</b>, and week groups on a circle read as a clock face.</li>
+    <li><b>The 76sp amount doesn't fit inside.</b> Here it had to drop to 40sp, and at 1.5× text it breaks the ring or the number.</li>
+    <li><b>A rotating ring is the spinner idiom</b> ("loading"), and the new day would rotate it one tick.</li>
+    <li><b>Clue needs colour arcs and a legend</b> to make its cycle ring readable; Hisaab has one colour.</li>
+  </ol>
+</section>
+
+<!-- ================= 3. Compare ================= -->
+<h2>3 · Compare</h2>
+<table class="cmp">
+  <tr><th></th><th>A · Dot ledger (top pick)</th><th>B · Blister card</th><th>C · Glass and road (fallback)</th></tr>
+  <tr><th>Counting at 28 days: 28 or 26 in 2 seconds?</th>
+    <td>Four week groups of 7 columns, split by a 4dp gap (twice the 2dp dot gap). 28 is "four full weeks"; 26 is "three, and a short one". The fastest of the three, if the groups read. Try the flash test below.</td>
+    <td>Five rows, but the first and last are part rows (Wed–Sun, Mon–Tue). You count rows, then the blanks: slow. 26 and 28 differ only in the first row's blank cells.</td>
+    <td>Three week ticks on the rail, but the notches are 6dp and the groups are the tank + 6, then 7, 7, 7. Ticks help; the first group (with the tank) is the odd one out.</td></tr>
+  <tr><th>Height on screen</th>
+    <td>40dp row, as now (today's capsule overhangs 3dp above and below).</td>
+    <td>Grows across the cycle: 50dp at 9 days (weekday letters + 2 rows), 104dp at 28 days. <b>+54dp</b>; the Today list moves down (see the B tab).</td>
+    <td>40dp row, as now.</td></tr>
+  <tr><th>Signature moment</th>
+    <td><b>Dots go out</b> on a spend: top first, 40ms apart, each with a 300ms afterglow (LM3914 hand-off). Digits step down with each dot.</td>
+    <td><b>Press out</b> on a new day: yesterday's cavity sinks to 0.92 and empties; on a Monday the finished row lifts away.</td>
+    <td><b>The next day steps up</b>: tomorrow's notch lifts out of the rail, swells into the tank and fills.</td></tr>
+  <tr><th>Risks</th>
+    <td><b>Nothing look-alike</b> on Android: high. <b>Signal bars / equaliser / battery ladder</b>: medium, as future columns stay level. <b>Dot contrast</b>: idle dots are <code>blockIdle</code>, 1.53:1 on the card at any size; 4dp dots look faint at arm's length (see the dot-size check). Planner reading: low.</td>
+    <td><b>Planner / schedule reading</b>: high, it is a wall calendar. Blank leading cells read as missing days. Today's 36 × 14dp cell shows a ₹60 spend as a 1.2dp change. Battery: low. Nothing: low.</td>
+    <td><b>Battery</b>: the tank alone is a draining rounded rectangle (no nub, no bars here). <b>Loading bar</b>: the thin rail reads as progress ("wait"). The rail's 10 → 9.8dp thinning at 28 days is invisible. Nothing: low.</td></tr>
+  <tr><th>Rules it bends</th>
+    <td>D7 (no longer "blocks"), D91 (the cap is "one dot out", 0.83 to 0.94 by dot count, not 0.9; the trail is per-dot afterglow), UI_DESIGN §5.2 geometry, §3.3 hatch becomes a checker. Week gaps are new (principle 50).</td>
+    <td>D7, §5.2 (height varies; FR-HO-2 hero height), adds weekday letters (new l10n strings), today is not at the start edge. The flag lives in the grid, not beside it.</td>
+    <td>D7 ("every piece the same chocolate": today is bigger than a future day), §5.2, §12's battery rule is close. Thickness as share is a new encoding.</td></tr>
+</table>
+
+<h3 style="margin-top:24px">Try it: the 2-second count</h3>
+<p class="lede">Pick a direction. A card with 26, 27 or 28 days flashes for 2 seconds with the words hidden; then say how many days are left.</p>
+<div class="acts"><button class="btn" data-quiz="A">Flash A</button> <button class="btn" data-quiz="B">Flash B</button> <button class="btn" data-quiz="C">Flash C</button></div>
+<div class="quizbox"><div class="stage" id="quizStage"><span class="which">Press a Flash button</span></div>
+  <div><div class="answer" id="quizAnswer"></div><div class="verdict" id="quizVerdict" aria-live="polite"></div></div></div>
+
+<!-- ================= 4. How to choose ================= -->
+<section class="boxed">
+  <h2 style="margin-top:0">How to choose</h2>
+  <p class="lede">Case study 12's blind read: <b>5 real people per round</b>, mixed literacy, Hindi and English, UPI-first, on low-end Android. Show A, C and the current blocks cold (B too if you still like it), then ask:</p>
+  <ol class="lede">
+    <li><b>"How many days until payday?"</b> Time it and count errors at 9, 28 and 31 days.</li>
+    <li><b>"How much is left today?"</b></li>
+    <li><b>"What happened?"</b> after the over-today frame strip.</li>
+    <li>A Single Ease Question (SEQ) after each task.</li>
+    <li>Does A read as <b>signal bars, a battery or a Nothing phone</b>? Does C read as a <b>battery or a loading bar</b>? Does B read as a <b>planner</b>?</li>
+  </ol>
+  <p class="lede">Also open: the smallest dot that holds 1.5:1 outdoors on a low-end panel (design-accessibility), and whether week groups follow the calendar or count from today.</p>
+</section>
+
+<!-- ================= 5. Tokens ================= -->
+<h2>Token table</h2>
+<p class="lede">Every value this mockup uses. Every fill is an existing HisaabColors role; nothing is derived.</p>
+<div class="row">
+<table>
+  <tr><th>Colour</th><th>Light</th><th>Dark</th><th>Used for</th></tr>
+  <tr><td><code>display</code></td><td><span class="sw" style="background:#FFFEFC"></span>#FFFEFC</td><td><span class="sw" style="background:#211F1C"></span>#211F1C</td><td>Hero card</td></tr>
+  <tr><td><code>displayInk</code></td><td>#161615</td><td>#F2F1EC</td><td>Amount, over text, glyphs, B's today weekday letter and flag date</td></tr>
+  <tr><td><code>displayInk2</code></td><td>#65605A (6.17:1)</td><td>#A7A199 (6.42:1)</td><td>Title, captions, flag date, weekday letters; A's checker dots and lost-dot rings (1dp); B/C hatch (2dp, 6 apart), outlines 1.5dp, ghosts 1dp, C's week ticks 1dp</td></tr>
+  <tr><td><code>blockIdle</code></td><td>#D7CFC5 (1.53:1)</td><td>#413D38 (1.53:1)</td><td>Future dots, cells and rail; today's empty dots and track</td></tr>
+  <tr><td><code>signal</code></td><td>#FFB020</td><td>#FFB020</td><td>Today's level, A's afterglow at 50%, B/C's trail at 50%, the slow-down ring. Today only</td></tr>
+  <tr><td><code>displayEdge</code></td><td>#161615</td><td>none</td><td>1.5dp edge on today (A: a capsule around the column), 1dp line on the level's edge</td></tr>
+  <tr><td><code>displayEtch</code>, <code>hairline</code>, <code>displayShadow</code>, <code>displaySheen</code>, <code>clear</code></td><td colspan="2">As the hero</td><td>Guilloché, grain, keylines, divider, raised shadow, sheen, hatch gaps</td></tr>
+  <tr><td><code>surface</code>, <code>ink</code>, <code>bg</code></td><td colspan="2">As the app</td><td>B's Today list and page stage</td></tr>
+</table>
+<table>
+  <tr><th>Type, space, shape, motion</th><th>Value</th></tr>
+  <tr><td>Amount, title, over, captions, range</td><td>Anek Latin 76 tnum / Mukta 15, 16, 12, 15 (D's amount 40, to show why it fails)</td></tr>
+  <tr><td>B · weekday letters, flag date</td><td>Mukta 12/14; today's letter 600 <code>displayInk</code>, others 400 <code>displayInk2</code></td></tr>
+  <tr><td>A · dots</td><td>5dp, 2dp gap, 7dp vertical pitch, 6 per column, 40 tall. ≤10 days: 3 dots wide, 5dp between days. 29–31 days: 4.5dp. Week gap +4dp after every 7th day counted from today. Today's capsule: 3dp outside the dots, radius ≤7, 1.5dp stroke</td></tr>
+  <tr><td>B · cells</td><td>7 columns of 36.6 × 14dp, 4dp gaps, radius 4; weekday row 18dp; row pitch 18dp</td></tr>
+  <tr><td>C · tank and rail</td><td>Tank 40 × 40, radius 8; rail starts 10dp after it, 10dp thick, 1dp breaks, radius 2; week ticks 18dp tall</td></tr>
+  <tr><td>Row</td><td>A, C: units + 10 gap + flag column (≥44, sizes to its date). B: full 280</td></tr>
+  <tr><td>Max fill once spent</td><td>A: one dot out, (N − 1) / N for N = 6 or 18 dots. B, C: 0.86</td></tr>
+  <tr><td>Springs (damping 1.0)</td><td>snap 250 · standard 350 · calm 550 · <code>land</code> 3% squash, 260ms</td></tr>
+  <tr><td>A · dots go out</td><td>40ms between dots, afterglow 50% → 0 linear over 300ms</td></tr>
+  <tr><td>Other</td><td>Trail hold 500 · crossfade 150 · sheen 1.4s · underspend stagger 20ms (A) / 25ms (B, C) · payday stagger 400 / 29ms · press 0.97</td></tr>
+</table>
+</div>
+
+<section class="boxed">
+  <h2 style="margin-top:0">Decided here, where case study 12 is silent</h2>
+  <ul class="lede">
+    <li><b>A's dot size is 5dp with a 2dp gap</b>, not 4.5dp. It fits 28 days (213dp of 226) and exactly 40dp tall, and it reads less faint (see the dot-size check). 29–31 days step down to 4.5dp.</li>
+    <li><b>A and C group by 7 days counted from today</b>, so 28 days is always four full groups. B groups by calendar week because it is a calendar.</li>
+    <li><b>A's slow down</b> shows the true level (1.3 dots at 9 days, so one lit dot and one dim one) inside a marigold ring, not exactly one dot.</li>
+    <li><b>A's ghost dots</b> use <code>blockIdle</code>, not <code>hairline</code>: dark <code>hairline</code> is 1.3:1 on the card, under the 1.5:1 floor.</li>
+    <li><b>B's caption</b> drops "Today" (today is not at the start edge) and keeps "N days to payday". Its flag cell holds a flag and the date number only.</li>
+    <li><b>C at 1 day left</b> has no rail: just the tank and the flag.</li>
+    <li><b>Underspend growth</b> starts the future units at 0.85 so it shows; the true ratio is 0.98.</li>
+  </ul>
+</section>
+
+<script>
+(() => {
+  const H = 40;
+  // ---------- Motion tokens ----------
+  // A critically damped spring x(t) = 1 − (1 + ωt)e^(−ωt), ω = 2π, normalised to land exactly at 1 when the token ends.
+  const W2 = 2 * Math.PI, SEND = 1 - (1 + W2) * Math.exp(-W2);
+  const springE = p => (p >= 1 ? 1 : (1 - (1 + W2 * p) * Math.exp(-W2 * p)) / SEND);
+  const linE = p => p;
+  if (CSS.supports('transition-timing-function', 'linear(0, 1)')) {
+    const pts = []; for (let i = 0; i <= 40; i++) pts.push(springE(i / 40).toFixed(4));
+    document.documentElement.style.setProperty('--spring', 'linear(' + pts.join(', ') + ')');
+  }
+  const SNAP = { ms: 250, ease: springE }, STANDARD = { ms: 350, ease: springE }, CALM = { ms: 550, ease: springE };
+  const at = (t, d) => ({ ...t, delay: d });
+  // `land`: response 0.2s, damping 0.85, an impulse (squash then settle), one axis only.
+  const LZ = 0.85, LW = 2 * Math.PI / 0.2, LWD = LW * Math.sqrt(1 - LZ * LZ);
+  const landRaw = s => Math.exp(-LZ * LW * s) * Math.sin(LWD * s);
+  let LPEAK = 0; for (let s = 0; s < 0.2; s += 0.0005) LPEAK = Math.max(LPEAK, landRaw(s));
+  const LAND_MS = 260;
+
+  const reduceBox = document.getElementById('reduce');
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  reduceBox.checked = mq.matches;
+  mq.addEventListener('change', e => { reduceBox.checked = e.matches; });
+  const reduced = () => reduceBox.checked;
+
+  // ---------- Money: en_IN, whole rupees ----------
+  const nf = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+  const rupee = v => '₹' + nf.format(Math.max(0, Math.round(v)));
+  const f1 = v => +(+v).toFixed(2);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  // ---------- Glyph stand-ins (the app uses Hugeicons) ----------
+  const svg = (d, sw = 1.8) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICON = {
+    check: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>'),
+    alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>'),
+    over: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
+    flag: svg('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', 1.6),
+  };
+
+  // ---------- Etch: guilloché rosette and grain ----------
+  let rosette = '';
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5; let d = '';
+    for (let i = 0; i <= 360; i++) {
+      const t = (i / 360) * Math.PI * 2, r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(1) + ' ' + (r * Math.sin(t)).toFixed(1);
+    }
+    rosette += `<path d="${d}Z"/>`;
+  }
+  const ETCH = `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${rosette}</svg>`;
+  const grainCache = {};
+  function grain(host) {
+    const colour = getComputedStyle(host).getPropertyValue('--displayEtch').trim();
+    if (!colour) return 'none';
+    if (!grainCache[colour]) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+      const g = cv.getContext('2d'); g.fillStyle = colour;
+      let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 240; i++) g.fillRect(Math.floor(r() * 120), Math.floor(r() * 120), 1, 1);
+      grainCache[colour] = `url(${cv.toDataURL()})`;
+    }
+    return grainCache[colour];
+  }
+
+  // ---------- States (SPEC worked example) ----------
+  const A = 1850;
+  const dayOf = k => new Date(2026, 9, 4 + k); // key 0 = Sun 4 Oct 2026; key 31 = Wed 4 Nov (payday)
+  const monCol = dt => (dt.getDay() + 6) % 7;   // Mon = 0
+  const R = {
+    spare: v => ({ icon: 'check', html: `Lasts till payday · about <b>${rupee(v)} spare</b>` }),
+    lasts: { icon: 'check', html: 'Lasts till payday' },
+    slow: { icon: 'alert', html: '<b>Slow down</b> · today’s share is almost used' },
+    overToday: { icon: 'over', html: '<b>Over today</b> · still lasts till payday' },
+    overCycle: D => ({ icon: 'over', html: `<b>Over by ₹1,200</b> · payday in ${D} days` }),
+  };
+  function S(D, style, o = {}) {
+    const st = { D, start: 31 - D, style, fill: 1430 / A, later: 1, amount: 1430, muted: false, over: '',
+      capR: D === 1 ? 'Payday tomorrow' : `${D} days to payday`, flag: '4 Nov', range: D === 9 ? R.spare(9300) : R.lasts, note: '' };
+    if (style === 'slow') Object.assign(st, { fill: 400 / A, amount: 400, range: R.slow });
+    if (style === 'overToday') {
+      const each = Math.floor((A * (D - 1) - 1020) / (D - 1));
+      Object.assign(st, { fill: 0, later: each / A, amount: 0, muted: true, over: '₹1,020 over today', capR: `Each day after: ${rupee(each)}`, range: R.overToday });
+    }
+    if (style === 'overCycle') Object.assign(st, { fill: 0, amount: 0, muted: true, over: '₹1,200 over', range: R.overCycle(D) });
+    return { ...st, ...o };
+  }
+  const NOTE = 'You saved ₹300 yesterday, so every day got ₹37 more.';
+  const ON = S(9, 'onTrack'), SPENT = S(9, 'onTrack', { amount: 1130, fill: 1130 / A, range: R.spare(9000) }), OVER = S(9, 'overToday');
+  const ON28 = S(28, 'onTrack'), SPENT28 = S(28, 'onTrack', { amount: 1130, fill: 1130 / A });
+  const BIG = S(9, 'slow', { amount: 430, fill: 430 / A });
+  const MON_END = S(9, 'slow', { fill: 300 / A, amount: 300 });
+  const TUE = S(8, 'onTrack', { fill: 1, amount: 1887, range: R.spare(8900) });
+  const TUE_NOTE = { ...TUE, note: NOTE };
+  const SUN_END = S(3, 'slow', { fill: 300 / A, amount: 300 }), MON2 = S(2, 'onTrack', { fill: 1, amount: 2000 });
+  const LAST = S(1, 'onTrack', { fill: 500 / 1640, amount: 500 });
+  const NEW = S(30, 'onTrack', { start: 31, fill: 1, amount: 1460, flag: '4 Dec' });
+
+  // ---------- Animation engine: one rAF loop, tweens on plain numbers, cards redrawn when dirty ----------
+  const anims = new Set(), dirty = new Set(); let running = false;
+  const kick = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
+  function anim(c, o) {
+    const a = { c, obj: o.obj, to: o.to || {}, from: null, start: (o.t0 ?? performance.now()) + (o.t.delay || 0),
+      ms: Math.max(1, o.t.ms), ease: o.t.ease || linE, update: o.update, done: o.done };
+    if (a.obj) { a.obj._tw = a.obj._tw || {}; for (const k in a.to) a.obj._tw[k] = a; }
+    anims.add(a); kick();
+    return a;
+  }
+  const after = (c, ms, fn, t0) => anim(c, { t: { ms: 1, delay: ms }, t0, done: fn });
+  function tick(now) {
+    for (const a of [...anims]) {
+      if (!anims.has(a)) continue;
+      const t = now - a.start; if (t < 0) continue;
+      if (!a.from && a.obj) { a.from = {}; for (const k in a.to) a.from[k] = a.obj[k]; }
+      const p = Math.min(1, t / a.ms), e = a.ease(p);
+      if (a.obj) for (const k in a.to) if (a.obj._tw[k] === a) a.obj[k] = a.from[k] + (a.to[k] - a.from[k]) * e;
+      if (a.update) a.update(e, p, t);
+      dirty.add(a.c);
+      if (p >= 1) { anims.delete(a); if (a.done) a.done(); }
+    }
+    dirty.forEach(draw); dirty.clear();
+    if (anims.size) requestAnimationFrame(tick); else running = false;
+  }
+  const cancel = c => { for (const a of anims) if (a.c === c) anims.delete(a); };
+
+  // ---------- Model: one entry per day; each direction places it ----------
+  const LOOKS = ['idle', 'sig', 'edge', 'ring', 'hatch', 'outline', 'empty', 'cap'];
+  const GROUPS = { geom: ['x', 'y', 'w', 'ht'], look: LOOKS, level: ['fill'], later: ['h'], ghost: ['ghost'], pos: ['op', 'tx', 'ty', 's'] };
+  function lookFor(k, style, today) {
+    const L = Object.fromEntries(LOOKS.map(x => [x, 0]));
+    if (style === 'overCycle') Object.assign(L, { empty: 1 }, today ? { outline: 1, cap: 1 } : {});
+    else if (!today) L.idle = 1;
+    else if (style === 'onTrack') Object.assign(L, { idle: 1, sig: 1, edge: 1, cap: 1 });
+    else if (style === 'slow') Object.assign(L, { idle: k === 'A' ? 1 : 0, sig: 1, ring: 1, edge: 1, cap: 1 });
+    else if (style === 'overToday') Object.assign(L, { hatch: 1, outline: 1, cap: 1 });
+    return L;
+  }
+  // A: lit dots in today's column; once anything is spent the top dot is out.
+  const dotsWide = D => (D <= 10 ? 3 : 1);
+  function shownFill(k, st) {
+    if (st.style !== 'onTrack' && st.style !== 'slow') return 0;
+    if (st.fill >= 1) return 1;
+    if (k === 'A') { const N = 6 * dotsWide(st.D); return Math.min(st.fill, (N - 1) / N); }
+    return Math.min(st.fill, 0.86);
+  }
+  const CW = (280 - 6 * 4) / 7; // B's cell width
+  const bRows = st => Math.floor((st.D + monCol(dayOf(st.start))) / 7) + 1;
+  const bHeight = st => 18 + bRows(st) * 18 - 4;
+  const GEOM = {
+    A(c, st, i) {
+      const n = st.D, d = c.dot ?? (n > 28 ? 4.5 : 5), g = c.dgap ?? 2, dw = dotsWide(n), colW = dw * d + (dw - 1) * g, dayGap = dw === 3 ? 5 : g;
+      let x = 3;
+      for (let j = 0; j < i; j++) x += colW + (j === 0 ? 3 + Math.max(dayGap, 3) : dayGap) + ((j + 1) % 7 === 0 ? 4 : 0);
+      return { x, y: 0, w: colW, ht: H, w0: colW, d, dw, px: d + g };
+    },
+    B(c, st, i) {
+      const idx = i + monCol(dayOf(st.start));
+      return { x: (idx % 7) * (CW + 4), y: 18 + Math.floor(idx / 7) * 18, w: CW, ht: 14 };
+    },
+    C(c, st, i) {
+      if (i === 0) return { x: 0, y: 0, w: 40, ht: 40 };
+      const n = st.D - 1, rw = c.W - 50, nw = (rw - (n - 1)) / n;
+      return { x: 50 + (i - 1) * (nw + 1), y: 15, w: nw, ht: 10 };
+    },
+  };
+  function model(c, st) {
+    return Array.from({ length: st.D }, (_, i) => {
+      const today = i === 0, cyc = st.style === 'overCycle';
+      return { key: st.start + i, isToday: today, fill: today ? shownFill(c.k, st) : 0, h: today || cyc ? 1 : st.later,
+        ghost: !today && !cyc && st.later < 1 ? 1 : 0, op: 1, tx: 0, ty: 0, s: 1, sx: 1, sy: 1, trail: 0, trailOp: 0,
+        ...lookFor(c.k, st.style, today), ...GEOM[c.k](c, st, i) };
+    });
+  }
+  const EXIT_TO = { A: { w: 0, op: 0 }, B: { s: 0.92, op: 0 }, C: { s: 0.8, op: 0 } };
+  // tm: { all, geom, look, level, later, ghost, pos, exit, enter:{from, t, stagger} }; 'skip' leaves a group alone.
+  function go(c, st, tm, t0 = performance.now()) {
+    c.state = st;
+    const tg = model(c, st), keys = new Set(tg.map(u => u.key));
+    for (const u of [...c.units]) {
+      if (keys.has(u.key) || u.exiting) continue;
+      if (!tm.exit) { c.units.splice(c.units.indexOf(u), 1); continue; }
+      u.exiting = true; u.isToday = false;
+      anim(c, { obj: u, to: { sig: 0, edge: 0, ring: 0, cap: 0, ...EXIT_TO[c.k] }, t: tm.exit, t0,
+        done: () => { const i = c.units.indexOf(u); if (i >= 0) c.units.splice(i, 1); } });
+    }
+    tg.forEach((v, i) => {
+      let u = c.units.find(x => x.key === v.key && !x.exiting);
+      if (!u) {
+        u = { ...v }; c.units.push(u);
+        if (tm.enter) { Object.assign(u, tm.enter.from); anim(c, { obj: u, to: { op: 1, tx: 0, ty: 0 }, t: at(tm.enter.t, (tm.enter.t.delay || 0) + i * tm.enter.stagger), t0 }); }
+        return;
+      }
+      u.isToday = v.isToday;
+      for (const [g, props] of Object.entries(GROUPS)) {
+        const t = g in tm ? tm[g] : (tm.all ?? null);
+        if (t === 'skip') continue;
+        const to = {}; props.forEach(p => { to[p] = v[p]; });
+        if (!t) { Object.assign(u, to); if (u._tw) props.forEach(p => delete u._tw[p]); }
+        else anim(c, { obj: u, to, t, t0 });
+      }
+    });
+    dirty.add(c); kick();
+  }
+  const todayU = c => c.units.find(u => u.isToday && !u.exiting);
+
+  // Digits ride the level: same tween, same frame, so they stop together.
+  function setAmt(c, part, v) { c.parts[part] = v; c.amount.textContent = rupee(Object.values(c.parts).reduce((a, b) => a + b, 0)); }
+  function level(c, u, to, t, amt, t0, opts = {}) {
+    let landed = false;
+    anim(c, { obj: u, to: { fill: to }, t, t0, update: e => {
+      if (amt) setAmt(c, 'main', amt[0] + (amt[1] - amt[0]) * e);
+      if (opts.land && !landed && e >= 0.97) { landed = true; land(c, u, opts.axis); }
+    } });
+  }
+  function land(c, u, axis = 'sy') {
+    anim(c, { t: { ms: LAND_MS }, update: (e, p, t) => { u[axis] = p >= 1 ? 1 : 1 - 0.03 * landRaw(t / 1000) / LPEAK; } });
+  }
+
+  // ---------- Drawing ----------
+  const rr = (x, y, w, h, r) => { r = Math.max(0, Math.min(r, w / 2, h / 2)); return `M${f1(x + r)} ${f1(y)}H${f1(x + w - r)}A${r} ${r} 0 0 1 ${f1(x + w)} ${f1(y + r)}V${f1(y + h - r)}A${r} ${r} 0 0 1 ${f1(x + w - r)} ${f1(y + h)}H${f1(x + r)}A${r} ${r} 0 0 1 ${f1(x)} ${f1(y + h - r)}V${f1(y + r)}A${r} ${r} 0 0 1 ${f1(x + r)} ${f1(y)}Z`; };
+  const circ = (cx, cy, r, cls, op, extra = '') => (op > 0.01 ? `<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${f1(r)}" class="${cls}"${op < 0.99 ? ` opacity="${f1(op)}"` : ''}${extra}/>` : '');
+
+  const DRAW = {
+    // A · Dot ledger. Dot k counts from the bottom-left; the top row goes out first.
+    A(c, vis) {
+      let s = '';
+      for (const u of vis) {
+        const N = 6 * u.dw, sx = u.w / u.w0, X = k => u.x + u.tx + (u.d / 2 + (k % u.dw) * u.px) * sx, Y = k => H - 2.5 - Math.floor(k / u.dw) * 7, r = u.d / 2;
+        s += `<g opacity="${f1(u.op)}"${u.sy !== 1 ? ` transform="translate(0 ${H}) scale(1 ${u.sy.toFixed(4)}) translate(0 -${H})"` : ''}>`;
+        for (let k = 0; k < N; k++) {
+          const cx = X(k), cy = Y(k), present = clamp(u.h * N - k, 0, 1), lit = clamp(u.fill * N - k, 0, 1) * u.sig;
+          const checker = (Math.floor(k / u.dw) + (k % u.dw)) % 2 === 0;
+          s += circ(cx, cy, r, 'f-idle', present * u.idle * (1 - u.hatch));
+          if (u.hatch > 0.01) s += circ(cx, cy, r, checker ? 'f-ink2' : 'f-idle', u.hatch);
+          s += circ(cx, cy, r, 'f-sig', lit);
+          if (present < 0.999 && u.ghost > 0.01) s += circ(cx, cy, r - 0.5, 's-ink2', u.ghost, ' stroke-width="1"');
+          if (u.empty > 0.01) s += circ(cx, cy, r - 0.5, 's-ink2', u.empty, ' stroke-width="1"');
+        }
+        for (const e of c.extras) if (e.kind === 'glow' && e.u === u) s += circ(X(e.k), Y(e.k), r, 'f-sig', e.a);
+        if (u.cap > 0.01) {
+          const w = u.w + 6, x = u.x + u.tx - 3, rad = Math.min(w / 2, 7);
+          if (u.edge > 0.01) s += `<path d="${rr(x, -3, w, 46, rad)}" class="s-edge" stroke-width="1.5" opacity="${f1(u.cap * u.edge)}"/>`;
+          if (u.ring > 0.01) s += `<path d="${rr(x + 1.5, -1.5, w - 3, 43, rad - 1.5)}" class="s-sig" stroke-width="1.5" opacity="${f1(u.cap * u.ring)}"/>`;
+          if (u.outline > 0.01) s += `<path d="${rr(x, -3, w, 46, rad)}" class="s-ink2" stroke-width="1.5" opacity="${f1(u.cap * u.outline)}"/>`;
+        }
+        s += '</g>';
+      }
+      return s;
+    },
+    // B · Blister card. Weekday letters, cells by calendar week, today drains right to left.
+    B(c, vis) {
+      const st = c.state, todayCol = monCol(dayOf(st.start));
+      let s = 'MTWTFSS'.split('').map((l, i) => `<text class="wd${i === todayCol ? ' on' : ''}" x="${f1(i * (CW + 4) + CW / 2)}" y="12" text-anchor="middle">${l}</text>`).join('');
+      for (const u of vis) {
+        const x = u.x + u.tx, y = u.y + u.ty, w = u.w * u.sx, hh = u.ht, cx = u.x + u.w / 2, cy = y + hh / 2, id = `b${c.id}_${u.key}`, d = rr(x, y, w, hh, 4);
+        s += `<g opacity="${f1(u.op)}"${u.s !== 1 ? ` transform="translate(${f1(cx)} ${f1(cy)}) scale(${f1(u.s)}) translate(${f1(-cx)} ${f1(-cy)})"` : ''}>`;
+        s += `<clipPath id="${id}"><path d="${d}"/></clipPath>`;
+        if (u.ghost > 0.01) s += `<path d="${d}" class="s-ink2" stroke-width="2" clip-path="url(#${id})" opacity="${f1(u.ghost)}"/>`;
+        s += `<g clip-path="url(#${id})">`;
+        if (u.idle > 0.01) s += `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w * u.h)}" height="${hh}" class="f-idle" opacity="${f1(u.idle)}"/>`;
+        if (u.hatch > 0.01) s += `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${hh}" fill="url(#h${c.id})" opacity="${f1(u.hatch)}"/>`;
+        const xl = x + w * u.fill;
+        if (u.trailOp > 0.01 && u.trail > u.fill) s += `<rect x="${f1(xl)}" y="${f1(y)}" width="${f1(w * (u.trail - u.fill))}" height="${hh}" class="f-sig" opacity="${f1(0.5 * u.trailOp)}"/>`;
+        if (u.sig > 0.01 && u.fill > 0.002) s += `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(xl - x)}" height="${hh}" class="f-sig" opacity="${f1(u.sig)}"/>` + (u.fill < 0.999 ? `<rect x="${f1(xl - 1)}" y="${f1(y)}" width="1" height="${hh}" class="f-edge"/>` : '');
+        s += '</g>';
+        if (u.ring > 0.01) s += `<path d="${d}" class="s-ring" clip-path="url(#${id})" opacity="${f1(u.ring)}"/>`;
+        if (u.edge > 0.01) s += `<path d="${d}" class="s-edge" stroke-width="3" clip-path="url(#${id})" opacity="${f1(u.edge)}"/>`;
+        const ol = Math.max(u.outline, u.empty);
+        if (ol > 0.01) s += `<path d="${d}" class="s-ink2" stroke-width="3" clip-path="url(#${id})" opacity="${f1(ol)}"/>`;
+        s += '</g>';
+      }
+      // The payday cell: a dashed cavity with a flag and the date number
+      const idx = st.D + todayCol, fx = (idx % 7) * (CW + 4), fy = 18 + Math.floor(idx / 7) * 18, pd = dayOf(st.start + st.D).getDate();
+      s += `<g opacity="${f1(c.flagA)}"><path d="${rr(fx + 0.5, fy + 0.5, CW - 1, 13, 4)}" class="s-ink2" stroke-width="1" stroke-dasharray="2.5 2"/>` +
+        `<path d="M${f1(fx + 9)} ${fy + 12}V${fy + 2.5}h6.5l-1.2 2.4 1.2 2.4H${f1(fx + 9)}" fill="none" stroke="var(--displayInk)" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>` +
+        `<text class="fd" x="${f1(fx + 19)}" y="${fy + 11.5}">${pd}</text></g>`;
+      return s;
+    },
+    // C · Glass and road. Today's tank, then a rail of notches to the flag with a tick every 7 days.
+    C(c, vis) {
+      let s = `<clipPath id="r${c.id}"><rect x="46" y="-4" width="${f1((c.W - 46 + 4) * c.reveal)}" height="48"/></clipPath>`;
+      const fut = vis.filter(u => !u.isToday && !u.exiting);
+      let rail = '';
+      for (const u of vis) {
+        const r = 2 + 6 * clamp((u.ht - 10) / 30, 0, 1), th = u.ht * u.h, x = u.x + u.tx, y = u.y + (u.ht - th) / 2, w = u.w, id = `c${c.id}_${u.key}`;
+        const d = rr(x, y, w, th, r), cx = x + w / 2, cy = u.y + u.ht / 2, bottom = y + th;
+        let g = `<g opacity="${f1(u.op)}"${u.s !== 1 ? ` transform="translate(${f1(cx)} ${f1(cy)}) scale(${f1(u.s)}) translate(${f1(-cx)} ${f1(-cy)})"` : ''}>`;
+        g += `<g${u.sy !== 1 ? ` transform="translate(0 ${f1(bottom)}) scale(1 ${u.sy.toFixed(4)}) translate(0 ${f1(-bottom)})"` : ''}>`;
+        g += `<clipPath id="${id}"><path d="${d}"/></clipPath>`;
+        if (u.ghost > 0.01) g += `<path d="${rr(x, u.y, w, u.ht, r)}" class="s-ink2" stroke-width="1" opacity="${f1(u.ghost)}"/>`;
+        g += `<g clip-path="url(#${id})">`;
+        if (u.idle > 0.01) g += `<path d="${d}" class="f-idle" opacity="${f1(u.idle)}"/>`;
+        if (u.hatch > 0.01) g += `<path d="${d}" fill="url(#h${c.id})" opacity="${f1(u.hatch)}"/>`;
+        const yl = y + th * (1 - u.fill);
+        if (u.trailOp > 0.01 && u.trail > u.fill) { const yt = y + th * (1 - u.trail); g += `<rect x="${f1(x)}" y="${f1(yt)}" width="${f1(w)}" height="${f1(yl - yt)}" class="f-sig" opacity="${f1(0.5 * u.trailOp)}"/>`; }
+        if (u.sig > 0.01 && u.fill > 0.002) g += `<rect x="${f1(x)}" y="${f1(yl)}" width="${f1(w)}" height="${f1(bottom - yl)}" class="f-sig" opacity="${f1(u.sig)}"/>` + (u.fill < 0.999 ? `<rect x="${f1(x)}" y="${f1(yl)}" width="${f1(w)}" height="1" class="f-edge"/>` : '');
+        g += '</g>';
+        if (u.ring > 0.01) g += `<path d="${d}" class="s-ring" clip-path="url(#${id})" opacity="${f1(u.ring)}"/>`;
+        if (u.edge > 0.01) g += `<path d="${d}" class="s-edge" stroke-width="3" clip-path="url(#${id})" opacity="${f1(u.edge)}"/>`;
+        const ol = Math.max(u.outline, u.empty);
+        if (ol > 0.01) g += `<path d="${d}" class="s-ink2" stroke-width="${u.ht > 20 ? 3 : 2}" clip-path="url(#${id})" opacity="${f1(ol)}"/>`;
+        g += '</g></g>';
+        if (u.isToday || u.exiting) s += g; else rail += g;
+      }
+      // Week ticks: before the 7th, 14th and 21st day after today
+      fut.forEach((u, j) => { if ((j + 1) % 7 === 0) rail += `<rect x="${f1(u.x + u.tx + u.w + 0.25)}" y="11" width="0.5" height="18" class="f-ink2" opacity="${f1(u.op)}"/><rect x="${f1(u.x + u.tx + u.w)}" y="11" width="1" height="18" class="f-ink2" opacity="${f1(u.op)}"/>`; });
+      return s + `<g clip-path="url(#r${c.id})">${rail}</g>`;
+    },
+  };
+  function draw(c) {
+    const vis = c.units.filter(u => u.op > 0.01 && u.w > 0.3).sort((a, b) => a.y - b.y || a.x - b.x);
+    c.svg.innerHTML = `<defs><pattern id="h${c.id}" width="6" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="10" class="f-ink2"/></pattern></defs>` + DRAW[c.k](c, vis);
+  }
+
+  // ---------- Card ----------
+  function set(el, styles, t) {
+    const props = Object.keys(styles);
+    el.style.transition = t ? props.map(p => `${p.replace(/[A-Z]/g, m => '-' + m.toLowerCase())} ${t.ms}ms var(--spring, ease-out) ${t.delay || 0}ms`).join(', ') : 'none';
+    Object.assign(el.style, styles);
+  }
+  function put(el, html) { el._sid = (el._sid || 0) + 1; el.getAnimations().forEach(a => a.cancel()); el.innerHTML = html; }
+  function swap(el, html) {
+    if (el.innerHTML === html) return;
+    const id = (el._sid = (el._sid || 0) + 1);
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120 }).onfinish = () => {
+      if (el._sid !== id) return;
+      el.innerHTML = html; el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+    };
+  }
+  const rangeHTML = r => ICON[r.icon] + `<span>${r.html}</span>`;
+  let cardId = 0;
+  function makeCard(stageEl, k, opts = {}) {
+    const root = document.createElement('section');
+    root.className = `hero d${k}` + (opts.note ? ' has-note' : '') + (opts.quiz ? ' quiz' : '');
+    root.tabIndex = 0;
+    root.setAttribute('role', 'button');
+    root.innerHTML = ETCH + '<div class="grain"></div><svg class="frame" aria-hidden="true"><rect class="k1"/><rect class="k2"/></svg>' +
+      '<div class="content"><div class="title">Safe to spend today</div><div class="amtrow"><span class="amount"></span><span class="over"></span></div>' +
+      `<div class="dayrow"><div class="units"><svg aria-hidden="true"></svg></div><div class="flag">${ICON.flag}<span></span></div></div>` +
+      '<div class="caps"><span>Today</span><span class="capR"></span></div><div class="divider"></div><div class="range"></div><div class="note"></div></div>' +
+      '<div class="sheen"></div>';
+    stageEl.appendChild(root);
+    root.querySelector('.grain').style.backgroundImage = grain(stageEl);
+    const q = s => root.querySelector(s);
+    const c = { id: ++cardId, k, root, stage: stageEl, content: q('.content'), amount: q('.amount'), over: q('.over'), unitsEl: q('.units'),
+      svg: q('.units > svg'), flagEl: q('.flag'), flag: q('.flag span'), capR: q('.capR'), caps: q('.caps'), range: q('.range'), note: q('.note'),
+      sheen: q('.sheen'), units: [], extras: [], parts: {}, state: null, reveal: 1, flagA: 1, dot: opts.dot, dgap: opts.dgap };
+    const down = () => root.classList.add('pressed'), up = () => root.classList.remove('pressed');
+    root.addEventListener('pointerdown', down);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(e => root.addEventListener(e, up));
+    root.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); down(); } });
+    root.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') up(); });
+    return c;
+  }
+  // The flag column sizes to its date (min 44); the row takes what is left. B's flag lives in the grid.
+  function measure(c) {
+    if (c.k === 'B') { c.W = 280; c.caps.style.paddingRight = '0'; return; }
+    c.flagW = Math.max(44, c.flagEl.offsetWidth || 44);
+    c.W = 280 - c.flagW - 10;
+    c.caps.style.paddingRight = (c.flagW + 10) + 'px';
+  }
+  function setHeight(c, st, t) {
+    const h = (c.k === 'B' ? bHeight(st) : H) + 'px';
+    c.unitsEl.style.transition = t ? `height ${t.ms}ms var(--spring, ease-out) ${t.delay || 0}ms` : 'none';
+    c.unitsEl.style.height = h;
+  }
+  const spoken = text => text.replace(/₹([\d,]+)/g, '$1 rupees');
+  function label(c, st) {
+    const tmp = document.createElement('div'); tmp.innerHTML = st.range.html;
+    c.root.setAttribute('aria-label', spoken(`Safe to spend today: ${rupee(st.amount)}. ${st.over ? st.over + '. ' : ''}${st.capR}. ${tmp.textContent}.${st.note ? ' ' + NOTE : ''}`));
+  }
+  function renderText(c, st) {
+    put(c.amount, rupee(st.amount));
+    c.amount.style.transition = 'none';
+    c.amount.classList.toggle('muted', !!st.muted);
+    put(c.over, st.over); c.over.style.display = st.over ? '' : 'none'; set(c.over, { opacity: 1 }, null);
+    put(c.capR, st.capR);
+    put(c.flag, st.flag);
+    put(c.range, rangeHTML(st.range));
+    c.note.textContent = NOTE;
+    set(c.note, { opacity: st.note ? 1 : 0 }, null);
+    label(c, st);
+  }
+  function render(c, st) {
+    cancel(c);
+    renderText(c, st);
+    measure(c);
+    setHeight(c, st, null);
+    c.state = st; c.units = model(c, st); c.extras = []; c.parts = { main: st.amount }; c.reveal = 1; c.flagA = 1;
+    draw(c);
+  }
+  function sheen(c) {
+    if (c.sheenAnim) c.sheenAnim.cancel();
+    c.sheenAnim = c.sheen.animate([{ transform: 'translateX(-70%)' }, { transform: 'translateX(70%)' }],
+      { duration: 1050, delay: 350, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'both' });
+  }
+  function crossfade(c, apply) {
+    const old = c.content.cloneNode(true);
+    old.classList.add('copy');
+    old.querySelectorAll('[id]').forEach(n => { n.id = 'z' + n.id; });
+    old.querySelectorAll('[clip-path], [fill]').forEach(n => ['clip-path', 'fill'].forEach(a => {
+      const v = n.getAttribute(a); if (v && v.startsWith('url(#')) n.setAttribute(a, v.replace('url(#', 'url(#z'));
+    }));
+    c.root.insertBefore(old, c.sheen);
+    apply();
+    c.content.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' });
+    old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'linear', fill: 'forwards' }).onfinish = () => old.remove();
+  }
+  function stage(parent, dark, text) {
+    const st = document.createElement('div');
+    st.className = 'stage' + (dark ? ' dark' : '');
+    if (text) { const w = document.createElement('span'); w.className = 'which'; w.textContent = text; st.appendChild(w); }
+    parent.appendChild(st);
+    return st;
+  }
+
+  // ---------- Shared motion ----------
+  function trail(c, u, toFill, t0) {
+    u.trail = u.fill; u.trailOp = 1;
+    after(c, 500, () => anim(c, { obj: u, to: { trail: toFill }, t: CALM, done: () => { u.trailOp = 0; } }), t0);
+  }
+  // A · dots go out: top first, 40ms apart; each leaves a 50% afterglow that fades over 300ms, so the next
+  // dot goes out while the last still glows (the LM3914 hand-off). The digits step with the dots.
+  function dotsOut(c, u, to, amt, t0, opts = {}) {
+    const N = 6 * u.dw, L0 = u.fill * N, L1 = to * N, steps = [];
+    let cur = L0;
+    while (cur > L1 + 1e-6) { const nx = Math.max(L1, Math.ceil(cur - 1e-6) - 1); steps.push([cur, nx]); cur = nx; }
+    if (u._tw) delete u._tw.fill;
+    steps.forEach(([a, b], j) => after(c, j * 40, () => {
+      const m = Math.floor(b + 1e-9), drop = clamp(a - m, 0, 1) - clamp(b - m, 0, 1);
+      u.fill = b / N;
+      const e = { kind: 'glow', u, k: m, a: 0.5 * drop };
+      c.extras.push(e);
+      anim(c, { t: { ms: 300 }, update: (_, p) => { e.a = 0.5 * drop * (1 - p); }, done: () => { c.extras.splice(c.extras.indexOf(e), 1); } });
+      setAmt(c, 'main', amt[0] + (amt[1] - amt[0]) * (L0 - b) / (L0 - L1));
+      if (j === steps.length - 1) { u.fill = to; if (opts.land) land(c, u, 'sy'); }
+    }, t0));
+    return Math.max(0, steps.length - 1) * 40;
+  }
+  // Underspend: future units grow on calm in a domino stagger; the number rides the wave.
+  function wave(c, t0, stg) {
+    const fut = c.units.filter(u => !u.exiting).sort((a, b) => a.y - b.y || a.x - b.x), n = fut.length, prog = new Array(n).fill(0);
+    fut.forEach((u, i) => anim(c, { obj: u, to: { h: 1 }, t: at(CALM, i * stg), t0, update: e => { if (!u.isToday) prog[i] = e; setAmt(c, 'wave', 37 * prog.reduce((a, b) => a + b, 0) / (n - 1)); } }));
+    return (n - 1) * stg + CALM.ms;
+  }
+  function textTo(c, st) {
+    c.state = st; swap(c.capR, st.capR); swap(c.range, rangeHTML(st.range)); label(c, st);
+    if (st.over) { put(c.over, st.over); c.over.style.display = ''; set(c.over, { opacity: 0 }, null); void c.over.offsetWidth; set(c.over, { opacity: 1 }, STANDARD); }
+    c.amount.style.transition = `color ${STANDARD.ms}ms var(--spring)`; c.amount.classList.toggle('muted', !!st.muted);
+  }
+
+  // ---------- Demos ----------
+  const RM = '<b>Reduced motion:</b> a 150ms crossfade to the end state.';
+  const DEMOS = {
+    fill: { title: 'Fill in (Home appears)', text: k => `${k === 'A' ? 'Today\'s dots light from the bottom' : k === 'B' ? 'Today\'s cell fills from the left' : 'The tank fills from the bottom'} to ₹1,430 on <b>calm</b>; the number counts up on the same spring and stops on the same frame. One sheen crosses the card. ${RM}`,
+      start: () => ON, end: () => ON,
+      setup: c => { todayU(c).fill = 0; setAmt(c, 'main', 0); },
+      run: (c, d, t0) => { level(c, todayU(c), shownFill(c.k, ON), CALM, [0, 1430], t0); sheen(c); } },
+    dotsOut: { title: 'Signature · Dots go out', show: true,
+      select: [['300', 'Spend ₹300 at 9 days'], ['1000', 'Spend ₹1,000 at 9 days (to slow down)'], ['300w', 'Spend ₹300 at 28 days']],
+      text: () => `After the Add tray closes, today's lit dots switch off <b>from the top, 40ms apart</b>. Each leaves a <b>50% afterglow</b> that fades over 300ms, so the next dot is already going out while the last one still glows: the LM3914 hand-off, and the trail as phosphor decay. The digits step down with each dot. The last dot <b>lands</b> with a 3% squash. Any spend puts out at least one whole dot: at 9 days a dot is ₹103, at 28 days ₹308. At ₹1,000 the marigold ring of slow down appears as the last dot goes. ${RM}`,
+      start: d => (d.alt === '300w' ? ON28 : ON), end: d => (d.alt === '300w' ? SPENT28 : d.alt === '1000' ? BIG : SPENT),
+      run: (c, d, t0) => {
+        const end = DEMOS.dotsOut.end(d), u = todayU(c), amt = end.amount;
+        const ms = dotsOut(c, u, shownFill('A', end), [1430, amt], t0, { land: true });
+        textTo(c, end);
+        if (end.style === 'slow') after(c, ms, () => go(c, end, { all: STANDARD, geom: 'skip', level: 'skip', later: 'skip', ghost: 'skip' }), t0);
+      } },
+    pressOut: { title: 'Signature · Press out', show: true, select: [['mon', 'Mon 26 → Tue 27'], ['sun', 'Sun 1 → Mon 2 (wraps a row)']],
+      text: () => `Midnight. Yesterday's cell <b>sinks to 0.92 and fades to blank</b>, like an emptied cavity, on <b>standard</b>. Marigold steps to the next cell; on a Monday it wraps to the next row's start, and the finished week's row lifts away (the grid moves up one row and the card gets 18dp shorter). Then today fills on <b>calm</b> with the sheen, and the number rides it. ${RM}`,
+      start: d => (d.alt === 'sun' ? SUN_END : MON_END), end: d => (d.alt === 'sun' ? MON2 : TUE),
+      run: (c, d, t0) => newDay(c, d.alt === 'sun' ? MON2 : TUE, t0, [300, d.alt === 'sun' ? 2000 : 1887]) },
+    stepUp: { title: 'Signature · The next day steps up', show: true,
+      text: () => `Midnight. Yesterday's tank empties and shrinks away on <b>standard</b>. <b>Tomorrow's notch lifts out of the rail and swells into the tank</b> on <b>calm</b> (one spatial spring, no overshoot), while the rail closes up one notch and its week ticks move with it. Then the tank fills on <b>calm</b> with the sheen, and the number rides it ₹300 → ₹1,887. ${RM}`,
+      start: () => MON_END, end: () => TUE,
+      run: (c, d, t0) => newDay(c, TUE, t0, [300, 1887]) },
+    newdayA: { title: 'New day', text: () => `Midnight, Mon → Tue. Yesterday's column <b>goes dark</b> (every dot off on <b>snap</b>), then <b>collapses</b> to zero width while the matrix slides one column left on <b>standard</b>, like a marquee; the capsule hands over to Tuesday. Then today's dots light from the bottom on <b>calm</b>, and the number rides them ₹300 → ₹1,887. ${RM}`,
+      start: () => MON_END, end: () => TUE,
+      run: (c, d, t0) => {
+        const y = todayU(c);
+        anim(c, { obj: y, to: { sig: 0, idle: 0, cap: 0, edge: 0, ring: 0 }, t: SNAP, t0 });
+        textTo(c, TUE);
+        after(c, SNAP.ms, () => {
+          go(c, { ...TUE, fill: 0 }, { all: STANDARD, exit: STANDARD });
+          after(c, STANDARD.ms, () => { level(c, todayU(c), 1, CALM, [300, 1887]); sheen(c); });
+        }, t0);
+      } },
+    spend: { title: 'Spend ₹300', text: k => `The level falls on <b>standard</b> ${k === 'B' ? 'from the right' : 'from the top'} and the digits ride it, ₹1,430 → ₹1,130. At 97% of the fall it <b>lands</b> with a 3% squash ${k === 'B' ? 'from its start edge' : 'from its base'}. The spent part stays as marigold at 50%, holds 500ms, then falls on <b>calm</b> (the trail). ${RM}`,
+      start: () => ON, end: () => SPENT,
+      run: (c, d, t0) => { const u = todayU(c); trail(c, u, shownFill(c.k, SPENT), t0); textTo(c, SPENT); level(c, u, shownFill(c.k, SPENT), STANDARD, [1430, 1130], t0, { land: true, axis: c.k === 'B' ? 'sx' : 'sy' }); } },
+    over: { title: 'Over today (₹2,450 more)', text: k => `${k === 'A' ? 'Every lit dot goes out, top first, with its afterglow. Then today\'s column turns to a <b>checkerboard</b> of <code>displayInk2</code> and <code>blockIdle</code> dots inside a <code>displayInk2</code> capsule.' : 'The level falls to 0 with the digits and lands; the trail holds 500ms. Today crossfades to a 2dp hatch and a <code>displayInk2</code> outline.'} At 500ms ${k === 'A' ? 'each future day loses its top dot(s), which stay as 1dp rings' : k === 'B' ? 'each future cell\'s fill shrinks from the right inside a ghost outline' : 'the rail thins inside a ghost outline of its old thickness'} on <b>calm</b>: ₹1,722 a day after, 0.93 of today's share. Cause, then effect. ${RM}`,
+      start: () => ON, end: () => OVER,
+      run: (c, d, t0) => {
+        const u = todayU(c);
+        const later = () => go(c, OVER, { all: 'skip', later: CALM, ghost: CALM });
+        textTo(c, OVER);
+        if (c.k === 'A') {
+          const ms = dotsOut(c, u, 0, [1430, 0], t0, { land: true });
+          after(c, ms, () => { go(c, OVER, { all: STANDARD, geom: 'skip', level: 'skip', later: 'skip', ghost: 'skip' }); after(c, 500, later); }, t0);
+        } else {
+          trail(c, u, 0, t0);
+          go(c, OVER, { all: STANDARD, geom: 'skip', level: 'skip', later: 'skip', ghost: 'skip' }, t0);
+          level(c, u, 0, STANDARD, [1430, 0], t0, { land: true, axis: c.k === 'B' ? 'sx' : 'sy' });
+          after(c, 500, later, t0);
+        }
+      } },
+    grow: { title: 'Underspend morning', note: true, text: k => `Mon ended with ₹300 unspent, so every day gets ₹37 more. ${k === 'A' ? 'Each future column <b>regains its top dot</b>, sweeping left to right 20ms apart' : k === 'B' ? 'The future cells <b>grow back to full width</b> row by row, 25ms apart' : 'The rail <b>thickens</b> in a left-to-right wave, 25ms apart'} on <b>calm</b>; the number rides the wave ₹1,850 → ₹1,887, then the note fades in. (The start is exaggerated to 0.85 so it shows; the true ratio is 0.98.) ${RM}`,
+      start: () => TUE, end: () => TUE_NOTE,
+      setup: c => { c.units.forEach(u => { if (!u.isToday) u.h = 0.85; }); c.parts = { main: 1850 }; setAmt(c, 'main', 1850); },
+      run: (c, d, t0) => { const ms = wave(c, t0, c.k === 'A' ? 20 : 25); label(c, TUE_NOTE); c.state = TUE_NOTE; after(c, ms, () => set(c.note, { opacity: 1 }, STANDARD), t0); } },
+    payday: { title: 'Payday assemble', text: k => `Wed 4 Nov, a new 30-day cycle. The last day leaves. ${k === 'A' ? 'The display <b>boots column by column</b> from the left: each column switches on in 80ms, ' + f1(400 / 29) + 'ms apart (the 400ms cap). At 30 days the dots step down to 4.5dp.' : k === 'B' ? 'A <b>new card slides up</b>: the cells rise 8dp and fade in row by row, ' + f1(400 / 29) + 'ms apart, the grid grows from 1 row to 5, and the payday cell appears last.' : 'The rail <b>draws from the tank to the flag</b> like a route stroke on <b>calm</b>, and the notches tick in ' + f1(400 / 29) + 'ms apart.'} Then today fills, and the number rides it ₹500 → ₹1,460. ${RM}`,
+      start: () => LAST, end: () => NEW,
+      run: (c, d, t0) => payday(c, t0) },
+  };
+  function newDay(c, end, t0, amt) {
+    const tall = c.k === 'C' ? CALM : STANDARD;
+    go(c, { ...end, fill: 0 }, { all: tall, look: STANDARD, exit: STANDARD }, t0);
+    setHeight(c, end, at(STANDARD, 0));
+    textTo(c, end);
+    after(c, tall.ms, () => { level(c, todayU(c), 1, CALM, amt); sheen(c); }, t0);
+  }
+  function payday(c, t0) {
+    const stg = 400 / 29, k = c.k;
+    swap(c.flag, NEW.flag); textTo(c, NEW);
+    if (k === 'C') measure(c);
+    const enter = k === 'A' ? { from: { op: 0 }, t: { ms: 80, ease: linE, delay: 120 }, stagger: stg }
+      : k === 'B' ? { from: { op: 0, ty: 8 }, t: at(CALM, 120), stagger: stg }
+      : { from: { op: 0 }, t: at(SNAP, 120), stagger: stg };
+    if (k === 'B') { c.flagA = 0; setHeight(c, NEW, at(CALM, 0)); }
+    if (k === 'C') { c.reveal = 0; anim(c, { obj: c, to: { reveal: 1 }, t: at(CALM, 120), t0 }); }
+    go(c, { ...NEW, fill: 0 }, { all: null, exit: STANDARD, enter }, t0);
+    const endMs = 120 + 29 * stg + (k === 'A' ? 80 : k === 'B' ? CALM.ms : SNAP.ms);
+    if (k === 'B') anim(c, { obj: c, to: { flagA: 1 }, t: at(STANDARD, endMs - 200), t0 });
+    after(c, endMs, () => { level(c, todayU(c), 1, CALM, [500, 1460]); sheen(c); }, t0);
+  }
+
+  const demos = [];
+  function demo(panel, k, key, label) {
+    const D = DEMOS[key];
+    const el = document.createElement('article');
+    el.className = 'demo' + (D.show ? ' show' : '');
+    el.id = `${k}-${key}`;
+    const sel = D.select ? `<select aria-label="Variant">${D.select.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>` : '';
+    el.innerHTML = `<header><div><h3>${label} · ${D.title}</h3><p>${D.text(k)}</p></div><div class="acts">${sel}<button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div>`;
+    panel.appendChild(el);
+    const pair = el.querySelector('.pair');
+    const d = { id: el.id, cards: [], alt: D.select ? D.select[0][0] : null };
+    for (const dark of [false, true]) d.cards.push(makeCard(stage(pair, dark, dark ? 'Dark' : 'Light'), k, { note: D.note }));
+    d.reset = () => d.cards.forEach(c => {
+      if (c.sheenAnim) c.sheenAnim.cancel();
+      c.root.querySelectorAll('.content.copy').forEach(n => n.remove());
+      render(c, D.start(d));
+      if (D.setup) { D.setup(c, d); draw(c); }
+    });
+    d.play = () => {
+      d.reset();
+      const token = (d.token = (d.token || 0) + 1);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (token !== d.token) return; // a newer replay owns these cards
+        const t0 = performance.now();
+        d.cards.forEach(c => { if (reduced()) crossfade(c, () => render(c, D.end(d))); else D.run(c, d, t0); });
+      }));
+    };
+    d.check = () => d.cards.flatMap((c, i) => check(c, D.end(d)).map(e => `${d.id}${d.alt ? '/' + d.alt : ''}${i ? ' dark' : ''}: ${e}`));
+    d.variants = D.select ? D.select.map(s => s[0]) : [null];
+    d.setAlt = v => { d.alt = v; if (D.select) el.querySelector('select').value = v; };
+    el.querySelector('[data-replay]').addEventListener('click', d.play);
+    if (D.select) el.querySelector('select').addEventListener('change', e => { d.alt = e.target.value; d.play(); });
+    d.reset();
+    demos.push(d);
+  }
+  // Headless check: after a demo ends, every unit, the number and the note match a plain render of the end state.
+  function check(c, st) {
+    const errs = [], tg = model(c, st);
+    if (c.units.length !== tg.length) errs.push(`units ${c.units.length} ≠ ${tg.length}`);
+    tg.forEach(v => {
+      const u = c.units.find(x => x.key === v.key && !x.exiting);
+      if (!u) { errs.push('missing ' + v.key); return; }
+      for (const p of ['x', 'y', 'w', 'ht', 'h', 'fill', 'op', 'tx', 'ty', 's', 'sx', 'sy', 'ghost', ...LOOKS]) if (Math.abs(u[p] - v[p]) > 0.01) errs.push(`${v.key}.${p} ${(+u[p]).toFixed(3)} ≠ ${v[p].toFixed(3)}`);
+      if (u.trailOp > 0.01) errs.push(v.key + '.trail');
+    });
+    if (c.extras.length) errs.push('extras ' + c.extras.length);
+    if (Math.abs(c.reveal - 1) > 0.01 || Math.abs(c.flagA - 1) > 0.01) errs.push('reveal/flag');
+    if (c.amount.textContent !== rupee(st.amount)) errs.push(`amount ${c.amount.textContent} ≠ ${rupee(st.amount)}`);
+    if (!!st.note !== (+getComputedStyle(c.note).opacity > 0.99)) errs.push('note opacity');
+    if (c.root.querySelector('.content.copy')) errs.push('crossfade copy left');
+    const hWant = (c.k === 'B' ? bHeight(st) : H);
+    const rw = c.root.getBoundingClientRect().width, hNow = rw ? c.unitsEl.getBoundingClientRect().height / (rw / 320) : parseFloat(c.unitsEl.style.height);
+    if (!(Math.abs(hNow - hWant) <= 0.5)) errs.push(`row height ${hNow} ≠ ${hWant}`);
+    if (c.k !== 'B') { const right = Math.max(...c.units.map(u => u.x + u.w + (u.isToday && c.k === 'A' ? 3 : 0))); if (right > c.W + 0.5) errs.push(`row overflows ${f1(right)} > ${f1(c.W)}`); }
+    return errs;
+  }
+  window.__demos = demos;
+
+  // ---------- 1. Side by side ----------
+  const DIRS = {
+    A: { name: 'A · Dot ledger', rank: 'Top pick', pitch: 'Each day is a column of 6 dots in the 40dp row, grouped in weeks of 7 by a wider gap. At 9 days each day is 3 dots wide. Today\'s dots are marigold inside an ink capsule; the lit count is today\'s money, and a spend puts dots out from the top.' },
+    B: { name: 'B · Blister card', rank: 'Third', pitch: 'A calendar grid 7 wide, Mon to Sun, with tiny weekday letters. Past days are blank. Today\'s cell drains sideways; payday is a dashed cell with the flag. The card grows with the days left.' },
+    C: { name: 'C · Glass and road', rank: 'Fallback', pitch: 'Today is a 40dp tank on the start side. Beside it, a thin rail of one notch per remaining day runs to the payday flag, with a tick every 7 days. Its thickness is each day\'s share.' },
+  };
+  const sideCards = [];
+  for (const k of 'ABC') {
+    const col = document.createElement('div');
+    col.innerHTML = `<h3>${DIRS[k].name} <span class="tag ghost">${DIRS[k].rank}</span></h3><p>${DIRS[k].pitch}</p>`;
+    const stack = document.createElement('div'); stack.className = 'stack'; col.appendChild(stack);
+    document.getElementById('side').appendChild(col);
+    for (const D of [9, 28]) for (const dark of [false, true]) {
+      const c = makeCard(stage(stack, dark, `${D} days · ${dark ? 'dark' : 'light'}`), k);
+      c.st = S(D, 'onTrack'); render(c, c.st); sideCards.push(c);
+    }
+  }
+  const ovSel = document.getElementById('ovTheme'), side = document.getElementById('side');
+  const applyOv = v => { side.classList.toggle('only-light', v === 'light'); side.classList.toggle('only-dark', v === 'dark'); };
+  ovSel.addEventListener('change', e => applyOv(e.target.value));
+  const qp = new URLSearchParams(location.search).get('ov'); if (qp) { ovSel.value = qp; applyOv(qp); }
+
+  // ---------- 2. Panels ----------
+  const STATES = [
+    ['On track', 'onTrack', k => ({ A: 'Today: lit <b>marigold</b> dots with <code>blockIdle</code> empties above them, inside a 1.5dp ink capsule in light (marigold is 1.81:1 on the card, so it never sits bare). The top lit dot is dimmed for the remainder. Future days: <code>blockIdle</code> dots, all the same height.', B: 'Today\'s cell: marigold from the left on a <code>blockIdle</code> track, 1.5dp ink edge in light and a 1dp ink line at the level. Future cells: <code>blockIdle</code>. Today\'s weekday letter is ink and bold.', C: 'The tank: marigold level, 1.5dp ink edge in light, 1dp ink line on top. The rail: flat <code>blockIdle</code> notches, 10dp thick, <code>displayInk2</code> week ticks.' }[k])],
+    ['Slow down', 'slow', k => (k === 'A' ? 'Under 25% left (₹400). A <b>marigold ring</b> inside the ink capsule, and the true level: 1.3 dots at 9 days (one lit, one dim), 0.2 at 28 days (one dim dot). The words say "Slow down".' : `Under 25% left (₹400). No track: a <b>marigold ring</b> inside the edge and a thin marigold sliver${k === 'B' ? ' at the cell\'s start' : ''}. The words say "Slow down".`)],
+    ['Over today', 'overToday', k => (k === 'A' ? 'Today is a <b>checkerboard</b> of <code>displayInk2</code> and <code>blockIdle</code> dots in a <code>displayInk2</code> capsule: the dot form of the hatch. Each future day loses its top dot(s) to a 1dp <code>displayInk2</code> ring (0.93: 1.2 of 18 dots at 9 days; 0.98: the top dot dims at 28 days).' : `Today is hatched (2dp <code>displayInk2</code>, 6dp apart) with a 1.5dp <code>displayInk2</code> outline. ${k === 'B' ? 'Each future cell\'s fill shrinks from the right inside a 1dp ghost outline' : 'The rail thins (10 → 9.3dp at 9 days, 9.8dp at 28) inside a 1dp ghost of its old thickness'}.`)],
+    ['Over for the cycle', 'overCycle', k => (k === 'A' ? 'Every dot is an <b>empty 1dp ring</b> in <code>displayInk2</code>; today keeps its <code>displayInk2</code> capsule so you can still find it. No marigold anywhere.' : `Every ${k === 'B' ? 'cell' : 'part, tank and rail,'} is <b>outline only</b> in <code>displayInk2</code>. No marigold anywhere.`)],
+  ];
+  const ORDER = { A: ['dotsOut', 'fill', 'over', 'newdayA', 'grow', 'payday'], B: ['pressOut', 'fill', 'spend', 'over', 'grow', 'payday'], C: ['stepUp', 'fill', 'spend', 'over', 'grow', 'payday'] };
+  const todayItems = '<div class="hd"><span>Today</span><span>₹420</span></div><div class="it"><span>Tea</span><b>₹40</b></div><div class="it"><span>Auto</span><b>₹120</b></div><div class="it"><span>Lunch</span><b>₹260</b></div>';
+  const heightRulers = [];
+  for (const k of 'ABC') {
+    const panel = document.getElementById('panel-' + k);
+    panel.insertAdjacentHTML('beforeend', `<h2 style="margin-top:24px">${DIRS[k].name} <span class="tag ghost">${DIRS[k].rank}</span></h2><p class="lede">${DIRS[k].pitch}</p>`);
+    demo(panel, k, ORDER[k][0], `${k}1`);
+    panel.insertAdjacentHTML('beforeend', '<h3 style="margin-top:32px">States</h3>');
+    for (const [name, style, text] of STATES) {
+      const row = document.createElement('div'); row.className = 'state';
+      row.innerHTML = `<h3>${name}</h3><p>${text(k)}</p>`;
+      const r = document.createElement('div'); r.className = 'row'; row.appendChild(r);
+      panel.appendChild(row);
+      for (const D of [9, 28]) for (const dark of [false, true]) render(makeCard(stage(r, dark, `${D} days · ${dark ? 'dark' : 'light'}`), k), S(D, style));
+    }
+    {
+      const row = document.createElement('div'); row.className = 'state';
+      row.innerHTML = `<h3>1 day left</h3><p>Tue 3 Nov, ₹500 of ₹1,640 left; "Payday tomorrow". ${k === 'A' ? 'One 3-wide column, 18 dots.' : k === 'B' ? 'One cell beside the payday cell, in the week of Mon 2 Nov.' : 'The tank and the flag; no rail.'}</p>`;
+      const r = document.createElement('div'); r.className = 'row'; row.appendChild(r); panel.appendChild(row);
+      for (const dark of [false, true]) render(makeCard(stage(r, dark, `1 day · ${dark ? 'dark' : 'light'}`), k), LAST);
+    }
+    if (k === 'A') {
+      const row = document.createElement('div'); row.className = 'state';
+      row.innerHTML = '<h3>Dot-size check at 28 days</h3><p>Idle dots are <code>blockIdle</code>: <b>1.53:1</b> on the card in light and dark, above the 1.5:1 floor at any size. But the ratio is measured on large areas; a small dot reads fainter. <b>4dp dots look faint</b> at arm\'s length, especially in light. <b>5dp with a 2dp gap</b> fits 28 days (213 of 226dp) and fills the 40dp height exactly (6 × 5 + 5 × 2), so it is the default here. Check on a low-end panel outdoors (design-accessibility).</p>';
+      const r = document.createElement('div'); r.className = 'row'; row.appendChild(r); panel.appendChild(row);
+      for (const dark of [false, true]) for (const [dot, dgap, lab] of [[4, 2.7, '4dp, 6.7 pitch'], [4.5, 3, '4.5dp, 7.5 pitch'], [5, 2, '5dp, 2dp gap (default)']])
+        render(makeCard(stage(r, dark, `${lab} · ${dark ? 'dark' : 'light'}`), 'A', { dot, dgap }), ON28);
+    }
+    if (k === 'B') {
+      const row = document.createElement('div'); row.className = 'state';
+      row.innerHTML = '<h3>Height across the cycle: the push-down</h3><p>The same card at 9 days (Mon 26 Oct, 2 rows) and 28 days (Wed 7 Oct, 5 rows), with Home\'s Today list below. The list starts lower by the difference, and on a 360 × 640dp phone the list\'s first row leaves the first screen at 28 days.</p>';
+      const r = document.createElement('div'); r.className = 'row'; row.appendChild(r); panel.appendChild(row);
+      for (const dark of [false, true]) for (const D of [9, 28]) {
+        const st = stage(r, dark, `${D} days · ${dark ? 'dark' : 'light'}`);
+        render(makeCard(st, 'B'), S(D, 'onTrack'));
+        const list = document.createElement('div'); list.className = 'todaylist'; list.innerHTML = todayItems; st.appendChild(list);
+        const rule = document.createElement('div'); rule.className = 'ruler'; st.appendChild(rule);
+        heightRulers.push({ st, list, rule });
+      }
+    }
+    panel.insertAdjacentHTML('beforeend', '<h3 style="margin-top:32px">Motion</h3>');
+    ORDER[k].slice(1).forEach((key, i) => demo(panel, k, key, `${k}${i + 2}`));
+  }
+  function measureRulers() {
+    heightRulers.forEach(h => { h.top = h.list.offsetTop; });
+    const min = Math.min(...heightRulers.map(h => h.top));
+    heightRulers.forEach(h => { h.rule.textContent = `Today list starts ${h.top - min === 0 ? 'at the baseline' : '+' + (h.top - min) + 'dp lower'} (hero ${h.st.querySelector('.hero').offsetHeight}dp tall)`; });
+  }
+
+  // D · the dial: static, light, one card
+  (() => {
+    const st = stage(document.getElementById('dialRow'), false, 'Rejected · 9 days · light');
+    const n = 9, cx = 140, cy = 112, R0 = 96, R1 = 84, gapDeg = 26, span = (360 - gapDeg) / n;
+    let wedges = '';
+    for (let i = 0; i < n; i++) {
+      const a0 = -90 + i * span + 2, a1 = a0 + span - 4, p = (a, r) => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
+      const [x0, y0] = p(a0, R0), [x1, y1] = p(a1, R0), [x2, y2] = p(a1, R1), [x3, y3] = p(a0, R1);
+      const d = `M${f1(x0)} ${f1(y0)}A${R0} ${R0} 0 0 1 ${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}A${R1} ${R1} 0 0 0 ${f1(x3)} ${f1(y3)}Z`;
+      if (i === 0) {
+        const am = a0 + (a1 - a0) * 0.773, [xm, ym] = p(am, R0), [xn, yn] = p(am, R1);
+        wedges += `<path d="${d}" class="f-idle"/><path d="M${f1(x0)} ${f1(y0)}A${R0} ${R0} 0 0 1 ${f1(xm)} ${f1(ym)}L${f1(xn)} ${f1(yn)}A${R1} ${R1} 0 0 0 ${f1(x3)} ${f1(y3)}Z" class="f-sig"/><path d="${d}" class="s-edge" stroke-width="1.5"/>`;
+      } else wedges += `<path d="${d}" class="f-idle"/>`;
+    }
+    const fa = -90 - gapDeg / 2 + 1, fx = cx + 90 * Math.cos(fa * Math.PI / 180), fy = cy + 90 * Math.sin(fa * Math.PI / 180);
+    st.insertAdjacentHTML('beforeend', `<section class="hero" role="img" aria-label="Rejected day dial: safe to spend today 1,430 rupees, 9 days to payday" style="cursor:default">${ETCH}<div class="grain" style="background-image:${grain(st)}"></div><svg class="frame" aria-hidden="true"><rect class="k1"/><rect class="k2"/></svg>
+      <div class="content"><div class="title">Safe to spend today</div>
+      <svg width="280" height="224" viewBox="0 0 280 224" aria-hidden="true" style="display:block;margin-top:8px">${wedges}
+        <path d="M${f1(fx - 4)} ${f1(fy + 6)}V${f1(fy - 6)}h7l-1.3 2.6 1.3 2.6H${f1(fx - 4)}" fill="none" stroke="var(--displayInk)" stroke-width="1.4" stroke-linejoin="round"/>
+        <text class="dial-amt" x="${cx}" y="${cy + 12}" text-anchor="middle">₹1,430</text>
+        <text class="wd" x="${cx}" y="${cy + 34}" text-anchor="middle">9 days to payday</text></svg>
+      <div class="divider"></div><div class="range">${ICON.check}<span>Lasts till payday · about <b>₹9,300 spare</b></span></div></div></section>`);
+  })();
+
+  // Tabs
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  function pick(tab) {
+    tabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+    if (tab.id === 'tab-B') measureRulers();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t));
+    t.addEventListener('keydown', e => { const n = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (n) { const nt = tabs[(i + n + tabs.length) % tabs.length]; pick(nt); nt.focus(); } });
+  });
+  pick(tabs[0]);
+  window.__pick = id => pick(document.getElementById(id));
+  window.__measureRulers = measureRulers;
+
+  // ---------- 2-second count ----------
+  const qStage = document.getElementById('quizStage'), qAns = document.getElementById('quizAnswer'), qVer = document.getElementById('quizVerdict');
+  let qTimer = 0;
+  document.querySelectorAll('[data-quiz]').forEach(b => b.addEventListener('click', () => {
+    clearTimeout(qTimer);
+    const k = b.dataset.quiz, D = 26 + Math.floor(Math.random() * 3);
+    qStage.innerHTML = `<span class="which">${DIRS[k].name} · look for 2 seconds</span>`; qAns.innerHTML = ''; qVer.textContent = '';
+    const c = makeCard(qStage, k, { quiz: true }); render(c, S(D, 'onTrack'));
+    qTimer = setTimeout(() => {
+      c.root.style.visibility = 'hidden';
+      qStage.querySelector('.which').textContent = 'How many days to payday?';
+      qAns.innerHTML = [26, 27, 28].map(n => `<button class="btn ghost" data-n="${n}">${n}</button>`).join('');
+      qAns.querySelectorAll('button').forEach(a => a.addEventListener('click', () => {
+        c.root.style.visibility = '';
+        qVer.textContent = +a.dataset.n === D ? `Right: ${D} days.` : `It was ${D} days; you said ${a.dataset.n}.`;
+      }));
+    }, 2000);
+  }));
+
+  // ---------- Play on load ----------
+  function replayAll() {
+    const token = (replayAll.token = (replayAll.token || 0) + 1);
+    sideCards.forEach(c => { render(c, c.st); DEMOS.fill.setup(c); draw(c); });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (token !== replayAll.token) return;
+      const t0 = performance.now();
+      sideCards.forEach(c => { if (reduced()) { crossfade(c, () => render(c, c.st)); return; } level(c, todayU(c), shownFill(c.k, c.st), CALM, [0, 1430], t0); sheen(c); });
+    }));
+    demos.forEach(d => d.play());
+  }
+  window.__sideCheck = () => sideCards.flatMap((c, i) => check(c, c.st).map(e => `side${i}: ${e}`));
+  window.__replayAll = replayAll;
+  document.getElementById('replayAll').addEventListener('click', replayAll);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(replayAll);
+})();
+</script>
+</body>
+</html>

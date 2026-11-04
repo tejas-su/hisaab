@@ -80,6 +80,19 @@
       }
     }
   },
+  "limitLeft": "{amount} left",
+  "@limitLeft": {
+    "description": "Where it went row at or under its limit: what is left of the limit (BR-12)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "hatchKey": "Striped part is over the limit.",
+  "@hatchKey": {
+    "description": "Key under Where it went, shown only when a bar is hatched; visual only, hidden from TalkBack"
+  },
   "limitOf": "limit {amount}",
   "@limitOf": {
     "description": "TalkBack detail for a category row with a limit",
@@ -176,6 +189,91 @@
     }
   },
   "safeToSpendThisWeek": "Safe to spend this week",
+  "weekSpent": "Spent {amount} this week",
+  "@weekSpent": {
+    "description": "Hero range slot in This week (BR-6a)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weekAllWithin": "every day within its share",
+  "@weekAllWithin": {
+    "description": "Detail after weekSpent when no day of the week went over its share"
+  },
+  "weekDayOver": "{day} was {amount} over its share",
+  "@weekDayOver": {
+    "description": "Detail after weekSpent naming the most-over past day; day is a short weekday name such as Tue",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weekTodayOver": "Today is {amount} over its share",
+  "@weekTodayOver": {
+    "description": "Detail after weekSpent when today is the most-over day",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weekMoreDays": "{count, plural, =1{and 1 more day} other{and {count} more days}}",
+  "@weekMoreDays": {
+    "description": "Added after weekDayOver when other days were over too",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overShare": "{amount} over its share",
+  "@overShare": {
+    "description": "TalkBack detail for a week day that went over its share",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weekDaySpoken": "{day}, {amount}",
+  "@weekDaySpoken": {
+    "description": "TalkBack for one past day of the week; day is the full weekday name",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weekTodaySpoken": "Today, {amount} so far",
+  "@weekTodaySpoken": {
+    "description": "TalkBack for today in the week",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "spokenSentences": "{first}. {second}",
+  "@spokenSentences": {
+    "description": "Joins two spoken sentences",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
   "showThisWeek": "show this week",
   "@showThisWeek": {
     "description": "TalkBack hint for tapping the hero card while it shows today: \"Double tap to show this week\""

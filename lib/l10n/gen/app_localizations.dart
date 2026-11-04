@@ -217,6 +217,18 @@ abstract class AppLocalizations {
   /// **'{amount} past limit'**
   String pastLimit(String amount);
 
+  /// Where it went row at or under its limit: what is left of the limit (BR-12)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left'**
+  String limitLeft(String amount);
+
+  /// Key under Where it went, shown only when a bar is hatched; visual only, hidden from TalkBack
+  ///
+  /// In en, this message translates to:
+  /// **'Striped part is over the limit.'**
+  String get hatchKey;
+
   /// TalkBack detail for a category row with a limit
   ///
   /// In en, this message translates to:
@@ -330,6 +342,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Safe to spend this week'**
   String get safeToSpendThisWeek;
+
+  /// Hero range slot in This week (BR-6a)
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount} this week'**
+  String weekSpent(String amount);
+
+  /// Detail after weekSpent when no day of the week went over its share
+  ///
+  /// In en, this message translates to:
+  /// **'every day within its share'**
+  String get weekAllWithin;
+
+  /// Detail after weekSpent naming the most-over past day; day is a short weekday name such as Tue
+  ///
+  /// In en, this message translates to:
+  /// **'{day} was {amount} over its share'**
+  String weekDayOver(String day, String amount);
+
+  /// Detail after weekSpent when today is the most-over day
+  ///
+  /// In en, this message translates to:
+  /// **'Today is {amount} over its share'**
+  String weekTodayOver(String amount);
+
+  /// Added after weekDayOver when other days were over too
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{and 1 more day} other{and {count} more days}}'**
+  String weekMoreDays(int count);
+
+  /// TalkBack detail for a week day that went over its share
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over its share'**
+  String overShare(String amount);
+
+  /// TalkBack for one past day of the week; day is the full weekday name
+  ///
+  /// In en, this message translates to:
+  /// **'{day}, {amount}'**
+  String weekDaySpoken(String day, String amount);
+
+  /// TalkBack for today in the week
+  ///
+  /// In en, this message translates to:
+  /// **'Today, {amount} so far'**
+  String weekTodaySpoken(String amount);
+
+  /// Joins two spoken sentences
+  ///
+  /// In en, this message translates to:
+  /// **'{first}. {second}'**
+  String spokenSentences(String first, String second);
 
   /// TalkBack hint for tapping the hero card while it shows today: "Double tap to show this week"
   ///

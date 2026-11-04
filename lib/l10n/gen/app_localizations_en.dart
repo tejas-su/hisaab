@@ -82,6 +82,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String limitLeft(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String get hatchKey => 'Striped part is over the limit.';
+
+  @override
   String limitOf(String amount) {
     return 'limit $amount';
   }
@@ -165,6 +173,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get safeToSpendThisWeek => 'Safe to spend this week';
+
+  @override
+  String weekSpent(String amount) {
+    return 'Spent $amount this week';
+  }
+
+  @override
+  String get weekAllWithin => 'every day within its share';
+
+  @override
+  String weekDayOver(String day, String amount) {
+    return '$day was $amount over its share';
+  }
+
+  @override
+  String weekTodayOver(String amount) {
+    return 'Today is $amount over its share';
+  }
+
+  @override
+  String weekMoreDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more days',
+      one: 'and 1 more day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String overShare(String amount) {
+    return '$amount over its share';
+  }
+
+  @override
+  String weekDaySpoken(String day, String amount) {
+    return '$day, $amount';
+  }
+
+  @override
+  String weekTodaySpoken(String amount) {
+    return 'Today, $amount so far';
+  }
+
+  @override
+  String spokenSentences(String first, String second) {
+    return '$first. $second';
+  }
 
   @override
   String get showThisWeek => 'show this week';

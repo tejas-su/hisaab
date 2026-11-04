@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Day unit concepts (proposal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Proposal: three shapes for one day in the hero's day row. Nothing here is decided or built.
+     Base, tokens, hero frame and springs are mockup 15's. Worked example (SPEC BR-4/6/7): cycle Sun 4 Oct to
+     Tue 3 Nov 2026, today Mon 26 Oct, D = 9, A = ₹1,850, ₹420 spent today, hero ₹1,430, fill 0.773.
+     The 28-day rows move "today" to Wed 7 Oct with the same daily share, so only the count changes. */
+  :root {
+    /* HisaabColors.light (lib/core/design/hisaab_colors.dart) */
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --control: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --displaySheen: #FFFEFCB3;
+    --clear: #F1EBE400;
+    --ringW: 3px;
+    /* Derived, not a token: the ingot's shaded facets (displayInk at 14%). Needs design-system if B wins. */
+    --facetShade: #16161524;
+    /* Mockup canvas only, not app tokens */
+    --canvas: #DDD5CB; --frame: #2B2926;
+  }
+  .dark {
+    /* HisaabColors.dark */
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --control: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --displaySheen: #F2F1EC1A;
+    --clear: #13121000;
+    --ringW: 1.5px;
+    /* Derived, not a token: bg at 45% */
+    --facetShade: #13121073;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 24px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 16px/20px 'Mukta', sans-serif; margin: 0 0 4px; }
+  p { margin: 0 0 8px; }
+  .lede { color: var(--ink2); max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede b { color: var(--ink); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--bg); vertical-align: 3px; }
+  .tag.ghost { background: none; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink2); }
+
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 8px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 48px; cursor: pointer; }
+  .controls input { width: 20px; height: 20px; accent-color: var(--ink); }
+  .controls .hint { color: var(--ink2); font-size: 13px; }
+  button.btn { font: 600 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 16px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+  select { font: 400 14px/20px 'Mukta', sans-serif; min-height: 40px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
+
+  .tabs { display: flex; gap: 8px; margin: 16px 0 0; }
+  .tabs [role=tab] { font: 600 15px/20px 'Mukta', sans-serif; min-height: 48px; padding: 12px 20px; border-radius: 14px; border: 0; cursor: pointer; background: var(--hairline); color: var(--ink); }
+  .tabs [role=tab][aria-selected=true] { background: var(--ink); color: var(--bg); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .cols { display: grid; grid-template-columns: repeat(3, max-content); gap: 24px; align-items: start; }
+  .cols > div > p { max-width: 360px; font-size: 14px; line-height: 20px; color: var(--ink2); }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .stage { position: relative; background: var(--bg); padding: 20px; border-radius: 20px; color: var(--ink); }
+  .stage .which { display: block; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink2); margin: -6px 0 10px; }
+
+  /* ---------- Hero card (etched, raised; D106/D107), as mockup 15 ---------- */
+  .hero { position: relative; width: 320px; border-radius: 28px; background: var(--display); color: var(--displayInk);
+    overflow: hidden; isolation: isolate; box-shadow: 0 10px 28px -12px var(--displayShadow); cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; transition: transform 250ms var(--spring, ease-out); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero.pressed { transform: scale(0.97); }
+  .hero:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .etch { position: absolute; z-index: 1; right: -70px; top: -90px; width: 300px; height: 300px; pointer-events: none; }
+  .etch path { fill: none; stroke: var(--displayEtch); stroke-width: 0.6; }
+  .grain { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
+  .frame rect { fill: none; stroke-width: 0.6; }
+  .frame .k1 { x: 6px; y: 6px; width: calc(100% - 12px); height: calc(100% - 12px); rx: 22px; ry: 22px; stroke: var(--displayEtch); }
+  .frame .k2 { x: 10px; y: 10px; width: calc(100% - 20px); height: calc(100% - 20px); rx: 18px; ry: 18px; stroke: var(--hairline); stroke-dasharray: 4 3; }
+  .sheen { position: absolute; inset: -40% -60%; z-index: 3; pointer-events: none; transform: translateX(-70%);
+    background: linear-gradient(105deg, var(--clear) 42%, var(--displaySheen) 50%, var(--clear) 58%); }
+  .content { position: relative; z-index: 2; padding: 24px 20px; }
+  .content.copy { position: absolute; inset: 0 0 auto 0; pointer-events: none; }
+  .title { font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .amtrow { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 12px; }
+  .amount { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: 76px; line-height: 76px; font-stretch: 85%;
+    font-variation-settings: 'wdth' 85; letter-spacing: -0.76px; font-feature-settings: 'tnum'; color: var(--displayInk); }
+  .amount.muted { color: var(--displayInk2); }
+  .over { font: 600 16px/20px 'Mukta', sans-serif; padding-bottom: 10px; color: var(--displayInk); }
+  .dayrow { margin-top: 24px; display: flex; align-items: flex-end; gap: 10px; }
+  .hero.cA .dayrow { gap: 0; }
+  .units { position: relative; flex: 1 1 0; min-width: 0; height: 40px; }
+  .units > svg { position: absolute; left: 0; top: 0; width: 100%; height: 40px; overflow: visible; }
+  .flag { min-width: 44px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--displayInk); }
+  .hero.cA .flag { height: 40px; justify-content: center; padding: 0 4px 0 6px; }
+  .flag span { font: 600 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); white-space: nowrap; }
+  .caps { margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; font: 400 12px/14px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .divider { margin-top: 20px; height: 1px; background: var(--displayEtch); }
+  .range { margin-top: 16px; display: flex; gap: 8px; align-items: center; font: 400 15px/20px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .range svg { flex: none; color: var(--displayInk); }
+  .range b { font-weight: 600; color: var(--displayInk); font-feature-settings: 'tnum'; }
+  .note { display: none; margin-top: 12px; font: 400 13px/18px 'Mukta', sans-serif; color: var(--displayInk2); opacity: 0; }
+  .hero.has-note .note { display: block; }
+
+  /* Flying parts (C's scrap) live above the card, so they can leave it */
+  .fly { position: absolute; left: 0; top: 0; width: 1px; height: 1px; z-index: 6; pointer-events: none; }
+  .fly svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .haptic { position: absolute; right: 20px; top: 8px; z-index: 7; font: 600 12px/16px 'Mukta', sans-serif; padding: 2px 8px; border-radius: 8px; background: var(--ink); color: var(--bg); opacity: 0; pointer-events: none; }
+
+  /* ---------- SVG paint classes: every fill is a HisaabColors role ---------- */
+  .f-idle { fill: var(--blockIdle); } .f-sig { fill: var(--signal); } .f-ink2 { fill: var(--displayInk2); } .f-card { fill: var(--display); }
+  .f-edge { fill: var(--displayEdge); } .f-sheen { fill: var(--displaySheen); } .f-shade { fill: var(--facetShade); }
+  .s-edge, .s-ring, .s-ink2, .s-card, .s-etch, .s-onsig, .s-sheen { fill: none; }
+  .s-edge { stroke: var(--displayEdge); } .s-ring { stroke: var(--signal); stroke-width: calc(var(--ringW) * 2); } .s-ink2 { stroke: var(--displayInk2); }
+  .s-card { stroke: var(--display); } .s-etch { stroke: var(--displayEtch); } .s-onsig { stroke: var(--onSignal); } .s-sheen { stroke: var(--displaySheen); }
+  text.d { font: 600 12px 'Mukta', sans-serif; font-feature-settings: 'tnum'; }
+  text.mint { font: 600 9px 'Anek Latin', sans-serif; }
+  .t-ink { fill: var(--displayInk); } .t-onsig { fill: var(--onSignal); }
+
+  /* ---------- Sections ---------- */
+  .state { margin-top: 24px; }
+  .state p, .demo p { font-size: 14px; line-height: 20px; color: var(--ink2); max-width: 90ch; }
+  .state p b, .demo p b { color: var(--ink); font-weight: 600; }
+  .demo { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline); }
+  .demo header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .demo header > div { max-width: 720px; }
+  .demo .acts { display: flex; gap: 8px; align-items: center; }
+  .demo.show { border: 2px dashed var(--ink2); border-radius: 28px; padding: 20px 24px 24px; margin-top: 32px; }
+  .panel { margin-top: 8px; }
+  .boxed { margin-top: 48px; padding: 24px; border-radius: 28px; border: 2px dashed var(--ink2); }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; background: var(--surface); border-radius: 20px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-weight: 600; }
+  td code { font-size: 13px; }
+  table.cmp td { max-width: 300px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--hairline); }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label><input type="checkbox" id="reduce"> Reduce motion</label>
+  <span class="hint">Starts from your system's prefers-reduced-motion. On, every replay shows its fallback.</span>
+  <button class="btn" id="replayAll">Replay all</button>
+</div>
+
+<h1>Day unit concepts <span class="tag">Proposal, not agreed in SPEC</span></h1>
+<p class="lede">Follows mockup 15, which was rejected for its capsules and its double-wide today. Every day here has the <b>same width</b> again. Marigold sits only on today's unit, with the 1.5dp <code>displayEdge</code> ink edge in light. Future days are grey. There is no red or green; state is fill, hatch, outline and words. The tokens, etched hero, springs (critically damped, sampled into CSS <code>linear()</code>), Reduce motion toggle, pressable card and worked example are mockup 15's, and so are its accessibility fixes: max fill 0.86 once anything is spent, 2dp hatch 6dp apart, <code>displayInk2</code> outlines for over-for-cycle and ghosts, "rupees" spoken, and a flag column that sizes to its date. Each concept gets one <b>showpiece</b>. All three share a new <b>weighted landing</b> (a 3% squash on the new <code>land</code> spring) and <b>digits bound to the fill spring</b>, so the number stops on the same frame as the level.</p>
+
+<!-- ================= 1. Side by side ================= -->
+<h2>1 · Side by side</h2>
+<p class="lede">On track, 9 days (Mon 26 Oct) and 28 days (Wed 7 Oct), light and dark. Each card fills in on load; press one to feel the 0.97 sink.</p>
+<div class="cols" id="side"></div>
+
+<!-- ================= 2. Detail tabs ================= -->
+<h2>2 · Each concept in detail</h2>
+<p class="lede">States at 9 and 28 days in light and dark, then every animation with its own Replay. Reduce motion turns every replay into its fallback.</p>
+<div class="tabs" role="tablist" aria-label="Concept">
+  <button role="tab" id="tab-A" aria-controls="panel-A" aria-selected="true">A · Ticket strip</button>
+  <button role="tab" id="tab-B" aria-controls="panel-B" aria-selected="false">B · Gold biscuits</button>
+  <button role="tab" id="tab-C" aria-controls="panel-C" aria-selected="false">C · Note strip</button>
+</div>
+<section class="panel" role="tabpanel" id="panel-A" aria-labelledby="tab-A"></section>
+<section class="panel" role="tabpanel" id="panel-B" aria-labelledby="tab-B" hidden></section>
+<section class="panel" role="tabpanel" id="panel-C" aria-labelledby="tab-C" hidden></section>
+
+<!-- ================= 3. Compare ================= -->
+<h2>3 · Compare</h2>
+<table class="cmp">
+  <tr><th></th><th>A · Ticket strip (rank 1)</th><th>B · Gold biscuits (rank 2)</th><th>C · Note strip (rank 3)</th></tr>
+  <tr><th>Counting at 28 days</th>
+    <td>8.4dp stubs, no gaps. Seams are dashed perforations in <code>display</code>, plus 1.5dp notches at the top and bottom (1.53:1 against <code>blockIdle</code>, the same step as any day block's edge). Monday dates, turned upright, mark the weeks, so you count in weeks, not stubs. The faintest separation of the three.</td>
+    <td>6.1dp ingots with 2dp gaps. The facets merge into a flat face with one highlight line, so each one reads as a bar with a slight taper. As countable as 15's pills.</td>
+    <td>6.1dp notes with 2dp gaps. The keyline (below 8dp) and the roundel (below 12dp) are gone, so at 28 days it is plain rounded bars: the concept disappears.</td></tr>
+  <tr><th>Wow moment</th>
+    <td><b>Morning tear</b>, about 2.2s, once a day, any tap skips it. Yesterday rips off with a <code>lightImpact</code>, curls and falls. Rare, so it can stay special.</td>
+    <td><b>The glint wave</b> on a morning after an underspend: the ingots swell in a domino stagger and a sheen rakes across each bevel. Only on a good morning, so it reads as a reward.</td>
+    <td><b>The scrap</b>: on every spend, the spent slice tears off and flies up out of the card. Strong once, but it plays on every spend, so it may wear thin by week two.</td></tr>
+  <tr><th>Paint cost</th>
+    <td>Per stub: one path with four arcs, a fill, a dashed seam line and an optional date (cached <code>TextPainter</code>). The tear adds one transformed layer for 450ms. Cheap.</td>
+    <td>Per ingot at ≤20 days: an outer polygon, four facet polygons, three brush lines and a minted ₹. The glint adds one clipped polygon for each ingot for about 600ms. The heaviest static paint, still fine for a <code>CustomPainter</code>.</td>
+    <td>Per note: a rounded rect, two keylines, a roundel and a deckled edge (about w / 1.6 points). The scrap needs a layer <b>above the card</b> (an <code>Overlay</code> entry), because the card clips. Cheap paint, extra plumbing.</td></tr>
+  <tr><th>Rules it bends</th>
+    <td>The tear's gravity and its 8° tilt extend the <b>D44</b> overshoot exception (splash only) to a daily Home moment. A haptic on a non-threshold event. Dates printed on the day row are new hero text (FR-HO-2). The <code>land</code> spring is a new token.</td>
+    <td>The facet shade is <b>not a token</b> (displayInk at 14% light, bg at 45% dark), so it needs <code>design-system</code>. The ₹ mint is 9dp decorative text, below the 12dp floor (it is <code>aria-hidden</code> and carries no information). The <code>land</code> spring is a new token.</td>
+    <td>Marigold <b>leaves the card</b> and crosses the light <code>bg</code> for about 300ms; it keeps a 1dp ink edge, but it bends "never bare on the light background". A ballistic path is a new motion kind. The <code>land</code> spring is a new token.</td></tr>
+</table>
+
+<!-- ================= 4. Tokens ================= -->
+<h2>Token table</h2>
+<p class="lede">Every value this mockup uses. Each fill is an existing HisaabColors role. The only exception is B's derived facet shade, which is marked.</p>
+<div class="row">
+<table>
+  <tr><th>Colour</th><th>Light</th><th>Dark</th><th>Used for</th></tr>
+  <tr><td><code>display</code></td><td><span class="sw" style="background:#FFFEFC"></span>#FFFEFC</td><td><span class="sw" style="background:#211F1C"></span>#211F1C</td><td>Hero card; A's perforations and notches (1.53:1 on blockIdle)</td></tr>
+  <tr><td><code>displayInk</code></td><td>#161615</td><td>#F2F1EC</td><td>Amount, over text, glyphs; A's stub dates (11.75:1 light, 9.53:1 dark on blockIdle)</td></tr>
+  <tr><td><code>displayInk2</code></td><td>#65605A (6.17:1)</td><td>#A7A199 (6.42:1)</td><td>Title, captions, flag date, hatch (2dp, 6 apart), over outlines 1.5dp (A dashed 3/2), ghosts 1dp, A's end tab 1dp, A's micro-print, mould inner line</td></tr>
+  <tr><td><code>blockIdle</code></td><td>#D7CFC5 (1.53:1)</td><td>#413D38 (1.53:1)</td><td>Future units, today's empty track</td></tr>
+  <tr><td><code>signal</code></td><td>#FFB020</td><td>#FFB020</td><td>Today's level, the 50% trail (A, B), the slow-down ring, C's scrap. Today only</td></tr>
+  <tr><td><code>onSignal</code></td><td>#161615 (9.90:1)</td><td>#161615</td><td>A's date where the level covers it; C's keylines on marigold at 30%</td></tr>
+  <tr><td><code>displayEdge</code></td><td>#161615</td><td>none</td><td>1.5dp edge on today; 1dp line on the level's top (C: along the deckle); 1dp edge on C's scrap</td></tr>
+  <tr><td><code>displayEtch</code></td><td>#F1EBE4</td><td>#2F2B27</td><td>Guilloché, grain, keyline, divider; C's note keylines on grey</td></tr>
+  <tr><td><code>displaySheen</code></td><td>#FFFEFC at 70%</td><td>#F2F1EC at 10%</td><td>Card sheen; B's lit facets, brush lines, highlight line and glint</td></tr>
+  <tr><td><code>hairline</code>, <code>displayShadow</code>, <code>clear</code></td><td colspan="2">As mockup 15</td><td>Dashed keyline, raised shadow, hatch gaps</td></tr>
+  <tr><td><i>facetShade</i> (derived)</td><td>#161615 at 14%</td><td>#131210 at 45%</td><td>B's shaded facets and the ₹ mint. <b>Not a token</b>: route to design-system</td></tr>
+</table>
+<table>
+  <tr><th>Type, space, shape, motion</th><th>Value</th></tr>
+  <tr><td>Amount, title, over, captions, range</td><td>As mockup 15 (Anek Latin 76 / Mukta 15, 16, 12, 15)</td></tr>
+  <tr><td>A · stub date</td><td>Mukta 12/14, 600, tnum. Every stub at ≤16 days; Mondays only at 17–31, turned 90° when a stub is under 16dp</td></tr>
+  <tr><td>B · minted ₹</td><td>Anek Latin 9, 600, decorative, only when an ingot is ≥16dp and ≤20 days</td></tr>
+  <tr><td>Row</td><td>Height 40. Equal widths. Gaps: A 0 (perforated), B and C 4dp at ≤16 days, 2dp above. Flag 44 + gap 10; A's end tab 44, gap 0</td></tr>
+  <tr><td>A · stub</td><td>Notch radius clamp(w × 0.16, 1.5, 3.5); outer corner 3; perforation dash 1.6/1.6, 1.2dp wide (1dp under 12dp); micro-print 0.6dp, 4dp from the bottom</td></tr>
+  <tr><td>B · ingot</td><td>Taper min(w × 0.14, 3) on each side; bevel clamp(w × 0.16, 1.5, 4); flat face above 20 days</td></tr>
+  <tr><td>C · note</td><td>Radius min(2, w / 4); keylines inset 2 (solid) and 3.6 (dashed 1.5/1.2), both 0.6dp, dropped under 8dp; roundel r min(w/2 − 5, 5.5), dropped under 12dp; deckle 1–2dp peak to peak, a point every 1.6dp</td></tr>
+  <tr><td>Strokes</td><td>Edge, ring, outlines 1.5 · ghost, tab, level top 1 · hatch 2 at 6 apart</td></tr>
+  <tr><td>Max fill once spent</td><td>0.86 (BR-6 change from mockup 15)</td></tr>
+  <tr><td>Springs (damping 1.0)</td><td>snap 250ms · standard 350ms · calm 550ms</td></tr>
+  <tr><td><b>New:</b> <code>land</code></td><td>Response 0.2s, damping 0.85, scale Y only, bottom-anchored, peak 0.97 at about 33ms, settled by 260ms. Starts when the fall reaches 97%</td></tr>
+  <tr><td>A · morning tear</td><td>Hold 150 · rip 120 (lightImpact) · fall 330 with g = 3,000dp/s², 8° tilt, curl, faded by 450 after the rip · close up on calm · fill on calm · wave from fill + 300, 25ms stagger, capped at 400 · note on standard</td></tr>
+  <tr><td>B · glint</td><td>450ms sweep, Cubic(0.65, 0, 0.35, 1), each ingot 120ms after its swell starts</td></tr>
+  <tr><td>C · scrap</td><td>650ms ballistic: up at 720dp/s, g = 500dp/s², drift 46dp/s, −30° turn, opacity 1 until 250ms then 0 by 650</td></tr>
+  <tr><td>Other</td><td>Trail hold 500 · crossfade 150 · sheen 1.4s · stagger 25ms (underspend), min(45, 400 / (n − 1)) (payday) · press 0.97</td></tr>
+</table>
+</div>
+
+<section class="boxed">
+  <h2 style="margin-top:0">Open questions</h2>
+  <ul class="lede">
+    <li><b>A's dates</b> add text to the day row. At 28 days only Mondays show, and they are turned upright to fit 8.4dp, which is slower to read. Decide if the row may carry dates at all (FR-HO-2).</li>
+    <li><b><code>land</code></b> and the tear's gravity need a D-row: they extend D44's overshoot exception from the splash to Home.</li>
+    <li><b>Underspend growth</b> starts the future units at 0.85 so it is visible; the true ratio is 1,850 / 1,887 = 0.98. Is an exaggerated start honest enough?</li>
+    <li>The <b>contrast pairs</b> (stub dates on blockIdle, onSignal keylines) need entries in <code>contrast_pairs_test.dart</code> if a concept is built.</li>
+  </ul>
+</section>
+
+<script>
+(() => {
+  const H = 40;
+  // ---------- Motion tokens ----------
+  // A critically damped spring x(t) = 1 − (1 + ωt)e^(−ωt), ω = 2π, normalised to land exactly at 1 when the token ends.
+  const W2 = 2 * Math.PI, SEND = 1 - (1 + W2) * Math.exp(-W2);
+  const springE = p => (p >= 1 ? 1 : (1 - (1 + W2 * p) * Math.exp(-W2 * p)) / SEND);
+  const linE = p => p;
+  function cubic(x1, y1, x2, y2) {
+    return p => { let lo = 0, hi = 1, s = p;
+      for (let i = 0; i < 24; i++) { s = (lo + hi) / 2; const x = 3 * (1 - s) ** 2 * s * x1 + 3 * (1 - s) * s * s * x2 + s ** 3; if (x < p) lo = s; else hi = s; }
+      return 3 * (1 - s) ** 2 * s * y1 + 3 * (1 - s) * s * s * y2 + s ** 3; };
+  }
+  const SWEEP = cubic(0.65, 0, 0.35, 1);
+  if (CSS.supports('transition-timing-function', 'linear(0, 1)')) {
+    const pts = []; for (let i = 0; i <= 40; i++) pts.push(springE(i / 40).toFixed(4));
+    document.documentElement.style.setProperty('--spring', 'linear(' + pts.join(', ') + ')');
+  }
+  const SNAP = { ms: 250, ease: springE }, STANDARD = { ms: 350, ease: springE }, CALM = { ms: 550, ease: springE };
+  const at = (t, d) => ({ ...t, delay: d });
+  // New token `land`: response 0.2s, damping 0.85, an impulse (squash then settle), scale Y only.
+  const LZ = 0.85, LW = 2 * Math.PI / 0.2, LWD = LW * Math.sqrt(1 - LZ * LZ);
+  const landRaw = s => Math.exp(-LZ * LW * s) * Math.sin(LWD * s);
+  let LPEAK = 0; for (let s = 0; s < 0.2; s += 0.0005) LPEAK = Math.max(LPEAK, landRaw(s));
+  const LAND_MS = 260;
+
+  const reduceBox = document.getElementById('reduce');
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  reduceBox.checked = mq.matches;
+  mq.addEventListener('change', e => { reduceBox.checked = e.matches; });
+  const reduced = () => reduceBox.checked;
+
+  // ---------- Money: en_IN, whole rupees ----------
+  const nf = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+  const rupee = v => '₹' + nf.format(Math.max(0, Math.round(v)));
+  const f1 = v => +(+v).toFixed(2);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rnd = n => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
+
+  // ---------- Glyph stand-ins (the app uses Hugeicons) ----------
+  const svg = (d, sw = 1.8) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICON = {
+    check: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>'),
+    alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>'),
+    over: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
+    flag: svg('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', 1.6),
+  };
+
+  // ---------- Etch: guilloché rosette and grain ----------
+  let rosette = '';
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5; let d = '';
+    for (let i = 0; i <= 360; i++) {
+      const t = (i / 360) * Math.PI * 2, r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      d += (i ? 'L' : 'M') + (r * Math.cos(t)).toFixed(1) + ' ' + (r * Math.sin(t)).toFixed(1);
+    }
+    rosette += `<path d="${d}Z"/>`;
+  }
+  const ETCH = `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${rosette}</svg>`;
+  const grainCache = {};
+  function grain(host) {
+    const colour = getComputedStyle(host).getPropertyValue('--displayEtch').trim();
+    if (!colour) return 'none';
+    if (!grainCache[colour]) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+      const g = cv.getContext('2d'); g.fillStyle = colour;
+      let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 240; i++) g.fillRect(Math.floor(r() * 120), Math.floor(r() * 120), 1, 1);
+      grainCache[colour] = `url(${cv.toDataURL()})`;
+    }
+    return grainCache[colour];
+  }
+
+  // ---------- States (SPEC worked example) ----------
+  const A = 1850;
+  const dayOf = k => new Date(2026, 9, 4 + k); // key 0 = Sun 4 Oct 2026
+  const R = {
+    spare: v => ({ icon: 'check', html: `Lasts till payday · about <b>${rupee(v)} spare</b>` }),
+    lasts: { icon: 'check', html: 'Lasts till payday' },
+    slow: { icon: 'alert', html: '<b>Slow down</b> · today’s share is almost used' },
+    overToday: { icon: 'over', html: '<b>Over today</b> · still lasts till payday' },
+    overCycle: D => ({ icon: 'over', html: `<b>Over by ₹1,200</b> · payday in ${D} days` }),
+  };
+  function S(D, style, o = {}) {
+    const st = { D, start: D === 28 ? 3 : 22, style, fill: 1430 / A, later: 1, amount: 1430, muted: false, over: '',
+      capR: `${D} days to payday`, flag: '4 Nov', range: D === 9 ? R.spare(9300) : R.lasts, note: '' };
+    if (style === 'slow') Object.assign(st, { fill: 400 / A, amount: 400, range: R.slow });
+    if (style === 'overToday') {
+      const each = Math.floor((A * (D - 1) - 1020) / (D - 1));
+      Object.assign(st, { fill: 0, later: each / A, amount: 0, muted: true, over: '₹1,020 over today', capR: `Each day after: ${rupee(each)}`, range: R.overToday });
+    }
+    if (style === 'overCycle') Object.assign(st, { fill: 0, amount: 0, muted: true, over: '₹1,200 over', range: R.overCycle(D) });
+    return { ...st, ...o };
+  }
+  const NOTE = 'You saved ₹300 yesterday, so every day got ₹37 more.';
+  const ON = S(9, 'onTrack'), SPENT = S(9, 'onTrack', { amount: 1130, fill: 1130 / A, range: R.spare(9000) }), OVER = S(9, 'overToday');
+  const MON_END = S(9, 'slow', { fill: 300 / A, amount: 300 }), MON_ZERO = S(9, 'slow', { fill: 0, amount: 0 });
+  const TUE = S(8, 'onTrack', { start: 23, fill: 1, amount: 1887, range: R.spare(8900) });
+  const TUE_NOTE = { ...TUE, note: NOTE }, TUE_ZERO = { ...TUE, amount: 1850, range: R.spare(8600) };
+  const LAST = S(1, 'onTrack', { start: 30, fill: 500 / 1640, amount: 500, capR: 'Payday tomorrow', range: R.lasts });
+  const NEW = S(30, 'onTrack', { start: 31, fill: 1, amount: 1460, capR: '30 days to payday', flag: '4 Dec', range: R.lasts });
+
+  // ---------- Animation engine: one rAF loop, tweens on plain numbers, cards redrawn when dirty ----------
+  const anims = new Set(), dirty = new Set(); let running = false;
+  const kick = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
+  function anim(c, o) {
+    const a = { c, obj: o.obj, to: o.to || {}, from: null, start: (o.t0 ?? performance.now()) + (o.t.delay || 0),
+      ms: Math.max(1, o.t.ms), ease: o.t.ease || linE, update: o.update, done: o.done };
+    if (a.obj) { a.obj._tw = a.obj._tw || {}; for (const k in a.to) a.obj._tw[k] = a; }
+    anims.add(a); kick();
+    return a;
+  }
+  const after = (c, ms, fn, t0) => anim(c, { t: { ms: 1, delay: ms }, t0, done: fn });
+  function tick(now) {
+    for (const a of [...anims]) {
+      if (!anims.has(a)) continue;
+      const t = now - a.start; if (t < 0) continue;
+      if (!a.from && a.obj) { a.from = {}; for (const k in a.to) a.from[k] = a.obj[k]; }
+      const p = Math.min(1, t / a.ms), e = a.ease(p);
+      if (a.obj) for (const k in a.to) if (a.obj._tw[k] === a) a.obj[k] = a.from[k] + (a.to[k] - a.from[k]) * e;
+      if (a.update) a.update(e, p, t);
+      dirty.add(a.c);
+      if (p >= 1) { anims.delete(a); if (a.done) a.done(); }
+    }
+    dirty.forEach(draw); dirty.clear();
+    if (anims.size) requestAnimationFrame(tick); else running = false;
+  }
+  const cancel = c => { for (const a of anims) if (a.c === c) anims.delete(a); };
+
+  // ---------- Model: one entry per day, all equal width ----------
+  const LOOKS = ['idle', 'sig', 'edge', 'ring', 'hatch', 'outline', 'dashed'];
+  const GROUPS = { geom: ['x', 'w'], look: LOOKS, level: ['fill', 'deck'], later: ['h'], ghost: ['ghost'], pos: ['op', 'tx'] };
+  const GAP = { A: () => 0, B: n => (n <= 16 ? 4 : 2), C: n => (n <= 16 ? 4 : 2) };
+  function lookFor(k, style, today) {
+    const L = Object.fromEntries(LOOKS.map(x => [x, 0]));
+    if (style === 'overCycle') L[k === 'A' ? 'dashed' : 'outline'] = 1;
+    else if (!today) L.idle = 1;
+    else if (style === 'onTrack') Object.assign(L, { idle: 1, sig: 1, edge: 1 });
+    else if (style === 'slow') Object.assign(L, { sig: 1, ring: 1, edge: 1 });
+    else if (style === 'overToday') Object.assign(L, { hatch: 1, outline: 1 });
+    return L;
+  }
+  const shownFill = st => (st.style === 'onTrack' || st.style === 'slow' ? (st.fill >= 1 ? 1 : Math.min(st.fill, 0.86)) : 0);
+  function model(c, st) {
+    const n = st.D, g = GAP[c.k](n), w = (c.W - g * (n - 1)) / n;
+    return Array.from({ length: n }, (_, i) => {
+      const today = i === 0, cyc = st.style === 'overCycle', fill = today ? shownFill(st) : 0;
+      return { key: st.start + i, isToday: today, x: i * (w + g), w, h: today || cyc ? 1 : st.later, fill,
+        ghost: !today && !cyc && st.later < 1 ? 1 : 0, deck: today && fill > 0 && fill < 1 ? 1 : 0,
+        op: 1, tx: 0, sy: 1, trail: 0, trailOp: 0, glint: -1, ...lookFor(c.k, st.style, today) };
+    });
+  }
+  // tm: { all, geom, look, level, later, ghost, pos, exit, exitTo, enter:{from, t, stagger} }; 'skip' leaves a group alone.
+  function go(c, st, tm, t0 = performance.now()) {
+    c.state = st;
+    const tg = model(c, st), keys = new Set(tg.map(u => u.key));
+    for (const u of [...c.units]) {
+      if (keys.has(u.key) || u.exiting) continue;
+      if (!tm.exit) { c.units.splice(c.units.indexOf(u), 1); continue; }
+      u.exiting = true; u.isToday = false;
+      anim(c, { obj: u, to: { w: 0, op: 0, fill: 0, sig: 0, edge: 0, ring: 0, ...(tm.exitTo || {}) }, t: tm.exit, t0,
+        done: () => { const i = c.units.indexOf(u); if (i >= 0) c.units.splice(i, 1); } });
+    }
+    tg.forEach((v, i) => {
+      let u = c.units.find(x => x.key === v.key && !x.exiting);
+      if (!u) {
+        u = { ...v }; c.units.push(u);
+        if (tm.enter) { Object.assign(u, tm.enter.from); anim(c, { obj: u, to: { op: 1, tx: 0 }, t: at(tm.enter.t, (tm.enter.t.delay || 0) + i * tm.enter.stagger), t0 }); }
+        return;
+      }
+      u.isToday = v.isToday;
+      for (const [g, props] of Object.entries(GROUPS)) {
+        const t = g in tm ? tm[g] : (tm.all ?? null);
+        if (t === 'skip') continue;
+        const to = {}; props.forEach(p => { to[p] = v[p]; });
+        if (!t) { Object.assign(u, to); if (u._tw) props.forEach(p => delete u._tw[p]); }
+        else anim(c, { obj: u, to, t, t0 });
+      }
+    });
+    dirty.add(c); kick();
+  }
+  const todayU = c => c.units.find(u => u.isToday && !u.exiting);
+
+  // Digits ride the fill spring: same tween, same frame, so they stop together.
+  function setAmt(c, part, v) { c.parts[part] = v; c.amount.textContent = rupee(Object.values(c.parts).reduce((a, b) => a + b, 0)); }
+  function level(c, u, to, t, amt, t0, opts = {}) {
+    let landed = false;
+    anim(c, { obj: u, to: { fill: to }, t, t0, update: e => {
+      if (amt) setAmt(c, 'main', amt[0] + (amt[1] - amt[0]) * e);
+      if (opts.land && !landed && e >= 0.97) { landed = true; land(c, u); }
+    } });
+  }
+  function land(c, u) {
+    anim(c, { t: { ms: LAND_MS }, update: (e, p, t) => { u.sy = p >= 1 ? 1 : 1 - 0.03 * landRaw(t / 1000) / LPEAK; } });
+  }
+
+  // ---------- Shapes ----------
+  const notchR = w => clamp(w * 0.16, 1.5, 3.5);
+  function stubPath(x, y, w, h, leftBite) {
+    const r = Math.min(notchR(w), h / 3, w / 2.2), cr = Math.min(3, w / 3, h / 3);
+    let p = leftBite ? `M${f1(x)} ${f1(y + r)}A${r} ${r} 0 0 0 ${f1(x + r)} ${f1(y)}` : `M${f1(x)} ${f1(y + cr)}A${cr} ${cr} 0 0 1 ${f1(x + cr)} ${f1(y)}`;
+    p += `L${f1(x + w - r)} ${f1(y)}A${r} ${r} 0 0 0 ${f1(x + w)} ${f1(y + r)}L${f1(x + w)} ${f1(y + h - r)}A${r} ${r} 0 0 0 ${f1(x + w - r)} ${f1(y + h)}`;
+    p += leftBite ? `L${f1(x + r)} ${f1(y + h)}A${r} ${r} 0 0 0 ${f1(x)} ${f1(y + h - r)}Z` : `L${f1(x + cr)} ${f1(y + h)}A${cr} ${cr} 0 0 1 ${f1(x)} ${f1(y + h - cr)}Z`;
+    return p;
+  }
+  const taper = w => Math.min(w * 0.14, 3);
+  const ingotPath = (x, y, w, h) => { const t = taper(w); return `M${f1(x)} ${f1(y + h)}L${f1(x + w)} ${f1(y + h)}L${f1(x + w - t)} ${f1(y)}L${f1(x + t)} ${f1(y)}Z`; };
+  function notePath(x, y, w, h) {
+    const r = Math.min(2, w / 4, h / 4);
+    return `M${f1(x + r)} ${f1(y)}H${f1(x + w - r)}A${r} ${r} 0 0 1 ${f1(x + w)} ${f1(y + r)}V${f1(y + h - r)}A${r} ${r} 0 0 1 ${f1(x + w - r)} ${f1(y + h)}H${f1(x + r)}A${r} ${r} 0 0 1 ${f1(x)} ${f1(y + h - r)}V${f1(y + r)}A${r} ${r} 0 0 1 ${f1(x + r)} ${f1(y)}Z`;
+  }
+  const shape = (k, x, y, w, h, leftBite) => (k === 'A' ? stubPath(x, y, w, h, leftBite) : k === 'B' ? ingotPath(x, y, w, h) : notePath(x, y, w, h));
+  // C's torn top: alternating teeth 1–2dp peak to peak, a point every 1.6dp, fixed per day so a tear matches its scrap.
+  function deckle(key, x, w, y, amt) {
+    const m = Math.max(2, Math.round(w / 1.6)), pts = [];
+    for (let j = 0; j <= m; j++) {
+      const a = j === 0 || j === m ? 0 : (j % 2 ? -1 : 1) * (0.5 + 0.5 * rnd(key * 131 + j));
+      pts.push([x + (w * j) / m, y + a * amt]);
+    }
+    return pts;
+  }
+  const P = pts => pts.map(p => `${f1(p[0])},${f1(p[1])}`).join(' ');
+
+  // ---------- Drawing ----------
+  function drawUnit(c, u, i, tag = '') {
+    const k = c.k, hh = H * u.h, top = H - hh, x = u.x + u.tx, w = u.w, id = `u${c.id}_${tag}${u.key}`;
+    const leftBite = k === 'A' && i > 0, d = shape(k, x, top, w, hh, leftBite), solid = Math.max(u.idle, u.sig);
+    const yl = top + hh * (1 - u.fill);
+    let s = `<g opacity="${f1(u.op)}"${u.sy !== 1 ? ` transform="translate(0 ${H}) scale(1 ${u.sy.toFixed(4)}) translate(0 -${H})"` : ''}>`;
+    s += `<clipPath id="${id}"><path d="${d}"/></clipPath>`;
+    if (u.ghost > 0.01) {
+      const dF = shape(k, x, 0, w, H, leftBite);
+      s += `<clipPath id="${id}g"><path d="${dF}"/></clipPath><path d="${dF}" class="s-ink2" stroke-width="2" clip-path="url(#${id}g)" opacity="${f1(u.ghost)}"/>`;
+    }
+    if (u.idle > 0.01) s += `<path d="${d}" class="f-idle" opacity="${f1(u.idle)}"/>`;
+    if (u.hatch > 0.01) s += `<path d="${d}" fill="url(#h${c.id})" opacity="${f1(u.hatch)}"/>`;
+    s += `<g clip-path="url(#${id})">`;
+    if (u.trailOp > 0.01 && u.trail > u.fill) { const yt = top + hh * (1 - u.trail); s += `<rect x="${f1(x)}" y="${f1(yt)}" width="${f1(w)}" height="${f1(yl - yt)}" class="f-sig" opacity="${f1(0.5 * u.trailOp)}"/>`; }
+    if (u.sig > 0.01 && u.fill > 0.002) {
+      if (k === 'C' && u.deck > 0.01) {
+        const pts = P(deckle(u.key, x, w, yl, u.deck));
+        s += `<polygon points="${f1(x)},${H} ${pts} ${f1(x + w)},${H}" class="f-sig" opacity="${f1(u.sig)}"/><polyline points="${pts}" class="s-edge" stroke-width="1"/>`;
+      } else {
+        s += `<rect x="${f1(x)}" y="${f1(yl)}" width="${f1(w)}" height="${f1(H - yl)}" class="f-sig" opacity="${f1(u.sig)}"/><rect x="${f1(x)}" y="${f1(yl)}" width="${f1(w)}" height="1" class="f-edge"/>`;
+      }
+    }
+    s += EXTRAS[k](c, u, { x, top, w, hh, yl, id, solid });
+    s += '</g>';
+    if (u.ring > 0.01) s += `<path d="${d}" class="s-ring" clip-path="url(#${id})" opacity="${f1(u.ring)}"/>`;
+    if (u.edge > 0.01) s += `<path d="${d}" class="s-edge" stroke-width="3" clip-path="url(#${id})" opacity="${f1(u.edge)}"/>`;
+    if (u.outline > 0.01) s += `<path d="${d}" class="s-ink2" stroke-width="3" clip-path="url(#${id})" opacity="${f1(u.outline)}"/>`;
+    if (u.dashed > 0.01) s += `<path d="${d}" class="s-ink2" stroke-width="3" stroke-dasharray="3 2" clip-path="url(#${id})" opacity="${f1(u.dashed)}"/>`;
+    return s + '</g>';
+  }
+
+  const EXTRAS = {
+    // A · ticket stub: micro-print on future stubs, a date in the corner
+    A(c, u, g) {
+      const { x, top, w, yl, id } = g; let s = '';
+      const r = notchR(w);
+      if (!u.isToday && u.idle > 0.01 && w > 6) s += `<line x1="${f1(x + r + 1)}" y1="${H - 4}" x2="${f1(x + w - r - 1)}" y2="${H - 4}" class="s-ink2" stroke-width="0.6" stroke-dasharray="0.8 1.2" opacity="${f1(0.6 * u.idle)}"/>`;
+      const dt = dayOf(u.key);
+      if (typeof u.key !== 'number' || !(c.state.D <= 16 || dt.getDay() === 1)) return s;
+      const txt = dt.getDate(), upright = w < 16;
+      const pos = upright ? `transform="translate(${f1(x + w / 2 + 4.2)} ${H - 8}) rotate(-90)"` : `x="${f1(x + Math.max(r, 2) + 1.5)}" y="${f1(top + 13)}"`;
+      if (u.isToday && u.sig > 0.01) {
+        s += `<clipPath id="${id}a"><rect x="${f1(x)}" y="-2" width="${f1(w)}" height="${f1(yl + 2)}"/></clipPath><clipPath id="${id}b"><rect x="${f1(x)}" y="${f1(yl)}" width="${f1(w)}" height="${f1(H - yl + 2)}"/></clipPath>`;
+        s += `<text class="d t-ink" ${pos} clip-path="url(#${id}a)">${txt}</text><text class="d t-onsig" ${pos} clip-path="url(#${id}b)">${txt}</text>`;
+      } else {
+        if (u.hatch > 0.5 && !upright) s += `<rect x="${f1(x + Math.max(r, 2))}" y="${f1(top + 2.5)}" width="${String(txt).length * 7 + 3}" height="13" rx="3" class="f-card"/>`;
+        s += `<text class="d t-ink" ${pos}>${txt}</text>`;
+      }
+      return s;
+    },
+    // B · ingot: facets, brush, minted ₹; a flat face and one highlight line above 20 days; the glint
+    B(c, u, g) {
+      const { x, top, w } = g; let s = '';
+      const flat = c.state.D > 20, t = taper(w), b = clamp(w * 0.16, 1.5, 4);
+      const OBL = [x, H], OBR = [x + w, H], OTR = [x + w - t, top], OTL = [x + t, top];
+      const yb = H - b * 0.8, yt = top + b;
+      const IBL = [x + b, yb], IBR = [x + w - b, yb], ITR = [x + w - t - b * 0.7, yt], ITL = [x + t + b * 0.7, yt];
+      if (g.solid > 0.01) {
+        if (!flat) {
+          s += `<g opacity="${f1(g.solid)}"><polygon points="${P([OTL, OTR, ITR, ITL])}" class="f-sheen" opacity=".8"/>`;
+          s += `<polygon points="${P([OBL, OTL, ITL, IBL])}" class="f-sheen" opacity=".4"/>`;
+          s += `<polygon points="${P([OTR, OBR, IBR, ITR])}" class="f-shade"/>`;
+          s += `<polygon points="${P([OBL, OBR, IBR, IBL])}" class="f-shade"/><polygon points="${P([OBL, OBR, IBR, IBL])}" class="f-shade"/>`;
+          if (!u.isToday) for (const f of [0.3, 0.5, 0.7]) { const y = yt + (yb - yt) * f; s += `<line x1="${f1(x + t + b + 1)}" y1="${f1(y)}" x2="${f1(x + w - t - b - 1)}" y2="${f1(y)}" class="s-sheen" stroke-width="0.5"/>`; }
+          if (w >= 16) { const cy = (yt + yb) / 2 + 3.2; s += `<text class="mint f-sheen" x="${f1(x + w / 2 + 0.5)}" y="${f1(cy + 0.6)}" text-anchor="middle" aria-hidden="true">₹</text><text class="mint f-shade" x="${f1(x + w / 2)}" y="${f1(cy)}" text-anchor="middle" aria-hidden="true">₹</text>`; }
+          s += '</g>';
+        } else s += `<line x1="${f1(x + t + 0.8)}" y1="${f1(top + 1.2)}" x2="${f1(x + w - t - 0.8)}" y2="${f1(top + 1.2)}" class="s-sheen" stroke-width="1" opacity="${f1(g.solid)}"/>`;
+      }
+      const hollow = Math.max(u.hatch, u.outline);
+      if (!flat && hollow > 0.01) s += `<polygon points="${P([IBL, IBR, ITR, ITL])}" class="s-ink2" stroke-width="1" opacity="${f1(0.55 * hollow)}"/>`;
+      if (u.glint >= 0 && u.glint <= 1) {
+        const cx = x - w * 0.6 + u.glint * w * 2.2, bw = Math.max(3, w * 0.4), sk = g.hh * 0.27;
+        s += `<polygon points="${P([[cx - bw / 2 + sk, top], [cx + bw / 2 + sk, top], [cx + bw / 2 - sk, H], [cx - bw / 2 - sk, H]])}" class="f-sheen"/>`;
+      }
+      return s;
+    },
+    // C · rupee note: the hero's keyline in miniature, split in colour where the level covers it
+    C(c, u, g) {
+      const { x, top, w, hh, yl, id } = g; let s = '';
+      if (w < 8) return s;
+      const shapes = `<rect x="${f1(x + 2)}" y="${f1(top + 2)}" width="${f1(w - 4)}" height="${f1(hh - 4)}" rx="1" stroke-width=".6"/>` +
+        `<rect x="${f1(x + 3.6)}" y="${f1(top + 3.6)}" width="${f1(w - 7.2)}" height="${f1(hh - 7.2)}" rx=".6" stroke-width=".6" stroke-dasharray="1.5 1.2"/>` +
+        (w >= 12 ? `<circle cx="${f1(x + w / 2)}" cy="${f1(top + hh / 2)}" r="${f1(Math.min(w / 2 - 5, 5.5))}" stroke-width=".6"/>` : '');
+      if (u.isToday && u.sig > 0.01 && u.fill > 0.002) {
+        s += `<clipPath id="${id}a"><rect x="${f1(x)}" y="${f1(top - 2)}" width="${f1(w)}" height="${f1(yl - top + 2)}"/></clipPath><clipPath id="${id}b"><rect x="${f1(x)}" y="${f1(yl)}" width="${f1(w)}" height="${f1(H - yl)}"/></clipPath>`;
+        s += `<g class="s-etch" clip-path="url(#${id}a)">${shapes}</g><g class="s-onsig" opacity=".3" clip-path="url(#${id}b)">${shapes}</g>`;
+      } else if (g.solid > 0.01) s += `<g class="s-etch" opacity="${f1(g.solid)}">${shapes}</g>`;
+      else if (u.outline > 0.01 && u.hatch < 0.01) s += `<g class="s-ink2" opacity="${f1(0.45 * u.outline)}">${shapes}</g>`;
+      return s;
+    },
+  };
+
+  function draw(c) {
+    const k = c.k, id = c.id;
+    let s = `<defs><pattern id="h${id}" width="4.24" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="10" class="f-ink2"/></pattern>` +
+      `<linearGradient id="g${id}" x1="1" x2="0"><stop offset="0" style="stop-color:var(--facetShade)"/><stop offset="1" style="stop-color:var(--clear)"/></linearGradient></defs>`;
+    const vis = c.units.filter(u => u.op > 0.01 && u.w > 0.3).sort((a, b) => a.x - b.x);
+    vis.forEach((u, i) => { s += drawUnit(c, u, i); });
+    if (k === 'A') {
+      // Perforations: dashes of the card colour down every seam, between the notches
+      vis.forEach(u => {
+        const sol = Math.max(u.idle, u.sig) * u.op; if (sol < 0.05) return;
+        const r = notchR(u.w), x = u.x + u.tx + u.w, top = H - H * u.h;
+        s += `<line x1="${f1(x)}" y1="${f1(top + r + 1.2)}" x2="${f1(x)}" y2="${f1(H - r - 1.2)}" class="s-card" stroke-width="${u.w >= 12 ? 1.2 : 1}" stroke-dasharray="1.6 1.6" opacity="${f1(sol)}"/>`;
+      });
+      // The roll's end tab holds the payday flag; its open side is the last perforation
+      const x0 = c.W, tw = c.flagW, r = notchR(vis[0] ? vis[0].w : 20);
+      s += `<path d="M${x0} ${r}A${r} ${r} 0 0 0 ${f1(x0 + r)} 0.5L${f1(x0 + tw - 8)} 0.5A7.5 7.5 0 0 1 ${f1(x0 + tw - 0.5)} 8L${f1(x0 + tw - 0.5)} 32A7.5 7.5 0 0 1 ${f1(x0 + tw - 8)} 39.5L${f1(x0 + r)} 39.5A${r} ${r} 0 0 0 ${x0} ${f1(H - r)}" class="s-ink2" stroke-width="1"/>`;
+    }
+    for (const e of c.extras) if (e.kind === 'torn') s += drawTorn(c, e);
+    c.svg.innerHTML = s;
+    c.flySvg.innerHTML = c.extras.filter(e => e.kind === 'scrap').map(e =>
+      `<g opacity="${f1(e.op)}" transform="translate(${f1(e.tx)} ${f1(e.ty)}) rotate(${f1(e.rot)} ${f1(e.cx)} ${f1(e.cy)})"><polygon points="${e.pts}" class="f-sig"/><polygon points="${e.pts}" class="s-edge" stroke-width="1"/></g>`).join('');
+  }
+  // A · the torn stub: hinged at its top-right, curls (narrows and skews) with a fold shadow, tilts and falls
+  function drawTorn(c, e) {
+    const u = e.u, px = u.x + u.w, d = stubPath(u.x, 0, u.w, H, false);
+    let jag = '';
+    for (let y = 2; y <= H - 2; y += 2) jag += `${f1(px + (y % 4 ? -0.8 : 0.8))},${y} `;
+    return `<g opacity="${f1(e.op)}" transform="translate(${f1(e.ox)} ${f1(e.oy)}) rotate(${f1(e.rot)} ${f1(px)} 0) translate(${f1(px)} 0) scale(${f1(1 - 0.3 * e.curl)} 1) skewY(${f1(-5 * e.curl)}) translate(${f1(-px)} 0)">` +
+      drawUnit(c, u, 0, 't') +
+      `<path d="${d}" fill="url(#g${c.id})" opacity="${f1(e.curl)}"/><polyline points="${jag}" class="s-card" stroke-width="1.6" opacity="${f1(e.rip)}"/></g>`;
+  }
+
+  // ---------- Card ----------
+  function set(el, styles, t) {
+    const props = Object.keys(styles);
+    el.style.transition = t ? props.map(p => `${p.replace(/[A-Z]/g, m => '-' + m.toLowerCase())} ${t.ms}ms var(--spring, ease-out) ${t.delay || 0}ms`).join(', ') : 'none';
+    Object.assign(el.style, styles);
+  }
+  function put(el, html) { el._sid = (el._sid || 0) + 1; el.getAnimations().forEach(a => a.cancel()); el.innerHTML = html; }
+  function swap(el, html) {
+    if (el.innerHTML === html) return;
+    const id = (el._sid = (el._sid || 0) + 1);
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120 }).onfinish = () => {
+      if (el._sid !== id) return;
+      el.innerHTML = html; el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+    };
+  }
+  const rangeHTML = r => ICON[r.icon] + `<span>${r.html}</span>`;
+  let cardId = 0;
+  function makeCard(stageEl, k, opts = {}) {
+    const root = document.createElement('section');
+    root.className = `hero c${k}` + (opts.note ? ' has-note' : '');
+    root.tabIndex = 0;
+    root.setAttribute('role', 'button');
+    root.innerHTML = ETCH + '<div class="grain"></div><svg class="frame" aria-hidden="true"><rect class="k1"/><rect class="k2"/></svg>' +
+      '<div class="content"><div class="title">Safe to spend today</div><div class="amtrow"><span class="amount"></span><span class="over"></span></div>' +
+      `<div class="dayrow"><div class="units"><svg aria-hidden="true"></svg></div><div class="flag">${ICON.flag}<span></span></div></div>` +
+      '<div class="caps"><span>Today</span><span class="capR"></span></div><div class="divider"></div><div class="range"></div><div class="note"></div></div>' +
+      '<div class="sheen"></div>';
+    stageEl.appendChild(root);
+    const fly = document.createElement('div'); fly.className = 'fly'; fly.innerHTML = '<svg width="1" height="1" aria-hidden="true"></svg>';
+    stageEl.appendChild(fly);
+    root.querySelector('.grain').style.backgroundImage = grain(stageEl);
+    const q = s => root.querySelector(s);
+    const flagEl = q('.flag');
+    const c = { id: ++cardId, k, root, stage: stageEl, content: q('.content'), amount: q('.amount'), over: q('.over'), unitsEl: q('.units'),
+      svg: q('.units > svg'), flagEl, flag: q('.flag span'), capR: q('.capR'), caps: q('.caps'), range: q('.range'), note: q('.note'),
+      sheen: q('.sheen'), fly, flySvg: fly.firstChild, units: [], extras: [], parts: {}, state: null };
+    const down = () => root.classList.add('pressed'), up = () => root.classList.remove('pressed');
+    root.addEventListener('pointerdown', down);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(e => root.addEventListener(e, up));
+    root.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); down(); } });
+    root.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { up(); root.click(); } });
+    return c;
+  }
+  // The flag column sizes to its date (min 44); the row takes what is left
+  function measure(c) {
+    c.flagW = Math.max(44, c.flagEl.offsetWidth || 44);
+    c.W = 280 - c.flagW - (c.k === 'A' ? 0 : 10);
+    c.caps.style.paddingRight = (c.flagW + (c.k === 'A' ? 0 : 10)) + 'px';
+  }
+  const spoken = text => text.replace(/₹([\d,]+)/g, '$1 rupees');
+  function label(c, st) {
+    const tmp = document.createElement('div'); tmp.innerHTML = st.range.html;
+    c.root.setAttribute('aria-label', spoken(`Safe to spend today: ${rupee(st.amount)}. ${st.over ? st.over + '. ' : ''}${st.capR}. ${tmp.textContent}.${st.note ? ' ' + NOTE : ''}`));
+  }
+  function renderText(c, st) {
+    put(c.amount, rupee(st.amount));
+    c.amount.style.transition = 'none';
+    c.amount.classList.toggle('muted', !!st.muted);
+    put(c.over, st.over); c.over.style.display = st.over ? '' : 'none'; set(c.over, { opacity: 1 }, null);
+    put(c.capR, st.capR);
+    put(c.flag, st.flag);
+    put(c.range, rangeHTML(st.range));
+    c.note.textContent = NOTE;
+    set(c.note, { opacity: st.note ? 1 : 0 }, null);
+    label(c, st);
+  }
+  function render(c, st) {
+    cancel(c);
+    renderText(c, st);
+    measure(c);
+    c.state = st; c.units = model(c, st); c.extras = []; c.parts = { main: st.amount };
+    if (c.hapticEl) c.hapticEl.getAnimations().forEach(a => a.cancel());
+    draw(c);
+  }
+  function sheen(c) {
+    if (c.sheenAnim) c.sheenAnim.cancel();
+    c.sheenAnim = c.sheen.animate([{ transform: 'translateX(-70%)' }, { transform: 'translateX(70%)' }],
+      { duration: 1050, delay: 350, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'both' });
+  }
+  function crossfade(c, apply) {
+    const old = c.content.cloneNode(true);
+    old.classList.add('copy');
+    old.querySelectorAll('[id]').forEach(n => { n.id = 'z' + n.id; });
+    old.querySelectorAll('[clip-path], [fill]').forEach(n => ['clip-path', 'fill'].forEach(a => {
+      const v = n.getAttribute(a); if (v && v.startsWith('url(#')) n.setAttribute(a, v.replace('url(#', 'url(#z'));
+    }));
+    c.root.insertBefore(old, c.sheen);
+    apply();
+    c.content.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' });
+    old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'linear', fill: 'forwards' }).onfinish = () => old.remove();
+  }
+  function stage(parent, dark, text) {
+    const st = document.createElement('div');
+    st.className = 'stage' + (dark ? ' dark' : '');
+    if (text) { const w = document.createElement('span'); w.className = 'which'; w.textContent = text; st.appendChild(w); }
+    parent.appendChild(st);
+    return st;
+  }
+
+  // ---------- Shared motion ----------
+  function trail(c, u, toFill, t0) {
+    u.trail = u.fill; u.trailOp = 1;
+    after(c, 500, () => anim(c, { obj: u, to: { trail: toFill }, t: CALM, done: () => { u.trailOp = 0; } }), t0);
+  }
+  // C · the spent slice tears off as a paper scrap and flies up and out of the card
+  function scrap(c, u, fromFill, toFill, t0) {
+    const yO = H * (1 - fromFill), yN = H * (1 - toFill);
+    const upper = deckle(u.key, u.x, u.w, yO, fromFill >= 1 ? 0 : 1), lower = deckle(u.key, u.x, u.w, yN, toFill > 0 ? 1 : 0).reverse();
+    const e = { kind: 'scrap', pts: P([...upper, ...lower]), cx: u.x + u.w / 2, cy: (yO + yN) / 2, tx: 0, ty: 0, rot: 0, op: 1 };
+    const rr = c.unitsEl.getBoundingClientRect(), sr = c.stage.getBoundingClientRect(), sc = rr.width ? sr.width / c.stage.offsetWidth : 1;
+    c.fly.style.left = (rr.left - sr.left) / sc + 'px'; c.fly.style.top = (rr.top - sr.top) / sc + 'px';
+    c.extras.push(e);
+    anim(c, { t: { ms: 650 }, t0, update: (_, p, t) => {
+      const s = t / 1000;
+      e.ty = -720 * s + 500 * s * s; e.tx = 46 * s; e.rot = -30 * p; e.op = s < 0.25 ? 1 : Math.max(0, 1 - (s - 0.25) / 0.4);
+    }, done: () => { c.extras.splice(c.extras.indexOf(e), 1); } });
+  }
+  // Underspend wave: future units grow on calm, 25ms apart (stagger capped at 400ms); the number rides the wave
+  function wave(c, t0, glint) {
+    const fut = c.units.filter(u => !u.exiting).sort((a, b) => a.x - b.x), n = fut.length;
+    const stg = Math.min(25, 400 / Math.max(1, n - 1)), prog = new Array(n).fill(0);
+    fut.forEach((u, i) => {
+      anim(c, { obj: u, to: { h: 1 }, t: at(CALM, i * stg), t0, update: e => { if (!u.isToday) prog[i] = e; setAmt(c, 'wave', 37 * prog.reduce((a, b) => a + b, 0) / (n - 1)); } });
+      if (glint) anim(c, { t: { ms: 450, delay: i * stg + 120, ease: SWEEP }, t0, update: e => { u.glint = e; }, done: () => { u.glint = -1; } });
+    });
+    return (n - 1) * stg + CALM.ms + (glint ? 0 : 0);
+  }
+
+  // ---------- Demos ----------
+  const RM = '<b>Reduced motion:</b> a 150ms crossfade to the end state.';
+  const DEMOS = {
+    fill: { title: 'Home appears', text: k => `Today's level rises from 0 to 0.773 on <b>calm</b>, and the number counts ₹0 → ₹1,430 on <b>the same spring</b>, so both stop on one frame. One band of <code>displaySheen</code> crosses the card. ${RM.replace('a 150ms crossfade to the end state', 'the level and number are there at once; no sheen')}`,
+      start: () => ON, end: () => ON,
+      setup: c => { const u = todayU(c); u.fill = 0; setAmt(c, 'main', 0); },
+      run: (c, d, t0) => { level(c, todayU(c), shownFill(ON), CALM, [0, 1430], t0); sheen(c); } },
+    spend: { title: 'A spend (₹300) with the weighted landing', text: () => `The level falls 0.773 → 0.611 on <b>standard</b>; the digits ride it, ₹1,430 → ₹1,130. At 97% of the fall the unit <b>squashes 3%</b> from its base on the new <code>land</code> spring (response 0.2, damping 0.85, scale only) and settles. The spent slice stays as marigold at 50%, holds 500ms, then falls on <b>calm</b>. ${RM}`,
+      start: () => ON, end: () => SPENT,
+      run: (c, d, t0) => { const u = todayU(c); trail(c, u, shownFill(SPENT), t0); spendText(c, SPENT); level(c, u, shownFill(SPENT), STANDARD, [1430, 1130], t0, { land: true }); } },
+    scrapSpend: { title: 'Showpiece · A spend (₹300) tears off', show: true, text: () => `The spent slice tears along the deckle and <b>flies up and out of the card</b> as a paper scrap (650ms, a ballistic arc with a −30° turn, faded from 250ms). It replaces mockup 15's 50% trail. Under it, the note's new top is the matching torn edge; the level falls on <b>standard</b> with the digits, then <b>lands</b> with the 3% squash. ${RM.replace('end state', 'end state; no scrap')}`,
+      start: () => ON, end: () => SPENT,
+      run: (c, d, t0) => { const u = todayU(c); scrap(c, u, u.fill, shownFill(SPENT), t0); spendText(c, SPENT); level(c, u, shownFill(SPENT), STANDARD, [1430, 1130], t0, { land: true }); } },
+    over: { title: 'Over today (₹2,450 more)', text: k => `The level falls to 0 on <b>standard</b> with the digits and lands. The today look crossfades to hatch and a <code>displayInk2</code> outline. ${k === 'C' ? 'What was left tears off as a scrap.' : 'The trail holds 500ms.'} At 500ms the future units shrink on <b>calm</b> to 1,722 / 1,850 = 0.93 and their ghost outlines appear: cause, then effect. ${RM}`,
+      start: () => ON, end: () => OVER,
+      run: (c, d, t0) => {
+        const u = todayU(c);
+        if (c.k === 'C') scrap(c, u, u.fill, 0, t0); else trail(c, u, 0, t0);
+        go(c, OVER, { all: STANDARD, geom: 'skip', level: 'skip', later: 'skip', ghost: 'skip' }, t0);
+        level(c, u, 0, STANDARD, [1430, 0], t0, { land: true });
+        c.amount.style.transition = `color ${STANDARD.ms}ms var(--spring)`; c.amount.classList.add('muted');
+        put(c.over, OVER.over); c.over.style.display = ''; set(c.over, { opacity: 0 }, null); void c.over.offsetWidth; set(c.over, { opacity: 1 }, STANDARD);
+        swap(c.capR, OVER.capR); swap(c.range, rangeHTML(OVER.range)); label(c, OVER);
+        after(c, 500, () => go(c, OVER, { all: 'skip', later: CALM, ghost: CALM }), t0);
+      } },
+    newday: { title: 'New day', text: () => `Midnight, Mon → Tue. Yesterday's unit loses its marigold and collapses to zero width at the start edge while it fades; the others slide and widen on <b>standard</b>. Then today fills on <b>calm</b> with the sheen, and the number rides the fill ₹300 → ₹1,887. ${RM}`,
+      start: () => MON_END, end: () => TUE,
+      run: (c, d, t0) => {
+        go(c, { ...TUE, fill: 0 }, { all: STANDARD, exit: STANDARD }, t0);
+        c.state = TUE; swap(c.capR, TUE.capR); swap(c.range, rangeHTML(TUE.range)); label(c, TUE);
+        c.amount.classList.remove('muted');
+        after(c, STANDARD.ms, () => { level(c, todayU(c), 1, CALM, [300, 1887]); sheen(c); }, t0);
+      } },
+    swell: { title: 'Showpiece · The morning after an underspend', show: true, note: true, text: () => `Mon ended with ₹300 unspent. The future ingots <b>swell</b> from 0.85 to full height in a domino stagger (25ms apart, on <b>calm</b>), and a <b>glint</b> of <code>displaySheen</code> rakes across each bevel in turn, 120ms behind its swell, starting with today's. The number rides the wave ₹1,850 → ₹1,887. The note fades in after the last ingot lands. (0.85 is exaggerated so the swell shows; the true ratio is 0.98.) ${RM}`,
+      start: () => TUE, end: () => TUE_NOTE,
+      setup: c => { c.units.forEach(u => { if (!u.isToday) u.h = 0.85; }); c.parts = { main: 1850 }; setAmt(c, 'main', 1850); },
+      run: (c, d, t0) => { const ms = wave(c, t0, true); label(c, TUE_NOTE); c.state = TUE_NOTE; after(c, ms, () => set(c.note, { opacity: 1 }, STANDARD), t0); } },
+    grow: { title: 'The morning after an underspend', note: true, text: () => `Mon ended with ₹300 unspent. The future notes rise from 0.85 to full height, 25ms apart on <b>calm</b>; the number rides the wave ₹1,850 → ₹1,887, then the note fades in. ${RM}`,
+      start: () => TUE, end: () => TUE_NOTE,
+      setup: c => { c.units.forEach(u => { if (!u.isToday) u.h = 0.85; }); c.parts = { main: 1850 }; setAmt(c, 'main', 1850); },
+      run: (c, d, t0) => { const ms = wave(c, t0, false); label(c, TUE_NOTE); c.state = TUE_NOTE; after(c, ms, () => set(c.note, { opacity: 1 }, STANDARD), t0); } },
+    payday: { title: 'Payday morning', text: k => `Wed 4 Nov, a new 30-day cycle. The last day's unit leaves; 30 new ${k === 'A' ? 'stubs' : k === 'B' ? 'ingots' : 'notes'} slide in from the start edge, ${f1(400 / 29)}ms apart (the 400ms cap), on <b>calm</b>${k === 'A' ? ' and the end tab gets its new date' : ''}. Then today fills, and the number rides it ₹500 → ₹1,460. ${RM}`,
+      start: () => LAST, end: () => NEW,
+      run: (c, d, t0) => {
+        const stg = 400 / 29;
+        go(c, { ...NEW, fill: 0 }, { all: null, exit: STANDARD, enter: { from: { tx: -16, op: 0 }, t: at(CALM, 120), stagger: stg } }, t0);
+        c.state = NEW; swap(c.capR, NEW.capR); swap(c.flag, NEW.flag); swap(c.range, rangeHTML(NEW.range)); label(c, NEW);
+        after(c, 120 + 29 * stg + CALM.ms, () => { level(c, todayU(c), 1, CALM, [500, 1460]); sheen(c); }, t0);
+      } },
+    tear: { title: 'Showpiece · Morning tear', show: true, note: true, select: [['save', 'Mon ended with ₹300 unspent'], ['zero', 'Mon ended at ₹0']],
+      text: () => `Once a day, on the first Home after midnight, about 2.2s; <b>any tap skips to the end</b>. (1) Hold 150ms. (2) Yesterday's stub rips along its perforation in 120ms (<code>lightImpact</code> at the rip frame), curls with a fold shadow, tilts 8° and falls with gravity, gone 450ms after the rip. (3) The strip closes up one slot on <b>calm</b>. (4) Today fills with the sheen; the number rides the fill. (5) After an underspend, a domino wave runs rightward: each stub grows on <b>calm</b>, 25ms apart (stagger capped at 400ms), and the number rides the wave to ₹1,887. (6) The note fades in. ${RM}`,
+      start: d => (d.alt === 'zero' ? MON_ZERO : MON_END), end: d => (d.alt === 'zero' ? TUE_ZERO : TUE_NOTE),
+      setup: (c, d) => { if (d.alt !== 'zero') c.units.forEach(u => { if (!u.isToday) u.h = 0.85; }); },
+      run: (c, d, t0) => tear(c, d, t0) },
+  };
+  function spendText(c, to) { c.state = to; swap(c.range, rangeHTML(to.range)); label(c, to); }
+
+  // A · morning tear
+  function tear(c, d, t0) {
+    const save = d.alt !== 'zero', end = save ? TUE_NOTE : TUE_ZERO, from = save ? 300 : 0;
+    c.tearing = end;
+    after(c, 150, () => {
+      const y = todayU(c), r0 = performance.now();
+      const e = { kind: 'torn', u: { ...y, _tw: null, key: 't' + y.key, isToday: false }, ox: 0, oy: 0, rot: 0, curl: 0, op: 1, rip: 0 };
+      e.u.isToday = true; // keep its marigold look while it falls
+      c.units.splice(c.units.indexOf(y), 1); c.extras.push(e);
+      anim(c, { t: { ms: 120 }, t0: r0, update: (_, p) => { e.rip = p; e.ox = -1.5 * p; } });
+      anim(c, { t: { ms: 330, delay: 120 }, t0: r0, update: (_, p, t) => {
+        const s = t / 1000; e.rot = 8 * Math.min(1, p * 2.2); e.curl = Math.min(1, p * 1.6); e.oy = 1500 * s * s; e.op = 1 - p;
+      }, done: () => { c.extras.splice(c.extras.indexOf(e), 1); } });
+      after(c, 120, () => c.hapticEl.animate([{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], { duration: 700 }), r0);
+      after(c, 200, () => {
+        go(c, { ...end, fill: 0 }, { geom: CALM, look: STANDARD, level: null, later: 'skip', ghost: 'skip', pos: null });
+        c.state = end; swap(c.capR, end.capR); swap(c.range, rangeHTML(end.range)); label(c, end);
+        c.amount.classList.remove('muted');
+        after(c, CALM.ms, () => {
+          const f0 = performance.now();
+          level(c, todayU(c), 1, CALM, [from, 1850], f0); sheen(c);
+          if (!save) { after(c, CALM.ms, () => { c.tearing = null; }, f0); return; }
+          after(c, 300, () => {
+            const ms = wave(c, performance.now(), false);
+            after(c, ms, () => { set(c.note, { opacity: 1 }, STANDARD); c.tearing = null; });
+          }, f0);
+        });
+      }, r0);
+    }, t0);
+  }
+
+  const demos = [];
+  function demo(panel, k, key, label) {
+    const D = DEMOS[key];
+    const el = document.createElement('article');
+    el.className = 'demo' + (D.show ? ' show' : '');
+    el.id = `${k}-${key}`;
+    const sel = D.select ? `<select aria-label="Variant">${D.select.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>` : '';
+    el.innerHTML = `<header><div><h3>${label} · ${D.title}</h3><p>${D.text(k)}</p></div><div class="acts">${sel}<button class="btn" data-replay>Replay</button></div></header><div class="row pair"></div>`;
+    panel.appendChild(el);
+    const pair = el.querySelector('.pair');
+    const d = { id: el.id, cards: [], alt: D.select ? D.select[0][0] : null };
+    for (const dark of [false, true]) {
+      const st = stage(pair, dark, dark ? 'Dark' : 'Light');
+      const c = makeCard(st, k, { note: D.note });
+      if (key === 'tear') {
+        c.hapticEl = document.createElement('span'); c.hapticEl.className = 'haptic'; c.hapticEl.textContent = 'Haptic · lightImpact'; st.appendChild(c.hapticEl);
+        c.root.addEventListener('click', () => { if (c.tearing) { const end = c.tearing; c.tearing = null; render(c, end); } });
+      }
+      d.cards.push(c);
+    }
+    d.reset = () => d.cards.forEach(c => {
+      if (c.sheenAnim) c.sheenAnim.cancel();
+      c.root.querySelectorAll('.content.copy').forEach(n => n.remove());
+      c.tearing = null;
+      render(c, D.start(d));
+      if (D.setup) { D.setup(c, d); draw(c); }
+    });
+    d.play = () => {
+      d.reset();
+      const token = (d.token = (d.token || 0) + 1);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (token !== d.token) return; // a newer replay owns these cards
+        const t0 = performance.now();
+        d.cards.forEach(c => { if (reduced()) crossfade(c, () => render(c, D.end(d))); else D.run(c, d, t0); });
+      }));
+    };
+    d.check = () => d.cards.flatMap((c, i) => check(c, D.end(d)).map(e => `${d.id}${i ? ' dark' : ''}: ${e}`));
+    el.querySelector('[data-replay]').addEventListener('click', d.play);
+    if (D.select) el.querySelector('select').addEventListener('change', e => { d.alt = e.target.value; d.play(); });
+    d.reset();
+    demos.push(d);
+  }
+  // Headless check: after a demo ends, every unit, the number and the note match a plain render of the end state.
+  function check(c, st) {
+    const errs = [], tg = model(c, st);
+    if (c.units.length !== tg.length) errs.push(`units ${c.units.length} ≠ ${tg.length}`);
+    tg.forEach(v => {
+      const u = c.units.find(x => x.key === v.key && !x.exiting);
+      if (!u) { errs.push('missing ' + v.key); return; }
+      for (const p of ['x', 'w', 'h', 'fill', 'op', 'tx', 'sy', 'ghost', ...LOOKS]) if (Math.abs(u[p] - v[p]) > 0.01) errs.push(`${v.key}.${p} ${(+u[p]).toFixed(3)} ≠ ${v[p].toFixed(3)}`);
+      if (u.glint !== -1) errs.push(v.key + '.glint'); if (u.trailOp > 0.01) errs.push(v.key + '.trail');
+    });
+    if (c.extras.length) errs.push('extras ' + c.extras.length);
+    if (c.amount.textContent !== rupee(st.amount)) errs.push(`amount ${c.amount.textContent} ≠ ${rupee(st.amount)}`);
+    if (!!st.note !== (+getComputedStyle(c.note).opacity > 0.99)) errs.push('note opacity');
+    if (c.root.querySelector('.content.copy')) errs.push('crossfade copy left');
+    if (c.tearing) errs.push('still tearing');
+    return errs;
+  }
+  window.__demos = demos;
+
+  // ---------- 1. Side by side ----------
+  const CONCEPTS = {
+    A: { name: 'A · Ticket strip', rank: 'Rank 1', pitch: 'One paper strip of stubs joined by perforations, with notches at every seam and a tiny date in the corner. Today is the leftmost stub, marigold, with a flat level that drains. The payday flag is the roll\'s end tab.' },
+    B: { name: 'B · Gold biscuits', rank: 'Rank 2', pitch: 'Each day is a stamped ingot: a bevelled trapezoid with facet planes and a minted ₹. Today is the marigold ingot with a flat molten level. Future ingots are brushed grey, never gold. Above 20 days the facets merge into a flat face and one highlight line.' },
+    C: { name: 'C · Note strip', rank: 'Rank 3', pitch: 'Each day is a portrait mini rupee note: the hero\'s keyline in miniature, with a solid rule, a dashed inner rule and a centre roundel. Today is the marigold note. Once you spend, its top edge is a deckled tear.' },
+  };
+  const sideCards = [];
+  for (const k of 'ABC') {
+    const col = document.createElement('div');
+    col.innerHTML = `<h3>${CONCEPTS[k].name} <span class="tag ghost">${CONCEPTS[k].rank}</span></h3><p>${CONCEPTS[k].pitch}</p>`;
+    const stack = document.createElement('div'); stack.className = 'stack'; col.appendChild(stack);
+    document.getElementById('side').appendChild(col);
+    for (const D of [9, 28]) for (const dark of [false, true]) {
+      const c = makeCard(stage(stack, dark, `${D} days · ${dark ? 'dark' : 'light'}`), k);
+      c.st = S(D, 'onTrack'); render(c, c.st); sideCards.push(c);
+    }
+  }
+
+  // ---------- 2. Panels ----------
+  const STATES = [
+    ['On track', 'onTrack', k => ({ A: 'Today\'s stub: marigold level on <b>blockIdle</b>, 1.5dp ink edge in light, a 1dp ink line on the level\'s top, its date split ink/onSignal where the level covers it. Future stubs: blockIdle with a dotted micro-print line.', B: 'Today\'s ingot: marigold level, flat, under the facets; ink edge in light. Future ingots: brushed grey with a minted ₹ (≥16dp).', C: 'Today\'s note: marigold with a <b>deckled</b> top once anything is spent; its keyline turns onSignal at 30% under the level. Future notes: blockIdle with an etched keyline and roundel.' }[k])],
+    ['Slow down', 'slow', () => 'Under 25% of today left (₹400). No track fill: a <b>marigold ring</b> inside the edge and a low marigold level. The words say "Slow down".'],
+    ['Over today', 'overToday', k => `No fill. 45° hatch in <b>displayInk2</b> (2dp, 6dp apart) and a 1.5dp displayInk2 outline${k === 'B' ? ', an inner mould line' : ''}. Future units shrink (0.93 at 9 days; 1,812 / 1,850 = 0.98 at 28) with 1dp ghost outlines.`],
+    ['Over for the cycle', 'overCycle', k => `Every unit is <b>outline only</b>, 1.5dp displayInk2${k === 'A' ? ', <b>dashed</b> 3/2 (the strip is used up)' : k === 'B' ? ': empty moulds' : ', with the keyline at 45%'}. No marigold anywhere.`],
+  ];
+  const ORDER = { A: ['fill', 'spend', 'over', 'tear', 'payday'], B: ['fill', 'spend', 'over', 'newday', 'swell', 'payday'], C: ['fill', 'scrapSpend', 'over', 'newday', 'grow', 'payday'] };
+  for (const k of 'ABC') {
+    const panel = document.getElementById('panel-' + k);
+    panel.insertAdjacentHTML('beforeend', `<h2 style="margin-top:24px">${CONCEPTS[k].name} <span class="tag ghost">${CONCEPTS[k].rank}</span></h2><p class="lede">${CONCEPTS[k].pitch}</p><h3 style="margin-top:20px">States</h3>`);
+    for (const [name, style, text] of STATES) {
+      const row = document.createElement('div'); row.className = 'state';
+      row.innerHTML = `<h3>${name}</h3><p>${text(k)}</p>`;
+      const r = document.createElement('div'); r.className = 'row'; row.appendChild(r);
+      panel.appendChild(row);
+      for (const D of [9, 28]) for (const dark of [false, true]) render(makeCard(stage(r, dark, `${D} days · ${dark ? 'dark' : 'light'}`), k), S(D, style));
+    }
+    panel.insertAdjacentHTML('beforeend', '<h3 style="margin-top:32px">Motion</h3>');
+    ORDER[k].forEach((key, i) => demo(panel, k, key, `${k}${i + 1}`));
+  }
+  // Tabs
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  function pick(tab) {
+    tabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t));
+    t.addEventListener('keydown', e => { const n = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (n) { const nt = tabs[(i + n + tabs.length) % tabs.length]; pick(nt); nt.focus(); } });
+  });
+  pick(tabs[0]);
+
+  // ---------- Play on load ----------
+  function replayAll() {
+    const token = (replayAll.token = (replayAll.token || 0) + 1);
+    sideCards.forEach(c => { render(c, c.st); DEMOS.fill.setup(c); draw(c); });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (token !== replayAll.token) return;
+      const t0 = performance.now();
+      sideCards.forEach(c => { if (reduced()) { render(c, c.st); return; } level(c, todayU(c), shownFill(c.st), CALM, [0, 1430], t0); sheen(c); });
+    }));
+    demos.forEach(d => d.play());
+  }
+  window.__replayAll = replayAll;
+  document.getElementById('replayAll').addEventListener('click', replayAll);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(replayAll);
+})();
+</script>
+</body>
+</html>

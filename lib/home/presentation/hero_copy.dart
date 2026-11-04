@@ -7,6 +7,7 @@ import '../../core/money/money_formatter.dart';
 import '../../core/time/calendar_date.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../ledger/ledger.dart';
+import 'week_copy.dart';
 
 /// One line of words under the blocks: a [lead] and an optional quieter [detail].
 final class RangeWords extends Equatable {
@@ -38,7 +39,8 @@ final class HeroCopy extends Equatable {
 
   /// Builds the copy for [summary] in [strings], formatting amounts with [money].
   ///
-  /// With [week] the number is *This week*'s (FR-HO-2); the blocks' words stay on today.
+  /// With [week] the number is *This week*'s (FR-HO-2), and the range slot and spoken days say how
+  /// each day of the week went (BR-6a).
   factory HeroCopy.of(
     CycleSummary summary, {
     required AppLocalizations strings,
@@ -51,21 +53,23 @@ final class HeroCopy extends Equatable {
     String spokenAmount(Money amount) => strings.spokenAmount(money.digits(amount));
     final _Headline headline = week ? _Headline.week(summary, strings) : _Headline.today(summary, strings);
     final String days = strings.daysToPayday(summary.daysLeft);
-    final RangeWords spokenRange = _range(summary, strings, spokenAmount, date);
+    final String laterSpoken = _laterCaption(summary, strings, spokenAmount).getOrElse(() => days);
+    final WeekCopy weekShown = WeekCopy(summary, strings: strings, amount: shown, locale: money.locale);
+    final WeekCopy weekSpoken = WeekCopy(summary, strings: strings, amount: spokenAmount, locale: money.locale);
     return HeroCopy._(
       title: headline.title,
       heroAmount: headline.amount,
       muted: headline.muted,
       overText: headline.overText(shown),
       laterCaption: _laterCaption(summary, strings, shown).getOrElse(() => days),
-      range: _range(summary, strings, shown, date),
-      calm: summary.state is OnTrack && summary.forecast is! RunsOut,
+      range: week ? weekShown.range : _range(summary, strings, shown, date),
+      calm: week ? weekShown.calm : summary.state is OnTrack && summary.forecast is! RunsOut,
       payday: date(summary.payday),
       spoken: strings.heroSpoken(
         headline.title,
         spokenAmount(headline.amount),
-        _laterCaption(summary, strings, spokenAmount).getOrElse(() => days),
-        _join(strings, spokenRange),
+        week ? weekSpoken.spokenDays ?? laterSpoken : laterSpoken,
+        _join(strings, week ? weekSpoken.range : _range(summary, strings, spokenAmount, date)),
       ),
     );
   }

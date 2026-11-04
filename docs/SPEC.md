@@ -132,6 +132,14 @@ The states below are evaluated in order, and the first match wins.
 - **Future blocks:** height ratio `clamp(tomorrow / A, 0.4, 1)` when `A > 0`. They shrink when today is overspent, and never grow above full height. The ghost outline of full height is drawn only when the ratio is below 1.
 - **Widths:** blocks share the width equally. If that is under 6dp, render one block per day for the next 7 days plus a "+N" label. The payday flag is always last.
 
+### BR-6a Week bars (*This week*)
+- **Days:** Monday to Sunday. Monday (or the cycle start, if later) to today each get a bar; days still to come in the cycle get a stub; days before the cycle start or from payday on get nothing.
+- **Each past day's share `A_d`** is that day *as it stood*, with the ledger as it is now: entries dated on or before `d`; bills posted after `d` still counted in `B`; income dated after `d` not yet in `I` (BR-3, BR-4; the same rebuild as BR-8's yesterday). A back-dated entry changes that day and the days after it.
+- **Each bar** fills to the day's *Spent* total. A tick marks `A_d`; any spend above it is hatched, never red. Today's bar is marigold; past bars are `displayInk2`.
+- **Scale:** zero at the bottom; the tallest spend or share in the week reaches the top (88dp).
+- **Words:** the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" (the most-over day, then "and N more days"), "Today is ₹220 over its share" when today is the most over, or "· every day within its share". A day exactly at its share is within it.
+- **Worked example:** today Thu 29 Oct. Spent Mon ₹1,240, Tue ₹2,310, Wed ₹980, Thu ₹420 so far. With Tue's `A_d = 1,850`, Tue's ₹460 above its tick is hatched and the sentence names it.
+
 ### BR-7 Range forecast (the range line)
 - **Pace:** `pace = V_prev / E`.
   - `V_prev` is the *Spent* entries in `[start, t − 1]` that were **not** posted by a recurring rule.
@@ -185,6 +193,7 @@ The states below are evaluated in order, and the first match wins.
   - Only categories with spending last cycle get a limit. Exactly ₹500 stays ₹500, and ₹501 becomes ₹1,000.
   - The offer is not made once any category has a limit.
 - **Display:** the bar fills to `spent / max(spent of any category)`. A limit tick sits at `limit / max`, and any spend past the tick is drawn hatched, never red.
+  - Under its limit a row says "₹200 left" beside the name, and "₹0 left" at the limit exactly; past it, "₹840 past limit" replaces the share. The words show even when the limit is beyond the biggest bar and no tick is drawn (D110).
 
 ### BR-13 Percentages (Spends)
 - The shares of the cycle total use the **largest-remainder method**, so the shown integers always sum to exactly 100.
@@ -274,7 +283,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Tapping the hero toggles *Today* ↔ *This week*. *This week* shows `A × min(7, D) − (spent since the start of the week, Monday)`, and the toggle lasts for the session only.
     - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37).
     - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
-    - The Day Blocks, their captions and the range line stay on today. TalkBack offers "Double tap to show this week" (or "show today").
+    - The Day Blocks give way to the week bars (BR-6a) and their captions to the weekday letters; the payday flag stays. The card grows 48dp for the bars, only in *This week*. The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
 - **FR-HO-3** **Due-soon nudge** (BR-9), when applicable.
 - **FR-HO-4** **Today list:**
   - The header shows today's total and *See all*.
@@ -322,7 +331,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - A today marker in marigold.
   - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. Without income there is no steady line, so only the total shows (DECISIONS D49).
   - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day.
-- **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12).
+- **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "past limit") (D110).
 - **FR-SP-5** **Insights** (BR-14), with their actions.
 - **FR-SP-6** *See every entry* opens a day-grouped list with category and cycle filter chips. Swipe to delete and tap to edit, as on Home.
   - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See {Cat} entries* opens it on that category (DECISIONS D53).
@@ -384,6 +393,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | NFR-7 | Changed-lines test coverage ≥ 90% (target 100%) per change (`.claude/rules/tests.md`) |
 | NFR-8 | Adaptive layout: no orientation or size lock; works from 320dp phones to tablets, in every foldable posture and in multi-window (UI_DESIGN §13) |
 | NFR-9 | The launch splash never delays Home: it is dismissed on Flutter's first frame. Its icon animation lasts 800 ms or less. Its background matches Home's in light and dark (UI_DESIGN §3.7) |
+| NFR-10 | The recent-apps preview never shows amounts on Android 13+ (`setRecentsScreenshotEnabled(false)`); screenshots keep working. Android 7–12 are unchanged, since `FLAG_SECURE` would block screenshots (D109) |
 
 ---
 

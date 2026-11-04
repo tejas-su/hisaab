@@ -5,15 +5,19 @@ import 'package:flutter/material.dart';
 import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
+import '../../../core/design/hisaab_motion.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/day_blocks/day_blocks.dart';
 import '../../../core/widgets/display_card.dart';
+import '../../../core/widgets/week_bars/week_bars.dart';
+import '../../../core/widgets/week_bars/week_letters.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../day_blocks_mapper.dart';
 import '../hero_copy.dart';
+import '../week_bars_mapper.dart';
 import 'hero_press.dart';
 import 'hero_sheen.dart';
 import 'range_line.dart';
@@ -25,8 +29,9 @@ import 'range_line.dart';
 /// It is the only raised card on Home, etched like a payment card, and a band of light crosses
 /// it once as it appears and on each new day; it sinks a little under a finger (D106).
 ///
-/// [week] shows *This week*'s number instead of today's; tapping the card calls [onTap] to flip
-/// it. [assemble] slides the blocks in once, after onboarding.
+/// [week] shows *This week*: its number, the weekday bars in place of the blocks (the card grows
+/// 48dp for them), and the week in words (BR-6a). Tapping the card calls [onTap] to flip it.
+/// [assemble] slides the blocks in once, after onboarding.
 class HeroCard extends StatelessWidget {
   const HeroCard({super.key, required this.summary, required this.onTap, this.week = false, this.assemble = false});
 
@@ -38,6 +43,11 @@ class HeroCard extends StatelessWidget {
   /// Width of the payday flag column and its gap from the blocks (UI_DESIGN §5.2 mockup).
   static const double _flagColumnWidth = 44;
   static const double _flagGap = 10;
+  static const double _captionGap = 6;
+
+  /// *This week*'s bars get room the Day Blocks' 40dp row can't give, so the card grows by 48dp
+  /// only after a tap (case study 15, W2).
+  static const double _weekBarsHeight = 88;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +56,7 @@ class HeroCard extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     final TextStyle? caption = HisaabType.regular(text.labelSmall)?.copyWith(color: context.colors.displayInk2);
     final String? overText = copy.overText.toNullable();
+    final bool reduceMotion = HisaabMotion.reduceMotion(context);
     return Semantics(
       container: true,
       label: copy.spoken,
@@ -88,46 +99,13 @@ class HeroCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: HisaabSpacing.xl),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Expanded(
-                      child: DayBlocks(
-                        // why: a new day gets a fresh block that fills in again (D91).
-                        key: ValueKey<CalendarDate>(summary.today),
-                        data: DayBlocksMapper.of(summary),
-                        semanticLabel: copy.laterCaption,
-                        assemble: assemble,
-                        fillIn: true,
-                      ),
-                    ),
-                    const SizedBox(width: _flagGap),
-                    SizedBox(
-                      width: _flagColumnWidth,
-                      child: Column(
-                        children: <Widget>[
-                          AppIcon(AppIcons.payday, size: 18, color: context.colors.displayInk),
-                          const SizedBox(height: 2),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(copy.payday, style: HisaabType.emphasized(caption)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: <Widget>[
-                    Text(strings.todayTitle, style: caption),
-                    const SizedBox(width: HisaabSpacing.s),
-                    // why: ends exactly under the last block, past which sits the flag column.
-                    Expanded(
-                      child: Text(copy.laterCaption, style: caption, textAlign: TextAlign.end),
-                    ),
-                    const SizedBox(width: _flagGap + _flagColumnWidth),
-                  ],
+                _resizing(
+                  reduceMotion: reduceMotion,
+                  child: AnimatedSwitcher(
+                    duration: HisaabMotion.reducedCrossfade,
+                    layoutBuilder: _stackFromTop,
+                    child: week ? _weekRows(context, copy, caption) : _dayRows(context, copy, caption),
+                  ),
                 ),
                 const SizedBox(height: HisaabSpacing.gutter),
                 // why: the subtlest line, so the range line reads as part of the card, not a new section.
@@ -141,4 +119,99 @@ class HeroCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _dayRows(BuildContext context, HeroCopy copy, TextStyle? caption) => Column(
+        key: const ValueKey<String>('hero-today-rows'),
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              Expanded(
+                child: DayBlocks(
+                  // why: a new day gets a fresh block that fills in again (D91).
+                  key: ValueKey<CalendarDate>(summary.today),
+                  data: DayBlocksMapper.of(summary),
+                  semanticLabel: copy.laterCaption,
+                  assemble: assemble,
+                  fillIn: true,
+                ),
+              ),
+              const SizedBox(width: _flagGap),
+              _flag(context, copy, caption),
+            ],
+          ),
+          const SizedBox(height: _captionGap),
+          Row(
+            children: <Widget>[
+              Text(AppLocalizations.of(context).todayTitle, style: caption),
+              const SizedBox(width: HisaabSpacing.s),
+              // why: ends exactly under the last block, past which sits the flag column.
+              Expanded(
+                child: Text(copy.laterCaption, style: caption, textAlign: TextAlign.end),
+              ),
+              const SizedBox(width: _flagGap + _flagColumnWidth),
+            ],
+          ),
+        ],
+      );
+
+  /// *This week*: the weekday bars where the blocks were, and their letters where the captions
+  /// were; the payday flag stays (BR-6a).
+  Widget _weekRows(BuildContext context, HeroCopy copy, TextStyle? caption) => Column(
+        key: const ValueKey<String>('hero-week-rows'),
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              Expanded(child: WeekBars(data: WeekBarsMapper.of(summary), height: _weekBarsHeight)),
+              const SizedBox(width: _flagGap),
+              _flag(context, copy, caption),
+            ],
+          ),
+          const SizedBox(height: _captionGap),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: WeekLetters(
+                  letters: WeekBarsMapper.letters(context.money.locale),
+                  todayIndex: summary.today.weekday - DateTime.monday,
+                ),
+              ),
+              const SizedBox(width: _flagGap + _flagColumnWidth),
+            ],
+          ),
+        ],
+      );
+
+  Widget _flag(BuildContext context, HeroCopy copy, TextStyle? caption) => SizedBox(
+        width: _flagColumnWidth,
+        child: Column(
+          children: <Widget>[
+            AppIcon(AppIcons.payday, size: 18, color: context.colors.displayInk),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(copy.payday, style: HisaabType.emphasized(caption)),
+            ),
+          ],
+        ),
+      );
+
+  // why: with reduced motion the card takes its new size at once; a zero-length AnimatedSize
+  // would trip Flutter's relayout assertion, so it is left out.
+  static Widget _resizing({required bool reduceMotion, required Widget child}) => reduceMotion
+      ? child
+      : AnimatedSize(
+          duration: HisaabMotion.resize,
+          curve: HisaabMotion.easeOut,
+          alignment: AlignmentDirectional.topStart,
+          child: child,
+        );
+
+  // why: the outgoing and incoming rows overlap from the top while the card resizes, so the
+  // bars rise where the blocks were rather than from the middle.
+  static Widget _stackFromTop(Widget? current, List<Widget> previous) => Stack(
+        alignment: AlignmentDirectional.topStart,
+        children: <Widget>[...previous, ?current],
+      );
 }

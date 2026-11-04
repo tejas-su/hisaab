@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• What to take from Unfold (proposal)</title>
+<!-- Plan for every item: docs/design-research/case-studies/15-unfold-takeaways-plan.md -->
+<style>
+  /* Proposal for case study 14 (docs/design-research/case-studies/14-unfold-money.md). Nothing here is decided or built.
+     Each section puts the screen as built ("Now") next to the proposal. Copy marked "draft" needs design-content.
+     Dates follow mockups 19 and 20: today Thu 29 Oct 2026, payday Sat 7 Nov, D = 9, A = ₹1,850, ₹420 spent, hero ₹1,430. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    /* HisaabColors.light */
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; /* mockup canvas only */
+  }
+  body.dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p { margin: 0 0 8px; }
+  code { font-size: .92em; }
+  .lede { color: var(--canvasInk2); max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .tag.soft { background: none; color: var(--canvasInk); box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .controls { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 8px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 48px; cursor: pointer; }
+  .controls input { width: 20px; height: 20px; accent-color: var(--canvasInk); }
+
+  .pair { display: grid; grid-template-columns: repeat(auto-fill, minmax(344px, 400px)); gap: 16px; margin-top: 16px; }
+  .phone { background: var(--bg); color: var(--ink); border-radius: 24px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .phone > .cap { font: 600 12px/16px 'Mukta', sans-serif; color: var(--ink2); display: flex; justify-content: space-between; }
+  .phone > .cap b { color: var(--ink); }
+  .note { font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 2px; }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* ---------- Hero, as hero_card.dart ---------- */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  body.dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; white-space: nowrap; }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; letter-spacing: 0; }
+  .blocksRow { display: flex; align-items: flex-end; gap: 10px; margin-top: 24px; }
+  .blocks { flex: 1; display: flex; gap: 6px; height: 40px; }
+  .blocks i { flex: 1; border-radius: 8px; background: var(--blockIdle); position: relative; overflow: hidden; }
+  .blocks i.today { box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .blocks i.today b { position: absolute; inset: auto 0 0 0; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 0 0 8px 8px; }
+  .flag { width: 44px; display: flex; flex-direction: column; align-items: center; gap: 2px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 6px; padding-inline-end: 54px; }
+  .hero hr { border: 0; height: 1px; background: var(--displayEtch); margin: 16px 0 14px; }
+  .range { display: flex; gap: 8px; align-items: center; font-size: 15px; line-height: 22px; }
+  .range span { color: var(--displayInk2); }
+
+  /* ---------- Cards and rows ---------- */
+  .card { background: var(--surface); border-radius: 28px; padding: 16px; }
+  .card h3 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 0 0 8px; }
+  .crow { padding: 6px 0; }
+  .crow .top { display: flex; align-items: center; gap: 10px; }
+  .well { width: 36px; height: 36px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .crow .nm { flex: 1; font-size: 16px; line-height: 24px; min-width: 0; }
+  .crow .nm span { font-size: 14px; color: var(--ink2); }
+  .crow .pc { font-size: 13px; color: var(--ink2); margin-inline-end: 8px; }
+  .crow .am { font: 600 16px/24px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .bar { position: relative; height: 12px; margin-top: 4px; }
+  .bar .track { position: absolute; inset: 2px 0; border-radius: 4px; background: var(--sunk); overflow: hidden; }
+  .bar .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+  .bar .over { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--ink) 0 1.6px, transparent 1.6px 4.5px); }
+  .bar .tick { position: absolute; top: 0; bottom: 0; width: 2px; margin-inline-start: -1px; background: var(--ink2); }
+  .bar .tick::after { content: ''; position: absolute; inset: 2px 0; background: var(--surface); }
+  .key { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .key .sw { width: 22px; height: 8px; border-radius: 4px; flex: none; background: repeating-linear-gradient(135deg, var(--ink) 0 1.6px, var(--sunk) 1.6px 4.5px); }
+
+  /* ---------- Week bars (R6) ---------- */
+  /* Week bars sit in the Day Blocks' own row: same width, 40dp tall, so the hero never changes height. */
+  .wk { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 40px; align-items: end; }
+  .wk .col { height: 100%; position: relative; }
+  .wk .b { position: absolute; inset: auto 0 0 0; border-radius: 6px 6px 3px 3px; background: var(--displayInk2); overflow: hidden; }
+  .wk .b.today { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .wk .b .o { position: absolute; inset: 0 0 auto 0; background: repeating-linear-gradient(135deg, var(--displayInk2) 0 1.6px, var(--display) 1.6px 4.5px); box-shadow: inset 0 0 0 1.5px var(--displayInk2); }
+  .wk .stub { position: absolute; inset: auto 0 0 0; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .wk .zero { position: absolute; inset: auto 0 0 0; height: 2px; border-radius: 1px; background: var(--displayInk2); }
+  .wk .tick { position: absolute; left: -2px; right: -2px; height: 2px; margin-bottom: -1px; background: var(--displayInk); box-shadow: 0 0 0 1px var(--display); }
+  .letters { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 6px; margin-inline-end: 54px; font-size: 13px; line-height: 18px; color: var(--displayInk2); text-align: center; }
+  .letters b { color: var(--displayInk); font-weight: 600; }
+
+  /* ---------- R6b: room for the bars, on a whole 360 × 780 phone ---------- */
+  .room { display: flex; gap: 16px; overflow-x: auto; padding: 12px 0; align-items: flex-start; }
+  .rcol { flex: none; width: 288px; }
+  .rcol h3 { font: 600 16px/20px 'Mukta', sans-serif; margin: 0 0 2px; }
+  .rcol .sub { font-size: 13px; line-height: 18px; color: var(--canvasInk2); min-height: 54px; }
+  .dev360 { width: 288px; height: 624px; border-radius: 28px; overflow: hidden; position: relative; background: var(--bg); box-shadow: 0 0 0 1px var(--hairline); }
+  .dev360 .scr { width: 360px; height: 780px; transform: scale(.8); transform-origin: top left; padding: 0 20px; position: relative; color: var(--ink); }
+  .dev360 .hdr { padding-top: 28px; }
+  .dev360 .hero { margin-top: 8px; display: flex; flex-direction: column; }
+  .dev360 .hero.r45 { aspect-ratio: 4 / 5; justify-content: space-between; }
+  .todayL { margin-top: 16px; }
+  .todayL .th { display: flex; justify-content: space-between; font: 600 16px/24px 'Mukta', sans-serif; padding: 0 4px 8px; }
+  .todayL .th span { font-weight: 400; color: var(--ink2); }
+  .dock { position: absolute; left: 20px; right: 20px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline); display: flex; align-items: center; justify-content: space-around; font-size: 13px; }
+  .dock b { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); box-shadow: 0 2px 0 var(--onSignal); display: grid; place-items: center; color: var(--onSignal); font-weight: 600; }
+  .fold { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--ink2); font: 600 12px/16px 'Mukta', sans-serif; color: var(--ink2); padding: 0 4px; transform: translateY(-100%); text-align: end; pointer-events: none; }
+  .verdict { margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--canvasInk2); }
+  .verdict b { color: var(--canvasInk); }
+
+  /* ---------- Recents (R4) ---------- */
+  .recents { background: #0000; display: flex; gap: 12px; justify-content: center; padding: 8px 0; }
+  .rcard { width: 210px; flex: none; }
+  .rcard .lbl { display: flex; gap: 6px; align-items: center; justify-content: center; font: 600 13px/18px 'Mukta', sans-serif; margin-bottom: 6px; }
+  .rcard .lbl i { width: 18px; height: 18px; border-radius: 6px; background: var(--ink); display: grid; place-items: center; }
+  .rcard .lbl i::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--signal); }
+  .rcard .shot { height: 360px; border-radius: 20px; background: var(--bg); overflow: hidden; position: relative; box-shadow: 0 0 0 1px var(--hairline); }
+  .rcard .shot .inner { transform: scale(.6); transform-origin: top left; width: 166.6%; padding: 16px; }
+  .rcard .shot.blank { display: grid; place-items: center; }
+  .wordmark { font: 600 26px/30px 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wordmark i { display: inline-block; width: .26em; height: .26em; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 1.5px var(--displayEdge); margin-inline-start: 2px; }
+  .hdr { display: flex; justify-content: space-between; align-items: center; min-height: 48px; }
+  .hdr .wells { display: flex; gap: 4px; }
+  .hdr .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; border: 0; color: var(--ink); cursor: pointer; }
+  body.dark .hdr .w { background: var(--hairline); }
+
+  /* ---------- Date sheet (R3, as built) ---------- */
+  .sheet { background: var(--surface); border-radius: 36px 36px 0 0; padding: 20px 16px 24px; display: grid; gap: 8px; }
+  .chip { min-height: 48px; border-radius: 12px; background: var(--hairline); display: flex; align-items: center; justify-content: center; font: 400 15px/20px 'Mukta', sans-serif; gap: 6px; }
+  body.dark .chip { background: var(--sunk); }
+  .chip.picked { background: var(--ink); color: var(--bg); font-weight: 600; }
+
+  /* ---------- Every entry (R7) ---------- */
+  .search { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 14px; border-radius: 12px; background: var(--surface); color: var(--ink2); }
+  body.dark .search { background: var(--hairline); }
+  .search input { flex: 1; border: 0; background: none; font: 400 16px/24px 'Mukta', sans-serif; color: var(--ink); outline: none; min-width: 0; }
+  .search input::placeholder { color: var(--ink2); }
+  .dayH { display: flex; justify-content: space-between; font: 600 14px/20px 'Mukta', sans-serif; padding: 8px 0 4px; }
+  .dayH span { color: var(--ink2); }
+  .erow { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--hairline); }
+  .dayH + .erow { border-top: 0; }
+  .erow .t { flex: 1; min-width: 0; }
+  .erow .t div:first-child { font-size: 16px; line-height: 24px; }
+  .erow .t div + div { font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .erow .am { font: 600 16px/24px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  mark { background: none; color: inherit; font-weight: 600; }
+  .empty { font-size: 14px; color: var(--ink2); padding: 12px 0; }
+
+  /* ---------- Store strip ---------- */
+  .strip { display: flex; gap: 12px; overflow-x: auto; padding: 8px 0 12px; }
+  .frame { flex: none; width: 200px; aspect-ratio: 9 / 16; border-radius: 18px; background: var(--bg); color: var(--ink); padding: 16px 14px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .frame.dk { --bg: #131210; --surface: #211F1C; --ink: #F2F1EC; --ink2: #A7A199; --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38; --displayEdge: #0000; --displayEtch: #2F2B27; --hairline: #3A3632; --sunk: #2F2B27; }
+  .frame .h { font: 600 17px/19px 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .frame .s { font-size: 12px; line-height: 16px; color: var(--ink2); }
+  .frame { padding: 0; gap: 0; }
+  .frame .band { height: 20%; padding: 14px 14px 0; flex: none; }
+  .frame .dev { flex: 1; overflow: hidden; position: relative; }
+  .frame .dev .inner { transform: scale(.47); transform-origin: top left; width: 212%; padding: 12px; }
+
+  table { border-collapse: collapse; margin-top: 16px; width: 100%; max-width: 1100px; background: var(--surface); color: var(--ink); border-radius: 12px; overflow: hidden; font-size: 14px; line-height: 20px; }
+  th, td { text-align: start; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; background: var(--sunk); }
+  .tablewrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>What to take from Unfold <span class="tag">proposal</span></h1>
+<p class="lede">Case study 14's seven "Take" items. Each one shows the screen <b>as built</b> next to the <b>proposal</b>, in hisaab's own tokens: one signal colour, no red or green, and state shown by fill, hatch and words. Unfold's own screens aren't redrawn here. Copy marked <span class="draft" style="color:inherit;box-shadow:inset 0 0 0 1px currentColor">draft</span> needs a <code>design-content</code> pass.</p>
+
+<div class="controls">
+  <label><input type="checkbox" id="dark"> Dark theme</label>
+</div>
+
+<h2>R1 + R2 · Limit rows in words, with a key for the hatch <span class="tag">recommended</span></h2>
+<p class="lede">Today a row with a limit shows its share (%) until it goes over, and the hatch is never explained. Proposed: a row with a limit says <b>"₹200 left"</b>, <b>"₹0 left"</b> or <b>"₹840 past limit"</b>, and one key line appears under the card only when a row is hatched. Cost: two ARB strings and a branch in <code>category_spend_row.dart</code>.</p>
+<div class="pair" id="r12"></div>
+
+<h2>R6 · <i>This week</i>: a bar per weekday <span class="tag soft">to test</span></h2>
+<p class="lede">Tapping the hero shows <i>This week</i> (FR-HO-2). Today the number changes and the Day Blocks stay. Proposed (case study 15 §2): seven bars, Mon to Sun, <b>in the Day Blocks' own 40dp row</b>, so the hero keeps its height. Each past bar has <b>its own share tick</b> (that day's share as it stood, the same tick as <i>Where it went</i>), and the part above it is hatched. Today is marigold with its own tick. Future days are idle stubs. The letters replace the captions, and the range slot says the week in words, so no key is needed. Shares are illustrative.</p>
+<div class="pair" id="r6"></div>
+
+<h2>R6b · Giving the bars room <span class="tag soft">owner's question</span></h2>
+<p class="lede">The bars above feel tight at 40dp. Three ways to give them room, each on a whole 360 × 780 phone (shown at 80%) with Home's <i>Today</i> list and the dock. Tap a hero to toggle <i>Today</i> ↔ <i>This week</i>. The dashed line shows where the <i>Today</i> list starts, measured live. <b>W1</b> is the 4:5 card. <b>W2</b> grows the hero only in <i>This week</i>, on your tap. <b>W3</b> makes the row taller in both modes.</p>
+<div class="room" id="r6b"></div>
+
+<h2>R5 · A small, raised ₹ on the hero <span class="tag soft">to test</span></h2>
+<p class="lede">The ₹ drops to about 42% of the digit size and sits at the cap line, so the digits carry the weight. Hero only. TalkBack still reads "1,430 rupees". Check it at 1.5× text (E12).</p>
+<div class="pair" id="r5"></div>
+
+<h2>R4 · Hide figures from the recent-apps screen <span class="tag">recommended</span></h2>
+<p class="lede">No UI. On Android 13+ the app switcher stops capturing hisaab, so it shows the system's placeholder instead of your money, and screenshots keep working (case study 15 §3). Android 7–12: no change in v1, because <code>FLAG_SECURE</code> would block screenshots and toggling it on pause is unreliable. The visible eye button is shown last, as an option that needs a blind read. Its state would persist across launches.</p>
+<div class="pair" id="r4"></div>
+
+<h2>R7 · Search notes in <i>Every entry</i> <span class="tag soft">dropped (D113)</span></h2>
+<p class="lede">A field at the top of <i>Every entry</i> that matches notes and category names. It sits on the list screen, so the Add flow is untouched. Type <b>swiggy</b>, <b>ravi</b> or <b>auto</b>. This is lower value while notes stay optional, so revisit it with usage data or with M6.</p>
+<div class="pair" id="r7"></div>
+
+<h2>R3 · <i>Yesterday</i> on the date chip <span class="tag soft">already built</span></h2>
+<p class="lede">Case study 14 assumed <i>Today ▾</i> goes straight to a calendar. It doesn't: <code>date_chip.dart</code> already opens <i>Today · Yesterday · Pick a date</i>, so back-dating to yesterday takes 2 taps. Nothing to do, and the case study should be corrected.</p>
+<div class="pair" id="r3"></div>
+
+<h2>Store screenshots <span class="tag soft">handoff to design-brand</span></h2>
+<p class="lede">Google Play's rules (case study 15 §5): taglines take at most 20% of the image, the first three screenshots lead with UI, there's <b>no device imagery</b>, and there are no "Best", "#1", "New" or "Free". So each frame is the real app, full-bleed, under a short tagline band. Light comes first and dark last. The taglines are drafts.</p>
+<div class="strip" id="store"></div>
+
+<h2>Summary</h2>
+<div class="tablewrap"><table>
+  <tr><th>#</th><th>Change</th><th>Cost</th><th>Conflicts</th><th>Verdict</th></tr>
+  <tr><td>R1</td><td>A key under hatched limit bars</td><td>1 string, 1 conditional line</td><td>None</td><td>Recommended</td></tr>
+  <tr><td>R2</td><td>"₹200 left" / "₹0 left" on rows with a limit</td><td>1 string, <code>category_spend_row.dart</code> + its TalkBack label</td><td>Changes BR-12's display (spec update)</td><td>Recommended</td></tr>
+  <tr><td>R3</td><td>Yesterday on the date chip</td><td>—</td><td>—</td><td>Already built</td></tr>
+  <tr><td>R4</td><td>Blank card in recent apps</td><td>Platform channel or <code>MainActivity</code>; no UI</td><td>API 24–32 needs <code>FLAG_SECURE</code>, which blocks screenshots</td><td>Recommended (API 33+ first)</td></tr>
+  <tr><td>R4b</td><td>Eye button to hide figures</td><td>A header well, a state, every amount widget</td><td>"Less, but better"; adds a control to Home</td><td>Blind read first</td></tr>
+  <tr><td>R5</td><td>Small raised ₹ on the hero</td><td><code>AmountText</code> hero variant</td><td>None; check at 1.5× text</td><td>Test</td></tr>
+  <tr><td>R6</td><td>Week bars in <i>This week</i></td><td>A per-day share rule for past days; a new painter</td><td>FR-HO-2; mockups 19 and 20</td><td>Test against 19 and 20</td></tr>
+  <tr><td>R7</td><td>Search notes</td><td>A field + filter in <i>Every entry</i></td><td>None</td><td>Later</td></tr>
+</table></div>
+
+<script>
+  const ico = {
+    food: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 7c0-1.5 1-2 1-3.5M13 7c0-1.5 1-2 1-3.5"/>',
+    shop: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    travel: '<rect x="5" y="4" width="14" height="13" rx="3"/><path d="M5 11h14M8 20v-3M16 20v-3"/><circle cx="8.5" cy="14" r=".6"/><circle cx="15.5" cy="14" r=".6"/>',
+    bills: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+    fun: '<path d="M4 8a2 2 0 0 0 0 4v4h16v-4a2 2 0 0 1 0-4V4H4z"/><path d="M14 4v12" stroke-dasharray="2 2"/>',
+    flag: '<path d="M6 21V4M6 4h11l-2 4 2 4H6"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+    eye: '<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 5.6A9.8 9.8 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8M6.5 7.2A16.6 16.6 0 0 0 2.5 12s3.5 6.5 9.5 6.5c1.4 0 2.6-.3 3.7-.8"/>',
+    cal: '<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+    down: '<path d="M7 10l5 5 5-5"/>',
+  };
+  const I = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ico[k]}</svg>`;
+  const money = n => '₹' + n.toLocaleString('en-IN');
+
+  /* ---------- Hero ---------- */
+  function blocks(fill = 77, d = 9) {
+    let s = `<i class="today"><b style="height:${fill}%"></b></i>`;
+    for (let i = 1; i < d; i++) s += '<i></i>';
+    return s;
+  }
+  function amount(n, small) {
+    const digits = n.toLocaleString('en-IN');
+    return small ? `<div class="amt"><span class="rs">₹</span>${digits}</div>` : `<div class="amt">₹${digits}</div>`;
+  }
+  function hero({ title = 'Safe to spend today', n = 1430, small = false, body, range } = {}) {
+    return `<div class="hero"><div class="ttl">${title}</div>${amount(n, small)}
+      ${body ?? `<div class="blocksRow"><div class="blocks">${blocks()}</div><div class="flag">${I('flag')}7 Nov</div></div>
+      <div class="capRow"><span>Today</span><span>9 days to payday</span></div>`}
+      <hr><div class="range">${range ?? `${I('check')}Lasts till payday <span>· about ₹9,300 spare</span>`}</div></div>`;
+  }
+  const header = (eye) => `<div class="hdr"><div class="wordmark">hisaab<i></i></div><div class="wells">
+      ${eye ? `<button class="w" id="eyeBtn" aria-label="Hide amounts" aria-pressed="false">${I('eye')}</button>` : ''}
+      <button class="w" aria-label="Settings">${I('gear')}</button></div></div>`;
+
+  /* ---------- Where it went ---------- */
+  const cats = [
+    { k: 'food', n: 'Food', s: 9800, l: 10000, p: 39 },
+    { k: 'shop', n: 'Shopping', s: 6840, l: 6000, p: 27 },
+    { k: 'travel', n: 'Travel', s: 4100, l: null, p: 16 },
+    { k: 'bills', n: 'Bills', s: 3000, l: 3000, p: 12 },
+    { k: 'fun', n: 'Fun', s: 1400, l: 2380, p: 6 },
+  ];
+  function rows(proposed) {
+    const big = cats[0].s;
+    let anyOver = false;
+    const html = cats.map(c => {
+      const past = c.l != null && c.s > c.l ? c.s - c.l : null;
+      if (past) anyOver = true;
+      let detail = '';
+      if (past) detail = ` <span>· ${money(past)} past limit</span>`;
+      else if (proposed && c.l != null) detail = ` <span>· ${money(c.l - c.s)} left</span>`;
+      const limitAt = c.l != null && c.l / big < 1 ? c.l / big * 100 : null;
+      const fill = c.s / big * 100;
+      const solid = limitAt != null && fill > limitAt ? limitAt : fill;
+      return `<div class="crow"><div class="top"><div class="well">${I(c.k)}</div>
+        <div class="nm">${c.n}${detail}</div>${past ? '' : `<span class="pc">${c.p}%</span>`}<span class="am">${money(c.s)}</span></div>
+        <div class="bar"><div class="track"><div class="fill" style="width:${solid}%"></div>
+        ${limitAt != null && fill > limitAt ? `<div class="over" style="left:${limitAt}%;width:${fill - limitAt}%"></div>` : ''}</div>
+        ${limitAt != null ? `<div class="tick" style="left:${limitAt}%"></div>` : ''}</div></div>`;
+    }).join('');
+    const key = proposed && anyOver ? `<div class="key"><span class="sw" aria-hidden="true"></span>Striped part is over the limit.<span class="draft">draft</span></div>` : '';
+    return `<div class="card"><h3>Where it went</h3>${html}${key}</div>`;
+  }
+
+  /* ---------- Week bars ---------- */
+  function week(H = 40) {
+    // Each day's share as it stood (BR-3/4 rebuilt for that day). Illustrative values; Thu is the worked example's A.
+    const d = [
+      { l: 'M', s: 1240, a: 1820 }, { l: 'T', s: 2310, a: 1850 }, { l: 'W', s: 980, a: 1790 }, { l: 'T', s: 420, a: 1850, today: true },
+      { l: 'F' }, { l: 'S' }, { l: 'S' },
+    ];
+    const max = Math.max(...d.flatMap(x => [x.s ?? 0, x.a ?? 0]));
+    const h = v => v / max * H;
+    const cols = d.map(x => {
+      if (x.s == null) return `<div class="col"><div class="stub"></div></div>`;
+      const tick = `<div class="tick" style="bottom:${h(x.a)}px"></div>`;
+      if (x.s === 0) return `<div class="col"><div class="zero"></div>${tick}</div>`;
+      const over = x.s > x.a ? h(x.s) - h(x.a) : 0;
+      return `<div class="col"><div class="b${x.today ? ' today' : ''}" style="height:${h(x.s)}px">${over ? `<div class="o" style="height:${over}px"></div>` : ''}</div>${tick}</div>`;
+    }).join('');
+    return `<div class="blocksRow"><div class="wk" style="height:${H}px">${cols}</div><div class="flag">${I('flag')}7 Nov</div></div>
+      <div class="letters">${d.map(x => x.today ? `<b>${x.l}</b>` : `<span>${x.l}</span>`).join('')}</div>`;
+  }
+  const weekRange = `<p style="margin:0">Spent ₹4,950 this week <span>· Tue was ₹460 over its share</span><span class="draft">draft</span></p>`;
+
+  /* ---------- Every entry ---------- */
+  const entries = [
+    { day: 'Thu, 29 Oct', items: [{ k: 'food', c: 'Food', note: 'Swiggy, lunch', a: 420 }] },
+    { day: 'Wed, 28 Oct', items: [{ k: 'travel', c: 'Travel', note: 'Auto to office', a: 140 }, { k: 'food', c: 'Food', note: 'Chai and samosa', a: 60 }, { k: 'shop', c: 'Shopping', note: '', a: 780 }] },
+    { day: 'Tue, 27 Oct', items: [{ k: 'fun', c: 'Fun', note: "Ravi's birthday gift", a: 1500 }, { k: 'food', c: 'Food', note: 'Swiggy, dinner', a: 560 }, { k: 'travel', c: 'Travel', note: 'Auto home', a: 250 }] },
+    { day: 'Mon, 26 Oct', items: [{ k: 'bills', c: 'Bills', note: 'Phone recharge', a: 299 }, { k: 'food', c: 'Food', note: 'Groceries', a: 941 }] },
+  ];
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function list(q) {
+    const re = q ? new RegExp(esc(q), 'i') : null;
+    const hi = s => re ? s.replace(new RegExp(`(${esc(q)})`, 'ig'), '<mark>$1</mark>') : s;
+    let out = '';
+    for (const g of entries) {
+      const its = re ? g.items.filter(x => re.test(x.note) || re.test(x.c)) : g.items;
+      if (!its.length) continue;
+      const tot = its.reduce((a, x) => a + x.a, 0);
+      out += `<div class="dayH">${g.day}<span>${money(tot)}</span></div>` + its.map(x => `<div class="erow"><div class="well">${I(x.k)}</div>
+        <div class="t"><div>${hi(x.c)}</div>${x.note ? `<div>${hi(x.note)}</div>` : ''}</div><span class="am">${money(x.a)}</span></div>`).join('');
+    }
+    return out || `<div class="empty">Nothing matches "${q}".<span class="draft">draft</span></div>`;
+  }
+
+  function render() {
+    document.getElementById('r12').innerHTML =
+      `<div class="phone"><div class="cap"><b>Now</b><span>Spends</span></div>${rows(false)}</div>
+       <div class="phone"><div class="cap"><b>Proposed</b><span>Spends</span></div>${rows(true)}</div>`;
+
+    document.getElementById('r6').innerHTML =
+      `<div class="phone"><div class="cap"><b>Now</b><span>Home · tapped to This week</span></div>${hero({ title: 'Safe to spend this week', n: 6980 })}</div>
+       <div class="phone"><div class="cap"><b>Proposed</b><span>Home · tapped to This week</span></div>${hero({ title: 'Safe to spend this week', n: 6980, body: week(), range: weekRange })}</div>`;
+
+    const todayList = `<div class="todayL"><div class="th">Today <span>₹420 · See all</span></div><div class="card" style="padding:4px 16px">
+        <div class="erow" style="border-top:0"><div class="well">${I('food')}</div><div class="t"><div>Food</div><div>Swiggy, lunch</div></div><span class="am">₹420</span></div></div></div>`;
+    const variants = [
+      { id: 'w0', t: 'As planned · 40dp row', sub: 'The hero keeps its height in both modes. Bars are 40dp.', today: () => hero(), week: () => hero({ title: 'Safe to spend this week', n: 6980, body: week(40), range: weekRange }) },
+      { id: 'w1', t: 'W1 · 4:5 card', sub: 'The card is 320 × 400 in both modes. Bars get 120dp, and Today mode gets the same empty height.', cls: 'r45',
+        today: () => hero(), week: () => hero({ title: 'Safe to spend this week', n: 6980, body: week(120), range: weekRange }) },
+      { id: 'w2', t: 'W2 · Grow in This week only', sub: 'Today mode as built. Your tap grows the hero by 48dp and bars get 88dp. The list slides down, and back up when you tap again.',
+        today: () => hero(), week: () => hero({ title: 'Safe to spend this week', n: 6980, body: week(88), range: weekRange }) },
+      { id: 'w3', t: 'W3 · Taller row in both modes', sub: 'The Day Blocks and the bars are both 64dp, so the hero is 24dp taller everywhere.',
+        today: () => hero({ body: `<div class="blocksRow"><div class="blocks" style="height:64px">${blocks()}</div><div class="flag">${I('flag')}7 Nov</div></div><div class="capRow"><span>Today</span><span>9 days to payday</span></div>` }),
+        week: () => hero({ title: 'Safe to spend this week', n: 6980, body: week(64), range: weekRange }) },
+    ];
+    const roomEl = document.getElementById('r6b');
+    roomEl.innerHTML = variants.map(v => `<div class="rcol"><h3>${v.t}</h3><div class="sub">${v.sub}</div>
+      <div class="dev360"><div class="scr">${header(false)}<div class="slot" data-v="${v.id}" data-mode="${location.hash === '#today' ? 'today' : 'week'}"></div>${todayList}
+      <div class="dock"><span>Home</span><b>Add</b><span>Spends</span></div><div class="fold"></div></div></div>
+      <div class="verdict" data-verdict="${v.id}"></div></div>`).join('');
+    const place = () => roomEl.querySelectorAll('.slot').forEach(sl => {
+      const v = variants.find(x => x.id === sl.dataset.v);
+      sl.innerHTML = sl.dataset.mode === 'week' ? v.week() : v.today();
+      const h = sl.querySelector('.hero'); if (v.cls) h.classList.add(v.cls); h.style.cursor = 'pointer';
+      h.onclick = () => { sl.dataset.mode = sl.dataset.mode === 'week' ? 'today' : 'week'; place(); };
+      const scr = sl.closest('.scr'); const list = scr.querySelector('.todayL'); const fold = scr.querySelector('.fold');
+      const top = Math.round(list.offsetTop); fold.style.top = top + 'px'; fold.textContent = `Today list starts at ${top}dp`;
+      const dockTop = 780 - 16 - 64;
+      roomEl.querySelector(`[data-verdict="${v.id}"]`).innerHTML = `${sl.dataset.mode === 'week' ? 'This week' : 'Today'}: hero <b>${Math.round(h.offsetHeight)}dp</b> tall; <b>${dockTop - top}dp</b> left for the list above the dock.`;
+    });
+    place();
+
+    document.getElementById('r5').innerHTML =
+      `<div class="phone"><div class="cap"><b>Now</b><span>Home</span></div>${hero()}</div>
+       <div class="phone"><div class="cap"><b>Proposed</b><span>Home</span></div>${hero({ small: true })}</div>`;
+
+    const shot = `<div class="inner">${header(false)}${hero()}</div>`;
+    document.getElementById('r4').innerHTML =
+      `<div class="phone"><div class="cap"><b>Now</b><span>Recent apps</span></div>
+         <div class="recents"><div class="rcard"><div class="lbl"><i></i>hisaab</div><div class="shot">${shot}</div></div></div>
+         <div class="note">Anyone who opens the app switcher sees today's money.</div></div>
+       <div class="phone"><div class="cap"><b>Proposed</b><span>Recent apps</span></div>
+         <div class="recents"><div class="rcard"><div class="lbl"><i></i>hisaab</div><div class="shot blank"><div class="note" style="text-align:center;padding:0 16px">System placeholder<br>(Android draws it)</div></div></div></div>
+         <div class="note">Android 13+: <code>setRecentsScreenshotEnabled(false)</code>. The system draws the placeholder, so we can't choose what it shows. Screenshots keep working.</div></div>
+       <div class="phone"><div class="cap"><b>Option, needs a blind read</b><span>Home · tap the eye</span></div>
+         ${header(true)}<div id="eyeHero">${hero()}</div></div>`;
+    const eyeBtn = document.getElementById('eyeBtn');
+    eyeBtn.addEventListener('click', () => {
+      const on = eyeBtn.getAttribute('aria-pressed') !== 'true';
+      eyeBtn.setAttribute('aria-pressed', String(on));
+      eyeBtn.innerHTML = I(on ? 'eyeOff' : 'eye');
+      const h = document.getElementById('eyeHero');
+      h.innerHTML = hero();
+      if (on) {
+        h.querySelector('.amt').textContent = '₹•••';
+        h.querySelector('.range').innerHTML = `${I('check')}Lasts till payday <span>· amounts hidden</span>`;
+      }
+    });
+
+    document.getElementById('r7').innerHTML =
+      `<div class="phone"><div class="cap"><b>Now</b><span>Every entry</span></div><div class="card">${list('')}</div></div>
+       <div class="phone"><div class="cap"><b>Proposed</b><span>Every entry</span></div>
+         <label class="search">${I('search')}<input id="q" type="search" placeholder="Search notes" aria-label="Search notes"><span class="draft">draft</span></label>
+         <div class="card" id="qlist">${list('')}</div></div>`;
+    document.getElementById('q').addEventListener('input', e => { document.getElementById('qlist').innerHTML = list(e.target.value.trim()); });
+
+    document.getElementById('r3').innerHTML =
+      `<div class="phone"><div class="cap"><b>As built</b><span>Add · tap Today ▾</span></div>
+         <div style="display:flex;gap:8px"><div class="chip" style="padding:0 12px;background:var(--surface)">${I('cal')}Today${I('down')}</div></div>
+         <div class="sheet"><div class="chip">Today</div><div class="chip">Yesterday</div><div class="chip">${I('cal')}Pick a date</div></div></div>`;
+
+    const frames = [
+      ['Know what you can spend today', '', hero()],
+      ['Add a spend in seconds', '', `<div class="card"><div class="amt" style="font-size:60px;line-height:60px">₹420</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px">${['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(k => `<div class="chip" style="min-height:56px;border-radius:16px;background:var(--sunk);font:600 24px/28px 'Anek Latin',sans-serif">${k}</div>`).join('')}</div>
+        <div class="chip" style="margin-top:8px;min-height:56px;border-radius:16px;background:var(--signal);color:var(--onSignal);font-weight:600;box-shadow:0 2px 0 var(--onSignal)">Next</div></div>`],
+      ['See where it went', '', rows(true)],
+      ['Ask any AI. See exactly what it gets', '', '<div class="card"><h3>What you\'ll share</h3><div class="note">My pay cycle: 8 Oct – 7 Nov. Spent so far ₹25,140: Food ₹9,800 …</div></div>'],
+      ['No sign-in. Your data stays on your phone', '', hero()],
+      ['Easy on the eyes at night', '', hero(), true],
+    ];
+    document.getElementById('store').innerHTML = frames.map(([h, s, inner, dk]) =>
+      `<div class="frame${dk ? ' dk' : ''}"><div class="band"><div class="h">${h}</div></div><div class="dev"><div class="inner">${inner}</div></div></div>`).join('');
+  }
+  document.getElementById('dark').addEventListener('change', e => document.body.classList.toggle('dark', e.target.checked));
+  render();
+</script>
+</body>
+</html>

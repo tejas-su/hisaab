@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/widgets/week_bars/week_bars.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/design/app_icon.dart';
@@ -284,7 +285,8 @@ void main() {
         await tester.settle();
         expect(find.text('Safe to spend this week'), findsOneWidget);
         expect(find.text('₹12,530'), findsOneWidget);
-        expect(find.text('9 days to payday'), findsOneWidget, reason: 'the blocks stay on today');
+        expect(find.byType(WeekBars), findsOneWidget, reason: 'the weekday bars take the blocks\' place (BR-6a)');
+        expect(find.text('9 days to payday'), findsNothing);
         await tester.tap(find.byType(HeroCard));
         await tester.settle();
         expect(find.text('Safe to spend today'), findsOneWidget);

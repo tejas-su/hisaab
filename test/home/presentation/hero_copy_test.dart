@@ -21,6 +21,7 @@ CycleSummary _summary({
   Option<Money> tomorrow = const Option<Money>.none(),
   CalendarDate today = const CalendarDate(2026, 10, 26),
   int spentThisWeek = 420,
+  List<WeekDay> week = const <WeekDay>[],
 }) =>
     CycleSummary(
       cycle: const PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3)),
@@ -33,7 +34,11 @@ CycleSummary _summary({
       forecast: forecast,
       earliestEntryDate: const CalendarDate(2026, 9, 4),
       spentThisWeek: Money.fromMajor(spentThisWeek),
+      week: week,
     );
+
+WeekDay _day(int october, {required int spent, int share = 1850}) =>
+    WeekDay(date: CalendarDate(2026, 10, october), spent: Money.fromMajor(spent), share: Money.fromMajor(share));
 
 HeroCopy _copy(CycleSummary summary) => HeroCopy.of(summary, strings: _strings, money: _money);
 
@@ -131,16 +136,19 @@ void main() {
     });
 
     test('on track: 7 × ₹1,850 − ₹420 = ₹12,530 this week, read aloud with the week title', () {
-      final HeroCopy copy = _weekCopy(_summary(state: const OnTrack(), forecast: LastsTillPayday(Money.fromMajor(9300))));
+      final HeroCopy copy = _weekCopy(_summary(
+        state: const OnTrack(),
+        forecast: LastsTillPayday(Money.fromMajor(9300)),
+        week: <WeekDay>[_day(26, spent: 420)],
+      ));
       expect(copy.title, 'Safe to spend this week');
       expect(copy.heroAmount, Money.fromMajor(12530));
       expect(copy.muted, isFalse);
       expect(copy.overText, const Option<String>.none());
-      expect(copy.laterCaption, '9 days to payday');
-      expect(copy.range, const RangeWords('Lasts till payday', 'about ₹9,300 spare'));
+      expect(copy.range, const RangeWords('Spent ₹420 this week', 'every day within its share'));
       expect(
         copy.spoken,
-        'Safe to spend this week: 12,530 rupees. 9 days to payday. Lasts till payday, about 9,300 rupees spare.',
+        'Safe to spend this week: 12,530 rupees. Today, 420 rupees so far. Spent 420 rupees this week, every day within its share.',
       );
     });
 
@@ -164,6 +172,79 @@ void main() {
       expect(copy.heroAmount, Money.zero);
       expect(copy.muted, isTrue);
       expect(copy.overText, const Option<String>.none());
+    });
+  });
+
+  group('HeroCopy — This week in words (BR-6a)', () {
+    // Thu 29 Oct: Mon to Wed as they stood, and today.
+    CycleSummary thursday(List<WeekDay> week, {int spentThisWeek = 4950}) =>
+        _summary(state: const OnTrack(), today: const CalendarDate(2026, 10, 29), spentThisWeek: spentThisWeek, week: week);
+
+    test('one day over its share: the sentence names it, and the glyph is the alert', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[
+        _day(26, spent: 1240, share: 1820),
+        _day(27, spent: 2310),
+        _day(28, spent: 980, share: 1790),
+        _day(29, spent: 420),
+      ]));
+      expect(copy.range, const RangeWords('Spent ₹4,950 this week', 'Tue was ₹460 over its share'));
+      expect(copy.calm, isFalse);
+    });
+
+    test('every day within its share: the check glyph', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[_day(26, spent: 1240), _day(29, spent: 420)], spentThisWeek: 1660));
+      expect(copy.range, const RangeWords('Spent ₹1,660 this week', 'every day within its share'));
+      expect(copy.calm, isTrue);
+    });
+
+    test('a day exactly at its share is within it', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[_day(26, spent: 1850), _day(29, spent: 0)], spentThisWeek: 1850));
+      expect(copy.range.detail, 'every day within its share');
+    });
+
+    test('several days over: the most-over day, and how many more', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[
+        _day(26, spent: 1900),
+        _day(27, spent: 2310),
+        _day(28, spent: 2000),
+        _day(29, spent: 0),
+      ], spentThisWeek: 6210));
+      expect(copy.range.detail, 'Tue was ₹460 over its share, and 2 more days');
+    });
+
+    test('two days over says "1 more day"', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[_day(26, spent: 1900), _day(27, spent: 2310), _day(29, spent: 0)], spentThisWeek: 4210));
+      expect(copy.range.detail, 'Tue was ₹460 over its share, and 1 more day');
+    });
+
+    test('today over its share is "Today is", not a past tense', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[_day(26, spent: 1000), _day(29, spent: 2070)], spentThisWeek: 3070));
+      expect(copy.range.detail, 'Today is ₹220 over its share');
+    });
+
+    test('a day with a ₹0 share is over by all it spent', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[_day(26, spent: 300, share: 0), _day(29, spent: 0)], spentThisWeek: 300));
+      expect(copy.range.detail, 'Mon was ₹300 over its share');
+    });
+
+    test('TalkBack hears each day by its full name with real values, and the week sentence', () {
+      final HeroCopy copy = _weekCopy(thursday(<WeekDay>[
+        _day(26, spent: 1240, share: 1820),
+        _day(27, spent: 2310),
+        _day(28, spent: 980, share: 1790),
+        _day(29, spent: 420),
+      ]));
+      expect(
+        copy.spoken,
+        'Safe to spend this week: 6,150 rupees. '
+        'Monday, 1,240 rupees. Tuesday, 2,310 rupees, 460 rupees over its share. Wednesday, 980 rupees. '
+        'Today, 420 rupees so far. Spent 4,950 rupees this week, Tue was 460 rupees over its share.',
+      );
+    });
+
+    test('Today mode keeps the forecast range line', () {
+      final HeroCopy copy = _copy(thursday(<WeekDay>[_day(27, spent: 2310), _day(29, spent: 420)]));
+      expect(copy.range, const RangeWords('Lasts till payday'));
     });
   });
 }

@@ -7,6 +7,7 @@ import 'entities/cycle_state.dart';
 import 'entities/cycle_summary.dart';
 import 'entities/range_forecast.dart';
 import 'entities/spend_preview.dart';
+import 'entities/week_day.dart';
 import 'entities/yesterday_saving.dart';
 
 /// The pure maths behind the hero: today's share, the state and the forecast (SPEC BR-3 to BR-7).
@@ -19,14 +20,15 @@ abstract final class SafeToSpend {
 
   /// Computes today's summary from [inputs]; [earliestEntryDate] is passed through for the Add tray.
   ///
-  /// [spentThisWeek] is passed through for the *This week* view (FR-HO-2). [yesterday] holds the
-  /// inputs as they stood yesterday, when yesterday is in the same cycle; it drives the "you saved
-  /// ₹X yesterday" note (BR-8).
+  /// [spentThisWeek] and [week] are passed through for the *This week* view (FR-HO-2, BR-6a).
+  /// [yesterday] holds the inputs as they stood yesterday, when yesterday is in the same cycle; it
+  /// drives the "you saved ₹X yesterday" note (BR-8).
   static CycleSummary compute(
     CycleInputs inputs, {
     required CalendarDate earliestEntryDate,
     Money spentThisWeek = Money.zero,
     Option<CycleInputs> yesterday = const Option<CycleInputs>.none(),
+    List<WeekDay> week = const <WeekDay>[],
   }) {
     final int daysLeft = inputs.cycle.daysLeftFrom(inputs.today);
     final Money pool = _pool(inputs);
@@ -45,8 +47,12 @@ abstract final class SafeToSpend {
       earliestEntryDate: earliestEntryDate,
       spentThisWeek: spentThisWeek,
       savedYesterday: yesterday.flatMap((CycleInputs before) => _savedYesterday(before, daysLeft)),
+      week: week,
     );
   }
+
+  /// `A` for the day [inputs] describe: its pool split over the days left from it (BR-4).
+  static Money shareOn(CycleInputs inputs) => _share(_pool(inputs), inputs.cycle.daysLeftFrom(inputs.today));
 
   /// Previews spending [amount] more today against [summary], for the Add keypad (FR-AD-3).
   static SpendPreview previewSpend(CycleSummary summary, Money amount) {
