@@ -1,4 +1,5 @@
 import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,6 +56,47 @@ void main() {
           ..path()
           ..path(excludes: <Offset>[const Offset(-0.5, 20)]),
       );
+    });
+  });
+
+  group('EntryRow bill tag (D119)', () {
+    Entry bill({String? note, int? recurringId = 3, EntryKind kind = EntryKind.spent}) => Entry(
+          id: 50,
+          amount: Money.fromMajor(1200),
+          kind: kind,
+          categoryId: seedCategories.first.id,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          recurringId: recurringId,
+          note: note,
+        );
+
+    Future<void> pumpRow(WidgetTester tester, Entry entry) => pumpApp(
+          tester,
+          Scaffold(
+            body: EntryRow(entry: entry, category: seedCategories.first, onEdit: () {}, onDelete: () {}, onThresholdReached: () {}),
+          ),
+        );
+
+    testWidgets('a rule-posted Spent entry with no note shows "Fixed bill"', (WidgetTester tester) async {
+      await pumpRow(tester, bill());
+      expect(find.text('Fixed bill'), findsOneWidget);
+    });
+
+    testWidgets('a typed entry shows no bill tag', (WidgetTester tester) async {
+      await pumpRow(tester, bill(recurringId: null));
+      expect(find.text('Fixed bill'), findsNothing);
+    });
+
+    testWidgets('a rule-posted entry with a note shows the note, not the tag', (WidgetTester tester) async {
+      await pumpRow(tester, bill(note: 'October'));
+      expect(find.text('October'), findsOneWidget);
+      expect(find.text('Fixed bill'), findsNothing);
+    });
+
+    testWidgets('a rule-posted Got entry (salary) shows no bill tag', (WidgetTester tester) async {
+      await pumpRow(tester, bill(kind: EntryKind.got, recurringId: 1));
+      expect(find.text('Fixed bill'), findsNothing);
     });
   });
 }

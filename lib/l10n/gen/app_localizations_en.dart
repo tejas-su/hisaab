@@ -450,6 +450,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayList => 'Today';
 
   @override
+  String get entryFixedBill => 'Fixed bill';
+
+  @override
   String get lastsTillPayday => 'Lasts till payday';
 
   @override

@@ -273,6 +273,22 @@ void main() {
       expect(bloc.state.form.preview, Option<SpendPreview>.of(FitsToday(Money.fromMajor(1330))));
     });
 
+    test('editing a bill posted today shows no today preview, since it sits in the pool (D119)', () async {
+      final Entry rentToday = Entry(
+        id: 50,
+        amount: Money.fromMajor(15000),
+        kind: EntryKind.spent,
+        categoryId: SeedCategoryIds.home,
+        date: WorkedExample.today,
+        createdAt: WorkedExample.now,
+        recurringId: WorkedExample.rent.id,
+      );
+      final AddEntryBloc bloc = build(editing: Option<Entry>.of(rentToday));
+      await bloc.dispatch(const AddEntryCleared());
+      await type(bloc, '14000');
+      expect(bloc.state.form.preview, const Option<SpendPreview>.none());
+    });
+
     test('saving replaces the entry', () async {
       final AddEntryBloc bloc = build(editing: Option<Entry>.of(chai));
       await bloc.dispatch(const AddEntryKeyPressed('0'));

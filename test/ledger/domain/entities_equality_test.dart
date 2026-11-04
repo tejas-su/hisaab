@@ -40,12 +40,13 @@ void main() {
         income: Money.zero,
         keepAside: Money.zero,
         billsDue: Money.zero,
+        billsPostedToday: Money.zero,
         spentBefore: Money.zero,
         spentToday: Money.zero,
         paceSpentBefore: Money.zero,
         hasIncomeRule: false,
       );
-      expect(inputs.props, hasLength(9));
+      expect(inputs.props, hasLength(10));
     });
 
     test('forecasts without data', () {

@@ -14,7 +14,7 @@
 - Money is `int` paise in `Money`; shares are floored to whole rupees (`SafeToSpend._floorShare`); never `double` for an amount.
 - "Today" comes from the injected `Clock`; tests pin it with `FakeClock`.
 - User-facing text only via `lib/l10n/app_en.arb` + `flutter gen-l10n`; banned words: "transaction", "debit/credit", "budget period", "Oops".
-- Existing tests are the contract. Where this plan **changes** a documented rule (BR-3, BR-4, BR-6a, FR-HO-2), it says which test changes and why, citing D117. Any other test going red means stop and ask.
+- Existing tests are the contract. Where this plan **changes** a documented rule (BR-3, BR-4, BR-6a, FR-HO-2), it says which test changes and why, citing D119. Any other test going red means stop and ask.
 - **Commits:** CLAUDE.md says commit only when the owner asks. The checkpoint steps below stage nothing and commit nothing unless the owner has said to.
 - **Done** means: `flutter analyze` is clean, `flutter test` is green, `scripts/changed_lines_coverage.sh` is ≥ 90% (any uncovered lines listed with a reason), and SPEC, DECISIONS and UI_DESIGN are updated in this change.
 
@@ -33,11 +33,11 @@
 - Modify: `lib/ledger/domain/entities/cycle_inputs.dart` (add a field)
 - Modify: `lib/ledger/domain/safe_to_spend.dart:69` (`_pool`)
 - Modify: `docs/SPEC.md` BR-3 (symbol table and the "Bills due today…" sentence), BR-4 (the "`A` does not change" bullet), §5 (edge case row)
-- Modify: `docs/DECISIONS.md` (append D117)
+- Modify: `docs/DECISIONS.md` (append D119)
 - Test: `test/ledger/domain/safe_to_spend_test.dart`
 
 **Interfaces:**
-- Produces: `CycleInputs.billsPostedToday` (`Money`, required named constructor parameter, in `props`), documented as "`R_t`: *Spent* entries dated today that a recurring rule posted (bills). They come out of the pool, not today's share (BR-3, D117)."
+- Produces: `CycleInputs.billsPostedToday` (`Money`, required named constructor parameter, in `props`), documented as "`R_t`: *Spent* entries dated today that a recurring rule posted (bills). They come out of the pool, not today's share (BR-3, D119)."
 - Changes the meaning of `CycleInputs.spentToday` to "`S_today`: *Spent* entries dated today that no recurring rule posted".
 
 - [ ] **Step 1: Add `billsPostedToday` to the test helper and write the failing tests**
@@ -45,7 +45,7 @@
 In `safe_to_spend_test.dart`, add `int billsPostedToday = 0` to `_inputs` and pass `billsPostedToday: _rupees(billsPostedToday)`. Add this group:
 
 ```dart
-group('SafeToSpend — bills posted today come out of the pool (BR-3, D117)', () {
+group('SafeToSpend — bills posted today come out of the pool (BR-3, D119)', () {
   test('rent day: ₹15,000 posted today, nothing spent, hero shows ₹316 and is not over', () {
     final CycleSummary s = _compute(_inputs(billsDue: 0, spentToday: 0, billsPostedToday: 15000));
     expect(s.pool, _rupees(2850));
@@ -102,10 +102,10 @@ Expected: all pass, the existing worked-example tests included (they default `bi
   - The formula becomes `P = I − K − B − S_prev − R_t`.
   - Add the row `R_t` = "*Spent* entries dated `t` that a recurring rule posted".
   - Change the `S_today` meaning in BR-4 to "*Spent* entries dated `t` with no recurring rule".
-  - Replace "Bills due **today** are posted by the recurring engine (BR-9), so they count as spent today, not in `B`." with "A bill posted on its own day comes out of the pool (`R_t`), not today's share: yesterday it sat in `B`, so today's share was already sized for it (D117)."
+  - Replace "Bills due **today** are posted by the recurring engine (BR-9), so they count as spent today, not in `B`." with "A bill posted on its own day comes out of the pool (`R_t`), not today's share: yesterday it sat in `B`, so today's share was already sized for it (D119)."
   - Add the rent-day worked example from the spec, §3 example 1.
 - **SPEC BR-4:** change the "`A` does not change" bullet to add "…or when a bill amount dated today is entered or changed".
-- **DECISIONS:** append D117, dated 2026-11-04. **Decision:** "a bill posted or entered on its own day comes out of the pool (`R_t`), not today's share". **Why:** "Rent day read *Over today* with nothing spent; case study 18; the same rule will reserve savings (spec §3)". **Rejected:** "Keeping bills in `S_today`; excluding them from the day entirely".
+- **DECISIONS:** append D119, dated 2026-11-04. **Decision:** "a bill posted or entered on its own day comes out of the pool (`R_t`), not today's share". **Why:** "Rent day read *Over today* with nothing spent; case study 18; the same rule will reserve savings (spec §3)". **Rejected:** "Keeping bills in `S_today`; excluding them from the day entirely".
 
 - [ ] **Step 6: Checkpoint**
 
@@ -127,12 +127,12 @@ Expected: "No issues found!" Commit only if the owner asked.
 
 - [ ] **Step 1: Write the failing tests**
 
-Use the file's `addEntry`/`setToday` helpers and `WorkedExample.electricity` (due on the 29th). Add a group `'GetCycleSummary — bills on their day (D117)'`:
+Use the file's `addEntry`/`setToday` helpers and `WorkedExample.electricity` (due on the 29th). Add a group `'GetCycleSummary — bills on their day (D119)'`:
 
 ```dart
 // Thu 29 Oct, electricity ₹1,200 posted today. S_prev = ₹27,570 (the BR-8 test above derives it:
 // A_28 = floor((45,000 − 1,200 − 27,570) / 7) = ₹2,318 with nothing spent on the 28th).
-// D117: P = 45,000 − 27,570 − 1,200 = 16,230 over 6 days → A = ₹2,705, spent today ₹0.
+// D119: P = 45,000 − 27,570 − 1,200 = 16,230 over 6 days → A = ₹2,705, spent today ₹0.
 // Old rule: A = floor(17,430 / 6) = ₹2,905 with ₹1,200 "spent today", so the hero read ₹1,705.
 test('a bill posted on its day comes out of the pool, not today (worked example, 29 Oct)', () async {
   setToday(const CalendarDate(2026, 10, 29));
@@ -157,7 +157,7 @@ And four more, in the same group (today is the fixture's Mon 26 Oct unless set):
 
 If the fixture's entries differ from the derivation in the first test's comment, recompute ₹2,705 by hand from `worked_example.dart` and use that value. Note the derivation in the test comment.
 
-**Leave the existing BR-8 test** "a bill posted today was still due yesterday" **unchanged**. D117 changes today's pool, not yesterday's, so its `YesterdaySaving(₹2,318, ₹386)` must still hold. If it fails, stop and ask.
+**Leave the existing BR-8 test** "a bill posted today was still due yesterday" **unchanged**. D119 changes today's pool, not yesterday's, so its `YesterdaySaving(₹2,318, ₹386)` must still hold. If it fails, stop and ask.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -171,18 +171,18 @@ In `_DayTotals.inputs`:
 - `billsPostedToday` sums *Spent* entries dated `today` with `recurringId != null`.
 - `spentBefore` and `paceSpentBefore` are unchanged.
 
-In `_spentThisWeek`, add `e.recurringId == null`. Add a `// why:` comment: "bills sit in the pool on their day (D117), so the week counts only typed spending, as each day's `S_today` does".
+In `_spentThisWeek`, add `e.recurringId == null`. Add a `// why:` comment: "bills sit in the pool on their day (D119), so the week counts only typed spending, as each day's `S_today` does".
 
 `_asItStood` needs no change. For a past day `d`, its bills dated `d` become that day's `R_t`, and bills after `d` are still added to `B`.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `flutter test test/ledger`
-Expected: all pass. If an existing *This week* or week-day test changes value, it is one whose fixture posts a bill inside the week. Check that its new value matches D117 by hand, update it, and record the test name in the checkpoint note. Any other failure: stop and ask.
+Expected: all pass. If an existing *This week* or week-day test changes value, it is one whose fixture posts a bill inside the week. Check that its new value matches D119 by hand, update it, and record the test name in the checkpoint note. Any other failure: stop and ask.
 
 - [ ] **Step 5: Update SPEC BR-6a and FR-HO-2**
 
-The week's spent figure and each day's bar count typed spending only. Bills posted that day are in the day's pool (D117).
+The week's spent figure and each day's bar count typed spending only. Bills posted that day are in the day's pool (D119).
 
 - [ ] **Step 6: Checkpoint**
 
@@ -206,7 +206,7 @@ Expected: clean and green.
 
 - [ ] **Step 1: Write the failing tests**
 
-- **`home_bloc_test.dart`**, test `'todaySpends leaves out a bill posted today (D117)'`:
+- **`home_bloc_test.dart`**, test `'todaySpends leaves out a bill posted today (D119)'`:
   - Arrange: the ledger fake has a ₹420 typed spend and a ₹1,200 entry with `recurringId` set, both dated today.
   - Assert: `todaySpends` has exactly the ₹420 entry, and `todayEntries` still has both.
 - **`entry_row_test.dart`:**
@@ -234,7 +234,7 @@ Expected: green.
 
 - [ ] **Step 5: Update the docs and check widget sizes**
 
-- UI_DESIGN, Today list row: "a bill the app posted shows *Fixed bill* as its second line when it has no note; the list's total counts typed spending only (D117)".
+- UI_DESIGN, Today list row: "a bill the app posted shows *Fixed bill* as its second line when it has no note; the list's total counts typed spending only (D119)".
 - SPEC FR-HO-4: the same sentence.
 
 Run: `flutter test test/home/presentation/pages/home_page_test.dart`. It already pumps at the `TestWindows` sizes. Expected: green.

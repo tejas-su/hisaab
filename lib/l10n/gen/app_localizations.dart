@@ -697,6 +697,12 @@ abstract class AppLocalizations {
   /// **'Today'**
   String get todayList;
 
+  /// Second line of a list row for a bill the app posted on its day, shown when the row has no note
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed bill'**
+  String get entryFixedBill;
+
   /// No description provided for @lastsTillPayday.
   ///
   /// In en, this message translates to:

@@ -139,6 +139,56 @@ void main() {
     }
   });
 
+  group('GetCycleSummary — bills on their day (D119)', () {
+    // Thu 29 Oct, electricity ₹1,200 posted today. S_prev = ₹27,570 (₹27,150 + the ₹420 of 26 Oct);
+    // rent is next due 5 Nov, after the cycle, so B = 0.
+    // D119: P = 45,000 − 27,570 − 1,200 = 16,230 over 6 days → A = ₹2,705, spent today ₹0.
+    // Old rule: A = floor(17,430 / 6) = ₹2,905 with ₹1,200 "spent today", so the hero read ₹1,705.
+    test('a bill posted on its day comes out of the pool, not today (worked example, 29 Oct)', () async {
+      setToday(const CalendarDate(2026, 10, 29));
+      addEntry(1200, const CalendarDate(2026, 10, 29), recurringId: WorkedExample.electricity.id);
+      recurring.rules = <RecurringRule>[
+        WorkedExample.salary,
+        WorkedExample.rent,
+        WorkedExample.electricity.copyWith(nextDue: const CalendarDate(2026, 11, 29)),
+      ];
+      final CycleSummary s = await summary();
+      expect(s.todayShare, Money.fromMajor(2705));
+      expect(s.spentToday, Money.zero);
+    });
+
+    test('salary posted today is income, not a bill', () async {
+      final Money poolBefore = (await summary()).pool;
+      addEntry(5000, WorkedExample.today, kind: EntryKind.got, recurringId: WorkedExample.salary.id);
+      final CycleSummary s = await summary();
+      expect(s.spentToday, Money.fromMajor(420));
+      expect(s.pool, poolBefore + Money.fromMajor(5000));
+    });
+
+    test('a bill posted on a past day still counts in spent before', () async {
+      addEntry(1200, const CalendarDate(2026, 10, 20));
+      final CycleSummary typed = await summary();
+      ledger.entries.removeLast();
+      addEntry(1200, const CalendarDate(2026, 10, 20), recurringId: WorkedExample.electricity.id);
+      final CycleSummary posted = await summary();
+      expect(posted.pool, typed.pool);
+      expect(posted.todayShare, typed.todayShare);
+    });
+
+    test('this week leaves out bills posted this week', () async {
+      addEntry(1200, WorkedExample.today, recurringId: WorkedExample.electricity.id);
+      expect((await summary()).spentThisWeek, Money.fromMajor(420));
+    });
+
+    test('a past week day with a bill posted on it shows only typed spending', () async {
+      setToday(const CalendarDate(2026, 10, 28));
+      addEntry(1200, const CalendarDate(2026, 10, 27), recurringId: WorkedExample.electricity.id);
+      final List<WeekDay> week = (await summary()).week;
+      expect(week[1].date, const CalendarDate(2026, 10, 27));
+      expect(week[1].spent, Money.zero);
+    });
+  });
+
   group('GetCycleSummary — this week (FR-HO-2)', () {
     test('worked example: 7 × ₹1,850 − ₹420 = ₹12,530 safe this week', () async {
       expect((await summary()).safeThisWeek, Money.fromMajor(12530));

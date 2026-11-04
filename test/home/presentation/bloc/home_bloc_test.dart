@@ -88,6 +88,21 @@ void main() {
       expect(ready().todaySpends.map((Entry e) => e.id), <int>[4, 5, 6, 1000, 1001, 1002, 1003]);
     });
 
+    test('todaySpends leaves out a bill posted today, which the Today list still shows (D119)', () async {
+      ledger.entries.add(Entry(
+        id: 50,
+        amount: Money.fromMajor(1200),
+        kind: EntryKind.spent,
+        categoryId: 1,
+        date: WorkedExample.today,
+        createdAt: WorkedExample.now,
+        recurringId: WorkedExample.electricity.id,
+      ));
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().todaySpends.map((Entry e) => e.id), <int>[4, 5, 6]);
+      expect(ready().todayEntries.map((Entry e) => e.id), contains(50));
+    });
+
     test('runs the recurring engine before working out today (BR-8)', () async {
       recurring.rules = <RecurringRule>[
         RecurringRule(

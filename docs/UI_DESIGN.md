@@ -318,10 +318,10 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   1. The hero number.
   2. Today's bar.
   3. The range line.
-  4. The Today list.
+  4. The Today list. A bill the app posted shows *Fixed bill* as its second line when it has no note; the header total counts typed spending only (D119).
 - **Today's bar (BR-6, D114, mockup 25):**
   - 48dp tall, the card's full inner width, radius 8 (`HisaabRadii.block`).
-  - The marigold yellow is what's left of today's share, from the start edge, with the 1.5dp `displayEdge` in light. Each *Spent* entry today is a `blockIdle` bite, 3dp apart, the first at the end edge and the newest beside the yellow; bites under 4dp merge. Category names sit under bites wide enough for them, in `displayInk2`.
+  - The marigold yellow is what's left of today's share, from the start edge, with the 1.5dp `displayEdge` in light. Each typed *Spent* entry today is a `blockIdle` bite (a bill posted today is not: it sits in the pool, D119), 3dp apart, the first at the end edge and the newest beside the yellow; bites under 4dp merge. Category names sit under bites wide enough for them, in `displayInk2`.
   - Over today the bar spans what was spent: a 2dp `displayInk` share tick cut from the card by a `display` notch, and a `displayInk2` hatch past it.
   - Captions under it: "₹420 spent" and "of ₹1,850 for today".
 - **Days rail:** one dot per day left, today's 10dp and marigold, the rest 6dp `blockIdle` (shrinking to fit at 28–31 days on small phones), then ⚑ and the payday date. "Today" and "9 days to payday" sit under it. It is the same in both modes. A month-end cycle (*It changes*, or month start on the 1st) has no payday: the caption reads "6 days left this month", the flag shows the 1st of the next month, and the range line says "Lasts till month end" (D116).

@@ -27,6 +27,7 @@ CycleInputs _inputs({
   int spentToday = 420,
   int paceSpentBefore = 18950,
   bool hasIncomeRule = true,
+  int billsPostedToday = 0,
 }) =>
     CycleInputs(
       cycle: _cycle,
@@ -34,6 +35,7 @@ CycleInputs _inputs({
       income: _rupees(income),
       keepAside: _rupees(keepAside),
       billsDue: _rupees(billsDue),
+      billsPostedToday: _rupees(billsPostedToday),
       spentBefore: _rupees(spentBefore),
       spentToday: _rupees(spentToday),
       paceSpentBefore: _rupees(paceSpentBefore),
@@ -52,6 +54,42 @@ CycleSummary _computeAfter(CycleInputs yesterday) =>
     SafeToSpend.compute(_inputs(), earliestEntryDate: _earliest, yesterday: Option<CycleInputs>.of(yesterday));
 
 void main() {
+  group('SafeToSpend — bills posted today come out of the pool (BR-3, D119)', () {
+    test('rent day: ₹15,000 posted today, nothing spent, hero shows ₹316 and is not over', () {
+      final CycleSummary s = _compute(_inputs(billsDue: 0, spentToday: 0, billsPostedToday: 15000));
+      expect(s.pool, _rupees(2850));
+      expect(s.todayShare, _rupees(316));
+      expect(s.state, isNot(isA<OverToday>()));
+    });
+
+    test('a changing bill entered today: ₹1,460 with ₹420 spent leaves ₹1,401', () {
+      final CycleSummary s = _compute(_inputs(billsDue: 0, billsPostedToday: 1460));
+      expect(s.todayShare, _rupees(1821));
+      expect(s.todayShare - s.spentToday, _rupees(1401));
+    });
+
+    test('the share is the same whether the bill is still due or posted today', () {
+      expect(
+        _compute(_inputs(billsDue: 1200)).todayShare,
+        _compute(_inputs(billsDue: 0, billsPostedToday: 1200)).todayShare,
+      );
+    });
+
+    test('a bill posted today that overdraws the pool is Over for the cycle', () {
+      final CycleSummary s = _compute(_inputs(billsDue: 0, spentToday: 0, billsPostedToday: 20000));
+      expect(s.state, OverCycle(_rupees(2150)));
+    });
+
+    test('a bill today larger than the pool floors the share at ₹0', () {
+      expect(_compute(_inputs(billsDue: 0, spentToday: 0, billsPostedToday: 20000)).todayShare, _rupees(0));
+    });
+
+    test('previewSpend on rent day fits within the new share', () {
+      final CycleSummary s = _compute(_inputs(billsDue: 0, spentToday: 0, billsPostedToday: 15000));
+      expect(SafeToSpend.previewSpend(s, _rupees(10)), FitsToday(_rupees(306)));
+    });
+  });
+
   group('SafeToSpend.compute — SPEC worked example', () {
     final CycleSummary summary = _compute(_inputs());
 

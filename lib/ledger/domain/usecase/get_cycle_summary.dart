@@ -84,11 +84,12 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
       firstLogged.filter((CalendarDate day) => day.isBefore(today)).map((CalendarDate _) => today.addDays(-1));
 
   // why: entries are loaded from the cycle start, so a week begun last cycle counts this cycle's days only.
+  // Bills sit in the pool on their day (D119), so the week counts typed spending, as each `S_today` does.
   static Money _spentThisWeek(List<Entry> entries, CalendarDate today) {
     final CalendarDate monday = _mondayOf(today);
     return _sum(
       entries
-          .where((Entry e) => e.kind == EntryKind.spent && !e.date.isBefore(monday) && !e.date.isAfter(today))
+          .where((Entry e) => _isTyped(e) && !e.date.isBefore(monday) && !e.date.isAfter(today))
           .map((Entry e) => e.amount),
     );
   }
@@ -134,6 +135,8 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
     return RecurringSchedule.datesFrom(rule.schedule, first, through: cycle.end).map((CalendarDate _) => rule.amount);
   }
 
+  static bool _isTyped(Entry entry) => entry.kind == EntryKind.spent && entry.recurringId == null;
+
   static Money _sum(Iterable<Money> amounts) => amounts.fold(Money.zero, (Money total, Money amount) => total + amount);
 }
 
@@ -149,14 +152,16 @@ final class _DayTotals {
   CycleInputs inputs(CalendarDate today, List<Entry> entries, {required Money billsDue}) {
     final Iterable<Entry> spent = entries.where((Entry e) => e.kind == EntryKind.spent);
     final Iterable<Entry> spentBefore = spent.where((Entry e) => e.date.isBefore(today));
+    final Iterable<Entry> spentOnDay = spent.where((Entry e) => e.date == today);
     return CycleInputs(
       cycle: cycle,
       today: today,
       income: GetCycleSummary._sum(entries.where((Entry e) => e.kind == EntryKind.got).map((Entry e) => e.amount)),
       keepAside: settings.keepAside,
       billsDue: billsDue,
+      billsPostedToday: GetCycleSummary._sum(spentOnDay.where((Entry e) => e.recurringId != null).map((Entry e) => e.amount)),
       spentBefore: GetCycleSummary._sum(spentBefore.map((Entry e) => e.amount)),
-      spentToday: GetCycleSummary._sum(spent.where((Entry e) => e.date == today).map((Entry e) => e.amount)),
+      spentToday: GetCycleSummary._sum(spentOnDay.where((Entry e) => e.recurringId == null).map((Entry e) => e.amount)),
       paceSpentBefore: GetCycleSummary._sum(spentBefore.where((Entry e) => e.recurringId == null).map((Entry e) => e.amount)),
       hasIncomeRule: hasIncomeRule,
     );

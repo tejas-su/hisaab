@@ -88,7 +88,7 @@ Example: 26 Oct → 3 Nov gives `D = 9`.
 
 ### BR-3 Spendable pool at the start of today (`P`)
 ```
-P = I − K − B − S_prev
+P = I − K − B − S_prev − R_t
 ```
 
 | Symbol | Meaning |
@@ -96,19 +96,20 @@ P = I − K − B − S_prev
 | `I` | All *Got* entries dated within the cycle, posted recurring income included |
 | `K` | Keep-aside amount, 0 if off |
 | `B` | Recurring *Spent* occurrences due in `(t, end]` (after today, within the cycle) and not yet posted |
-| `S_prev` | All *Spent* entries dated within `[start, t − 1]` |
+| `S_prev` | All *Spent* entries dated within `[start, t − 1]`, bills included |
+| `R_t` | *Spent* entries dated `t` that a recurring rule posted (bills due today) |
 
-Bills due **today** are posted by the recurring engine (BR-9), so they count as spent today, not in `B`.
+A bill posted on its own day comes out of the pool (`R_t`), not out of today's share: until today it sat in `B`, so the share was already sized for it (DECISIONS D119). Example: rent ₹15,000 posts today, nothing spent yet, `B = 0`, `S_prev = 27,150`: `P = 45,000 − 15,000 − 27,150 = 2,850` and `A = floor(2,850 / 9) = ₹316`. The hero shows ₹316, not ₹0 and "over today".
 
 ### BR-4 Today's share and safe to spend
 ```
 A          = max(0, floor(P / D))      // fixed for the whole of day t
-S_today    = Spent entries dated t
+S_today    = Spent entries dated t that no recurring rule posted
 safeToday  = A − S_today               // hero shows max(0, safeToday)
 overToday  = max(0, S_today − A)
 tomorrow   = floor((P − S_today) / (D − 1))   // only when D > 1
 ```
-- `A` does **not** change as the user spends during the day. Only `safeToday` changes. Saving an entry dated in the past changes `S_prev`, so `A` is recomputed.
+- `A` does **not** change as the user spends during the day. Only `safeToday` changes. Saving an entry dated in the past changes `S_prev`, and entering or changing a bill dated today changes `R_t`; either way `A` is recomputed.
 - **Worked example:**
   - Inputs: `I = 45,000`, `K = 0`, `B = 1,200` (electricity due Thu 29 Oct), `S_prev = 27,150`.
   - Pool: `P = 16,650`.
@@ -143,7 +144,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 ### BR-6a Week bars (*This week*)
 - **Days:** Monday to Sunday. Monday (or the cycle start, if later) to today each get a bar; days still to come in the cycle get a stub; days before the cycle start or from payday on get nothing.
 - **Each past day's share `A_d`** is that day *as it stood*, with the ledger as it is now: entries dated on or before `d`; bills posted after `d` still counted in `B`; income dated after `d` not yet in `I` (BR-3, BR-4; the same rebuild as BR-8's yesterday). A back-dated entry changes that day and the days after it.
-- **Each bar** fills to the day's *Spent* total. A tick marks `A_d`; any spend above it is hatched, never red. Today's bar is marigold; past bars are `displayInk2`.
+- **Each bar** fills to the day's typed *Spent* total; a bill posted that day is in its pool (`R_t`), not its bar (D119). A tick marks `A_d`; any spend above it is hatched, never red. Today's bar is marigold; past bars are `displayInk2`.
 - **Scale:** zero at the bottom; the tallest spend or share in the week reaches the top (64dp, the card's full inner width; D114).
 - **Words:** the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" (the most-over day, then "and N more days"), "Today is ₹220 over its share" when today is the most over, or "· every day within its share". A day exactly at its share is within it.
 - **Worked example:** today Thu 29 Oct. Spent Mon ₹1,240, Tue ₹2,310, Wed ₹980, Thu ₹420 so far. With Tue's `A_d = 1,850`, Tue's ₹460 above its tick is hatched and the sentence names it.
@@ -297,12 +298,13 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Today's bar with its captions, then the days rail with "Today", "{D} days to payday" and the payday flag date (BR-6).
   - The range line (BR-7).
   - Tapping the hero toggles *Today* ↔ *This week*. *This week* shows `A × min(7, D) − (spent since the start of the week, Monday)`, and the toggle lasts for the session only.
-    - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37).
+    - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37). It counts typed spending only; bills posted in the week are in each day's pool (D119).
     - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
     - Today's bar and its captions give way to the week bars and weekday letters (BR-6a), in a 150ms crossfade; the days rail and its flag stay. The card's height never changes between the two (BR-6, D114). The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
 - **FR-HO-3** **Due-soon nudge** (BR-9), when applicable. It is a tappable `sunk` row at least 56dp tall: the bill's icon in a well, the sentence, the date under it, and a chevron. TalkBack reads the sentence, then "Opens the bill." A tap opens that bill's sheet (FR-SE-1) over Home. After a change Home reloads; *Delete bill* deletes it from Home with Undo (D35, D118).
 - **FR-HO-4** **Today list:**
-  - The header shows today's total and *See all*.
+  - The header shows today's total (typed spending, `S_today`) and *See all*.
+  - A bill the app posted is listed like any entry; with no note, its second line reads *Fixed bill* (D119).
   - At most the 5 most recent entries for today.
   - Swipe left to delete, with Undo (BR-10). Tapping a row edits it.
   - Empty state: "Nothing spent today. Tap Add when you do."

@@ -2,7 +2,7 @@
 
 **Status:** design approved in chat on 2026-11-04 (owner answers: credit card = A, `flutter_local_notifications` approved, keep-aside replaced). Waiting: review of this written spec.
 **Research:** [case study 17, savings and RD](../../design-research/case-studies/17-savings-and-rd.md) · [case study 18, variable bills and quick entry](../../design-research/case-studies/18-variable-bills-and-quick-entry.md) · [case study 16, bill sheet](../../design-research/case-studies/16-bill-edit-flow.md)
-**Next decision number:** D117.
+**Next decision number:** D119 (D117–D118 were taken by parallel work).
 
 ## 1. Problem
 The owner's two jobs:
@@ -156,7 +156,7 @@ tomorrow  = floor(remaining / (D − 1))                  // D > 1
 ## 9. Delivery: four phases, each shippable
 | Phase | Ships | Depends on |
 |---|---|---|
-| **0. Bills come out of the pool, not today** | `R_t` in `SafeToSpend`, BR-3/4/6/6a/8 tests, DECISIONS D117 | — |
+| **0. Bills come out of the pool, not today** | `R_t` in `SafeToSpend`, BR-3/4/6/6a/8 tests, DECISIONS D119 | — |
 | **1. Savings** | Migration 002 (all of §4 at once, so there's one schema bump), the `saved` kind, saving rules, keep-aside migration, Settings → Savings list and wizard, Home row and due-soon, *Put in extra*, the Spends line, Ask AI, BR-8 copy | 0 |
 | **2. Changing bills and card** | The bill sheet (case study 16), `AmountMode`, the 2 new pills, the waiting state, `B` with estimates, the bill amount sheet, the Home "How much?" line, `cardPaid` | 1 (migration) |
 | **3. Due-day notification** | The package, `BillReminders`, permission ask, deep link, boot re-arm | 2 |

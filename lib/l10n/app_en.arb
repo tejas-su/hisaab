@@ -503,6 +503,10 @@
   },
   "todayTitle": "Today",
   "todayList": "Today",
+  "entryFixedBill": "Fixed bill",
+  "@entryFixedBill": {
+    "description": "Second line of a list row for a bill the app posted on its day, shown when the row has no note"
+  },
   "lastsTillPayday": "Lasts till payday",
   "lastsTillMonthEnd": "Lasts till month end",
   "@lastsTillMonthEnd": {

@@ -195,9 +195,11 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
       categories.where((Category category) => category.kind == kind).toList()
         ..sort((Category a, Category b) => a.sort.compareTo(b.sort));
 
-  // why: an edited entry from today is already inside spentToday, so only the change counts.
+  // why: an edited entry from today is already inside spentToday, so only the change counts. A bill
+  // the app posted sits in the pool, not spentToday (D119), so "left today" doesn't describe its change.
   static Option<SpendPreview> _previewFor(EntryForm form, Option<CycleSummary> summary) {
-    if (form.kind != EntryKind.spent || form.rupees == 0 || form.date != form.today) {
+    final bool editingABill = form.editing.filter((Entry entry) => entry.recurringId != null).isSome();
+    if (form.kind != EntryKind.spent || form.rupees == 0 || form.date != form.today || editingABill) {
       return const Option<SpendPreview>.none();
     }
     final Money alreadyCounted = form.editing

@@ -75,9 +75,13 @@ class EntryRow extends StatelessWidget {
     );
   }
 
+  // why: a bill the app posted would otherwise look like typed spending that the Today total leaves out (D119).
+  String? _billTag(AppLocalizations strings) =>
+      entry.recurringId != null && entry.kind == EntryKind.spent ? strings.entryFixedBill : null;
+
   Widget _content(BuildContext context, AppLocalizations strings) {
     final TextTheme text = Theme.of(context).textTheme;
-    final String? note = entry.note;
+    final String? note = entry.note ?? _billTag(strings);
     final String amount = context.money.format(entry.amount);
     final Category? kind = category;
     return Padding(

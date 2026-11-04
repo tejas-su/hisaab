@@ -12,6 +12,7 @@ final class CycleInputs extends Equatable {
     required this.income,
     required this.keepAside,
     required this.billsDue,
+    required this.billsPostedToday,
     required this.spentBefore,
     required this.spentToday,
     required this.paceSpentBefore,
@@ -30,10 +31,14 @@ final class CycleInputs extends Equatable {
   /// `B`: recurring *Spent* occurrences due after today within the cycle, not yet posted.
   final Money billsDue;
 
+  /// `R_t`: *Spent* entries dated today that a recurring rule posted (bills). They come out of
+  /// the pool, not today's share (BR-3, DECISIONS D119).
+  final Money billsPostedToday;
+
   /// `S_prev`: *Spent* entries from the cycle start to yesterday.
   final Money spentBefore;
 
-  /// `S_today`: *Spent* entries dated today.
+  /// `S_today`: *Spent* entries dated today that no recurring rule posted.
   final Money spentToday;
 
   /// `V_prev`: the part of [spentBefore] that no recurring rule posted (BR-7 pace).
@@ -44,5 +49,5 @@ final class CycleInputs extends Equatable {
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, income, keepAside, billsDue, spentBefore, spentToday, paceSpentBefore, hasIncomeRule];
+      <Object?>[cycle, today, income, keepAside, billsDue, billsPostedToday, spentBefore, spentToday, paceSpentBefore, hasIncomeRule];
 }

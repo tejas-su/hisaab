@@ -70,7 +70,8 @@ abstract final class SafeToSpend {
     );
   }
 
-  static Money _pool(CycleInputs inputs) => inputs.income - inputs.keepAside - inputs.billsDue - inputs.spentBefore;
+  static Money _pool(CycleInputs inputs) =>
+      inputs.income - inputs.keepAside - inputs.billsDue - inputs.spentBefore - inputs.billsPostedToday;
 
   static Money _share(Money pool, int daysLeft) => _atLeastZero(_floorShare(pool, daysLeft));
 
