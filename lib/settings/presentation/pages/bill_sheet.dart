@@ -35,11 +35,26 @@ class BillSheet extends StatefulWidget {
   /// Completes after the exit animation with what the sheet did: [BillSheetDeleted] for the
   /// caller to delete with Undo, [BillSheetChanged] after any save, else [BillSheetUnchanged].
   static Future<BillSheetOutcome> show(BuildContext context, BillSheetBloc bloc) async {
+    final ModalBottomSheetRoute<void> route = BillSheet.route(
+      context,
+      builder: (BuildContext _) => BlocProvider<BillSheetBloc>(create: (BuildContext _) => bloc, child: const BillSheet()),
+    );
+    unawaited(Navigator.of(context).push(route));
+    await route.completed;
+    return switch (bloc.state) {
+      BillSheetClosed(:final BillSheetOutcome outcome) => outcome,
+      final BillSheetReady ready => ready.outcome,
+    };
+  }
+
+  /// The bottom-sheet route the bill sheet rises in, shared with the *Put in extra* sheet (D120):
+  /// [builder] builds its body. Its `completed` waits for the exit animation to end.
+  static ModalBottomSheetRoute<void> route(BuildContext context, {required WidgetBuilder builder}) {
     final bool tabletop = context.layout.panes is TabletopPanes;
     final NavigatorState navigator = Navigator.of(context);
     final MaterialLocalizations localizations = MaterialLocalizations.of(context);
     // why: as AddEntryTray.show, the route's `completed` waits for the exit to end.
-    final ModalBottomSheetRoute<void> route = ModalBottomSheetRoute<void>(
+    return ModalBottomSheetRoute<void>(
       capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
       barrierLabel: localizations.scrimLabel,
       barrierOnTapHint: localizations.scrimOnTapHint(localizations.bottomSheetLabel),
@@ -51,14 +66,8 @@ class BillSheet extends StatefulWidget {
       shape: HisaabShapes.trayTop(),
       constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop,
-      builder: (BuildContext _) => BlocProvider<BillSheetBloc>(create: (BuildContext _) => bloc, child: const BillSheet()),
+      builder: builder,
     );
-    unawaited(navigator.push(route));
-    await route.completed;
-    return switch (bloc.state) {
-      BillSheetClosed(:final BillSheetOutcome outcome) => outcome,
-      final BillSheetReady ready => ready.outcome,
-    };
   }
 
   @override

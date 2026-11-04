@@ -157,6 +157,16 @@ abstract final class AppRoutes {
         child: Builder(
           builder: (BuildContext context) => BillsPage(
             kind: kind,
+            onPutInExtra: kind == EntryKind.saved
+                ? () => PutInSheet.show(
+                      context,
+                      PutInExtraBloc(
+                        getCycleSummary: getIt<GetCycleSummary>(),
+                        putInExtra: getIt<PutInExtra>(),
+                        haptics: getIt<Haptics>(),
+                      )..add(const PutInExtraLoadRequested()),
+                    )
+                : null,
             onAdd: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => billEditor(getIt, kind: kind)),
             ),
