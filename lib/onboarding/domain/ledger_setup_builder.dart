@@ -38,7 +38,7 @@ abstract final class LedgerSetupBuilder {
         .flatMap(
           (PayRule rule) => _categoryId(categories, CategoryKeys.salary).flatMap(
             (int salaryId) => draft.bills.traverseEither((BillDraft bill) => _bill(bill, today, rule, categories, labels)).map(
-                  (List<RecurringDraft> bills) => _withIncome(draft.income, rule, today, salaryId, labels.income, bills),
+                  (List<RecurringDraft> bills) => _withIncome(draft.income, rule, today, salaryId, labels, bills),
                 ),
           ),
         );
@@ -49,19 +49,23 @@ abstract final class LedgerSetupBuilder {
     PayRule rule,
     CalendarDate today,
     int salaryId,
-    String label,
+    SetupLabels labels,
     List<RecurringDraft> bills,
   ) {
     final PayCycle cycle = _cycle(today, rule);
     return PayRuleSchedule.scheduleFor(rule, today: today).match(
       () => LedgerSetup(
         rules: bills,
-        entries: <EntryDraft>[EntryDraft(amount: income, kind: EntryKind.got, categoryId: salaryId, date: cycle.start)],
+        // why: the amount is a low-month guess (D117); the note tells the user it is theirs to change
+        // once real money comes in, so it isn't counted twice (D27).
+        entries: <EntryDraft>[
+          EntryDraft(amount: income, kind: EntryKind.got, categoryId: salaryId, date: cycle.start, note: labels.startingGuess),
+        ],
       ),
       (Schedule schedule) => LedgerSetup(
         rules: <RecurringDraft>[
           RecurringDraft(
-            label: label,
+            label: labels.income,
             amount: rule is WeeklyOn ? _weekly(income) : income,
             kind: EntryKind.got,
             categoryId: salaryId,

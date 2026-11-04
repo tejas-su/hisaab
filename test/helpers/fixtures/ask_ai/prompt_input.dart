@@ -39,7 +39,11 @@ PromptInput workedPromptInput({
 );
 
 /// Home's summary for the worked example (SPEC BR-4, BR-7): ₹1,430 safe today, about ₹9,300 spare.
-CycleSummary workedSummary({CycleState state = const OnTrack(), RangeForecast forecast = const LastsTillPayday(Money(930000))}) =>
+CycleSummary workedSummary({
+  CycleState state = const OnTrack(),
+  RangeForecast forecast = const LastsTillPayday(Money(930000)),
+  bool endsAtMonthEnd = false,
+}) =>
     CycleSummary(
       cycle: workedCycles.first,
       today: WorkedExample.today,
@@ -50,6 +54,7 @@ CycleSummary workedSummary({CycleState state = const OnTrack(), RangeForecast fo
       state: state,
       forecast: forecast,
       earliestEntryDate: workedCycles[1].start,
+      endsAtMonthEnd: endsAtMonthEnd,
     );
 
 /// The English seed names, as `AppLocalizations.categoryName` gives them.
@@ -63,7 +68,7 @@ String englishName(Category category) =>
       'fun': 'Fun',
       'health': 'Health',
       'home': 'Home',
-      'salary': 'Salary',
+      'salary': 'Money in',
       'other_income': 'Other income',
       'other': 'Other',
     }[category.key]!;

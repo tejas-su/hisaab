@@ -6,6 +6,7 @@ import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/month_start.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -234,6 +235,13 @@ void main() {
       testWidgets('shows for the current cycle with a payday', (WidgetTester tester) async {
         await pump(tester);
         expect(find.byKey(const ValueKey<String>('goal-onTrack')), findsOneWidget);
+      });
+
+      testWidgets('a month that starts on the 1st asks whether it lasts the month (D117)', (WidgetTester tester) async {
+        services.settings.settings = const BudgetSettings(monthStart: MonthStart.firstOfMonth);
+        await pump(tester);
+        expect(find.text('Will my money last the month?'), findsOneWidget);
+        expect(find.text('Will my money last till payday?'), findsNothing);
       });
 
       testWidgets('is hidden once the cycle is past, leaving three goals and the own question', (WidgetTester tester) async {

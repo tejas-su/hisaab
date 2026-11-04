@@ -118,7 +118,7 @@ class AskAiBloc extends Bloc<AskAiEvent, AskAiState> {
     );
   }
 
-  // why: *Will my money last till payday?* is hidden for a past cycle or income with no payday
+  // why: the on-track goal is hidden for a past cycle, which has no today to forecast from
   // (FR-AI-1); a pick of it, or one left over from before a reload, falls back to the default.
   static PromptChoice _offered(PromptInput input, PromptChoice choice) =>
       choice.goal == AskGoal.onTrack && !input.offersOnTrack ? choice.copyWith(goal: const PromptChoice().goal) : choice;

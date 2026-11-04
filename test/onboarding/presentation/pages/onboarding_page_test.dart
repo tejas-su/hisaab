@@ -100,6 +100,18 @@ void main() {
       expect(find.byKey(const ValueKey<String>('privacy-note')), findsNothing);
     });
 
+    testWidgets('It changes saves the guess as an entry noted "Starting guess" (D117)', (WidgetTester tester) async {
+      await pump(tester);
+      await tapKeys(tester, '30000');
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('payday-changes')));
+      await settle(tester);
+      await tester.tap(find.text('Skip'));
+      await settle(tester);
+      expect(services.recurring.setups.single.entries.single.note, 'Starting guess');
+    });
+
     testWidgets('a bill amount has no privacy note', (WidgetTester tester) async {
       await pump(tester);
       await tapKeys(tester, '45000');
@@ -147,7 +159,7 @@ void main() {
       await settle(tester);
       expect(finished, 1);
       expect(services.preferences.done, isTrue);
-      expect(services.recurring.setups.single.rules.map((RecurringDraft r) => r.label), <String>['Salary', 'Rent']);
+      expect(services.recurring.setups.single.rules.map((RecurringDraft r) => r.label), <String>['Money in', 'Rent']);
     });
 
     testWidgets('Every week asks for the weekday', (WidgetTester tester) async {

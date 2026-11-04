@@ -45,9 +45,13 @@ final class PromptInput extends Equatable {
   /// `K`: money kept aside each cycle; zero when off.
   final Money keepAside;
 
-  /// Whether *Will my money last till payday?* is offered (FR-AI-1): the shown cycle holds today
-  /// and income has a payday, so the forecast has a payday to reach.
-  bool get offersOnTrack => cycles.first.contains(today) && payRule is! IrregularIncome;
+  /// Whether the on-track goal is offered (FR-AI-1): the shown cycle holds today, so the forecast
+  /// has a payday or a month end to reach (DECISIONS D117, amending D72).
+  bool get offersOnTrack => cycles.first.contains(today);
+
+  /// Whether today's cycle ends at month end, so the goal asks *Will my money last the month?*;
+  /// false for a past cycle, which has no summary (D117).
+  bool get endsAtMonthEnd => summary.match(() => false, (CycleSummary summary) => summary.endsAtMonthEnd);
 
   @override
   List<Object?> get props => <Object?>[cycles, today, incomeRule, payRule, bills, categories, entries, summary, keepAside];

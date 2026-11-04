@@ -192,7 +192,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 ### BR-11 Categories
 - **Seed list (fixed order):**
   - Spent: Food, Travel, Shopping, Bills, Fun, Health, Home, Other.
-  - Got: Salary, Other income.
+  - Got: Money in, Other income. The stored key stays `salary`; "Money in" fits pay, pension, pocket money and family money alike (D116).
 - The user may **rename** a category or **change its icon**. Order and count are fixed in v1, so muscle memory survives.
 - Every entry has exactly one category. Entries posted by recurring rules use the rule's category.
 
@@ -229,7 +229,7 @@ At most **3** are shown, chosen in priority order:
 
 ### BR-15 Ask AI prompt
 - **Inputs:**
-  - Goal: How did I do? / Where can I save? / What should my limits be? / Will my money last till payday? / Ask something else (the user's own question) (DECISIONS D71). *Will my money last till payday?* is offered only when the cycle shown holds today and income has a payday (not "It changes"); otherwise it is hidden, and a pick of it falls back to *How did I do?* (DECISIONS D72).
+  - Goal: How did I do? / Where can I save? / What should my limits be? / Will my money last till payday? / Ask something else (the user's own question) (DECISIONS D71). *Will my money last till payday?* is offered only when the cycle shown holds today; otherwise it is hidden, and a pick of it falls back to *How did I do?* (DECISIONS D72). A cycle that ends at month end (*It changes*, or month start on the 1st) asks *Will my money last the month?* instead (DECISIONS D117).
   - Period: this cycle (default) or the last 3 cycles. "This cycle" is the one Spends shows; the last 3 are it and the two before it (DECISIONS D60).
   - "Leave out my notes" switch (off by default).
 - **Output:** plain UTF-8 text in this order:
@@ -242,7 +242,7 @@ At most **3** are shown, chosen in priority order:
   2. Context (income, pay rule, currency, period dates).
   3. **Facts from the app**, only when the period holds today: "From my app, and correct: safe to spend today ₹1,430; at this pace it lasts till payday with about ₹9,300 spare; I keep aside ₹5,000 a month as savings." The numbers are Home's own (`GetCycleSummary`, BR-4 and BR-7), never recomputed (DECISIONS D79):
      - Safe to spend today is the hero's number: ₹0 when today or the cycle is over.
-     - The forecast reads "at this pace it lasts till payday with about ₹X spare" or "at this pace it runs out on YYYY-MM-DD", and is left out while it is too early to forecast (`E < 3`). It stays for "It changes" income, as on Home.
+     - The forecast reads "at this pace it lasts till payday with about ₹X spare" ("till month end" for a month-end cycle, D117) or "at this pace it runs out on YYYY-MM-DD", and is left out while it is too early to forecast (`E < 3`). It stays for "It changes" income, as on Home.
      - The keep-aside clause is left out when keep-aside is ₹0. It reads "a week" for weekly pay, "a month" otherwise.
      - With no income at all (Home shows the No income card), the whole line is left out.
   4. Summary table by category (spent / limit).
@@ -253,6 +253,7 @@ At most **3** are shown, chosen in priority order:
      - Where can I save?: "Task: Show me where I can save. Give 5 specific cuts, easiest first, each with how much it saves a month, then the total. Don't cut rent, EMIs, other fixed bills or health."
      - What should my limits be?: "Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed bills and what I keep aside. Show a table: category, limit in ₹, one short reason."
      - Will my money last till payday?: "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. Tell me which 1–2 categories are pushing my pace up and one thing to change this week."
+       A month-end cycle reads "Task: Will my money last the month? …" with the same rest (D117).
      - Ask something else: "My question: {question}", trimmed.
 - **Determinism:** the same data always produces byte-identical text, so it can be checked with a golden-string test.
 - **Size guard:** if the text is over 12,000 characters, the oldest entries are summarised by week first, and the preview says so. Weeks are 7-day blocks from the period start, folded oldest first, one at a time, until the text fits (DECISIONS D64).
@@ -280,7 +281,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Next is enabled only when the amount is greater than 0.
 - **FR-ON-3** Step 2 asks "When does it come?" with five chips: *1st of the month*, *Last day*, *Pick a date* (day 1–31), *Every week* (weekday), *It changes*. The hint reads "Your month runs from one payday to the next. No fixed day? Pick It changes." Selecting a chip advances.
 - **FR-ON-4** Step 3, "Any fixed bills?", offers chips (Rent, EMI, Phone, Internet, School fees, Subscriptions) that each open a mini keypad and a due day. **Skip** is always visible.
-- **FR-ON-5** Finishing creates the income rule, any bill rules and the seed categories in one transaction. It then runs the recurring engine, lands on Home with the "assemble" motion (today's bar fills and the rail's dots arrive one by one) and fires the success haptic.
+- **FR-ON-5** Finishing creates the income rule (for *It changes*, this month's money as one *Got* entry noted "Starting guess", D27, D117), any bill rules and the seed categories in one transaction. It then runs the recurring engine, lands on Home with the "assemble" motion (today's bar fills and the rail's dots arrive one by one) and fires the success haptic.
 - **FR-ON-6** If the user leaves mid-onboarding, it resumes at the same step.
 
 ### 4.2 Home (FR-HO)

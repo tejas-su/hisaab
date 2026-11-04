@@ -377,7 +377,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 Two layers only: the grey page and near-white cards, the same build as the Today list (D45, D67).
 1. **Header:** Back and "Ask AI". It is fixed and doesn't scroll.
 2. **"What do you want to know?" card:**
-   - The goals as one column of rows, phrased as the user's own questions (D71): *How did I do?* · *Where can I save?* · *What should my limits be?* · *Will my money last till payday?*. Each row has an icon in a 42dp `sunk` well, and hairlines are indented to the text (74dp), as on Home. *Will my money last till payday?* shows only for the current cycle with a payday (D72).
+   - The goals as one column of rows, phrased as the user's own questions (D71): *How did I do?* · *Where can I save?* · *What should my limits be?* · *Will my money last till payday?*. Each row has an icon in a 42dp `sunk` well, and hairlines are indented to the text (74dp), as on Home. *Will my money last till payday?* shows only for the current cycle (D72); a month-end cycle reads *Will my money last the month?* (D117).
    - The last row is an always-visible field with a pen icon and the placeholder *Ask something else*. While it has focus and is empty, the placeholder becomes an example: "Like: can I afford a new phone this month?" (D73). Tapping or typing in it picks it.
    - The pick: an `ink` check at the row's end and a bold label. No fill, no marigold (Apple HIG option lists).
    - The period: *October* (default) · *Aug – Oct*, as one segmented control in the Spent | Got style, with no check. The segments are named by their dates, as the cycle switcher names cycles; weekly cycles read "26 Oct – 1 Nov" · "12 Oct – 1 Nov" (D76).

@@ -50,6 +50,7 @@ abstract final class PromptBuilder {
       weeks: _weeks(period),
       names: names,
       choice: choice,
+      task: _task(input, choice),
     );
     return Iterable<int>.generate(draft.weeks.length)
         .map(draft.grouping)
@@ -88,7 +89,7 @@ abstract final class PromptBuilder {
         (CycleSummary summary) => <String>[
           'From my app, and correct: ${<String>[
             'safe to spend today ${_money.format(_safeToday(summary))}',
-            ..._forecast(summary.forecast),
+            ..._forecast(summary),
             if (!input.keepAside.isZero) 'I keep aside ${_money.format(input.keepAside)} a ${_cycleWord(input.payRule)} as savings',
           ].join('; ')}.',
         ],
@@ -100,8 +101,11 @@ abstract final class PromptBuilder {
     NoIncome() || SlowDown() || OnTrack() => summary.safeToday.isNegative ? Money.zero : summary.safeToday,
   };
 
-  static List<String> _forecast(RangeForecast forecast) => switch (forecast) {
-    LastsTillPayday(:final Money spare) => <String>['at this pace it lasts till payday with about ${_money.format(spare)} spare'],
+  // why: a calendar-month cycle has no payday, so it lasts till month end, as Home's range line says (D117).
+  static List<String> _forecast(CycleSummary summary) => switch (summary.forecast) {
+    LastsTillPayday(:final Money spare) => <String>[
+      'at this pace it lasts till ${summary.endsAtMonthEnd ? 'month end' : 'payday'} with about ${_money.format(spare)} spare',
+    ],
     RunsOut(:final CalendarDate date) => <String>['at this pace it runs out on ${date.toIso()}'],
     TooEarlyToForecast() => const <String>[],
   };
@@ -190,7 +194,7 @@ abstract final class PromptBuilder {
     ),
   ].join('\n');
 
-  static String _task(PromptChoice choice) => switch (choice.goal) {
+  static String _task(PromptInput input, PromptChoice choice) => switch (choice.goal) {
     AskGoal.reviewMonth =>
       'Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts '
           '2) the one change that would save the most, and how much a month 3) one habit worth keeping.',
@@ -201,7 +205,7 @@ abstract final class PromptBuilder {
       'Task: Suggest a spending limit per category for one pay cycle. Together they must fit my income after fixed '
           'bills and what I keep aside. Show a table: category, limit in ₹, one short reason.',
     AskGoal.onTrack =>
-      "Task: Will my money last till payday? Use the numbers from my app as correct; don't recalculate them. "
+      "Task: Will my money last ${input.endsAtMonthEnd ? 'the month' : 'till payday'}? Use the numbers from my app as correct; don't recalculate them. "
           'Tell me which 1–2 categories are pushing my pace up and one thing to change this week.',
     AskGoal.ownQuestion => 'My question: ${choice.question.trim()}',
   };
@@ -226,13 +230,23 @@ final class _Names {
 
 /// One prompt being built: the lines before the CSV, the period's entries and its weeks.
 final class _Draft {
-  const _Draft({required this.head, required this.entries, required this.weeks, required this.names, required this.choice});
+  const _Draft({
+    required this.head,
+    required this.entries,
+    required this.weeks,
+    required this.names,
+    required this.choice,
+    required this.task,
+  });
 
   final String head;
   final List<Entry> entries;
   final List<PayCycle> weeks;
   final _Names names;
   final PromptChoice choice;
+
+  /// The last line: the goal's task, or the user's own question.
+  final String task;
 
   /// The full prompt with the [grouped] oldest weeks summarised instead of listed.
   PromptText grouping(int grouped) {
@@ -242,7 +256,7 @@ final class _Draft {
       if (grouped > 0) PromptBuilder._earlierWeeks(weeks.take(grouped), entries),
       PromptBuilder._entrySection(entries.where((Entry e) => !e.date.isBefore(listedFrom)), names, hideNotes: choice.hideNotes),
       '',
-      PromptBuilder._task(choice),
+      task,
     ].join('\n');
     return PromptText(text: text, entryCount: entries.length, groupedWeeks: grouped);
   }

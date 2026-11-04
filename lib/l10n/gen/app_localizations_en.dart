@@ -340,7 +340,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'fun': 'Fun',
       'health': 'Health',
       'home': 'Home',
-      'salary': 'Salary',
+      'salary': 'Money in',
       'other_income': 'Other income',
       'other': 'Other',
     });
@@ -358,6 +358,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get incomeHint =>
       'Pay, business, pension or family money. If it changes, a low month is a safe guess.';
+
+  @override
+  String get startingGuessNote => 'Starting guess';
 
   @override
   String get incomePrivacy =>
@@ -695,6 +698,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get askGoalOnTrack => 'Will my money last till payday?';
+
+  @override
+  String get askGoalLastsMonth => 'Will my money last the month?';
 
   @override
   String get askGoalOwn => 'Ask something else';

@@ -23,7 +23,7 @@ const String _golden =
     '\n'
     'Entries (CSV):\n'
     'date,amount,kind,category,note\n'
-    '2026-10-04,45000,got,Salary,\n'
+    '2026-10-04,45000,got,Money in,\n'
     '2026-10-05,8200,spent,Home,\n'
     '2026-10-20,18950,spent,Food,\n'
     '2026-10-26,60,spent,Food,Chai & samosa\n'
@@ -64,7 +64,7 @@ void main() {
       final PromptText prompt = _build(choice: const PromptChoice(hideNotes: true));
       expect(
         _lines(prompt),
-        containsAllInOrder(<String>['date,amount,kind,category', '2026-10-04,45000,got,Salary', '2026-10-26,60,spent,Food']),
+        containsAllInOrder(<String>['date,amount,kind,category', '2026-10-04,45000,got,Money in', '2026-10-26,60,spent,Food']),
       );
       expect(prompt.text, isNot(contains('Chai')));
       expect(prompt.text, isNot(contains('note')));
@@ -243,6 +243,13 @@ void main() {
         );
       });
 
+      test('a cycle that ends at month end lasts till month end, as Home says (D117)', () {
+        expect(
+          lines(summary: Option<CycleSummary>.of(workedSummary(endsAtMonthEnd: true)), payRule: const IrregularIncome())[4],
+          contains('at this pace it lasts till month end with about ₹9,300 spare'),
+        );
+      });
+
       test('no income on Home means no facts line', () {
         expect(lines(summary: Option<CycleSummary>.of(workedSummary(state: const NoIncome())))[4], startsWith('Spent '));
       });
@@ -268,6 +275,18 @@ void main() {
           expect(_lines(_build(choice: PromptChoice(goal: task.key))).last, task.value);
         });
       }
+
+      test('a month-end cycle asks whether it lasts the month (D117)', () {
+        final PromptText prompt = PromptBuilder.build(
+          workedPromptInput(summary: Option<CycleSummary>.of(workedSummary(endsAtMonthEnd: true))),
+          const PromptChoice(goal: AskGoal.onTrack),
+          nameOf: englishName,
+        );
+        expect(
+          _lines(prompt).last,
+          "Task: Will my money last the month? Use the numbers from my app as correct; don't recalculate them. Tell me which 1–2 categories are pushing my pace up and one thing to change this week.",
+        );
+      });
 
       test('own question is trimmed', () {
         final PromptText prompt = _build(

@@ -21,7 +21,7 @@ import 'period_switch.dart';
 /// period switch (D45, D67).
 ///
 /// Needs an [AskAiBloc] above it; [choice] is what is picked now and [input] names the period
-/// and decides whether *Will my money last till payday?* is offered.
+/// and decides whether *Will my money last till payday?* (or *the month?*, D117) is offered.
 class AskAiControls extends StatelessWidget {
   const AskAiControls({super.key, required this.choice, required this.input});
 
@@ -52,7 +52,7 @@ class AskAiControls extends StatelessWidget {
           for (final AskGoal goal in _starters.where((AskGoal g) => g != AskGoal.onTrack || input.offersOnTrack)) ...<Widget>[
             GoalRow(
               key: ValueKey<String>('goal-${goal.name}'),
-              label: _label(strings, goal),
+              label: _label(strings, goal, monthEnd: input.endsAtMonthEnd),
               icon: _icon(goal),
               selected: choice.goal == goal,
               onPressed: () => bloc.add(AskAiGoalChosen(goal)),
@@ -85,11 +85,11 @@ class AskAiControls extends StatelessWidget {
     );
   }
 
-  static String _label(AppLocalizations strings, AskGoal goal) => switch (goal) {
+  static String _label(AppLocalizations strings, AskGoal goal, {required bool monthEnd}) => switch (goal) {
     AskGoal.reviewMonth => strings.askGoalReview,
     AskGoal.helpMeSave => strings.askGoalSave,
     AskGoal.makeBudget => strings.askGoalBudget,
-    AskGoal.onTrack => strings.askGoalOnTrack,
+    AskGoal.onTrack => monthEnd ? strings.askGoalLastsMonth : strings.askGoalOnTrack,
     AskGoal.ownQuestion => strings.askGoalOwn,
   };
 

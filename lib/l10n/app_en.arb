@@ -402,7 +402,7 @@
     }
   },
   "deleteLastDigit": "Delete last digit. Long-press to clear",
-  "categoryName": "{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Salary} other_income{Other income} other{Other}}",
+  "categoryName": "{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Money in} other_income{Other income} other{Other}}",
   "@categoryName": {
     "description": "Default name of a seeded category, by its stored key",
     "placeholders": {
@@ -426,6 +426,10 @@
   "incomeHint": "Pay, business, pension or family money. If it changes, a low month is a safe guess.",
   "@incomeHint": {
     "description": "Onboarding step 1 hint; names sources, not jobs, so it fits non-salaried users (D116)"
+  },
+  "startingGuessNote": "Starting guess",
+  "@startingGuessNote": {
+    "description": "Note on the income entry onboarding saves for It changes; the amount is the user's low-month guess (D117)"
   },
   "incomePrivacy": "It stays on this phone. The app never uses the internet.",
   "@incomePrivacy": {
@@ -776,7 +780,11 @@
   },
   "askGoalOnTrack": "Will my money last till payday?",
   "@askGoalOnTrack": {
-    "description": "Ask AI goal row; shown only for the current cycle with a payday"
+    "description": "Ask AI goal row for the current cycle with a payday"
+  },
+  "askGoalLastsMonth": "Will my money last the month?",
+  "@askGoalLastsMonth": {
+    "description": "Ask AI goal row for the current cycle when it ends at month end, with no payday (D117)"
   },
   "askGoalOwn": "Ask something else",
   "@askGoalOwn": {

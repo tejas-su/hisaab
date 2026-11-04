@@ -10,7 +10,7 @@ void main() {
     expect(const OnboardingFinishing(OnboardingDraft()).props, <Object?>[const OnboardingDraft()]);
     expect(
       const SetupLabels(income: 'Salary', bills: <BillKind, String>{}).props,
-      <Object?>['Salary', <BillKind, String>{}],
+      <Object?>['Salary', <BillKind, String>{}, null],
     );
   });
 }

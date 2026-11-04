@@ -544,7 +544,7 @@ abstract class AppLocalizations {
   /// Default name of a seeded category, by its stored key
   ///
   /// In en, this message translates to:
-  /// **'{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Salary} other_income{Other income} other{Other}}'**
+  /// **'{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Money in} other_income{Other income} other{Other}}'**
   String categoryName(String key);
 
   /// No description provided for @onboardingProgress.
@@ -564,6 +564,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pay, business, pension or family money. If it changes, a low month is a safe guess.'**
   String get incomeHint;
+
+  /// Note on the income entry onboarding saves for It changes; the amount is the user's low-month guess (D117)
+  ///
+  /// In en, this message translates to:
+  /// **'Starting guess'**
+  String get startingGuessNote;
 
   /// Caption under the onboarding income keypad, beside a lock icon (D116)
   ///
@@ -1051,11 +1057,17 @@ abstract class AppLocalizations {
   /// **'What should my limits be?'**
   String get askGoalBudget;
 
-  /// Ask AI goal row; shown only for the current cycle with a payday
+  /// Ask AI goal row for the current cycle with a payday
   ///
   /// In en, this message translates to:
   /// **'Will my money last till payday?'**
   String get askGoalOnTrack;
+
+  /// Ask AI goal row for the current cycle when it ends at month end, with no payday (D117)
+  ///
+  /// In en, this message translates to:
+  /// **'Will my money last the month?'**
+  String get askGoalLastsMonth;
 
   /// Placeholder of the always-visible own-question field, the last Ask AI goal row
   ///

@@ -39,7 +39,7 @@ const String _golden =
     '\n'
     'Entries (CSV):\n'
     'date,amount,kind,category,note\n'
-    '2026-10-04,45000,got,Salary,\n'
+    '2026-10-04,45000,got,Money in,\n'
     '2026-10-05,8200,spent,Home,\n'
     '2026-10-20,18950,spent,Food,\n'
     '2026-10-26,60,spent,Food,Chai & samosa\n'
@@ -199,13 +199,14 @@ void main() {
       expect(ready().prompt.text, isNot(contains('Will my money last')));
     });
 
-    test('income with no fixed payday falls back to the default goal', () async {
+    test('income with no fixed payday keeps the pick, asking whether it lasts the month (D117)', () async {
       recurring.rules = <RecurringRule>[WorkedExample.rent];
       await bloc.close();
       bloc = build(cycle: const PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31)));
       await bloc.dispatch(const AskAiLoadRequested());
       await bloc.dispatch(const AskAiGoalChosen(AskGoal.onTrack));
-      expect(ready().choice.goal, const PromptChoice().goal);
+      expect(ready().choice.goal, AskGoal.onTrack);
+      expect(ready().prompt.text, contains('Task: Will my money last the month?'));
     });
 
     test('a reload after payday drops the pick that is no longer offered', () async {

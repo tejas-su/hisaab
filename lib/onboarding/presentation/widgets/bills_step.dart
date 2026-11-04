@@ -31,6 +31,7 @@ class BillsStep extends StatelessWidget {
   static SetupLabels labelsOf(AppLocalizations strings) => SetupLabels(
         income: strings.categoryName('salary'),
         bills: <BillKind, String>{for (final BillKind kind in BillKind.values) kind: strings.billName(kind.name)},
+        startingGuess: strings.startingGuessNote,
       );
 
   @override

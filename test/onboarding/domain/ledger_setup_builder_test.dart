@@ -63,6 +63,17 @@ void main() {
       );
     });
 
+    test('the guessed income is noted as a starting guess, so the user knows to change it (D117)', () {
+      const SetupLabels labels = SetupLabels(income: 'Money in', bills: <BillKind, String>{}, startingGuess: 'Starting guess');
+      final LedgerSetup setup = LedgerSetupBuilder.build(
+        _draft(const IrregularIncome()),
+        today: _today,
+        categories: seedCategories,
+        labels: labels,
+      ).getOrElse((Failure f) => fail(f.message));
+      expect(setup.entries.single.note, 'Starting guess');
+    });
+
     test('bills start at their first date in this cycle; rent goes under Home, others under Bills', () {
       final LedgerSetup setup = _build(
         _draft(const MonthlyOnDay(4), bills: <BillDraft>[
