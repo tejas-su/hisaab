@@ -10,7 +10,7 @@ import '../entities/recurring_rule.dart';
 import '../recurring_schedule.dart';
 import '../repository/recurring_repository.dart';
 
-/// Finds the soonest unposted *Spent* occurrence within the next [window] days (SPEC BR-9).
+/// Finds the soonest unposted bill or saving occurrence within the next [window] days (SPEC BR-9, D120).
 final class GetDueSoonBill implements UseCase<Option<DueSoonBill>, NoParams> {
   const GetDueSoonBill({required this._recurring, required this._clock});
 
@@ -30,7 +30,7 @@ final class GetDueSoonBill implements UseCase<Option<DueSoonBill>, NoParams> {
 
   static Option<DueSoonBill> _soonest(List<RecurringRule> rules, CalendarDate today) {
     final Iterable<DueSoonBill> soon = rules
-        .where((RecurringRule rule) => rule.kind == EntryKind.spent)
+        .where((RecurringRule rule) => rule.kind == EntryKind.spent || rule.kind == EntryKind.saved)
         .map((RecurringRule rule) => _nextOf(rule, today))
         .where((DueSoonBill bill) => bill.daysAway <= window);
     return Option<DueSoonBill>.fromNullable(

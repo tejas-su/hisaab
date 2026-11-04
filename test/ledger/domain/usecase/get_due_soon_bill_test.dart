@@ -56,6 +56,26 @@ void main() {
       expect((await run()).map((DueSoonBill b) => b.label), const Option<String>.of('Bill 2'));
     });
 
+    test('a saving 2 days away is due soon (D120)', () async {
+      final RecurringRule rd28 = WorkedExample.rd.copyWith(
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 28)),
+        nextDue: const CalendarDate(2026, 10, 28),
+      );
+      recurring.rules = <RecurringRule>[WorkedExample.salary, WorkedExample.rent, rd28];
+      expect(
+        await run(),
+        Option<DueSoonBill>.of(DueSoonBill(rule: rd28, dueDate: const CalendarDate(2026, 10, 28), daysAway: 2)),
+      );
+    });
+
+    test('a bill and a saving on the same day: the first rule wins', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd.copyWith(
+          schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 9, 29)),
+          nextDue: const CalendarDate(2026, 10, 29),
+        )];
+      expect((await run()).map((DueSoonBill b) => b.rule), Option<RecurringRule>.of(WorkedExample.electricity));
+    });
+
     test('on a tie, the first rule wins', () async {
       recurring.rules = <RecurringRule>[
         _bill(4, 500, const CalendarDate(2026, 10, 28)),

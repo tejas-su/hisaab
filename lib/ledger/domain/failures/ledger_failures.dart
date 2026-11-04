@@ -29,3 +29,8 @@ final class RuleNotFoundFailure extends Failure {
 final class InvalidBillNameFailure extends Failure {
   const InvalidBillNameFailure(super.message);
 }
+
+/// A *Put in extra* larger than what is left for the cycle (D120); saving must never make it over.
+final class PutInTooMuchFailure extends Failure {
+  const PutInTooMuchFailure() : super('More than is left this cycle');
+}

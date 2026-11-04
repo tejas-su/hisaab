@@ -7,7 +7,6 @@ import 'package:fpdart/fpdart.dart';
 import '../../../core/design/haptics.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/logging/app_logger.dart';
-import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
 import 'bills_event.dart';
 import 'bills_state.dart';
@@ -39,7 +38,7 @@ class BillsBloc extends Bloc<BillsEvent, BillsState> {
 
   /// Loads the bills, soonest first.
   Future<void> _load(Emitter<BillsState> emit) async {
-    final Either<Failure, List<RecurringRule>> loaded = await _getBills(const NoParams()).run();
+    final Either<Failure, List<RecurringRule>> loaded = await _getBills(EntryKind.spent).run();
     emit(loaded.match((Failure failure) {
       _log('bills.load_failed', failure);
       return BillsFailed(failure);

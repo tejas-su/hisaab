@@ -129,6 +129,10 @@ final class FakeServices {
     ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
     ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(getCycleSummary)
+    ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
+    ..registerSingleton<PutInExtra>(
+      PutInExtra(getCycleSummary: getCycleSummary, ledger: ledger, categories: categories, clock: clock),
+    )
     ..registerSingleton<GetSuggestedLimits>(getSuggestedLimits)
     ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: categories))
     ..registerSingleton<GetSpendsOverview>(getSpendsOverview)

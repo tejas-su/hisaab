@@ -26,6 +26,8 @@ import '../domain/usecase/get_suggested_limits.dart';
 import '../domain/usecase/restore_bill.dart';
 import '../domain/usecase/delete_entry.dart';
 import '../domain/usecase/get_cycle_summary.dart';
+import '../domain/usecase/get_saved_total.dart';
+import '../domain/usecase/put_in_extra.dart';
 import '../domain/usecase/post_due_recurring.dart';
 import '../domain/usecase/restore_entry.dart';
 import '../domain/usecase/save_entry.dart';
@@ -61,6 +63,15 @@ void registerLedgerServices(GetIt getIt) {
         recurring: recurring,
         settings: getIt<BudgetSettingsRepository>(),
         periods: getIt<PeriodCalculator>(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
+    ..registerSingleton<PutInExtra>(
+      PutInExtra(
+        getCycleSummary: getIt<GetCycleSummary>(),
+        ledger: ledger,
+        categories: getIt<CategoryRepository>(),
         clock: clock,
       ),
     )

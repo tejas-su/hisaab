@@ -32,6 +32,25 @@ void main() {
   Future<RecurringRule> added(AddBillParams p) async =>
       (await addBill(p).run()).getOrElse((Failure f) => fail('unexpected $f'));
 
+  group('AddBill — savings (D120)', () {
+    AddBillParams saving(int day) => AddBillParams(
+          input: BillInput(label: 'RD', amount: Money.fromMajor(5000), dueDay: day),
+          entryKind: EntryKind.saved,
+        );
+
+    test('a saving is a Saved rule in the hidden category, first going in on its next day', () async {
+      final RecurringRule rule = await added(saving(10));
+      expect(rule.kind, EntryKind.saved);
+      expect(rule.categoryId, SeedCategoryIds.saved);
+      expect(rule.schedule.anchor, const CalendarDate(2026, 10, 10));
+      expect(rule.nextDue, const CalendarDate(2026, 11, 10));
+    });
+
+    test('a saving due today goes in today (D33)', () async {
+      expect((await added(saving(26))).nextDue, const CalendarDate(2026, 10, 26));
+    });
+  });
+
   group('AddBill (FR-SE-1)', () {
     test('saves a monthly Spent rule in Bills, first due on its next date', () async {
       final RecurringRule rule = await added(params());

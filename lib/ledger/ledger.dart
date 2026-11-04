@@ -52,3 +52,8 @@ export 'presentation/bill_icon_extensions.dart';
 export 'presentation/category_extensions.dart';
 export 'presentation/widgets/entry_row.dart';
 export 'di/ledger_module.dart';
+export 'domain/due_amounts.dart';
+export 'domain/entities/put_in_preview.dart';
+export 'domain/entities/saving_kind.dart';
+export 'domain/usecase/get_saved_total.dart';
+export 'domain/usecase/put_in_extra.dart';
