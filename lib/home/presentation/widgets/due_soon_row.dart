@@ -9,6 +9,8 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
+import '../../../ledger/presentation/rule_glyph.dart';
+import '../../../ledger/presentation/rule_words.dart';
 
 /// The due-soon nudge under the hero, as a tappable `sunk` row: the bill's icon, "Electricity
 /// ₹1,200 goes out in 3 days", its date and a chevron. A tap opens the bill's sheet
@@ -30,11 +32,13 @@ class DueSoonRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextTheme text = Theme.of(context).textTheme;
-    final String date = DateFormat('EEE, d MMM', Localizations.localeOf(context).toString())
-        .format(DateTime(bill.dueDate.year, bill.dueDate.month, bill.dueDate.day));
+    final String locale = Localizations.localeOf(context).toString();
+    final DateTime due = DateTime(bill.dueDate.year, bill.dueDate.month, bill.dueDate.day);
+    final String date = DateFormat('EEE, d MMM', locale).format(due);
+    final String weekday = DateFormat('EEE', locale).format(due);
     return Pressable(
-      semanticLabel: strings.billGoesOut(bill.label, strings.spokenAmount(context.money.digits(bill.amount)), bill.daysAway),
-      semanticHint: strings.dueSoonOpensBill,
+      semanticLabel: strings.ruleGoesOut(bill.rule, strings.spokenAmount(context.money.digits(bill.amount)), bill.daysAway, weekday),
+      semanticHint: strings.ruleOpensHint(bill.rule.kind),
       focusRadius: _radius,
       onPressed: () => onOpenBill(bill.rule),
       builder: (BuildContext context, bool pressed) => Container(
@@ -51,14 +55,14 @@ class DueSoonRow extends StatelessWidget {
               height: HisaabSizes.iconWell,
               alignment: Alignment.center,
               decoration: ShapeDecoration(color: context.colors.surface, shape: HisaabShapes.squircle(HisaabRadii.chip)),
-              child: AppIcon(bill.rule.shownIcon.glyph),
+              child: AppIcon(bill.rule.glyph),
             ),
             const SizedBox(width: HisaabSpacing.m),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(strings.billGoesOut(bill.label, context.money.format(bill.amount), bill.daysAway), style: text.bodyMedium),
+                  Text(strings.ruleGoesOut(bill.rule, context.money.format(bill.amount), bill.daysAway, weekday), style: text.bodyMedium),
                   Text(date, style: text.bodySmall),
                 ],
               ),

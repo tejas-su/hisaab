@@ -103,6 +103,23 @@ void main() {
       expect(ready().todayEntries.map((Entry e) => e.id), contains(50));
     });
 
+    test('a saving today is listed but never a bite (D120)', () async {
+      ledger.entries.add(Entry(
+        id: 51,
+        amount: Money.fromMajor(5000),
+        kind: EntryKind.saved,
+        categoryId: 11,
+        date: WorkedExample.today,
+        createdAt: WorkedExample.now,
+        recurringId: WorkedExample.rd.id,
+        note: 'RD',
+      ));
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().todayEntries.map((Entry e) => e.id), contains(51));
+      expect(ready().todaySpends.map((Entry e) => e.id), isNot(contains(51)));
+      expect(ready().summary.spentToday, Money.fromMajor(420));
+    });
+
     test('runs the recurring engine before working out today (BR-8)', () async {
       recurring.rules = <RecurringRule>[
         RecurringRule(

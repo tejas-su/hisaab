@@ -11,6 +11,7 @@ import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../core/widgets/top_bar_scroll_view.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
+import '../../../ledger/presentation/rule_words.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -156,7 +157,7 @@ class HomePage extends StatelessWidget {
     final HomeBloc bloc = context.read<HomeBloc>();
     HisaabSnackbarHost.of(context).show(
       HisaabSnackbar(
-        message: strings.billDeleted(deleted.label),
+        message: strings.ruleDeleted(deleted),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeBillUndoRequested(deleted))),
       ),
     );

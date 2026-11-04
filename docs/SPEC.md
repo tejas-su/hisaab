@@ -189,7 +189,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - A bill **added** in Settings first goes out on its next due date on or after today; earlier dates this cycle are not back-posted (DECISIONS D33).
   - When a bill's **day changes**, its next date is the new day in the month of the old `next_due` (the first month not yet posted), or, if that day has passed, the next due date from today. No month is posted twice and nothing is back-posted (D34).
   - **Delete** stops the rule at once, with Undo (6 s) that resumes it (D35).
-- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label} ₹{amount} goes out in {n} days" ("goes out tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown.
+- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label} ₹{amount} goes out in {n} days" ("goes out tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown. Saving rules are nudged the same way, worded "{Label} ₹{amount} goes in on {weekday}" ("goes in tomorrow" when `n = 1`) (D120).
 - **Bill stamp (D118):** the bill sheet (FR-SE-1) stamps the bill:
   - When its next unposted occurrence is 1 to 5 days away (the due-soon window): "Due in {n} days" ("Due tomorrow" when `n = 1`).
   - Otherwise, when an entry posted by this rule is dated on or after the occurrence one month before `next_due`: "Counted {d MMM}" with that entry's date, or "Counted today" when it is today.
@@ -201,7 +201,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 - The amount is 1 to 999,999,999 rupees (at most 9 digits) and is stored as paise.
 - The date defaults to today. The user may pick yesterday, or a date in the current or previous cycle. Future dates are not allowed.
 - A note is optional, at most 80 characters, with whitespace trimmed.
-- **Delete** happens at once with an Undo snackbar (6 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled.
+- **Delete** happens at once with an Undo snackbar (6 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled. A *Saved* entry can be deleted (that skips the month) but never edited in the tray, which knows only *Spent* and *Got* (D120).
 - After any write, the ledger notifies listeners, and Home and Spends recompute.
 
 ### BR-11 Categories
@@ -309,10 +309,11 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37). It counts typed spending only; bills posted in the week are in each day's pool (D119).
     - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
     - Today's bar and its captions give way to the week bars and weekday letters (BR-6a), in a 150ms crossfade; the days rail and its flag stay. The card's height never changes between the two (BR-6, D114). The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
-- **FR-HO-3** **Due-soon nudge** (BR-9), when applicable. It is a tappable `sunk` row at least 56dp tall: the bill's icon in a well, the sentence, the date under it, and a chevron. TalkBack reads the sentence, then "Opens the bill." A tap opens that bill's sheet (FR-SE-1) over Home. After a change Home reloads; *Delete bill* deletes it from Home with Undo (D35, D118).
+- **FR-HO-3** **Due-soon nudge** (BR-9), when applicable. It is a tappable `sunk` row at least 56dp tall: the bill's icon in a well, the sentence, the date under it, and a chevron. TalkBack reads the sentence, then "Opens the bill." ("Opens the saving." for a saving, D120). A tap opens that bill's or saving's sheet (FR-SE-1) over Home. After a change Home reloads; *Delete bill* deletes it from Home with Undo (D35, D118).
 - **FR-HO-4** **Today list:**
   - The header shows today's total (typed spending, `S_today`) and *See all*.
   - A bill the app posted is listed like any entry; with no note, its second line reads *Fixed bill* (D119).
+  - A saving reads its name (or *Put in extra*), *Saved* and the amount, with the piggy-bank glyph. It is never a bite on today's bar and has no tap; swiping deletes it with Undo (D120).
   - At most the 5 most recent entries for today.
   - Swipe left to delete, with Undo (BR-10). Tapping a row edits it.
   - Empty state: "Nothing spent today. Tap Add when you do."

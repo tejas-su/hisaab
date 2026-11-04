@@ -318,7 +318,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   1. The hero number.
   2. Today's bar.
   3. The range line.
-  4. The Today list. A bill the app posted shows *Fixed bill* as its second line when it has no note; the header total counts typed spending only (D119).
+  4. The Today list. A bill the app posted shows *Fixed bill* as its second line when it has no note; the header total counts typed spending only (D119). A saving shows the piggy-bank glyph, its name (or *Put in extra*), *Saved* and the amount with no "+"; it has no tap and is never a bite on today's bar (D120).
 - **Today's bar (BR-6, D114, mockup 25):**
   - 48dp tall, the card's full inner width, radius 8 (`HisaabRadii.block`).
   - The marigold yellow is what's left of today's share, from the start edge, with the 1.5dp `displayEdge` in light. Each typed *Spent* entry today is a `blockIdle` bite (a bill posted today is not: it sits in the pool, D119), 3dp apart, the first at the end edge and the newest beside the yellow; bites under 4dp merge. Category names sit under bites wide enough for them, in `displayInk2`.

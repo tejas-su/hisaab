@@ -115,6 +115,14 @@ void main() {
       expect(calls, <Object>[WorkedExample.electricity]);
     });
 
+    testWidgets('deleting a saving from its sheet offers Undo with its name (D120)', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      await pump(tester);
+      await tester.runAsync(() => bloc.dispatch(HomeBillDeleteRequested(WorkedExample.rd)));
+      await tester.settle();
+      expect(find.text('Deleted RD'), findsOneWidget);
+    });
+
     testWidgets('a bill deleted from its sheet offers Undo, which brings it back (D118)', (WidgetTester tester) async {
       await pump(tester);
       await tester.runAsync(() => bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity)));

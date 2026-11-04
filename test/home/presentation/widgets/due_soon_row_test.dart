@@ -54,4 +54,26 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('DueSoonRow for a saving (D120)', () {
+    final RecurringRule rd29 = WorkedExample.rd.copyWith(
+      schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 29)),
+      nextDue: const CalendarDate(2026, 10, 29),
+    );
+
+    testWidgets('a saving goes in on its weekday', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, Scaffold(body: DueSoonRow(bill: DueSoonBill(rule: rd29, dueDate: const CalendarDate(2026, 10, 29), daysAway: 3), onOpenBill: (RecurringRule _) {})));
+      expect(find.text('RD ₹5,000 goes in on Thu'), findsOneWidget);
+      expect(tester.getSemantics(find.byType(DueSoonRow)), isSemantics(hint: 'Opens the saving.', isButton: true, hasTapAction: true));
+      final List<AppIconData> glyphs = tester.widgetList<AppIcon>(find.byType(AppIcon)).map((AppIcon i) => i.icon).toList();
+      expect(glyphs.first, AppIcons.saving);
+      handle.dispose();
+    });
+
+    testWidgets('a saving tomorrow', (WidgetTester tester) async {
+      await pumpApp(tester, Scaffold(body: DueSoonRow(bill: DueSoonBill(rule: rd29, dueDate: const CalendarDate(2026, 10, 27), daysAway: 1), onOpenBill: (RecurringRule _) {})));
+      expect(find.text('RD ₹5,000 goes in tomorrow'), findsOneWidget);
+    });
+  });
 }

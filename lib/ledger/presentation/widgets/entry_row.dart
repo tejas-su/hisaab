@@ -69,11 +69,15 @@ class EntryRow extends StatelessWidget {
           // matches the card's (D99).
           radius: HisaabRadii.card - FocusRing.outset,
           inset: const EdgeInsets.all(FocusRing.outset),
-          child: InkWell(onTap: onEdit, focusColor: context.colors.clear, child: _content(context, strings)),
+          // why: the Add tray knows only Spent and Got; editing a saving there would turn it into
+          // spending (D120). A saving is skipped by swiping it away instead.
+          child: InkWell(onTap: _isSaved ? null : onEdit, focusColor: context.colors.clear, child: _content(context, strings)),
         ),
       ),
     );
   }
+
+  bool get _isSaved => entry.kind == EntryKind.saved;
 
   // why: a bill the app posted would otherwise look like typed spending that the Today total leaves out (D119).
   String? _billTag(AppLocalizations strings) =>
@@ -81,7 +85,9 @@ class EntryRow extends StatelessWidget {
 
   Widget _content(BuildContext context, AppLocalizations strings) {
     final TextTheme text = Theme.of(context).textTheme;
-    final String? note = entry.note ?? _billTag(strings);
+    // why: a saving is named by its rule (the note), or "Put in extra"; its line says *Saved* (D120).
+    final String title = _isSaved ? entry.note ?? strings.entryPutInExtra : category?.labelIn(strings) ?? strings.categoryName('other');
+    final String? note = _isSaved ? strings.entrySaved : entry.note ?? _billTag(strings);
     final String amount = context.money.format(entry.amount);
     final Category? kind = category;
     return Padding(
@@ -93,14 +99,14 @@ class EntryRow extends StatelessWidget {
             height: 42,
             alignment: Alignment.center,
             decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
-            child: AppIcon(AppIcons.forKey(kind?.iconKey ?? '')),
+            child: AppIcon(_isSaved ? AppIcons.saving : AppIcons.forKey(kind?.iconKey ?? '')),
           ),
           const SizedBox(width: HisaabSpacing.m),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(kind?.labelIn(strings) ?? strings.categoryName('other'), style: text.bodyLarge),
+                Text(title, style: text.bodyLarge),
                 if (note != null) Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodySmall?.copyWith(fontSize: 14)),
               ],
             ),

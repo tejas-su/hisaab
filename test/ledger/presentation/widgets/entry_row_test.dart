@@ -1,5 +1,7 @@
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/design/app_icon.dart';
+import 'package:expense_tracker/core/design/app_icons.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -97,6 +99,64 @@ void main() {
     testWidgets('a rule-posted Got entry (salary) shows no bill tag', (WidgetTester tester) async {
       await pumpRow(tester, bill(kind: EntryKind.got, recurringId: 1));
       expect(find.text('Fixed bill'), findsNothing);
+    });
+  });
+
+  group('EntryRow saved (D120)', () {
+    Entry saved({String? note = 'RD', int? recurringId = 4}) => Entry(
+          id: 70,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: 11,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          recurringId: recurringId,
+          note: note,
+        );
+
+    Future<List<String>> pumpRow(WidgetTester tester, Entry entry) async {
+      final List<String> calls = <String>[];
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: EntryRow(
+            entry: entry,
+            category: null,
+            onEdit: () => calls.add('edit'),
+            onDelete: () => calls.add('delete'),
+            onThresholdReached: () {},
+          ),
+        ),
+      );
+      return calls;
+    }
+
+    testWidgets('a posted saving reads RD · Saved · ₹5,000', (WidgetTester tester) async {
+      await pumpRow(tester, saved());
+      expect(find.text('RD'), findsOneWidget);
+      expect(find.text('Saved'), findsOneWidget);
+      expect(find.text('₹5,000'), findsOneWidget);
+      expect(find.text('Other'), findsNothing);
+      expect(tester.widget<AppIcon>(find.byType(AppIcon).last).icon, AppIcons.saving);
+    });
+
+    testWidgets('an extra reads Put in extra', (WidgetTester tester) async {
+      await pumpRow(tester, saved(note: null, recurringId: null));
+      expect(find.text('Put in extra'), findsOneWidget);
+      expect(find.text('Saved'), findsOneWidget);
+    });
+
+    testWidgets('a saved row has no tap action but can still be swiped away', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      final List<String> calls = await pumpRow(tester, saved());
+      await tester.tap(find.text('RD'));
+      await tester.pump();
+      expect(calls, isEmpty);
+      expect(tester.getSemantics(find.text('RD')), isSemantics(hasTapAction: false));
+      await tester.fling(find.byType(EntryRow), const Offset(-500, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(calls, <String>['delete']);
+      handle.dispose();
     });
   });
 }
