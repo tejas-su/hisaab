@@ -65,7 +65,7 @@ tomorrow  = floor(remaining / (D − 1))                  // D > 1
 4. **Card bill.** A card bill of ₹8,000 paid today changes nothing: `P`, `A` and the hero are unchanged. The swipes were counted when they happened.
 
 ## 4. Data
-**Migration 002** (schema v1 → v2; SQLite can't alter a `CHECK`, so `recurring` and `transactions` are rebuilt in one transaction, keeping ids):
+**Migration 003** (schema v2 → v3, since v2 shipped as the bill-icon migration, D118; SQLite can't alter a `CHECK`, so `recurring` and `transactions` are rebuilt in one transaction, keeping ids):
 - `transactions.kind` CHECK: `'out','in','save','card'`.
 - `recurring.kind` CHECK: `'out','in','save'`.
 - `recurring.amount_mode TEXT NOT NULL DEFAULT 'fixed' CHECK IN ('fixed','varies','card')`. It applies to `out` rules only. `save` rules are always `fixed`.
@@ -111,7 +111,7 @@ tomorrow  = floor(remaining / (D − 1))                  // D > 1
 - **Today list rows:** a saving reads "RD · ₹5,000 · *saved*" (own glyph, word, no colour, never a bite on today's bar). A card bill reads "Card bill · ₹8,000 · *paid, not counted again*". A bill posted today shows as now, but isn't a bite on today's bar.
 - The hero, today's bar and the rail don't change for any of this.
 
-**Savings list:** rows (name, day, amount), a footer **"₹42,000 put in since Jan"** (never "worth" or "balance"), and a button **Put in extra**. It opens the keypad with a preview line, "Each day till payday gets ₹63 less", and is capped at `remaining`.
+**Savings list:** rows (name, day, amount), a footer **"₹42,000 put in since Jan"** (never "worth" or "balance"), and a button **Put in extra**. It opens the keypad with a preview line, "Each day till payday gets ₹62 less", and is capped at `remaining`.
 
 **Spends:**
 - One line above *Where it went*: **"Spent ₹27,570 · Saved ₹5,000"** for the period shown.
@@ -157,7 +157,7 @@ tomorrow  = floor(remaining / (D − 1))                  // D > 1
 | Phase | Ships | Depends on |
 |---|---|---|
 | **0. Bills come out of the pool, not today** | `R_t` in `SafeToSpend`, BR-3/4/6/6a/8 tests, DECISIONS D119 | — |
-| **1. Savings** | Migration 002 (all of §4 at once, so there's one schema bump), the `saved` kind, saving rules, keep-aside migration, Settings → Savings list and wizard, Home row and due-soon, *Put in extra*, the Spends line, Ask AI, BR-8 copy | 0 |
+| **1. Savings** | Migration 003 (all of §4 at once, so there's one schema bump), the `saved` kind, saving rules, keep-aside migration, Settings → Savings list and wizard, Home row and due-soon, *Put in extra*, the Spends line, Ask AI, BR-8 copy | 0 |
 | **2. Changing bills and card** | The bill sheet (case study 16), `AmountMode`, the 2 new pills, the waiting state, `B` with estimates, the bill amount sheet, the Home "How much?" line, `cardPaid` | 1 (migration) |
 | **3. Due-day notification** | The package, `BillReminders`, permission ask, deep link, boot re-arm | 2 |
 
