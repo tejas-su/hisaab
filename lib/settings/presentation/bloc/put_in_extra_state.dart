@@ -59,9 +59,12 @@ final class PutInExtraReady extends PutInExtraState {
   /// Nothing is left this cycle, so nothing can be put in.
   bool get nothingLeft => roomRupees == 0;
 
-  /// What [rupees] does to the days left; [None] at ₹0.
-  Option<PutInPreview> get preview =>
-      rupees == 0 ? const Option<PutInPreview>.none() : Option<PutInPreview>.of(SafeToSpend.previewPutIn(summary, Money.fromMajor(rupees)));
+  /// What [rupees] does to the days left; [None] at ₹0, or when it is too small to take a whole
+  /// rupee off any day (a "₹0 less" line would read as a mistake).
+  Option<PutInPreview> get preview => rupees == 0
+      ? const Option<PutInPreview>.none()
+      : Option<PutInPreview>.of(SafeToSpend.previewPutIn(summary, Money.fromMajor(rupees)))
+          .filter((PutInPreview preview) => preview is! EachDayLess || !preview.less.isZero);
 
   /// Returns a copy with the given fields replaced; [saveFailed] resets unless passed.
   PutInExtraReady copyWith({int? rupees, int? rejections, bool? saving, bool saveFailed = false}) => PutInExtraReady(

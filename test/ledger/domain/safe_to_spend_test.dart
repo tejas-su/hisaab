@@ -110,6 +110,16 @@ void main() {
       );
     });
 
+    test('money put in extra yesterday is not "under its share" (BR-8)', () {
+      final CycleInputs yesterday = _inputs(today: const CalendarDate(2026, 10, 25), spentToday: 0, savedExtraToday: 1665);
+      expect(_computeAfter(yesterday).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+
+    test('an extra smaller than yesterday\'s underspend leaves the rest (BR-8)', () {
+      final CycleInputs yesterday = _inputs(today: const CalendarDate(2026, 10, 25), spentToday: 0, savedExtraToday: 665);
+      expect(_computeAfter(yesterday).savedYesterday.map((YesterdaySaving s) => s.saved), Option<Money>.of(_rupees(1000)));
+    });
+
     test('a saving bigger than everything left is Over for the cycle (E-b)', () {
       final CycleSummary s = _compute(_inputs(savedByRuleToday: 20000));
       expect(s.todayShare, _rupees(0));

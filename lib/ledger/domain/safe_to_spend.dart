@@ -93,7 +93,8 @@ abstract final class SafeToSpend {
   // credits only the underspend, not income or bills that also moved overnight.
   static Option<YesterdaySaving> _savedYesterday(CycleInputs yesterday, int daysLeftToday) {
     final Money share = _share(_pool(yesterday), yesterday.cycle.daysLeftFrom(yesterday.today));
-    final Money saved = share - yesterday.spentToday;
+    // why: money put in extra yesterday went into savings, not to the days left (D120).
+    final Money saved = share - yesterday.spentToday - yesterday.savedExtraToday;
     if (saved.isNegative || saved.isZero) {
       return const Option<YesterdaySaving>.none();
     }

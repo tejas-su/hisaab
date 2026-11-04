@@ -89,6 +89,12 @@ void main() {
       expect(ready(bloc).preview, Option<PutInPreview>.of(EachDayLess(Money.fromMajor(62))));
     });
 
+    test('an extra too small to change a day shows no preview', () async {
+      final PutInExtraBloc bloc = await loaded();
+      await type(bloc, '5');
+      expect(ready(bloc).preview, const Option<PutInPreview>.none());
+    });
+
     test('no preview at ₹0', () async {
       expect(ready(await loaded()).preview, const Option<PutInPreview>.none());
     });
