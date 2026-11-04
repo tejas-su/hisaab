@@ -19,6 +19,14 @@ abstract final class RecurringSchedule {
         Frequency.yearly => _yearlyIn(schedule, occurrence.year + 1),
       };
 
+  /// The due date that comes before [occurrence].
+  static CalendarDate previous(Schedule schedule, CalendarDate occurrence) => switch (schedule.frequency) {
+        Frequency.weekly => occurrence.addDays(-_daysInWeek),
+        Frequency.biweekly => occurrence.addDays(-_daysInFortnight),
+        Frequency.monthly => _monthlyIn(schedule, occurrence.year, occurrence.month - 1),
+        Frequency.yearly => _yearlyIn(schedule, occurrence.year - 1),
+      };
+
   /// The first due date that is [date] or later.
   static CalendarDate firstOnOrAfter(Schedule schedule, CalendarDate date) => switch (schedule.frequency) {
         Frequency.weekly => _nextInPhase(schedule.anchor, date, _daysInWeek),
@@ -63,7 +71,8 @@ abstract final class RecurringSchedule {
   static CalendarDate _nextInPhase(CalendarDate anchor, CalendarDate date, int period) =>
       date.addDays(date.daysUntil(anchor) % period);
 
-  /// The monthly due date in [month] of [year]; [month] may be 13 to mean January of next year.
+  /// The monthly due date in [month] of [year]; [month] may be 0 or 13 to mean December of last
+  /// year or January of next year.
   static CalendarDate _monthlyIn(Schedule schedule, int year, int month) {
     final int monthIndex = year * 12 + month - 1;
     final int targetYear = monthIndex ~/ 12;

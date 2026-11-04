@@ -120,6 +120,7 @@ final class FakeServices {
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(postDue)
     ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
+    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
     ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: categories, clock: clock))
     ..registerSingleton<EditBill>(EditBill(recurring: recurring, clock: clock))

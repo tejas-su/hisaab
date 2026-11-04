@@ -33,6 +33,27 @@ void main() {
     }
   });
 
+  group('RecurringSchedule.previous', () {
+    const Schedule on31st = Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 8, 31));
+
+    final List<(String, Schedule, CalendarDate, CalendarDate)> cases = <(String, Schedule, CalendarDate, CalendarDate)>[
+      ('monthly on the 31st clamps to 30 Nov', on31st, _d(2026, 12, 31), _d(2026, 11, 30)),
+      ('monthly on the 31st clamps to 28 Feb', on31st, _d(2027, 3, 31), _d(2027, 2, 28)),
+      ('monthly returns to the 31st before a short month', on31st, _d(2026, 11, 30), _d(2026, 10, 31)),
+      ('monthly crosses the year backwards', const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 1, 25)),
+          _d(2027, 1, 25), _d(2026, 12, 25)),
+      ('weekly takes 7 days', const Schedule(frequency: Frequency.weekly, anchor: CalendarDate(2026, 10, 2)),
+          _d(2026, 11, 6), _d(2026, 10, 30)),
+      ('every 2 weeks takes 14 days', const Schedule(frequency: Frequency.biweekly, anchor: CalendarDate(2026, 10, 2)),
+          _d(2027, 1, 8), _d(2026, 12, 25)),
+      ('yearly on 29 Feb clamps in the common year before', const Schedule(frequency: Frequency.yearly, anchor: CalendarDate(2028, 2, 29)),
+          _d(2032, 2, 29), _d(2031, 2, 28)),
+    ];
+    for (final (String name, Schedule schedule, CalendarDate from, CalendarDate expected) in cases) {
+      test(name, () => expect(RecurringSchedule.previous(schedule, from), expected));
+    }
+  });
+
   group('RecurringSchedule.firstOnOrAfter', () {
     final List<(String, Schedule, CalendarDate, CalendarDate)> cases = <(String, Schedule, CalendarDate, CalendarDate)>[
       ('monthly, later this month', const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 1, 5)),

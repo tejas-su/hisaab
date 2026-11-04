@@ -19,6 +19,7 @@ import '../domain/usecase/add_bill.dart';
 import '../domain/usecase/apply_suggested_limits.dart';
 import '../domain/usecase/delete_bill.dart';
 import '../domain/usecase/edit_bill.dart';
+import '../domain/usecase/get_bill_status.dart';
 import '../domain/usecase/get_bills.dart';
 import '../domain/usecase/get_due_soon_bill.dart';
 import '../domain/usecase/get_suggested_limits.dart';
@@ -48,6 +49,7 @@ void registerLedgerServices(GetIt getIt) {
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(PostDueRecurring(recurring: recurring, clock: clock))
     ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
+    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
     ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
     ..registerSingleton<EditBill>(EditBill(recurring: recurring, clock: clock))
