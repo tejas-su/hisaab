@@ -25,6 +25,9 @@ final class FakeRecurringRepository implements RecurringRepository {
   final List<RecurringPosting> postings = <RecurringPosting>[];
   final List<LedgerSetup> setups = <LedgerSetup>[];
 
+  /// Every rule written by [update], in order.
+  final List<RecurringRule> updates = <RecurringRule>[];
+
   TaskEither<Failure, T> _run<T>(T Function() action, [Failure? override]) {
     final Failure? current = override ?? failure;
     return current == null ? TaskEither<Failure, T>.right(action()) : TaskEither<Failure, T>.left(current);
@@ -80,12 +83,26 @@ final class FakeRecurringRepository implements RecurringRepository {
         return rule;
       });
 
+  /// When set, the next [update] waits for this to complete before writing, so a test can
+  /// send a second save while the first is in flight.
+  Completer<void>? nextUpdateGate;
+
   @override
   TaskEither<Failure, RecurringRule> update(RecurringRule rule) {
+    final Completer<void>? gate = nextUpdateGate;
+    nextUpdateGate = null;
+    return gate == null ? _update(rule) : TaskEither<Failure, Unit>(() async {
+      await gate.future;
+      return Either<Failure, Unit>.right(unit);
+    }).flatMap((Unit _) => _update(rule));
+  }
+
+  TaskEither<Failure, RecurringRule> _update(RecurringRule rule) {
     if (failure == null && !rules.any((RecurringRule r) => r.id == rule.id)) {
       return TaskEither<Failure, RecurringRule>.left(RuleNotFoundFailure('No rule ${rule.id}'));
     }
     return _run(() {
+      updates.add(rule);
       rules = <RecurringRule>[for (final RecurringRule r in rules) r.id == rule.id ? rule : r];
       _changes.add(null);
       return rule;
