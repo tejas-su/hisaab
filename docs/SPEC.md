@@ -181,6 +181,12 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - When a bill's **day changes**, its next date is the new day in the month of the old `next_due` (the first month not yet posted), or, if that day has passed, the next due date from today. No month is posted twice and nothing is back-posted (D34).
   - **Delete** stops the rule at once, with Undo (6 s) that resumes it (D35).
 - **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label} ₹{amount} goes out in {n} days" ("goes out tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown.
+- **Bill stamp (D118):** the bill sheet (FR-SE-1) stamps the bill:
+  - When its next unposted occurrence is 1 to 5 days away (the due-soon window): "Due in {n} days" ("Due tomorrow" when `n = 1`).
+  - Otherwise, when an entry posted by this rule is dated on or after the occurrence one month before `next_due`: "Counted {d MMM}" with that entry's date, or "Counted today" when it is today.
+  - Otherwise no stamp. A bill added this cycle after its day (D33) has no entry, so it never claims to be counted.
+  - Nobody marks a bill as paid. The engine counts it on its day; a month that differed is fixed by editing or deleting that entry in *Every entry*.
+- **Bill icon (D118):** a bill's icon is the one the user picked, or else the icon its name suggests (`BillIcon.forName`, whole-word matches, first group wins: loan, card, power, internet, phone, TV & apps, school, water, gas, insurance, house help, milk, society, home, car; else the plain bill glyph). Picking the icon the name already suggests clears the pick, so a later rename moves the icon with the name. A picked icon survives a rename.
 
 ### BR-10 Entries
 - The amount is 1 to 999,999,999 rupees (at most 9 digits) and is stored as paise.
@@ -294,7 +300,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37).
     - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
     - Today's bar and its captions give way to the week bars and weekday letters (BR-6a), in a 150ms crossfade; the days rail and its flag stay. The card's height never changes between the two (BR-6, D114). The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
-- **FR-HO-3** **Due-soon nudge** (BR-9), when applicable.
+- **FR-HO-3** **Due-soon nudge** (BR-9), when applicable. It is a tappable `sunk` row at least 56dp tall: the bill's icon in a well, the sentence, the date under it, and a chevron. TalkBack reads the sentence, then "Opens the bill." A tap opens that bill's sheet (FR-SE-1) over Home. After a change Home reloads; *Delete bill* deletes it from Home with Undo (D35, D118).
 - **FR-HO-4** **Today list:**
   - The header shows today's total and *See all*.
   - At most the 5 most recent entries for today.
@@ -355,7 +361,15 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
   - Money coming in (edits the income rule; future cycles only; D116).
-  - Fixed bills (list, add, edit, delete rules). The list shows each bill's name, day and amount, soonest first. Adding or editing asks three questions: the name (typed, or one of the onboarding chips, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*; every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe or *Delete* removes a bill with Undo (BR-9).
+  - Fixed bills (list, add, edit, delete rules). The list shows each bill's name, day and amount, soonest first. Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of the onboarding chips, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*; every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
+  - **Changing a bill** happens in the bill sheet (D118, mockup [27](design/mockups/27-bill-sheet.html)):
+    - **AC-1** Tapping a bill row, or Home's due-soon row (FR-HO-3), opens the sheet over the current screen. No page is pushed.
+    - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then four rows (Amount, Day of the month, Name, Icon), then "Next goes out {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
+    - **AC-3** A row opens its one question inside the sheet: the keypad prefilled with the amount (the first key replaces it, as FR-AD-8), the 1–31 grid with the current day picked, the name field without pills, or the grid of 16 icons with the current one picked.
+    - **AC-4** Amount and name save with *Save*; a day or an icon saves on tap. Each save changes only that answer (a day follows D34), returns to the bill, flashes the row, and the footer reads "Saved." for 2.4 s. Saving an unchanged answer writes nothing.
+    - **AC-5** Back from a question returns to the bill. Back, a swipe down or the scrim closes the sheet; unsaved typing is dropped, saved answers stay.
+    - **AC-6** *Delete bill*, a full-width `sunk` key at the foot of the bill, closes the sheet and deletes the bill with Undo (D35).
+    - **AC-7** A failed save keeps the question open with "Couldn't save. Try again."
   - Keep aside each month.
   - My month starts on: *Payday* / *1st*.
 - **FR-SE-2** Categories: rename, change icon.

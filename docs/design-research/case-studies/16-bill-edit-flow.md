@@ -1,5 +1,7 @@
 # 16. Changing a fixed bill
 
+**Outcome:** approved as D118 (2026-11-04), with the icon row, the Counted stamp and Home's due-soon line as the way in. Built per `docs/superpowers/plans/2026-11-04-bill-sheet.md`.
+
 ## Job of the screen
 Change one thing about a bill that already exists. Usually that's the amount (rent goes up, the phone plan changes). Less often it's the day, and the name almost never changes. The user knows exactly what they want to change before they open the bill.
 

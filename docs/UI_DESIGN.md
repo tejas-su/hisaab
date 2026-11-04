@@ -304,7 +304,8 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
  │ Today                 9 days to payday │
  │ ✓ Lasts till payday · about ₹9,300 spare│
  └────────────────────────────────────────┘
- ⓘ Electricity ₹1,200 goes out in 3 days
+ [⚡] Electricity ₹1,200 goes out in 3 days ›
+     Thu, 29 Oct
  Today                         ₹420  See all
    [🍴] Food     Chai & samosa          ₹60
    [🚌] Travel   Auto to office        ₹120
@@ -327,6 +328,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **One height:** the bar block and the week block (BR-6a) share one cell in a `HeroModeStack`; the card takes the taller, so it never resizes.
 - **Tap the hero** to flip between *Today* and *This week*. Monzo users found a daily figure meaningless when they don't spend every day.
 - **This week (BR-6a, D111, D114, case study 15):** seven bars, Mon–Sun, take today's bar's place at the card's full width, 64dp tall (D114 drops D111's 48dp growth). Past days are `displayInk2` with a 2dp `displayInk` share tick each, cut from the card by a `display` notch, and hatched above it; a past ₹0 day is a 2dp baseline line. Today is marigold with the 1.5dp `displayEdge` in light, plus its tick. Days to come are 6dp `blockIdle` stubs; days outside the cycle draw nothing. The weekday letters (today Semibold) sit under them, the days rail stays, and the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" with the alert glyph (the check when every day is within its share).
+- **Due-soon row (FR-HO-3, D118):** a `sunk` row at least 56dp tall under the hero: the bill's icon in a well, the sentence, the date under it in `ink2`, and a chevron. A tap opens the bill sheet over Home.
 - **When you underspend:** the next morning the number rolls up, and a one-line note appears: "You saved ₹300 yesterday, so every day got ₹35 more."
 - **Empty Today:** "Nothing spent today. Tap Add when you do."
 
@@ -389,7 +391,16 @@ Two layers only: the grey page and near-white cards, the same build as the Today
 ### 5.6 Settings (one level)
 - **Money:**
   - Money coming in (D116)
-  - Fixed bills: one card of rows (name, "Every month on day 29", amount), soonest first, with *Add a bill* above it. Tap a row to change it; swipe it away with Undo. Adding or changing asks one question per screen, like onboarding: the name (a field with the onboarding bill chips 16dp under it, in two equal-width columns that share the field's edges and narrow to what is typed; left out when changing a bill; a tap fills the field and marks the pill, and Next moves on; Next alone at the bottom, D83, D85, D86), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
+  - Fixed bills: one card of rows (name, "Every month on day 29", amount), soonest first, with *Add a bill* above it. Each row leads with the bill's icon in a `sunk` well. Swipe a row away with Undo. Adding asks one question per screen, like onboarding: the name (a field with the onboarding bill chips 16dp under it, in two equal-width columns that share the field's edges and narrow to what is typed; a tap fills the field and marks the pill, and Next moves on; Next alone at the bottom, D83, D85, D86), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
+  - **The bill sheet (FR-SE-1, D118, mockup [27](design/mockups/27-bill-sheet.html)):** tapping a row (or Home's due-soon row) raises a sheet that looks like a paper bill. Changing never pushes a page.
+    - The slip is `display` paper, flat (D106: only the hero is raised), with 20dp top corners and a torn bottom edge of 14dp × 8dp teeth.
+    - Head: the "Fixed bill" eyebrow, the name, and the bill's icon in a `sunk` well. Then a dashed `hairline` perforation with 16dp half-circle notches cut at both edges.
+    - The amount line: the amount in Anek with tabular figures, "Every month on day N" under it, and the stamp. The stamp is straight (not rotated), `displayInk2` text in a 2dp `displayInk2` edge with 6 corners, its right edge on the value column. It lands with a squash (scale 1.25 → 1) 260 ms after the sheet opens, on the spring tokens; with reduced motion it fades in over 150 ms.
+    - Four rows, Amount, Day of the month, Name, Icon, each a label, a dotted leader in `hairline`, the value, and a chevron; 56dp tall. A saved row flashes `sunk` once.
+    - The foot: "Next goes out {date}", then *Delete bill*, a full-width `sunk` key in the place *Save* takes on a question.
+    - A question replaces the rows inside the sheet, under a compact slip (name, amount, icon): the keypad with *Save*, showing "Was ₹1,200" under the typed amount; the 1–31 grid; the name field (no pills), with a line saying whether the icon follows the name; or a 4-column grid of the 16 icons in `sunk` wells, labelled under each. Back sits top left.
+    - **The day grid's picked state** is the D88 pick (lifted to `surface`, ink check) plus a 4dp `ink` dot under the number.
+    - Bill icons sit in 40dp `sunk` wells everywhere (the slip, rows, the grid, Home's due-soon row).
   - Keep aside each month
   - My month starts on: *Payday* (default) / *1st*
 - **Categories:** rename, change icon.
