@@ -94,6 +94,7 @@ final class RecurringRepositoryImpl implements RecurringRepository {
         schedule: draft.schedule,
         nextDue: draft.nextDue,
         isIncomeSource: draft.isIncomeSource,
+        icon: draft.icon,
       );
 
   Either<Failure, EntryModel> _validatedModel(Occurrence occurrence) {

@@ -68,6 +68,7 @@ final class AddBill implements UseCase<RecurringRule, AddBillParams> {
       categoryId: categoryId,
       schedule: schedule,
       nextDue: RecurringSchedule.firstOnOrAfter(schedule, today),
+      icon: input.icon,
     );
   }
 }

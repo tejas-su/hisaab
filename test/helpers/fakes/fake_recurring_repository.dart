@@ -66,6 +66,7 @@ final class FakeRecurringRepository implements RecurringRepository {
               schedule: draft.schedule,
               nextDue: draft.nextDue,
               isIncomeSource: draft.isIncomeSource,
+              icon: draft.icon,
             ),
         ];
         return unit;
@@ -123,5 +124,6 @@ final class FakeRecurringRepository implements RecurringRepository {
         schedule: draft.schedule,
         nextDue: draft.nextDue,
         isIncomeSource: draft.isIncomeSource,
+        icon: draft.icon,
       );
 }

@@ -6,6 +6,7 @@ import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/usecases/use_case.dart';
 import 'package:expense_tracker/ledger/data/datasource/recurring_local_data_source.dart';
 import 'package:expense_tracker/ledger/data/repository/recurring_repository_impl.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_draft.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
@@ -187,6 +188,24 @@ void main() {
       await settle();
       expect(right(await repository.activeRules().run()).last, edited);
       expect(changes, hasLength(2));
+    });
+
+    test('add and update keep a picked bill icon, and none clears it (D118)', () async {
+      final RecurringDraft gas = RecurringDraft(
+        label: 'Gas',
+        amount: Money.fromMajor(900),
+        kind: EntryKind.spent,
+        categoryId: SeedCategoryIds.bills,
+        schedule: _milk.schedule,
+        nextDue: _milk.nextDue,
+        icon: const Option<BillIcon>.of(BillIcon.gas),
+      );
+      final RecurringRule added = right(await repository.add(gas).run());
+      expect(added.icon, const Option<BillIcon>.of(BillIcon.gas));
+      expect(right(await repository.activeRules().run()).last.icon, const Option<BillIcon>.of(BillIcon.gas));
+
+      right(await repository.update(added.copyWith(icon: const Option<BillIcon>.none())).run());
+      expect(right(await repository.activeRules().run()).last.icon, const Option<BillIcon>.none());
     });
 
     test('update returns RuleNotFoundFailure for a missing rule and doesn\'t notify', () async {

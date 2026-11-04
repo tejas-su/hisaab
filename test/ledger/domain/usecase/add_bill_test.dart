@@ -46,6 +46,13 @@ void main() {
       expect(recurring.rules.last, rule);
     });
 
+    test('saves the picked icon (D118)', () async {
+      final RecurringRule rule = await added(AddBillParams(
+        input: BillInput(label: 'Cylinder', amount: Money.fromMajor(900), dueDay: 3, icon: const Option<BillIcon>.of(BillIcon.gas)),
+      ));
+      expect(rule.icon, const Option<BillIcon>.of(BillIcon.gas));
+    });
+
     test('rent goes to Home; other chips go to Bills', () async {
       expect((await added(params(label: 'Rent', kind: BillKind.rent))).categoryId, SeedCategoryIds.home);
       expect((await added(params(label: 'EMI', kind: BillKind.emi))).categoryId, SeedCategoryIds.bills);

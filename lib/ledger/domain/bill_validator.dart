@@ -27,6 +27,6 @@ abstract final class BillValidator {
       return Either<Failure, BillInput>.left(InvalidDataFailure('Due day ${input.dueDay}'));
     }
     return EntryValidator.validateAmount(input.amount)
-        .map((Money amount) => BillInput(label: label, amount: amount, dueDay: input.dueDay));
+        .map((Money amount) => BillInput(label: label, amount: amount, dueDay: input.dueDay, icon: input.icon));
   }
 }

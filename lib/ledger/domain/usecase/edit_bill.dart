@@ -13,7 +13,7 @@ import '../entities/schedule.dart';
 import '../recurring_schedule.dart';
 import '../repository/recurring_repository.dart';
 
-/// A change to an existing bill [rule]: its new name, amount and due day.
+/// A change to an existing bill [rule]: its new name, amount, due day and icon.
 final class EditBillParams extends Equatable {
   const EditBillParams({required this.rule, required this.input});
 
@@ -46,7 +46,13 @@ final class EditBill implements UseCase<RecurringRule, EditBillParams> {
     final CalendarDate today = _clock.today();
     final Schedule schedule =
         Schedule(frequency: Frequency.monthly, anchor: RecurringSchedule.monthlyAnchor(input.dueDay, near: today));
-    return rule.copyWith(label: input.label, amount: input.amount, schedule: schedule, nextDue: _nextDue(schedule, rule.nextDue, today));
+    return rule.copyWith(
+      label: input.label,
+      amount: input.amount,
+      schedule: schedule,
+      nextDue: _nextDue(schedule, rule.nextDue, today),
+      icon: input.icon,
+    );
   }
 
   static CalendarDate _nextDue(Schedule schedule, CalendarDate oldNextDue, CalendarDate today) {

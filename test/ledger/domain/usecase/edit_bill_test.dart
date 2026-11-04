@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
@@ -17,9 +18,15 @@ void main() {
     editBill = EditBill(recurring: recurring, clock: FakeClock(WorkedExample.now));
   });
 
-  EditBillParams params(RecurringRule rule, {String? label, int? rupees, required int day}) => EditBillParams(
+  EditBillParams params(RecurringRule rule, {String? label, int? rupees, required int day, Option<BillIcon>? icon}) =>
+      EditBillParams(
         rule: rule,
-        input: BillInput(label: label ?? rule.label, amount: rupees == null ? rule.amount : Money.fromMajor(rupees), dueDay: day),
+        input: BillInput(
+          label: label ?? rule.label,
+          amount: rupees == null ? rule.amount : Money.fromMajor(rupees),
+          dueDay: day,
+          icon: icon ?? rule.icon,
+        ),
       );
 
   Future<RecurringRule> edited(EditBillParams p) async =>
@@ -54,6 +61,22 @@ void main() {
       final RecurringRule stale = WorkedExample.electricity.copyWith(nextDue: const CalendarDate(2026, 9, 29));
       recurring.rules = <RecurringRule>[stale];
       expect((await edited(params(stale, day: 30))).nextDue, const CalendarDate(2026, 10, 30));
+    });
+
+    test('changing only the amount keeps next_due for day 31 in a 30-day month (Review Focus 1)', () async {
+      final RecurringRule day31 = WorkedExample.electricity.copyWith(
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 31)),
+        nextDue: const CalendarDate(2026, 11, 30),
+      );
+      recurring.rules = <RecurringRule>[day31];
+      final RecurringRule rule = await edited(params(day31, rupees: 1350, day: 31));
+      expect((rule.amount, rule.nextDue), (Money.fromMajor(1350), const CalendarDate(2026, 11, 30)));
+    });
+
+    test('saves a picked icon, and none clears it (D118)', () async {
+      final RecurringRule picked = await edited(params(WorkedExample.rent, day: 5, icon: const Option<BillIcon>.of(BillIcon.society)));
+      expect(picked.icon, const Option<BillIcon>.of(BillIcon.society));
+      expect((await edited(params(picked, day: 5, icon: const Option<BillIcon>.none()))).icon, const Option<BillIcon>.none());
     });
 
     test('the schedule follows the new day', () async {
