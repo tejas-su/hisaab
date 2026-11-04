@@ -54,7 +54,9 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   final GetBillStatus _getStatus;
   final Haptics _haptics;
 
-  Future<void> _onStatusRequested(BillSheetStatusRequested event, Emitter<BillSheetState> emit) async {
+  Future<void> _onStatusRequested(BillSheetStatusRequested event, Emitter<BillSheetState> emit) => _loadStatus(emit);
+
+  Future<void> _loadStatus(Emitter<BillSheetState> emit) async {
     final BillSheetState current = state;
     if (current is! BillSheetReady) {
       return;
@@ -156,8 +158,8 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     emit(form.copyWith(saving: true));
     final Either<Failure, RecurringRule> saved =
         await _editBill(EditBillParams(rule: form.rule, input: input.getOrElse(() => _inputOf(form.rule)))).run();
-    saved.match(
-      (Failure failure) {
+    await saved.match(
+      (Failure failure) async {
         AppLogger.log(tag: 'bills.sheet_save_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
         unawaited(_haptics.reject());
         emit(form.copyWith(saveFailed: true));
@@ -170,10 +172,7 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
           justSaved: Option<BillAnswer>.of(answer),
           changed: true,
         ));
-        // why: the sheet may close while the save is in flight; a closed bloc takes no events.
-        if (!isClosed) {
-          add(const BillSheetStatusRequested());
-        }
+        return _loadStatus(emit);
       },
     );
   }

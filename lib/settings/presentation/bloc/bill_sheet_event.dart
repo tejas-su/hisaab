@@ -11,7 +11,7 @@ sealed class BillSheetEvent extends Equatable {
   List<Object?> get props => <Object?>[];
 }
 
-/// The bill's stamp and next date should be (re)loaded: on open and after each save.
+/// The bill's stamp and next date should be loaded, when the sheet opens.
 final class BillSheetStatusRequested extends BillSheetEvent {
   const BillSheetStatusRequested();
 }
