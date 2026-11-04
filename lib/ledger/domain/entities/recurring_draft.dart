@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
+import 'bill_icon.dart';
 import 'entry_kind.dart';
 import 'schedule.dart';
 
@@ -15,6 +17,7 @@ final class RecurringDraft extends Equatable {
     required this.schedule,
     required this.nextDue,
     this.isIncomeSource = false,
+    this.icon = const Option<BillIcon>.none(),
   });
 
   final String label;
@@ -27,6 +30,9 @@ final class RecurringDraft extends Equatable {
   final CalendarDate nextDue;
   final bool isIncomeSource;
 
+  /// The bill icon the user picked; none follows the name (D118).
+  final Option<BillIcon> icon;
+
   @override
-  List<Object?> get props => <Object?>[label, amount, kind, categoryId, schedule, nextDue, isIncomeSource];
+  List<Object?> get props => <Object?>[label, amount, kind, categoryId, schedule, nextDue, isIncomeSource, icon];
 }

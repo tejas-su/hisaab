@@ -5,6 +5,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/money/currency_spec.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
+import '../../domain/entities/bill_icon.dart';
 import '../../domain/entities/entry_kind.dart';
 import '../../domain/entities/frequency.dart';
 import '../../domain/entities/recurring_draft.dart';
@@ -34,6 +35,8 @@ abstract final class RecurringMapper {
                         schedule: Schedule(frequency: frequency, anchor: anchor, lastDayOfMonth: model.lastDayOfMonth),
                         nextDue: nextDue,
                         isIncomeSource: model.isIncomeSource,
+                        // why: an icon from a newer version maps to none, so the bill still loads.
+                        icon: BillIcon.fromValue(model.icon),
                       ),
                     ),
               ),
@@ -55,6 +58,7 @@ abstract final class RecurringMapper {
         lastDayOfMonth: draft.schedule.lastDayOfMonth,
         nextDue: draft.nextDue.toIso(),
         isIncomeSource: draft.isIncomeSource,
+        icon: draft.icon.map((BillIcon icon) => icon.value).toNullable(),
       );
 
   static String _valueOf(Frequency frequency) => switch (frequency) {

@@ -3,6 +3,7 @@
 library;
 
 export 'domain/bill_validator.dart';
+export 'domain/entities/bill_icon.dart';
 export 'domain/entities/bill_input.dart';
 export 'domain/entities/bill_kind.dart';
 export 'domain/entities/budget_settings.dart';
@@ -44,6 +45,7 @@ export 'domain/usecase/post_due_recurring.dart';
 export 'domain/usecase/restore_bill.dart';
 export 'domain/usecase/restore_entry.dart';
 export 'domain/usecase/save_entry.dart';
+export 'presentation/bill_icon_extensions.dart';
 export 'presentation/category_extensions.dart';
 export 'presentation/widgets/entry_row.dart';
 export 'di/ledger_module.dart';

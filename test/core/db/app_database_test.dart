@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:expense_tracker/core/db/app_database.dart';
 import 'package:expense_tracker/core/db/db_schema.dart';
+import 'package:expense_tracker/core/db/migrations/migration_001_initial.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -58,7 +59,7 @@ void main() {
     test('is at the latest schema version', () async {
       final List<Map<String, Object?>> rows = await db().rawQuery('PRAGMA user_version');
       expect(rows.single.values.single, AppDatabase.schemaVersion);
-      expect(AppDatabase.schemaVersion, 1);
+      expect(AppDatabase.schemaVersion, 2);
     });
 
     test('seeds the fixed category list in order (SPEC BR-11)', () async {
@@ -132,6 +133,15 @@ void main() {
     });
   });
 
+  group('AppDatabase v2 schema', () {
+    test('a new database stores a bill icon per rule (D118)', () async {
+      final int id = await insertRule(label: 'Gas');
+      await db().update(Tables.recurring, <String, Object?>{RecurringColumns.icon: 'gas'}, where: '${RecurringColumns.id} = ?', whereArgs: <Object?>[id]);
+      final List<Map<String, Object?>> rows = await db().query(Tables.recurring);
+      expect(rows.single[RecurringColumns.icon], 'gas');
+    });
+  });
+
   group('AppDatabase on disk', () {
     test('reopening keeps data and does not re-run migrations', () async {
       final Directory dir = await Directory.systemTemp.createTemp('hisaab_db_test');
@@ -146,6 +156,33 @@ void main() {
       addTearDown(second.close);
       expect(await second.db.query(Tables.settings, where: "${SettingsColumns.key} = 'probe'"), hasLength(1));
       expect(await second.db.query(Tables.categories), hasLength(10));
+    });
+
+    test('upgrading a v1 database adds an empty bill icon to each rule (D118)', () async {
+      final Directory dir = await Directory.systemTemp.createTemp('hisaab_db_v1');
+      addTearDown(() => dir.delete(recursive: true));
+      final String path = p.join(dir.path, AppDatabase.fileName);
+      final Database v1 = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(version: 1, onCreate: (Database db, int _) => migration001Initial(db)),
+      );
+      await v1.insert(Tables.recurring, <String, Object?>{
+        RecurringColumns.label: 'Rent',
+        RecurringColumns.amountMinor: 1800000,
+        RecurringColumns.kind: EntryKindValues.spent,
+        RecurringColumns.categoryId: 7,
+        RecurringColumns.frequency: FrequencyValues.monthly,
+        RecurringColumns.anchorDate: '2026-10-05',
+        RecurringColumns.nextDue: '2026-11-05',
+      });
+      await v1.close();
+
+      final AppDatabase upgraded = await _openOrFail(path);
+      addTearDown(upgraded.close);
+      final List<Map<String, Object?>> rows = await upgraded.db.query(Tables.recurring);
+      expect(rows.single[RecurringColumns.label], 'Rent');
+      expect(rows.single.containsKey(RecurringColumns.icon), isTrue);
+      expect(rows.single[RecurringColumns.icon], isNull);
     });
 
     test('returns DatabaseFailure instead of throwing when the file cannot be opened', () async {

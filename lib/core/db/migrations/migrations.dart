@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import 'migration_001_initial.dart';
+import 'migration_002_bill_icon.dart';
 
 /// One schema step; migration `n` upgrades the database from version `n - 1` to `n`.
 typedef Migration = Future<void> Function(DatabaseExecutor db);
@@ -8,6 +9,7 @@ typedef Migration = Future<void> Function(DatabaseExecutor db);
 /// Every migration in order. Append new ones; never edit or reorder shipped entries.
 const List<Migration> migrations = <Migration>[
   migration001Initial,
+  migration002BillIcon,
 ];
 
 /// Runs the migrations that take a database from version [from] to version [to].

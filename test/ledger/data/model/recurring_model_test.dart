@@ -16,6 +16,7 @@ const Map<String, Object?> _row = <String, Object?>{
   RecurringColumns.nextDue: '2026-11-04',
   RecurringColumns.active: 1,
   RecurringColumns.isIncomeSource: 1,
+  RecurringColumns.icon: null,
 };
 
 void main() {
@@ -52,6 +53,19 @@ void main() {
         isIncomeSource: false,
       );
       expect(model.toRow().containsKey(RecurringColumns.id), isFalse);
+    });
+
+    test('reads and writes the bill icon (D118)', () {
+      final RecurringModel model = RecurringModel.fromRow(<String, Object?>{..._row, RecurringColumns.icon: 'gas'})
+          .getOrElse((Failure f) => fail(f.message));
+      expect(model.icon, 'gas');
+      expect(model.toRow()[RecurringColumns.icon], 'gas');
+    });
+
+    test('reads a row without the icon column as no icon', () {
+      final RecurringModel model = RecurringModel.fromRow(<String, Object?>{..._row}..remove(RecurringColumns.icon))
+          .getOrElse((Failure f) => fail(f.message));
+      expect(model.icon, isNull);
     });
 
     test('returns InvalidDataFailure for a bad column', () {

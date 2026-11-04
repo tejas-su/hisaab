@@ -44,6 +44,9 @@ abstract final class RecurringColumns {
 
   /// 1 for the salary rule that defines pay cycles (DECISIONS D20); at most one is active.
   static const String isIncomeSource = 'is_income_source';
+
+  /// The bill icon the user picked (`BillIcon` value); null follows the name (D118, schema v2).
+  static const String icon = 'icon';
 }
 
 /// Columns of [Tables.transactions] (an "entry" in the UI; never called a transaction there).

@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/ledger/data/mapper/recurring_mapper.dart';
 import 'package:expense_tracker/ledger/data/model/recurring_model.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_draft.dart';
@@ -11,7 +12,13 @@ import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
-RecurringModel _model({int? id = 3, String frequency = 'monthly', String anchor = '2026-01-31', String nextDue = '2026-10-31'}) =>
+RecurringModel _model({
+  int? id = 3,
+  String frequency = 'monthly',
+  String anchor = '2026-01-31',
+  String nextDue = '2026-10-31',
+  String? icon,
+}) =>
     RecurringModel(
       id: id,
       label: 'Rent',
@@ -24,6 +31,7 @@ RecurringModel _model({int? id = 3, String frequency = 'monthly', String anchor 
       lastDayOfMonth: true,
       nextDue: nextDue,
       isIncomeSource: false,
+      icon: icon,
     );
 
 const RecurringDraft _draft = RecurringDraft(
@@ -78,6 +86,30 @@ void main() {
         expect(rule.schedule.frequency, frequency);
       });
     }
+
+    test('round-trips a picked bill icon (D118)', () {
+      final RecurringModel model = RecurringMapper.toModel(
+        RecurringDraft(
+          label: _draft.label,
+          amount: _draft.amount,
+          kind: _draft.kind,
+          categoryId: _draft.categoryId,
+          schedule: _draft.schedule,
+          nextDue: _draft.nextDue,
+          icon: const Option<BillIcon>.of(BillIcon.gas),
+        ),
+        id: 3,
+      );
+      expect(model.icon, 'gas');
+      final RecurringRule rule = RecurringMapper.toEntity(model).getOrElse((Failure f) => fail(f.message));
+      expect(rule.icon, const Option<BillIcon>.of(BillIcon.gas));
+    });
+
+    test('maps an unknown stored icon to none, keeping the bill (Review Focus 4)', () {
+      final RecurringRule rule = RecurringMapper.toEntity(_model(icon: 'rocket')).getOrElse((Failure f) => fail(f.message));
+      expect(rule.icon, const Option<BillIcon>.none());
+      expect(rule.label, 'Rent');
+    });
 
     final List<(String, RecurringModel)> bad = <(String, RecurringModel)>[
       ('an unknown frequency', _model(frequency: 'daily')),

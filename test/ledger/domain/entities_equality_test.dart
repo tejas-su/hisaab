@@ -20,7 +20,7 @@ void main() {
         schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 5)),
         nextDue: const CalendarDate(2026, 10, 5),
       );
-      expect(draft.props, hasLength(7));
+      expect(draft.props, hasLength(8));
       expect(LedgerSetup(rules: <RecurringDraft>[draft]).props, <Object?>[<RecurringDraft>[draft], <EntryDraft>[]]);
     });
 

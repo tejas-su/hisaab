@@ -19,6 +19,7 @@ final class RecurringModel extends Equatable {
     required this.lastDayOfMonth,
     required this.nextDue,
     required this.isIncomeSource,
+    this.icon,
   });
 
   /// Reads a `recurring` row.
@@ -38,6 +39,7 @@ final class RecurringModel extends Equatable {
           lastDayOfMonth: row.intAt(RecurringColumns.lastDayOfMonth) == 1,
           nextDue: row.stringAt(RecurringColumns.nextDue),
           isIncomeSource: row.intAt(RecurringColumns.isIncomeSource) == 1,
+          icon: row.stringOrNullAt(RecurringColumns.icon),
         ),
       );
 
@@ -55,6 +57,9 @@ final class RecurringModel extends Equatable {
   final String nextDue;
   final bool isIncomeSource;
 
+  /// The picked bill icon's stored value, or null when the icon follows the name.
+  final String? icon;
+
   /// The row to insert; omits `id` when null. New rules are always active.
   Map<String, Object?> toRow() => <String, Object?>{
         if (id != null) RecurringColumns.id: id,
@@ -69,9 +74,10 @@ final class RecurringModel extends Equatable {
         RecurringColumns.nextDue: nextDue,
         RecurringColumns.active: 1,
         RecurringColumns.isIncomeSource: isIncomeSource ? 1 : 0,
+        RecurringColumns.icon: icon,
       };
 
   @override
   List<Object?> get props =>
-      <Object?>[id, label, amountMinor, currency, kind, categoryId, frequency, anchorDate, lastDayOfMonth, nextDue, isIncomeSource];
+      <Object?>[id, label, amountMinor, currency, kind, categoryId, frequency, anchorDate, lastDayOfMonth, nextDue, isIncomeSource, icon];
 }
