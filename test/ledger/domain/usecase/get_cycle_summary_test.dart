@@ -5,6 +5,8 @@ import 'package:expense_tracker/core/time/month_start.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/core/usecases/use_case.dart';
+import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_skip.dart';
 import 'package:expense_tracker/ledger/domain/entities/budget_settings.dart';
 import 'package:expense_tracker/ledger/domain/entities/cycle_state.dart';
 import 'package:expense_tracker/ledger/domain/entities/cycle_summary.dart';
@@ -198,6 +200,91 @@ void main() {
       final CycleSummary s = await summary();
       expect(s.pool, Money.fromMajor(16650));
       expect(s.todayShare, Money.fromMajor(1850));
+    });
+  });
+
+  group('GetCycleSummary — changing and card bills (D123)', () {
+    const CalendarDate oct26 = CalendarDate(2026, 10, 26);
+    RecurringRule bill(AmountMode mode, {CalendarDate due = oct26, int rupees = 1200}) => RecurringRule(
+          id: 3,
+          label: mode == AmountMode.card ? 'Credit card' : 'Electricity',
+          amount: Money.fromMajor(rupees),
+          kind: EntryKind.spent,
+          categoryId: 5,
+          schedule: Schedule(frequency: Frequency.monthly, anchor: due),
+          nextDue: due,
+          amountMode: mode,
+        );
+    void useRules(RecurringRule extra) => recurring.rules = <RecurringRule>[WorkedExample.salary, WorkedExample.rent, extra];
+
+    test('a changing bill due today waits at its estimate (spec example 2)', () async {
+      useRules(bill(AmountMode.varies));
+      final CycleSummary result = await summary();
+      expect(result.pool, Money.fromMajor(16650));
+      expect(result.todayShare, Money.fromMajor(1850));
+      expect(result.safeToday, Money.fromMajor(1430));
+      expect(result.waitingBills.single.date, oct26);
+    });
+
+    test('entering it moves it from B to today\'s bills: ₹1,401 (spec example 2)', () async {
+      useRules(bill(AmountMode.varies));
+      addEntry(1460, oct26, recurringId: 3);
+      final CycleSummary result = await summary();
+      expect(result.pool, Money.fromMajor(16390));
+      expect(result.todayShare, Money.fromMajor(1821));
+      expect(result.safeToday, Money.fromMajor(1401));
+      expect(result.waitingBills, isEmpty);
+    });
+
+    test('deleting an entered bill puts it back in B and on the waiting list', () async {
+      useRules(bill(AmountMode.varies));
+      addEntry(1460, oct26, recurringId: 3);
+      await summary();
+      ledger.entries.removeWhere((Entry e) => e.recurringId == 3);
+      final CycleSummary result = await summary();
+      expect(result.pool, Money.fromMajor(16650));
+      expect(result.todayShare, Money.fromMajor(1850));
+      expect(result.waitingBills, hasLength(1));
+    });
+
+    test('a card bill paid today leaves pool, share and hero unchanged (spec example 4)', () async {
+      useRules(bill(AmountMode.card, rupees: 8000));
+      final CycleSummary waiting = await summary();
+      addEntry(8000, oct26, kind: EntryKind.cardPaid, recurringId: 3);
+      final CycleSummary paid = await summary();
+      expect(waiting.pool, Money.fromMajor(17850));
+      expect(paid.pool, waiting.pool);
+      expect(paid.todayShare, waiting.todayShare);
+      expect(paid.spentToday, waiting.spentToday);
+      expect(paid.safeToday, waiting.safeToday);
+      expect(waiting.waitingBills, hasLength(1));
+      expect(paid.waitingBills, isEmpty);
+    });
+
+    test('a card bill due later is never reserved', () async {
+      useRules(bill(AmountMode.card, due: const CalendarDate(2026, 10, 30), rupees: 8000));
+      expect((await summary()).pool, Money.fromMajor(17850));
+    });
+
+    test('a skipped bill leaves B and stops waiting', () async {
+      useRules(bill(AmountMode.varies));
+      recurring.skips = const <BillSkip>[BillSkip(ruleId: 3, date: oct26)];
+      final CycleSummary result = await summary();
+      expect(result.pool, Money.fromMajor(17850));
+      expect(result.waitingBills, isEmpty);
+    });
+
+    test('a future changing bill is in B at its estimate and not waiting', () async {
+      useRules(bill(AmountMode.varies, due: const CalendarDate(2026, 10, 30)));
+      final CycleSummary result = await summary();
+      expect(result.pool, Money.fromMajor(16650));
+      expect(result.waitingBills, isEmpty);
+    });
+
+    test('returns DatabaseFailure when reading skips fails', () async {
+      useRules(bill(AmountMode.varies));
+      recurring.skipsFailure = DatabaseFailure('skips');
+      expect((await getCycleSummary(const NoParams()).run()).getLeft().toNullable(), isA<DatabaseFailure>());
     });
   });
 

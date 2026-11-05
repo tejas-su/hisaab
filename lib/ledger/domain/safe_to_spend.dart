@@ -5,6 +5,7 @@ import '../../core/time/calendar_date.dart';
 import 'entities/cycle_inputs.dart';
 import 'entities/cycle_state.dart';
 import 'entities/cycle_summary.dart';
+import 'entities/occurrence.dart';
 import 'entities/put_in_preview.dart';
 import 'entities/range_forecast.dart';
 import 'entities/spend_preview.dart';
@@ -32,6 +33,7 @@ abstract final class SafeToSpend {
     Option<CycleInputs> yesterday = const Option<CycleInputs>.none(),
     List<WeekDay> week = const <WeekDay>[],
     bool endsAtMonthEnd = false,
+    List<Occurrence> waitingBills = const <Occurrence>[],
   }) {
     final int daysLeft = inputs.cycle.daysLeftFrom(inputs.today);
     final Money pool = _pool(inputs);
@@ -53,6 +55,7 @@ abstract final class SafeToSpend {
       week: week,
       endsAtMonthEnd: endsAtMonthEnd,
       savedExtraToday: inputs.savedExtraToday,
+      waitingBills: waitingBills,
     );
   }
 

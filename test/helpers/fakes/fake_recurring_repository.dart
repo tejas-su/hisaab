@@ -146,9 +146,12 @@ final class FakeRecurringRepository implements RecurringRepository {
         return unit;
       });
 
+  /// Failure for [skipsBetween] only.
+  Failure? skipsFailure;
+
   @override
   TaskEither<Failure, List<BillSkip>> skipsBetween(CalendarDate from, CalendarDate to) =>
-      _run(() => skips.where((BillSkip s) => !s.date.isBefore(from) && !s.date.isAfter(to)).toList());
+      _run(() => skips.where((BillSkip s) => !s.date.isBefore(from) && !s.date.isAfter(to)).toList(), skipsFailure);
 
   @override
   Stream<void> get changes => _changes.stream;

@@ -8,11 +8,14 @@ import '../../../core/time/pay_cycle.dart';
 import '../../../core/time/pay_rule.dart';
 import '../../../core/time/period_calculator.dart';
 import '../../../core/usecases/use_case.dart';
+import '../entities/amount_mode.dart';
+import '../entities/bill_skip.dart';
 import '../entities/budget_settings.dart';
 import '../entities/cycle_inputs.dart';
 import '../entities/cycle_summary.dart';
 import '../entities/entry.dart';
 import '../entities/entry_kind.dart';
+import '../entities/occurrence.dart';
 import '../entities/recurring_rule.dart';
 import '../entities/week_day.dart';
 import '../pay_rule_schedule.dart';
@@ -21,6 +24,7 @@ import '../repository/ledger_repository.dart';
 import '../repository/recurring_repository.dart';
 import '../due_amounts.dart';
 import '../safe_to_spend.dart';
+import '../waiting_bills.dart';
 
 /// Loads the current cycle's data and works out today's [CycleSummary] (SPEC BR-1 to BR-7).
 final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
@@ -56,29 +60,55 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
     );
     final PayRule payRule = PayRuleSchedule.payRuleOf(income);
     final PayCycle cycle = _periods.cycleFor(today: today, rule: payRule, monthStart: settings.monthStart);
-    final PayCycle previous =
-        _periods.cycleFor(today: cycle.start.addDays(-1), rule: payRule, monthStart: settings.monthStart);
-    final _Due due = (
-      bills: DueAmounts.after(rules.where((RecurringRule r) => r.kind == EntryKind.spent), today: today, cycle: cycle),
-      savings: DueAmounts.after(rules.where((RecurringRule r) => r.kind == EntryKind.saved), today: today, cycle: cycle),
+    final _Cycle context = (
+      day: _DayTotals(cycle: cycle, hasIncomeRule: income.isSome()),
+      today: today,
+      previousStart: _periods.cycleFor(today: cycle.start.addDays(-1), rule: payRule, monthStart: settings.monthStart).start,
+      endsAtMonthEnd: _periods.endsAtMonthEnd(rule: payRule, monthStart: settings.monthStart),
     );
-    final _DayTotals day = _DayTotals(cycle: cycle, hasIncomeRule: income.isSome());
     return _ledger.firstLoggedOn().flatMap(
-          (Option<CalendarDate> firstLogged) => _ledger.entriesBetween(cycle.start, cycle.end).map(
-                (List<Entry> entries) => SafeToSpend.compute(
-                  day.inputs(today, entries, due),
-                  earliestEntryDate: previous.start,
-                  spentThisWeek: _spentThisWeek(entries, today),
-                  yesterday: _trackedYesterday(firstLogged, today).flatMap(
-                    (CalendarDate _) => _yesterday(day, today, (entries: entries, due: due)),
-                  ),
-                  week: _week(day, today, (entries: entries, due: due)),
-                  endsAtMonthEnd: _periods.endsAtMonthEnd(rule: payRule, monthStart: settings.monthStart),
-                ),
+          (Option<CalendarDate> firstLogged) => _ledger.entriesBetween(cycle.start, cycle.end).flatMap(
+                (List<Entry> entries) => _recurring.skipsBetween(cycle.start, today).map(
+                      (List<BillSkip> skips) => _compute(
+                        context,
+                        (rules: rules, entries: entries, skips: skips),
+                        firstLogged,
+                      ),
+                    ),
               ),
         );
   }
 
+  static CycleSummary _compute(_Cycle context, _Data data, Option<CalendarDate> firstLogged) {
+    final CalendarDate today = context.today;
+    final PayCycle cycle = context.day.cycle;
+    final List<Occurrence> waiting =
+        WaitingBills.of(data.rules, entries: data.entries, skips: data.skips, today: today, cycle: cycle);
+    final _Ledger ledger = (entries: data.entries, due: _due(data.rules, waiting, today, cycle));
+    return SafeToSpend.compute(
+      context.day.inputs(today, data.entries, ledger.due),
+      earliestEntryDate: context.previousStart,
+      spentThisWeek: _spentThisWeek(data.entries, today),
+      yesterday: _trackedYesterday(firstLogged, today).flatMap((CalendarDate _) => _yesterday(context.day, today, ledger)),
+      week: _week(context.day, today, ledger),
+      endsAtMonthEnd: context.endsAtMonthEnd,
+      waitingBills: waiting,
+    );
+  }
+
+  // why: a changing bill is reserved at its estimate while it waits and on its later dates; a
+  // card bill is never reserved, because its card buys were counted when made (D123).
+  static _Due _due(List<RecurringRule> rules, List<Occurrence> waiting, CalendarDate today, PayCycle cycle) {
+    final Iterable<RecurringRule> bills =
+        rules.where((RecurringRule r) => r.kind == EntryKind.spent && r.amountMode != AmountMode.card);
+    final Money waitingVaries = _sum(
+      waiting.where((Occurrence o) => o.rule.amountMode == AmountMode.varies).map((Occurrence o) => o.rule.amount),
+    );
+    return (
+      bills: DueAmounts.after(bills, today: today, cycle: cycle) + waitingVaries,
+      savings: DueAmounts.after(rules.where((RecurringRule r) => r.kind == EntryKind.saved), today: today, cycle: cycle),
+    );
+  }
   // why: an app installed today back-posts salary to the cycle start, so yesterday's "saving"
   // would be money nobody tracked. Only a day the app was already in use earns the note.
   static Option<CalendarDate> _trackedYesterday(Option<CalendarDate> firstLogged, CalendarDate today) =>
@@ -142,6 +172,12 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
 
 /// What is still to post after a day: bills (`B`) and savings (`R`) (BR-3, D120).
 typedef _Due = ({Money bills, Money savings});
+
+/// What one load read: the active rules, this cycle's entries and its skips.
+typedef _Data = ({List<RecurringRule> rules, List<Entry> entries, List<BillSkip> skips});
+
+/// The cycle being summarised, as seen from [today].
+typedef _Cycle = ({_DayTotals day, CalendarDate today, CalendarDate previousStart, bool endsAtMonthEnd});
 
 /// The cycle's entries with what was due after today, for rebuilding a past day.
 typedef _Ledger = ({List<Entry> entries, _Due due});

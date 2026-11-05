@@ -5,6 +5,7 @@ import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import 'cycle_state.dart';
+import 'occurrence.dart';
 import 'range_forecast.dart';
 import 'week_day.dart';
 import 'yesterday_saving.dart';
@@ -26,6 +27,7 @@ final class CycleSummary extends Equatable {
     this.week = const <WeekDay>[],
     this.endsAtMonthEnd = false,
     this.savedExtraToday = Money.zero,
+    this.waitingBills = const <Occurrence>[],
   });
 
   final PayCycle cycle;
@@ -65,6 +67,9 @@ final class CycleSummary extends Equatable {
   /// Money put in extra today; it thins the days after today, never today's share (D120).
   final Money savedExtraToday;
 
+  /// Changing and card bills waiting for the user to say how much, oldest first (D123).
+  final List<Occurrence> waitingBills;
+
   /// What is left for the rest of the cycle after today's spending and today's extras (BR-4).
   Money get remaining => pool - spentToday - savedExtraToday;
 
@@ -84,5 +89,5 @@ final class CycleSummary extends Equatable {
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week, endsAtMonthEnd, savedExtraToday];
+      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week, endsAtMonthEnd, savedExtraToday, waitingBills];
 }
