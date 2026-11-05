@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
@@ -67,6 +68,23 @@ void main() {
       expect(find.text('Mon, 26 Oct'), findsOneWidget);
       expect(find.text('₹420'), findsWidgets);
       expect(tester.getTopLeft(find.text('Mon, 26 Oct')).dy, lessThan(tester.getTopLeft(find.text('Tue, 20 Oct')).dy));
+    });
+
+    testWidgets('a card bill is listed with its word and left out of the day\'s total (D123)', (WidgetTester tester) async {
+      services.ledger.entries.add(Entry(
+        id: 81,
+        amount: Money.fromMajor(8000),
+        kind: EntryKind.cardPaid,
+        categoryId: 12,
+        date: WorkedExample.today,
+        createdAt: WorkedExample.now,
+        recurringId: 9,
+        note: 'Credit card',
+      ));
+      await pump(tester);
+      expect(find.text('Paid, not counted again'), findsOneWidget);
+      expect(find.text('₹420'), findsWidgets);
+      expect(find.text('₹8,420'), findsNothing);
     });
 
     testWidgets('a category chip narrows the list; All brings everything back', (WidgetTester tester) async {

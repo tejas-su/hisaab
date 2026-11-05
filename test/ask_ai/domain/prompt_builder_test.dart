@@ -285,6 +285,47 @@ void main() {
       expect(_lines(prompt), contains('2026-10-10,5000,saved,savings,RD'));
     });
 
+    test('a card bill is listed as kind card_bill_paid, category card bill (D123)', () {
+      final PromptText prompt = _build(entries: <Entry>[
+        ...WorkedExample.entries,
+        Entry(
+          id: 51,
+          amount: Money.fromMajor(8000),
+          kind: EntryKind.cardPaid,
+          categoryId: 12,
+          date: const CalendarDate(2026, 10, 20),
+          createdAt: WorkedExample.now,
+          recurringId: 9,
+          note: 'Credit card',
+        ),
+      ]);
+      expect(_lines(prompt), contains('2026-10-20,8000,card_bill_paid,card bill,Credit card'));
+      expect(_lines(prompt)[4], startsWith('Spent ₹27,570, got ₹45,000.'));
+    });
+
+    test('a changing bill and a card bill are marked in the bills line (D123)', () {
+      RecurringRule rule(int id, String label, int rupees, AmountMode mode) => RecurringRule(
+            id: id,
+            label: label,
+            amount: Money.fromMajor(rupees),
+            kind: EntryKind.spent,
+            categoryId: SeedCategoryIds.bills,
+            schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 20)),
+            nextDue: const CalendarDate(2026, 11, 20),
+            amountMode: mode,
+          );
+      final PromptText prompt = PromptBuilder.build(
+        workedPromptInput(bills: <RecurringRule>[rule(8, 'Electricity', 1200, AmountMode.varies), rule(9, 'Credit card', 8000, AmountMode.card)]),
+        const PromptChoice(),
+        nameOf: englishName,
+      );
+      expect(
+        _lines(prompt)[5],
+        'Recurring bills: Electricity monthly on day 20 (changes, about 1,200); '
+        'Credit card 8,000 monthly on day 20 (credit card; purchases already listed).',
+      );
+    });
+
     group('task line per goal', () {
       const Map<AskGoal, String> tasks = <AskGoal, String>{
         AskGoal.reviewMonth:

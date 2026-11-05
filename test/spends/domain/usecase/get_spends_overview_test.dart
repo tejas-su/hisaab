@@ -145,6 +145,26 @@ void main() {
       expect(after.pace.toNullable()?.spentByDay, before.pace.toNullable()?.spentByDay);
     });
 
+    test('a card bill paid never reaches spent, saved, the rows, the pace or the insights (D123)', () async {
+      final SpendsOverview before = await overview();
+      ledger.entries.add(Entry(
+          id: 51,
+          amount: Money.fromMajor(8000),
+          kind: EntryKind.cardPaid,
+          categoryId: SeedCategoryIds.cardPaid,
+          date: const CalendarDate(2026, 10, 20),
+          createdAt: WorkedExample.now,
+          recurringId: 9,
+          note: 'Credit card',
+        ));
+      final SpendsOverview after = await overview();
+      expect(after.rows, before.rows);
+      expect(after.insights, before.insights);
+      expect(after.spent, before.spent);
+      expect(after.saved, before.saved);
+      expect(after.pace, before.pace);
+    });
+
     test('no income: no pace chart, rows still show', () async {
       ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.got);
       final SpendsOverview result = await overview();

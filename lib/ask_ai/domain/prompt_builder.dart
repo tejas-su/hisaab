@@ -17,6 +17,8 @@ import 'prompt_csv.dart';
 /// byte-identical for the same input (DECISIONS D59).
 abstract final class PromptBuilder {
   static const String _savingsCategory = 'savings';
+  static const String _cardBillCategory = 'card bill';
+  static const String _cardBillKind = 'card_bill_paid';
 
   /// The longest text before the oldest entries are grouped by week.
   static const int maxLength = 12000;
@@ -177,9 +179,17 @@ abstract final class PromptBuilder {
         (bills.toList()
               ..sort((RecurringRule a, RecurringRule b) => a.nextDue == b.nextDue ? a.id.compareTo(b.id) : a.nextDue.compareTo(b.nextDue)))
             .map(
-              (RecurringRule bill) => bill.schedule.frequency == Frequency.monthly
-                  ? '${bill.label} ${_money.digits(bill.amount)} monthly on day ${bill.schedule.anchor.day}'
-                  : '${bill.label} ${_money.digits(bill.amount)} ${bill.schedule.frequency.name}',
+              (RecurringRule bill) => switch (bill.amountMode) {
+                AmountMode.fixed => bill.schedule.frequency == Frequency.monthly
+                    ? '${bill.label} ${_money.digits(bill.amount)} monthly on day ${bill.schedule.anchor.day}'
+                    : '${bill.label} ${_money.digits(bill.amount)} ${bill.schedule.frequency.name}',
+                // why: the amount is only last time's, and the AI must not count a card bill on
+                // top of the card buys already in the entries (D123).
+                AmountMode.varies =>
+                  '${bill.label} monthly on day ${bill.schedule.anchor.day} (changes, about ${_money.digits(bill.amount)})',
+                AmountMode.card =>
+                  '${bill.label} ${_money.digits(bill.amount)} monthly on day ${bill.schedule.anchor.day} (credit card; purchases already listed)',
+              },
             )
             .toList();
     return 'Recurring bills: ${rows.isEmpty ? 'none' : rows.join('; ')}.';
@@ -201,9 +211,14 @@ abstract final class PromptBuilder {
       (Entry e) => <String>[
         e.date.toIso(),
         '${e.amount.floorMajor}',
-        e.kind.name,
-        // why: a saving's category is hidden and not in the list, so it is named here (D120).
-        e.kind == EntryKind.saved ? _savingsCategory : PromptCsv.field(names.nameOf(e.categoryId)),
+        e.kind == EntryKind.cardPaid ? _cardBillKind : e.kind.name,
+        // why: a saving's and a card bill's categories are hidden and not in the list, so they are
+        // named here (D120, D123).
+        switch (e.kind) {
+          EntryKind.saved => _savingsCategory,
+          EntryKind.cardPaid => _cardBillCategory,
+          EntryKind.spent || EntryKind.got => PromptCsv.field(names.nameOf(e.categoryId)),
+        },
         if (!hideNotes) PromptCsv.field(e.note ?? ''),
       ].join(','),
     ),
