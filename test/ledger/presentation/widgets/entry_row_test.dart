@@ -102,6 +102,46 @@ void main() {
     });
   });
 
+  group('EntryRow card bill (D123)', () {
+    testWidgets('reads Credit card · Paid, not counted again, with the card glyph; no tap, but swipes away', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      final List<String> calls = <String>[];
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: EntryRow(
+            entry: Entry(
+              id: 80,
+              amount: Money.fromMajor(8000),
+              kind: EntryKind.cardPaid,
+              categoryId: 12,
+              date: WorkedExample.today,
+              createdAt: WorkedExample.now,
+              recurringId: 9,
+              note: 'Credit card',
+            ),
+            category: null,
+            onEdit: () => calls.add('edit'),
+            onDelete: () => calls.add('delete'),
+            onThresholdReached: () {},
+          ),
+        ),
+      );
+      expect(find.text('Credit card'), findsOneWidget);
+      expect(find.text('Paid, not counted again'), findsOneWidget);
+      expect(find.text('₹8,000'), findsOneWidget);
+      expect(tester.widget<AppIcon>(find.byType(AppIcon).last).icon, BillIcon.card.glyph);
+      await tester.tap(find.text('Credit card'));
+      await tester.pump();
+      expect(calls, isEmpty);
+      expect(tester.getSemantics(find.text('Credit card')), isSemantics(hasTapAction: false));
+      await tester.fling(find.byType(EntryRow), const Offset(-500, 0), 1000);
+      await tester.pumpAndSettle();
+      expect(calls, <String>['delete']);
+      handle.dispose();
+    });
+  });
+
   group('EntryRow saved (D120)', () {
     Entry saved({String? note = 'RD', int? recurringId = 4}) => Entry(
           id: 70,

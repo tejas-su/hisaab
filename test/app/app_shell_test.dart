@@ -24,7 +24,7 @@ Widget _shell() => MultiBlocProvider(
       ],
       child: Scaffold(
         body: AppShell(
-          home: HomePage(onAdd: (EntryKind _) {}, onEdit: (Entry _) {}, onOpenSettings: () {}, onOpenBill: (RecurringRule _) {}),
+          home: HomePage(onAdd: (EntryKind _) {}, onEdit: (Entry _) {}, onOpenSettings: () {}, onOpenBill: (RecurringRule _) {}, onEnterBill: (Occurrence _) {}),
           spends: SpendsPage(today: WorkedExample.today, onSeeEntries: (PayCycle _, Option<int> _) {}, onAskAi: (PayCycle _) {}),
           onAdd: () {},
         ),

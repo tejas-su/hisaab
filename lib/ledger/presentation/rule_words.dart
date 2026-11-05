@@ -75,9 +75,22 @@ extension RuleWords on AppLocalizations {
   String entryRemoved(Entry entry, String amount) =>
       _isSaving(entry.kind) && entry.recurringId != null ? savingSkipped : entryDeleted(amount);
 
-  /// Home's nudge for [rule], [days] away; a saving names the [weekday] (D120).
-  String ruleGoesOut(RecurringRule rule, String amount, int days, String weekday) =>
-      _isSaving(rule.kind) ? savingGoesIn(rule.label, amount, days, weekday) : billGoesOut(rule.label, amount, days);
+  /// Home's nudge for [rule], [days] away; a saving names the [weekday] (D120), and a bill
+  /// whose amount changes, or a card bill, says "about" (D123).
+  String ruleGoesOut(RecurringRule rule, String amount, int days, String weekday) {
+    if (_isSaving(rule.kind)) {
+      return savingGoesIn(rule.label, amount, days, weekday);
+    }
+    return rule.amountMode == AmountMode.fixed ? billGoesOut(rule.label, amount, days) : billGoesOutAbout(rule.label, amount, days);
+  }
+
+  /// Home's line for a bill waiting for its amount since [date]; [isToday] when that is today (D123).
+  String ruleWaiting(RecurringRule rule, String date, {required bool isToday}) => switch ((rule.amountMode, isToday)) {
+        (AmountMode.card, true) => waitingCardToday(rule.label),
+        (AmountMode.card, false) => waitingCardOn(rule.label, date),
+        (_, true) => waitingVariesToday(rule.label),
+        (_, false) => waitingVariesOn(rule.label, date),
+      };
 
   /// TalkBack's hint on the nudge.
   String ruleOpensHint(EntryKind kind) => _isSaving(kind) ? dueSoonOpensSaving : dueSoonOpensBill;

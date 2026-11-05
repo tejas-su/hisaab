@@ -44,6 +44,8 @@ abstract final class AppRoutes {
               restoreEntry: getIt<RestoreEntry>(),
               deleteBill: getIt<DeleteBill>(),
               restoreBill: getIt<RestoreBill>(),
+              undoBillAmount: getIt<UndoBillAmount>(),
+              unskipBill: getIt<UnskipBillOccurrence>(),
               haptics: getIt<Haptics>(),
             )..add(const HomeLoadRequested()),
           ),
@@ -72,6 +74,22 @@ abstract final class AppRoutes {
               if (await openBillSheet(context, getIt, rule) case BillSheetDeleted(:final RecurringRule rule)) {
                 home.add(HomeBillDeleteRequested(rule));
               }
+            },
+            onEnterBill: (Occurrence occurrence) async {
+              final HomeBloc home = context.read<HomeBloc>();
+              // why: the write reloads Home through the change streams; the outcome goes through
+              // Home so its Undo shows there (D123).
+              final Option<BillAmountOutcome> outcome = await BillAmountSheet.show(
+                context,
+                BillAmountBloc(
+                  occurrence: occurrence,
+                  getLastAmount: getIt<GetLastBillAmount>(),
+                  enter: getIt<EnterBillAmount>(),
+                  skip: getIt<SkipBillOccurrence>(),
+                  haptics: getIt<Haptics>(),
+                )..add(const BillAmountLoadRequested()),
+              );
+              outcome.map((BillAmountOutcome done) => home.add(HomeBillAmountDone(done)));
             },
             onAskAi: (PayCycle cycle) => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => askAi(getIt, cycle: cycle)),

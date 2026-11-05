@@ -61,6 +61,26 @@ final class HomeBillUndoRequested extends HomeEvent {
   List<Object?> get props => <Object?>[rule];
 }
 
+/// The bill amount sheet entered or skipped a waiting bill; Home offers Undo (D123).
+final class HomeBillAmountDone extends HomeEvent {
+  const HomeBillAmountDone(this.outcome);
+
+  final BillAmountOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
+/// The user tapped Undo after a waiting bill was entered or skipped; it waits again (E-e).
+final class HomeBillAmountUndoRequested extends HomeEvent {
+  const HomeBillAmountUndoRequested(this.outcome);
+
+  final BillAmountOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
 /// A row's swipe crossed the delete threshold.
 final class HomeSwipeThresholdReached extends HomeEvent {
   const HomeSwipeThresholdReached();

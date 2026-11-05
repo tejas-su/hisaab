@@ -21,7 +21,8 @@ final class HomeLoading extends HomeState {
 /// latest entries.
 ///
 /// [undo] holds an entry just deleted, so the page can offer Undo once (SPEC BR-10); [billUndo]
-/// does the same for a bill deleted from its sheet (D118).
+/// does the same for a bill deleted from its sheet (D118), and [amountUndo] for a waiting bill
+/// just entered or skipped (D123).
 /// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
 final class HomeReady extends HomeState {
   const HomeReady({
@@ -32,6 +33,7 @@ final class HomeReady extends HomeState {
     this.dueSoon = const Option<DueSoonBill>.none(),
     this.undo = const Option<Entry>.none(),
     this.billUndo = const Option<RecurringRule>.none(),
+    this.amountUndo = const Option<BillAmountOutcome>.none(),
     this.showWeek = false,
   });
 
@@ -50,13 +52,16 @@ final class HomeReady extends HomeState {
   final Option<DueSoonBill> dueSoon;
   final Option<Entry> undo;
   final Option<RecurringRule> billUndo;
+  final Option<BillAmountOutcome> amountUndo;
   final bool showWeek;
 
-  /// Returns a copy with the given fields replaced; [undo] and [billUndo] reset unless passed.
+  /// Returns a copy with the given fields replaced; [undo], [billUndo] and [amountUndo] reset
+  /// unless passed.
   HomeReady copyWith({
     List<Entry>? todayEntries,
     Option<Entry> undo = const Option<Entry>.none(),
     Option<RecurringRule> billUndo = const Option<RecurringRule>.none(),
+    Option<BillAmountOutcome> amountUndo = const Option<BillAmountOutcome>.none(),
     bool? showWeek,
   }) =>
       HomeReady(
@@ -67,11 +72,12 @@ final class HomeReady extends HomeState {
         dueSoon: dueSoon,
         undo: undo,
         billUndo: billUndo,
+        amountUndo: amountUndo,
         showWeek: showWeek ?? this.showWeek,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, showWeek];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, showWeek];
 }
 
 /// Loading failed; a quiet message with Try again.

@@ -26,6 +26,7 @@ class MainScreen extends StatefulWidget {
     required this.onEdit,
     required this.onOpenSettings,
     required this.onOpenBill,
+    required this.onEnterBill,
     required this.onSeeEntries,
     required this.onAskAi,
     this.assemble = false,
@@ -38,6 +39,9 @@ class MainScreen extends StatefulWidget {
 
   /// Opens a bill's sheet from Home's due-soon row (D118).
   final ValueChanged<RecurringRule> onOpenBill;
+
+  /// Opens the amount sheet of a bill waiting on Home (D123).
+  final ValueChanged<Occurrence> onEnterBill;
   final void Function(PayCycle cycle, Option<int> categoryId) onSeeEntries;
 
   /// Opens Ask AI for the cycle Spends shows (SPEC FR-SP-2).
@@ -78,6 +82,7 @@ class _MainScreenState extends State<MainScreen> {
               onEdit: widget.onEdit,
               onOpenSettings: widget.onOpenSettings,
               onOpenBill: widget.onOpenBill,
+              onEnterBill: widget.onEnterBill,
               onSeeAll: (PayCycle cycle) => widget.onSeeEntries(cycle, const Option<int>.none()),
               // why: beside Home in two panes, Spends is already on screen, so the step is hidden.
               onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,

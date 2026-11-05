@@ -13,6 +13,7 @@ import 'package:expense_tracker/home/presentation/widgets/hero_card.dart';
 import 'package:expense_tracker/home/presentation/widgets/home_header.dart';
 import 'package:expense_tracker/home/presentation/widgets/saved_yesterday_note.dart';
 import 'package:expense_tracker/home/presentation/widgets/today_list.dart';
+import 'package:expense_tracker/home/presentation/widgets/waiting_bill_row.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
@@ -63,6 +64,7 @@ void main() {
             onEdit: (Entry entry) => calls.add(entry),
             onOpenSettings: () => calls.add('settings'),
             onOpenBill: calls.add,
+            onEnterBill: calls.add,
             onSeeAll: links ? calls.add : null,
             onSeeWhereItWent: links ? () => calls.add('spends') : null,
           ),
@@ -73,6 +75,110 @@ void main() {
       themeMode: theme,
     );
   }
+
+  group('HomePage: a bill waiting for its amount (D123)', () {
+    const CalendarDate oct26 = CalendarDate(2026, 10, 26);
+    RecurringRule waiting(AmountMode mode, {CalendarDate due = oct26}) => WorkedExample.electricity.copyWith(
+          label: mode == AmountMode.card ? 'Credit card' : 'Electricity',
+          amountMode: mode,
+          schedule: Schedule(frequency: Frequency.monthly, anchor: due),
+          nextDue: due,
+        );
+    void useRules(List<RecurringRule> extra) =>
+        services.recurring.rules = <RecurringRule>[WorkedExample.salary, WorkedExample.rent, ...extra];
+
+    testWidgets('a changing bill due today asks how much, in place of the due-soon line', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies)]);
+      await pump(tester);
+      expect(find.text('Electricity went out today. How much?'), findsOneWidget);
+      expect(find.byType(DueSoonRow), findsNothing);
+      await tester.tap(find.byType(WaitingBillRow));
+      expect(calls.single, Occurrence(rule: waiting(AmountMode.varies), date: oct26));
+    });
+
+    testWidgets('a card bill from an earlier day asks what was paid', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.card, due: const CalendarDate(2026, 10, 24))]);
+      await pump(tester);
+      expect(find.text('Credit card bill was due on 24 Oct. How much did you pay?'), findsOneWidget);
+    });
+
+    testWidgets('a waiting bill beats a bill that is due soon', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies), WorkedExample.rd.copyWith(nextDue: const CalendarDate(2026, 10, 28))]);
+      await pump(tester);
+      expect(find.byType(WaitingBillRow), findsOneWidget);
+      expect(find.byType(DueSoonRow), findsNothing);
+    });
+
+    testWidgets('a changing bill due soon says about how much', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies, due: const CalendarDate(2026, 10, 27))]);
+      await pump(tester);
+      expect(find.text('Electricity about ₹1,200 goes out tomorrow'), findsOneWidget);
+    });
+
+    testWidgets('the line spans the hero card\'s width, as the due-soon line does', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies)]);
+      await pump(tester);
+      final Rect hero = tester.getRect(find.byType(HeroCard));
+      final Rect line = tester.getRect(find.byType(WaitingBillRow));
+      expect((line.left, line.right), (hero.left, hero.right));
+    });
+
+    testWidgets('an entered amount offers Undo, which puts the bill back', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies)]);
+      await pump(tester);
+      final BillAmountEntered entered = (await tester.runAsync(() => EnterBillAmount(ledger: services.ledger, recurring: services.recurring)(
+            EnterBillAmountParams(occurrence: Occurrence(rule: waiting(AmountMode.varies), date: oct26), amount: Money.fromMajor(1460)),
+          ).run()))!
+          .getOrElse((Failure f) => fail(f.message));
+      await tester.settle();
+      bloc.add(HomeBillAmountDone(BillAmountWasEntered(entered)));
+      await tester.settle();
+      expect(find.text('Electricity ₹1,460 added'), findsOneWidget);
+      await tester.tap(find.text('Undo'));
+      await tester.settle();
+      await tester.pumpAndSettle();
+      expect(find.text('Electricity went out today. How much?'), findsOneWidget);
+    });
+
+    testWidgets('a skip offers Undo too', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies)]);
+      await pump(tester);
+      bloc.add(HomeBillAmountDone(BillAmountWasSkipped(
+        occurrence: Occurrence(rule: waiting(AmountMode.varies), date: oct26),
+        skip: const BillSkip(ruleId: 3, date: oct26),
+      )));
+      await tester.settle();
+      expect(find.text('Electricity skipped this month'), findsOneWidget);
+    });
+
+    testWidgets('a card bill paid today is no bite on today\'s bar and leaves the hero alone', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.card)]);
+      services.ledger.entries.add(Entry(
+        id: 80,
+        amount: Money.fromMajor(8000),
+        kind: EntryKind.cardPaid,
+        categoryId: 12,
+        date: oct26,
+        createdAt: WorkedExample.now,
+        recurringId: 3,
+        note: 'Credit card',
+      ));
+      await pump(tester);
+      expect(find.text('Paid, not counted again'), findsOneWidget);
+      expect(bloc.state, isA<HomeReady>().having((HomeReady s) => s.todaySpends.any((Entry e) => e.kind == EntryKind.cardPaid), 'card in bar', isFalse));
+      expect(find.byType(WaitingBillRow), findsNothing);
+    });
+
+    testWidgets('meets tap-target, label and contrast guidelines with the line', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      useRules(<RecurringRule>[waiting(AmountMode.varies)]);
+      await pump(tester);
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
+    });
+  });
 
   group('HomePage (FR-HO)', () {
     testWidgets('loading shows the hero card without a number', (WidgetTester tester) async {

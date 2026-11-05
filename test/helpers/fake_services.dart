@@ -59,6 +59,8 @@ final class FakeServices {
         restoreEntry: RestoreEntry(ledger: ledger),
         deleteBill: DeleteBill(recurring: recurring),
         restoreBill: RestoreBill(recurring: recurring),
+        undoBillAmount: UndoBillAmount(ledger: ledger, recurring: recurring),
+        unskipBill: UnskipBillOccurrence(recurring: recurring),
         haptics: haptics,
       );
 
@@ -122,6 +124,7 @@ final class FakeServices {
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(postDue)
     ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
+    ..registerSingleton<GetLastBillAmount>(GetLastBillAmount(ledger: ledger, clock: clock))
     ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
     ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: categories, clock: clock))

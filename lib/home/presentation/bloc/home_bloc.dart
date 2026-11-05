@@ -15,7 +15,7 @@ import 'home_state.dart';
 /// Owns Home's summary, due-soon nudge and Today list (SPEC FR-HO). Driven by
 /// [HomeLoadRequested] (start, resume, midnight) and by every write through
 /// [LedgerRepository.changes] and [RecurringRepository.changes]; the page adds
-/// [HomeDeleteRequested], [HomeUndoRequested] and [HomeWeekToggled]. The app adds
+/// [HomeDeleteRequested], [HomeUndoRequested], [HomeBillAmountUndoRequested] and [HomeWeekToggled]. The app adds
 /// [HomeTrayOpened] and [HomeTrayClosed] around the Add tray, and reloads wait in between.
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   HomeBloc({
@@ -29,6 +29,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this._restoreEntry,
     required this._deleteBill,
     required this._restoreBill,
+    required this._undoBillAmount,
+    required this._unskipBill,
     required this._haptics,
   }) : super(const HomeLoading()) {
     // why: every write reloads Home; a newer load cancels an older one still reading, so stale
@@ -42,6 +44,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     // why: a second Delete bill while the first is being written must not delete twice.
     on<HomeBillDeleteRequested>(_onBillDeleteRequested, transformer: droppable());
     on<HomeBillUndoRequested>(_onBillUndoRequested);
+    on<HomeBillAmountDone>(_onBillAmountDone);
+    on<HomeBillAmountUndoRequested>(_onBillAmountUndoRequested);
     on<HomeSwipeThresholdReached>((HomeSwipeThresholdReached event, Emitter<HomeState> emit) => unawaited(_haptics.threshold()));
     _changes = _ledger.changes.listen((void _) => add(const HomeLoadRequested()));
     _ruleChanges = recurring.changes.listen((void _) => add(const HomeLoadRequested()));
@@ -59,6 +63,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final RestoreEntry _restoreEntry;
   final DeleteBill _deleteBill;
   final RestoreBill _restoreBill;
+  final UndoBillAmount _undoBillAmount;
+  final UnskipBillOccurrence _unskipBill;
   final Haptics _haptics;
   late final StreamSubscription<void> _changes;
   late final StreamSubscription<void> _ruleChanges;
@@ -182,6 +188,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _onBillUndoRequested(HomeBillUndoRequested event, Emitter<HomeState> emit) async {
     final Either<Failure, Unit> restored = await _restoreBill(event.rule.id).run();
     restored.mapLeft(_logFailure('home.bill_undo_failed'));
+  }
+
+  void _onBillAmountDone(HomeBillAmountDone event, Emitter<HomeState> emit) {
+    final HomeState current = state;
+    if (current is HomeReady) {
+      emit(current.copyWith(amountUndo: Option<BillAmountOutcome>.of(event.outcome)));
+    }
+  }
+
+  /// Puts an entered or skipped bill back to waiting; the change streams reload Home (E-e).
+  Future<void> _onBillAmountUndoRequested(HomeBillAmountUndoRequested event, Emitter<HomeState> emit) async {
+    final Either<Failure, Unit> undone = await switch (event.outcome) {
+      BillAmountWasEntered(:final BillAmountEntered entered) => _undoBillAmount(entered).run(),
+      BillAmountWasSkipped(:final BillSkip skip) => _unskipBill(skip).run(),
+    };
+    undone.mapLeft(_logFailure('home.bill_amount_undo_failed'));
   }
 
   static void Function(Failure) _logFailure(String tag) =>

@@ -50,6 +50,8 @@ void main() {
       restoreEntry: RestoreEntry(ledger: ledger),
       deleteBill: DeleteBill(recurring: recurring),
       restoreBill: RestoreBill(recurring: recurring),
+      undoBillAmount: UndoBillAmount(ledger: ledger, recurring: recurring),
+      unskipBill: UnskipBillOccurrence(recurring: recurring),
       haptics: haptics,
     );
   });
@@ -156,6 +158,8 @@ void main() {
         restoreEntry: RestoreEntry(ledger: ledger),
         deleteBill: DeleteBill(recurring: recurring),
         restoreBill: RestoreBill(recurring: recurring),
+        undoBillAmount: UndoBillAmount(ledger: ledger, recurring: recurring),
+        unskipBill: UnskipBillOccurrence(recurring: recurring),
         haptics: haptics,
       );
       addTearDown(withBrokenEngine.close);
@@ -192,6 +196,8 @@ void main() {
         restoreEntry: RestoreEntry(ledger: ledger),
         deleteBill: DeleteBill(recurring: recurring),
         restoreBill: RestoreBill(recurring: recurring),
+        undoBillAmount: UndoBillAmount(ledger: ledger, recurring: recurring),
+        unskipBill: UnskipBillOccurrence(recurring: recurring),
         haptics: haptics,
       );
       addTearDown(withBrokenNudge.close);
@@ -337,6 +343,8 @@ void main() {
         restoreEntry: RestoreEntry(ledger: ledger),
         deleteBill: DeleteBill(recurring: recurring),
         restoreBill: RestoreBill(recurring: recurring),
+        undoBillAmount: UndoBillAmount(ledger: ledger, recurring: recurring),
+        unskipBill: UnskipBillOccurrence(recurring: recurring),
         haptics: haptics,
       );
       addTearDown(fresh.close);
@@ -393,6 +401,79 @@ void main() {
       await bloc.dispatch(HomeBillUndoRequested(WorkedExample.electricity));
       expect(bloc.state, isA<HomeReady>());
     });
+  });
+
+  group('HomeBloc a waiting bill entered or skipped (D123)', () {
+    const CalendarDate oct26 = CalendarDate(2026, 10, 26);
+    final RecurringRule varies = WorkedExample.electricity.copyWith(
+      amountMode: AmountMode.varies,
+      schedule: const Schedule(frequency: Frequency.monthly, anchor: oct26),
+      nextDue: oct26,
+    );
+    final Occurrence occurrence = Occurrence(rule: varies, date: oct26);
+
+    setUp(() async {
+      recurring.rules = <RecurringRule>[WorkedExample.salary, WorkedExample.rent, varies];
+      await bloc.dispatch(const HomeLoadRequested());
+    });
+
+    // why: the write reloads Home through the change streams; in the app the sheet's exit
+    // animation lets that land before the outcome arrives, so the tests wait for it too.
+    Future<BillAmountOutcome> entered() async {
+      final BillAmountEntered done = (await EnterBillAmount(ledger: ledger, recurring: recurring)(
+        EnterBillAmountParams(occurrence: occurrence, amount: Money.fromMajor(1460)),
+      ).run())
+          .getOrElse((Failure f) => fail(f.message));
+      await pumpEventQueue();
+      return BillAmountWasEntered(done);
+    }
+
+    test('the waiting bill is on Home', () {
+      expect(ready().summary.waitingBills, <Occurrence>[occurrence]);
+    });
+
+    test('an entered amount offers Undo once', () async {
+      final BillAmountOutcome outcome = await entered();
+      await bloc.dispatch(HomeBillAmountDone(outcome));
+      expect(ready().amountUndo, Option<BillAmountOutcome>.of(outcome));
+    });
+
+    test('Undo after entering deletes the entry, restores the estimate, and the bill waits again (E-e)', () async {
+      final BillAmountOutcome outcome = await entered();
+      await pumpEventQueue();
+      expect(ready().summary.waitingBills, isEmpty);
+      await bloc.dispatch(HomeBillAmountUndoRequested(outcome));
+      await pumpEventQueue();
+      expect(ledger.entries.where((Entry e) => e.recurringId == varies.id), isEmpty);
+      expect(recurring.rules.last.amount, Money.fromMajor(1200));
+      expect(ready().summary.waitingBills, <Occurrence>[occurrence]);
+    });
+
+    test('Undo after skipping makes it wait again', () async {
+      const BillSkip skip = BillSkip(ruleId: 3, date: oct26);
+      await recurring.skip(skip).run();
+      await pumpEventQueue();
+      expect(ready().summary.waitingBills, isEmpty);
+      await bloc.dispatch(HomeBillAmountUndoRequested(BillAmountWasSkipped(occurrence: occurrence, skip: skip)));
+      await pumpEventQueue();
+      expect(recurring.skips, isEmpty);
+      expect(ready().summary.waitingBills, <Occurrence>[occurrence]);
+    });
+
+    test('a failed undo is quiet', () async {
+      final BillAmountOutcome outcome = await entered();
+      ledger.failure = DatabaseFailure('locked');
+      await bloc.dispatch(HomeBillAmountUndoRequested(outcome));
+      expect(bloc.state, isA<HomeReady>());
+    });
+  });
+
+  test('an amount done before Home has loaded offers nothing', () async {
+    await bloc.dispatch(HomeBillAmountDone(BillAmountWasSkipped(
+      occurrence: Occurrence(rule: WorkedExample.electricity, date: WorkedExample.today),
+      skip: const BillSkip(ruleId: 3, date: WorkedExample.today),
+    )));
+    expect(bloc.state, isA<HomeLoading>());
   });
 
   test('a bill delete does nothing before Home has loaded', () async {
