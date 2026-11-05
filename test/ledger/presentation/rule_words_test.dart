@@ -89,7 +89,7 @@ void main() {
           _strings.ruleNext(EntryKind.spent, '10 Nov'),
           _strings.ruleStampCounted(EntryKind.spent, '10 Oct'),
         ],
-        <String>['Fixed bills', 'Add a bill', 'Fixed bill', 'Delete bill', 'Next goes out on 10 Nov', 'Counted 10 Oct'],
+        <String>['Bills', 'Add a bill', 'Bill', 'Delete bill', 'Next goes out on 10 Nov', 'Counted 10 Oct'],
       );
     });
 

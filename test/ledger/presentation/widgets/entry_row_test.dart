@@ -80,25 +80,25 @@ void main() {
           ),
         );
 
-    testWidgets('a rule-posted Spent entry with no note shows "Fixed bill"', (WidgetTester tester) async {
+    testWidgets('a rule-posted Spent entry with no note shows "Bill" (D123)', (WidgetTester tester) async {
       await pumpRow(tester, bill());
-      expect(find.text('Fixed bill'), findsOneWidget);
+      expect(find.text('Bill'), findsOneWidget);
     });
 
     testWidgets('a typed entry shows no bill tag', (WidgetTester tester) async {
       await pumpRow(tester, bill(recurringId: null));
-      expect(find.text('Fixed bill'), findsNothing);
+      expect(find.text('Bill'), findsNothing);
     });
 
     testWidgets('a rule-posted entry with a note shows the note, not the tag', (WidgetTester tester) async {
       await pumpRow(tester, bill(note: 'October'));
       expect(find.text('October'), findsOneWidget);
-      expect(find.text('Fixed bill'), findsNothing);
+      expect(find.text('Bill'), findsNothing);
     });
 
     testWidgets('a rule-posted Got entry (salary) shows no bill tag', (WidgetTester tester) async {
       await pumpRow(tester, bill(kind: EntryKind.got, recurringId: 1));
-      expect(find.text('Fixed bill'), findsNothing);
+      expect(find.text('Bill'), findsNothing);
     });
   });
 

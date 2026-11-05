@@ -65,7 +65,7 @@ void main() {
     testWidgets('shows the bill with its stamp, four rows and the next date', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await open(tester);
-      expect(find.text('Fixed bill'), findsOneWidget);
+      expect(find.text('Bill'), findsOneWidget);
       expect(find.text('Due in 3 days'), findsOneWidget);
       expect(find.bySemanticsLabel('Change Amount, 1,200 rupees'), findsOneWidget);
       expect(find.bySemanticsLabel('Change Day of the month, 29'), findsOneWidget);
@@ -96,7 +96,7 @@ void main() {
     testWidgets('the stamp lands with a squash, or only fades with reduced motion', (WidgetTester tester) async {
       await open(tester);
       expect(find.byKey(const ValueKey<String>('bill-stamp-squash')), findsOneWidget);
-      Navigator.of(tester.element(find.text('Fixed bill'))).pop();
+      Navigator.of(tester.element(find.text('Bill'))).pop();
       await tester.settle();
       await open(tester, reduceMotion: true);
       expect(find.byKey(const ValueKey<String>('bill-stamp-squash')), findsNothing);
@@ -110,7 +110,7 @@ void main() {
       await tester.tap(delete);
       await tester.settle();
       expect(await outcome, BillSheetDeleted(WorkedExample.electricity));
-      expect(find.text('Fixed bill'), findsNothing);
+      expect(find.text('Bill'), findsNothing);
     });
 
     testWidgets('Back on the bill closes it unchanged (AC-5)', (WidgetTester tester) async {
@@ -148,7 +148,7 @@ void main() {
       await tapRow(tester, 'day');
       await tester.binding.handlePopRoute();
       await tester.settle();
-      expect(find.text('Fixed bill'), findsOneWidget);
+      expect(find.text('Bill'), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('day-1')), findsNothing);
     });
 

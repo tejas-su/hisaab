@@ -64,7 +64,7 @@ void main() {
   group('BillsPage (FR-SE-1)', () {
     testWidgets('lists the bills soonest first, with day and amount', (WidgetTester tester) async {
       await pump(tester);
-      expect(find.text('Fixed bills'), findsOneWidget);
+      expect(find.text('Bills'), findsOneWidget);
       expect(find.text('Every month on day 29'), findsOneWidget);
       expect(find.text('₹1,200'), findsOneWidget);
       expect(find.text('₹8,200'), findsOneWidget);
@@ -121,7 +121,7 @@ void main() {
     testWidgets('no bills says what to add', (WidgetTester tester) async {
       recurring.rules = <RecurringRule>[WorkedExample.salary];
       await pump(tester);
-      expect(find.textContaining('No fixed bills yet'), findsOneWidget);
+      expect(find.textContaining('No bills added yet'), findsOneWidget);
       expect(find.text('Add a bill'), findsOneWidget);
     });
 

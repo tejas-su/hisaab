@@ -418,6 +418,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'internet': 'Internet',
       'schoolFees': 'School fees',
       'subscriptions': 'Subscriptions',
+      'creditCard': 'Credit card',
+      'electricity': 'Electricity',
       'other': 'Bill',
     });
     return '$_temp0';
@@ -450,7 +452,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayList => 'Today';
 
   @override
-  String get entryFixedBill => 'Fixed bill';
+  String get entryFixedBill => 'Bill';
 
   @override
   String get lastsTillPayday => 'Lasts till payday';
@@ -650,18 +652,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMoney => 'Money';
 
   @override
-  String get fixedBills => 'Fixed bills';
+  String get fixedBills => 'Bills';
 
   @override
   String get fixedBillsHint =>
-      'They go out by themselves on their day. Today\'s share already leaves room for them.';
+      'Most go out by themselves on their day. If the amount changes, Home asks how much.';
 
   @override
   String get addBill => 'Add a bill';
 
   @override
   String get noBills =>
-      'No fixed bills yet. Add rent, EMI or anything that goes out every month.';
+      'No bills added yet. Add rent, EMI or anything that goes out every month.';
 
   @override
   String get savings => 'Savings';
@@ -830,7 +832,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get billSheetEyebrow => 'Fixed bill';
+  String get billSheetEyebrow => 'Bill';
 
   @override
   String billStampDue(int days) {
@@ -1025,6 +1027,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get askAiCardNote => 'You\'ll see exactly what it gets.';
+
+  @override
+  String billAmountQuestionVaries(String bill) {
+    return 'About how much is $bill?';
+  }
+
+  @override
+  String billAmountQuestionCard(String bill) {
+    return 'About how much is the $bill bill?';
+  }
+
+  @override
+  String get billCardHint =>
+      'Add what you buy on the card on the day you buy it. This bill only reminds you to pay. It isn\'t counted again.';
+
+  @override
+  String get billModeRow => 'Amount changes?';
+
+  @override
+  String get billModeFixed => 'Same every month';
+
+  @override
+  String get billModeVaries => 'Changes every month';
+
+  @override
+  String get billModeCard => 'Credit card';
+
+  @override
+  String waitingVariesToday(String bill) {
+    return '$bill went out today. How much?';
+  }
+
+  @override
+  String waitingVariesOn(String bill, String date) {
+    return '$bill went out on $date. How much?';
+  }
+
+  @override
+  String waitingCardToday(String bill) {
+    return '$bill bill is due today. How much did you pay?';
+  }
+
+  @override
+  String waitingCardOn(String bill, String date) {
+    return '$bill bill was due on $date. How much did you pay?';
+  }
+
+  @override
+  String get waitingOpensHint => 'Opens the keypad.';
+
+  @override
+  String billGoesOutAbout(String bill, String amount, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $days days',
+      one: 'tomorrow',
+    );
+    return '$bill about $amount goes out $_temp0';
+  }
+
+  @override
+  String billAmountTitle(String bill, String date) {
+    return '$bill · $date';
+  }
+
+  @override
+  String billAmountLastTime(String amount) {
+    return 'Last time $amount';
+  }
+
+  @override
+  String billAmountYourGuess(String amount) {
+    return 'You said about $amount';
+  }
+
+  @override
+  String get billDidntGoOut => 'Didn\'t go out this month';
+
+  @override
+  String billAmountAdded(String bill, String amount) {
+    return '$bill $amount added';
+  }
+
+  @override
+  String billSkipped(String bill) {
+    return '$bill skipped this month';
+  }
+
+  @override
+  String get entryCardPaid => 'Paid, not counted again';
 }
 
 /// The translations for English, as used in India (`en_IN`).

@@ -658,7 +658,7 @@ abstract class AppLocalizations {
   /// Name of a fixed bill chip, by its kind
   ///
   /// In en, this message translates to:
-  /// **'{kind, select, rent{Rent} emi{EMI} phone{Phone} internet{Internet} schoolFees{School fees} subscriptions{Subscriptions} other{Bill}}'**
+  /// **'{kind, select, rent{Rent} emi{EMI} phone{Phone} internet{Internet} schoolFees{School fees} subscriptions{Subscriptions} creditCard{Credit card} electricity{Electricity} other{Bill}}'**
   String billName(String kind);
 
   /// No description provided for @billAmountQuestion.
@@ -700,7 +700,7 @@ abstract class AppLocalizations {
   /// Second line of a list row for a bill the app posted on its day, shown when the row has no note
   ///
   /// In en, this message translates to:
-  /// **'Fixed bill'**
+  /// **'Bill'**
   String get entryFixedBill;
 
   /// No description provided for @lastsTillPayday.
@@ -982,13 +982,13 @@ abstract class AppLocalizations {
   /// No description provided for @fixedBills.
   ///
   /// In en, this message translates to:
-  /// **'Fixed bills'**
+  /// **'Bills'**
   String get fixedBills;
 
   /// No description provided for @fixedBillsHint.
   ///
   /// In en, this message translates to:
-  /// **'They go out by themselves on their day. Today\'s share already leaves room for them.'**
+  /// **'Most go out by themselves on their day. If the amount changes, Home asks how much.'**
   String get fixedBillsHint;
 
   /// No description provided for @addBill.
@@ -1000,7 +1000,7 @@ abstract class AppLocalizations {
   /// No description provided for @noBills.
   ///
   /// In en, this message translates to:
-  /// **'No fixed bills yet. Add rent, EMI or anything that goes out every month.'**
+  /// **'No bills added yet. Add rent, EMI or anything that goes out every month.'**
   String get noBills;
 
   /// Settings row and list title for money put away every month (D120)
@@ -1216,7 +1216,7 @@ abstract class AppLocalizations {
   /// Small heading at the top of the bill sheet (D118)
   ///
   /// In en, this message translates to:
-  /// **'Fixed bill'**
+  /// **'Bill'**
   String get billSheetEyebrow;
 
   /// Stamp on a bill that goes out within 5 days
@@ -1482,6 +1482,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'ll see exactly what it gets.'**
   String get askAiCardNote;
+
+  /// Wizard and bill sheet amount question for a bill that changes every month (D123).
+  ///
+  /// In en, this message translates to:
+  /// **'About how much is {bill}?'**
+  String billAmountQuestionVaries(String bill);
+
+  /// Amount question for a credit card bill; {bill} is the card's name (D123).
+  ///
+  /// In en, this message translates to:
+  /// **'About how much is the {bill} bill?'**
+  String billAmountQuestionCard(String bill);
+
+  /// One line under a card bill's amount question and on its amount sheet: card buys are counted when made, so the bill isn't (D123).
+  ///
+  /// In en, this message translates to:
+  /// **'Add what you buy on the card on the day you buy it. This bill only reminds you to pay. It isn\'t counted again.'**
+  String get billCardHint;
+
+  /// Bill sheet row and question title: whether the amount is fixed, changes, or is a card bill.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount changes?'**
+  String get billModeRow;
+
+  /// Amount changes? answer: a fixed bill, posted by itself.
+  ///
+  /// In en, this message translates to:
+  /// **'Same every month'**
+  String get billModeFixed;
+
+  /// Amount changes? answer: Home asks how much on its day.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes every month'**
+  String get billModeVaries;
+
+  /// Amount changes? answer: a card bill, recorded but never counted.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card'**
+  String get billModeCard;
+
+  /// Home line for a changing bill due today and not yet entered.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} went out today. How much?'**
+  String waitingVariesToday(String bill);
+
+  /// Home line for a changing bill due earlier this cycle, not yet entered; {date} like 18 Nov.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} went out on {date}. How much?'**
+  String waitingVariesOn(String bill, String date);
+
+  /// Home line for a card bill due today; {bill} is the card's name.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} bill is due today. How much did you pay?'**
+  String waitingCardToday(String bill);
+
+  /// Home line for a card bill due earlier this cycle; {date} like 18 Nov.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} bill was due on {date}. How much did you pay?'**
+  String waitingCardOn(String bill, String date);
+
+  /// TalkBack hint on the Home line for a waiting bill.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the keypad.'**
+  String get waitingOpensHint;
+
+  /// Home due-soon nudge for a bill whose amount changes; mirrors billGoesOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} about {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}'**
+  String billGoesOutAbout(String bill, String amount, int days);
+
+  /// Bill amount sheet title, e.g. Electricity · 18 Nov.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} · {date}'**
+  String billAmountTitle(String bill, String date);
+
+  /// Bill amount sheet caption: the amount entered last time, prefilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Last time {amount}'**
+  String billAmountLastTime(String amount);
+
+  /// Bill amount sheet caption the first time: the estimate from setup, prefilled.
+  ///
+  /// In en, this message translates to:
+  /// **'You said about {amount}'**
+  String billAmountYourGuess(String amount);
+
+  /// Bill amount sheet chip: skip this occurrence.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t go out this month'**
+  String get billDidntGoOut;
+
+  /// Snackbar after entering a bill's amount, with Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} {amount} added'**
+  String billAmountAdded(String bill, String amount);
+
+  /// Snackbar after Didn't go out this month, with Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} skipped this month'**
+  String billSkipped(String bill);
+
+  /// Line under a card bill's row: recorded, never counted (D123).
+  ///
+  /// In en, this message translates to:
+  /// **'Paid, not counted again'**
+  String get entryCardPaid;
 }
 
 class _AppLocalizationsDelegate

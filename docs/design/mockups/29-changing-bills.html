@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Bills that change, and the card bill (proposal)</title>
+<style>
+  /* Bills that change and the credit card bill, Phase 2 (spec docs/superpowers/specs/2026-11-04-savings-and-changing-bills-design.md §5,
+     plan docs/superpowers/plans/2026-11-05-phase-2-changing-bills-and-card.md Task 1 Step 2). Nothing here is built yet.
+     Every frame is drawn twice, light and dark, at 360dp. Geometry follows the widgets as built, not older mockups:
+     DueSoonRow (12dp start inset, 40dp surface well, 24dp glyph, 18dp chevron), EntryRow (20dp inset, 42dp sunk well,
+     9dp vertical padding, Mukta 17 Bold amount), BillAnswerRow (Mukta 16 Semibold value, capped at 38% of the row),
+     HisaabChip (fill-only, 12dp side padding, ink fill when picked), the Put in extra sheet (title, AmountDisplay, an ink2
+     line, keypad of 56dp keys, SignalKey 58dp), and sheets inset by the 20dp gutter (D122).
+     Numbers: spec worked example 2. Electricity is due today (Mon 26 Oct 2026), estimate ₹1,200, still waiting, so it
+     stays in B at ₹1,200: P = ₹16,650, A = ₹1,850, ₹420 spent, hero ₹1,430, 9 days to payday (Wed 4 Nov).
+     Worked example 4: a ₹8,000 card bill paid today changes nothing, so the hero stays ₹1,430 and the Today total ₹420.
+     Copy is the plan's Task 1 table; lines marked draft wait for the design-content deck (29-changing-bills-copy-deck.md).
+     Icons are hand-drawn stand-ins for Hugeicons stroke-rounded: Flash (power), CreditCard, Restaurant, and the rest. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 700; src: url(../../../assets/fonts/Mukta-Bold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    /* control is hairline in dark, as HisaabColors.dark (mockup 28 still draws it as surface) */
+    --bg: #131210; --surface: #211F1C; --control: #3A3632; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+  .controls { position: sticky; top: 0; z-index: 50; display: flex; gap: 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid #C9C0B5; }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 736px; margin: 8px 0 0; }
+
+  /* Phone */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  svg.i.s18 { width: 18px; height: 18px; }
+  .page { position: absolute; inset: 0; padding: 12px 20px 0; display: flex; flex-direction: column; gap: 16px; }
+  .page.dense { gap: 12px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; height: 48px; gap: 8px; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .wm { font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .hint { font-size: 15px; line-height: 20px; color: var(--ink2); margin: 0; }
+
+  /* HisaabChip: fill-only. Rest = control on the page and on the sheet (whose layer is bg); picked = ink with a bg label and a check */
+  .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 12px; border-radius: 12px; background: var(--control); color: var(--ink); font: 600 15px/20px 'Mukta', sans-serif; }
+  .chip.self { align-self: flex-start; }
+  .chip.wide { display: flex; width: 100%; }
+  .chip.wide span { flex: 1; }
+  .chip.on { background: var(--ink); color: var(--bg); }
+  .chip svg.i { width: 20px; height: 20px; }
+  .chip.on svg.i { width: 18px; height: 18px; }
+  .stack { display: flex; flex-direction: column; gap: 8px; }
+
+  /* A card of EntryRows: 42dp sunk wells, 20dp inset, hairlines indented to the text (74dp) */
+  .card { background: var(--surface); border-radius: 28px; padding: 8px 0; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 9px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: 16px; line-height: 24px; }
+  .row .t span { display: block; font-size: 14px; line-height: 18px; color: var(--ink2); }
+  .row b { margin-inline-start: -4px; font: 700 17px/22px 'Mukta', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Home (the hero follows mockup 25 / 28) */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .tbar { display: flex; gap: 3px; height: 48px; margin-top: 20px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+  .names { display: flex; gap: 3px; height: 14px; margin-top: 4px; font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); text-align: center; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; }
+  .capRow b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rail { display: flex; align-items: center; gap: 10px; height: 18px; margin-top: 14px; }
+  .dots { flex: 1; display: flex; align-items: center; gap: 12px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .dots i.t { width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .pf svg.i { width: 16px; height: 16px; }
+  /* The nudge slot: DueSoonRow's shape. 12dp start inset puts the 24dp glyph on the hero's 40dp text edge */
+  .nudge { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; border-radius: 18px; background: var(--sunk); }
+  .nudge .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .nudge .t { flex: 1; font-size: 15px; line-height: 20px; }
+  .nudge > svg:last-child { margin-inline-start: -4px; color: var(--ink2); }
+  /* TodayList as built: the header is inside the card, on the rows' 20dp inset, See all ending on the content edge */
+  .card.today { padding: 6px 0 8px; }
+  .listHd { display: flex; align-items: baseline; gap: 10px; min-height: 48px; padding: 8px 20px 6px; }
+  .listHd .h { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .listHd b { flex: 1; font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .listHd span { font: 600 15px/20px 'Mukta', sans-serif; }
+  .listHd + .row::before { display: none; }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  /* Sheet over a page: bg layer, 20dp gutter (D122) */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 20px 20px; z-index: 9; }
+  .dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; }
+  .sheetTtl { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .amtShow { font: 600 60px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 12px; }
+  .cap { font-size: 15px; line-height: 20px; color: var(--ink2); margin-top: 8px; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .key { height: 56px; border-radius: 16px; background: var(--sunk); font: 400 27px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .key.two { font-size: 23px; }
+  .save { display: flex; align-items: center; justify-content: center; height: 58px; margin-top: 12px; border-radius: 18px; background: var(--signal); color: var(--onSignal);
+    box-shadow: inset 0 0 0 1.5px var(--onSignal), 0 2px 0 var(--onSignal); font: 600 21px/28px 'Anek Latin', sans-serif; }
+
+  /* The bill slip (mockup 27) */
+  .slip { position: relative; background: var(--display); color: var(--displayInk); border-radius: 20px 20px 0 0; padding: 18px 20px 14px; margin-bottom: 8px; }
+  .slip::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px;
+    background: conic-gradient(from -45deg at 50% 100%, var(--display) 0 90deg, transparent 90deg) 0 0 / 14px 100% repeat-x; }
+  .eyebrow { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--displayInk2); }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .who .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .who .nm { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .big { font: 600 56px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 10px; }
+  .every { font-size: 15px; line-height: 22px; color: var(--displayInk2); }
+  .perf { position: relative; height: 20px; margin: 8px -20px; }
+  .perf::before { content: ''; position: absolute; left: 22px; right: 22px; top: 9px; border-top: 2px dashed var(--hairline); }
+  .perf i { position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .perf i.l { left: -8px; } .perf i.r { right: -8px; }
+  /* BillAnswerRow: label (max 45%), dotted leader, value (max 38%, Mukta 16 Semibold), 18dp chevron; the row bleeds 8dp each side */
+  .line { display: flex; align-items: center; margin: 0 -8px; min-height: 56px; padding: 8px; font-size: 16px; line-height: 24px; }
+  .line .l { max-width: 45%; }
+  .line .lead { flex: 1; min-width: 8px; height: 2px; margin: 0 4px; background: radial-gradient(circle, var(--hairline) 1px, transparent 1.2px) 0 0 / 5px 2px repeat-x; }
+  .line .v { display: inline-flex; align-items: center; gap: 6px; max-width: 38%; font: 600 16px/20px 'Mukta', sans-serif; font-variant-numeric: tabular-nums; text-align: end; }
+  .line .v.one { white-space: nowrap; }
+  .line .v svg.i { width: 18px; height: 18px; }
+  .line > svg:last-child { width: 18px; height: 18px; margin-inline-start: 6px; color: var(--displayInk2); }
+  .line.multi .lead { align-self: flex-end; margin-bottom: 15px; }
+  .stepHd { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-bottom: 8px; }
+  .slip.compact { padding-bottom: 12px; }
+  .slip.compact .big { font-size: 48px; line-height: 52px; margin-top: 6px; }
+
+  /* Edge guides: page gutter (20 / 340) and content edge (40 / 320) */
+  .guides { display: none; position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+  body.edges .guides { display: block; }
+  .guides i { position: absolute; top: 0; bottom: 0; width: 1px; background: #FFFFFF; mix-blend-mode: difference; }
+</style>
+</head>
+<body>
+
+<h1>Bills that change, and the card bill <span class="tag">proposal</span></h1>
+<p class="lede">Spec §5, Phase 2, drawn. A bill whose amount <b>changes</b> (electricity) is never counted by itself: on its day it waits, Home asks <b>"How much?"</b> in the nudge slot, and one tap on <b>Save</b> confirms last month's amount. A <b>credit card bill</b> is recorded but never counted, because every swipe already was; its row says so in words, with the card glyph and no colour. Today is <b>Mon 26 Oct 2026</b>. Electricity is due today and still waiting, so it stays set aside at its ₹1,200 estimate and the hero is the worked example's <b>₹1,430</b>, with <b>9 days to payday</b>. Each frame is shown in light and dark at 360dp. Turn on <b>Show edges</b> to check the shared gutters.</p>
+
+<div class="controls"><label><input type="checkbox" id="edges"> Show edges (20 and 40dp from each side)</label></div>
+
+<div id="frames"></div>
+
+<h2>What changes, and what doesn't</h2>
+<table>
+  <tr><th>Element</th><th>How it's drawn</th><th>Why</th></tr>
+  <tr><td>"How much?" line</td><td><code>DueSoonRow</code>'s shape in the nudge slot: an 18dp-radius <code>sunk</code> row, 12dp start inset, the bill's glyph in a 40dp <code>surface</code> well, the sentence in <code>bodyMedium</code>, an 18dp <code>ink2</code> chevron. No date line: the sentence carries the day ("today", "on 18 Nov")</td><td>Same slot, same shape, so it reads as the one thing Home wants from you. It outranks due-soon (FR-HO-3). The 24dp glyph lands on the hero's 40dp text edge, as the due-soon row does. No marigold: the act is on the next screen</td></tr>
+  <tr><td>Bill amount sheet</td><td>The <i>Put in extra</i> sheet as built: title (<code>titleLarge</code>), the prefilled amount (<code>displayMedium</code>), an <code>ink2</code> caption, a text chip, the keypad, the marigold Save</td><td>One tap confirms "same as last time". The chip sits between the caption and the keypad so a thumb can't hit it while typing, and it never looks like the act</td></tr>
+  <tr><td>"Didn't go out this month"</td><td>A <code>HisaabChip</code> at rest: <code>control</code> fill, no glyph, no edge, its start on the sheet gutter</td><td>Skipping is the rare answer, so it is quiet. It is a chip, not a key, because it isn't a digit</td></tr>
+  <tr><td>Card-bill row</td><td>An <code>EntryRow</code>: CreditCard glyph in the 42dp <code>sunk</code> well, title <i>Credit card</i>, second line <i>Paid, not counted again</i> in <code>ink2</code>, amount in <code>ink</code>, no sign, no colour. It is not a bite and is left out of the Today total</td><td>Spec example 4: nothing changes. The word and glyph say what it is (no red, no green)</td></tr>
+  <tr><td><i>Amount changes?</i> row</td><td>A fifth <code>BillAnswerRow</code> after Amount. Its value wraps to two lines, end-aligned, and the dotted leader sits on the last line</td><td>"Changes every month" can't fit in 38% of a 280dp row on one line. Two lines keep the whole answer (see <i>For you to decide</i>)</td></tr>
+  <tr><td>The question</td><td>Back well and question, the compact slip, then three full-width chips stacked 8dp apart. The current answer is the picked chip: <code>ink</code> fill, <code>bg</code> label, a trailing 18dp check on the end edge. Tapping a chip saves it, like the day grid</td><td>Three short answers read best as a list, and a pick never uses marigold. No Save key: one tap is the answer</td></tr>
+</table>
+
+<h2>Tokens used</h2>
+<table>
+  <tr><th>Kind</th><th>Tokens</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>control</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEdge</code>, <code>blockIdle</code>, <code>scrim</code>, <code>signal</code> (hero fill, today's dot, Add, the sheet's Save only), <code>onSignal</code>. No new colour</td></tr>
+  <tr><td>Type</td><td><code>titleLarge</code> (page and sheet titles, the slip name), <code>displayLarge</code> (hero), <code>displayMedium</code> (sheet amount), <code>bodyLarge</code> (row titles, answer labels), <code>bodyMedium</code> (nudge, caption, hint), <code>bodySmall</code> at 14 (row second lines), <code>titleMedium</code> (answer values), <code>labelLarge</code> at 15 (chips), <code>HisaabType.rowAmount</code> (list amounts), <code>headlineSmall</code> regular (keys); Anek Latin with tabular figures for the hero, sheet and slip amounts</td></tr>
+  <tr><td>Spacing</td><td><code>gutter</code> 20 (page edge, sheet inset, row inset, slip inset), <code>l</code> 16 (between blocks), <code>m</code> 12 (well to text, nudge inset, title to amount, keypad to Save), <code>s</code> 8 (between chips and keys, caption gap, row bleed), <code>xs</code> 4 (leader gap)</td></tr>
+  <tr><td>Radius</td><td><code>card</code> 28, <code>chip</code> 12 (chips, 40dp wells), 14 (42dp wells), <code>key</code> 16, 18 (nudge row, Save), 20 (slip top corners), 6 / 14 for today's bar as mockup 25</td></tr>
+  <tr><td>Glyphs</td><td>Flash (power), CreditCard (new <code>AppIcons</code> card glyph, already in mockup 27's icon set), Restaurant, ArrowLeft01, ArrowRight01, Add01, Settings01, Flag, Tick02, Backspace, Repeat</td></tr>
+</table>
+
+<h2>For you to decide</h2>
+<ul>
+  <li><b>The <i>Amount changes?</i> value is too long for <code>BillAnswerRow</code>.</b> As built, the value is one line capped at 38% of the row (about 106dp at 360dp), so "Changes every month" would read "Changes ev…". Drawn: two lines, end-aligned, leader on the last line (the row grows from 56 to 64dp). The other way is a shorter value ("Changes", "Same", "Card") with the full words on the chips; that is the content designer's call. Either needs <code>maxLines: 2</code> or new strings before Task 5.</li>
+  <li><b>Picked chip in a full-width stack.</b> <code>HisaabChip(expand: true)</code> centres its label and check together. Drawn: label at the start, check on the end edge, so the three labels share one edge. That is a change in <code>design-system</code>'s chip.</li>
+  <li><b>The slip of a waiting bill.</b> The eyebrow says <i>Fixed bill</i> today, which a changing bill isn't; drawn <i>Bill</i>, as the copy deck proposes. "Counted 26 Oct" would be wrong while it waits, and "Next goes out on 26 Nov" too early, so frame 4 draws no stamp and no footer. A stamp such as <i>Waiting</i> needs copy.</li>
+  <li><b>The question's title.</b> Drawn as the row's own words, <i>Amount changes?</i>, so no new string. A full question ("Does Electricity change each month?") would need one.</li>
+  <li><b>The Bills page hint</b> said "They go out by themselves on their day", which is untrue for a changing bill. Drawn with the copy deck's proposal: "Most go out by themselves on their day. If the amount changes, Home asks how much."</li>
+  <li><b>Composite.</b> The worked example's Electricity is due on the 29th; here it is due on the 26th (today) so frames 1, 2 and 4 show one bill. The hero is the same either way, because a waiting bill stays in <code>B</code> at its estimate (spec example 2).</li>
+</ul>
+
+<script>
+const P = {
+  power: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+  card: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h3"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  food: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  back: '<path d="M15 6l-6 6 6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  bs: '<path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
+};
+const ic = (k, label, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" role="img" aria-label="${label || k}">${P[k]}</svg>`;
+const draft = '<span class="draft">draft</span>';
+const guides = '<div class="guides"><i style="left:20px"></i><i style="left:40px"></i><i style="left:319px"></i><i style="left:339px"></i></div>';
+const dock = () => `<div class="dock"><span class="on">Home</span><span class="add">${ic('plus', 'Add')}</span><span>Spends</span></div>`;
+
+const hero = () => `<div class="hero">
+    <div class="ttl">Safe to spend today</div>
+    <div class="amt"><span class="rs">₹</span>1,430</div>
+    <div class="tbar"><span class="f" style="flex:1430"></span><span class="bite" style="flex:380"></span><span class="bite end" style="flex:40;min-width:4px"></span></div>
+    <div class="names"><span style="flex:1430"></span><span style="flex:380">Food</span><span style="flex:40;min-width:4px"></span></div>
+    <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹1,850</b> for today</span></div>
+    <div class="rail"><span class="dots"><i class="t"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="pf">${ic('flag', 'Payday')} 4 Nov</span></div>
+    <div class="capRow"><span>Today</span><span>9 days to payday</span></div>
+  </div>`;
+const spendRows = `<div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Lunch<span>Food</span></span><b>₹380</b></div>
+    <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Chai<span>Food</span></span><b>₹40</b></div>`;
+
+const homeAsk = () => `<div class="page dense">
+  <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+  ${hero()}
+  <div class="nudge" role="button" aria-label="Electricity went out today. How much? Opens the keypad"><span class="w">${ic('power', 'Power')}</span><span class="t">Electricity went out today. How much?</span>${ic('chev', 'Opens', 's18')}</div>
+  <div class="card today"><div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>${spendRows}</div>
+</div>${dock()}`;
+
+const homeCard = () => `<div class="page dense">
+  <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+  ${hero()}
+  <div class="card today"><div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>
+    ${spendRows}
+    <div class="row"><span class="w">${ic('card', 'Card')}</span><span class="t">Credit card<span>Paid, not counted again</span></span><b>₹8,000</b></div>
+  </div>
+</div>${dock()}`;
+
+const keys = `<div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<div class="key${k.length > 1 ? ' two' : ''}">${k}</div>`).join('')}<div class="key">${ic('bs', 'Delete last digit')}</div></div>`;
+const amountSheet = () => `${homeAsk()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="sheetTtl">Electricity · 26 Oct</div>
+  <div class="amtShow"><span class="rs">₹</span>1,200</div>
+  <div class="cap">Last time ₹1,200</div>
+  <div class="chip self" style="margin:16px 0">Didn't go out this month</div>
+  ${keys}
+  <div class="save">Save</div>
+</div>`;
+
+const billsList = () => `<div class="page">
+  <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Bills</span></div>
+  <p class="hint">Most go out by themselves on their day. If the amount changes, Home asks how much.</p>
+  <span class="chip self">${ic('plus', 'Add')} Add a bill</span>
+  <div class="card">
+    <div class="row"><span class="w">${ic('power', 'Power')}</span><span class="t">Electricity<span>Every month on day 26</span></span><b>₹1,200</b></div>
+    <div class="row"><span class="w">${ic('home', 'Home')}</span><span class="t">Rent<span>Every month on day 5</span></span><b>₹18,000</b></div>
+    <div class="row"><span class="w">${ic('card', 'Card')}</span><span class="t">Credit card<span>Every month on day 15</span></span><b>₹8,000</b></div>
+  </div>
+</div>`;
+const perf = '<div class="perf"><i class="l"></i><i class="r"></i></div>';
+const line = (label, v, opts = {}) => `<div class="line${opts.multi ? ' multi' : ''}"><span class="l">${label}</span><i class="lead"></i><span class="v${opts.multi ? '' : ' one'}">${v}</span>${ic('chev', 'Change', 's18')}</div>`;
+const who = `<div class="who"><span class="w">${ic('power', 'Power')}</span><span class="nm">Electricity</span></div>`;
+const billSheet = () => `${billsList()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="slip">
+    <div class="eyebrow">Bill</div>
+    ${who}
+    <div class="big"><span class="rs">₹</span>1,200</div>
+    <div class="every">Every month on day 26</div>
+    ${perf}
+    ${line('Amount', '₹1,200')}
+    ${line('Amount changes?', 'Changes every month', { multi: true })}
+    ${line('Day of the month', '26')}
+    ${line('Name', 'Electricity')}
+    ${line('Icon', `${ic('power', 'Power')}Power`)}
+  </div>
+</div>`;
+
+const modeQuestion = () => `${billsList()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="stepHd"><span class="well40">${ic('back', 'Back')}</span><span class="sheetTtl">Amount changes?</span></div>
+  <div class="slip compact">${who}
+    <div class="big"><span class="rs">₹</span>1,200</div>
+    <div class="every">Every month on day 26</div></div>
+  <div class="stack" style="margin-top:16px">
+    <div class="chip wide"><span>Same every month</span></div>
+    <div class="chip wide on" aria-selected="true"><span>Changes every month</span>${ic('check', 'Picked')}</div>
+    <div class="chip wide"><span>Credit card</span></div>
+  </div>
+</div>`;
+
+const FRAMES = [
+  ['1. Home asks "How much?"', homeAsk, 'Electricity changes, so on its day nothing is counted: it waits, still set aside at ₹1,200, and Home asks. The line takes the nudge slot ahead of any due-soon bill and opens frame 2. A card bill reads "Credit card bill is due today. How much did you pay?", same row, card glyph. The hero and today\'s bar don\'t move.'],
+  ['2. The bill amount sheet', amountSheet, 'Opens straight onto the keypad over Home, no Back (one step). ₹1,200 is prefilled and the first key replaces it, so one tap on Save confirms "same as last time". <i>Didn\'t go out this month</i> skips this one and closes with Undo. Save is the sheet\'s only marigold; ₹1,460 would make the hero ₹1,401 (spec example 2).'],
+  ['3. Today with a card bill', homeCard, 'The ₹8,000 row sits under today\'s spends with the CreditCard glyph and <i>Paid, not counted again</i>. The amount has no sign and no colour. It is no bite on today\'s bar, the Today total stays ₹420 and the hero ₹1,430 (spec example 4). Tapping it opens nothing (plan Review Focus 6); it can be swiped away.'],
+  ['4. The bill sheet', billSheet, 'Mockup 27\'s slip with a fifth row, <i>Amount changes?</i>, right under Amount because it says how to read the amount. Its value wraps to two lines (see <i>For you to decide</i>). Stamp, footer and <i>Delete bill</i> are left out here to show the rows; the build keeps <i>Delete bill</i>.'],
+  ['5. Amount changes?, opened', modeQuestion, 'Three answers stacked, full width, sharing the sheet\'s 20dp edges. The current one is filled ink with a check; tapping another saves it alone and returns to the slip with the row flashed. Picking <i>Credit card</i> shows one line under the chips: "Add what you buy on the card on the day you buy it. This bill only reminds you to pay. It isn't counted again." (copy deck)'],
+];
+document.getElementById('frames').innerHTML = FRAMES.map(([t, f, why]) => `<h2>${t}</h2>
+  <div class="pair">
+    <figure><div class="phone light">${f()}${guides}</div><figcaption>Light</figcaption></figure>
+    <figure><div class="phone dark">${f()}${guides}</div><figcaption>Dark</figcaption></figure>
+  </div><p class="why">${why}</p>`).join('');
+document.getElementById('edges').addEventListener('change', e => document.body.classList.toggle('edges', e.target.checked));
+if (location.hash === '#edges') { document.body.classList.add('edges'); document.getElementById('edges').checked = true; }
+</script>
+</body>
+</html>

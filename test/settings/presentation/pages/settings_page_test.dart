@@ -7,12 +7,12 @@ import '../../../helpers/pump_app.dart';
 
 void main() {
   group('SettingsPage (FR-SE)', () {
-    testWidgets('shows the Money group with Fixed bills, which opens', (WidgetTester tester) async {
+    testWidgets('shows the Money group with Bills, which opens (D123)', (WidgetTester tester) async {
       int opened = 0;
       await pumpApp(tester, SettingsPage(onOpenBills: () => opened++, onOpenSavings: () {}));
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Money'), findsOneWidget);
-      await tester.tap(find.text('Fixed bills'));
+      await tester.tap(find.text('Bills'));
       expect(opened, 1);
     });
 
