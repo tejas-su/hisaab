@@ -99,6 +99,24 @@ void main() {
       expect(pace.steadyThrough(30), Money.fromMajor(45000));
     });
 
+    test('the current cycle forecasts as Home does: about ₹9,300 spare (BR-7, D133)', () async {
+      final PaceSeries pace = (await overview()).pace.getOrElse(() => fail('no pace'));
+      expect(pace.forecast, Option<RangeForecast>.of(LastsTillPayday(Money.fromMajor(9300))));
+    });
+
+    test('a past cycle has no forecast (D133)', () async {
+      ledger.entries.add(Entry(
+        id: 61,
+        amount: Money.fromMajor(30000),
+        kind: EntryKind.got,
+        categoryId: SeedCategoryIds.salary,
+        date: _september.start,
+        createdAt: DateTime(2026, 9, 4),
+      ));
+      final PaceSeries pace = (await overview(1)).pace.getOrElse(() => fail('no pace'));
+      expect(pace.forecast, const Option<RangeForecast>.none());
+    });
+
     test('a card bill still to come never steps the steady line (D123)', () async {
       recurring.rules = <RecurringRule>[
         WorkedExample.salary,

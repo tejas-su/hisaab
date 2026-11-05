@@ -14,16 +14,16 @@ final AppLocalizations _strings = lookupAppLocalizations(const Locale('en'));
 void main() {
   group('RuleWords (D120)', () {
     test('bill and saving words differ only where they should', () {
-      expect(_strings.ruleDayQuestion(EntryKind.spent, 'Rent'), 'Which day does Rent go out?');
-      expect(_strings.ruleDayQuestion(EntryKind.saved, 'RD'), 'Which day does RD go in?');
-      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD', AmountMode.fixed), 'How much goes into RD?');
-      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Rent', AmountMode.fixed), 'How much is Rent?');
-      expect(_strings.ruleDeleted(WorkedExample.rd), 'Deleted RD');
-      expect(_strings.ruleDeleted(WorkedExample.rent), 'Deleted Rent');
+      expect(_strings.ruleDayQuestion(EntryKind.spent, 'Rent'), 'Which day of the month for Rent?');
+      expect(_strings.ruleDayQuestion(EntryKind.saved, 'RD'), 'Which day of the month for RD?');
+      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD', AmountMode.fixed), 'How much do you put in RD each month?');
+      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Rent', AmountMode.fixed), 'How much for Rent each month?');
+      expect(_strings.ruleDeleted(WorkedExample.rd), 'RD deleted');
+      expect(_strings.ruleDeleted(WorkedExample.rent), 'Rent deleted');
     });
 
     group('entryRemoved', () {
-      Entry entry({required EntryKind kind, int? recurringId}) => Entry(
+      Entry entry({required EntryKind kind, int? recurringId, String? note}) => Entry(
             id: 50,
             amount: Money.fromMajor(500),
             kind: kind,
@@ -31,25 +31,30 @@ void main() {
             date: WorkedExample.today,
             createdAt: WorkedExample.now,
             recurringId: recurringId,
+            note: note,
           );
 
       test('a saving its rule put in reads as a skipped month (case study 17)', () {
-        expect(_strings.entryRemoved(entry(kind: EntryKind.saved, recurringId: 4), '₹500'), 'Skipped this month');
+        expect(_strings.entryRemoved(entry(kind: EntryKind.saved, recurringId: 4, note: 'RD'), '₹500'), 'RD skipped this month');
+      });
+
+      test('a rule\'s saving with no note is named Saving', () {
+        expect(_strings.entryRemoved(entry(kind: EntryKind.saved, recurringId: 4), '₹500'), 'Saving skipped this month');
       });
 
       test('an extra put in by hand is deleted like any entry', () {
-        expect(_strings.entryRemoved(entry(kind: EntryKind.saved), '₹500'), 'Deleted ₹500');
+        expect(_strings.entryRemoved(entry(kind: EntryKind.saved), '₹500'), '₹500 deleted');
       });
 
       test('a bill a rule posted is deleted like any entry', () {
-        expect(_strings.entryRemoved(entry(kind: EntryKind.spent, recurringId: 1), '₹500'), 'Deleted ₹500');
+        expect(_strings.entryRemoved(entry(kind: EntryKind.spent, recurringId: 1), '₹500'), '₹500 deleted');
       });
     });
 
     test('a changing or card bill asks about how much (D123)', () {
-      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Electricity', AmountMode.varies), 'About how much is Electricity?');
-      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'HDFC card', AmountMode.card), 'About how much is the HDFC card bill?');
-      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD', AmountMode.fixed), 'How much goes into RD?');
+      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Electricity', AmountMode.varies), 'About how much for Electricity each month?');
+      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'HDFC card', AmountMode.card), 'About how much for HDFC card each month?');
+      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD', AmountMode.fixed), 'How much do you put in RD each month?');
     });
 
     test('the mode words (D123)', () {
@@ -90,8 +95,8 @@ void main() {
           _strings.savingNameHint,
           'Saving',
           'Delete saving',
-          'Next goes in on 10 Nov',
-          'Goes in tomorrow',
+          'Next due on 10 Nov',
+          'Due tomorrow',
           'Put in 10 Oct',
           'Put in today',
         ],
@@ -108,14 +113,14 @@ void main() {
           _strings.ruleNext(EntryKind.spent, '10 Nov'),
           _strings.ruleStampCounted(EntryKind.spent, '10 Oct'),
         ],
-        <String>['Bills', 'Add a bill', 'Bill', 'Delete bill', 'Next goes out on 10 Nov', 'Counted 10 Oct'],
+        <String>['Bills', 'Add a bill', 'Bill', 'Delete bill', 'Next due on 10 Nov', 'Went out 10 Oct'],
       );
     });
 
     test('the nudge says goes out for a bill and goes in for a saving', () {
-      expect(_strings.ruleGoesOut(WorkedExample.electricity, '₹1,200', 3, 'Thu'), 'Electricity ₹1,200 goes out in 3 days');
-      expect(_strings.ruleGoesOut(WorkedExample.rd, '₹5,000', 2, 'Thu'), 'RD ₹5,000 goes in on Thu');
-      expect(_strings.ruleGoesOut(WorkedExample.rd, '₹5,000', 1, 'Thu'), 'RD ₹5,000 goes in tomorrow');
+      expect(_strings.ruleGoesOut(WorkedExample.electricity, '₹1,200', 3, 'Thu'), 'Electricity, ₹1,200, due in 3 days');
+      expect(_strings.ruleGoesOut(WorkedExample.rd, '₹5,000', 2, 'Thu'), 'RD, ₹5,000, due on Thu');
+      expect(_strings.ruleGoesOut(WorkedExample.rd, '₹5,000', 1, 'Thu'), 'RD, ₹5,000, due tomorrow');
       expect(_strings.ruleOpensHint(EntryKind.saved), 'Opens the saving.');
       expect(_strings.ruleOpensHint(EntryKind.spent), 'Opens the bill.');
     });

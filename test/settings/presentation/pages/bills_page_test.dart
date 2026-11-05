@@ -81,7 +81,7 @@ void main() {
 
     testWidgets('loading shows only the hint', (WidgetTester tester) async {
       await pump(tester, load: false);
-      expect(find.textContaining('go out by themselves'), findsOneWidget);
+      expect(find.textContaining('adds most bills to your spends'), findsOneWidget);
       expect(find.text('Add a bill'), findsNothing);
     });
 
@@ -102,7 +102,7 @@ void main() {
       await tester.drag(find.text('Rent'), const Offset(-500, 0));
       await tester.settle();
       expect(find.text('Rent'), findsNothing);
-      expect(find.text('Deleted Rent'), findsOneWidget);
+      expect(find.text('Rent deleted'), findsOneWidget);
       expect(haptics.events, contains('threshold'));
       await tester.tap(find.text('Undo'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
@@ -128,7 +128,7 @@ void main() {
     testWidgets('a failed load says so and Try again reloads', (WidgetTester tester) async {
       recurring.failure = DatabaseFailure('locked');
       await pump(tester);
-      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.text("Couldn't open this."), findsOneWidget);
       recurring.failure = null;
       await tester.tap(find.text('Try again'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));

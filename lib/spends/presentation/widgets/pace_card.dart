@@ -2,25 +2,29 @@ import '../../../core/design/hisaab_type.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/design/app_icon.dart';
-import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/money/money.dart';
+import '../../../core/time/pay_cycle.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/pace_series.dart';
+import '../pace_card_copy.dart';
 import 'pace_chart_painter.dart';
+import 'pace_dates.dart';
+import 'pace_legend.dart';
 import 'spends_card.dart';
 
-/// "Spent so far ₹27,570 of ₹45,000", the pace chart and its verdict (SPEC FR-SP-3).
+/// "Spent so far ₹27,570 of ₹45,000", the pace chart with its dates, and the key (SPEC FR-SP-3).
 ///
 /// Without [pace] (no money came in) only the total shows. TalkBack reads the card as one
-/// sentence. [showToday] marks today on the current cycle.
+/// sentence. [showToday] marks today on the current cycle, with the gap to the steady line and the
+/// forecast (D133). [cycle] names the first and last days under the chart.
 class PaceCard extends StatelessWidget {
-  const PaceCard({super.key, required this.spent, required this.pace, required this.showToday});
+  const PaceCard({super.key, required this.spent, required this.pace, required this.cycle, required this.showToday});
 
   final Money spent;
   final Option<PaceSeries> pace;
+  final PayCycle cycle;
   final bool showToday;
 
   static const double _chartMinHeight = 160;
@@ -29,11 +33,12 @@ class PaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
+    final PaceCardCopy copy = PaceCardCopy(strings, context.money);
     final PaceSeries? series = pace.toNullable();
     return SpendsCard(
       child: Semantics(
         container: true,
-        label: _spoken(context, strings, series),
+        label: copy.spoken(spent, series, showToday: showToday),
         excludeSemantics: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,9 +46,10 @@ class PaceCard extends StatelessWidget {
             _total(context, strings, series),
             if (series != null) ...<Widget>[
               const SizedBox(height: HisaabSpacing.s),
-              _chart(context, series),
+              _chart(context, copy, series),
+              _dates(context, copy, strings, series),
               const SizedBox(height: HisaabSpacing.s),
-              _legend(context, strings, series.verdict),
+              PaceLegend(verdict: series.verdict, showForecast: series.forecastByDay.isNotEmpty),
             ],
           ],
         ),
@@ -72,74 +78,45 @@ class PaceCard extends StatelessWidget {
 
   // why: a fixed height flattens the slope on wide windows; half the width keeps the gap to the
   // steady line readable, and the cap keeps "Where it went" in view on a phone (D69).
-  Widget _chart(BuildContext context, PaceSeries series) => LayoutBuilder(
+  Widget _chart(BuildContext context, PaceCardCopy copy, PaceSeries series) => LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) => SizedBox(
           key: const ValueKey<String>('pace-chart'),
           height: (constraints.maxWidth / 2).clamp(_chartMinHeight, _chartMaxHeight),
           width: double.infinity,
-          child: CustomPaint(painter: _painter(context, series)),
+          child: CustomPaint(painter: _painter(context, copy, series)),
         ),
       );
 
-  PaceChartPainter _painter(BuildContext context, PaceSeries series) => PaceChartPainter(
+  PaceChartPainter _painter(BuildContext context, PaceCardCopy copy, PaceSeries series) => PaceChartPainter(
         series: series,
-        axisLabels: series.axisLabels.map(context.money.compact).toList(),
-        labelStyle: Theme.of(context).textTheme.labelSmall ?? const TextStyle(),
-        ink: context.colors.ink,
-        ink2: context.colors.ink2,
-        hairline: context.colors.hairline,
-        signal: context.colors.signal,
+        axisLabels: _axisLabels(context, series),
+        labelStyle: _labelStyle(context),
+        markStyle: _markStyle(context),
+        words: copy.chartWords(series, showToday: showToday),
+        colors: (
+          ink: context.colors.ink,
+          ink2: context.colors.ink2,
+          hairline: context.colors.hairline,
+          signal: context.colors.signal,
+          surface: context.colors.surface,
+        ),
         showToday: showToday,
       );
 
-  Widget _legend(BuildContext context, AppLocalizations strings, PaceVerdict verdict) {
-    final TextStyle? caption = Theme.of(context).textTheme.bodySmall;
-    final bool below = verdict == PaceVerdict.belowPace;
-    return Wrap(
-      spacing: HisaabSpacing.l,
-      runSpacing: HisaabSpacing.xs,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: <Widget>[
-        _key(Container(width: 16, height: 2.5, color: context.colors.ink), Text(strings.paceYou, style: caption)),
-        _key(
-          SizedBox(width: 16, height: 2.5, child: CustomPaint(painter: _DotsPainter(context.colors.ink2))),
-          Text(strings.paceSteady, style: caption),
-        ),
-        _key(
-          AppIcon(below ? AppIcons.onTrack : AppIcons.alert, size: 16),
-          Text(below ? strings.belowPace : strings.abovePace, style: HisaabType.emphasized(caption)?.copyWith(color: context.colors.ink)),
-        ),
-      ],
-    );
-  }
+  Widget _dates(BuildContext context, PaceCardCopy copy, AppLocalizations strings, PaceSeries series) => PaceDates(
+        start: copy.date(cycle.start),
+        end: copy.date(cycle.end),
+        today: strings.paceToday,
+        todayAt: showToday ? series.spentByDay.length / series.cycleDays : null,
+        axisLabels: _axisLabels(context, series),
+        labelStyle: _labelStyle(context).copyWith(color: context.colors.ink2),
+        todayStyle: _markStyle(context),
+      );
 
-  static Widget _key(Widget mark, Widget label) =>
-      Row(mainAxisSize: MainAxisSize.min, children: <Widget>[mark, const SizedBox(width: 6), label]);
+  static List<String> _axisLabels(BuildContext context, PaceSeries series) => series.axisLabels.map(context.money.compact).toList();
 
-  String _spoken(BuildContext context, AppLocalizations strings, PaceSeries? series) {
-    String amount(Money money) => strings.spokenAmount(context.money.digits(money));
-    if (series == null) {
-      return strings.spentSoFarSpoken(amount(spent));
-    }
-    final String verdict = series.verdict == PaceVerdict.belowPace ? strings.belowPace : strings.abovePace;
-    return strings.paceSpoken(amount(spent), amount(series.budget), verdict);
-  }
-}
+  static TextStyle _labelStyle(BuildContext context) => Theme.of(context).textTheme.labelSmall ?? const TextStyle();
 
-/// The dotted "Steady pace" legend mark.
-class _DotsPainter extends CustomPainter {
-  const _DotsPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint dot = Paint()..color = color;
-    for (double x = 1; x < size.width; x += 4) {
-      canvas.drawCircle(Offset(x, size.height / 2), 1, dot);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DotsPainter oldDelegate) => oldDelegate.color != color;
+  static TextStyle _markStyle(BuildContext context) =>
+      (HisaabType.emphasized(Theme.of(context).textTheme.labelSmall) ?? const TextStyle()).copyWith(color: context.colors.ink);
 }

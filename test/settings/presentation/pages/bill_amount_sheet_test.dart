@@ -130,10 +130,10 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('keypad-6')));
       await tester.settle();
       expect(find.text('₹46'), findsOneWidget);
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('₹4'), findsOneWidget);
-      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('₹0'), findsOneWidget);
     });

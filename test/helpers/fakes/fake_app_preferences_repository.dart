@@ -6,13 +6,20 @@ import 'package:fpdart/fpdart.dart';
 
 /// An in-memory [AppPreferencesRepository]; set [failure] to make every call fail.
 final class FakeAppPreferencesRepository implements AppPreferencesRepository {
-  FakeAppPreferencesRepository({this.done = false, this.draftJson, this.reminders = const Option<bool>.none()});
+  FakeAppPreferencesRepository({
+    this.done = false,
+    this.draftJson,
+    this.reminders = const Option<bool>.none(),
+    this.theme = ThemeChoice.matchPhone,
+  });
 
   bool done;
   String? draftJson;
 
   /// The answer to "Remind you on the day it's due?"; [None] when never asked.
   Option<bool> reminders;
+  /// The saved look (FR-SE-3).
+  ThemeChoice theme;
   Failure? failure;
 
   /// Failure for [markOnboardingDone] only.
@@ -58,6 +65,15 @@ final class FakeAppPreferencesRepository implements AppPreferencesRepository {
   @override
   TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind}) => _run(() {
         reminders = Option<bool>.of(remind);
+        return unit;
+      });
+
+  @override
+  TaskEither<Failure, ThemeChoice> themeChoice() => _run(() => theme);
+
+  @override
+  TaskEither<Failure, Unit> saveThemeChoice(ThemeChoice choice) => _run(() {
+        theme = choice;
         return unit;
       });
 }

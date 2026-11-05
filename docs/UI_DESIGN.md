@@ -285,10 +285,10 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 ### 5.1 Onboarding: 3 questions
 1. **"How much money comes in each month?"**
    - The keypad is open from the start.
-   - The hint names the money, not a job: "Pay, business, pension or family money. If it changes, a low month is a safe guess." Only about a quarter of Indian workers are salaried, so "salary" would leave most users out (D116; mockup [26](design/mockups/26-income-for-everyone.html)).
-   - Between the keypad and Next: a lock and "It stays on this phone. The app never uses the internet.", centred, `bodyMedium` in `ink2`. It answers the moment the question feels intrusive.
+   - The hint names the money, not a job: "Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month." Only about a quarter of Indian workers are salaried, so "salary" would leave most users out (D116; mockup [26](design/mockups/26-income-for-everyone.html)).
+   - Between the keypad and Next: a lock and "What you type stays on this phone. The app never uses the internet.", centred, `bodyMedium` in `ink2`. It answers the moment the question feels intrusive.
    - A live preview underneath turns the amount into blocks: "That's about **₹1,500 a day**", and the day blocks appear one by one as you type. Its caption is "Every day gets its own share" (`bodyMedium`, `displayInk2`). This is the rare, bold delight moment.
-2. **"When does it come?"** Big chips: *1st of the month* · *Last day* · *Pick a date* · *Every week* · *It changes*. The hint ends "No fixed day? Pick It changes." so shop owners, freelancers and daily earners know which chip is theirs.
+2. **"When does it come?"** Big chips: *1st of the month* · *Last day of the month* · *Pick a date* · *Every week* · *It changes*. The hint ends 'No fixed day? Pick "It changes".' so shop owners, freelancers and daily earners know which chip is theirs.
 3. **"Any fixed bills?"** Chips for Rent · EMI · Phone · Internet · School fees · Subscriptions, plus a big **Skip**.
 4. **Done.** The hero card assembles: today's bar fills marigold, the rail's dots arrive one by one, and `successNotification` fires.
 
@@ -304,7 +304,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
  │ Today                 9 days to payday │
  │ ✓ Lasts till payday · about ₹9,300 spare│
  └────────────────────────────────────────┘
- [⚡] Electricity ₹1,200 goes out in 3 days ›
+ [⚡] Electricity, ₹1,200, due in 3 days ›
      Thu, 29 Oct
  Today                         ₹420  See all
    [🍴] Food     Chai & samosa          ₹60
@@ -368,13 +368,16 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - A solid `ink` line for your spending and a dotted `ink2` line for steady pace. The steady line steps up on each bill's day, so a bill on the spending line meets a matching step and doesn't read as overspending (D129).
   - The y-axis is fixed and labelled (₹0 / ₹20K / ₹40K), avoiding Apple Card's rescaling problem.
   - Its height is half the card's width, kept between 160 and 200 (D69).
+  - On the current cycle (D133, mockup 31): an `ink2` 1.5dp bracket from today's dot to the steady line with the gap ("₹7,042 under") beside it, on the `surface` colour so it reads over the lines; a dashed `ink` 2dp line (6 on 5) for *At this pace*, ending in "about ₹9,300 spare", or in an `ink` ring and "runs out 1 Nov" where it meets the money there is to spend. Marks on the plot are `labelSmall` 600 `ink`.
+  - Under the plot, a `labelSmall` date row: the cycle's first and last days in `ink2`, and *Today* (600, `ink`) under today's dot; a date that would touch *Today* is dropped.
   - A verdict: "Spending slower" or "Spending faster" (D77). The legend wraps, so the longer words never clip.
 - **Where it went:**
+  - The title row ends in *See all*, built as Home's Today header: an `ink` `labelLarge` 15 text button, no inset, label ending on the rows' content edge, on the title's baseline, in a 48dp target. TalkBack reads "Every entry in October". It opens every entry of the shown cycle, so the way in stays near the top however many rows and insights follow; there is no chip at the end of the page (D131). A cycle with nothing spent has no card and keeps the *See every entry* chip under its sentence.
   - Rows sorted by amount: icon well, name, %, ₹, and an `ink` bar on a `sunk` track. Bars, not donuts: people judge length more accurately than angle.
   - If a category has a limit, the bar shows a limit tick. Overspend shows as a hatched segment past the tick, not as red.
-  - A row with a limit says what is left: "Food · ₹200 left", "Bills · ₹0 left", or "Shopping · ₹840 past limit" (D110).
+  - A row with a limit says what is left: "Food · ₹200 left", "Bills · ₹0 left", or "Shopping · ₹840 over limit" (D110).
   - When a bar is hatched, one key line closes the card: a hatch swatch and "Striped part is over the limit." in `bodySmall` (D110).
-- **Insights:** at most 3 plain sentences, each with a next step, for example "Food is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
+- **Insights:** at most 3 plain sentences, each with a next step, for example "Food spending is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
 - **Spent and saved (D120, mockup 28):** when the cycle has saves, one `bodyMedium` `ink2` line, "Spent ₹27,570 · Saved ₹5,000", sits above *Where it went*, aligned with the card titles. Saves never appear in the bars, pace or insights.
 
 ### 5.5 Ask AI
@@ -397,18 +400,18 @@ Two layers only: the grey page and near-white cards, the same build as the Today
   - **The bill sheet (FR-SE-1, D118, mockup [27](design/mockups/27-bill-sheet.html)):** tapping a row (or Home's due-soon row) raises a sheet that looks like a paper bill. Changing never pushes a page.
     - The slip is `display` paper, flat (D106: only the hero is raised), with 20dp top corners and a torn bottom edge of 14dp × 8dp teeth.
     - Head: the "Bill" eyebrow, the name, and the bill's icon in a `sunk` well. Then a dashed `hairline` perforation with 16dp half-circle notches cut at both edges.
-    - The amount line: the amount in Anek with tabular figures, "Every month on day N" under it, and the stamp. The stamp is straight (not rotated), letter-spaced `displayInk2` text written as in the copy (never upper-cased: "Due in 3 days", "Counted 5 Oct", "Paid 5 Oct" for a card, "Waiting" while a changing bill waits, D127) in a 2dp `displayInk2` edge with 6 corners, its right edge on the value column. It lands with a squash (scale 1.25 → 1) 260 ms after the sheet opens, on the spring tokens; with reduced motion it fades in over 150 ms.
-    - Five rows, Amount, Amount changes?, Day of the month, Name, Icon (D123), each a label, a dotted leader in `hairline`, the value, and a chevron; 56dp tall. A saved row flashes `sunk` once.
-    - The foot: "Next goes out on {date}" (a waiting bill says when it went out: "Went out on 24 Oct. Home asks how much.", D127), then *Delete bill*, a full-width `sunk` key in the place *Save* takes on a question.
+    - The amount line: the amount in Anek with tabular figures, "Every month on day N" under it, and the stamp. The stamp is straight (not rotated), letter-spaced `displayInk2` text written as in the copy (never upper-cased: "Due in 3 days", "Went out 5 Oct", "Paid 5 Oct" for a card, "Waiting" while a changing bill waits, D127) in a 2dp `displayInk2` edge with 6 corners, its right edge on the value column. It lands with a squash (scale 1.25 → 1) 260 ms after the sheet opens, on the spring tokens; with reduced motion it fades in over 150 ms.
+    - Five rows, Amount, Kind of bill, Day of the month, Name, Icon (D123), each a label, a dotted leader in `hairline`, the value, and a chevron; 56dp tall. A saved row flashes `sunk` once.
+    - The foot: "Next due on {date}" (a waiting bill says when it went out: "Went out on 24 Oct. Home asks how much.", D127), then *Delete bill*, a full-width `sunk` key in the place *Save* takes on a question.
     - A question replaces the rows inside the sheet, under a compact slip (name, amount, icon): the keypad with *Save*, showing "Was ₹1,200" under the typed amount; the 1–31 grid; the name field (no pills), with a line saying whether the icon follows the name; or a 4-column grid of the 16 icons in `sunk` wells, labelled under each. Back sits top left.
     - **Picked state** (the day grid and the icon grid): the bill's current day or icon lifts one layer to `control` (as a chip on the page), its label turns Semibold, and a 6dp `ink` dot sits 6dp in from its top end corner. TalkBack announces it as selected.
     - Bill icons sit in `sunk` icon wells everywhere: the slip, the Bills rows, the grid and Home's due-soon and waiting rows.
-    - *Amount changes?* (D123): a row between Amount and Day; its value ("Changes every month") may take two lines, end-aligned. Its question stacks the three answers as full-width `hairline` chips 8dp apart, the current one picked (`ink` fill, check); a tap saves, like the day grid. A saving has no such row.
+    - *Kind of bill* (D123): a row between Amount and Day; its value ("Changes every month") may take two lines, end-aligned. Its question, "What kind of bill is it?", stacks the three answers as full-width `hairline` chips 8dp apart, the current one picked (`ink` fill, check); a tap saves, like the day grid. A saving has no such row.
   - **Remind ask (FR-SE-1 AC-10, D126):** after the first changing or card bill is saved, a sheet rises in the bill sheet's route: "Remind you on the day it's due?" in `titleLarge` on the 20dp gutter, a full-width marigold *Remind me* key, and the text chip *Not now* under it (`hairline`, never marigold). Asked once. The reminders themselves are system notifications in a *Bill reminders* channel with the monochrome launcher glyph, and a locked screen hides their text.
   - Savings (D120, mockup [28](design/mockups/28-savings.html)): a second row under Bills with the piggy-bank glyph. The list, wizard and sheet are the bill ones with a saving's words ("goes in", "put in"); the sheet drops the Icon row. Under the list, a `ink2` footer "₹5,000 put in since Oct", and a *Put in extra* chip beside *Add a saving* (never marigold; only the keypad's Save is). *Put in extra* rises in the bill sheet's route: the question, the amount, a `ink2` line saying what it does to the days left, the keypad and a marigold Save.
   - My month starts on: *Payday* (default) / *1st*
 - **Categories:** rename, change icon.
-- **Look:** Light / Dark / Match phone (default).
+- **Look** (D130, mockup [30](design/mockups/30-look-setting.html), case study [19](design-research/case-studies/19-theme-choice.md)): a `titleLarge` header 24dp under the Money card, then one `surface` card holding one row (20dp gutter, 12dp vertical): *Light or dark* in `bodyLarge` with the current look's name under it in `bodyMedium` `ink2`, and at the end a compact icon toggle: a `sunk` track (radius `key`, 4dp inset and gaps) of three 48dp buttons (radius `chip`) with 24dp smartphone, sun and moon glyphs in `ink`. The pick fills `ink` with its glyph in `bg`; a press steps to `hairline`. The words may wrap beside the toggle but never break mid-word; when a word can't fit (2× text on a 320dp phone), the toggle moves under the words, on their start edge. The buttons carry their names for TalkBack and the row's words are excluded, so nothing is read twice. Never marigold: a look is a mode, not an act. One tap applies; `MaterialApp.themeAnimationDuration` is zero, so nothing fades.
 - **Data:** Backup · Restore · Export CSV.
 - **About.**
 

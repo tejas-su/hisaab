@@ -36,8 +36,8 @@ void main() {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey<String>('keypad-4')));
       await tester.tap(find.byKey(const ValueKey<String>('keypad-00')));
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
-      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       expect(pressed, <String>['4', '00', '⌫', 'clear']);
     });
 

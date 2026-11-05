@@ -10,7 +10,7 @@ import '../../../../ledger/presentation/rule_words.dart';
 /// The bill sheet's derived words: the stamp, short dates and icon names (SPEC BR-9, D118).
 extension BillSheetCopy on BuildContext {
   /// The stamp's text for [status], or null when there is no stamp; a saving's [kind] says
-  /// "goes in" and "put in" (D120), and a card bill's [mode] says "Paid", never "Counted" (D123).
+  /// "Put in" (D120), and a card bill's [mode] says "Paid", never "Went out" (D123).
   String? stampText(BillStatus status, {EntryKind kind = EntryKind.spent, AmountMode mode = AmountMode.fixed}) {
     final AppLocalizations strings = AppLocalizations.of(this);
     // why: daysAway counts from today, so the stamp needs no clock of its own.

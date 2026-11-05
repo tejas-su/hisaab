@@ -66,7 +66,7 @@ final class BillSheetDayChosen extends BillSheetEvent {
   List<Object?> get props => <Object?>[day];
 }
 
-/// The user picked how the bill's amount behaves under *Amount changes?*; this saves it (D123).
+/// The user picked how the bill's amount behaves under *Kind of bill*; this saves it (D123).
 final class BillSheetModeChosen extends BillSheetEvent {
   const BillSheetModeChosen(this.mode);
 

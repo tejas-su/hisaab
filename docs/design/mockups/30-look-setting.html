@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Look setting (as built)</title>
+<style>
+  /* Look setting, SPEC FR-SE-3: Match phone (default) / Light / Dark, drawn to match the build (D130, case study 19):
+     LookGroup (lib/settings/presentation/widgets/look_group.dart) is one surface card holding "Light or dark" and a
+     LookSwitch (look_switch.dart) at its end: three 48dp icon buttons on a sunk track. One tap applies the look app-wide. No sheet.
+     Frames 1 and 2 are drawn at 412dp (TestWindows.phone), frame 1 light and dark, frame 2 dark only, frame 3 at 320dp with 2x text, light and dark.
+     Icons are Hugeicons stroke-rounded path data at the app's 1.6 stroke: SmartPhone01, Sun03, Moon02,
+     ArrowRight02, ArrowLeft01, Repeat, PiggyBank. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #3A3632; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 736px; margin: 8px 0 0; }
+
+  /* Phone */
+  .phone { position: relative; width: 412px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  .phone.narrow { width: 320px; }
+  @media (max-width: 460px) { .phone { zoom: 0.85; } }
+  svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  /* Settings ListView: padding gutter 20 sides, s 8 top */
+  .page { position: absolute; inset: 0; padding: 0 20px; }
+  .topbar { display: flex; align-items: center; height: 56px; gap: 8px; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  /* Section header: titleLarge, xs 4 start inset, s 8 below; the second one has xl 24 above */
+  .secHd { font: 600 22px/28px 'Anek Latin', sans-serif; padding: 8px 0 8px 4px; }
+  .secHd.next { padding-top: 24px; }
+
+  /* Cards: surface, squircle 28, no inner padding; the Money divider is the code's (indent gutter 20, no end indent) */
+  .card { background: var(--surface); border-radius: 28px; overflow: hidden; }
+  .card .div { height: 1px; margin-left: 20px; background: var(--hairline); }
+  /* SettingsRow / SettingsChoiceRow: padding gutter 20 x m 12, 42dp sunk squircle(14) well, m 12 to the text, 24dp trailing */
+  .row { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 20px; }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); color: var(--ink); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: 16px; line-height: 24px; }
+  .row .t small { display: block; font-size: 15px; line-height: 20px; color: var(--ink2); }
+  .row > .chev { color: var(--ink2); }
+  .row .gap24 { width: 24px; height: 24px; flex: none; }
+  /* LookGroup: surface card, squircle card 28, padding gutter 20 x m 12; one Row, m 12 between the words and the track */
+  .lookCard { background: var(--surface); border-radius: 28px; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+  .lookCard .words { flex: 1; min-width: 0; }
+  .lookCard .lbl { display: block; font-size: 16px; line-height: 24px; }
+  .lookCard .cur { display: block; font-size: 15px; line-height: 20px; color: var(--ink2); }
+  /* LookSwitch: sunk track, squircle key 16, xs 4 padding, xs 4 gaps; three 48x48 buttons, squircle chip 12, 24dp ink glyphs */
+  .track { background: var(--sunk); border-radius: 16px; padding: 4px; display: flex; gap: 4px; flex: none; }
+  .btn { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; color: var(--ink); }
+  /* The pick: ink fill, glyph in bg, both themes. Pressed: hairline fill */
+  .btn.on { background: var(--ink); color: var(--bg); }
+  .btn.down { background: var(--hairline); }
+
+  /* 2x text (frame 3): type doubles; glyphs, padding and radii stay */
+  .x2 .topbar { height: auto; min-height: 56px; }
+  .x2 .topbar .ttl, .x2 .secHd { font-size: 44px; line-height: 56px; }
+  .x2 .row .t, .x2 .lookCard .lbl { font-size: 32px; line-height: 48px; }
+  .x2 .lookCard .cur { font-size: 30px; line-height: 40px; }
+  /* A word can't fit beside the toggle: Column, start-aligned, m 12 gap, toggle on the words' start edge */
+  .x2 .lookCard { flex-direction: column; align-items: flex-start; }
+  .x2 .lookCard .words { flex: none; }
+  .note { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 736px; margin: 32px 0 0; padding: 12px 16px; border-radius: 12px; box-shadow: inset 0 0 0 1px #C9C0B5; }
+</style>
+</head>
+<body>
+
+<h1>Look setting <span class="tag">as built</span></h1>
+<p class="lede">SPEC <b>FR-SE-3</b>: <b>Match phone</b> (default), <b>Light</b>, <b>Dark</b>. Under the <i>Money</i> card sits a <i>Look</i> group: <b>one card, one row</b>. On the start side <i>Light or dark</i> with the current look's name under it; on the end side a <b>compact icon toggle</b>: phone, sun, moon. <b>One tap applies the look to the whole app at once</b>; there is no sheet. The pick is shown by <b>fill</b>: <code>ink</code> with its glyph in <code>bg</code>, in both themes, and by the name in words. No check, no marigold, no words in the buttons; TalkBack reads each button's name.</p>
+
+<div id="frames"></div>
+
+<p class="note">Earlier drafts (three inline rows; a row opening a sheet; a worded segmented control) replaced by a compact icon toggle at the owner's request, D130.</p>
+
+<h2>Tokens used</h2>
+<table>
+  <tr><th>Kind</th><th>Tokens</th></tr>
+  <tr><td>Colour</td><td><code>bg</code> (page; the picked glyph), <code>surface</code> (cards), <code>sunk</code> (track; Money wells), <code>hairline</code> (Money divider; a pressed button), <code>ink</code> (labels, resting glyphs, the picked fill), <code>ink2</code> (the current look's name; Money chevrons). No <code>signal</code>, no new colour</td></tr>
+  <tr><td>Contrast</td><td><i>Light or dark</i> <code>ink</code> on <code>surface</code> 17.97 light / 14.54 dark. Current name <code>ink2</code> on <code>surface</code> 7.20 / 6.42. Resting glyph <code>ink</code> on <code>sunk</code> 13.84 / 12.41. Picked glyph <code>bg</code> on <code>ink</code> 15.30 / 16.55; picked fill against the track 13.84 / 12.41. Pressed glyph <code>ink</code> on <code>hairline</code> 11.75 / 10.59. Track edge <code>sunk</code> on <code>surface</code> 1.30 / 1.17: below 3:1, but the track is grouping, not a control; every glyph is far above 3:1</td></tr>
+  <tr><td>Type</td><td><code>titleLarge</code> (page title, <i>Money</i>, <i>Look</i>), <code>bodyLarge</code> 16/24 (<i>Light or dark</i>, Money rows), <code>bodyMedium</code> 15/20 in <code>ink2</code> (current look's name). One weight in the card: 400</td></tr>
+  <tr><td>Spacing</td><td><code>gutter</code> 20 (page edge; card side padding), <code>m</code> 12 (card top and bottom padding; words to track), <code>xl</code> 24 (Money card to <i>Look</i>), <code>s</code> 8 (header to card), <code>xs</code> 4 (track padding; gap between buttons; header inset)</td></tr>
+  <tr><td>Radius</td><td><code>card</code> 28 (squircle), <code>key</code> 16 (track), <code>chip</code> 12 (buttons, the pick, focus ring); 14 (Money wells)</td></tr>
+  <tr><td>Sizes</td><td>Buttons 48×48 (<code>minTouchTarget</code>); track 160×56; card 80 tall at 1×; glyphs 24; stroke 1.6</td></tr>
+  <tr><td>Glyphs</td><td>SmartPhone01 (Match phone), Sun03 (Light), Moon02 (Dark), ArrowRight02 (<code>AppIcons.next</code>), Repeat, PiggyBank, ArrowLeft01</td></tr>
+</table>
+
+<script>
+const P = {
+  phone: '<path d="M13.5 2H10.5C8.14298 2 6.96447 2 6.23223 2.73223C5.5 3.46447 5.5 4.64298 5.5 7V17C5.5 19.357 5.5 20.5355 6.23223 21.2678C6.96447 22 8.14298 22 10.5 22H13.5C15.857 22 17.0355 22 17.7678 21.2678C18.5 20.5355 18.5 19.357 18.5 17V7C18.5 4.64298 18.5 3.46447 17.7678 2.73223C17.0355 2 15.857 2 13.5 2Z"/><path d="M12.125 19H12M12.25 19C12.25 19.1381 12.1381 19.25 12 19.25C11.8619 19.25 11.75 19.1381 11.75 19C11.75 18.8619 11.8619 18.75 12 18.75C12.1381 18.75 12.25 18.8619 12.25 19Z"/>',
+  sun: '<path d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"/><path d="M12 2V3.5M12 20.5V22M19.0708 19.0713L18.0101 18.0106M5.98926 5.98926L4.9286 4.9286M22 12H20.5M3.5 12H2M19.0713 4.92871L18.0106 5.98937M5.98975 18.0107L4.92909 19.0714"/>',
+  moon: '<path d="M21.5 14.0784C20.3003 14.7189 18.9301 15.0821 17.4751 15.0821C12.7491 15.0821 8.91792 11.2509 8.91792 6.52485C8.91792 5.06986 9.28105 3.69968 9.92163 2.5C5.66765 3.49698 2.5 7.31513 2.5 11.8731C2.5 17.1899 6.8101 21.5 12.1269 21.5C16.6849 21.5 20.503 18.3324 21.5 14.0784Z"/>',
+  next: '<path d="M18.5 12L4.99997 12"/><path d="M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6"/>',
+  back: '<path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/>',
+  bill: '<path d="M16.3884 3L17.3913 3.97574C17.8393 4.41165 18.0633 4.62961 17.9844 4.81481C17.9056 5 17.5888 5 16.9552 5H9.19422C5.22096 5 2 8.13401 2 12C2 13.4872 2.47668 14.8662 3.2895 16"/><path d="M7.61156 21L6.60875 20.0243C6.16074 19.5883 5.93673 19.3704 6.01557 19.1852C6.09441 19 6.4112 19 7.04478 19H14.8058C18.779 19 22 15.866 22 12C22 10.5128 21.5233 9.13383 20.7105 8"/>',
+  piggy: '<path d="M14.5 5.5H10.5C6.91015 5.5 4 8.41015 4 12C4 14.3012 5.19584 16.3231 7 17.4782L7.28751 19.2158C7.35758 19.6393 7.39262 19.851 7.4905 20.0143C7.6037 20.2031 7.77604 20.3492 7.98078 20.4301C8.1578 20.5 8.37243 20.5 8.80169 20.5C9.19947 20.5 9.39836 20.5 9.56635 20.4378C9.76071 20.3659 9.92792 20.2353 10.0449 20.0642C10.1459 19.9163 10.1942 19.7234 10.2906 19.3375L10.5 18.5H13.5L13.7094 19.3375C13.8058 19.7234 13.8541 19.9163 13.9551 20.0642C14.0721 20.2353 14.2393 20.3659 14.4337 20.4378C14.6016 20.5 14.8005 20.5 15.1983 20.5C15.6276 20.5 15.8422 20.5 16.0192 20.4301C16.224 20.3492 16.3963 20.2031 16.5095 20.0143C16.6074 19.851 16.6424 19.6393 16.7125 19.2158L17 17.4782C18.1096 16.7678 18.9891 15.7295 19.5018 14.5L20.3925 14.3217C21.162 14.1677 21.5468 14.0907 21.7734 13.8142C22 13.5378 22 13.1454 22 12.3606V12.0616C22 11.3116 22 10.9366 21.7882 10.6654C21.5764 10.3941 21.2126 10.3032 20.4851 10.1213L20 10C20 8.5 18.8333 7.16667 18 6.5V3.5H17.7361C16.3657 3.5 15.1129 4.27427 14.5 5.5Z"/><path d="M15.875 9.75H15.75M16 9.75C16 9.88807 15.8881 10 15.75 10C15.6119 10 15.5 9.88807 15.5 9.75C15.5 9.61193 15.6119 9.5 15.75 9.5C15.8881 9.5 16 9.61193 16 9.75Z"/><path d="M2 8V10C2 11.1046 2.89543 12 4 12"/>',
+};
+const ic = (k, label, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" role="img" aria-label="${label || k}">${P[k]}</svg>`;
+
+const LOOK = [['phone', 'Match phone'], ['sun', 'Light'], ['moon', 'Dark']];
+
+const topbar = () => `<div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Settings</span></div>`;
+
+const moneyCard = () => `<div class="card">
+    <div class="row"><span class="w">${ic('bill', 'Fixed bills')}</span><span class="t">Fixed bills</span>${ic('next', 'Opens', 'chev')}</div>
+    <div class="div"></div>
+    <div class="row"><span class="w">${ic('piggy', 'Savings')}</span><span class="t">Savings</span>${ic('next', 'Opens', 'chev')}</div>
+  </div>`;
+
+// LookGroup: one surface card, one row: the words, then the LookSwitch track
+const lookCard = (picked) => `<div class="lookCard"><span class="words"><span class="lbl">Light or dark</span><span class="cur">${LOOK[picked][1]}</span></span>
+    <span class="track">${LOOK.map(([k, n], i) => `<span class="btn${i === picked ? ' on' : ''}">${ic(k, n)}</span>`).join('')}</span>
+  </div>`;
+
+const settings = (picked) => `<div class="page">
+  ${topbar()}
+  <div class="secHd">Money</div>
+  ${moneyCard()}
+  <div class="secHd next">Look</div>
+  ${lookCard(picked)}
+</div>`;
+
+const FRAMES = [
+  ['1. Settings, Match phone (default)', () => settings(0), '', ['light', 'dark'],
+   'The <i>Look</i> header sits <code>xl</code> 24 below the Money card, <code>s</code> 8 above its own card, 4dp in from the gutter, the same code as <i>Money</i>. One <code>surface</code> card, 20dp side and 12dp top and bottom padding, one row: <i>Light or dark</i> (<code>bodyLarge</code>, <code>ink</code>) over <i>Match phone</i> (<code>bodyMedium</code>, <code>ink2</code>), then 12dp, then the <code>sunk</code> track of three 48dp buttons. The words start 20dp in, the same edge as the Money wells; the track ends 20dp in, the same edge as the chevrons. The pick fills <code>ink</code> with its glyph in <code>bg</code>, in both themes.'],
+  ['2. After tapping Dark', () => settings(2), '', ['dark'],
+   'One tap on the moon: the whole app changes look at once, with no sheet and no confirm. The ink fill moves to the moon and the name under <i>Light or dark</i> becomes <i>Dark</i>. While a finger is down, a button steps to <code>hairline</code>.'],
+  ['3. 2× text on a 320dp phone', () => settings(0), 'narrow x2', ['light', 'dark'],
+   'Type doubles; the buttons, glyphs, padding and radii stay. A 2× word no longer fits the 68dp beside the 160dp toggle, so the toggle moves <b>under</b> the words: a start-aligned column, <code>m</code> 12 below them, its start edge on the words\' start edge (the card\'s 20dp inset), still one row of three 48dp buttons. Words wrap only at spaces; nothing is clipped or broken mid-word.'],
+];
+document.getElementById('frames').innerHTML = FRAMES.map(([t, f, cls, themes, why]) => `<h2>${t}</h2>
+  <div class="pair">${themes.map(th => `
+    <figure><div class="phone ${th} ${cls}">${f()}</div><figcaption>${th[0].toUpperCase() + th.slice(1)}</figcaption></figure>`).join('')}
+  </div><p class="why">${why}</p>`).join('');
+</script>
+</body>
+</html>

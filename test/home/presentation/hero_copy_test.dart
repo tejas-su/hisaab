@@ -114,9 +114,9 @@ void main() {
       expect(copy.heroAmount, Money.zero);
       expect(copy.muted, isTrue);
       expect(copy.overText, const Option<String>.of('₹220 over today'));
-      expect(copy.laterCaption, 'Each day after: ₹1,776');
+      expect(copy.laterCaption, 'From tomorrow: ₹1,776 a day');
       expect(copy.range, const RangeWords('Over today', 'still lasts till payday'));
-      expect(copy.spoken, contains('Each day after: 1,776 rupees'));
+      expect(copy.spoken, contains('From tomorrow: 1,776 rupees a day'));
     });
 
     test('over today on the last day falls back to days to payday', () {

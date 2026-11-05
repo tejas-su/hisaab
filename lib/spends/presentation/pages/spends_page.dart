@@ -77,7 +77,7 @@ class SpendsPage extends StatelessWidget {
         SpendsReady(:final SpendsOverview overview) when overview.isEmpty => <Widget>[
             SpendsCard(
               child: Text(
-                AppLocalizations.of(context).nothingSpentIn(_label(context, overview.cycle)),
+                AppLocalizations.of(context).nothingSpentIn(_label(context, overview.cycle), overview.isCurrent ? 'current' : 'past'),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
               ),
             ),
@@ -90,13 +90,17 @@ class SpendsPage extends StatelessWidget {
               onPressed: () => onAskAi(overview.cycle),
             ),
             const SizedBox(height: HisaabSpacing.m),
-            PaceCard(spent: overview.spent, pace: overview.pace, showToday: overview.isCurrent),
+            PaceCard(spent: overview.spent, pace: overview.pace, cycle: overview.cycle, showToday: overview.isCurrent),
             const SizedBox(height: HisaabSpacing.m),
             if (!overview.saved.isZero) ...<Widget>[
               SpentSavedLine(key: const ValueKey<String>('spent-saved'), spent: overview.spent, saved: overview.saved),
               const SizedBox(height: HisaabSpacing.s),
             ],
-            WhereItWentCard(rows: overview.rows),
+            WhereItWentCard(
+              rows: overview.rows,
+              cycleLabel: _label(context, overview.cycle),
+              onSeeAll: () => onSeeEntries(overview.cycle, const Option<int>.none()),
+            ),
             if (overview.insights.isNotEmpty) ...<Widget>[
               const SizedBox(height: HisaabSpacing.m),
               InsightsCard(
@@ -108,7 +112,6 @@ class SpendsPage extends StatelessWidget {
                 limitsFailed: limitsFailed,
               ),
             ],
-            ..._seeEveryEntry(context, overview),
           ],
       };
 

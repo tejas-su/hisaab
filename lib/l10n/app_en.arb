@@ -63,6 +63,77 @@
       }
     }
   },
+  "paceGapUnder": "{amount} under",
+  "@paceGapUnder": {
+    "description": "Pace chart label beside today's point: how far spending is below the steady line (D133)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paceGapOver": "{amount} over",
+  "@paceGapOver": {
+    "description": "Pace chart label beside today's point: how far spending is above the steady line (D133)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paceRunsOut": "runs out {date}",
+  "@paceRunsOut": {
+    "description": "Pace chart label where the forecast line meets the money there is to spend, e.g. 'runs out 1 Nov' (D133)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "paceAtThisPace": "At this pace",
+  "@paceAtThisPace": {
+    "description": "Pace chart legend key for the dashed forecast line (D133)"
+  },
+  "paceToday": "Today",
+  "@paceToday": {
+    "description": "Pace chart date row: today's mark (D133)"
+  },
+  "paceGapUnderSpoken": "{amount} under steady pace.",
+  "@paceGapUnderSpoken": {
+    "description": "TalkBack, after paceSpoken: how far spending is below the steady line (D133)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paceGapOverSpoken": "{amount} over steady pace.",
+  "@paceGapOverSpoken": {
+    "description": "TalkBack, after paceSpoken: how far spending is above the steady line (D133)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paceSpareSpoken": "At this pace about {amount} spare.",
+  "@paceSpareSpoken": {
+    "description": "TalkBack, after the gap: the forecast's money left at the cycle's end, rounded to ₹100 (D133)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paceRunsOutSpoken": "At this pace it runs out on {date}.",
+  "@paceRunsOutSpoken": {
+    "description": "TalkBack, after the gap: the day the forecast says the money runs out (D133)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "whereItWent": "Where it went",
   "percentShare": "{percent}%",
   "@percentShare": {
@@ -72,7 +143,7 @@
       }
     }
   },
-  "pastLimit": "{amount} past limit",
+  "pastLimit": "{amount} over limit",
   "@pastLimit": {
     "placeholders": {
       "amount": {
@@ -102,16 +173,20 @@
       }
     }
   },
-  "nothingSpentIn": "Nothing spent in {cycle} yet.",
+  "nothingSpentIn": "{when, select, past{Nothing was spent in {cycle}.} other{Nothing spent in {cycle} yet.}}",
   "@nothingSpentIn": {
     "placeholders": {
       "cycle": {
         "type": "String"
+      },
+      "when": {
+        "type": "String"
       }
-    }
+    },
+    "description": "Spends with nothing spent; when is 'past' for a finished cycle, else 'current'"
   },
   "tipsTitle": "Worth knowing",
-  "insightCategoryUp": "{category} is {amount} more than in {cycle}.",
+  "insightCategoryUp": "{category} spending is {amount} more than in {cycle}.",
   "@insightCategoryUp": {
     "description": "BR-14 #1; cycle names the previous cycle, as the cycle switcher does (October, or 26 Oct – 1 Nov)",
     "placeholders": {
@@ -140,7 +215,7 @@
       }
     }
   },
-  "insightSteadiest": "{category} costs about the same every week.",
+  "insightSteadiest": "{category} spending stays about the same every week.",
   "@insightSteadiest": {
     "description": "BR-14 #3",
     "placeholders": {
@@ -149,14 +224,43 @@
       }
     }
   },
-  "insightLimitOffer": "Set limits from {cycle}'s spending? Each one is rounded up to the next ₹500.",
+  "insightLimitOffer": "Set limits from {cycle}'s spending? Each one is rounded up to the next {step}.",
   "seeEntries": "See {category} entries",
   "useTheseLimits": "Use these limits",
   "seeEveryEntry": "See every entry",
   "seeAll": "See all",
   "everyEntry": "Every entry",
+  "everyEntryIn": "Every entry in {cycle}",
+  "@everyEntryIn": {
+    "description": "TalkBack label of Where it went's See all link (FR-SP-6); cycle is the switcher's label, like October",
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
   "allCategories": "All",
-  "noEntriesHere": "Nothing here yet.",
+  "noEntriesIn": "No entries in {cycle}.",
+  "@noEntriesIn": {
+    "description": "Every entry, nothing in the cycle",
+    "placeholders": {
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "noCategoryEntriesIn": "No {category} entries in {cycle}.",
+  "@noCategoryEntriesIn": {
+    "description": "Every entry filtered to a category with nothing in the cycle",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
   "filteredBy": "· {category}",
   "@filteredBy": {
     "description": "After the cycle name on Every entry, naming the category the list is narrowed to",
@@ -167,7 +271,7 @@
     }
   },
   "seeWhereItWent": "See where it went",
-  "overTodayCard": "{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it is a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}",
+  "overTodayCard": "{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it's a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}",
   "@overTodayCard": {
     "description": "Calm card under the hero when today is overspent (SPEC FR-HO-5); days is at least 1, since on the last day any overspend is over the cycle",
     "placeholders": {
@@ -373,7 +477,7 @@
       }
     }
   },
-  "startupFailed": "hisaab couldn't open its data. Close the app and open it again.",
+  "startupFailed": "hisaab couldn't open your data. Close the app and open it again.",
   "@startupFailed": {
     "description": "Shown only when the local database cannot be opened at start-up"
   },
@@ -401,7 +505,7 @@
       }
     }
   },
-  "deleteLastDigit": "Delete last digit. Long-press to clear",
+  "deleteLastDigit": "Delete last digit. Touch and hold to clear all",
   "categoryName": "{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Money in} other_income{Other income} other{Other}}",
   "@categoryName": {
     "description": "Default name of a seeded category, by its stored key",
@@ -423,7 +527,7 @@
     }
   },
   "incomeQuestion": "How much money comes in each month?",
-  "incomeHint": "Pay, business, pension or family money. If it changes, a low month is a safe guess.",
+  "incomeHint": "Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month.",
   "@incomeHint": {
     "description": "Onboarding step 1 hint; names sources, not jobs, so it fits non-salaried users (D116)"
   },
@@ -431,7 +535,7 @@
   "@startingGuessNote": {
     "description": "Note on the income entry onboarding saves for It changes; the amount is the user's low-month guess (D117)"
   },
-  "incomePrivacy": "It stays on this phone. The app never uses the internet.",
+  "incomePrivacy": "What you type stays on this phone. The app never uses the internet.",
   "@incomePrivacy": {
     "description": "Caption under the onboarding income keypad, beside a lock icon (D116)"
   },
@@ -446,16 +550,16 @@
   },
   "dailyPreviewCaption": "Every day gets its own share",
   "paydayQuestion": "When does it come?",
-  "paydayHint": "Your month runs from one payday to the next. No fixed day? Pick It changes.",
+  "paydayHint": "Your month runs from one payday to the next. No fixed day? Pick \"It changes\".",
   "payFirstOfMonth": "1st of the month",
-  "payLastDay": "Last day",
+  "payLastDay": "Last day of the month",
   "payPickDate": "Pick a date",
   "payEveryWeek": "Every week",
   "payItChanges": "It changes",
   "pickPaydayQuestion": "Which day of the month?",
   "pickWeekdayQuestion": "Which day of the week?",
   "billsQuestion": "Any fixed bills?",
-  "billsHint": "Money that goes out on the same day every month. Add them now or later.",
+  "billsHint": "Same amount, same day, every month. You can add more later in Settings.",
   "billName": "{kind, select, rent{Rent} emi{EMI} phone{Phone} internet{Internet} schoolFees{School fees} subscriptions{Subscriptions} creditCard{Credit card} electricity{Electricity} other{Bill}}",
   "@billName": {
     "description": "Name of a fixed bill chip, by its kind",
@@ -465,7 +569,7 @@
       }
     }
   },
-  "billAmountQuestion": "How much is {bill}?",
+  "billAmountQuestion": "How much for {bill} each month?",
   "@billAmountQuestion": {
     "placeholders": {
       "bill": {
@@ -473,7 +577,7 @@
       }
     }
   },
-  "billDayQuestion": "Which day does {bill} go out?",
+  "billDayQuestion": "Which day of the month for {bill}?",
   "@billDayQuestion": {
     "placeholders": {
       "bill": {
@@ -493,7 +597,7 @@
       }
     }
   },
-  "removeBill": "Remove {bill}",
+  "removeBill": "Delete {bill}",
   "@removeBill": {
     "placeholders": {
       "bill": {
@@ -583,7 +687,7 @@
       }
     }
   },
-  "eachDayAfter": "Each day after: {amount}",
+  "eachDayAfter": "From tomorrow: {amount} a day",
   "@eachDayAfter": {
     "placeholders": {
       "amount": {
@@ -618,11 +722,11 @@
       }
     }
   },
-  "noIncomeTitle": "Add money you got this month",
+  "noIncomeTitle": "Add the money that came in",
   "noIncomeBody": "Your daily share starts once there's money to share.",
   "addMoney": "Add money",
   "emptyToday": "Nothing spent today. Tap Add when you do.",
-  "entryDeleted": "Deleted {amount}",
+  "entryDeleted": "{amount} deleted",
   "@entryDeleted": {
     "placeholders": {
       "amount": {
@@ -630,7 +734,7 @@
       }
     }
   },
-  "loadFailed": "Couldn't load your money.",
+  "loadFailed": "Couldn't open this.",
   "gotAmount": "+{amount}",
   "@gotAmount": {
     "description": "An amount of money that came in",
@@ -677,7 +781,7 @@
       }
     }
   },
-  "tomorrowShare": "tomorrow {amount}",
+  "tomorrowShare": "tomorrow's share {amount}",
   "@tomorrowShare": {
     "placeholders": {
       "amount": {
@@ -701,7 +805,7 @@
     }
   },
   "backToAmount": "Back to amount",
-  "billGoesOut": "{bill} {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}",
+  "billGoesOut": "{bill}, {amount}, due {days, plural, =1{tomorrow} other{in {days} days}}",
   "@billGoesOut": {
     "description": "Home's due-soon nudge for the next fixed bill, e.g. \"Electricity ₹1,200 goes out in 3 days\"",
     "placeholders": {
@@ -724,15 +828,39 @@
   "@settingsMoney": {
     "description": "Settings group heading for money setup"
   },
+  "settingsLook": "Look",
+  "@settingsLook": {
+    "description": "Settings group heading for choosing light or dark colours (FR-SE-3). Sits under settingsMoney"
+  },
+  "lookTile": "Light or dark",
+  "@lookTile": {
+    "description": "Title of the one Look row in Settings; the current look shows under it and the phone, sun and moon buttons sit at its end"
+  },
+  "lookMatchPhone": "Match phone",
+  "@lookMatchPhone": {
+    "description": "Look option and the default: the app goes light or dark when the phone does"
+  },
+  "lookMatchPhoneSemantics": "Match phone, light or dark like your phone",
+  "@lookMatchPhoneSemantics": {
+    "description": "TalkBack label for the Match phone option, so it makes sense heard alone. Flutter adds 'selected' itself"
+  },
+  "lookLight": "Light",
+  "@lookLight": {
+    "description": "Look option: the app always uses light colours"
+  },
+  "lookDark": "Dark",
+  "@lookDark": {
+    "description": "Look option: the app always uses dark colours"
+  },
   "fixedBills": "Bills",
-  "fixedBillsHint": "Most go out by themselves on their day. If the amount changes, Home asks how much.",
+  "fixedBillsHint": "hisaab adds most bills to your spends on their day. If the amount changes, Home asks how much.",
   "addBill": "Add a bill",
   "noBills": "No bills added yet. Add rent, EMI or anything that goes out every month.",
   "savings": "Savings",
   "@savings": {
     "description": "Settings row and list title for money put away every month (D120)"
   },
-  "savingsHint": "Money you put away on the same day every month, like an RD. It goes in by itself on its day. Today's share already leaves room for it.",
+  "savingsHint": "Money you put in on the same day every month, like an RD. hisaab adds it on its day for you. Today's share already leaves room for it.",
   "@savingsHint": {
     "description": "Hint under the Savings title"
   },
@@ -761,7 +889,7 @@
   "@savingNameHint": {
     "description": "Hint in the saving name field"
   },
-  "savingAmountQuestion": "How much goes into {saving}?",
+  "savingAmountQuestion": "How much do you put in {saving} each month?",
   "@savingAmountQuestion": {
     "description": "Amount question for a saving",
     "placeholders": {
@@ -770,7 +898,7 @@
       }
     }
   },
-  "savingDayQuestion": "Which day does {saving} go in?",
+  "savingDayQuestion": "Which day of the month for {saving}?",
   "@savingDayQuestion": {
     "description": "Day question for a saving",
     "placeholders": {
@@ -787,11 +915,16 @@
   "@deleteSaving": {
     "description": "Delete key on a saving's sheet"
   },
-  "savingSkipped": "Skipped this month",
+  "savingSkipped": "{saving} skipped this month",
   "@savingSkipped": {
-    "description": "Snackbar after swiping away a saving its rule put in. Deleting it skips this month, never 'missed' (case study 17)."
+    "description": "Snackbar after swiping away a saving its rule put in. Deleting it skips this month, never 'missed' (case study 17).",
+    "placeholders": {
+      "saving": {
+        "type": "String"
+      }
+    }
   },
-  "savingDeleted": "Deleted {saving}",
+  "savingDeleted": "{saving} deleted",
   "@savingDeleted": {
     "description": "Snackbar after deleting a saving",
     "placeholders": {
@@ -800,7 +933,7 @@
       }
     }
   },
-  "savingStampDue": "{days, plural, =1{Goes in tomorrow} other{Goes in {days} days from now}}",
+  "savingStampDue": "{days, plural, =1{Due tomorrow} other{Due in {days} days}}",
   "@savingStampDue": {
     "description": "Stamp on a saving's sheet before its day",
     "placeholders": {
@@ -822,7 +955,7 @@
   "@savingStampCountedToday": {
     "description": "Stamp on a saving's sheet when it went in today"
   },
-  "savingNextGoesIn": "Next goes in on {date}",
+  "savingNextGoesIn": "Next due on {date}",
   "@savingNextGoesIn": {
     "description": "Foot of a saving's sheet",
     "placeholders": {
@@ -846,7 +979,7 @@
       }
     }
   },
-  "savingGoesIn": "{saving} {amount} goes in {days, plural, =1{tomorrow} other{on {weekday}}}",
+  "savingGoesIn": "{saving}, {amount}, due {days, plural, =1{tomorrow} other{on {weekday}}}",
   "@savingGoesIn": {
     "description": "Home nudge before a saving's day",
     "placeholders": {
@@ -972,7 +1105,7 @@
   "@billNameHint": {
     "description": "Placeholder in the bill name field"
   },
-  "billDeleted": "Deleted {bill}",
+  "billDeleted": "{bill} deleted",
   "@billDeleted": {
     "placeholders": {
       "bill": {
@@ -993,7 +1126,7 @@
       }
     }
   },
-  "billStampCounted": "Counted {date}",
+  "billStampCounted": "Went out {date}",
   "@billStampCounted": {
     "description": "Stamp on a bill the app counted as spent this month, e.g. \"Counted 5 Oct\"",
     "placeholders": {
@@ -1037,7 +1170,7 @@
       }
     }
   },
-  "billStampCountedToday": "Counted today",
+  "billStampCountedToday": "Went out today",
   "@billStampCountedToday": {
     "description": "Stamp on a bill the app counted as spent today"
   },
@@ -1069,7 +1202,7 @@
       }
     }
   },
-  "billNextGoesOut": "Next goes out on {date}",
+  "billNextGoesOut": "Next due on {date}",
   "@billNextGoesOut": {
     "description": "Bill sheet footer, e.g. \"Next goes out on 29 Oct\"",
     "placeholders": {
@@ -1286,9 +1419,12 @@
     "description": "Second line of the Ask AI card on Spends: the prompt is previewed before it is shared"
   },
   "@insightLimitOffer": {
-    "description": "BR-14 #4; cycle names the previous cycle, whose spending the limits come from",
+    "description": "BR-14 #4; cycle names the previous cycle, whose spending the limits come from; step is the rounding unit, e.g. ₹500",
     "placeholders": {
       "cycle": {
+        "type": "String"
+      },
+      "step": {
         "type": "String"
       }
     }
@@ -1301,7 +1437,7 @@
       }
     }
   },
-  "billAmountQuestionVaries": "About how much is {bill}?",
+  "billAmountQuestionVaries": "About how much for {bill} each month?",
   "@billAmountQuestionVaries": {
     "description": "Wizard and bill sheet amount question for a bill that changes every month (D123).",
     "placeholders": {
@@ -1310,7 +1446,7 @@
       }
     }
   },
-  "billAmountQuestionCard": "About how much is the {bill} bill?",
+  "billAmountQuestionCard": "About how much for {bill} each month?",
   "@billAmountQuestionCard": {
     "description": "Amount question for a credit card bill; {bill} is the card's name (D123).",
     "placeholders": {
@@ -1323,9 +1459,13 @@
   "@billCardHint": {
     "description": "One line under a card bill's amount question and on its amount sheet: card buys are counted when made, so the bill isn't (D123)."
   },
-  "billModeRow": "Amount changes?",
+  "billModeRow": "Kind of bill",
   "@billModeRow": {
-    "description": "Bill sheet row and question title: whether the amount is fixed, changes, or is a card bill."
+    "description": "Bill sheet row label: whether the amount is fixed, changes, or is a card bill."
+  },
+  "billModeQuestion": "What kind of bill is it?",
+  "@billModeQuestion": {
+    "description": "Bill sheet question title for the kind of bill (D123)."
   },
   "billModeFixed": "Same every month",
   "@billModeFixed": {
@@ -1385,7 +1525,7 @@
   "@waitingOpensHint": {
     "description": "TalkBack hint on the Home line for a waiting bill."
   },
-  "billGoesOutAbout": "{bill} about {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}",
+  "billGoesOutAbout": "{bill}, about {amount}, due {days, plural, =1{tomorrow} other{in {days} days}}",
   "@billGoesOutAbout": {
     "description": "Home due-soon nudge for a bill whose amount changes; mirrors billGoesOut.",
     "placeholders": {
@@ -1485,7 +1625,7 @@
   "@reminderChannel": {
     "description": "Android notification channel name, shown in the system's notification settings"
   },
-  "reminderChannelDescription": "One note on the day a bill that changes, or a card bill, is due",
+  "reminderChannelDescription": "On the day a changing bill or card bill is due",
   "@reminderChannelDescription": {
     "description": "Android notification channel description"
   },
@@ -1500,5 +1640,9 @@
   "remindAskNo": "Not now",
   "@remindAskNo": {
     "description": "No to bill reminders; never asked again"
+  },
+  "remindRefused": "Reminders are off. Home still shows bills that need an amount.",
+  "@remindRefused": {
+    "description": "Shown in the reminder ask after Android's permission is refused (E-i)"
   }
 }

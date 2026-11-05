@@ -134,7 +134,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.byTooltip('Back'));
       await settle(tester);
-      expect(find.text('Water ₹300 goes out tomorrow'), findsOneWidget);
+      expect(find.text('Water, ₹300, due tomorrow'), findsOneWidget);
     });
 
     Future<void> openBills(WidgetTester tester) async {
@@ -177,7 +177,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('bill-delete')));
       await settle(tester);
       expect(find.byType(BillSheet), findsNothing);
-      expect(find.text('Deleted Electricity'), findsOneWidget);
+      expect(find.text('Electricity deleted'), findsOneWidget);
       await tester.tap(find.text('Undo'));
       await settle(tester);
       expect(find.text('Electricity'), findsOneWidget);
@@ -185,16 +185,16 @@ void main() {
 
     testWidgets('Home\'s due-soon row opens the bill sheet; a delete there offers Undo on Home (FR-HO-3)', (WidgetTester tester) async {
       await boot(tester, FakeServices());
-      await tester.tap(find.text('Electricity ₹1,200 goes out in 3 days'));
+      await tester.tap(find.text('Electricity, ₹1,200, due in 3 days'));
       await settle(tester);
       expect(find.byType(BillSheet), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('bill-delete')));
       await settle(tester);
       expect(find.byType(BillSheet), findsNothing);
-      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsNothing);
+      expect(find.text('Electricity, ₹1,200, due in 3 days'), findsNothing);
       await tester.tap(find.text('Undo'));
       await settle(tester);
-      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
+      expect(find.text('Electricity, ₹1,200, due in 3 days'), findsOneWidget);
     });
 
     testWidgets('Home reloads when the app resumes (BR-8)', (WidgetTester tester) async {
@@ -287,6 +287,23 @@ void main() {
       expect(services.preferences.reminders, const Option<bool>.of(true));
       expect(services.reminders.permissionAsks, 1);
       expect(services.reminders.scheduled.single.billName, 'Electricity');
+      expect(find.byType(RemindRefusedSheet), findsNothing);
+    });
+
+    testWidgets('Remind me with the permission refused says reminders are off (E-i)', (WidgetTester tester) async {
+      final FakeServices fakes = FakeServices()..reminders.granted = false;
+      await boot(tester, fakes);
+      await tester.tap(find.byType(DueSoonRow));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-row-mode')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-mode-varies')));
+      await settle(tester);
+      Navigator.of(tester.element(find.byType(BillSheet))).pop();
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('remind-yes')));
+      await settle(tester);
+      expect(find.text('Reminders are off. Home still shows bills that need an amount.'), findsOneWidget);
     });
 
     testWidgets('a bill switched with the question already answered asks nothing', (WidgetTester tester) async {

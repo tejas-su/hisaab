@@ -39,7 +39,9 @@ abstract final class SafeToSpend {
     final Money pool = _pool(inputs);
     final Money share = _share(pool, daysLeft);
     final Money remaining = pool - inputs.spentToday - inputs.savedExtraToday;
-    final RangeForecast forecast = _forecast(inputs, remaining, daysLeft);
+    final RangeForecast forecast = SafeToSpend.forecast(
+      (cycle: inputs.cycle, today: inputs.today, remaining: remaining, paceSpentBefore: inputs.paceSpentBefore),
+    );
     return CycleSummary(
       cycle: inputs.cycle,
       today: inputs.today,
@@ -129,8 +131,12 @@ abstract final class SafeToSpend {
   static bool _runsOutBy(RangeForecast forecast, CalendarDate end) =>
       forecast is RunsOut && !forecast.date.isAfter(end);
 
+  /// The range forecast (BR-7): too early, about how much is spare at the cycle's end, or the
+  /// day the money runs out. Spends' pace chart uses it too, so the two never disagree (D133).
   // why: BR-7 pace uses only typed spending (V_prev / E); bills arrive on schedule, not at a pace.
-  static RangeForecast _forecast(CycleInputs inputs, Money remaining, int daysLeft) {
+  static RangeForecast forecast(ForecastInputs inputs) {
+    final Money remaining = inputs.remaining;
+    final int daysLeft = inputs.cycle.daysLeftFrom(inputs.today);
     final int elapsed = inputs.cycle.daysElapsedBefore(inputs.today);
     if (elapsed < _minimumHistoryDays) {
       return const TooEarlyToForecast();

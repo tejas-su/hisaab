@@ -15,8 +15,9 @@ PaceSeries _series(
   CalendarDate asOf = WorkedExample.today,
   int budget = 45000,
   List<DatedAmount> billsDue = const <DatedAmount>[],
+  bool isCurrent = false,
 }) =>
-    PaceSeries.of(entries, cycle: _cycle, asOf: asOf, budget: Money.fromMajor(budget), billsDue: billsDue)
+    PaceSeries.of(entries, cycle: _cycle, asOf: asOf, budget: Money.fromMajor(budget), billsDue: billsDue, isCurrent: isCurrent)
         .getOrElse(() => fail('no series'));
 
 Entry _spent(int rupees, CalendarDate date, {EntryKind kind = EntryKind.spent, int? recurringId}) => Entry(
@@ -30,6 +31,10 @@ Entry _spent(int rupees, CalendarDate date, {EntryKind kind = EntryKind.spent, i
     );
 
 const CalendarDate _rentDay = CalendarDate(2026, 10, 5);
+
+final List<DatedAmount> _electricity = <DatedAmount>[(date: const CalendarDate(2026, 10, 29), amount: Money.fromMajor(1200))];
+
+List<int> _rupees(List<Money> amounts) => amounts.map((Money m) => m.floorMajor).toList();
 
 void main() {
   group('PaceSeries.of (FR-SP-3)', () {
@@ -169,5 +174,57 @@ void main() {
         expect(series.axisLabels, labels.map(Money.fromMajor).toList());
       });
     }
+  });
+
+  group('PaceSeries gap and forecast (FR-SP-3, D133)', () {
+    test('worked example: ₹7,042 under the steady line', () {
+      expect(_series(WorkedExample.entries, billsDue: _electricity).gap, Money.fromMajor(-7042));
+    });
+
+    test('over the steady line the gap is positive', () {
+      final PaceSeries series = _series(<Entry>[_spent(5000, const CalendarDate(2026, 10, 4))], asOf: const CalendarDate(2026, 10, 5));
+      expect(series.gap, Money.fromMajor(5000 - 2903));
+    });
+
+    test('a past cycle has no forecast', () {
+      final PaceSeries series = _series(WorkedExample.entries, asOf: _cycle.end);
+      expect(series.forecast, const Option<RangeForecast>.none());
+      expect(series.forecastByDay, isEmpty);
+    });
+
+    test('worked example: about ₹9,300 spare, as Home says (BR-7)', () {
+      final PaceSeries series = _series(WorkedExample.entries, billsDue: _electricity, isCurrent: true);
+      expect(series.forecast, Option<RangeForecast>.of(LastsTillPayday(Money.fromMajor(9300))));
+    });
+
+    test('the forecast runs from today to the end at ₹861 a day, with electricity on its day', () {
+      final PaceSeries series = _series(WorkedExample.entries, billsDue: _electricity, isCurrent: true);
+      // 18,950 typed over 22 days; 29 Oct is 3 days on: 27,570 + 2,584 + 1,200.
+      expect(_rupees(series.forecastByDay), <int>[27570, 28431, 29292, 31354, 32215, 33076, 33938, 34799, 35660]);
+    });
+
+    test('spending fast: it runs out on 1 Nov and the forecast stops there', () {
+      final PaceSeries series = _series(
+        <Entry>[...WorkedExample.entries, _spent(9000, const CalendarDate(2026, 10, 22))],
+        billsDue: _electricity,
+        isCurrent: true,
+      );
+      expect(series.forecast, const Option<RangeForecast>.of(RunsOut(CalendarDate(2026, 11, 1))));
+      expect(series.forecastByDay, hasLength(7));
+      expect(series.forecastByDay.last, Money.fromMajor(36570 + 7622 + 1200));
+    });
+
+    test('fewer than 3 days in: too early, no forecast line', () {
+      final PaceSeries series = _series(<Entry>[_spent(8200, _rentDay, recurringId: 2)], asOf: _rentDay, isCurrent: true);
+      expect(series.forecast, const Option<RangeForecast>.of(TooEarlyToForecast()));
+      expect(series.forecastByDay, isEmpty);
+    });
+
+    test('already past the budget with nothing typed: it runs out today, a line of one point', () {
+      const CalendarDate today = CalendarDate(2026, 10, 9);
+      final PaceSeries series = _series(<Entry>[_spent(8200, _rentDay, recurringId: 2)], asOf: today, budget: 5000, isCurrent: true);
+      expect(series.forecast, const Option<RangeForecast>.of(RunsOut(today)));
+      expect(_rupees(series.forecastByDay), <int>[8200]);
+    });
   });
 }

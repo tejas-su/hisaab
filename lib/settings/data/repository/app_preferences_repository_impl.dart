@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../core/db/db_row.dart';
 import '../../../core/db/db_schema.dart';
 import '../../../core/errors/failure.dart';
+import '../../domain/entities/theme_choice.dart';
 import '../../domain/repository/app_preferences_repository.dart';
 import '../datasource/preferences_local_data_source.dart';
 
@@ -39,6 +40,17 @@ final class AppPreferencesRepositoryImpl implements AppPreferencesRepository {
   @override
   TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind}) => dbTask(() async {
         await _preferences.write(SettingKeys.billReminders, remind ? _yes : _no);
+        return unit;
+      });
+
+  @override
+  TaskEither<Failure, ThemeChoice> themeChoice() => dbTask(() => _preferences.read(SettingKeys.themeMode))
+      .map((String? stored) => ThemeChoice.values.firstWhere((ThemeChoice choice) => choice.name == stored, orElse: () => ThemeChoice.matchPhone));
+
+  @override
+  TaskEither<Failure, Unit> saveThemeChoice(ThemeChoice choice) => dbTask(() async {
+        // why: the enum's name is the stored value, so renaming a value needs a migration.
+        await _preferences.write(SettingKeys.themeMode, choice.name);
         return unit;
       });
 

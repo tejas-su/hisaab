@@ -4,6 +4,7 @@ library;
 
 export 'domain/bill_reminder_plan.dart';
 export 'domain/bill_validator.dart';
+export 'domain/budget_suggester.dart';
 export 'domain/entities/bill_icon.dart';
 export 'domain/entities/bill_input.dart';
 export 'domain/entities/amount_mode.dart';

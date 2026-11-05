@@ -1,9 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
+import '../entities/theme_choice.dart';
 
-/// App preferences owned by the settings feature: onboarding progress (DECISIONS D20) and the
-/// answer to "Remind you on the day it's due?" (D126).
+/// App preferences owned by the settings feature: onboarding progress (DECISIONS D20), the
+/// answer to "Remind you on the day it's due?" (D126) and the look (FR-SE-3).
 abstract interface class AppPreferencesRepository {
   /// Whether onboarding was finished (SPEC FR-ON-1).
   ///
@@ -36,4 +37,15 @@ abstract interface class AppPreferencesRepository {
   ///
   /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
   TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind});
+
+  /// The look the user picked (SPEC FR-SE-3).
+  ///
+  /// Returns [Right] with the choice, [ThemeChoice.matchPhone] when none was picked or the stored
+  /// value is unknown; or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, ThemeChoice> themeChoice();
+
+  /// Remembers [choice] as the look.
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> saveThemeChoice(ThemeChoice choice);
 }

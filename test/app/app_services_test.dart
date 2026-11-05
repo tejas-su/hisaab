@@ -45,7 +45,7 @@ void main() {
       addTearDown(getIt.reset);
 
       expect(await getIt<ShouldAskBillReminders>()(const NoParams()).run(), Either<Failure, bool>.right(false));
-      expect(await getIt<AnswerBillReminders>()(false).run(), Either<Failure, Unit>.right(unit));
+      expect(await getIt<AnswerBillReminders>()(false).run(), Either<Failure, bool>.right(false));
       expect(getIt<ArmBillReminders>(), isNotNull);
     });
 

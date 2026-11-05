@@ -64,8 +64,8 @@
 </head>
 <body>
 
-<h1>Pace chart <span class="tag">proposal</span></h1>
-<p class="lede">The Spends pace chart (FR-SP-3), three ways. <b>Before</b> is the chart before D129, with a straight steady ramp. <b>D129 (built)</b> is the fix that shipped: the steady line steps up on each bill's day, so a bill no longer reads as overspending. <b>Proposal</b> adds three things on top, none of them built: the gap at today as a number, where this pace ends up, and three dates under the plot. Everything is drawn with tokens only (ink, ink2, hairline, one marigold dot); no red, no green.</p>
+<h1>Pace chart <span class="tag">built: D129, D133</span></h1>
+<p class="lede">The Spends pace chart (FR-SP-3), three ways. <b>Before</b> is the chart before D129, with a straight steady ramp. <b>D129 (built)</b> is the fix that shipped: the steady line steps up on each bill's day, so a bill no longer reads as overspending. <b>Proposal</b> adds three things on top, built as D133: the gap at today as a number, where this pace ends up, and three dates under the plot. Everything is drawn with tokens only (ink, ink2, hairline, one marigold dot); no red, no green.</p>
 
 <h2>A · Worked example, Mon 26 Oct</h2>
 <p class="why">Rent ₹8,200 posted 5 Oct, ₹18,950 of food on 20 Oct, ₹420 today. Electricity ₹1,200 is still to come on 29 Oct. The verdict is the same before and after D129, but the steady line now meets the rent step, and the proposal says how much room there is and where the month ends up.</p>
@@ -87,18 +87,18 @@
   <tr><th>Mark</th><th>Drawn as</th><th>Rule</th></tr>
   <tr><td>Steady pace</td><td>Dotted <code>ink2</code>, 2dp, 2 on 4</td><td>Bills due by the day + an even share of the rest of <code>I − K</code> (D129, built)</td></tr>
   <tr><td>You</td><td>Solid <code>ink</code>, 2.5dp</td><td>Running total of <i>Spent</i>, bills included (unchanged)</td></tr>
-  <tr><td>Gap at today</td><td><code>ink2</code> bracket at today's x, label in <code>ink</code> on the card colour</td><td><code>|spent − steady(today)|</code>, floored to the rupee, "₹X under" / "₹X over"<span class="draft">copy draft</span></td></tr>
+  <tr><td>Gap at today</td><td><code>ink2</code> bracket at today's x, label in <code>ink</code> on the card colour</td><td><code>|spent − steady(today)|</code>, floored to the rupee, "₹X under" / "₹X over"</td></tr>
   <tr><td>At this pace</td><td>Dashed <code>ink</code>, 2dp, 6 on 5, from today's dot</td><td>BR-7 pace a day + bills still to come on their days; hidden while <code>E &lt; 3</code>; on a past cycle not drawn</td></tr>
   <tr><td>Where it ends</td><td>Spare: label at the end, rounded to ₹100 with "about". Runs out: an <code>ink</code> ring where it crosses <code>I − K</code>, then the line stops</td><td>The same numbers as Home's range line (BR-7), so the two never disagree</td></tr>
   <tr><td>Dates</td><td>Cycle start, <b>Today</b> (600 weight, <code>ink</code>), cycle end, in <code>labelSmall</code> <code>ink2</code></td><td>A date label is dropped when it would overlap <i>Today</i></td></tr>
-  <tr><td>TalkBack</td><td>The card stays one sentence</td><td>"Spent so far ₹27,570 of ₹45,000. Spending slower, ₹7,042 under steady pace. At this pace about ₹9,300 spare."<span class="draft">copy draft</span></td></tr>
+  <tr><td>TalkBack</td><td>The card stays one sentence</td><td>"27,570 rupees spent so far of 45,000 rupees. Spending slower. 7,042 rupees under steady pace. At this pace about 9,300 rupees spare."</td></tr>
 </table>
 
 <h2>Open questions</h2>
 <ul>
-  <li><b>Copy:</b> "₹7,042 under", "about ₹9,300 spare", "runs out 1 Nov" and "At this pace" are drafts for <code>design-content</code>. "Spare" and "runs out" reuse Home's range-line words on purpose.</li>
+  <li><b>Copy:</b> shipped as drawn (D133). "Spare" and "runs out" reuse Home's range-line words on purpose.</li>
   <li><b>Gap vs verdict:</b> the gap could replace the verdict word instead of sitting beside it ("₹7,042 slower than steady"). Kept both here so the word still carries it at 2× text where the bracket label may be tight.</li>
-  <li><b>Past cycles:</b> no forecast and no <i>Today</i>; the bracket would sit at the end and read the final gap ("₹2,100 under for the month").</li>
+  <li><b>Past cycles:</b> built with no gap, no forecast and no <i>Today</i>; only the first and last dates. A final gap ("₹2,100 under for the month") is still open.</li>
   <li><b>Not in this mockup:</b> savings on the chart (#4) needs a decision against D120 first; touch-to-read a day (#6) and last cycle's line (#7) are later.</li>
 </ul>
 
@@ -216,7 +216,7 @@
       `<span class="v">${slower ? GLYPH_OK : GLYPH_ALERT}${slower ? 'Spending slower' : 'Spending faster'}</span>`,
     ].join('');
     const spoken = mode === 'proposal'
-      ? `TalkBack: "Spent so far ${inr(sc.spent)} of ${inr(BUDGET)}. ${slower ? 'Spending slower' : 'Spending faster'}, ${inr(Math.abs(c.gap))} ${slower ? 'under' : 'over'} steady pace.${c.fc ? (c.fc.runsOut ? ' At this pace it runs out on ' + short(dateOf(c.fc.runsOut)) + '.' : ' At this pace about ' + inr(c.fc.spare) + ' spare.') : ''}"`
+      ? `TalkBack: "${inr(sc.spent).slice(1)} rupees spent so far of ${inr(BUDGET).slice(1)} rupees. ${slower ? 'Spending slower' : 'Spending faster'}. ${inr(Math.abs(c.gap)).slice(1)} rupees ${slower ? 'under' : 'over'} steady pace.${c.fc ? (c.fc.runsOut ? ' At this pace it runs out on ' + short(dateOf(c.fc.runsOut)) + '.' : ' At this pace about ' + inr(c.fc.spare).slice(1) + ' rupees spare.') : ''}"`
       : '';
     return `<div class="strip ${theme}"><div class="card">
       <div class="total"><span class="lbl">Spent so far</span><span><b>${inr(sc.spent)}</b> <small>of ${inr(BUDGET)}</small></span></div>

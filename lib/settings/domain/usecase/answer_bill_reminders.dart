@@ -11,23 +11,22 @@ import '../repository/app_preferences_repository.dart';
 ///
 /// A refused permission still counts as answered: nothing is asked again, and Home's line still
 /// works (E-i).
-final class AnswerBillReminders implements UseCase<Unit, bool> {
+final class AnswerBillReminders implements UseCase<bool, bool> {
   const AnswerBillReminders({required this._preferences, required this._reminders, required this._arm});
 
   final AppPreferencesRepository _preferences;
   final BillReminders _reminders;
   final ArmBillReminders _arm;
 
-  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure` when the answer can't be
-  /// saved (then nothing else happens) or the bills can't be read.
+  /// Returns [Right] with true when reminders are on (Android gave the permission), false for
+  /// *Not now* or a refused permission; or [Left] with `DatabaseFailure` when the answer can't
+  /// be saved (then nothing else happens) or the bills can't be read.
   @override
-  TaskEither<Failure, Unit> call(bool params) => _preferences
+  TaskEither<Failure, bool> call(bool params) => _preferences
       .saveBillRemindersChoice(remind: params)
-      .flatMap((Unit _) => params ? _askAndroid() : TaskEither<Failure, Unit>.right(unit))
-      .flatMap((Unit _) => _arm(params));
+      .flatMap((Unit _) => params ? _askAndroid() : TaskEither<Failure, bool>.right(false))
+      .flatMap((bool on) => _arm(params).map((Unit _) => on));
 
-  TaskEither<Failure, Unit> _askAndroid() => TaskEither<Failure, Unit>(() async {
-        await _reminders.requestPermission();
-        return Either<Failure, Unit>.right(unit);
-      });
+  TaskEither<Failure, bool> _askAndroid() =>
+      TaskEither<Failure, bool>(() async => Either<Failure, bool>.right(await _reminders.requestPermission()));
 }

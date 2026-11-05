@@ -13,7 +13,7 @@ import '../../bloc/bill_sheet_event.dart';
 import '../../bloc/bill_sheet_state.dart';
 import 'bill_question_frame.dart';
 
-/// The *Amount changes?* question: three answers stacked, the current one picked; a tap saves
+/// The *Kind of bill* question, "What kind of bill is it?": three answers stacked, the current one picked; a tap saves
 /// (D123).
 class BillModeQuestion extends StatelessWidget {
   const BillModeQuestion({super.key, required this.state});
@@ -25,7 +25,7 @@ class BillModeQuestion extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final RecurringRule rule = state.rule;
     return BillQuestionFrame(
-      question: strings.billModeRow,
+      question: strings.billModeQuestion,
       name: rule.label,
       glyph: rule.glyph,
       figure: AmountText(rule.amount, roll: false, style: Theme.of(context).textTheme.displaySmall),

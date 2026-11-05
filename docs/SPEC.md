@@ -59,7 +59,11 @@ Tests should cite the ID they cover.
 | **Days rail** | One dot per day left in the cycle, today's first, ending at the payday flag (BR-6) |
 | **Range line** | A forecast sentence: does the money last until payday at the current pace? |
 | **Month end** | The end of a cycle that follows the calendar month (*It changes*, or month start on the 1st). It has no payday, so the rail, range line and over card name the month end instead (DECISIONS D116) |
-| **Keep aside** | Optional money set aside each cycle and never counted as spendable |
+| **Bill** | Money that goes out every month on a day. It is *Same every month* (posted by itself), *Changes every month* (Home asks how much on its day) or a *Credit card* bill (a reminder to pay; never counted again) (BR-9, D123) |
+| **Waiting** | A changing or card bill whose day has come but whose amount isn't entered yet (BR-9) |
+| **Saving** | Money put in on the same day every month, like an RD; today's share leaves room for it, and it is never spending (D120) |
+| **Limit** | An optional cap on one category's spending in a cycle (BR-12) |
+| **Starting guess** | The income an *It changes* user typed in onboarding, saved as one *Got* entry with that note (D117) |
 
 ---
 
@@ -186,23 +190,23 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   1. Insert the entry dated `next_due`.
   2. Advance `next_due` by one period, with monthly rules clamped as in BR-1.
 - All inserts for one run happen in **one DB transaction**.
-- **Amount changes? (D123).** A bill is *Same every month* (fixed, posted as above), *Changes every month* or a *Credit card*. Savings and income are always fixed.
+- **Kind of bill (D123).** A bill is *Same every month* (fixed, posted as above), *Changes every month* or a *Credit card*. Savings and income are always fixed.
   - The engine **never posts** a changing or card bill and never moves its `next_due`, which stays the first date it may wait from (D33).
   - An occurrence **waits** when it falls in this cycle on or before today, not before `next_due`, and its month has neither an entry nor a skip of that bill. A month is answered once, so moving the bill's day or an entry's date never asks (or reserves) the same month twice. Nothing else is stored: deleting an entered bill makes it wait again, and a bill left unanswered drops out when the cycle ends (it is never posted; it can still be added by hand, E6).
   - **Entering** an amount posts an entry dated on the occurrence, linked to the rule: *Spent* for a changing bill, a card bill paid (kind `card`, in a hidden category, named after the card) for a card. The amount becomes the estimate for next time. Undo deletes the entry and puts the old estimate back.
   - **Didn't go out this month** records a skip for that date; Undo removes it.
   - **Switching to *Same every month*** moves `next_due` up to the latest occurrence on or before today, when that is later, so at most that one is posted, at the estimate; one already entered or skipped is left out. Older unanswered months are never back-posted (D124, D34).
-  - The bill sheet's *Amount changes?* row files a card bill in the hidden card category, and moves it back to *Bills* when it stops being one.
+  - The bill sheet's *Kind of bill* row files a card bill in the hidden card category, and moves it back to *Bills* when it stops being one.
 - **Idempotency:** the unique index `(recurring_id, date)` plus `ConflictAlgorithm.ignore` means a crash or double run never double-posts.
 - **Catch-up:** after 6 weeks away, a weekly rule posts all 6 occurrences, each with its own date.
 - **Editing a rule** changes future occurrences only; already-posted entries are not touched. **Deleting a rule** stops future posts and keeps past entries.
   - A bill **added** in Settings first goes out on its next due date on or after today; earlier dates this cycle are not back-posted (DECISIONS D33).
   - When a bill's **day changes**, its next date is the new day in the month of the old `next_due` (the first month not yet posted), or, if that day has passed, the next due date from today. No month is posted twice and nothing is back-posted (D34).
   - **Delete** stops the rule at once, with Undo (4 s) that resumes it (D35).
-- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label} ₹{amount} goes out in {n} days" ("goes out tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown. Saving rules are nudged the same way, worded "{Label} ₹{amount} goes in on {weekday}" ("goes in tomorrow" when `n = 1`) (D120). A changing or card bill says "about": "Electricity about ₹1,200 goes out tomorrow" (D123).
+- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label}, ₹{amount}, due in {n} days" ("due tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown. Saving rules are nudged the same way, worded "{Label}, ₹{amount}, due on {weekday}" ("due tomorrow" when `n = 1`) (D120). A changing or card bill says "about": "Electricity, about ₹1,200, due tomorrow" (D123, D132).
 - **Bill stamp (D118):** the bill sheet (FR-SE-1) stamps the bill:
   - When its next unposted occurrence is 1 to 5 days away (the due-soon window): "Due in {n} days" ("Due tomorrow" when `n = 1`).
-  - Otherwise, when an entry posted by this rule is dated on or after the occurrence one month before `next_due`: "Counted {d MMM}" with that entry's date, or "Counted today" when it is today.
+  - Otherwise, when an entry posted by this rule is dated on or after the occurrence one month before `next_due`: "Went out {d MMM}" with that entry's date, or "Went out today" when it is today (D132).
   - Otherwise no stamp. A bill added this cycle after its day (D33) has no entry, so it never claims to be counted.
   - A changing or card bill that still waits for its amount (FR-HO-3) is stamped "Waiting" first, and the footer gives the day it went out instead of next month's: "Went out on {d MMM}. Home asks how much." ("Was due on {d MMM}. Home asks what you paid." for a card). A card bill already paid reads "Paid {d MMM}" or "Paid today", never "Counted", because it isn't counted (D127).
   - Nobody marks a bill as paid. The engine counts it on its day; a month that differed is fixed by editing or deleting that entry in *Every entry*.
@@ -217,7 +221,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 - The amount is 1 to 999,999,999 rupees (at most 9 digits) and is stored as paise.
 - The date defaults to today. The user may pick yesterday, or a date in the current or previous cycle. Future dates are not allowed.
 - A note is optional, at most 80 characters, with whitespace trimmed.
-- **Delete** happens at once with an Undo snackbar (4 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled. A *Saved* entry can be deleted (that skips the month, and a rule's saving says "Skipped this month", never "missed") but never edited in the tray, which knows only *Spent* and *Got* (D120). A card bill paid is the same: never edited in the tray, and deleting it makes the bill wait again (D123). Editing the amount of a changing bill's latest entry in the tray makes it next month's estimate, as entering it did (D127).
+- **Delete** happens at once with an Undo snackbar (4 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled. A *Saved* entry can be deleted (that skips the month, and a rule's saving says "RD skipped this month", never "missed") but never edited in the tray, which knows only *Spent* and *Got* (D120). A card bill paid is the same: never edited in the tray, and deleting it makes the bill wait again (D123). Editing the amount of a changing bill's latest entry in the tray makes it next month's estimate, as entering it did (D127).
 - After any write, the ledger notifies listeners, and Home and Spends recompute.
 
 ### BR-11 Categories
@@ -233,7 +237,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - Only categories with spending last cycle get a limit. Exactly ₹500 stays ₹500, and ₹501 becomes ₹1,000.
   - The offer is not made once any category has a limit.
 - **Display:** the bar fills to `spent / max(spent of any category)`. A limit tick sits at `limit / max`, and any spend past the tick is drawn hatched, never red.
-  - Under its limit a row says "₹200 left" beside the name, and "₹0 left" at the limit exactly; past it, "₹840 past limit" replaces the share. The words show even when the limit is beyond the biggest bar and no tick is drawn (D110).
+  - Under its limit a row says "₹200 left" beside the name, and "₹0 left" at the limit exactly; past it, "₹840 over limit" replaces the share. The words show even when the limit is beyond the biggest bar and no tick is drawn (D110).
 
 ### BR-13 Percentages (Spends)
 - The shares of the cycle total use the **largest-remainder method**, so the shown integers always sum to exactly 100.
@@ -249,9 +253,9 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 
 ### BR-14 Insights (Spends)
 At most **3** are shown, chosen in priority order:
-1. **A category up at least 20% and at least ₹1,000 against the previous cycle at the same day-of-cycle.** "{Cat} is ₹X more than in {previous cycle}.", where the previous cycle is named as the cycle switcher names it ("September", or "19 Oct – 25 Oct") (DECISIONS D78). Day-of-cycle `k` is compared with day `min(k, previous cycle length)` of the previous cycle; this matters for 28-, 30- and 31-day cycles.
+1. **A category up at least 20% and at least ₹1,000 against the previous cycle at the same day-of-cycle.** "{Cat} spending is ₹X more than in {previous cycle}.", where the previous cycle is named as the cycle switcher names it ("September", or "19 Oct – 25 Oct") (DECISIONS D78). Day-of-cycle `k` is compared with day `min(k, previous cycle length)` of the previous cycle; this matters for 28-, 30- and 31-day cycles.
 2. **A single entry larger than 2× that category's median entry this cycle.** "Your biggest {cat} spend was ₹X on {date}."
-3. **The cycle's steadiest category** (lowest week-to-week variance, with at least 4 entries). "{Cat} costs about the same every week."
+3. **The cycle's steadiest category** (lowest week-to-week variance, with at least 4 entries). "{Cat} spending stays about the same every week."
 4. **The limit offer** from BR-12, on the current cycle only. "Set limits from {previous cycle}'s spending? Each one is rounded up to the next ₹500."
 
 - Each rule gives at most one insight. #1 picks the biggest rise and needs a fully tracked previous cycle (the first entry saved on or before its start). #2 picks the biggest standout. #2 and #3 leave out bills posted by a rule.
@@ -307,10 +311,10 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 ### 4.1 Onboarding (FR-ON)
 - **FR-ON-1** A fresh install opens onboarding. A finished onboarding never shows again unless the user resets the app.
-- **FR-ON-2** Step 1 asks "How much money comes in each month?" with the keypad open. The hint names money, not a job, so it fits salaried, self-employed, gig, pension and family money alike: "Pay, business, pension or family money. If it changes, a low month is a safe guess." Between the keypad and Next, a lock and "It stays on this phone. The app never uses the internet." (DECISIONS D116).
+- **FR-ON-2** Step 1 asks "How much money comes in each month?" with the keypad open. The hint names money, not a job, so it fits salaried, self-employed, gig, pension and family money alike: "Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month." Between the keypad and Next, a lock and "What you type stays on this phone. The app never uses the internet." (DECISIONS D116).
   - Given 45000 is typed, then the preview reads "That's about ₹1,500 a day", captioned "Every day gets its own share". This is `floor(amount / 30)`, for the preview only.
   - Next is enabled only when the amount is greater than 0.
-- **FR-ON-3** Step 2 asks "When does it come?" with five chips: *1st of the month*, *Last day*, *Pick a date* (day 1–31), *Every week* (weekday), *It changes*. The hint reads "Your month runs from one payday to the next. No fixed day? Pick It changes." Selecting a chip advances.
+- **FR-ON-3** Step 2 asks "When does it come?" with five chips: *1st of the month*, *Last day of the month*, *Pick a date* (day 1–31), *Every week* (weekday), *It changes*. The hint reads 'Your month runs from one payday to the next. No fixed day? Pick "It changes".' Selecting a chip advances.
 - **FR-ON-4** Step 3, "Any fixed bills?", offers chips (Rent, EMI, Phone, Internet, School fees, Subscriptions) that each open a mini keypad and a due day. **Skip** is always visible.
 - **FR-ON-5** Finishing creates the income rule (for *It changes*, this month's money as one *Got* entry noted "Starting guess", D27, D117), any bill rules and the seed categories in one transaction. It then runs the recurring engine, lands on Home with the "assemble" motion (today's bar fills and the rail's dots arrive one by one) and fires the success haptic.
 - **FR-ON-6** If the user leaves mid-onboarding, it resumes at the same step.
@@ -361,7 +365,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - A 10th digit is rejected with a head-shake and the reject haptic.
   - There is no decimal key.
   - The amount shows live Indian grouping.
-- **FR-AD-3** A helper line previews the effect, for example "₹1,020 over today's share · tomorrow ₹1,722", using BR-4 with the typed amount.
+- **FR-AD-3** A helper line previews the effect, for example "₹1,020 over today's share · tomorrow's share ₹1,722", using BR-4 with the typed amount.
 - **FR-AD-4** **Next** is enabled when the amount is greater than 0 and opens step 2. The tray shortens, and the amount flies up into the title.
 - **FR-AD-5** Step 2 shows a 2×4 grid of categories for *Spent*, or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a tile saves**, then:
   1. The tile flashes (120 ms).
@@ -376,7 +380,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 - **FR-SP-1** A cycle switcher `‹ October ›` shows the current and earlier cycles. Next is disabled on the current cycle.
   - A cycle is named after the month holding most of its days, with the year when it isn't this year; a weekly cycle by its dates (DECISIONS D52).
   - Earlier is enabled while the cycle before has entries, or the app was in use before it ended.
-  - An empty cycle reads "Nothing spent in October yet." and hides the chart and the list.
+  - An empty cycle reads "Nothing spent in October yet." (a finished one "Nothing was spent in September.") and hides the chart and the list.
 - **FR-SP-2** The **Ask AI** card at the top opens FR-AI for the cycle shown. It shows only when that cycle has spends (DECISIONS D53, D61). It reads "Ask an AI about October", with "You'll see exactly what it gets." below in smaller grey text; TalkBack reads both as one button (DECISIONS D70).
 - **FR-SP-3** **Pace chart:**
   - The cumulative *Spent* line (solid ink) against the steady-pace line (dotted) from (start, 0) to (end, `I − K`), with `K` computed from the cycle's savings, posted or still to come (D120).
@@ -384,12 +388,17 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).
   - A "Spending slower" or "Spending faster" verdict with a glyph (DECISIONS D77).
   - A today marker in marigold.
+  - On the current cycle (D133, mockup [31](design/mockups/31-pace-chart.html)):
+    - **Gap:** a bracket from today's point to the steady line, labelled "₹7,042 under" or "₹1,958 over": spending so far less `steady(today)`.
+    - **Forecast:** a dashed line from today's point, labelled *At this pace* in the key: spending so far, plus BR-7's `pace` a day (floored to the rupee), plus each bill still to come on its day. It ends at the cycle's last day with "about ₹9,300 spare", BR-7's spare; or, when BR-7 says it runs out, where it meets `I − K` (or on the run-out day), with a ring and "runs out 1 Nov". Its numbers are BR-7's, computed by the same function as Home's range line, so the two never disagree. Hidden while BR-7 is too early (`E < 3`).
+    - **TalkBack** adds two sentences after the verdict: "7,042 rupees under steady pace. At this pace about 9,300 rupees spare." (or "…it runs out on 1 Nov.").
+  - **Dates:** a row under the plot (the plot keeps its D69 height) with the cycle's first and last days and, on the current cycle, *Today* under today's point; a date that would touch *Today* gives way to it.
   - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. When spending runs far past `I − K`, the step moves up the same ladder so at most 4 labels sit above ₹0 (₹3,000 with ₹5,00,000 spent gives ₹0 / ₹2L / ₹4L). Without income there is no steady line, so only the total shows (DECISIONS D49, D115).
   - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day. Rent posted on day 2 with nothing else spent is *Spending slower*.
-- **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "past limit") (D110).
+- **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "over limit") (D110).
 - **FR-SP-4a** **Spent and saved:** one `ink2` line above *Where it went*, "Spent ₹27,570 · Saved ₹5,000", when the cycle shown has saves. Saves are never in the bars, percentages, week bars, pace or insights (D120).
 - **FR-SP-5** **Insights** (BR-14), with their actions.
-- **FR-SP-6** *See every entry* opens a day-grouped list with category and cycle filter chips. Swipe to delete and tap to edit, as on Home. A saving is listed with *Saved* and has no tap; each day's total counts spending only (D120).
+- **FR-SP-6** *See every entry* opens a day-grouped list (D131: the way in is *See all* at the end of *Where it went*'s title row, read by TalkBack as "Every entry in October"; a cycle with nothing spent keeps a *See every entry* chip under its sentence), with category and cycle filter chips. Swipe to delete and tap to edit, as on Home. A saving is listed with *Saved* and has no tap; each day's total counts spending only (D120).
   - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See {Cat} entries* opens it on that category (DECISIONS D53).
 
 ### 4.5 Ask AI (FR-AI)
@@ -404,23 +413,111 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
   - **Changing a bill** happens in the bill sheet (D118, mockup [27](design/mockups/27-bill-sheet.html)):
     - **AC-1** Tapping a bill row, or Home's due-soon row (FR-HO-3), opens the sheet over the current screen. No page is pushed.
-    - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then five rows (Amount, Amount changes?, Day of the month, Name, Icon), then "Next goes out on {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
+    - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then five rows (Amount, Kind of bill, Day of the month, Name, Icon), then "Next due on {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
     - **AC-3** A row opens its one question inside the sheet: the keypad prefilled with the amount (the first key replaces it, as FR-AD-8), the 1–31 grid with the current day picked, the name field without pills, or the grid of 16 icons with the current one picked.
     - **AC-4** Amount and name save with *Save*; a day or an icon saves on tap. Each save changes only that answer (a day follows D34), returns to the bill, flashes the row, and the footer reads "Changed." for 2.4 s ("Saved" means only real saving, D120). Saving an unchanged answer writes nothing.
     - **AC-5** Back from a question returns to the bill. Back, a swipe down or the scrim closes the sheet; unsaved typing is dropped, saved answers stay.
     - **AC-6** *Delete bill*, a full-width `sunk` key at the foot of the bill, closes the sheet and deletes the bill with Undo (D35).
     - **AC-7** A failed save keeps the question open with "Couldn't save. Try again."
-    - **AC-8** *Amount changes?* shows *Same every month*, *Changes every month* or *Credit card* (the value may take two lines). Its question is the three answers stacked, the current one picked; a tap saves (BR-9, D123).
-    - **AC-10** The first time a changing or card bill exists (added, or switched in *Amount changes?*), a sheet asks once "Remind you on the day it's due?" with *Remind me* (marigold) and *Not now*. *Remind me* then shows Android's permission prompt. Either answer is kept and never asked again; Back leaves it unanswered, to ask next time (D126).
-    - **AC-9** The *Credit card* chip makes a card bill and *Electricity* a changing one; any other name starts fixed. A changing bill's amount question reads "About how much is Electricity?", a card's "About how much is the Credit card bill?", with the card line of FR-HO-8 AC-2 under it while adding.
-  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "goes in". The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today:
+    - **AC-8** *Kind of bill* shows *Same every month*, *Changes every month* or *Credit card* (the value may take two lines). Its question, "What kind of bill is it?", is the three answers stacked, the current one picked; a tap saves (BR-9, D123).
+    - **AC-10** The first time a changing or card bill exists (added, or switched in *Kind of bill*), a sheet asks once "Remind you on the day it's due?" with *Remind me* (marigold) and *Not now*. *Remind me* then shows Android's permission prompt. Either answer is kept and never asked again; Back leaves it unanswered, to ask next time (D126). If Android refuses the permission, a second sheet says "Reminders are off. Home still shows bills that need an amount." with *Done* (E30, D132).
+    - **AC-9** The *Credit card* chip makes a card bill and *Electricity* a changing one; any other name starts fixed. A changing bill's amount question reads "About how much for Electricity each month?", a card's "About how much for Credit card each month?", with the card line of FR-HO-8 AC-2 under it while adding.
+  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "put in" ("How much do you put in RD each month?"). The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today:
     - **AC-1** It opens the keypad in a sheet, in the bill sheet's route.
     - **AC-2** The line under the amount is `tomorrow(remaining) − tomorrow(remaining − x)`: "Each day till payday gets ₹62 less" in the worked example ("…till month end…" for a month-end cycle), or "Payday's tomorrow." when `D = 1` (E-h).
     - **AC-3** The keypad refuses a digit that would go past `remaining`; with nothing left it reads "Nothing left to put in for now." and Save stays off.
     - **AC-4** Save posts a *Saved* entry dated today and closes the sheet with the success haptic. Today's share stays fixed; the later days get the less.
   - My month starts on: *Payday* / *1st*.
 - **FR-SE-2** Categories: rename, change icon.
-- **FR-SE-3** Look: Light / Dark / Match phone (default).
+- **FR-SE-3** Look: Match phone (default) / Light / Dark (D130, mockup [30](design/mockups/30-look-setting.html), case study [19](design-research/case-studies/19-theme-choice.md)).
+  - **AC-1** A *Look* group sits under *Money*: one row reading *Light or dark* with the current look's name under it, and three icon buttons at its end (phone, sun, moon), the current one filled. Nothing is stored until the user taps.
+  - **AC-2** One tap on an icon applies the look to the whole app in the same frame (no sheet, no fade, no Save, no message), remembers it in `theme_mode`, and the name under *Light or dark* changes.
+  - **AC-3** TalkBack reads the three buttons as one group of exclusive choices by name ("Match phone, light or dark like your phone, selected", "Light", "Dark"); the row's words are not read twice.
+  - **AC-5** The words may wrap beside the buttons but never break mid-word: when a word can't fit, the three buttons move under the words, still in one row.
+  - **AC-4** The text chip *Didn't go out this month* skips the occurrence; Home shows "Electricity skipped this month" with Undo.
+  - **AC-5** A failed save keeps the sheet open with "Couldn't save. Try again."
+  - **AC-6** Back while *Save* is still writing closes the sheet, and the save still ends with its Undo on Home. An Undo offered while Home can't show (still loading, or a failed reload) waits for Home's next good load (D127).
+  - **AC-6** Its content starts on the page gutter (D122).
+
+### 4.3 Add tray (FR-AD)
+- **FR-AD-1** Step 1, amount:
+  - *Spent* / *Got* segmented control, with *Spent* selected by default.
+  - Phone-layout keypad with `00`, `0` and ⌫. Long-pressing ⌫ clears the amount.
+  - Quick chips +₹10 / +₹20 / +₹50 / +₹100 / +₹500 **add** to the amount.
+- **FR-AD-2** Input rules:
+  - Leading zeros are ignored.
+  - A 10th digit is rejected with a head-shake and the reject haptic.
+  - There is no decimal key.
+  - The amount shows live Indian grouping.
+- **FR-AD-3** A helper line previews the effect, for example "₹1,020 over today's share · tomorrow's share ₹1,722", using BR-4 with the typed amount.
+- **FR-AD-4** **Next** is enabled when the amount is greater than 0 and opens step 2. The tray shortens, and the amount flies up into the title.
+- **FR-AD-5** Step 2 shows a 2×4 grid of categories for *Spent*, or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a tile saves**, then:
+  1. The tile flashes (120 ms).
+  2. The tray closes.
+  3. Once the tray has fully closed, Home recomputes. Today's block drains and the hero number rolls to its new value, starting in the same frame. While the tray covers Home, Home holds its last numbers (D91).
+  4. The success haptic fires.
+- **FR-AD-6** Double-taps while saving are ignored. If the save fails, the tray stays open with "Couldn't save. Try again." and nothing is lost.
+- **FR-AD-7** Back from step 2 returns to step 1 with the amount intact. Back from step 1 closes the tray without saving.
+- **FR-AD-8** Edit mode opens step 1 prefilled. Saving replaces the entry, and *Delete* is shown in step 2.
+
+### 4.4 Spends (FR-SP)
+- **FR-SP-1** A cycle switcher `‹ October ›` shows the current and earlier cycles. Next is disabled on the current cycle.
+  - A cycle is named after the month holding most of its days, with the year when it isn't this year; a weekly cycle by its dates (DECISIONS D52).
+  - Earlier is enabled while the cycle before has entries, or the app was in use before it ended.
+  - An empty cycle reads "Nothing spent in October yet." (a finished one "Nothing was spent in September.") and hides the chart and the list.
+- **FR-SP-2** The **Ask AI** card at the top opens FR-AI for the cycle shown. It shows only when that cycle has spends (DECISIONS D53, D61). It reads "Ask an AI about October", with "You'll see exactly what it gets." below in smaller grey text; TalkBack reads both as one button (DECISIONS D70).
+- **FR-SP-3** **Pace chart:**
+  - The cumulative *Spent* line (solid ink) against the steady-pace line (dotted) from (start, 0) to (end, `I − K`), with `K` computed from the cycle's savings, posted or still to come (D120).
+  - The steady line steps up by each bill on its own day: bills already posted, and on the current cycle the bills still to come (a changing bill at its estimate; never a card bill, D123). Between bills it rises by an even daily share of the rest: `steady(d) = bills due by d + floor((I − K − all bills) × (d + 1) / days)`, the share counted as ₹0 when the bills reach `I − K`. Worked example: rent ₹8,200 on 5 Oct and electricity ₹1,200 on 29 Oct give `steady(26 Oct) = 8,200 + floor(35,600 × 23 / 31) = ₹34,612`, so ₹27,570 is *Spending slower* (D129).
+  - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).
+  - A "Spending slower" or "Spending faster" verdict with a glyph (DECISIONS D77).
+  - A today marker in marigold.
+  - On the current cycle (D133, mockup [31](design/mockups/31-pace-chart.html)):
+    - **Gap:** a bracket from today's point to the steady line, labelled "₹7,042 under" or "₹1,958 over": spending so far less `steady(today)`.
+    - **Forecast:** a dashed line from today's point, labelled *At this pace* in the key: spending so far, plus BR-7's `pace` a day (floored to the rupee), plus each bill still to come on its day. It ends at the cycle's last day with "about ₹9,300 spare", BR-7's spare; or, when BR-7 says it runs out, where it meets `I − K` (or on the run-out day), with a ring and "runs out 1 Nov". Its numbers are BR-7's, computed by the same function as Home's range line, so the two never disagree. Hidden while BR-7 is too early (`E < 3`).
+    - **TalkBack** adds two sentences after the verdict: "7,042 rupees under steady pace. At this pace about 9,300 rupees spare." (or "…it runs out on 1 Nov.").
+  - **Dates:** a row under the plot (the plot keeps its D69 height) with the cycle's first and last days and, on the current cycle, *Today* under today's point; a date that would touch *Today* gives way to it.
+  - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. When spending runs far past `I − K`, the step moves up the same ladder so at most 4 labels sit above ₹0 (₹3,000 with ₹5,00,000 spent gives ₹0 / ₹2L / ₹4L). Without income there is no steady line, so only the total shows (DECISIONS D49, D115).
+  - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day. Rent posted on day 2 with nothing else spent is *Spending slower*.
+- **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "over limit") (D110).
+- **FR-SP-4a** **Spent and saved:** one `ink2` line above *Where it went*, "Spent ₹27,570 · Saved ₹5,000", when the cycle shown has saves. Saves are never in the bars, percentages, week bars, pace or insights (D120).
+- **FR-SP-5** **Insights** (BR-14), with their actions.
+- **FR-SP-6** *See every entry* opens a day-grouped list (D131: the way in is *See all* at the end of *Where it went*'s title row, read by TalkBack as "Every entry in October"; a cycle with nothing spent keeps a *See every entry* chip under its sentence), with category and cycle filter chips. Swipe to delete and tap to edit, as on Home. A saving is listed with *Saved* and has no tap; each day's total counts spending only (D120).
+  - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See {Cat} entries* opens it on that category (DECISIONS D53).
+
+### 4.5 Ask AI (FR-AI)
+- **FR-AI-1** The goals (4, or 3 when *Will my money last till payday?* is hidden, BR-15) are a single column of list rows, each with an icon, followed by an own-question row: a 200-character text field that is always visible, with the placeholder "Ask something else". While it has focus and is empty, the placeholder reads "Like: can I afford a new phone this month?" (DECISIONS D73). Tapping or typing in it picks it. The pick shows an ink check at the row's end and a bold label, never a fill or marigold (DECISIONS D67).
+- **FR-AI-2** The period segments and the *Leave out my notes* switch regenerate the preview immediately. The segments are named by their dates, as the cycle switcher names cycles: the shown cycle ("October"), and the three cycles oldest to newest ("Aug – Oct" for monthly cycles, short month names with no year; "12 Oct – 1 Nov" for weekly ones, the oldest start to the newest end) (DECISIONS D76).
+- **FR-AI-3** The preview shows "What the AI will see · {n} entries", then the caption "Nothing leaves your phone until you share it.", then (when weeks were grouped) "Older weeks are shown as totals to keep it short.", the first 4 lines, and *Show full text*, which expands to the full scrollable text (DECISIONS D75).
+- **FR-AI-4** The actions follow BR-15: *Copy & open ChatGPT*, *Other apps* and *Copy only*. When the prompt is too long to prefill ChatGPT, the paste caption sits directly above them. Nothing is sent anywhere by the app itself.
+
+### 4.6 Settings (FR-SE)
+- **FR-SE-1** Money settings:
+  - Money coming in (edits the income rule; future cycles only; D116).
+  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
+  - **Changing a bill** happens in the bill sheet (D118, mockup [27](design/mockups/27-bill-sheet.html)):
+    - **AC-1** Tapping a bill row, or Home's due-soon row (FR-HO-3), opens the sheet over the current screen. No page is pushed.
+    - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then five rows (Amount, Kind of bill, Day of the month, Name, Icon), then "Next due on {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
+    - **AC-3** A row opens its one question inside the sheet: the keypad prefilled with the amount (the first key replaces it, as FR-AD-8), the 1–31 grid with the current day picked, the name field without pills, or the grid of 16 icons with the current one picked.
+    - **AC-4** Amount and name save with *Save*; a day or an icon saves on tap. Each save changes only that answer (a day follows D34), returns to the bill, flashes the row, and the footer reads "Changed." for 2.4 s ("Saved" means only real saving, D120). Saving an unchanged answer writes nothing.
+    - **AC-5** Back from a question returns to the bill. Back, a swipe down or the scrim closes the sheet; unsaved typing is dropped, saved answers stay.
+    - **AC-6** *Delete bill*, a full-width `sunk` key at the foot of the bill, closes the sheet and deletes the bill with Undo (D35).
+    - **AC-7** A failed save keeps the question open with "Couldn't save. Try again."
+    - **AC-8** *Kind of bill* shows *Same every month*, *Changes every month* or *Credit card* (the value may take two lines). Its question, "What kind of bill is it?", is the three answers stacked, the current one picked; a tap saves (BR-9, D123).
+    - **AC-10** The first time a changing or card bill exists (added, or switched in *Kind of bill*), a sheet asks once "Remind you on the day it's due?" with *Remind me* (marigold) and *Not now*. *Remind me* then shows Android's permission prompt. Either answer is kept and never asked again; Back leaves it unanswered, to ask next time (D126). If Android refuses the permission, a second sheet says "Reminders are off. Home still shows bills that need an amount." with *Done* (E30, D132).
+    - **AC-9** The *Credit card* chip makes a card bill and *Electricity* a changing one; any other name starts fixed. A changing bill's amount question reads "About how much for Electricity each month?", a card's "About how much for Credit card each month?", with the card line of FR-HO-8 AC-2 under it while adding.
+  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "put in" ("How much do you put in RD each month?"). The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today:
+    - **AC-1** It opens the keypad in a sheet, in the bill sheet's route.
+    - **AC-2** The line under the amount is `tomorrow(remaining) − tomorrow(remaining − x)`: "Each day till payday gets ₹62 less" in the worked example ("…till month end…" for a month-end cycle), or "Payday's tomorrow." when `D = 1` (E-h).
+    - **AC-3** The keypad refuses a digit that would go past `remaining`; with nothing left it reads "Nothing left to put in for now." and Save stays off.
+    - **AC-4** Save posts a *Saved* entry dated today and closes the sheet with the success haptic. Today's share stays fixed; the later days get the less.
+  - My month starts on: *Payday* / *1st*.
+- **FR-SE-2** Categories: rename, change icon.
+- **FR-SE-3** Look: Match phone (default) / Light / Dark (D130, mockup [30](design/mockups/30-look-setting.html)).
+  - **AC-1** A *Look* group sits under *Money*: one row, *Light or dark*, with the current choice under it. Tapping it opens a sheet of the three looks, the current one picked. Nothing is stored until the user picks.
+  - **AC-2** A pick closes the sheet and applies the look to the whole app in the same frame (no fade, no Save, no message), and remembers it in `theme_mode`. The row then reads the new choice.
+  - **AC-3** TalkBack reads the rows as one group of exclusive choices: "Match phone, light or dark like your phone, selected".
+  - **AC-4** A failed read keeps matching the phone. A failed save still applies the look for now, and it is lost at the next launch.
 - **FR-SE-4** Data: Backup, Restore, Export CSV (BR-16), and *Reset app*. Reset asks the user to type "RESET", then wipes all data and returns to onboarding.
 - **FR-SE-5** About: version, licences, and the privacy sentence "Everything stays on this phone."
 
@@ -439,7 +536,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E7 | App closed for 6 weeks | Recurring engine catches up, each occurrence posted exactly once (BR-9) |
 | E8 | Two app launches race the engine | The unique index prevents duplicates |
 | E9 | Device date moved backwards | No crash; no un-posting; `next_due` is never moved back |
-| E10 | Irregular income with no *Got* entry yet this month | `I = 0`, so Home asks "Add money you got this month" |
+| E10 | Irregular income with no *Got* entry yet this month | `I = 0`, so Home asks "Add the money that came in" |
 | E11 | 9-digit amount (₹99,99,99,999) | Accepted; formats `₹99,99,99,999`; compact `₹100Cr` on charts |
 | E12 | Text scale 1.5× | Hero steps down to 56 / 44 with no clipping (UI_DESIGN §3.4) |
 | E13 | Reduce motion on | All motion becomes 150 ms crossfades; values still update |
@@ -459,7 +556,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E26 | Undo after entering | The entry goes and the bill waits again, with its old estimate |
 | E27 | A long-ignored changing bill switched to *Same every month* | Only the latest occurrence on or before today is posted, at the estimate; older months never (D124) |
 | E28 | A card bill with income that changes | No difference: a card bill never touches the pool |
-| E30 | Notification permission refused, or turned off later | Nothing is asked again; Home's waiting line still works (D126) |
+| E30 | Notification permission refused, or turned off later | Nothing is asked again; Home's waiting line still works (D126). A refusal right after *Remind me* says "Reminders are off. Home still shows bills that need an amount." (D132) |
 | E31 | A bill entered before 9:00 on its day | That day's reminder is removed before it shows; next month's is armed (D126) |
 | E32 | A reminder tapped after its bill was entered, skipped or deleted | Opens Home only (D126) |
 | E33 | The phone restarts, or the app is updated | The plugin's boot receiver re-arms the reminders; the next start or resume re-arms them too (D126) |
@@ -480,7 +577,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | NFR-7 | Changed-lines test coverage ≥ 90% (target 100%) per change (`.claude/rules/tests.md`) |
 | NFR-8 | Adaptive layout: no orientation or size lock; works from 320dp phones to tablets, in every foldable posture and in multi-window (UI_DESIGN §13) |
 | NFR-9 | The launch splash never delays Home: it is dismissed on Flutter's first frame. Its icon animation lasts 800 ms or less. Its background matches Home's in light and dark (UI_DESIGN §3.7) |
-| NFR-10 | The recent-apps preview never shows amounts on Android 13+ (`setRecentsScreenshotEnabled(false)`); screenshots keep working. Android 7–12 are unchanged, since `FLAG_SECURE` would block screenshots (D109) |
+| NFR-10 | The recent-apps preview never shows amounts on Android 13+ (`setRecentsScreenshotEnabled(false)`); screenshots keep working. The placeholder is Home's `bg` edge to edge, never the system's white card (D134). Android 7–12 are unchanged, since `FLAG_SECURE` would block screenshots (D109) |
 
 ---
 

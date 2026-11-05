@@ -47,14 +47,14 @@ void main() {
       expect(painter(tester).fill, 0.5);
     });
 
-    testWidgets('past its limit: "₹840 past limit" replaces the share, and the bar hatches past the tick', (WidgetTester tester) async {
+    testWidgets('past its limit: "₹840 over limit" replaces the share, and the bar hatches past the tick', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pump(tester, _food(limit: 9000));
-      expect(find.textContaining('₹840 past limit'), findsOneWidget);
+      expect(find.textContaining('₹840 over limit'), findsOneWidget);
       expect(find.text('36%'), findsNothing);
       expect(painter(tester).limitAt, closeTo(9000 / 9840, 1e-9));
       expect(
-        find.bySemanticsLabel('Food: 9,840 rupees, 36%, limit 9,000 rupees, 840 rupees past limit'),
+        find.bySemanticsLabel('Food: 9,840 rupees, 36%, limit 9,000 rupees, 840 rupees over limit'),
         findsOneWidget,
       );
       handle.dispose();
@@ -86,7 +86,7 @@ void main() {
     testWidgets('exactly at its limit: "₹0 left", with no hatch', (WidgetTester tester) async {
       await pump(tester, _food(spent: 5000, limit: 5000), biggest: 9840);
       expect(find.textContaining('₹0 left'), findsOneWidget);
-      expect(find.textContaining('past limit'), findsNothing);
+      expect(find.textContaining('over limit'), findsNothing);
       expect(painter(tester).fill, closeTo(painter(tester).limitAt!, 1e-9));
     });
 
@@ -98,7 +98,7 @@ void main() {
     testWidgets('without a limit there are no limit words', (WidgetTester tester) async {
       await pump(tester, _food());
       expect(find.textContaining('left'), findsNothing);
-      expect(find.textContaining('past limit'), findsNothing);
+      expect(find.textContaining('over limit'), findsNothing);
     });
 
     testWidgets('the category name is Regular row text (D68)', (WidgetTester tester) async {

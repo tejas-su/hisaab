@@ -22,7 +22,7 @@ import 'bill_slip.dart';
 import 'bill_stamp_badge.dart';
 import 'bill_wide_key.dart';
 
-/// The whole bill on its slip: head, amount and stamp, the answer rows (with *Amount changes?*, D123), the next date,
+/// The whole bill on its slip: head, amount and stamp, the answer rows (with *Kind of bill*, D123), the next date,
 /// then *Delete bill* (SPEC FR-SE-1 AC-2, AC-6). A saving has no Icon row and says "goes in"
 /// and "put in" (D120).
 class BillSummary extends StatelessWidget {

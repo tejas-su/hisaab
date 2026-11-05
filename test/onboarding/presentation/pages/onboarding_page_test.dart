@@ -79,24 +79,24 @@ void main() {
     testWidgets('⌫ drops the last digit and a long-press clears the income', (WidgetTester tester) async {
       await pump(tester);
       await tapKeys(tester, '450');
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await settle(tester);
       expect(find.text('₹45'), findsOneWidget);
-      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await settle(tester);
       expect(find.text('₹45'), findsNothing);
     });
 
     testWidgets('the income question names money, not salary, and says it stays on the phone (D116)', (WidgetTester tester) async {
       await pump(tester);
-      expect(find.text('Pay, business, pension or family money. If it changes, a low month is a safe guess.'), findsOneWidget);
-      expect(find.text('It stays on this phone. The app never uses the internet.'), findsOneWidget);
+      expect(find.text('Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month.'), findsOneWidget);
+      expect(find.text('What you type stays on this phone. The app never uses the internet.'), findsOneWidget);
       await tapKeys(tester, '45000');
       expect(find.text('Every day gets its own share'), findsOneWidget);
 
       await tester.tap(find.text('Next'));
       await settle(tester);
-      expect(find.text('Your month runs from one payday to the next. No fixed day? Pick It changes.'), findsOneWidget);
+      expect(find.text('Your month runs from one payday to the next. No fixed day? Pick "It changes".'), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('privacy-note')), findsNothing);
     });
 
@@ -137,7 +137,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.byKey(const ValueKey<String>('bill-rent')));
       await settle(tester);
-      expect(find.text('How much is Rent?'), findsOneWidget);
+      expect(find.text('How much for Rent each month?'), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('privacy-note')), findsNothing);
     });
 
@@ -161,7 +161,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey<String>('bill-rent')));
       await settle(tester);
-      expect(find.text('How much is Rent?'), findsOneWidget);
+      expect(find.text('How much for Rent each month?'), findsOneWidget);
       await tapKeys(tester, '8200');
       await tester.tap(find.text('Next'));
       await settle(tester);
@@ -259,7 +259,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.byKey(const ValueKey<String>('bill-phone')));
       await settle(tester);
-      await tester.tap(find.text('Remove Phone'));
+      await tester.tap(find.text('Delete Phone'));
       await settle(tester);
       expect(find.text('Skip'), findsOneWidget);
     });

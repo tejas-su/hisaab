@@ -5,7 +5,7 @@ import '../../../../core/design/hisaab_dimensions.dart';
 import '../../../../core/design/hisaab_motion.dart';
 import '../../../../core/extensions/build_context_extensions.dart';
 
-/// The bill's stamp, "Due in 3 days" or "Counted 5 Oct": straight letter-spaced text in a 2dp
+/// The bill's stamp, "Due in 3 days" or "Went out 5 Oct": straight letter-spaced text in a 2dp
 /// `displayInk2` edge (D118).
 ///
 /// It lands with a squash 260 ms after it first shows, on the flick spring; with reduced

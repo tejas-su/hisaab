@@ -16,7 +16,7 @@ void main() {
     testWidgets('a 56dp button with the bill\'s icon, the sentence, its date and a chevron', (WidgetTester tester) async {
       await pumpApp(tester, Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule _) {})));
       expect(tester.getSize(find.byType(DueSoonRow)).height, greaterThanOrEqualTo(56));
-      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
+      expect(find.text('Electricity, ₹1,200, due in 3 days'), findsOneWidget);
       expect(find.text('Thu, 29 Oct'), findsOneWidget);
       final List<AppIconData> glyphs = tester.widgetList<AppIcon>(find.byType(AppIcon)).map((AppIcon i) => i.icon).toList();
       expect(glyphs, <AppIconData>[BillIcon.power.glyph, AppIcons.next]);
@@ -26,9 +26,9 @@ void main() {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pumpApp(tester, Scaffold(body: DueSoonRow(bill: electricity, onOpenBill: (RecurringRule _) {})));
       expect(
-        tester.getSemantics(find.bySemanticsLabel('Electricity 1,200 rupees goes out in 3 days')),
+        tester.getSemantics(find.bySemanticsLabel('Electricity, 1,200 rupees, due in 3 days')),
         isSemantics(
-          label: 'Electricity 1,200 rupees goes out in 3 days',
+          label: 'Electricity, 1,200 rupees, due in 3 days',
           hint: 'Opens the bill.',
           isButton: true,
           hasTapAction: true,
@@ -64,7 +64,7 @@ void main() {
     testWidgets('a saving goes in on its weekday', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pumpApp(tester, Scaffold(body: DueSoonRow(bill: DueSoonBill(rule: rd29, dueDate: const CalendarDate(2026, 10, 29), daysAway: 3), onOpenBill: (RecurringRule _) {})));
-      expect(find.text('RD ₹5,000 goes in on Thu'), findsOneWidget);
+      expect(find.text('RD, ₹5,000, due on Thu'), findsOneWidget);
       expect(tester.getSemantics(find.byType(DueSoonRow)), isSemantics(hint: 'Opens the saving.', isButton: true, hasTapAction: true));
       final List<AppIconData> glyphs = tester.widgetList<AppIcon>(find.byType(AppIcon)).map((AppIcon i) => i.icon).toList();
       expect(glyphs.first, AppIcons.saving);
@@ -73,7 +73,7 @@ void main() {
 
     testWidgets('a saving tomorrow', (WidgetTester tester) async {
       await pumpApp(tester, Scaffold(body: DueSoonRow(bill: DueSoonBill(rule: rd29, dueDate: const CalendarDate(2026, 10, 27), daysAway: 1), onOpenBill: (RecurringRule _) {})));
-      expect(find.text('RD ₹5,000 goes in tomorrow'), findsOneWidget);
+      expect(find.text('RD, ₹5,000, due tomorrow'), findsOneWidget);
     });
   });
 }

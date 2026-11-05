@@ -138,11 +138,19 @@ class EntriesPage extends StatelessWidget {
         ),
         if (state.shown.isEmpty) ...<Widget>[
           const SizedBox(height: HisaabSpacing.l),
-          Text(strings.noEntriesHere, style: text.bodyLarge?.copyWith(color: context.colors.ink2)),
+          Text(
+            _empty(strings, state, CycleLabel.of(cycle, locale: context.money.locale, today: today)),
+            style: text.bodyLarge?.copyWith(color: context.colors.ink2),
+          ),
         ],
       ],
     );
   }
+
+  /// "No Food entries in October." when filtered to a category, else "No entries in October.".
+  static String _empty(AppLocalizations strings, EntriesReady state, String cycle) => state.filter
+      .flatMap((int id) => Option<Category>.fromNullable(state.categories[id]))
+      .match(() => strings.noEntriesIn(cycle), (Category category) => strings.noCategoryEntriesIn(category.labelIn(strings), cycle));
 
   Widget _failed(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);

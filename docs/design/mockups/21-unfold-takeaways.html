@@ -386,7 +386,7 @@
          <div class="note">Anyone who opens the app switcher sees today's money.</div></div>
        <div class="phone"><div class="cap"><b>Proposed</b><span>Recent apps</span></div>
          <div class="recents"><div class="rcard"><div class="lbl"><i></i>hisaab</div><div class="shot blank"><div class="note" style="text-align:center;padding:0 16px">System placeholder<br>(Android draws it)</div></div></div></div>
-         <div class="note">Android 13+: <code>setRecentsScreenshotEnabled(false)</code>. The system draws the placeholder, so we can't choose what it shows. Screenshots keep working.</div></div>
+         <div class="note">Android 13+: <code>setRecentsScreenshotEnabled(false)</code>. The system draws the placeholder: only colours, never an icon. We set them to Home's <code>bg</code> (D134). Screenshots keep working.</div></div>
        <div class="phone"><div class="cap"><b>Option, needs a blind read</b><span>Home · tap the eye</span></div>
          ${header(true)}<div id="eyeHero">${hero()}</div></div>`;
     const eyeBtn = document.getElementById('eyeBtn');

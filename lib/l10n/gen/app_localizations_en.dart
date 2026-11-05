@@ -69,6 +69,47 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String paceGapUnder(String amount) {
+    return '$amount under';
+  }
+
+  @override
+  String paceGapOver(String amount) {
+    return '$amount over';
+  }
+
+  @override
+  String paceRunsOut(String date) {
+    return 'runs out $date';
+  }
+
+  @override
+  String get paceAtThisPace => 'At this pace';
+
+  @override
+  String get paceToday => 'Today';
+
+  @override
+  String paceGapUnderSpoken(String amount) {
+    return '$amount under steady pace.';
+  }
+
+  @override
+  String paceGapOverSpoken(String amount) {
+    return '$amount over steady pace.';
+  }
+
+  @override
+  String paceSpareSpoken(String amount) {
+    return 'At this pace about $amount spare.';
+  }
+
+  @override
+  String paceRunsOutSpoken(String date) {
+    return 'At this pace it runs out on $date.';
+  }
+
+  @override
   String get whereItWent => 'Where it went';
 
   @override
@@ -78,7 +119,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pastLimit(String amount) {
-    return '$amount past limit';
+    return '$amount over limit';
   }
 
   @override
@@ -95,8 +136,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String nothingSpentIn(String cycle) {
-    return 'Nothing spent in $cycle yet.';
+  String nothingSpentIn(String cycle, String when) {
+    String _temp0 = intl.Intl.selectLogic(when, {
+      'past': 'Nothing was spent in $cycle.',
+      'other': 'Nothing spent in $cycle yet.',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -104,7 +149,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String insightCategoryUp(String category, String amount, String cycle) {
-    return '$category is $amount more than in $cycle.';
+    return '$category spending is $amount more than in $cycle.';
   }
 
   @override
@@ -114,12 +159,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String insightSteadiest(String category) {
-    return '$category costs about the same every week.';
+    return '$category spending stays about the same every week.';
   }
 
   @override
-  String insightLimitOffer(String cycle) {
-    return 'Set limits from $cycle\'s spending? Each one is rounded up to the next ₹500.';
+  String insightLimitOffer(String cycle, String step) {
+    return 'Set limits from $cycle\'s spending? Each one is rounded up to the next $step.';
   }
 
   @override
@@ -140,10 +185,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get everyEntry => 'Every entry';
 
   @override
+  String everyEntryIn(String cycle) {
+    return 'Every entry in $cycle';
+  }
+
+  @override
   String get allCategories => 'All';
 
   @override
-  String get noEntriesHere => 'Nothing here yet.';
+  String noEntriesIn(String cycle) {
+    return 'No entries in $cycle.';
+  }
+
+  @override
+  String noCategoryEntriesIn(String category, String cycle) {
+    return 'No $category entries in $cycle.';
+  }
 
   @override
   String filteredBy(String category) {
@@ -161,7 +218,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other:
           'It happens. The $amount is spread across the next $days days, so each one is a little smaller.',
       one:
-          'It happens. The $amount comes out of tomorrow, so it is a little smaller.',
+          'It happens. The $amount comes out of tomorrow, so it\'s a little smaller.',
     );
     return '$_temp0';
   }
@@ -293,7 +350,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startupFailed =>
-      'hisaab couldn\'t open its data. Close the app and open it again.';
+      'hisaab couldn\'t open your data. Close the app and open it again.';
 
   @override
   String get back => 'Back';
@@ -328,7 +385,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get deleteLastDigit => 'Delete last digit. Long-press to clear';
+  String get deleteLastDigit =>
+      'Delete last digit. Touch and hold to clear all';
 
   @override
   String categoryName(String key) {
@@ -357,14 +415,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incomeHint =>
-      'Pay, business, pension or family money. If it changes, a low month is a safe guess.';
+      'Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month.';
 
   @override
   String get startingGuessNote => 'Starting guess';
 
   @override
   String get incomePrivacy =>
-      'It stays on this phone. The app never uses the internet.';
+      'What you type stays on this phone. The app never uses the internet.';
 
   @override
   String dailyPreview(String amount) {
@@ -379,13 +437,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paydayHint =>
-      'Your month runs from one payday to the next. No fixed day? Pick It changes.';
+      'Your month runs from one payday to the next. No fixed day? Pick \"It changes\".';
 
   @override
   String get payFirstOfMonth => '1st of the month';
 
   @override
-  String get payLastDay => 'Last day';
+  String get payLastDay => 'Last day of the month';
 
   @override
   String get payPickDate => 'Pick a date';
@@ -407,7 +465,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billsHint =>
-      'Money that goes out on the same day every month. Add them now or later.';
+      'Same amount, same day, every month. You can add more later in Settings.';
 
   @override
   String billName(String kind) {
@@ -427,12 +485,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String billAmountQuestion(String bill) {
-    return 'How much is $bill?';
+    return 'How much for $bill each month?';
   }
 
   @override
   String billDayQuestion(String bill) {
-    return 'Which day does $bill go out?';
+    return 'Which day of the month for $bill?';
   }
 
   @override
@@ -442,7 +500,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String removeBill(String bill) {
-    return 'Remove $bill';
+    return 'Delete $bill';
   }
 
   @override
@@ -529,7 +587,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String eachDayAfter(String amount) {
-    return 'Each day after: $amount';
+    return 'From tomorrow: $amount a day';
   }
 
   @override
@@ -543,7 +601,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get noIncomeTitle => 'Add money you got this month';
+  String get noIncomeTitle => 'Add the money that came in';
 
   @override
   String get noIncomeBody =>
@@ -557,11 +615,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String entryDeleted(String amount) {
-    return 'Deleted $amount';
+    return '$amount deleted';
   }
 
   @override
-  String get loadFailed => 'Couldn\'t load your money.';
+  String get loadFailed => 'Couldn\'t open this.';
 
   @override
   String gotAmount(String amount) {
@@ -602,7 +660,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tomorrowShare(String amount) {
-    return 'tomorrow $amount';
+    return 'tomorrow\'s share $amount';
   }
 
   @override
@@ -642,7 +700,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: 'in $days days',
       one: 'tomorrow',
     );
-    return '$bill $amount goes out $_temp0';
+    return '$bill, $amount, due $_temp0';
   }
 
   @override
@@ -652,11 +710,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMoney => 'Money';
 
   @override
+  String get settingsLook => 'Look';
+
+  @override
+  String get lookTile => 'Light or dark';
+
+  @override
+  String get lookMatchPhone => 'Match phone';
+
+  @override
+  String get lookMatchPhoneSemantics =>
+      'Match phone, light or dark like your phone';
+
+  @override
+  String get lookLight => 'Light';
+
+  @override
+  String get lookDark => 'Dark';
+
+  @override
   String get fixedBills => 'Bills';
 
   @override
   String get fixedBillsHint =>
-      'Most go out by themselves on their day. If the amount changes, Home asks how much.';
+      'hisaab adds most bills to your spends on their day. If the amount changes, Home asks how much.';
 
   @override
   String get addBill => 'Add a bill';
@@ -670,7 +747,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savingsHint =>
-      'Money you put away on the same day every month, like an RD. It goes in by itself on its day. Today\'s share already leaves room for it.';
+      'Money you put in on the same day every month, like an RD. hisaab adds it on its day for you. Today\'s share already leaves room for it.';
 
   @override
   String get addSaving => 'Add a saving';
@@ -699,12 +776,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String savingAmountQuestion(String saving) {
-    return 'How much goes into $saving?';
+    return 'How much do you put in $saving each month?';
   }
 
   @override
   String savingDayQuestion(String saving) {
-    return 'Which day does $saving go in?';
+    return 'Which day of the month for $saving?';
   }
 
   @override
@@ -714,11 +791,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteSaving => 'Delete saving';
 
   @override
-  String get savingSkipped => 'Skipped this month';
+  String savingSkipped(String saving) {
+    return '$saving skipped this month';
+  }
 
   @override
   String savingDeleted(String saving) {
-    return 'Deleted $saving';
+    return '$saving deleted';
   }
 
   @override
@@ -726,8 +805,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: 'Goes in $days days from now',
-      one: 'Goes in tomorrow',
+      other: 'Due in $days days',
+      one: 'Due tomorrow',
     );
     return '$_temp0';
   }
@@ -742,7 +821,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String savingNextGoesIn(String date) {
-    return 'Next goes in on $date';
+    return 'Next due on $date';
   }
 
   @override
@@ -758,7 +837,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: 'on $weekday',
       one: 'tomorrow',
     );
-    return '$saving $amount goes in $_temp0';
+    return '$saving, $amount, due $_temp0';
   }
 
   @override
@@ -833,7 +912,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String billDeleted(String bill) {
-    return 'Deleted $bill';
+    return '$bill deleted';
   }
 
   @override
@@ -852,7 +931,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String billStampCounted(String date) {
-    return 'Counted $date';
+    return 'Went out $date';
   }
 
   @override
@@ -877,7 +956,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get billStampCountedToday => 'Counted today';
+  String get billStampCountedToday => 'Went out today';
 
   @override
   String get billAnswerAmount => 'Amount';
@@ -898,7 +977,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String billNextGoesOut(String date) {
-    return 'Next goes out on $date';
+    return 'Next due on $date';
   }
 
   @override
@@ -1056,12 +1135,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String billAmountQuestionVaries(String bill) {
-    return 'About how much is $bill?';
+    return 'About how much for $bill each month?';
   }
 
   @override
   String billAmountQuestionCard(String bill) {
-    return 'About how much is the $bill bill?';
+    return 'About how much for $bill each month?';
   }
 
   @override
@@ -1069,7 +1148,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add what you buy on the card on the day you buy it. This bill only reminds you to pay. It isn\'t counted again.';
 
   @override
-  String get billModeRow => 'Amount changes?';
+  String get billModeRow => 'Kind of bill';
+
+  @override
+  String get billModeQuestion => 'What kind of bill is it?';
 
   @override
   String get billModeFixed => 'Same every month';
@@ -1111,7 +1193,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: 'in $days days',
       one: 'tomorrow',
     );
-    return '$bill about $amount goes out $_temp0';
+    return '$bill, about $amount, due $_temp0';
   }
 
   @override
@@ -1163,7 +1245,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderChannelDescription =>
-      'One note on the day a bill that changes, or a card bill, is due';
+      'On the day a changing bill or card bill is due';
 
   @override
   String get remindAskTitle => 'Remind you on the day it\'s due?';
@@ -1173,6 +1255,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remindAskNo => 'Not now';
+
+  @override
+  String get remindRefused =>
+      'Reminders are off. Home still shows bills that need an amount.';
 }
 
 /// The translations for English, as used in India (`en_IN`).

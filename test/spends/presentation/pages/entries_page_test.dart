@@ -121,7 +121,16 @@ void main() {
       await tester.settle();
       await tester.runAsync(() => bloc.dispatch(EntriesDeleteRequested((bloc.state as EntriesReady).shown.single)));
       await tester.pumpAndSettle();
-      expect(find.text('Nothing here yet.'), findsOneWidget);
+      expect(find.text('No Travel entries in October.'), findsOneWidget);
+    });
+
+    testWidgets('a cycle with no entries says so', (WidgetTester tester) async {
+      await pump(tester);
+      for (final Entry entry in (bloc.state as EntriesReady).shown) {
+        await tester.runAsync(() => bloc.dispatch(EntriesDeleteRequested(entry)));
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('No entries in October.'), findsOneWidget);
     });
 
     testWidgets('tapping a row edits it', (WidgetTester tester) async {
@@ -135,7 +144,7 @@ void main() {
       await tester.drag(find.text('Chai & samosa'), const Offset(-500, 0));
       await tester.settle();
       expect(find.text('Chai & samosa'), findsNothing);
-      expect(find.text('Deleted ₹60'), findsOneWidget);
+      expect(find.text('₹60 deleted'), findsOneWidget);
       expect(services.haptics.events, contains('threshold'));
       await tester.tap(find.text('Undo'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
@@ -161,7 +170,7 @@ void main() {
     testWidgets('a failed load says so and Try again reloads', (WidgetTester tester) async {
       services.ledger.failure = DatabaseFailure('locked');
       await pump(tester);
-      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.text("Couldn't open this."), findsOneWidget);
       services.ledger.failure = null;
       await tester.runAsync(() async {
         await tester.tap(find.text('Try again'));

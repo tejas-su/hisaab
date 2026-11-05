@@ -83,7 +83,7 @@ void main() {
     testWidgets('a failed load offers Try again, which loads again', (WidgetTester tester) async {
       services.ledger.failure = DatabaseFailure('disk');
       await pump(tester);
-      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.text("Couldn't open this."), findsOneWidget);
       services.ledger.failure = null;
       await tester.tap(find.text('Try again'));
       await tester.settle();

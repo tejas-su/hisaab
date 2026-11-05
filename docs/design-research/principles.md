@@ -110,3 +110,8 @@ Each principle cites its source and names where it applies in Hisaab. The newest
 61. **Count money once, at the moment of choice.** A card purchase is spending; paying the card is not. *Sources:* YNAB credit card handling; Monarch transfers; Realbyte transfers; Soman 2001. *Applies to:* credit card bills, any future "account" idea.
 62. **A reminder is a bonus; the in-app line is the guarantee.** Design so nothing breaks if the notification never arrives. *Sources:* dontkillmyapp; Android alarms (inexact, Doze, reboot). *Applies to:* bill reminders, any scheduled nudge.
 63. **One notification per thing, opened by its tap, with no action that repeats the tap; ask permission at the moment it helps.** *Sources:* Material notifications pattern; Apple HIG Notifications; Android notification permission. *Applies to:* bill reminders.
+
+## Choosing light or dark (case study 19)
+
+64. **Follow the phone by default; an in-app look is a quiet override, not a feature.** Most people set light or dark once on the phone and never look for it in an app, so the in-app choice should be one tap with every option visible, and should never stay hidden behind a second step. *Sources:* NN/g, *Dark Mode: How Users Think about It*; Material 3 / Compose `SingleChoiceSegmentedButtonRow`; iOS Display & Brightness. *Applies to:* Settings › Look.
+65. **A short word in a secondary grey can fail contrast that its colour pair passes.** At 15dp, anti-aliasing on a 4-letter word pulled `ink2` on `sunk` (5.7:1 as flat colours) to 3.2:1 under Flutter's text-contrast check. Keep short labels on tinted tracks in the primary ink and mark the pick by fill and weight. *Sources:* `textContrastGuideline` on the Look control (D130). *Applies to:* segmented controls, chips.

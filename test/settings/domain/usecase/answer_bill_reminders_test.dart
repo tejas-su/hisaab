@@ -58,7 +58,7 @@ void main() {
 
   group('AnswerBillReminders (spec §5, §6, E-i)', () {
     test('Remind me saves yes, asks Android, then arms the reminders', () async {
-      expect(await answer()(true).run(), Either<Failure, Unit>.right(unit));
+      expect(await answer()(true).run(), Either<Failure, bool>.right(true));
       expect(preferences.reminders, const Option<bool>.of(true));
       expect(reminders.permissionAsks, 1);
       expect(reminders.scheduled.single.billName, 'Electricity');
@@ -66,13 +66,13 @@ void main() {
 
     test('Remind me with the permission refused still saves yes; nothing is asked again (E-i)', () async {
       reminders.granted = false;
-      await answer()(true).run();
+      expect(await answer()(true).run(), Either<Failure, bool>.right(false));
       expect(preferences.reminders, const Option<bool>.of(true));
       expect(await shouldAsk(), isFalse);
     });
 
     test('Not now saves no, never asks Android, and arms nothing', () async {
-      await answer()(false).run();
+      expect(await answer()(false).run(), Either<Failure, bool>.right(false));
       expect(preferences.reminders, const Option<bool>.of(false));
       expect(reminders.permissionAsks, 0);
       expect(reminders.scheduled, isEmpty);

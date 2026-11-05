@@ -6,17 +6,23 @@ import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../bloc/theme_bloc.dart';
+import '../widgets/look_group.dart';
 import '../widgets/settings_row.dart';
 
-/// Settings (SPEC FR-SE), one level deep. Today it holds the Money group's Fixed bills, which
-/// [onOpenBills] opens; the other groups arrive with their milestones.
+/// Settings (SPEC FR-SE), one level deep. Today it holds the Money group (Bills, which
+/// [onOpenBills] opens, and Savings) and the Look group, which [themeBloc] drives; the other
+/// groups arrive with their milestones.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.onOpenBills, required this.onOpenSavings});
+  const SettingsPage({super.key, required this.onOpenBills, required this.onOpenSavings, required this.themeBloc});
 
   final VoidCallback onOpenBills;
 
   /// Opens the Savings list (D120).
   final VoidCallback onOpenSavings;
+
+  /// The app-wide look (FR-SE-3), shown and changed by the Look group.
+  final ThemeBloc themeBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +68,11 @@ class SettingsPage extends StatelessWidget {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, top: HisaabSpacing.xl, bottom: HisaabSpacing.s),
+              child: Semantics(header: true, child: Text(strings.settingsLook, style: text.titleLarge)),
+            ),
+            LookGroup(themeBloc: themeBloc),
           ],
         ),
       ),

@@ -34,7 +34,7 @@ void main() {
       (await getDueSoon(const NoParams()).run()).getOrElse((Failure f) => fail('unexpected $f'));
 
   group('GetDueSoonBill (BR-9 due-soon nudge, FR-HO-3)', () {
-    test('worked example: Electricity ₹1,200 goes out in 3 days', () async {
+    test('worked example: Electricity, ₹1,200, due in 3 days', () async {
       expect(
         await run(),
         Option<DueSoonBill>.of(

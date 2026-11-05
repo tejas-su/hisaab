@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:expense_tracker/app/app_shell.dart';
 import 'package:expense_tracker/app/widgets/hisaab_dock.dart';
 import 'package:expense_tracker/home/home.dart';
+import 'package:expense_tracker/spends/presentation/widgets/where_it_went_card.dart';
 import 'package:expense_tracker/spends/spends.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
@@ -74,7 +75,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
       await tester.pumpAndSettle();
-      final Finder last = find.byKey(const ValueKey<String>('see-every-entry'));
+      final Finder last = find.byType(WhereItWentCard);
       expect(tester.getRect(last).bottom, lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey<String>('bottom-fade'))).top));
     });
 

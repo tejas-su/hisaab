@@ -20,13 +20,13 @@ void main() {
 
   group('InsightCopy (BR-14)', () {
     final List<(Insight, String, String)> cases = <(Insight, String, String)>[
-      (CategoryUp(categoryId: 1, rise: Money.fromMajor(1900)), 'Food is ₹1,900 more than in September.', 'See Food entries'),
+      (CategoryUp(categoryId: 1, rise: Money.fromMajor(1900)), 'Food spending is ₹1,900 more than in September.', 'See Food entries'),
       (
         BiggestSpend(categoryId: 2, amount: Money.fromMajor(1930), date: const CalendarDate(2026, 10, 31)),
         'Your biggest Travel spend was ₹1,930 on 31 Oct.',
         'See Travel entries',
       ),
-      (const SteadiestCategory(categoryId: 1), 'Food costs about the same every week.', 'See Food entries'),
+      (const SteadiestCategory(categoryId: 1), 'Food spending stays about the same every week.', 'See Food entries'),
       (
         LimitOffer(limits: <int, Money>{1: Money.fromMajor(10000)}),
         "Set limits from September's spending? Each one is rounded up to the next ₹500.",

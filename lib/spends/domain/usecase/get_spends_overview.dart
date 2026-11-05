@@ -125,7 +125,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
       spent: _sum(current.where((Entry e) => e.kind == EntryKind.spent)),
       budget: budget,
       saved: saved,
-      pace: PaceSeries.of(current, cycle: viewed.cycle, asOf: viewed.asOf, budget: budget, billsDue: due.bills),
+      pace: PaceSeries.of(current, cycle: viewed.cycle, asOf: viewed.asOf, budget: budget, billsDue: due.bills, isCurrent: viewed.cyclesBack == 0),
       rows: CategoryShares.of(current, categories),
       insights: <Insight>[...rules, ...offer.match(() => const <Insight>[], (Insight o) => <Insight>[o])].take(_maxInsights).toList(),
     );

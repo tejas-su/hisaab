@@ -34,7 +34,7 @@ Every setting the user must think about is friction. The app decides; power user
 | Over budget | Shown as "₹1,200 over" in words, never "-₹1,200" and never red | — |
 | Paise | Whole rupees only: no decimal key, never displayed (stored as minor units) | — |
 | Savings | *Savings* in Settings: monthly savings (RD, SIP…) set aside before their day and recorded on it; *Put in extra* for one-offs (D120) | List in Settings |
-| Bills that change, and card bills | A bill is *Same every month* unless its chip says otherwise: *Electricity* changes (set aside at its last amount, and Home asks how much on its day); a *Credit card* bill is recorded when paid but never counted, because card buys count when made (D123). Onboarding offers only fixed bills (D125) | *Amount changes?* on the bill sheet |
+| Bills that change, and card bills | A bill is *Same every month* unless its chip says otherwise: *Electricity* changes (set aside at its last amount, and Home asks how much on its day); a *Credit card* bill is recorded when paid but never counted, because card buys count when made (D123). Onboarding offers only fixed bills (D125) | *Kind of bill* on the bill sheet |
 
 ---
 

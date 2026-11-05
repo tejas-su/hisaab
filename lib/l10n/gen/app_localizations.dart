@@ -199,6 +199,60 @@ abstract class AppLocalizations {
   /// **'{spent} spent so far of {budget}. {verdict}.'**
   String paceSpoken(String spent, String budget, String verdict);
 
+  /// Pace chart label beside today's point: how far spending is below the steady line (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} under'**
+  String paceGapUnder(String amount);
+
+  /// Pace chart label beside today's point: how far spending is above the steady line (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over'**
+  String paceGapOver(String amount);
+
+  /// Pace chart label where the forecast line meets the money there is to spend, e.g. 'runs out 1 Nov' (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'runs out {date}'**
+  String paceRunsOut(String date);
+
+  /// Pace chart legend key for the dashed forecast line (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'At this pace'**
+  String get paceAtThisPace;
+
+  /// Pace chart date row: today's mark (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get paceToday;
+
+  /// TalkBack, after paceSpoken: how far spending is below the steady line (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} under steady pace.'**
+  String paceGapUnderSpoken(String amount);
+
+  /// TalkBack, after paceSpoken: how far spending is above the steady line (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over steady pace.'**
+  String paceGapOverSpoken(String amount);
+
+  /// TalkBack, after the gap: the forecast's money left at the cycle's end, rounded to ₹100 (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'At this pace about {amount} spare.'**
+  String paceSpareSpoken(String amount);
+
+  /// TalkBack, after the gap: the day the forecast says the money runs out (D133)
+  ///
+  /// In en, this message translates to:
+  /// **'At this pace it runs out on {date}.'**
+  String paceRunsOutSpoken(String date);
+
   /// No description provided for @whereItWent.
   ///
   /// In en, this message translates to:
@@ -214,7 +268,7 @@ abstract class AppLocalizations {
   /// No description provided for @pastLimit.
   ///
   /// In en, this message translates to:
-  /// **'{amount} past limit'**
+  /// **'{amount} over limit'**
   String pastLimit(String amount);
 
   /// Where it went row at or under its limit: what is left of the limit (BR-12)
@@ -235,11 +289,11 @@ abstract class AppLocalizations {
   /// **'limit {amount}'**
   String limitOf(String amount);
 
-  /// No description provided for @nothingSpentIn.
+  /// Spends with nothing spent; when is 'past' for a finished cycle, else 'current'
   ///
   /// In en, this message translates to:
-  /// **'Nothing spent in {cycle} yet.'**
-  String nothingSpentIn(String cycle);
+  /// **'{when, select, past{Nothing was spent in {cycle}.} other{Nothing spent in {cycle} yet.}}'**
+  String nothingSpentIn(String cycle, String when);
 
   /// No description provided for @tipsTitle.
   ///
@@ -250,7 +304,7 @@ abstract class AppLocalizations {
   /// BR-14 #1; cycle names the previous cycle, as the cycle switcher does (October, or 26 Oct – 1 Nov)
   ///
   /// In en, this message translates to:
-  /// **'{category} is {amount} more than in {cycle}.'**
+  /// **'{category} spending is {amount} more than in {cycle}.'**
   String insightCategoryUp(String category, String amount, String cycle);
 
   /// No description provided for @insightBiggestSpend.
@@ -262,14 +316,14 @@ abstract class AppLocalizations {
   /// BR-14 #3
   ///
   /// In en, this message translates to:
-  /// **'{category} costs about the same every week.'**
+  /// **'{category} spending stays about the same every week.'**
   String insightSteadiest(String category);
 
-  /// BR-14 #4; cycle names the previous cycle, whose spending the limits come from
+  /// BR-14 #4; cycle names the previous cycle, whose spending the limits come from; step is the rounding unit, e.g. ₹500
   ///
   /// In en, this message translates to:
-  /// **'Set limits from {cycle}\'s spending? Each one is rounded up to the next ₹500.'**
-  String insightLimitOffer(String cycle);
+  /// **'Set limits from {cycle}\'s spending? Each one is rounded up to the next {step}.'**
+  String insightLimitOffer(String cycle, String step);
 
   /// Insight action that opens the entries of one category
   ///
@@ -301,17 +355,29 @@ abstract class AppLocalizations {
   /// **'Every entry'**
   String get everyEntry;
 
+  /// TalkBack label of Where it went's See all link (FR-SP-6); cycle is the switcher's label, like October
+  ///
+  /// In en, this message translates to:
+  /// **'Every entry in {cycle}'**
+  String everyEntryIn(String cycle);
+
   /// No description provided for @allCategories.
   ///
   /// In en, this message translates to:
   /// **'All'**
   String get allCategories;
 
-  /// No description provided for @noEntriesHere.
+  /// Every entry, nothing in the cycle
   ///
   /// In en, this message translates to:
-  /// **'Nothing here yet.'**
-  String get noEntriesHere;
+  /// **'No entries in {cycle}.'**
+  String noEntriesIn(String cycle);
+
+  /// Every entry filtered to a category with nothing in the cycle
+  ///
+  /// In en, this message translates to:
+  /// **'No {category} entries in {cycle}.'**
+  String noCategoryEntriesIn(String category, String cycle);
 
   /// After the cycle name on Every entry, naming the category the list is narrowed to
   ///
@@ -328,7 +394,7 @@ abstract class AppLocalizations {
   /// Calm card under the hero when today is overspent (SPEC FR-HO-5); days is at least 1, since on the last day any overspend is over the cycle
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it is a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}'**
+  /// **'{days, plural, =1{It happens. The {amount} comes out of tomorrow, so it\'s a little smaller.} other{It happens. The {amount} is spread across the next {days} days, so each one is a little smaller.}}'**
   String overTodayCard(String amount, int days);
 
   /// Calm card under the hero when the whole cycle is overspent (SPEC FR-HO-5)
@@ -472,7 +538,7 @@ abstract class AppLocalizations {
   /// Shown only when the local database cannot be opened at start-up
   ///
   /// In en, this message translates to:
-  /// **'hisaab couldn\'t open its data. Close the app and open it again.'**
+  /// **'hisaab couldn\'t open your data. Close the app and open it again.'**
   String get startupFailed;
 
   /// No description provided for @back.
@@ -538,7 +604,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteLastDigit.
   ///
   /// In en, this message translates to:
-  /// **'Delete last digit. Long-press to clear'**
+  /// **'Delete last digit. Touch and hold to clear all'**
   String get deleteLastDigit;
 
   /// Default name of a seeded category, by its stored key
@@ -562,7 +628,7 @@ abstract class AppLocalizations {
   /// Onboarding step 1 hint; names sources, not jobs, so it fits non-salaried users (D116)
   ///
   /// In en, this message translates to:
-  /// **'Pay, business, pension or family money. If it changes, a low month is a safe guess.'**
+  /// **'Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month.'**
   String get incomeHint;
 
   /// Note on the income entry onboarding saves for It changes; the amount is the user's low-month guess (D117)
@@ -574,7 +640,7 @@ abstract class AppLocalizations {
   /// Caption under the onboarding income keypad, beside a lock icon (D116)
   ///
   /// In en, this message translates to:
-  /// **'It stays on this phone. The app never uses the internet.'**
+  /// **'What you type stays on this phone. The app never uses the internet.'**
   String get incomePrivacy;
 
   /// Rough daily share while typing income (amount ÷ 30)
@@ -598,7 +664,7 @@ abstract class AppLocalizations {
   /// No description provided for @paydayHint.
   ///
   /// In en, this message translates to:
-  /// **'Your month runs from one payday to the next. No fixed day? Pick It changes.'**
+  /// **'Your month runs from one payday to the next. No fixed day? Pick \"It changes\".'**
   String get paydayHint;
 
   /// No description provided for @payFirstOfMonth.
@@ -610,7 +676,7 @@ abstract class AppLocalizations {
   /// No description provided for @payLastDay.
   ///
   /// In en, this message translates to:
-  /// **'Last day'**
+  /// **'Last day of the month'**
   String get payLastDay;
 
   /// No description provided for @payPickDate.
@@ -652,7 +718,7 @@ abstract class AppLocalizations {
   /// No description provided for @billsHint.
   ///
   /// In en, this message translates to:
-  /// **'Money that goes out on the same day every month. Add them now or later.'**
+  /// **'Same amount, same day, every month. You can add more later in Settings.'**
   String get billsHint;
 
   /// Name of a fixed bill chip, by its kind
@@ -664,13 +730,13 @@ abstract class AppLocalizations {
   /// No description provided for @billAmountQuestion.
   ///
   /// In en, this message translates to:
-  /// **'How much is {bill}?'**
+  /// **'How much for {bill} each month?'**
   String billAmountQuestion(String bill);
 
   /// No description provided for @billDayQuestion.
   ///
   /// In en, this message translates to:
-  /// **'Which day does {bill} go out?'**
+  /// **'Which day of the month for {bill}?'**
   String billDayQuestion(String bill);
 
   /// Chip detail for an added bill
@@ -682,7 +748,7 @@ abstract class AppLocalizations {
   /// No description provided for @removeBill.
   ///
   /// In en, this message translates to:
-  /// **'Remove {bill}'**
+  /// **'Delete {bill}'**
   String removeBill(String bill);
 
   /// No description provided for @todayTitle.
@@ -796,7 +862,7 @@ abstract class AppLocalizations {
   /// No description provided for @eachDayAfter.
   ///
   /// In en, this message translates to:
-  /// **'Each day after: {amount}'**
+  /// **'From tomorrow: {amount} a day'**
   String eachDayAfter(String amount);
 
   /// Label after the visible day blocks when there are too many to draw
@@ -814,7 +880,7 @@ abstract class AppLocalizations {
   /// No description provided for @noIncomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Add money you got this month'**
+  /// **'Add the money that came in'**
   String get noIncomeTitle;
 
   /// No description provided for @noIncomeBody.
@@ -838,13 +904,13 @@ abstract class AppLocalizations {
   /// No description provided for @entryDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Deleted {amount}'**
+  /// **'{amount} deleted'**
   String entryDeleted(String amount);
 
   /// No description provided for @loadFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t load your money.'**
+  /// **'Couldn\'t open this.'**
   String get loadFailed;
 
   /// An amount of money that came in
@@ -904,7 +970,7 @@ abstract class AppLocalizations {
   /// No description provided for @tomorrowShare.
   ///
   /// In en, this message translates to:
-  /// **'tomorrow {amount}'**
+  /// **'tomorrow\'s share {amount}'**
   String tomorrowShare(String amount);
 
   /// No description provided for @whatWasItFor.
@@ -964,7 +1030,7 @@ abstract class AppLocalizations {
   /// Home's due-soon nudge for the next fixed bill, e.g. "Electricity ₹1,200 goes out in 3 days"
   ///
   /// In en, this message translates to:
-  /// **'{bill} {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}'**
+  /// **'{bill}, {amount}, due {days, plural, =1{tomorrow} other{in {days} days}}'**
   String billGoesOut(String bill, String amount, int days);
 
   /// TalkBack hint on Home's due-soon row, read after the sentence (D118)
@@ -979,6 +1045,42 @@ abstract class AppLocalizations {
   /// **'Money'**
   String get settingsMoney;
 
+  /// Settings group heading for choosing light or dark colours (FR-SE-3). Sits under settingsMoney
+  ///
+  /// In en, this message translates to:
+  /// **'Look'**
+  String get settingsLook;
+
+  /// Title of the one Look row in Settings; the current look shows under it and the phone, sun and moon buttons sit at its end
+  ///
+  /// In en, this message translates to:
+  /// **'Light or dark'**
+  String get lookTile;
+
+  /// Look option and the default: the app goes light or dark when the phone does
+  ///
+  /// In en, this message translates to:
+  /// **'Match phone'**
+  String get lookMatchPhone;
+
+  /// TalkBack label for the Match phone option, so it makes sense heard alone. Flutter adds 'selected' itself
+  ///
+  /// In en, this message translates to:
+  /// **'Match phone, light or dark like your phone'**
+  String get lookMatchPhoneSemantics;
+
+  /// Look option: the app always uses light colours
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get lookLight;
+
+  /// Look option: the app always uses dark colours
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get lookDark;
+
   /// No description provided for @fixedBills.
   ///
   /// In en, this message translates to:
@@ -988,7 +1090,7 @@ abstract class AppLocalizations {
   /// No description provided for @fixedBillsHint.
   ///
   /// In en, this message translates to:
-  /// **'Most go out by themselves on their day. If the amount changes, Home asks how much.'**
+  /// **'hisaab adds most bills to your spends on their day. If the amount changes, Home asks how much.'**
   String get fixedBillsHint;
 
   /// No description provided for @addBill.
@@ -1012,7 +1114,7 @@ abstract class AppLocalizations {
   /// Hint under the Savings title
   ///
   /// In en, this message translates to:
-  /// **'Money you put away on the same day every month, like an RD. It goes in by itself on its day. Today\'s share already leaves room for it.'**
+  /// **'Money you put in on the same day every month, like an RD. hisaab adds it on its day for you. Today\'s share already leaves room for it.'**
   String get savingsHint;
 
   /// Button on the Savings list
@@ -1048,13 +1150,13 @@ abstract class AppLocalizations {
   /// Amount question for a saving
   ///
   /// In en, this message translates to:
-  /// **'How much goes into {saving}?'**
+  /// **'How much do you put in {saving} each month?'**
   String savingAmountQuestion(String saving);
 
   /// Day question for a saving
   ///
   /// In en, this message translates to:
-  /// **'Which day does {saving} go in?'**
+  /// **'Which day of the month for {saving}?'**
   String savingDayQuestion(String saving);
 
   /// Small label at the top of a saving's sheet
@@ -1072,19 +1174,19 @@ abstract class AppLocalizations {
   /// Snackbar after swiping away a saving its rule put in. Deleting it skips this month, never 'missed' (case study 17).
   ///
   /// In en, this message translates to:
-  /// **'Skipped this month'**
-  String get savingSkipped;
+  /// **'{saving} skipped this month'**
+  String savingSkipped(String saving);
 
   /// Snackbar after deleting a saving
   ///
   /// In en, this message translates to:
-  /// **'Deleted {saving}'**
+  /// **'{saving} deleted'**
   String savingDeleted(String saving);
 
   /// Stamp on a saving's sheet before its day
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, =1{Goes in tomorrow} other{Goes in {days} days from now}}'**
+  /// **'{days, plural, =1{Due tomorrow} other{Due in {days} days}}'**
   String savingStampDue(int days);
 
   /// Stamp on a saving's sheet once this month's went in
@@ -1102,7 +1204,7 @@ abstract class AppLocalizations {
   /// Foot of a saving's sheet
   ///
   /// In en, this message translates to:
-  /// **'Next goes in on {date}'**
+  /// **'Next due on {date}'**
   String savingNextGoesIn(String date);
 
   /// TalkBack sentence for a saving's slip
@@ -1114,7 +1216,7 @@ abstract class AppLocalizations {
   /// Home nudge before a saving's day
   ///
   /// In en, this message translates to:
-  /// **'{saving} {amount} goes in {days, plural, =1{tomorrow} other{on {weekday}}}'**
+  /// **'{saving}, {amount}, due {days, plural, =1{tomorrow} other{on {weekday}}}'**
   String savingGoesIn(String saving, String amount, int days, String weekday);
 
   /// TalkBack hint on the saving nudge
@@ -1216,7 +1318,7 @@ abstract class AppLocalizations {
   /// No description provided for @billDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Deleted {bill}'**
+  /// **'{bill} deleted'**
   String billDeleted(String bill);
 
   /// Small heading at the top of the bill sheet (D118)
@@ -1234,7 +1336,7 @@ abstract class AppLocalizations {
   /// Stamp on a bill the app counted as spent this month, e.g. "Counted 5 Oct"
   ///
   /// In en, this message translates to:
-  /// **'Counted {date}'**
+  /// **'Went out {date}'**
   String billStampCounted(String date);
 
   /// Stamp on a credit card bill recorded as paid this month, e.g. "Paid 5 Oct"; a card bill is never counted (D123)
@@ -1270,7 +1372,7 @@ abstract class AppLocalizations {
   /// Stamp on a bill the app counted as spent today
   ///
   /// In en, this message translates to:
-  /// **'Counted today'**
+  /// **'Went out today'**
   String get billStampCountedToday;
 
   /// Bill sheet row label
@@ -1306,7 +1408,7 @@ abstract class AppLocalizations {
   /// Bill sheet footer, e.g. "Next goes out on 29 Oct"
   ///
   /// In en, this message translates to:
-  /// **'Next goes out on {date}'**
+  /// **'Next due on {date}'**
   String billNextGoesOut(String date);
 
   /// Bill sheet footer for 2.4 s after an answer is saved
@@ -1522,13 +1624,13 @@ abstract class AppLocalizations {
   /// Wizard and bill sheet amount question for a bill that changes every month (D123).
   ///
   /// In en, this message translates to:
-  /// **'About how much is {bill}?'**
+  /// **'About how much for {bill} each month?'**
   String billAmountQuestionVaries(String bill);
 
   /// Amount question for a credit card bill; {bill} is the card's name (D123).
   ///
   /// In en, this message translates to:
-  /// **'About how much is the {bill} bill?'**
+  /// **'About how much for {bill} each month?'**
   String billAmountQuestionCard(String bill);
 
   /// One line under a card bill's amount question and on its amount sheet: card buys are counted when made, so the bill isn't (D123).
@@ -1537,11 +1639,17 @@ abstract class AppLocalizations {
   /// **'Add what you buy on the card on the day you buy it. This bill only reminds you to pay. It isn\'t counted again.'**
   String get billCardHint;
 
-  /// Bill sheet row and question title: whether the amount is fixed, changes, or is a card bill.
+  /// Bill sheet row label: whether the amount is fixed, changes, or is a card bill.
   ///
   /// In en, this message translates to:
-  /// **'Amount changes?'**
+  /// **'Kind of bill'**
   String get billModeRow;
+
+  /// Bill sheet question title for the kind of bill (D123).
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of bill is it?'**
+  String get billModeQuestion;
 
   /// Amount changes? answer: a fixed bill, posted by itself.
   ///
@@ -1594,7 +1702,7 @@ abstract class AppLocalizations {
   /// Home due-soon nudge for a bill whose amount changes; mirrors billGoesOut.
   ///
   /// In en, this message translates to:
-  /// **'{bill} about {amount} goes out {days, plural, =1{tomorrow} other{in {days} days}}'**
+  /// **'{bill}, about {amount}, due {days, plural, =1{tomorrow} other{in {days} days}}'**
   String billGoesOutAbout(String bill, String amount, int days);
 
   /// Bill amount sheet title, e.g. Electricity · 18 Nov.
@@ -1666,7 +1774,7 @@ abstract class AppLocalizations {
   /// Android notification channel description
   ///
   /// In en, this message translates to:
-  /// **'One note on the day a bill that changes, or a card bill, is due'**
+  /// **'On the day a changing bill or card bill is due'**
   String get reminderChannelDescription;
 
   /// Asked once, after the first changing or card bill is saved (spec §5)
@@ -1686,6 +1794,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get remindAskNo;
+
+  /// Shown in the reminder ask after Android's permission is refused (E-i)
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders are off. Home still shows bills that need an amount.'**
+  String get remindRefused;
 }
 
 class _AppLocalizationsDelegate

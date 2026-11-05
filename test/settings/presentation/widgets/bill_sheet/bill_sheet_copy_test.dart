@@ -13,8 +13,8 @@ void main() {
     final List<(String, BillStatus, String?)> cases = <(String, BillStatus, String?)>[
       ('due tomorrow', const BillStatus(nextDate: CalendarDate(2026, 10, 27), daysAway: 1, stamp: BillStampDue(1)), 'Due tomorrow'),
       ('due in 5 days', const BillStatus(nextDate: CalendarDate(2026, 10, 31), daysAway: 5, stamp: BillStampDue(5)), 'Due in 5 days'),
-      ('counted earlier', const BillStatus(nextDate: next, daysAway: 31, stamp: BillStampCounted(CalendarDate(2026, 10, 5))), 'Counted 5 Oct'),
-      ('counted today', const BillStatus(nextDate: next, daysAway: 31, stamp: BillStampCounted(CalendarDate(2026, 10, 26))), 'Counted today'),
+      ('counted earlier', const BillStatus(nextDate: next, daysAway: 31, stamp: BillStampCounted(CalendarDate(2026, 10, 5))), 'Went out 5 Oct'),
+      ('counted today', const BillStatus(nextDate: next, daysAway: 31, stamp: BillStampCounted(CalendarDate(2026, 10, 26))), 'Went out today'),
       ('no stamp', const BillStatus(nextDate: next, daysAway: 31, stamp: BillStampNone()), null),
     ];
     for (final (String name, BillStatus status, String? expected) in cases) {
@@ -34,7 +34,7 @@ void main() {
     final List<(String, BillStatus, AmountMode, String?)> stamps = <(String, BillStatus, AmountMode, String?)>[
       ('a card bill paid earlier says paid', counted, AmountMode.card, 'Paid 5 Oct'),
       ('a card bill paid today says paid today', countedToday, AmountMode.card, 'Paid today'),
-      ('a changing bill entered earlier is counted', counted, AmountMode.varies, 'Counted 5 Oct'),
+      ('a changing bill entered earlier is counted', counted, AmountMode.varies, 'Went out 5 Oct'),
       ('a changing bill waiting says waiting', waiting, AmountMode.varies, 'Waiting'),
       ('a card bill waiting says waiting', waiting, AmountMode.card, 'Waiting'),
     ];
@@ -48,7 +48,7 @@ void main() {
     final List<(String, BillStatus, AmountMode, String)> feet = <(String, BillStatus, AmountMode, String)>[
       ('a waiting changing bill says when it went out', waiting, AmountMode.varies, 'Went out on 24 Oct. Home asks how much.'),
       ('a waiting card bill says when it was due', waiting, AmountMode.card, 'Was due on 24 Oct. Home asks what you paid.'),
-      ('an answered bill gives its next date', counted, AmountMode.varies, 'Next goes out on 26 Nov'),
+      ('an answered bill gives its next date', counted, AmountMode.varies, 'Next due on 26 Nov'),
     ];
     for (final (String name, BillStatus status, AmountMode mode, String expected) in feet) {
       testWidgets(name, (WidgetTester tester) async {

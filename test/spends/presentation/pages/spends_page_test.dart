@@ -95,7 +95,14 @@ void main() {
     testWidgets('TalkBack reads the pace card as one sentence', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pump(tester);
-      expect(find.bySemanticsLabel('27,570 rupees spent so far of 45,000 rupees. Spending slower.'), findsOneWidget);
+      // The gap and the forecast follow the verdict on the current cycle (D133).
+      expect(
+        find.bySemanticsLabel(
+          '27,570 rupees spent so far of 45,000 rupees. Spending slower. 7,042 rupees under steady pace. '
+          'At this pace about 9,300 rupees spare.',
+        ),
+        findsOneWidget,
+      );
       expect(find.bySemanticsLabel('Food: 19,010 rupees, 69%'), findsOneWidget);
       handle.dispose();
     });
@@ -126,6 +133,18 @@ void main() {
       expect(find.text('October'), findsOneWidget);
     });
 
+    testWidgets('a past cycle with nothing spent drops "yet"', (WidgetTester tester) async {
+      trackSeptember();
+      services.ledger.entries.removeWhere((Entry e) => e.id == 202);
+      await pump(tester);
+      await tester.runAsync(() async {
+        await tester.tap(find.byKey(const ValueKey<String>('earlier-cycle')));
+        await pumpEventQueue();
+      });
+      await tester.pumpAndSettle();
+      expect(find.text('Nothing was spent in September.'), findsOneWidget);
+    });
+
     testWidgets('See every entry opens the cycle unfiltered', (WidgetTester tester) async {
       await pump(tester);
       await tester.ensureVisible(find.byKey(const ValueKey<String>('see-every-entry')));
@@ -137,8 +156,9 @@ void main() {
       trackSeptember();
       await pump(tester);
       expect(find.text('Worth knowing'), findsOneWidget);
-      expect(find.text('Food is ₹17,010 more than in September.'), findsOneWidget);
+      expect(find.text('Food spending is ₹17,010 more than in September.'), findsOneWidget);
       await tester.ensureVisible(find.text('See Food entries'));
+      await tester.pump();
       await tester.tap(find.text('See Food entries'));
       expect(opened, <(PayCycle, Option<int>)>[(_october, const Option<int>.of(SeedCategoryIds.food))]);
       await tester.ensureVisible(find.text('Use these limits'));
@@ -149,6 +169,21 @@ void main() {
       });
       await tester.pump();
       expect(services.categories.savedLimits, hasLength(1));
+    });
+
+    testWidgets('See every entry lives in Where it went\'s title row, not at the end of the page', (WidgetTester tester) async {
+      trackSeptember();
+      await pump(tester);
+      final Finder link = find.byKey(const ValueKey<String>('see-every-entry'));
+      expect(link, findsOneWidget);
+      expect(find.descendant(of: find.byType(WhereItWentCard), matching: link), findsOneWidget);
+      expect(tester.getTopLeft(link).dy, lessThan(tester.getTopLeft(find.byType(InsightsCard)).dy));
+    });
+
+    testWidgets('See every entry is on the first screen of a phone', (WidgetTester tester) async {
+      trackSeptember();
+      await pump(tester);
+      expect(tester.getBottomLeft(find.byKey(const ValueKey<String>('see-every-entry'))).dy, lessThan(TestWindows.phone.height));
     });
 
     testWidgets('a failed limits save says so', (WidgetTester tester) async {
@@ -183,7 +218,7 @@ void main() {
     testWidgets('a failed load says so and Try again reloads', (WidgetTester tester) async {
       services.ledger.failure = DatabaseFailure('locked');
       await pump(tester);
-      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.text("Couldn't open this."), findsOneWidget);
       services.ledger.failure = null;
       await tester.runAsync(() async {
         await tester.tap(find.text('Try again'));
@@ -200,12 +235,24 @@ void main() {
         expect(tester.getTopRight(switcher).dx, tester.getTopRight(find.byType(PaceCard)).dx);
       });
 
-      testWidgets('the title, cards and See every entry share one left edge', (WidgetTester tester) async {
+      testWidgets('the title and cards share one left edge', (WidgetTester tester) async {
         await pump(tester);
         final double edge = tester.getTopLeft(find.byType(PaceCard)).dx;
         expect(tester.getTopLeft(find.text('Spends')).dx, edge);
         expect(tester.getTopLeft(find.byType(WhereItWentCard)).dx, edge);
-        expect(tester.getTopLeft(find.byKey(const ValueKey<String>('see-every-entry'))).dx, edge);
+      });
+
+      testWidgets('nothing spent: See every entry shares the cards\' left edge', (WidgetTester tester) async {
+        services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.spent);
+        await pump(tester);
+        expect(tester.getTopLeft(find.byKey(const ValueKey<String>('see-every-entry'))).dx, tester.getTopLeft(find.text('Spends')).dx);
+      });
+
+      testWidgets('Where it went\'s title row is one 48dp See all target tall, as on Home', (WidgetTester tester) async {
+        await pump(tester);
+        final double top = tester.getTopLeft(find.byType(WhereItWentCard)).dy;
+        expect(tester.getTopLeft(find.text('Where it went')).dy - top, closeTo(23, 0.5));
+        expect(tester.getTopLeft(find.text('Food')).dy - top, 76);
       });
 
       testWidgets('card content starts at one inner inset', (WidgetTester tester) async {

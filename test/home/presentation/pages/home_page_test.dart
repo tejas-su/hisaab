@@ -112,7 +112,7 @@ void main() {
     testWidgets('a changing bill due soon says about how much', (WidgetTester tester) async {
       useRules(<RecurringRule>[waiting(AmountMode.varies, due: const CalendarDate(2026, 10, 27))]);
       await pump(tester);
-      expect(find.text('Electricity about ₹1,200 goes out tomorrow'), findsOneWidget);
+      expect(find.text('Electricity, about ₹1,200, due tomorrow'), findsOneWidget);
     });
 
     testWidgets('the line spans the hero card\'s width, as the due-soon line does', (WidgetTester tester) async {
@@ -223,8 +223,8 @@ void main() {
     testWidgets('nudges about the soonest bill, read with spoken amounts (FR-HO-3)', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pump(tester);
-      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
-      expect(find.bySemanticsLabel('Electricity 1,200 rupees goes out in 3 days'), findsOneWidget);
+      expect(find.text('Electricity, ₹1,200, due in 3 days'), findsOneWidget);
+      expect(find.bySemanticsLabel('Electricity, 1,200 rupees, due in 3 days'), findsOneWidget);
       handle.dispose();
     });
 
@@ -239,14 +239,14 @@ void main() {
       await pump(tester);
       await tester.runAsync(() => bloc.dispatch(HomeBillDeleteRequested(WorkedExample.rd)));
       await tester.settle();
-      expect(find.text('Deleted RD'), findsOneWidget);
+      expect(find.text('RD deleted'), findsOneWidget);
     });
 
     testWidgets('a bill deleted from its sheet offers Undo, which brings it back (D118)', (WidgetTester tester) async {
       await pump(tester);
       await tester.runAsync(() => bloc.dispatch(HomeBillDeleteRequested(WorkedExample.electricity)));
       await tester.settle();
-      expect(find.text('Deleted Electricity'), findsOneWidget);
+      expect(find.text('Electricity deleted'), findsOneWidget);
       await tester.tap(find.text('Undo'));
       await tester.settle();
       expect(services.recurring.rules, contains(WorkedExample.electricity));
@@ -261,7 +261,7 @@ void main() {
         ),
       ];
       await pump(tester);
-      expect(find.text('Electricity ₹1,200 goes out tomorrow'), findsOneWidget);
+      expect(find.text('Electricity, ₹1,200, due tomorrow'), findsOneWidget);
     });
 
     testWidgets('no nudge when no bill goes out within 5 days', (WidgetTester tester) async {
@@ -274,8 +274,8 @@ void main() {
       services.recurring.rules = <RecurringRule>[WorkedExample.electricity];
       services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.got);
       await pump(tester);
-      expect(find.text('Add money you got this month'), findsOneWidget);
-      expect(find.text('Electricity ₹1,200 goes out in 3 days'), findsOneWidget);
+      expect(find.text('Add the money that came in'), findsOneWidget);
+      expect(find.text('Electricity, ₹1,200, due in 3 days'), findsOneWidget);
     });
 
     group('alignment', () {
@@ -361,7 +361,7 @@ void main() {
       await tester.drag(find.text('Chai & samosa'), const Offset(-500, 0));
       await tester.settle();
       expect(find.text('Chai & samosa'), findsNothing);
-      expect(find.text('Deleted ₹60'), findsOneWidget);
+      expect(find.text('₹60 deleted'), findsOneWidget);
       expect(services.haptics.events, contains('threshold'));
       await tester.tap(find.text('Undo'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
@@ -392,8 +392,8 @@ void main() {
       await pump(tester);
       await tester.drag(find.text('RD'), const Offset(-500, 0));
       await tester.settle();
-      expect(find.text('Skipped this month'), findsOneWidget);
-      expect(find.text('Deleted ₹5,000'), findsNothing);
+      expect(find.text('RD skipped this month'), findsOneWidget);
+      expect(find.text('₹5,000 deleted'), findsNothing);
     });
 
     testWidgets('TalkBack users can delete a row without swiping', (WidgetTester tester) async {
@@ -422,7 +422,7 @@ void main() {
       services.recurring.rules = <RecurringRule>[];
       services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.got);
       await pump(tester);
-      expect(find.text('Add money you got this month'), findsOneWidget);
+      expect(find.text('Add the money that came in'), findsOneWidget);
       await tester.tap(find.text('Add money'));
       expect(calls, <Object>[EntryKind.got]);
     });
@@ -430,7 +430,7 @@ void main() {
     testWidgets('a failed load says so and Try again reloads', (WidgetTester tester) async {
       services.ledger.failure = DatabaseFailure('locked');
       await pump(tester);
-      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.text("Couldn't open this."), findsOneWidget);
       services.ledger.failure = null;
       await tester.tap(find.text('Try again'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
@@ -445,7 +445,7 @@ void main() {
       await pump(tester, theme: ThemeMode.dark);
       expect(find.text('₹0'), findsOneWidget);
       expect(find.text('₹1,020 over today'), findsOneWidget);
-      expect(find.text('Each day after: ₹1,722'), findsOneWidget);
+      expect(find.text('From tomorrow: ₹1,722 a day'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

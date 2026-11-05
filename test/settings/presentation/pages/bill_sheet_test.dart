@@ -84,7 +84,7 @@ void main() {
       expect(find.bySemanticsLabel('Change Day of the month, 29'), findsOneWidget);
       expect(find.bySemanticsLabel('Change Name, Electricity'), findsOneWidget);
       expect(find.bySemanticsLabel('Change Icon, Power'), findsOneWidget);
-      expect(find.text('Next goes out on 29 Oct'), findsOneWidget);
+      expect(find.text('Next due on 29 Oct'), findsOneWidget);
       handle.dispose();
     });
 
@@ -96,18 +96,19 @@ void main() {
 
     testWidgets('a bill shows Amount changes? with its answer (D123)', (WidgetTester tester) async {
       await open(tester);
-      expect(find.text('Amount changes?'), findsOneWidget);
+      expect(find.text('Kind of bill'), findsOneWidget);
       expect(find.text('Same every month'), findsOneWidget);
     });
 
     testWidgets('a saving has no Amount changes? row', (WidgetTester tester) async {
       await open(tester, rule: WorkedExample.rd);
-      expect(find.text('Amount changes?'), findsNothing);
+      expect(find.text('Kind of bill'), findsNothing);
     });
 
     testWidgets('Amount changes? offers three answers; one tap saves it (D123)', (WidgetTester tester) async {
       await open(tester);
       await tapRow(tester, 'mode');
+      expect(find.text('What kind of bill is it?'), findsOneWidget);
       for (final String answer in <String>['fixed', 'varies', 'card']) {
         expect(find.byKey(ValueKey<String>('bill-mode-$answer')), findsOneWidget);
       }
@@ -125,7 +126,7 @@ void main() {
       recurring.rules = <RecurringRule>[varies];
       await open(tester, rule: varies);
       await tapRow(tester, 'amount');
-      expect(find.text('About how much is Electricity?'), findsOneWidget);
+      expect(find.text('About how much for Electricity each month?'), findsOneWidget);
     });
 
     testWidgets('the slip reads as one sentence', (WidgetTester tester) async {
@@ -137,7 +138,7 @@ void main() {
 
     testWidgets('a bill counted this month says so', (WidgetTester tester) async {
       await open(tester, rule: WorkedExample.rent);
-      expect(find.text('Counted 5 Oct'), findsOneWidget);
+      expect(find.text('Went out 5 Oct'), findsOneWidget);
     });
 
     testWidgets('the stamp lands with a squash, or only fades with reduced motion', (WidgetTester tester) async {
@@ -262,7 +263,7 @@ void main() {
     testWidgets('⌫ on the keypad drops the last digit of the amount', (WidgetTester tester) async {
       await open(tester);
       await tapRow(tester, 'amount');
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('Was ₹1,200'), findsOneWidget);
       expect(find.text('₹120'), findsOneWidget);
@@ -331,7 +332,7 @@ void main() {
       expect(find.byKey(const ValueKey<String>('bill-row-icon')), findsNothing);
       expect(find.byKey(const ValueKey<String>('bill-row-amount')), findsOneWidget);
       expect(find.text('Put in 10 Oct'), findsOneWidget);
-      expect(find.text('Next goes in on 10 Nov'), findsOneWidget);
+      expect(find.text('Next due on 10 Nov'), findsOneWidget);
       expect(find.text('Delete saving'), findsOneWidget);
     });
 

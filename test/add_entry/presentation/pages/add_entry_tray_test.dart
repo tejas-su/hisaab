@@ -83,10 +83,10 @@ void main() {
     testWidgets('⌫ drops the last digit and a long-press clears the amount (FR-AD-2)', (WidgetTester tester) async {
       await open(tester);
       await type(tester, '245');
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.pump();
       expect(find.text('₹24'), findsOneWidget);
-      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.pump();
       expect(find.text('₹24'), findsNothing);
     });
@@ -134,7 +134,7 @@ void main() {
     testWidgets('shows the overspend preview from the mockup (FR-AD-3)', (WidgetTester tester) async {
       await open(tester);
       await type(tester, '2450');
-      expect(find.text("₹1,020 over today's share · tomorrow ₹1,722"), findsOneWidget);
+      expect(find.text("₹1,020 over today's share · tomorrow's share ₹1,722"), findsOneWidget);
     });
 
     testWidgets('quick chips add, Got switches tiles, back keeps the amount', (WidgetTester tester) async {

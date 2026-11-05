@@ -44,6 +44,17 @@ void main() {
       expect(await answer, const Option<bool>.none());
     });
 
+    testWidgets('a refused permission says reminders are off; Done closes it (E-i)', (WidgetTester tester) async {
+      await pumpApp(tester, const Scaffold());
+      final Future<void> shown = RemindAskSheet.showRefused(tester.element(find.byType(Scaffold)));
+      await tester.pumpAndSettle();
+      expect(find.text('Reminders are off. Home still shows bills that need an amount.'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('remind-refused-done')));
+      await tester.pumpAndSettle();
+      await shown;
+      expect(find.byType(RemindRefusedSheet), findsNothing);
+    });
+
     testWidgets('the question starts on the page gutter', (WidgetTester tester) async {
       await open(tester);
       final double sheet = tester.getTopLeft(find.byType(RemindAskSheet)).dx;

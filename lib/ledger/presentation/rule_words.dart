@@ -8,7 +8,7 @@ import '../domain/entities/recurring_rule.dart';
 ///
 /// A bill (*Spent*) "goes out"; a saving (*Saved*) "goes in". Any other kind reads as a bill.
 extension RuleWords on AppLocalizations {
-  /// The list's title: "Fixed bills" or "Savings".
+  /// The list's title: "Bills" or "Savings".
   String ruleListTitle(EntryKind kind) => _isSaving(kind) ? savings : fixedBills;
 
   /// The hint under the list's title.
@@ -26,7 +26,8 @@ extension RuleWords on AppLocalizations {
   /// The name field's hint.
   String ruleNameHint(EntryKind kind) => _isSaving(kind) ? savingNameHint : billNameHint;
 
-  /// "How much is {label}?", "How much goes into {label}?", or "About how much…" for a bill
+  /// "How much for {label} each month?", "How much do you put in {label} each month?", or
+  /// "About how much…" for a bill
   /// whose amount changes or a card bill (D123).
   String ruleAmountQuestion(EntryKind kind, String label, AmountMode mode) {
     if (_isSaving(kind)) {
@@ -39,14 +40,14 @@ extension RuleWords on AppLocalizations {
     };
   }
 
-  /// The *Amount changes?* answer for [mode] (D123).
+  /// The *Kind of bill* answer for [mode] (D123).
   String amountModeName(AmountMode mode) => switch (mode) {
         AmountMode.fixed => billModeFixed,
         AmountMode.varies => billModeVaries,
         AmountMode.card => billModeCard,
       };
 
-  /// "Which day does {label} go out?" or "… go in?".
+  /// "Which day of the month for {label}?", for a bill or a saving.
   String ruleDayQuestion(EntryKind kind, String label) => _isSaving(kind) ? savingDayQuestion(label) : billDayQuestion(label);
 
   /// The sheet's small label above the name.
@@ -71,9 +72,10 @@ extension RuleWords on AppLocalizations {
   String ruleDeleted(RecurringRule rule) => _isSaving(rule.kind) ? savingDeleted(rule.label) : billDeleted(rule.label);
 
   /// The snackbar after [entry], of [amount], is deleted: a saving its rule put in reads as a
-  /// skipped month, never a loss (case study 17); anything else says what was deleted.
+  /// skipped month, named by its note (the rule's name, D120), never a loss (case study 17);
+  /// anything else says what was deleted.
   String entryRemoved(Entry entry, String amount) =>
-      _isSaving(entry.kind) && entry.recurringId != null ? savingSkipped : entryDeleted(amount);
+      _isSaving(entry.kind) && entry.recurringId != null ? savingSkipped(entry.note ?? savingName('other')) : entryDeleted(amount);
 
   /// Home's nudge for [rule], [days] away; a saving names the [weekday] (D120), and a bill
   /// whose amount changes, or a card bill, says "about" (D123).

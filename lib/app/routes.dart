@@ -151,7 +151,11 @@ abstract final class AppRoutes {
     }
     final Option<bool> answer = await RemindAskSheet.show(context);
     if (answer case Some(:final bool value)) {
-      await getIt<AnswerBillReminders>()(value).run();
+      final bool on = (await getIt<AnswerBillReminders>()(value).run()).getOrElse((Failure _) => true);
+      // why: a refused permission is otherwise silent, and the ask never comes back (E-i).
+      if (value && !on && context.mounted) {
+        await RemindAskSheet.showRefused(context);
+      }
     }
   }
 
@@ -203,6 +207,7 @@ abstract final class AppRoutes {
           onOpenSavings: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt, kind: EntryKind.saved)),
           ),
+          themeBloc: context.read<ThemeBloc>(),
         ),
       );
 

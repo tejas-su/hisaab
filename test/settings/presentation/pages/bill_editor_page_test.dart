@@ -84,10 +84,10 @@ void main() {
       await tester.settle();
       await next(tester);
       await keys(tester, '820');
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('₹82'), findsOneWidget);
-      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('₹82'), findsNothing);
     });
@@ -98,11 +98,11 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
       await tester.settle();
       await next(tester);
-      expect(find.text('How much is Water?'), findsOneWidget);
+      expect(find.text('How much for Water each month?'), findsOneWidget);
       await keys(tester, '300');
       expect(find.text('₹300'), findsOneWidget);
       await next(tester);
-      expect(find.text('Which day does Water go out?'), findsOneWidget);
+      expect(find.text('Which day of the month for Water?'), findsOneWidget);
       await saveOn(tester, 3);
       expect(find.byType(BillEditorPage), findsNothing);
       expect(recurring.rules.last.label, 'Water');
@@ -119,7 +119,7 @@ void main() {
       await tester.showKeyboard(find.byKey(const ValueKey<String>('bill-name')));
       await tester.testTextInput.receiveAction(TextInputAction.next);
       await tester.settle();
-      expect(find.text('How much is Water?'), findsOneWidget);
+      expect(find.text('How much for Water each month?'), findsOneWidget);
     });
 
     testWidgets('a chip fills the field and is picked, closing the keyboard; Next moves on (D86)', (WidgetTester tester) async {
@@ -133,7 +133,7 @@ void main() {
       expect(tester.getSemantics(find.byKey(const ValueKey<String>('bill-rent'))).flagsCollection.isSelected, Tristate.isTrue);
       expect(tester.testTextInput.isVisible, isFalse);
       await next(tester);
-      expect(find.text('How much is Rent?'), findsOneWidget);
+      expect(find.text('How much for Rent each month?'), findsOneWidget);
       handle.dispose();
     });
 
@@ -145,7 +145,7 @@ void main() {
       await tester.settle();
       await next(tester);
       await next(tester);
-      expect(find.text('How much is Water?'), findsOneWidget);
+      expect(find.text('How much for Water each month?'), findsOneWidget);
     });
 
     testWidgets('Back steps back with the name kept, then closes', (WidgetTester tester) async {
@@ -205,10 +205,10 @@ void main() {
     await tester.settle();
     expect(tester.getRect(find.text("What's the bill called?")).left, HisaabSpacing.gutter);
     await next(tester);
-    expect(tester.getRect(find.text('How much is Rent?')).left, HisaabSpacing.gutter);
+    expect(tester.getRect(find.text('How much for Rent each month?')).left, HisaabSpacing.gutter);
     await keys(tester, '9');
     await next(tester);
-    expect(tester.getRect(find.text('Which day does Rent go out?')).left, HisaabSpacing.gutter);
+    expect(tester.getRect(find.text('Which day of the month for Rent?')).left, HisaabSpacing.gutter);
   });
 
   group('BillEditorPage: the name pills', () {
@@ -241,7 +241,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('bill-electricity')));
       await tester.settle();
       await next(tester);
-      expect(find.text('About how much is Electricity?'), findsOneWidget);
+      expect(find.text('About how much for Electricity each month?'), findsOneWidget);
     });
 
     testWidgets('Credit card asks about the card bill and says why it isn\'t counted (D123)', (WidgetTester tester) async {
@@ -249,7 +249,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('bill-creditCard')));
       await tester.settle();
       await next(tester);
-      expect(find.text('About how much is the Credit card bill?'), findsOneWidget);
+      expect(find.text('About how much for Credit card each month?'), findsOneWidget);
       expect(find.textContaining("It isn't counted again."), findsOneWidget);
     });
 
@@ -367,10 +367,10 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('saving-rd')));
       await tester.settle();
       await next(tester);
-      expect(find.text('How much goes into RD?'), findsOneWidget);
+      expect(find.text('How much do you put in RD each month?'), findsOneWidget);
       await keys(tester, '5000');
       await next(tester);
-      expect(find.text('Which day does RD go in?'), findsOneWidget);
+      expect(find.text('Which day of the month for RD?'), findsOneWidget);
     });
   });
 }

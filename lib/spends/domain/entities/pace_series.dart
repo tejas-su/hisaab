@@ -17,19 +17,22 @@ final class PaceSeries extends Equatable {
     required this.billsByDay,
     required this.budget,
     required this.axisStep,
+    this.forecast = const Option<RangeForecast>.none(),
+    this.forecastByDay = const <Money>[],
   });
 
   /// Builds the series for [cycle] up to [asOf] (today, or the cycle's end for a past cycle).
   ///
   /// [budget] is `I − K`. The steady line steps up by each bill on its day: the bills [entries]
   /// posted, and [billsDue], the bills still to come. Returns [None] when [budget] is ₹0 or less,
-  /// since there is no steady line.
+  /// since there is no steady line. [isCurrent] adds the BR-7 forecast from [asOf] (D133).
   static Option<PaceSeries> of(
     Iterable<Entry> entries, {
     required PayCycle cycle,
     required CalendarDate asOf,
     required Money budget,
     List<DatedAmount> billsDue = const <DatedAmount>[],
+    bool isCurrent = false,
   }) {
     if (budget.isNegative || budget.isZero) {
       return const Option<PaceSeries>.none();
@@ -42,15 +45,53 @@ final class PaceSeries extends Equatable {
     ];
     final List<Money> billsByDay = _runningTotals(bills, cycle, cycle.end, budget);
     final Money top = <Money>[cumulative.last, budget, billsByDay.last].reduce((Money a, Money b) => a > b ? a : b);
-    return Option<PaceSeries>.of(
-      PaceSeries(
-        cycleDays: cycle.lengthInDays,
-        spentByDay: cumulative,
-        billsByDay: billsByDay,
-        budget: budget,
-        axisStep: _niceStep(budget, top),
-      ),
+    final PaceSeries series = PaceSeries(
+      cycleDays: cycle.lengthInDays,
+      spentByDay: cumulative,
+      billsByDay: billsByDay,
+      budget: budget,
+      axisStep: _niceStep(budget, top),
     );
+    return Option<PaceSeries>.of(isCurrent ? series._withForecast(cycle, asOf, _typedBefore(spent, asOf, budget)) : series);
+  }
+
+  static Money _typedBefore(Iterable<Entry> spent, CalendarDate asOf, Money budget) => spent
+      .where((Entry e) => e.recurringId == null && e.date.isBefore(asOf))
+      .fold(Money(0, currency: budget.currency), (Money total, Entry e) => total + e.amount);
+
+  // why: `remaining` is Home's `P − S_today − Sv_extra_today`: [budget] already takes off every
+  // saving, so what is left after the spending so far and the bills still to come (BR-3, BR-7).
+  PaceSeries _withForecast(PayCycle cycle, CalendarDate today, Money typedBefore) {
+    final int todayIndex = spentByDay.length - 1;
+    final Money billsToCome = billsByDay.last - billsByDay[todayIndex];
+    final RangeForecast forecast = SafeToSpend.forecast(
+      (cycle: cycle, today: today, remaining: budget - spentSoFar - billsToCome, paceSpentBefore: typedBefore),
+    );
+    final int? lastDay = switch (forecast) {
+      TooEarlyToForecast() => null,
+      LastsTillPayday() => cycleDays - 1,
+      RunsOut(:final CalendarDate date) => cycle.start.daysUntil(date),
+    };
+    return PaceSeries(
+      cycleDays: cycleDays,
+      spentByDay: spentByDay,
+      billsByDay: billsByDay,
+      budget: budget,
+      axisStep: axisStep,
+      forecast: Option<RangeForecast>.of(forecast),
+      forecastByDay: lastDay == null ? const <Money>[] : _forecastLine(todayIndex, lastDay, typedBefore, today, cycle),
+    );
+  }
+
+  /// Spending so far, plus `V_prev / E` a day (floored to the rupee) and each bill still to come on
+  /// its day, from today to [lastDay].
+  List<Money> _forecastLine(int todayIndex, int lastDay, Money typedBefore, CalendarDate today, PayCycle cycle) {
+    final int perMajor = budget.currency.minorPerMajor;
+    final int elapsed = cycle.daysElapsedBefore(today);
+    return List<Money>.generate(lastDay - todayIndex + 1, (int ahead) {
+      final int paced = typedBefore.amountMinor * ahead ~/ (elapsed * perMajor) * perMajor;
+      return spentSoFar + Money(paced, currency: budget.currency) + billsByDay[todayIndex + ahead] - billsByDay[todayIndex];
+    });
   }
 
   /// The running total of [amounts] at the end of each day from the cycle's start to [through].
@@ -78,6 +119,13 @@ final class PaceSeries extends Equatable {
   /// `I − K`: the money the cycle has to spend.
   final Money budget;
 
+  /// The BR-7 forecast seen from today; [None] on a past cycle.
+  final Option<RangeForecast> forecast;
+
+  /// The forecast line: the running total from today to the cycle's end, or to the day the money
+  /// runs out. Empty on a past cycle and while it is too early to forecast.
+  final List<Money> forecastByDay;
+
   /// Gap between y-axis labels: a third of [budget] rounded up to 1, 2 or 5 × 10ⁿ rupees, raised
   /// up the same ladder when needed so at most 4 steps sit above ₹0 (D115).
   final Money axisStep;
@@ -96,9 +144,11 @@ final class PaceSeries extends Equatable {
     return billsByDay[dayIndex] + Money(share, currency: budget.currency);
   }
 
+  /// Spending so far less the steady line on the same day: negative when under it.
+  Money get gap => spentSoFar - steadyThrough(spentByDay.length - 1);
+
   /// Below pace when spending so far is at or under the steady line on the same day.
-  PaceVerdict get verdict =>
-      spentSoFar > steadyThrough(spentByDay.length - 1) ? PaceVerdict.abovePace : PaceVerdict.belowPace;
+  PaceVerdict get verdict => gap.isNegative || gap.isZero ? PaceVerdict.belowPace : PaceVerdict.abovePace;
 
   /// The chart's top: the budget, or the spending or the bills if either went higher.
   Money get top => <Money>[spentSoFar, budget, billsByDay.last].reduce((Money a, Money b) => a > b ? a : b);
@@ -124,5 +174,5 @@ final class PaceSeries extends Equatable {
   }
 
   @override
-  List<Object?> get props => <Object?>[cycleDays, spentByDay, billsByDay, budget, axisStep];
+  List<Object?> get props => <Object?>[cycleDays, spentByDay, billsByDay, budget, axisStep, forecast, forecastByDay];
 }

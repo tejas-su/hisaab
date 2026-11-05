@@ -116,17 +116,17 @@ void main() {
     testWidgets('a failed load says so', (WidgetTester tester) async {
       ledger.failure = DatabaseFailure('x');
       await open(tester);
-      expect(find.text("Couldn't load your money."), findsOneWidget);
+      expect(find.text("Couldn't open this."), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('put-in-save')), findsNothing);
     });
 
     testWidgets('⌫ and long-press clear reach the bloc', (WidgetTester tester) async {
       await open(tester);
       await keys(tester, '50');
-      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('₹5'), findsOneWidget);
-      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
       await tester.settle();
       expect(find.text('₹5'), findsNothing);
     });

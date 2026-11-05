@@ -1,15 +1,31 @@
+import 'dart:ui';
+
+import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/fakes/fake_app_preferences_repository.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
+  late FakeAppPreferencesRepository preferences;
+  late ThemeBloc themeBloc;
+
+  setUp(() {
+    preferences = FakeAppPreferencesRepository();
+    themeBloc = ThemeBloc(preferences: preferences);
+  });
+  tearDown(() => themeBloc.close());
+
+  SettingsPage page({VoidCallback? onOpenBills, VoidCallback? onOpenSavings}) =>
+      SettingsPage(onOpenBills: onOpenBills ?? () {}, onOpenSavings: onOpenSavings ?? () {}, themeBloc: themeBloc);
+
   group('SettingsPage (FR-SE)', () {
     testWidgets('shows the Money group with Bills, which opens (D123)', (WidgetTester tester) async {
       int opened = 0;
-      await pumpApp(tester, SettingsPage(onOpenBills: () => opened++, onOpenSavings: () {}));
+      await pumpApp(tester, page(onOpenBills: () => opened++));
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Money'), findsOneWidget);
       await tester.tap(find.text('Bills'));
@@ -17,7 +33,7 @@ void main() {
     });
 
     testWidgets('lays out on a 320dp phone at 2× text', (WidgetTester tester) async {
-      await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () {}), size: TestWindows.smallPhone, textScale: 2);
+      await pumpApp(tester, page(), size: TestWindows.smallPhone, textScale: 2);
       expect(tester.takeException(), isNull);
     });
 
@@ -28,7 +44,7 @@ void main() {
       (ThemeMode.dark, Brightness.light),
     ]) {
       testWidgets('status-bar icons contrast with the page in $mode', (WidgetTester tester) async {
-        await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () {}), themeMode: mode);
+        await pumpApp(tester, page(), themeMode: mode);
         final AnnotatedRegion<SystemUiOverlayStyle> bar = tester.widget(
           find.descendant(of: find.byType(AppBar), matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>)),
         );
@@ -38,7 +54,7 @@ void main() {
 
     testWidgets('meets tap-target, label and contrast guidelines', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
-      await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () {}));
+      await pumpApp(tester, page());
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       await expectLater(tester, meetsGuideline(textContrastGuideline));
@@ -49,10 +65,99 @@ void main() {
   group('SettingsPage savings (D120)', () {
     testWidgets('Savings opens the savings list', (WidgetTester tester) async {
       int opened = 0;
-      await pumpApp(tester, SettingsPage(onOpenBills: () {}, onOpenSavings: () => opened++));
+      await pumpApp(tester, page(onOpenSavings: () => opened++));
       expect(find.descendant(of: find.byKey(const ValueKey<String>('open-savings')), matching: find.text('Savings')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('open-savings')));
       expect(opened, 1);
+    });
+  });
+
+  group('SettingsPage look (FR-SE-3)', () {
+    Finder choice(String key) => find.byKey(ValueKey<String>('look-$key'));
+    final Finder tile = find.byKey(const ValueKey<String>('look-tile'));
+
+    bool picked(WidgetTester tester, String key) =>
+        tester.getSemantics(choice(key)).flagsCollection.isSelected == Tristate.isTrue;
+
+    testWidgets('one Light or dark row under Look names the current look, Match phone picked', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, page());
+      expect(find.text('Look'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('Look')).dy, greaterThan(tester.getTopLeft(find.text('Savings')).dy));
+      expect(find.descendant(of: tile, matching: find.text('Light or dark')), findsOneWidget);
+      expect(find.descendant(of: tile, matching: find.text('Match phone')), findsOneWidget);
+      expect(picked(tester, 'matchPhone'), isTrue);
+      expect(picked(tester, 'light'), isFalse);
+      expect(picked(tester, 'dark'), isFalse);
+      handle.dispose();
+    });
+
+    testWidgets('one tap on an icon picks the look, saves it and names it', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, page());
+      await tester.tap(choice('dark'));
+      await tester.runAsync(pumpEventQueue);
+      await tester.pumpAndSettle();
+      expect(themeBloc.state.choice, ThemeChoice.dark);
+      expect(preferences.theme, ThemeChoice.dark);
+      expect(picked(tester, 'dark'), isTrue);
+      expect(picked(tester, 'matchPhone'), isFalse);
+      expect(find.descendant(of: tile, matching: find.text('Dark')), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('each icon is labelled, in one group of exclusive choices', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, page());
+      for (final (String key, String label) in <(String, String)>[('matchPhone', 'like your phone'), ('light', 'Light'), ('dark', 'Dark')]) {
+        expect(tester.getSemantics(choice(key)).flagsCollection.isInMutuallyExclusiveGroup, isTrue);
+        expect(tester.getSemantics(choice(key)).label, contains(label));
+      }
+      handle.dispose();
+    });
+
+    testWidgets('the icons sit in one row at the tile\'s end edge, 48dp each', (WidgetTester tester) async {
+      await pumpApp(tester, page());
+      expect(tester.getCenter(choice('light')).dy, tester.getCenter(choice('matchPhone')).dy);
+      expect(tester.getCenter(choice('dark')).dy, tester.getCenter(choice('matchPhone')).dy);
+      expect(tester.getSize(choice('dark')), const Size.square(HisaabSizes.minTouchTarget));
+      final Rect savings = tester.getRect(find.byKey(const ValueKey<String>('open-savings')));
+      expect(tester.getRect(find.byKey(const ValueKey<String>('look-track'))).right, savings.right - HisaabSpacing.gutter);
+      expect(tester.getRect(find.text('Light or dark')).left, savings.left + HisaabSpacing.gutter);
+    });
+
+    testWidgets('at 2× text on a 320dp phone the icons move under the words, so no word breaks', (WidgetTester tester) async {
+      await pumpApp(tester, page(), size: TestWindows.smallPhone, textScale: 2);
+      expect(tester.takeException(), isNull);
+      final Finder value = find.descendant(of: tile, matching: find.text('Match phone'));
+      expect(tester.getRect(find.byKey(const ValueKey<String>('look-track'))).top, greaterThanOrEqualTo(tester.getRect(value).bottom));
+      expect(tester.getRect(find.byKey(const ValueKey<String>('look-track'))).left, tester.getRect(find.text('Light or dark')).left);
+      expect(tester.getCenter(choice('dark')).dy, tester.getCenter(choice('matchPhone')).dy);
+    });
+
+    for (final (Size size, double scale) in <(Size, double)>[
+      (const Size(360, 800), 1),
+      (const Size(360, 800), 1.3),
+      (TestWindows.phoneLandscape, 1),
+      (TestWindows.foldableUnfolded, 1),
+      (TestWindows.tablet, 1),
+    ]) {
+      testWidgets('keeps the icons beside the words at $size, $scale× text', (WidgetTester tester) async {
+        await pumpApp(tester, page(), size: size, textScale: scale);
+        expect(tester.takeException(), isNull);
+        expect(tester.getCenter(choice('dark')).dy, tester.getCenter(choice('matchPhone')).dy);
+        expect(tester.getRect(find.byKey(const ValueKey<String>('look-track'))).left,
+            greaterThan(tester.getRect(find.text('Light or dark')).right));
+      });
+    }
+
+    testWidgets('meets the guidelines in dark', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await pumpApp(tester, page(), themeMode: ThemeMode.dark);
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
     });
   });
 }
