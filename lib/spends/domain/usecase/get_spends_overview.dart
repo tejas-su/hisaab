@@ -48,7 +48,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
           (BudgetSettings settings) => _recurring.activeRules().flatMap((List<RecurringRule> rules) {
             final List<PayCycle> cycles = _cyclesBack(today, settings, rules, params + 1);
             final _Viewed viewed = _Viewed(cycle: cycles[params], previous: cycles[params + 1], cyclesBack: params, today: today);
-            return _overview(viewed, _savingsDue(viewed, rules));
+            return _overview(viewed, (savings: _savingsDue(viewed, rules), bills: _billsDue(viewed, rules)));
           }),
         );
   }
@@ -71,11 +71,21 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
       ? DueAmounts.after(rules.where((RecurringRule r) => r.kind == EntryKind.saved), today: viewed.asOf, cycle: viewed.cycle)
       : Money.zero;
 
-  TaskEither<Failure, SpendsOverview> _overview(_Viewed viewed, Money savingsDue) => _categories.all().flatMap(
+  // why: the steady line steps up by each bill on its day (D129). A card bill is never reserved,
+  // since its card buys were counted when made (D123); a past cycle has nothing still to come.
+  static List<DatedAmount> _billsDue(_Viewed viewed, List<RecurringRule> rules) => viewed.cyclesBack == 0
+      ? DueAmounts.datedAfter(
+          rules.where((RecurringRule r) => r.kind == EntryKind.spent && r.amountMode != AmountMode.card),
+          today: viewed.asOf,
+          cycle: viewed.cycle,
+        )
+      : const <DatedAmount>[];
+
+  TaskEither<Failure, SpendsOverview> _overview(_Viewed viewed, _Due due) => _categories.all().flatMap(
         (List<Category> categories) => _ledger.entriesBetween(viewed.previous.start, viewed.cycle.end).flatMap(
               (List<Entry> entries) => _ledger.firstLoggedOn().flatMap(
                     (Option<CalendarDate> firstLogged) => _limitOffer(viewed).map(
-                      (Option<Insight> offer) => _build(viewed, savingsDue, categories, entries, firstLogged, offer),
+                      (Option<Insight> offer) => _build(viewed, due, categories, entries, firstLogged, offer),
                     ),
                   ),
             ),
@@ -89,7 +99,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
 
   static SpendsOverview _build(
     _Viewed viewed,
-    Money savingsDue,
+    _Due due,
     List<Category> categories,
     List<Entry> entries,
     Option<CalendarDate> firstLogged,
@@ -99,7 +109,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
     final List<Entry> previous = entries.where((Entry e) => viewed.previous.contains(e.date)).toList();
     final Money saved = _sum(current.where((Entry e) => e.kind == EntryKind.saved));
     final Money budget =
-        _sum(entries.where((Entry e) => viewed.cycle.contains(e.date) && e.kind == EntryKind.got)) - saved - savingsDue;
+        _sum(entries.where((Entry e) => viewed.cycle.contains(e.date) && e.kind == EntryKind.got)) - saved - due.savings;
     final bool previousTracked = firstLogged.filter((CalendarDate d) => !d.isAfter(viewed.previous.start)).isSome();
     final List<Insight> rules = InsightRules.evaluate(
       InsightWindow(cycle: viewed.cycle, asOf: viewed.asOf, entries: current),
@@ -115,7 +125,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
       spent: _sum(current.where((Entry e) => e.kind == EntryKind.spent)),
       budget: budget,
       saved: saved,
-      pace: PaceSeries.of(current, cycle: viewed.cycle, asOf: viewed.asOf, budget: budget),
+      pace: PaceSeries.of(current, cycle: viewed.cycle, asOf: viewed.asOf, budget: budget, billsDue: due.bills),
       rows: CategoryShares.of(current, categories),
       insights: <Insight>[...rules, ...offer.match(() => const <Insight>[], (Insight o) => <Insight>[o])].take(_maxInsights).toList(),
     );
@@ -123,6 +133,9 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
 
   static Money _sum(Iterable<Entry> entries) => entries.fold(Money.zero, (Money total, Entry e) => total + e.amount);
 }
+
+/// What rules still have to post in the cycle: savings (`R`, D120) and bills on their days (D129).
+typedef _Due = ({Money savings, List<DatedAmount> bills});
 
 /// The cycle being looked at, the one before it, and the day it is seen from.
 final class _Viewed {

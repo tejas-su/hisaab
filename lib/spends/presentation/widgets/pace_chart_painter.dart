@@ -1,9 +1,11 @@
+import 'dart:ui' show PathMetric;
+
 import 'package:flutter/rendering.dart';
 
 import '../../../core/money/money.dart';
 import '../../domain/entities/pace_series.dart';
 
-/// Paints the pace chart: labelled gridlines, the dotted steady line, the solid spending line
+/// Paints the pace chart: labelled gridlines, the dotted steady line (stepping up on bill days), the solid spending line
 /// and, on the current cycle, a marigold today dot (SPEC FR-SP-3, UI_DESIGN §5.4).
 class PaceChartPainter extends CustomPainter {
   const PaceChartPainter({
@@ -42,7 +44,10 @@ class PaceChartPainter extends CustomPainter {
     final double labelWidth = labels.fold(0.0, (double widest, TextPainter p) => p.width > widest ? p.width : widest);
     final Rect plot = Rect.fromLTRB(labelWidth + _labelGap, _inset, size.width - _inset, size.height - _inset);
     _grid(canvas, plot, labels, labelWidth);
-    _dotted(canvas, _point(plot, 0, Money.zero), _point(plot, series.cycleDays, series.budget));
+    _dotted(canvas, <Offset>[
+      _point(plot, 0, Money.zero),
+      for (int day = 0; day < series.cycleDays; day++) _point(plot, day + 1, series.steadyThrough(day)),
+    ]);
     final List<Offset> spent = <Offset>[
       _point(plot, 0, Money.zero),
       for (final (int day, Money total) in series.spentByDay.indexed) _point(plot, day + 1, total),
@@ -92,16 +97,18 @@ class PaceChartPainter extends CustomPainter {
         ..strokeWidth = 1.5,
     );
 
-  void _dotted(Canvas canvas, Offset from, Offset to) {
-    final Offset step = to - from;
-    final double length = step.distance;
+  // why: the steady line steps up on bill days (D129), so the dashes walk the whole path; one
+  // metric keeps their rhythm even across the corners.
+  void _dotted(Canvas canvas, List<Offset> points) {
     final Paint paint = Paint()
       ..color = ink2
+      ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
-    for (double d = 0; d < length; d += _dash + _dashGap) {
-      final double end = d + _dash < length ? d + _dash : length;
-      canvas.drawLine(from + step * (d / length), from + step * (end / length), paint);
+    for (final PathMetric metric in (Path()..addPolygon(points, false)).computeMetrics()) {
+      for (double d = 0; d < metric.length; d += _dash + _dashGap) {
+        canvas.drawPath(metric.extractPath(d, d + _dash), paint);
+      }
     }
   }
 

@@ -379,12 +379,13 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - An empty cycle reads "Nothing spent in October yet." and hides the chart and the list.
 - **FR-SP-2** The **Ask AI** card at the top opens FR-AI for the cycle shown. It shows only when that cycle has spends (DECISIONS D53, D61). It reads "Ask an AI about October", with "You'll see exactly what it gets." below in smaller grey text; TalkBack reads both as one button (DECISIONS D70).
 - **FR-SP-3** **Pace chart:**
-  - The cumulative *Spent* line (solid ink) against the steady-pace line from (start, 0) to (end, `I − K`) (dotted), with `K` computed from the cycle's savings, posted or still to come (D120).
+  - The cumulative *Spent* line (solid ink) against the steady-pace line (dotted) from (start, 0) to (end, `I − K`), with `K` computed from the cycle's savings, posted or still to come (D120).
+  - The steady line steps up by each bill on its own day: bills already posted, and on the current cycle the bills still to come (a changing bill at its estimate; never a card bill, D123). Between bills it rises by an even daily share of the rest: `steady(d) = bills due by d + floor((I − K − all bills) × (d + 1) / days)`, the share counted as ₹0 when the bills reach `I − K`. Worked example: rent ₹8,200 on 5 Oct and electricity ₹1,200 on 29 Oct give `steady(26 Oct) = 8,200 + floor(35,600 × 23 / 31) = ₹34,612`, so ₹27,570 is *Spending slower* (D129).
   - Fixed y-axis labels at ₹0 and at round thirds of `I`, in compact `en_IN` (₹20K).
   - A "Spending slower" or "Spending faster" verdict with a glyph (DECISIONS D77).
   - A today marker in marigold.
   - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. When spending runs far past `I − K`, the step moves up the same ladder so at most 4 labels sit above ₹0 (₹3,000 with ₹5,00,000 spent gives ₹0 / ₹2L / ₹4L). Without income there is no steady line, so only the total shows (DECISIONS D49, D115).
-  - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day.
+  - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day. Rent posted on day 2 with nothing else spent is *Spending slower*.
 - **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "past limit") (D110).
 - **FR-SP-4a** **Spent and saved:** one `ink2` line above *Where it went*, "Spent ₹27,570 · Saved ₹5,000", when the cycle shown has saves. Saves are never in the bars, percentages, week bars, pace or insights (D120).
 - **FR-SP-5** **Insights** (BR-14), with their actions.

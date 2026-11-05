@@ -365,7 +365,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - Shown only when the cycle has spends (DECISIONS D61).
   - Text: "Ask an AI about October" in `bodyLarge`, with "You'll see exactly what it gets." below in `bodySmall` `ink2`. TalkBack reads both as one button (D70).
 - **Pace chart:**
-  - A solid `ink` line for your spending and a dotted `ink2` line for steady pace.
+  - A solid `ink` line for your spending and a dotted `ink2` line for steady pace. The steady line steps up on each bill's day, so a bill on the spending line meets a matching step and doesn't read as overspending (D129).
   - The y-axis is fixed and labelled (₹0 / ₹20K / ₹40K), avoiding Apple Card's rescaling problem.
   - Its height is half the card's width, kept between 160 and 200 (D69).
   - A verdict: "Spending slower" or "Spending faster" (D77). The legend wraps, so the longer words never clip.

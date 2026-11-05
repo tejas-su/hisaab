@@ -11,29 +11,58 @@ enum PaceVerdict { belowPace, abovePace }
 
 /// The pace chart's data: cumulative *Spent* per day against a steady line to [budget] (FR-SP-3).
 final class PaceSeries extends Equatable {
-  const PaceSeries({required this.cycleDays, required this.spentByDay, required this.budget, required this.axisStep});
+  const PaceSeries({
+    required this.cycleDays,
+    required this.spentByDay,
+    required this.billsByDay,
+    required this.budget,
+    required this.axisStep,
+  });
 
   /// Builds the series for [cycle] up to [asOf] (today, or the cycle's end for a past cycle).
   ///
-  /// [budget] is `I − K`. Returns [None] when it is ₹0 or less, since there is no steady line.
-  static Option<PaceSeries> of(Iterable<Entry> entries, {required PayCycle cycle, required CalendarDate asOf, required Money budget}) {
+  /// [budget] is `I − K`. The steady line steps up by each bill on its day: the bills [entries]
+  /// posted, and [billsDue], the bills still to come. Returns [None] when [budget] is ₹0 or less,
+  /// since there is no steady line.
+  static Option<PaceSeries> of(
+    Iterable<Entry> entries, {
+    required PayCycle cycle,
+    required CalendarDate asOf,
+    required Money budget,
+    List<DatedAmount> billsDue = const <DatedAmount>[],
+  }) {
     if (budget.isNegative || budget.isZero) {
       return const Option<PaceSeries>.none();
     }
-    final Map<int, int> byDay = entries
-        .where((Entry e) => e.kind == EntryKind.spent && cycle.contains(e.date) && !e.date.isAfter(asOf))
-        .fold(<int, int>{}, (Map<int, int> days, Entry e) {
-      final int day = cycle.start.daysUntil(e.date);
-      return <int, int>{...days, day: (days[day] ?? 0) + e.amount.amountMinor};
+    final Iterable<Entry> spent = entries.where((Entry e) => e.kind == EntryKind.spent && cycle.contains(e.date) && !e.date.isAfter(asOf));
+    final List<Money> cumulative = _runningTotals(spent.map((Entry e) => (date: e.date, amount: e.amount)), cycle, asOf, budget);
+    final List<DatedAmount> bills = <DatedAmount>[
+      ...spent.where((Entry e) => e.recurringId != null).map((Entry e) => (date: e.date, amount: e.amount)),
+      ...billsDue.where((DatedAmount due) => cycle.contains(due.date)),
+    ];
+    final List<Money> billsByDay = _runningTotals(bills, cycle, cycle.end, budget);
+    final Money top = <Money>[cumulative.last, budget, billsByDay.last].reduce((Money a, Money b) => a > b ? a : b);
+    return Option<PaceSeries>.of(
+      PaceSeries(
+        cycleDays: cycle.lengthInDays,
+        spentByDay: cumulative,
+        billsByDay: billsByDay,
+        budget: budget,
+        axisStep: _niceStep(budget, top),
+      ),
+    );
+  }
+
+  /// The running total of [amounts] at the end of each day from the cycle's start to [through].
+  static List<Money> _runningTotals(Iterable<DatedAmount> amounts, PayCycle cycle, CalendarDate through, Money budget) {
+    final Map<int, int> byDay = amounts.fold(<int, int>{}, (Map<int, int> days, DatedAmount a) {
+      final int day = cycle.start.daysUntil(a.date);
+      return <int, int>{...days, day: (days[day] ?? 0) + a.amount.amountMinor};
     });
-    final List<Money> cumulative = List<int>.generate(cycle.start.daysUntil(asOf) + 1, (int day) => byDay[day] ?? 0)
+    return List<int>.generate(cycle.start.daysUntil(through) + 1, (int day) => byDay[day] ?? 0)
         .fold(<int>[], (List<int> sums, int day) => <int>[...sums, (sums.isEmpty ? 0 : sums.last) + day])
         .map((int minor) => Money(minor, currency: budget.currency))
         .toList();
-    final Money top = cumulative.last > budget ? cumulative.last : budget;
-    return Option<PaceSeries>.of(
-      PaceSeries(cycleDays: cycle.lengthInDays, spentByDay: cumulative, budget: budget, axisStep: _niceStep(budget, top)),
-    );
   }
 
   /// Days in the cycle; the steady line reaches [budget] at the last one.
@@ -41,6 +70,10 @@ final class PaceSeries extends Equatable {
 
   /// Running total of spending at the end of each day from the cycle's start to its as-of day.
   final List<Money> spentByDay;
+
+  /// Running total of the cycle's bills at the end of each day, posted or still to come, for
+  /// every day of the cycle.
+  final List<Money> billsByDay;
 
   /// `I − K`: the money the cycle has to spend.
   final Money budget;
@@ -52,19 +85,23 @@ final class PaceSeries extends Equatable {
   /// Total spent up to the as-of day.
   Money get spentSoFar => spentByDay.last;
 
-  /// The steady line's value at the end of day [dayIndex] (0 is the cycle's start), floored to
-  /// the rupee.
+  /// The steady line's value at the end of day [dayIndex] (0 is the cycle's start): the bills
+  /// due by then, plus an even share of the rest of [budget] for each day, floored to the rupee.
+  // why: a straight ramp put rent on day 2 far above the line, so the verdict read "Spending
+  // faster" for most of the month with nothing else spent (D129).
   Money steadyThrough(int dayIndex) {
     final int perMajor = budget.currency.minorPerMajor;
-    return Money(budget.amountMinor * (dayIndex + 1) ~/ (cycleDays * perMajor) * perMajor, currency: budget.currency);
+    final int everyday = budget.amountMinor - billsByDay.last.amountMinor;
+    final int share = everyday <= 0 ? 0 : everyday * (dayIndex + 1) ~/ (cycleDays * perMajor) * perMajor;
+    return billsByDay[dayIndex] + Money(share, currency: budget.currency);
   }
 
   /// Below pace when spending so far is at or under the steady line on the same day.
   PaceVerdict get verdict =>
       spentSoFar > steadyThrough(spentByDay.length - 1) ? PaceVerdict.abovePace : PaceVerdict.belowPace;
 
-  /// The chart's top: the budget, or the spending if that went higher.
-  Money get top => spentSoFar > budget ? spentSoFar : budget;
+  /// The chart's top: the budget, or the spending or the bills if either went higher.
+  Money get top => <Money>[spentSoFar, budget, billsByDay.last].reduce((Money a, Money b) => a > b ? a : b);
 
   /// Fixed y-axis labels: ₹0 and every [axisStep] up to [top].
   List<Money> get axisLabels => <Money>[
@@ -87,5 +124,5 @@ final class PaceSeries extends Equatable {
   }
 
   @override
-  List<Object?> get props => <Object?>[cycleDays, spentByDay, budget, axisStep];
+  List<Object?> get props => <Object?>[cycleDays, spentByDay, billsByDay, budget, axisStep];
 }

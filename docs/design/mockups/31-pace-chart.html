@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Pace chart (proposal)</title>
+<style>
+  /* Pace chart, FR-SP-3 / UI_DESIGN §5.4. Column 1 is the chart before D129 (a straight steady ramp); column 2 is D129
+     as built (the steady line steps up on bill days); column 3 is a proposal on top of it, not built: the gap at today,
+     the forecast to the cycle's end (BR-7) and three dates under the plot. Drawn at 360dp with the painter's real
+     geometry: plot height = half the chart width clamped to 160–200 (D69), labels every 1-2-5 step (D49, D115),
+     dots 2 on 4 with round caps, spending 2.5dp, today dot r5 marigold with an ink ring.
+     Numbers: the worked example (docs/design/README.md): cycle Sun 4 Oct – Tue 3 Nov 2026, I = ₹45,000, rent ₹8,200
+     posted 5 Oct, ₹18,950 food on 20 Oct, ₹420 today (Mon 26 Oct), electricity ₹1,200 due 29 Oct.
+     BR-7 pace = 18,950 / 22 ≈ ₹861 a day, so the forecast spare is about ₹9,300. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; max-width: 360px; }
+  .pair figcaption span { display: block; font-weight: 400; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 736px; margin: 8px 0 0; }
+
+  /* A 360dp strip of the Spends page holding the pace card (20dp page gutter, 20dp card padding, 28dp radius) */
+  .strip { width: 360px; padding: 16px 20px; background: var(--bg); border-radius: 28px; color: var(--ink); flex: none; }
+  @media (max-width: 420px) { .strip { zoom: 0.85; } }
+  .card { background: var(--surface); border-radius: 28px; padding: 20px; }
+  .total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .total .lbl { font: 400 18px/24px 'Anek Latin', sans-serif; color: var(--ink2); }
+  .total b { font: 600 24px/30px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .total small { font-size: 15px; line-height: 20px; color: var(--ink2); }
+  .chart { display: block; margin: 8px 0; width: 280px; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; font-size: 13px; line-height: 18px; }
+  .legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .v { font-weight: 600; }
+  svg.k { width: 16px; height: 16px; overflow: visible; }
+  .spoken { font-size: 12px; line-height: 16px; color: var(--canvasInk2); margin-top: 4px; font-style: italic; max-width: 360px; }
+</style>
+</head>
+<body>
+
+<h1>Pace chart <span class="tag">proposal</span></h1>
+<p class="lede">The Spends pace chart (FR-SP-3), three ways. <b>Before</b> is the chart before D129, with a straight steady ramp. <b>D129 (built)</b> is the fix that shipped: the steady line steps up on each bill's day, so a bill no longer reads as overspending. <b>Proposal</b> adds three things on top, none of them built: the gap at today as a number, where this pace ends up, and three dates under the plot. Everything is drawn with tokens only (ink, ink2, hairline, one marigold dot); no red, no green.</p>
+
+<h2>A · Worked example, Mon 26 Oct</h2>
+<p class="why">Rent ₹8,200 posted 5 Oct, ₹18,950 of food on 20 Oct, ₹420 today. Electricity ₹1,200 is still to come on 29 Oct. The verdict is the same before and after D129, but the steady line now meets the rent step, and the proposal says how much room there is and where the month ends up.</p>
+<div class="pair" id="a"></div>
+
+<h2>B · The bug: Mon 5 Oct, the day rent goes out</h2>
+<p class="why">Nothing has been spent except rent. Before D129 the straight ramp was at ₹2,903, so ₹8,200 read <b>Spending faster</b> and stayed "faster" until 9 Oct. With D129 the steady line has the same step, so it reads <b>Spending slower</b>. The forecast is hidden because there are fewer than 3 days of history (BR-7, <code>E &lt; 3</code>), and the <i>4 Oct</i> label gives way to <i>Today</i> where they would overlap.</p>
+<div class="pair" id="b"></div>
+
+<h2>C · Spending fast: ₹9,000 more on 22 Oct</h2>
+<p class="why">The same cycle with ₹9,000 more spent on Thu 22 Oct, ₹36,570 by today. Pace = (18,950 + 9,000) / 22 ≈ ₹1,270 a day. With electricity on the 29th the total passes ₹45,000 on Sun 1 Nov, the same date BR-7 gives Home's range line ("At this pace it runs out on 1 Nov"). The forecast stops where it crosses the budget, with a ring and the date.</p>
+<div class="pair" id="c"></div>
+
+<h2>D · Proposal in dark</h2>
+<div class="pair" id="d"></div>
+
+<h2>What each mark is</h2>
+<table>
+  <tr><th>Mark</th><th>Drawn as</th><th>Rule</th></tr>
+  <tr><td>Steady pace</td><td>Dotted <code>ink2</code>, 2dp, 2 on 4</td><td>Bills due by the day + an even share of the rest of <code>I − K</code> (D129, built)</td></tr>
+  <tr><td>You</td><td>Solid <code>ink</code>, 2.5dp</td><td>Running total of <i>Spent</i>, bills included (unchanged)</td></tr>
+  <tr><td>Gap at today</td><td><code>ink2</code> bracket at today's x, label in <code>ink</code> on the card colour</td><td><code>|spent − steady(today)|</code>, floored to the rupee, "₹X under" / "₹X over"<span class="draft">copy draft</span></td></tr>
+  <tr><td>At this pace</td><td>Dashed <code>ink</code>, 2dp, 6 on 5, from today's dot</td><td>BR-7 pace a day + bills still to come on their days; hidden while <code>E &lt; 3</code>; on a past cycle not drawn</td></tr>
+  <tr><td>Where it ends</td><td>Spare: label at the end, rounded to ₹100 with "about". Runs out: an <code>ink</code> ring where it crosses <code>I − K</code>, then the line stops</td><td>The same numbers as Home's range line (BR-7), so the two never disagree</td></tr>
+  <tr><td>Dates</td><td>Cycle start, <b>Today</b> (600 weight, <code>ink</code>), cycle end, in <code>labelSmall</code> <code>ink2</code></td><td>A date label is dropped when it would overlap <i>Today</i></td></tr>
+  <tr><td>TalkBack</td><td>The card stays one sentence</td><td>"Spent so far ₹27,570 of ₹45,000. Spending slower, ₹7,042 under steady pace. At this pace about ₹9,300 spare."<span class="draft">copy draft</span></td></tr>
+</table>
+
+<h2>Open questions</h2>
+<ul>
+  <li><b>Copy:</b> "₹7,042 under", "about ₹9,300 spare", "runs out 1 Nov" and "At this pace" are drafts for <code>design-content</code>. "Spare" and "runs out" reuse Home's range-line words on purpose.</li>
+  <li><b>Gap vs verdict:</b> the gap could replace the verdict word instead of sitting beside it ("₹7,042 slower than steady"). Kept both here so the word still carries it at 2× text where the bracket label may be tight.</li>
+  <li><b>Past cycles:</b> no forecast and no <i>Today</i>; the bracket would sit at the end and read the final gap ("₹2,100 under for the month").</li>
+  <li><b>Not in this mockup:</b> savings on the chart (#4) needs a decision against D120 first; touch-to-read a day (#6) and last cycle's line (#7) are later.</li>
+</ul>
+
+<script>
+  const CYCLE_DAYS = 31, BUDGET = 45000;
+  const START = new Date(2026, 9, 4);
+  const BILLS = [{ day: 1, amount: 8200 }, { day: 25, amount: 1200 }];
+  const W = 280, H = 160, LABEL_GAP = 8, INSET = 6, X_ROW = 18;
+
+  const inr = n => '₹' + Math.floor(n).toLocaleString('en-IN');
+  const compact = n => n === 0 ? '₹0' : '₹' + (n / 1000) + 'K';
+  const dateOf = day => { const d = new Date(START); d.setDate(d.getDate() + day); return d; };
+  const short = d => d.getDate() + ' ' + d.toLocaleString('en-GB', { month: 'short' });
+
+  // spentDays: { dayIndex: rupees } up to asOf (inclusive). Bills posted by asOf are spent too.
+  function scenario(asOf, typed) {
+    const byDay = {};
+    BILLS.filter(b => b.day <= asOf).forEach(b => byDay[b.day] = (byDay[b.day] || 0) + b.amount);
+    Object.entries(typed).forEach(([d, a]) => byDay[d] = (byDay[d] || 0) + a);
+    const cum = []; let s = 0;
+    for (let d = 0; d <= asOf; d++) { s += byDay[d] || 0; cum.push(s); }
+    const typedBefore = Object.entries(typed).filter(([d]) => +d < asOf).reduce((t, [, a]) => t + a, 0);
+    return { asOf, cum, spent: s, pace: asOf >= 3 ? typedBefore / asOf : null };
+  }
+
+  const billsThrough = d => BILLS.filter(b => b.day <= d).reduce((t, b) => t + b.amount, 0);
+  const steadyNew = d => billsThrough(d) + Math.floor((BUDGET - billsThrough(CYCLE_DAYS)) * (d + 1) / CYCLE_DAYS);
+  const steadyOld = d => Math.floor(BUDGET * (d + 1) / CYCLE_DAYS);
+
+  // Forecast: from the end of asOf, add pace each day and each bill still to come on its day.
+  function forecast(sc) {
+    const pts = [{ day: sc.asOf, v: sc.spent }]; let v = sc.spent;
+    for (let d = sc.asOf + 1; d < CYCLE_DAYS; d++) {
+      v += sc.pace + BILLS.filter(b => b.day === d).reduce((t, b) => t + b.amount, 0);
+      if (v > BUDGET) {
+        const prev = pts[pts.length - 1];
+        const f = (BUDGET - prev.v) / (v - prev.v);
+        pts.push({ day: prev.day + f, v: BUDGET });
+        return { pts, runsOut: d };
+      }
+      pts.push({ day: d, v });
+    }
+    return { pts, spare: Math.round((BUDGET - v) / 100) * 100 };
+  }
+
+  function chart(sc, mode) {
+    const steady = mode === 'before' ? steadyOld : steadyNew;
+    const proposal = mode === 'proposal';
+    const top = Math.max(BUDGET, sc.spent);
+    const labels = [0, 20000, 40000].filter(v => v <= top);
+    const labelW = 30;
+    const plot = { l: labelW + LABEL_GAP, t: INSET, r: W - INSET, b: H - INSET };
+    const x = dayEnd => plot.l + (plot.r - plot.l) * dayEnd / CYCLE_DAYS;
+    const y = v => plot.b - (plot.b - plot.t) * v / top;
+    const out = [];
+    labels.forEach(v => {
+      out.push(`<line x1="${plot.l}" y1="${y(v)}" x2="${plot.r}" y2="${y(v)}" stroke="var(--hairline)" stroke-width="1"/>`);
+      out.push(`<text x="${labelW}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink2)">${compact(v)}</text>`);
+    });
+    const steadyPts = [[x(0), y(0)]];
+    for (let d = 0; d < CYCLE_DAYS; d++) steadyPts.push([x(d + 1), y(steady(d))]);
+    out.push(`<polyline points="${steadyPts.join(' ')}" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`);
+
+    const spentPts = [[x(0), y(0)], ...sc.cum.map((v, d) => [x(d + 1), y(v)])];
+    const today = spentPts[spentPts.length - 1];
+    let fc = null;
+    if (proposal && sc.pace !== null) {
+      fc = forecast(sc);
+      out.push(`<polyline points="${fc.pts.map(p => [x(p.day + 1), y(p.v)]).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round"/>`);
+      const end = fc.pts[fc.pts.length - 1], ex = x(end.day + 1), ey = y(end.v);
+      if (fc.runsOut) {
+        out.push(`<circle cx="${ex}" cy="${ey}" r="4.5" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>`);
+        out.push(tag(ex - 8, ey + 18, 'end', 'runs out ' + short(dateOf(fc.runsOut))));
+      } else {
+        out.push(tag(plot.r, ey - 10, 'end', 'about ' + inr(fc.spare) + ' spare'));
+      }
+    }
+    out.push(`<polyline points="${spentPts.join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`);
+
+    if (proposal) {
+      const sv = steady(sc.asOf), gap = sc.spent - sv, sy = y(sv), tx = today[0];
+      out.push(`<path d="M${tx} ${today[1]} V${sy} M${tx - 3} ${sy} H${tx + 3}" stroke="var(--ink2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>`);
+      const left = tx > W / 2;
+      out.push(tag(tx + (left ? -8 : 8), (today[1] + sy) / 2 + 4, left ? 'end' : 'start', inr(Math.abs(gap)) + (gap > 0 ? ' over' : ' under')));
+      const by = H + X_ROW - 4;
+      const todayLbl = `<text x="${tx}" y="${by}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">Today</text>`;
+      if (tx - plot.l > 44) out.push(`<text x="${plot.l}" y="${by}" font-size="11" fill="var(--ink2)">${short(dateOf(0))}</text>`);
+      if (plot.r - tx > 44) out.push(`<text x="${plot.r}" y="${by}" text-anchor="end" font-size="11" fill="var(--ink2)">${short(dateOf(CYCLE_DAYS - 1))}</text>`);
+      out.push(todayLbl);
+    }
+    out.push(`<circle cx="${today[0]}" cy="${today[1]}" r="5" fill="var(--signal)" stroke="var(--ink)" stroke-width="1.5"/>`);
+    const h = proposal ? H + X_ROW : H;
+    return { svg: `<svg class="chart" viewBox="0 0 ${W} ${h}" height="${h}" font-family="Mukta, sans-serif">${out.join('')}</svg>`, fc, gap: sc.spent - steady(sc.asOf) };
+  }
+
+  // A label on the card colour, so it reads over the lines it sits on.
+  function tag(tx, ty, anchor, text) {
+    const w = text.length * 5.6 + 6, bx = anchor === 'end' ? tx - w + 3 : anchor === 'middle' ? tx - w / 2 : tx - 3;
+    return `<rect x="${bx}" y="${ty - 11}" width="${w}" height="15" rx="4" fill="var(--surface)"/><text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="var(--ink)">${text}</text>`;
+  }
+
+  const KEY_SOLID = '<svg class="k"><line x1="0" y1="8" x2="16" y2="8" stroke="var(--ink)" stroke-width="2.5"/></svg>';
+  const KEY_DOTS = '<svg class="k"><line x1="1" y1="8" x2="16" y2="8" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/></svg>';
+  const KEY_DASH = '<svg class="k"><line x1="1" y1="8" x2="16" y2="8" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round"/></svg>';
+  const GLYPH_OK = '<svg class="k" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><path d="M5 8.2l2 2 4-4.2"/></svg>';
+  const GLYPH_ALERT = '<svg class="k" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"><path d="M8 1.8l6.6 11.7H1.4z" stroke-linejoin="round"/><path d="M8 6.5v3"/><circle cx="8" cy="11.6" r=".4"/></svg>';
+
+  function card(sc, mode, theme) {
+    const c = chart(sc, mode);
+    const slower = c.gap <= 0;
+    const legend = [
+      `<span>${KEY_SOLID}You</span>`,
+      `<span>${KEY_DOTS}Steady pace</span>`,
+      c.fc ? `<span>${KEY_DASH}At this pace</span>` : '',
+      `<span class="v">${slower ? GLYPH_OK : GLYPH_ALERT}${slower ? 'Spending slower' : 'Spending faster'}</span>`,
+    ].join('');
+    const spoken = mode === 'proposal'
+      ? `TalkBack: "Spent so far ${inr(sc.spent)} of ${inr(BUDGET)}. ${slower ? 'Spending slower' : 'Spending faster'}, ${inr(Math.abs(c.gap))} ${slower ? 'under' : 'over'} steady pace.${c.fc ? (c.fc.runsOut ? ' At this pace it runs out on ' + short(dateOf(c.fc.runsOut)) + '.' : ' At this pace about ' + inr(c.fc.spare) + ' spare.') : ''}"`
+      : '';
+    return `<div class="strip ${theme}"><div class="card">
+      <div class="total"><span class="lbl">Spent so far</span><span><b>${inr(sc.spent)}</b> <small>of ${inr(BUDGET)}</small></span></div>
+      ${c.svg}
+      <div class="legend">${legend}</div>
+    </div></div>${spoken ? `<div class="spoken">${spoken}</div>` : ''}`;
+  }
+
+  const NAMES = { before: ['Before', 'Straight ramp to ₹45,000'], fixed: ['D129 (built)', 'Steps up on bill days'], proposal: ['Proposal', 'Gap, forecast and dates'] };
+  function row(id, sc, modes, theme) {
+    document.getElementById(id).innerHTML = modes.map(m =>
+      `<figure>${card(sc, m, theme)}<figcaption>${NAMES[m][0]}<span>${NAMES[m][1]}</span></figcaption></figure>`).join('');
+  }
+
+  const A = scenario(22, { 16: 18950, 22: 420 });
+  const B = scenario(1, {});
+  const C = scenario(22, { 16: 18950, 18: 9000, 22: 420 });
+  const ALL = ['before', 'fixed', 'proposal'];
+  row('a', A, ALL, 'light');
+  row('b', B, ALL, 'light');
+  row('c', C, ALL, 'light');
+  document.getElementById('d').innerHTML = [A, B, C].map(sc => `<figure>${card(sc, 'proposal', 'dark')}</figure>`).join('');
+</script>
+</body>
+</html>

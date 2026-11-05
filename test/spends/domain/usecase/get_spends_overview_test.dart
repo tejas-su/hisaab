@@ -91,6 +91,37 @@ void main() {
       ]);
     });
 
+    test('the steady line steps up by rent on its day and by electricity still to come (D129)', () async {
+      final PaceSeries pace = (await overview()).pace.getOrElse(() => fail('no pace'));
+      // 26 Oct is day 22: rent ₹8,200 + 23/31 of the other ₹35,600; 29 Oct (day 25) adds ₹1,200.
+      expect(pace.steadyThrough(22), Money.fromMajor(34612));
+      expect(pace.steadyThrough(25), Money.fromMajor(9400 + 29858));
+      expect(pace.steadyThrough(30), Money.fromMajor(45000));
+    });
+
+    test('a card bill still to come never steps the steady line (D123)', () async {
+      recurring.rules = <RecurringRule>[
+        WorkedExample.salary,
+        WorkedExample.rent,
+        WorkedExample.electricity.copyWith(amountMode: AmountMode.card),
+      ];
+      final PaceSeries pace = (await overview()).pace.getOrElse(() => fail('no pace'));
+      expect(pace.steadyThrough(25) - pace.steadyThrough(24), Money.fromMajor(1187));
+    });
+
+    test('a past cycle has no bills still to come', () async {
+      ledger.entries.add(Entry(
+        id: 60,
+        amount: Money.fromMajor(30000),
+        kind: EntryKind.got,
+        categoryId: SeedCategoryIds.salary,
+        date: _september.start,
+        createdAt: DateTime(2026, 9, 4),
+      ));
+      final PaceSeries pace = (await overview(1)).pace.getOrElse(() => fail('no pace'));
+      expect(pace.steadyThrough(24), Money.fromMajor(25000));
+    });
+
     test('first cycle in use: nothing earlier to go back to, and nothing to compare', () async {
       final SpendsOverview result = await overview();
       expect(result.canGoBack, isFalse);

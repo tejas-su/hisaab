@@ -10,26 +10,36 @@ import '../../helpers/fixtures/ledger/worked_example.dart';
 
 const PayCycle _cycle = PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3));
 
-PaceSeries _series(Iterable<Entry> entries, {CalendarDate asOf = WorkedExample.today, int budget = 45000}) =>
-    PaceSeries.of(entries, cycle: _cycle, asOf: asOf, budget: Money.fromMajor(budget)).getOrElse(() => fail('no series'));
+PaceSeries _series(
+  Iterable<Entry> entries, {
+  CalendarDate asOf = WorkedExample.today,
+  int budget = 45000,
+  List<DatedAmount> billsDue = const <DatedAmount>[],
+}) =>
+    PaceSeries.of(entries, cycle: _cycle, asOf: asOf, budget: Money.fromMajor(budget), billsDue: billsDue)
+        .getOrElse(() => fail('no series'));
 
-Entry _spent(int rupees, CalendarDate date, {EntryKind kind = EntryKind.spent}) => Entry(
+Entry _spent(int rupees, CalendarDate date, {EntryKind kind = EntryKind.spent, int? recurringId}) => Entry(
       id: date.day,
       amount: Money.fromMajor(rupees),
       kind: kind,
       categoryId: 1,
       date: date,
       createdAt: DateTime(2026, 10, 1),
+      recurringId: recurringId,
     );
+
+const CalendarDate _rentDay = CalendarDate(2026, 10, 5);
 
 void main() {
   group('PaceSeries.of (FR-SP-3)', () {
-    test('worked example: ₹27,570 spent by 26 Oct, below the ₹33,387 steady pace', () {
+    test('worked example: ₹27,570 spent by 26 Oct, below the ₹35,503 steady pace', () {
       final PaceSeries series = _series(WorkedExample.entries);
       expect(series.cycleDays, 31);
       expect(series.spentByDay, hasLength(23));
       expect(series.spentSoFar, Money.fromMajor(27570));
-      expect(series.steadyThrough(22), Money.fromMajor(33387));
+      // Rent ₹8,200 on its day, plus 23/31 of the other ₹36,800 (D129).
+      expect(series.steadyThrough(22), Money.fromMajor(35503));
       expect(series.verdict, PaceVerdict.belowPace);
     });
 
@@ -66,6 +76,48 @@ void main() {
         _spent(100, const CalendarDate(2026, 10, 27)),
       ]);
       expect(series.spentSoFar, Money.zero);
+    });
+
+    // Regression: the steady line was a straight ramp, so rent on day 2 read "Spending faster"
+    // for most of the month (₹8,200 against ₹2,903) though nothing else was spent.
+    test('a bill posted on its day steps the steady line up, so rent alone is spending slower', () {
+      final PaceSeries series = _series(<Entry>[_spent(8200, _rentDay, recurringId: 2)], asOf: _rentDay);
+      expect(series.steadyThrough(0), Money.fromMajor(1187));
+      expect(series.steadyThrough(1), Money.fromMajor(10574));
+      expect(series.verdict, PaceVerdict.belowPace);
+    });
+
+    test('the same amount typed by hand is spending, not a bill, so it is faster', () {
+      final PaceSeries series = _series(<Entry>[_spent(8200, _rentDay)], asOf: _rentDay);
+      expect(series.steadyThrough(1), Money.fromMajor(2903));
+      expect(series.verdict, PaceVerdict.abovePace);
+    });
+
+    test('a bill still to come steps the line on its day and the line still ends on the budget', () {
+      final PaceSeries series = _series(
+        <Entry>[_spent(8200, _rentDay, recurringId: 2)],
+        billsDue: <DatedAmount>[(date: const CalendarDate(2026, 10, 29), amount: Money.fromMajor(1200))],
+      );
+      // 29 Oct is day 25: ₹35,600 × 25/31 = 28,709, then × 26/31 = 29,858.
+      expect(series.steadyThrough(24), Money.fromMajor(8200 + 28709));
+      expect(series.steadyThrough(25), Money.fromMajor(8200 + 1200 + 29858));
+      expect(series.steadyThrough(30), Money.fromMajor(45000));
+    });
+
+    test('a bill due outside the cycle is left out', () {
+      final PaceSeries series = _series(
+        const <Entry>[],
+        billsDue: <DatedAmount>[(date: const CalendarDate(2026, 11, 4), amount: Money.fromMajor(1200))],
+      );
+      expect(series.steadyThrough(30), Money.fromMajor(45000));
+      expect(series.steadyThrough(0), Money.fromMajor(1451));
+    });
+
+    test('bills past the budget: the line is the bills alone and the top reaches them', () {
+      final PaceSeries series = _series(<Entry>[_spent(8200, _rentDay, recurringId: 2)], asOf: _cycle.end, budget: 5000);
+      expect(series.steadyThrough(0), Money.zero);
+      expect(series.steadyThrough(30), Money.fromMajor(8200));
+      expect(series.top, Money.fromMajor(8200));
     });
 
     test('no money to spend gives no chart', () {
