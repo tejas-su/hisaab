@@ -1,11 +1,15 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/usecases/use_case.dart';
+import 'package:expense_tracker/ledger/domain/entities/occurrence.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
+import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 
@@ -15,10 +19,10 @@ void main() {
 
   setUp(() {
     recurring = FakeRecurringRepository(WorkedExample.rules);
-    editBill = EditBill(recurring: recurring, clock: FakeClock(WorkedExample.now));
+    editBill = EditBill(recurring: recurring, categories: FakeCategoryRepository(), clock: FakeClock(WorkedExample.now));
   });
 
-  EditBillParams params(RecurringRule rule, {String? label, int? rupees, required int day, Option<BillIcon>? icon}) =>
+  EditBillParams params(RecurringRule rule, {String? label, int? rupees, required int day, Option<BillIcon>? icon, AmountMode? mode}) =>
       EditBillParams(
         rule: rule,
         input: BillInput(
@@ -26,11 +30,66 @@ void main() {
           amount: rupees == null ? rule.amount : Money.fromMajor(rupees),
           dueDay: day,
           icon: icon ?? rule.icon,
+          amountMode: mode ?? rule.amountMode,
         ),
       );
 
   Future<RecurringRule> edited(EditBillParams p) async =>
       (await editBill(p).run()).getOrElse((Failure f) => fail('unexpected $f'));
+
+  group('EditBill — Amount changes? (D123, D124)', () {
+    test('fixed to card files it under the hidden card category', () async {
+      final RecurringRule rule = await edited(params(WorkedExample.electricity, day: 29, mode: AmountMode.card));
+      expect(rule.amountMode, AmountMode.card);
+      expect(rule.categoryId, SeedCategoryIds.cardPaid);
+    });
+
+    test('card to changing files it back under Bills', () async {
+      final RecurringRule card = WorkedExample.electricity.copyWith(amountMode: AmountMode.card, categoryId: SeedCategoryIds.cardPaid);
+      recurring.rules = <RecurringRule>[card];
+      final RecurringRule rule = await edited(params(card, day: 29, mode: AmountMode.varies));
+      expect(rule.amountMode, AmountMode.varies);
+      expect(rule.categoryId, SeedCategoryIds.bills);
+    });
+
+    test('fixed to changing keeps the category, schedule and next date', () async {
+      final RecurringRule rule = await edited(params(WorkedExample.electricity, day: 29, mode: AmountMode.varies));
+      expect(rule.categoryId, WorkedExample.electricity.categoryId);
+      expect(rule.schedule, WorkedExample.electricity.schedule);
+      expect(rule.nextDue, WorkedExample.electricity.nextDue);
+    });
+
+    test('switching to fixed posts at most the latest unanswered occurrence (E-f)', () async {
+      final RecurringRule stale = RecurringRule(
+        id: 8,
+        label: 'Electricity',
+        amount: Money.fromMajor(1200),
+        kind: EntryKind.spent,
+        categoryId: SeedCategoryIds.bills,
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 7, 20)),
+        nextDue: const CalendarDate(2026, 7, 20),
+        amountMode: AmountMode.varies,
+      );
+      recurring.rules = <RecurringRule>[stale];
+      final RecurringRule rule = await edited(params(stale, day: 20, mode: AmountMode.fixed));
+      expect(rule.nextDue, const CalendarDate(2026, 10, 20));
+      await PostDueRecurring(recurring: recurring, clock: FakeClock(WorkedExample.now))(const NoParams()).run();
+      expect(recurring.postings.single.occurrences.map((Occurrence o) => o.date), <CalendarDate>[const CalendarDate(2026, 10, 20)]);
+      expect(recurring.postings.single.occurrences.single.rule.amount, Money.fromMajor(1200));
+    });
+
+    test('switching to fixed never moves a next date already ahead', () async {
+      final RecurringRule ahead = WorkedExample.electricity.copyWith(amountMode: AmountMode.varies);
+      recurring.rules = <RecurringRule>[ahead];
+      expect((await edited(params(ahead, day: 29, mode: AmountMode.fixed))).nextDue, const CalendarDate(2026, 10, 29));
+    });
+
+    test('returns the category read failure for a switch to card', () async {
+      final FakeCategoryRepository categories = FakeCategoryRepository()..failure = DatabaseFailure('categories');
+      final EditBill failing = EditBill(recurring: recurring, categories: categories, clock: FakeClock(WorkedExample.now));
+      expect((await failing(params(WorkedExample.electricity, day: 29, mode: AmountMode.card)).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
 
   group('EditBill (FR-SE-1; BR-9 edits change future occurrences only)', () {
     test('a new name and amount keep the rule, its category and its next date', () async {

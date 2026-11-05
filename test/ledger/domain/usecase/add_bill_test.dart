@@ -51,6 +51,24 @@ void main() {
     });
   });
 
+  group('AddBill — changing and card bills (D123)', () {
+    test('a credit card is a card bill in the hidden card category', () async {
+      final RecurringRule rule = await added(params(label: 'Credit card', kind: BillKind.creditCard));
+      expect(rule.amountMode, AmountMode.card);
+      expect(rule.categoryId, SeedCategoryIds.cardPaid);
+    });
+
+    test('electricity changes every month and goes to Bills', () async {
+      final RecurringRule rule = await added(params(kind: BillKind.electricity));
+      expect(rule.amountMode, AmountMode.varies);
+      expect(rule.categoryId, SeedCategoryIds.bills);
+    });
+
+    test('a typed name is a fixed bill', () async {
+      expect((await added(params(label: 'Water'))).amountMode, AmountMode.fixed);
+    });
+  });
+
   group('AddBill (FR-SE-1)', () {
     test('saves a monthly Spent rule in Bills, first due on its next date', () async {
       final RecurringRule rule = await added(params());

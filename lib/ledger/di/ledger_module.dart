@@ -19,6 +19,10 @@ import '../domain/usecase/add_bill.dart';
 import '../domain/usecase/apply_suggested_limits.dart';
 import '../domain/usecase/delete_bill.dart';
 import '../domain/usecase/edit_bill.dart';
+import '../domain/usecase/enter_bill_amount.dart';
+import '../domain/usecase/skip_bill_occurrence.dart';
+import '../domain/usecase/undo_bill_amount.dart';
+import '../domain/usecase/unskip_bill_occurrence.dart';
 import '../domain/usecase/get_bill_status.dart';
 import '../domain/usecase/get_bills.dart';
 import '../domain/usecase/get_due_soon_bill.dart';
@@ -54,7 +58,11 @@ void registerLedgerServices(GetIt getIt) {
     ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
     ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
-    ..registerSingleton<EditBill>(EditBill(recurring: recurring, clock: clock))
+    ..registerSingleton<EditBill>(EditBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
+    ..registerSingleton<EnterBillAmount>(EnterBillAmount(ledger: ledger, recurring: recurring))
+    ..registerSingleton<UndoBillAmount>(UndoBillAmount(ledger: ledger, recurring: recurring))
+    ..registerSingleton<SkipBillOccurrence>(SkipBillOccurrence(recurring: recurring))
+    ..registerSingleton<UnskipBillOccurrence>(UnskipBillOccurrence(recurring: recurring))
     ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
     ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(

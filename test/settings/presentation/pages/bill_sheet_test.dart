@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
+import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/fakes/fake_ledger_repository.dart';
@@ -45,7 +46,7 @@ void main() {
     final BillSheetBloc bloc = await tester.buildBloc(
       () => BillSheetBloc(
         rule: rule ?? WorkedExample.electricity,
-        editBill: EditBill(recurring: recurring, clock: clock),
+        editBill: EditBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
         getStatus: GetBillStatus(ledger: ledger, clock: clock),
         haptics: FakeHaptics(),
       ),

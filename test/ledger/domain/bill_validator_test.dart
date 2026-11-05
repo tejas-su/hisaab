@@ -13,6 +13,17 @@ void main() {
       expect(BillValidator.validate(_input()), Either<Failure, BillInput>.right(_input()));
     });
 
+    test('keeps the icon and the amount mode (D123)', () {
+      final BillInput input = BillInput(
+        label: 'Electricity',
+        amount: Money.fromMajor(1200),
+        dueDay: 20,
+        icon: const Option<BillIcon>.of(BillIcon.power),
+        amountMode: AmountMode.varies,
+      );
+      expect(BillValidator.validate(input), Either<Failure, BillInput>.right(input));
+    });
+
     test('trims the name', () {
       expect(BillValidator.validate(_input(label: '  Rent  ')), Either<Failure, BillInput>.right(_input(label: 'Rent')));
     });

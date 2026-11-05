@@ -26,4 +26,7 @@ abstract final class SeedCategoryIds {
 
   /// The hidden `saved` category migration 003 seeds (D120).
   static const int saved = 11;
+
+  /// The hidden `card_paid` category migration 003 seeds (D123).
+  static const int cardPaid = 12;
 }

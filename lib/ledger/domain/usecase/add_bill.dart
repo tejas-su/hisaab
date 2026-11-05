@@ -6,6 +6,7 @@ import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/usecases/use_case.dart';
 import '../bill_validator.dart';
+import '../entities/amount_mode.dart';
 import '../entities/bill_input.dart';
 import '../entities/bill_kind.dart';
 import '../entities/category.dart';
@@ -54,7 +55,7 @@ final class AddBill implements UseCase<RecurringRule, AddBillParams> {
     return TaskEither<Failure, BillInput>.fromEither(BillValidator.validate(params.input)).flatMap(
       (BillInput input) => _categories
           .idOf(_categoryKey(params))
-          .flatMap((int categoryId) => _recurring.add(_draft(input, (categoryId: categoryId, kind: params.entryKind), today))),
+          .flatMap((int categoryId) => _recurring.add(_draft(input, (categoryId: categoryId, kind: params.entryKind, mode: _modeOf(params)), today))),
     );
   }
 
@@ -62,7 +63,12 @@ final class AddBill implements UseCase<RecurringRule, AddBillParams> {
       ? CategoryKeys.saved
       : params.kind.match(() => CategoryKeys.bills, (BillKind kind) => kind.categoryKey);
 
-  static RecurringDraft _draft(BillInput input, ({int categoryId, EntryKind kind}) filed, CalendarDate today) {
+  // why: a saving always goes in by itself; a bill's chip says whether its amount changes (D123).
+  static AmountMode _modeOf(AddBillParams params) => params.entryKind == EntryKind.saved
+      ? AmountMode.fixed
+      : params.kind.match(() => AmountMode.fixed, (BillKind kind) => kind.amountMode);
+
+  static RecurringDraft _draft(BillInput input, ({int categoryId, EntryKind kind, AmountMode mode}) filed, CalendarDate today) {
     final Schedule schedule =
         Schedule(frequency: Frequency.monthly, anchor: RecurringSchedule.monthlyAnchor(input.dueDay, near: today));
     return RecurringDraft(
@@ -73,6 +79,7 @@ final class AddBill implements UseCase<RecurringRule, AddBillParams> {
       schedule: schedule,
       nextDue: RecurringSchedule.firstOnOrAfter(schedule, today),
       icon: input.icon,
+      amountMode: filed.mode,
     );
   }
 }
