@@ -36,7 +36,7 @@ Chosen on load or resume only; an item leaves only through the user acting (tap,
 - **First frame or never:** read from the cached result; never appears late.
 - **Disappears** on the first digit, chip, ⌫ or kind switch; does not return until the tray reopens.
 - **Look:** fully rounded pill, hairline `ink2` outline on `surface`, no fill; category Hugeicon 18dp, amount in Anek with tabular figures, "· your usual" in `ink2`. At large text drop "· your usual"; if it still doesn't fit one line, show nothing.
-- **Tap:** adds at once. Pill flashes ink 120ms, tray drops, block drains, number rolls, `successNotification`. Snackbar "Added ₹55 to Food" with Undo for 6 s (kept until dismissed under TalkBack). Undo also quiets the habit for the day.
+- **Tap:** adds at once. Pill flashes ink 120ms, tray drops, block drains, number rolls, `successNotification`. Snackbar "Added ₹55 to Food" with Undo for 4 s (kept until dismissed under TalkBack). Undo also quiets the habit for the day.
 - **Motion:** 150ms crossfade to the preview text, no height change; same under reduced motion.
 - **Home hand-off:** tapping the missed-log question opens the tray carrying that habit, and the pill shows it regardless of the time window.
 

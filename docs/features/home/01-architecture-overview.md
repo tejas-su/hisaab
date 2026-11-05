@@ -23,7 +23,7 @@ HomeTrayOpened … HomeTrayClosed  AppRoutes.openAddTray wraps the Add tray; a H
                              is held and runs once when the tray's exit ends, so the drain plays in view (D91)
 HomeDeleteRequested(entry)   emits the list without it first (Dismissible), then HomeReady.undo
 HomeWeekToggled              hero tap: flips HomeReady.showWeek (kept across reloads, not saved), tick haptic
-HomePage BlocConsumer: undo → HisaabSnackbarHost (above the dock, 6 s, D105) → HomeUndoRequested → RestoreEntry
+HomePage BlocConsumer: undo → HisaabSnackbarHost (above the dock, 4 s, D105 and D128) → HomeUndoRequested → RestoreEntry
 HeroCard: HeroCopy.of(summary, week:) words + DayBlocksMapper.of(summary) picture;
           DayBlocks(fillIn: true) keyed by today: fills in on appear and on a new day, trail after a spend
 SavedYesterdayNote: summary.savedYesterday, under the hero and above the due-soon nudge

@@ -477,7 +477,7 @@ One effect per event, never buzzy.
 - State is shown by fill, outline, hatch **and** words.
 - TalkBack reads, for example: "Safe to spend today: 1,430 rupees. 9 days to payday. Lasts till payday with about 9,300 rupees spare."
 - Text scales to 1.5× with no clipping. Every colour has an increased-contrast variant (HIG).
-- **Snackbar timing (D105, WCAG 2.2.1).** A bar closes after 6 s; a touch or keyboard focus on it restarts the 6 s. With TalkBack on, a bar with Undo stays until Undo, TalkBack's Dismiss action, a newer message or leaving the page. It is a live region, so it is announced without moving focus, and an amount is spoken in rupees.
+- **Snackbar timing (D105, D128, WCAG 2.2.1).** A bar closes after 4 s; a touch or keyboard focus on it restarts the 4 s. With TalkBack on, a bar with Undo stays until Undo, TalkBack's Dismiss action, a newer message or leaving the page. It is a live region, so it is announced without moving focus, and an amount is spoken in rupees.
 - **Focus (D99, principle 24).** Every control is reachable by keyboard, D-pad and switch access, and Enter, Space and D-pad centre do what a tap does.
   - A focused control gets a 2dp `focus` ring outside a 2dp `focusGap` band. The ring follows the control's own squircle, with its corner radius grown so it stays concentric.
   - It shows only in Flutter's traditional highlight mode, so a touch never leaves a ring behind. It appears and goes at once, so it needs no motion token.

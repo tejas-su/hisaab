@@ -25,7 +25,7 @@ class HisaabSnackbarHost extends StatefulWidget {
   final double bottom;
 
   /// How long a bar stays without touch, focus or TalkBack (SPEC BR-10).
-  static const Duration visibleFor = Duration(seconds: 6);
+  static const Duration visibleFor = Duration(seconds: 4);
 
   /// How far the bar rises as it enters.
   static const double rise = 16;

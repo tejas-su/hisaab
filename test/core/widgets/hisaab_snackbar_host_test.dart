@@ -52,7 +52,11 @@ void _useTalkBack(WidgetTester tester) {
 
 void main() {
   group('HisaabSnackbarHost', () {
-    testWidgets('a bar with Undo closes itself after 6 s (regression: it stayed forever)', (WidgetTester tester) async {
+    test('a bar stays a medium 4 s, not a long 6 s (SPEC BR-10)', () {
+      expect(HisaabSnackbarHost.visibleFor, const Duration(seconds: 4));
+    });
+
+    testWidgets('a bar with Undo closes itself after 4 s (regression: it stayed forever)', (WidgetTester tester) async {
       final HisaabSnackbarHostState host = await _pumpHost(tester);
       await _show(tester, host, _undo(<String>[]));
 
@@ -64,7 +68,7 @@ void main() {
       expect(find.text(_deleted), findsNothing);
     });
 
-    testWidgets('a plain message closes itself after 6 s', (WidgetTester tester) async {
+    testWidgets('a plain message closes itself after 4 s', (WidgetTester tester) async {
       final HisaabSnackbarHostState host = await _pumpHost(tester);
       await _show(tester, host, const HisaabSnackbar(message: _toast));
 
@@ -99,7 +103,7 @@ void main() {
       expect(find.text(_deleted), findsOneWidget);
     });
 
-    testWidgets('with TalkBack, a plain message still closes after 6 s', (WidgetTester tester) async {
+    testWidgets('with TalkBack, a plain message still closes after 4 s', (WidgetTester tester) async {
       _useTalkBack(tester);
       final HisaabSnackbarHostState host = await _pumpHost(tester);
       await _show(tester, host, const HisaabSnackbar(message: _toast));
@@ -110,7 +114,7 @@ void main() {
       expect(find.text(_toast), findsNothing);
     });
 
-    testWidgets('a newer message replaces the current one and gets its own 6 s', (WidgetTester tester) async {
+    testWidgets('a newer message replaces the current one and gets its own 4 s', (WidgetTester tester) async {
       final HisaabSnackbarHostState host = await _pumpHost(tester);
       await _show(tester, host, _undo(<String>[]));
       await tester.pump(const Duration(seconds: 4));
@@ -135,7 +139,7 @@ void main() {
       expect(find.text(_deleted), findsNothing);
     });
 
-    testWidgets('a finger on it holds the timer; lifting starts a fresh 6 s', (WidgetTester tester) async {
+    testWidgets('a finger on it holds the timer; lifting starts a fresh 4 s', (WidgetTester tester) async {
       final HisaabSnackbarHostState host = await _pumpHost(tester);
       await _show(tester, host, _undo(<String>[]));
 
@@ -151,7 +155,7 @@ void main() {
       expect(find.text(_deleted), findsNothing);
     });
 
-    testWidgets('a cancelled touch also starts a fresh 6 s', (WidgetTester tester) async {
+    testWidgets('a cancelled touch also starts a fresh 4 s', (WidgetTester tester) async {
       final HisaabSnackbarHostState host = await _pumpHost(tester);
       await _show(tester, host, _undo(<String>[]));
 
