@@ -3,17 +3,22 @@ import 'package:expense_tracker/app/app_shell.dart';
 import 'package:expense_tracker/app/hisaab_app.dart';
 import 'package:expense_tracker/app/widgets/startup_failure_view.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/notifications/bill_reminder.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:expense_tracker/home/home.dart';
+import 'package:expense_tracker/home/presentation/widgets/due_soon_row.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart' show Option;
 import 'package:get_it/get_it.dart';
 
 import '../helpers/fake_services.dart';
+import '../helpers/fixtures/ledger/worked_example.dart';
 import '../helpers/pump_app.dart';
 
 void main() {
@@ -221,6 +226,80 @@ void main() {
         contains(('Salary', const CalendarDate(2026, 11, 4))),
       );
       expect(find.text('Wed, 4 Nov'), findsOneWidget);
+    });
+  });
+
+  group('AppRoot bill reminders (spec §6, D126)', () {
+    final RecurringRule waitingToday = WorkedExample.electricity.copyWith(
+      amountMode: AmountMode.varies,
+      schedule: const Schedule(frequency: Frequency.monthly, anchor: WorkedExample.today),
+      nextDue: WorkedExample.today,
+    );
+    FakeServices withWaitingBill() => FakeServices(rules: <RecurringRule>[WorkedExample.salary, WorkedExample.rent, waitingToday])
+      ..preferences.reminders = const Option<bool>.of(true);
+    const BillReminderTap tapToday = BillReminderTap(ruleId: 3, date: WorkedExample.today);
+
+    testWidgets('a returning user who said Remind me has the next reminder armed', (WidgetTester tester) async {
+      await boot(tester, withWaitingBill());
+      expect(services.reminders.scheduled.single.date, const CalendarDate(2026, 11, 26));
+      expect(services.reminders.kept, <int>{BillReminder.idFor(3, WorkedExample.today)});
+    });
+
+    testWidgets('a reminder that started the app opens the bill\'s amount sheet over Home', (WidgetTester tester) async {
+      final FakeServices fakes = withWaitingBill()..reminders.launchedBy = const Option<BillReminderTap>.of(tapToday);
+      await boot(tester, fakes);
+      expect(find.byType(BillAmountSheet), findsOneWidget);
+      expect(find.text('Electricity · 26 Oct'), findsOneWidget);
+    });
+
+    testWidgets('a tap while in Settings goes back to Home, then opens the sheet', (WidgetTester tester) async {
+      await boot(tester, withWaitingBill());
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      expect(find.byType(SettingsPage), findsOneWidget);
+      services.reminders.tapOn(tapToday);
+      await settle(tester);
+      expect(find.byType(SettingsPage), findsNothing);
+      expect(find.byType(BillAmountSheet), findsOneWidget);
+    });
+
+    testWidgets('a tap for a bill already answered shows only Home', (WidgetTester tester) async {
+      await boot(tester, withWaitingBill());
+      services.reminders.tapOn(const BillReminderTap(ruleId: 3, date: CalendarDate(2026, 9, 26)));
+      await settle(tester);
+      expect(find.byType(BillAmountSheet), findsNothing);
+      expect(find.byType(HomePage), findsOneWidget);
+    });
+
+    testWidgets('switching a bill to Changes every month asks once; Remind me asks Android', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.byType(DueSoonRow));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-row-mode')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-mode-varies')));
+      await settle(tester);
+      Navigator.of(tester.element(find.byType(BillSheet))).pop();
+      await settle(tester);
+      expect(find.text("Remind you on the day it's due?"), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('remind-yes')));
+      await settle(tester);
+      expect(services.preferences.reminders, const Option<bool>.of(true));
+      expect(services.reminders.permissionAsks, 1);
+      expect(services.reminders.scheduled.single.billName, 'Electricity');
+    });
+
+    testWidgets('a bill switched with the question already answered asks nothing', (WidgetTester tester) async {
+      await boot(tester, FakeServices()..preferences.reminders = const Option<bool>.of(false));
+      await tester.tap(find.byType(DueSoonRow));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-row-mode')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-mode-varies')));
+      await settle(tester);
+      Navigator.of(tester.element(find.byType(BillSheet))).pop();
+      await settle(tester);
+      expect(find.byType(RemindAskSheet), findsNothing);
     });
   });
 }

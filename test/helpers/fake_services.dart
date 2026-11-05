@@ -1,5 +1,6 @@
 import 'package:expense_tracker/ask_ai/ask_ai.dart';
 import 'package:expense_tracker/core/design/haptics.dart';
+import 'package:expense_tracker/core/notifications/bill_reminders.dart';
 import 'package:expense_tracker/core/time/clock.dart';
 import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/home/home.dart';
@@ -12,6 +13,7 @@ import 'package:get_it/get_it.dart';
 
 import 'fakes/fake_ai_handoff.dart';
 import 'fakes/fake_app_preferences_repository.dart';
+import 'fakes/fake_bill_reminders.dart';
 import 'fakes/fake_budget_settings_repository.dart';
 import 'fakes/fake_category_repository.dart';
 import 'fakes/fake_clock.dart';
@@ -35,6 +37,7 @@ final class FakeServices {
   final FakeBudgetSettingsRepository settings = FakeBudgetSettingsRepository();
   final FakeHaptics haptics = FakeHaptics();
   final FakeAiHandoff handoff = FakeAiHandoff();
+  final FakeBillReminders reminders = FakeBillReminders();
   final FakeClock clock = FakeClock(WorkedExample.now);
 
   GetCycleSummary get getCycleSummary => GetCycleSummary(
@@ -44,6 +47,10 @@ final class FakeServices {
         periods: const PeriodCalculator(),
         clock: clock,
       );
+
+  /// Arms the reminders over these fakes.
+  ArmBillReminders get armBillReminders =>
+      ArmBillReminders(recurring: recurring, summary: getCycleSummary, reminders: reminders, clock: clock);
 
   PostDueRecurring get postDue => PostDueRecurring(recurring: recurring, clock: clock);
 
@@ -115,17 +122,18 @@ final class FakeServices {
     ..registerSingleton<Haptics>(haptics)
     ..registerSingleton<PeriodCalculator>(const PeriodCalculator())
     ..registerSingleton<AppPreferencesRepository>(preferences)
+    ..registerSingleton<BillReminders>(reminders)
     ..registerSingleton<LedgerRepository>(ledger)
     ..registerSingleton<RecurringRepository>(recurring)
     ..registerSingleton<CategoryRepository>(categories)
     ..registerSingleton<BudgetSettingsRepository>(settings)
-    ..registerSingleton<SaveEntry>(SaveEntry(ledger: ledger, clock: clock))
+    ..registerSingleton<SaveEntry>(SaveEntry(ledger: ledger, recurring: recurring, clock: clock))
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(postDue)
     ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
     ..registerSingleton<GetLastBillAmount>(GetLastBillAmount(ledger: ledger, clock: clock))
-    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock))
+    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock, summary: getCycleSummary))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
     ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: categories, clock: clock))
     ..registerSingleton<EditBill>(EditBill(recurring: recurring, categories: categories, clock: clock))
@@ -136,6 +144,9 @@ final class FakeServices {
     ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
     ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(getCycleSummary)
+    ..registerSingleton<ArmBillReminders>(armBillReminders)
+    ..registerSingleton<ShouldAskBillReminders>(ShouldAskBillReminders(preferences: preferences, recurring: recurring))
+    ..registerSingleton<AnswerBillReminders>(AnswerBillReminders(preferences: preferences, reminders: reminders, arm: armBillReminders))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
     ..registerSingleton<PutInExtra>(
       PutInExtra(getCycleSummary: getCycleSummary, ledger: ledger, categories: categories, clock: clock),
@@ -169,5 +180,6 @@ final class FakeServices {
   Future<void> dispose() async {
     await ledger.dispose();
     await recurring.dispose();
+    await reminders.dispose();
   }
 }

@@ -942,6 +942,15 @@
       }
     }
   },
+  "billAmountAbout": "about {amount}",
+  "@billAmountAbout": {
+    "description": "A changing or card bill's amount in the Bills list, an estimate, e.g. \"about ₹1,200\"",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "billRowSpoken": "{bill}, {amount}, {when}",
   "@billRowSpoken": {
     "description": "Screen-reader label of one fixed bill row",
@@ -993,6 +1002,41 @@
       }
     }
   },
+  "billStampPaid": "Paid {date}",
+  "@billStampPaid": {
+    "description": "Stamp on a credit card bill recorded as paid this month, e.g. \"Paid 5 Oct\"; a card bill is never counted (D123)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billStampPaidToday": "Paid today",
+  "@billStampPaidToday": {
+    "description": "Stamp on a credit card bill recorded as paid today"
+  },
+  "billStampWaiting": "Waiting",
+  "@billStampWaiting": {
+    "description": "Stamp on a changing or card bill that went out and waits for its amount (D123)"
+  },
+  "billWaitingVaries": "Went out on {date}. Home asks how much.",
+  "@billWaitingVaries": {
+    "description": "Bill sheet footer of a changing bill waiting for its amount, e.g. \"Went out on 24 Oct. Home asks how much.\"",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "billWaitingCard": "Was due on {date}. Home asks what you paid.",
+  "@billWaitingCard": {
+    "description": "Bill sheet footer of a card bill waiting to be recorded as paid, e.g. \"Was due on 24 Oct. Home asks what you paid.\"",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "billStampCountedToday": "Counted today",
   "@billStampCountedToday": {
     "description": "Stamp on a bill the app counted as spent today"
@@ -1034,7 +1078,7 @@
       }
     }
   },
-  "billSaved": "Saved.",
+  "billSaved": "Changed.",
   "@billSaved": {
     "description": "Bill sheet footer for 2.4 s after an answer is saved"
   },
@@ -1414,5 +1458,47 @@
   "entryCardPaid": "Paid, not counted again",
   "@entryCardPaid": {
     "description": "Line under a card bill's row: recorded, never counted (D123)."
+  },
+  "reminderTitleVaries": "{bill} went out today",
+  "@reminderTitleVaries": {
+    "description": "Due-day notification title for a changing bill, e.g. \"Electricity went out today\"; never an amount (spec §6)",
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderTitleCard": "{bill} bill is due today",
+  "@reminderTitleCard": {
+    "description": "Due-day notification title for a card bill, e.g. \"Credit card bill is due today\"",
+    "placeholders": {
+      "bill": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderText": "Tap to add how much",
+  "@reminderText": {
+    "description": "Due-day notification text"
+  },
+  "reminderChannel": "Bill reminders",
+  "@reminderChannel": {
+    "description": "Android notification channel name, shown in the system's notification settings"
+  },
+  "reminderChannelDescription": "One note on the day a bill that changes, or a card bill, is due",
+  "@reminderChannelDescription": {
+    "description": "Android notification channel description"
+  },
+  "remindAskTitle": "Remind you on the day it's due?",
+  "@remindAskTitle": {
+    "description": "Asked once, after the first changing or card bill is saved (spec §5)"
+  },
+  "remindAskYes": "Remind me",
+  "@remindAskYes": {
+    "description": "Yes to bill reminders; Android then asks for the permission"
+  },
+  "remindAskNo": "Not now",
+  "@remindAskNo": {
+    "description": "No to bill reminders; never asked again"
   }
 }

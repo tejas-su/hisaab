@@ -140,6 +140,18 @@ void main() {
       expect(find.text('Electricity went out today. How much?'), findsOneWidget);
     });
 
+    testWidgets('an entered bill\'s row names the bill, not "Bill"', (WidgetTester tester) async {
+      useRules(<RecurringRule>[waiting(AmountMode.varies)]);
+      await pump(tester);
+      await tester.runAsync(() => EnterBillAmount(ledger: services.ledger, recurring: services.recurring)(
+            EnterBillAmountParams(occurrence: Occurrence(rule: waiting(AmountMode.varies), date: oct26), amount: Money.fromMajor(1460)),
+          ).run());
+      await tester.settle();
+      await tester.pumpAndSettle();
+      expect(find.text('Electricity'), findsOneWidget);
+      expect(find.text('Bill'), findsNothing);
+    });
+
     testWidgets('a skip offers Undo too', (WidgetTester tester) async {
       useRules(<RecurringRule>[waiting(AmountMode.varies)]);
       await pump(tester);

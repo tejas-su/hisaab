@@ -23,7 +23,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this._postDueRecurring,
     required this._getDueSoonBill,
     required this._ledger,
-    required RecurringRepository recurring,
+    required this._recurring,
     required this._categories,
     required this._deleteEntry,
     required this._restoreEntry,
@@ -48,7 +48,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeBillAmountUndoRequested>(_onBillAmountUndoRequested);
     on<HomeSwipeThresholdReached>((HomeSwipeThresholdReached event, Emitter<HomeState> emit) => unawaited(_haptics.threshold()));
     _changes = _ledger.changes.listen((void _) => add(const HomeLoadRequested()));
-    _ruleChanges = recurring.changes.listen((void _) => add(const HomeLoadRequested()));
+    _ruleChanges = _recurring.changes.listen((void _) => add(const HomeLoadRequested()));
   }
 
   /// Most rows the Today list shows (FR-HO-4).
@@ -58,6 +58,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final PostDueRecurring _postDueRecurring;
   final GetDueSoonBill _getDueSoonBill;
   final LedgerRepository _ledger;
+  final RecurringRepository _recurring;
   final CategoryRepository _categories;
   final DeleteEntry _deleteEntry;
   final RestoreEntry _restoreEntry;
@@ -73,6 +74,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   // a reload waits for the tray to go (FR-AD-5, D91).
   bool _trayOpen = false;
   bool _reloadWhenTrayCloses = false;
+
+  // why: an amount entered while Home couldn't show (still loading, or a failed reload) would
+  // lose its Undo; it waits here for the next load that succeeds.
+  Option<BillAmountOutcome> _pendingAmountUndo = const Option<BillAmountOutcome>.none();
 
   Future<void> _onLoadRequested(HomeLoadRequested event, Emitter<HomeState> emit) async {
     if (_trayOpen) {
@@ -106,15 +111,18 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final Either<Failure, HomeReady> loaded = await _getCycleSummary(const NoParams())
         .flatMap(
           (CycleSummary summary) => _categories.all().flatMap(
-                (List<Category> categories) => _ledger.entriesBetween(summary.today, summary.today).map(
-                      (List<Entry> entries) => HomeReady(
-                        summary: summary,
-                        todayEntries: entries.take(todayListLimit).toList(),
-                        categories: <int, Category>{for (final Category c in categories) c.id: c},
-                        // why: a bill posted today sits in the pool, not today's bar (D119).
-                        todaySpends: entries.reversed.where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null).toList(),
-                        dueSoon: dueSoon,
-                      ),
+                (List<Category> categories) => _recurring.activeRules().flatMap(
+                      (List<RecurringRule> rules) => _ledger.entriesBetween(summary.today, summary.today).map(
+                            (List<Entry> entries) => HomeReady(
+                              summary: summary,
+                              todayEntries: entries.take(todayListLimit).toList(),
+                              categories: <int, Category>{for (final Category c in categories) c.id: c},
+                              // why: a bill posted today sits in the pool, not today's bar (D119).
+                              todaySpends: entries.reversed.where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null).toList(),
+                              dueSoon: dueSoon,
+                              billNames: <int, String>{for (final RecurringRule rule in rules) rule.id: rule.label},
+                            ),
+                          ),
                     ),
               ),
         )
@@ -122,7 +130,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(loaded.match((Failure failure) {
       _logFailure('home.load_failed')(failure);
       return HomeFailed(failure);
-    }, (HomeReady ready) => ready.copyWith(showWeek: _showingWeek)));
+    }, _shown));
+  }
+
+  HomeReady _shown(HomeReady ready) {
+    final Option<BillAmountOutcome> pending = _pendingAmountUndo;
+    _pendingAmountUndo = const Option<BillAmountOutcome>.none();
+    return ready.copyWith(showWeek: _showingWeek, amountUndo: pending);
   }
 
   /// Flips the hero between *Today* and *This week*; the choice lasts for the session (FR-HO-2).
@@ -192,9 +206,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   void _onBillAmountDone(HomeBillAmountDone event, Emitter<HomeState> emit) {
     final HomeState current = state;
-    if (current is HomeReady) {
-      emit(current.copyWith(amountUndo: Option<BillAmountOutcome>.of(event.outcome)));
+    if (current is! HomeReady) {
+      _pendingAmountUndo = Option<BillAmountOutcome>.of(event.outcome);
+      return;
     }
+    emit(current.copyWith(amountUndo: Option<BillAmountOutcome>.of(event.outcome)));
   }
 
   /// Puts an entered or skipped bill back to waiting; the change streams reload Home (E-e).

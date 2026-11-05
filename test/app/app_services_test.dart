@@ -10,6 +10,8 @@ import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:expense_tracker/spends/spends.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/fakes/fake_bill_reminders.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
 
@@ -20,7 +22,7 @@ void main() {
     test('wires every feature over one real database', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database);
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
       addTearDown(getIt.reset);
 
       expect(await getIt<AppPreferencesRepository>().onboardingDone().run(), Either<Failure, bool>.right(false));
@@ -36,10 +38,21 @@ void main() {
       expect(summary.state, const NoIncome());
     });
 
+    test('wires the bill reminders ask over the ledger registered after it (D126)', () async {
+      final AppDatabase database = await openTestDatabase();
+      final GetIt getIt = GetIt.asNewInstance();
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      addTearDown(getIt.reset);
+
+      expect(await getIt<ShouldAskBillReminders>()(const NoParams()).run(), Either<Failure, bool>.right(false));
+      expect(await getIt<AnswerBillReminders>()(false).run(), Either<Failure, Unit>.right(unit));
+      expect(getIt<ArmBillReminders>(), isNotNull);
+    });
+
     test('wires Spends over the ledger', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database);
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
       addTearDown(getIt.reset);
 
       expect(getIt<GetSuggestedLimits>(), isNotNull);
@@ -51,7 +64,7 @@ void main() {
     test('wires Ask AI over the ledger', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database);
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
       addTearDown(getIt.reset);
 
       const PayCycle october = PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31));

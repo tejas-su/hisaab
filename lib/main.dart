@@ -15,6 +15,8 @@ import 'core/db/app_database.dart';
 import 'core/errors/failure.dart';
 import 'core/logging/app_bloc_observer.dart';
 import 'core/logging/app_logger.dart';
+import 'core/notifications/android_bill_reminders.dart';
+import 'core/notifications/bill_reminders.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,7 @@ Future<void> main() async {
   registerFontLicenses();
   Bloc.observer = const AppBlocObserver();
 
+  final BillReminders reminders = await AndroidBillReminders.start();
   final String path = p.join(await getDatabasesPath(), AppDatabase.fileName);
   final Either<Failure, AppDatabase> opened = await AppDatabase.open(factory: databaseFactory, path: path).run();
 
@@ -33,7 +36,7 @@ Future<void> main() async {
       runApp(const HisaabApp.startupFailed());
     },
     (AppDatabase database) {
-      registerAppServices(GetIt.I, database: database);
+      registerAppServices(GetIt.I, database: database, reminders: reminders);
       runApp(HisaabApp(getIt: GetIt.I));
     },
   );

@@ -204,14 +204,20 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - When its next unposted occurrence is 1 to 5 days away (the due-soon window): "Due in {n} days" ("Due tomorrow" when `n = 1`).
   - Otherwise, when an entry posted by this rule is dated on or after the occurrence one month before `next_due`: "Counted {d MMM}" with that entry's date, or "Counted today" when it is today.
   - Otherwise no stamp. A bill added this cycle after its day (D33) has no entry, so it never claims to be counted.
+  - A changing or card bill that still waits for its amount (FR-HO-3) is stamped "Waiting" first, and the footer gives the day it went out instead of next month's: "Went out on {d MMM}. Home asks how much." ("Was due on {d MMM}. Home asks what you paid." for a card). A card bill already paid reads "Paid {d MMM}" or "Paid today", never "Counted", because it isn't counted (D127).
   - Nobody marks a bill as paid. The engine counts it on its day; a month that differed is fixed by editing or deleting that entry in *Every entry*.
 - **Bill icon (D118):** a bill's icon is the one the user picked, or else the icon its name suggests (`BillIcon.forName`, whole-word matches, first group wins: loan, card, power, internet, phone, TV & apps, school, water, gas, insurance, house help, milk, society, home, car; else the plain bill glyph). Picking the icon the name already suggests clears the pick, so a later rename moves the icon with the name. A picked icon survives a rename.
+- **Due-day reminder (D126):** a bonus on top of Home's waiting line, which is the guarantee (some phones drop reminders). Only once the user said *Remind me* (FR-SE-1 AC-10):
+  - Each changing or card bill gets one local notification for its next due day at about 09:00 (inexact, no exact-alarm permission). Today's counts only while it still waits and it is before 09:00, so none is ever shown after the fact. A card reads "{Card} bill is due today", a changing bill "{Bill} went out today"; the text is "Tap to add how much". Never an amount or a note; a locked screen hides the text (private visibility).
+  - The id comes from the rule and the date, so re-arming never shows two. They are re-armed on every start, resume and write: one already shown stays while its bill waits and goes once it is entered or skipped; a deleted bill's go too. A swiped-away one is never sent again. No action buttons.
+  - A tap carries `hisaab://bill/{ruleId}/{date}`; it goes back to Home and opens that bill's amount sheet (FR-HO-8), or only Home when the bill no longer waits.
+
 
 ### BR-10 Entries
 - The amount is 1 to 999,999,999 rupees (at most 9 digits) and is stored as paise.
 - The date defaults to today. The user may pick yesterday, or a date in the current or previous cycle. Future dates are not allowed.
 - A note is optional, at most 80 characters, with whitespace trimmed.
-- **Delete** happens at once with an Undo snackbar (6 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled. A *Saved* entry can be deleted (that skips the month, and a rule's saving says "Skipped this month", never "missed") but never edited in the tray, which knows only *Spent* and *Got* (D120). A card bill paid is the same: never edited in the tray, and deleting it makes the bill wait again (D123).
+- **Delete** happens at once with an Undo snackbar (6 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled. A *Saved* entry can be deleted (that skips the month, and a rule's saving says "Skipped this month", never "missed") but never edited in the tray, which knows only *Spent* and *Got* (D120). A card bill paid is the same: never edited in the tray, and deleting it makes the bill wait again (D123). Editing the amount of a changing bill's latest entry in the tray makes it next month's estimate, as entering it did (D127).
 - After any write, the ledger notifies listeners, and Home and Spends recompute.
 
 ### BR-11 Categories
@@ -324,7 +330,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **Due-soon nudge** (BR-9), when applicable. It is a tappable `sunk` row at least 56dp tall: the bill's icon in a well, the sentence, the date under it, and a chevron. TalkBack reads the sentence, then "Opens the bill." ("Opens the saving." for a saving, D120). A tap opens that bill's or saving's sheet (FR-SE-1) over Home. After a change Home reloads; *Delete bill* deletes it from Home with Undo (D35, D118).
 - **FR-HO-4** **Today list:**
   - The header shows today's total (typed spending, `S_today`) and *See all*.
-  - A bill the app posted is listed like any entry; with no note, its second line reads *Bill* (D119, D123).
+  - A bill the app posted or the user entered is listed like any entry; with no note, its second line is the bill's name ("Bills · Electricity", "Home · Rent"), or *Bill* once the bill is deleted (D119, D123, D127).
   - A card bill paid reads the card's name, *Paid, not counted again* and the amount, with the card glyph. It is never a bite on today's bar, is not in today's total, and has no tap; swiping deletes it with Undo, and the bill waits again (D123).
   - A saving reads its name (or *Put in extra*), *Saved* and the amount, with the piggy-bank glyph. It is never a bite on today's bar and has no tap; swiping deletes it with Undo (D120).
   - At most the 5 most recent entries for today.
@@ -342,6 +348,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **AC-3** *Save* (marigold) enters the amount; untouched, it enters the estimate in one tap. ₹0 saves nothing. The sheet closes with the tick haptic and Home shows "Electricity ₹1,460 added" with Undo.
   - **AC-4** The text chip *Didn't go out this month* skips the occurrence; Home shows "Electricity skipped this month" with Undo.
   - **AC-5** A failed save keeps the sheet open with "Couldn't save. Try again."
+  - **AC-6** Back while *Save* is still writing closes the sheet, and the save still ends with its Undo on Home. An Undo offered while Home can't show (still loading, or a failed reload) waits for Home's next good load (D127).
   - **AC-6** Its content starts on the page gutter (D122).
 
 ### 4.3 Add tray (FR-AD)
@@ -393,16 +400,17 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
   - Money coming in (edits the income rule; future cycles only; D116).
-  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first. Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
+  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
   - **Changing a bill** happens in the bill sheet (D118, mockup [27](design/mockups/27-bill-sheet.html)):
     - **AC-1** Tapping a bill row, or Home's due-soon row (FR-HO-3), opens the sheet over the current screen. No page is pushed.
     - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then five rows (Amount, Amount changes?, Day of the month, Name, Icon), then "Next goes out on {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
     - **AC-3** A row opens its one question inside the sheet: the keypad prefilled with the amount (the first key replaces it, as FR-AD-8), the 1–31 grid with the current day picked, the name field without pills, or the grid of 16 icons with the current one picked.
-    - **AC-4** Amount and name save with *Save*; a day or an icon saves on tap. Each save changes only that answer (a day follows D34), returns to the bill, flashes the row, and the footer reads "Saved." for 2.4 s. Saving an unchanged answer writes nothing.
+    - **AC-4** Amount and name save with *Save*; a day or an icon saves on tap. Each save changes only that answer (a day follows D34), returns to the bill, flashes the row, and the footer reads "Changed." for 2.4 s ("Saved" means only real saving, D120). Saving an unchanged answer writes nothing.
     - **AC-5** Back from a question returns to the bill. Back, a swipe down or the scrim closes the sheet; unsaved typing is dropped, saved answers stay.
     - **AC-6** *Delete bill*, a full-width `sunk` key at the foot of the bill, closes the sheet and deletes the bill with Undo (D35).
     - **AC-7** A failed save keeps the question open with "Couldn't save. Try again."
     - **AC-8** *Amount changes?* shows *Same every month*, *Changes every month* or *Credit card* (the value may take two lines). Its question is the three answers stacked, the current one picked; a tap saves (BR-9, D123).
+    - **AC-10** The first time a changing or card bill exists (added, or switched in *Amount changes?*), a sheet asks once "Remind you on the day it's due?" with *Remind me* (marigold) and *Not now*. *Remind me* then shows Android's permission prompt. Either answer is kept and never asked again; Back leaves it unanswered, to ask next time (D126).
     - **AC-9** The *Credit card* chip makes a card bill and *Electricity* a changing one; any other name starts fixed. A changing bill's amount question reads "About how much is Electricity?", a card's "About how much is the Credit card bill?", with the card line of FR-HO-8 AC-2 under it while adding.
   - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "goes in". The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today:
     - **AC-1** It opens the keypad in a sheet, in the bill sheet's route.
@@ -450,6 +458,11 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E26 | Undo after entering | The entry goes and the bill waits again, with its old estimate |
 | E27 | A long-ignored changing bill switched to *Same every month* | Only the latest occurrence on or before today is posted, at the estimate; older months never (D124) |
 | E28 | A card bill with income that changes | No difference: a card bill never touches the pool |
+| E30 | Notification permission refused, or turned off later | Nothing is asked again; Home's waiting line still works (D126) |
+| E31 | A bill entered before 9:00 on its day | That day's reminder is removed before it shows; next month's is armed (D126) |
+| E32 | A reminder tapped after its bill was entered, skipped or deleted | Opens Home only (D126) |
+| E33 | The phone restarts, or the app is updated | The plugin's boot receiver re-arms the reminders; the next start or resume re-arms them too (D126) |
+| E34 | Entered, then swiped away, then *Undo* on the entered snackbar | The old estimate comes back; the bill waits again (D127) |
 
 ---
 

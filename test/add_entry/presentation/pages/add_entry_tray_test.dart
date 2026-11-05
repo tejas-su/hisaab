@@ -34,7 +34,7 @@ void main() {
   tearDown(() => services.dispose());
 
   AddEntryBloc bloc({Option<Entry> editing = const Option<Entry>.none()}) => AddEntryBloc(
-        saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
+        saveEntry: SaveEntry(ledger: services.ledger, recurring: services.recurring, clock: services.clock),
         deleteEntry: DeleteEntry(ledger: services.ledger),
         haptics: services.haptics,
         clock: services.clock,

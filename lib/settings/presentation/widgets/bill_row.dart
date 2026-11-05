@@ -12,7 +12,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../../../ledger/presentation/rule_glyph.dart';
 
-/// One fixed bill: its name, its day of the month and its amount (SPEC FR-SE-1).
+/// One bill or saving: its name, its day of the month and its amount, "about" when it changes (SPEC FR-SE-1, D123).
 ///
 /// It leads with the bill's icon (D118). Tap opens the bill sheet; swiping left deletes it at once (Undo comes from the page). TalkBack gets a
 /// Delete action, since swiping is gesture-only.
@@ -70,11 +70,15 @@ class BillRow extends StatelessWidget {
     );
   }
 
+  // why: a changing or card bill's amount is only the estimate, so it says "about" (D123).
+  String _estimated(AppLocalizations strings, String amount) =>
+      bill.amountMode == AmountMode.fixed ? amount : strings.billAmountAbout(amount);
+
   Widget _content(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextTheme text = Theme.of(context).textTheme;
     final String when = strings.billEveryMonth(bill.schedule.anchor.day);
-    final String spoken = strings.billRowSpoken(bill.label, strings.spokenAmount(context.money.digits(bill.amount)), when);
+    final String spoken = strings.billRowSpoken(bill.label, _estimated(strings, strings.spokenAmount(context.money.digits(bill.amount))), when);
     return Semantics(
       label: spoken,
       excludeSemantics: true,
@@ -100,7 +104,7 @@ class BillRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: HisaabSpacing.s),
-            Text(context.money.format(bill.amount), style: HisaabType.rowAmount(context.colors.ink)),
+            Text(_estimated(strings, context.money.format(bill.amount)), style: HisaabType.rowAmount(context.colors.ink)),
           ],
         ),
       ),

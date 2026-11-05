@@ -146,6 +146,7 @@ class HomePage extends StatelessWidget {
     return TodayList(
       entries: state.todayEntries,
       categories: state.categories,
+      billNames: state.billNames,
       spentToday: state.summary.spentToday,
       onSeeAll: _seeAll(state.summary.cycle),
       onEdit: onEdit,

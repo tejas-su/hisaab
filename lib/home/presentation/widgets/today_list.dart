@@ -20,6 +20,7 @@ class TodayList extends StatelessWidget {
     required this.onDelete,
     required this.onThresholdReached,
     this.onSeeAll,
+    this.billNames = const <int, String>{},
   });
 
   final List<Entry> entries;
@@ -29,6 +30,9 @@ class TodayList extends StatelessWidget {
   final ValueChanged<Entry> onDelete;
   final VoidCallback onThresholdReached;
   final VoidCallback? onSeeAll;
+
+  /// Each bill rule's name by id, so a row a bill posted names it.
+  final Map<int, String> billNames;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +81,7 @@ class TodayList extends StatelessWidget {
               key: ValueKey<int>(entry.id),
               entry: entry,
               category: categories[entry.categoryId],
+              billName: billNames[entry.recurringId],
               onEdit: () => onEdit(entry),
               onDelete: () => onDelete(entry),
               onThresholdReached: onThresholdReached,

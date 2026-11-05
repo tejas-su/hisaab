@@ -6,10 +6,13 @@ import 'package:fpdart/fpdart.dart';
 
 /// An in-memory [AppPreferencesRepository]; set [failure] to make every call fail.
 final class FakeAppPreferencesRepository implements AppPreferencesRepository {
-  FakeAppPreferencesRepository({this.done = false, this.draftJson});
+  FakeAppPreferencesRepository({this.done = false, this.draftJson, this.reminders = const Option<bool>.none()});
 
   bool done;
   String? draftJson;
+
+  /// The answer to "Remind you on the day it's due?"; [None] when never asked.
+  Option<bool> reminders;
   Failure? failure;
 
   /// Failure for [markOnboardingDone] only.
@@ -46,6 +49,15 @@ final class FakeAppPreferencesRepository implements AppPreferencesRepository {
   @override
   TaskEither<Failure, Unit> saveOnboardingDraft(String json) => _run(() {
         draftJson = json;
+        return unit;
+      });
+
+  @override
+  TaskEither<Failure, Option<bool>> billRemindersChoice() => _run(() => reminders);
+
+  @override
+  TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind}) => _run(() {
+        reminders = Option<bool>.of(remind);
         return unit;
       });
 }

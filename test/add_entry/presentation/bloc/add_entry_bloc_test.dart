@@ -46,7 +46,7 @@ void main() {
 
   AddEntryBloc build({Option<Entry> editing = const Option<Entry>.none(), EntryKind kind = EntryKind.spent, bool withSummary = true}) {
     final AddEntryBloc bloc = AddEntryBloc(
-      saveEntry: SaveEntry(ledger: ledger, clock: clock),
+      saveEntry: SaveEntry(ledger: ledger, recurring: FakeRecurringRepository(WorkedExample.rules), clock: clock),
       deleteEntry: DeleteEntry(ledger: ledger),
       haptics: haptics,
       clock: clock,

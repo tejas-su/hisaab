@@ -55,4 +55,33 @@ void main() {
       );
     });
   });
+
+  group('BillRow amount (D123)', () {
+    Future<void> pumpRow(WidgetTester tester, AmountMode mode) => pumpApp(
+          tester,
+          Scaffold(
+            body: BillRow(
+              bill: WorkedExample.electricity.copyWith(amountMode: mode),
+              onEdit: () {},
+              onDelete: () {},
+              onThresholdReached: () {},
+            ),
+          ),
+        );
+
+    testWidgets('a fixed bill shows its amount as it is', (WidgetTester tester) async {
+      await pumpRow(tester, AmountMode.fixed);
+      expect(find.text('₹1,200'), findsOneWidget);
+    });
+
+    for (final AmountMode mode in <AmountMode>[AmountMode.varies, AmountMode.card]) {
+      testWidgets('a ${mode.name} bill says about, on screen and to TalkBack', (WidgetTester tester) async {
+        final SemanticsHandle handle = tester.ensureSemantics();
+        await pumpRow(tester, mode);
+        expect(find.text('about ₹1,200'), findsOneWidget);
+        expect(find.bySemanticsLabel(RegExp('Electricity, about 1,200 rupees, ')), findsOneWidget);
+        handle.dispose();
+      });
+    }
+  });
 }

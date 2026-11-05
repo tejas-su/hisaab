@@ -24,6 +24,7 @@ final class HomeLoading extends HomeState {
 /// does the same for a bill deleted from its sheet (D118), and [amountUndo] for a waiting bill
 /// just entered or skipped (D123).
 /// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
+/// [billNames] names each bill rule by id, so a row a bill posted says which bill it is.
 final class HomeReady extends HomeState {
   const HomeReady({
     required this.summary,
@@ -35,6 +36,7 @@ final class HomeReady extends HomeState {
     this.billUndo = const Option<RecurringRule>.none(),
     this.amountUndo = const Option<BillAmountOutcome>.none(),
     this.showWeek = false,
+    this.billNames = const <int, String>{},
   });
 
   final CycleSummary summary;
@@ -54,6 +56,7 @@ final class HomeReady extends HomeState {
   final Option<RecurringRule> billUndo;
   final Option<BillAmountOutcome> amountUndo;
   final bool showWeek;
+  final Map<int, String> billNames;
 
   /// Returns a copy with the given fields replaced; [undo], [billUndo] and [amountUndo] reset
   /// unless passed.
@@ -74,10 +77,11 @@ final class HomeReady extends HomeState {
         billUndo: billUndo,
         amountUndo: amountUndo,
         showWeek: showWeek ?? this.showWeek,
+        billNames: billNames,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, showWeek];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, showWeek, billNames];
 }
 
 /// Loading failed; a quiet message with Try again.

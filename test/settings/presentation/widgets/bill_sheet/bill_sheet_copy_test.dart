@@ -24,4 +24,37 @@ void main() {
       });
     }
   });
+
+  group('BillSheetCopy, card and waiting bills (D123)', () {
+    const CalendarDate next = CalendarDate(2026, 11, 26);
+    const BillStatus counted = BillStatus(nextDate: next, daysAway: 31, stamp: BillStampCounted(CalendarDate(2026, 10, 5)));
+    const BillStatus countedToday = BillStatus(nextDate: next, daysAway: 31, stamp: BillStampCounted(CalendarDate(2026, 10, 26)));
+    const BillStatus waiting = BillStatus(nextDate: CalendarDate(2026, 10, 24), daysAway: -2, stamp: BillStampWaiting(CalendarDate(2026, 10, 24)));
+
+    final List<(String, BillStatus, AmountMode, String?)> stamps = <(String, BillStatus, AmountMode, String?)>[
+      ('a card bill paid earlier says paid', counted, AmountMode.card, 'Paid 5 Oct'),
+      ('a card bill paid today says paid today', countedToday, AmountMode.card, 'Paid today'),
+      ('a changing bill entered earlier is counted', counted, AmountMode.varies, 'Counted 5 Oct'),
+      ('a changing bill waiting says waiting', waiting, AmountMode.varies, 'Waiting'),
+      ('a card bill waiting says waiting', waiting, AmountMode.card, 'Waiting'),
+    ];
+    for (final (String name, BillStatus status, AmountMode mode, String? expected) in stamps) {
+      testWidgets(name, (WidgetTester tester) async {
+        await pumpApp(tester, const Scaffold());
+        expect(tester.element(find.byType(Scaffold)).stampText(status, mode: mode), expected);
+      });
+    }
+
+    final List<(String, BillStatus, AmountMode, String)> feet = <(String, BillStatus, AmountMode, String)>[
+      ('a waiting changing bill says when it went out', waiting, AmountMode.varies, 'Went out on 24 Oct. Home asks how much.'),
+      ('a waiting card bill says when it was due', waiting, AmountMode.card, 'Was due on 24 Oct. Home asks what you paid.'),
+      ('an answered bill gives its next date', counted, AmountMode.varies, 'Next goes out on 26 Nov'),
+    ];
+    for (final (String name, BillStatus status, AmountMode mode, String expected) in feet) {
+      testWidgets(name, (WidgetTester tester) async {
+        await pumpApp(tester, const Scaffold());
+        expect(tester.element(find.byType(Scaffold)).footText(status, kind: EntryKind.spent, mode: mode), expected);
+      });
+    }
+  });
 }

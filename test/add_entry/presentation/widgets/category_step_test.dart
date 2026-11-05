@@ -21,7 +21,7 @@ void main() {
     addTearDown(services.dispose);
     final AddEntryBloc bloc = await tester.buildBloc(
       () => AddEntryBloc(
-        saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
+        saveEntry: SaveEntry(ledger: services.ledger, recurring: services.recurring, clock: services.clock),
         deleteEntry: DeleteEntry(ledger: services.ledger),
         haptics: services.haptics,
         clock: services.clock,
@@ -60,7 +60,7 @@ void main() {
       addTearDown(services.dispose);
       final AddEntryBloc bloc = await tester.buildBloc(
         () => AddEntryBloc(
-          saveEntry: SaveEntry(ledger: services.ledger, clock: services.clock),
+          saveEntry: SaveEntry(ledger: services.ledger, recurring: services.recurring, clock: services.clock),
           deleteEntry: DeleteEntry(ledger: services.ledger),
           haptics: services.haptics,
           clock: services.clock,

@@ -54,4 +54,18 @@ void main() {
     expect((await UndoBillAmount(ledger: ledger, recurring: recurring)(done).run()).isLeft(), isTrue);
     expect(recurring.updates, isEmpty);
   });
+
+  test('Undo after the entry was swiped away still puts the estimate back', () async {
+    final FakeLedgerRepository ledger = FakeLedgerRepository();
+    addTearDown(ledger.dispose);
+    final FakeRecurringRepository recurring = FakeRecurringRepository(<RecurringRule>[electricity]);
+    final BillAmountEntered done = (await EnterBillAmount(ledger: ledger, recurring: recurring)(
+      EnterBillAmountParams(occurrence: Occurrence(rule: electricity, date: const CalendarDate(2026, 10, 20)), amount: Money.fromMajor(1460)),
+    ).run())
+        .getOrElse((Failure f) => fail(f.message));
+    await DeleteEntry(ledger: ledger)(done.entry.id).run();
+
+    expect(await UndoBillAmount(ledger: ledger, recurring: recurring)(done).run(), Either<Failure, Unit>.right(unit));
+    expect(recurring.rules.single, electricity);
+  });
 }

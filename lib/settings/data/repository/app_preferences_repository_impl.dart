@@ -31,4 +31,17 @@ final class AppPreferencesRepositoryImpl implements AppPreferencesRepository {
         await _preferences.write(SettingKeys.onboardingDraft, json);
         return unit;
       });
+
+  @override
+  TaskEither<Failure, Option<bool>> billRemindersChoice() => dbTask(() => _preferences.read(SettingKeys.billReminders))
+      .map((String? value) => Option<String>.fromNullable(value).map((String stored) => stored == _yes));
+
+  @override
+  TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind}) => dbTask(() async {
+        await _preferences.write(SettingKeys.billReminders, remind ? _yes : _no);
+        return unit;
+      });
+
+  static const String _yes = '1';
+  static const String _no = '0';
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
@@ -106,6 +108,19 @@ void main() {
       Navigator.of(tester.element(find.byType(BillAmountSheet))).pop();
       await tester.pumpAndSettle();
       expect(await outcome, const Option<BillAmountOutcome>.none());
+    });
+
+    testWidgets('Back while Save is still writing waits for it and reports what was entered', (WidgetTester tester) async {
+      final Future<Option<BillAmountOutcome>> outcome = await open(tester);
+      final Completer<void> slowWrite = Completer<void>();
+      recurring.nextUpdateGate = slowWrite;
+      await tester.tap(find.byKey(const ValueKey<String>('bill-amount-save')));
+      await tester.settle();
+      Navigator.of(tester.element(find.byType(BillAmountSheet))).pop();
+      await tester.pumpAndSettle();
+      slowWrite.complete();
+      await tester.settle();
+      expect((await outcome).toNullable(), isA<BillAmountWasEntered>());
     });
 
     testWidgets('the keys replace, shorten and clear the amount', (WidgetTester tester) async {

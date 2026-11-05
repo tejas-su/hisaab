@@ -51,6 +51,13 @@ void main() {
       expect(rule.categoryId, SeedCategoryIds.bills);
     });
 
+    test('rent switched to card and back is filed under Home again', () async {
+      final RecurringRule card = WorkedExample.rent.copyWith(amountMode: AmountMode.card, categoryId: SeedCategoryIds.cardPaid);
+      recurring.rules = <RecurringRule>[card];
+      final RecurringRule rule = await edited(params(card, day: 5, mode: AmountMode.fixed));
+      expect(rule.categoryId, SeedCategoryIds.home);
+    });
+
     test('fixed to changing keeps the category, schedule and next date', () async {
       final RecurringRule rule = await edited(params(WorkedExample.electricity, day: 29, mode: AmountMode.varies));
       expect(rule.categoryId, WorkedExample.electricity.categoryId);

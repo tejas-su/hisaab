@@ -34,7 +34,7 @@ class BillSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final RecurringRule rule = state.rule;
-    final String? stamp = state.status.map((BillStatus status) => context.stampText(status, kind: rule.kind)).toNullable();
+    final String? stamp = state.status.map((BillStatus status) => context.stampText(status, kind: rule.kind, mode: rule.amountMode)).toNullable();
     final String spoken = _isSaving
         ? strings.savingSlipSpoken(rule.label, context.spokenMoney(rule), _day(rule))
         : strings.billSlipSpoken(rule.label, context.iconName(rule.shownIcon), context.spokenMoney(rule), _day(rule));
@@ -129,7 +129,7 @@ class BillSummary extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextStyle? style = Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.displayInk2);
     final String? next =
-        state.status.map((BillStatus status) => strings.ruleNext(state.rule.kind, context.shortDate(status.nextDate))).toNullable();
+        state.status.map((BillStatus status) => context.footText(status, kind: state.rule.kind, mode: state.rule.amountMode)).toNullable();
     return Semantics(
       liveRegion: true,
       child: Row(

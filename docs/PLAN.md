@@ -170,7 +170,7 @@ Rules:
 - Other platform folders (ios/macos/linux/windows/web) left untouched but not built or tested.
 
 ## 11. Dependencies
-Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58).
+Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it.
 To add when the milestone needs them: `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `file_picker` (M6), `home_widget` + `quick_settings_tile` (later).
 Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/` (M0).
 

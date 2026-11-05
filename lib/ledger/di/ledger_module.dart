@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 
 import '../../core/db/app_database.dart';
+import '../../core/notifications/bill_reminders.dart';
 import '../../core/time/clock.dart';
 import '../../core/time/period_calculator.dart';
 import '../data/datasource/budget_settings_local_data_source.dart';
@@ -17,6 +18,7 @@ import '../domain/repository/ledger_repository.dart';
 import '../domain/repository/recurring_repository.dart';
 import '../domain/usecase/add_bill.dart';
 import '../domain/usecase/apply_suggested_limits.dart';
+import '../domain/usecase/arm_bill_reminders.dart';
 import '../domain/usecase/delete_bill.dart';
 import '../domain/usecase/edit_bill.dart';
 import '../domain/usecase/enter_bill_amount.dart';
@@ -51,13 +53,12 @@ void registerLedgerServices(GetIt getIt) {
     ..registerSingleton<BudgetSettingsRepository>(
       BudgetSettingsRepositoryImpl(settings: SqfliteBudgetSettingsLocalDataSource(database)),
     )
-    ..registerSingleton<SaveEntry>(SaveEntry(ledger: ledger, clock: clock))
+    ..registerSingleton<SaveEntry>(SaveEntry(ledger: ledger, recurring: recurring, clock: clock))
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(PostDueRecurring(recurring: recurring, clock: clock))
     ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
     ..registerSingleton<GetLastBillAmount>(GetLastBillAmount(ledger: ledger, clock: clock))
-    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
     ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
     ..registerSingleton<EditBill>(EditBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
@@ -76,6 +77,10 @@ void registerLedgerServices(GetIt getIt) {
         clock: clock,
       ),
     )
+    ..registerSingleton<ArmBillReminders>(
+      ArmBillReminders(recurring: recurring, summary: getIt<GetCycleSummary>(), reminders: getIt<BillReminders>(), clock: clock),
+    )
+    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock, summary: getIt<GetCycleSummary>()))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
     ..registerSingleton<PutInExtra>(
       PutInExtra(

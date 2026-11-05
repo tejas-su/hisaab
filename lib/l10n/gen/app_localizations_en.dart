@@ -813,6 +813,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String billAmountAbout(String amount) {
+    return 'about $amount';
+  }
+
+  @override
   String billRowSpoken(String bill, String amount, String when) {
     return '$bill, $amount, $when';
   }
@@ -851,6 +856,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String billStampPaid(String date) {
+    return 'Paid $date';
+  }
+
+  @override
+  String get billStampPaidToday => 'Paid today';
+
+  @override
+  String get billStampWaiting => 'Waiting';
+
+  @override
+  String billWaitingVaries(String date) {
+    return 'Went out on $date. Home asks how much.';
+  }
+
+  @override
+  String billWaitingCard(String date) {
+    return 'Was due on $date. Home asks what you paid.';
+  }
+
+  @override
   String get billStampCountedToday => 'Counted today';
 
   @override
@@ -876,7 +902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get billSaved => 'Saved.';
+  String get billSaved => 'Changed.';
 
   @override
   String get deleteBill => 'Delete bill';
@@ -1118,6 +1144,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryCardPaid => 'Paid, not counted again';
+
+  @override
+  String reminderTitleVaries(String bill) {
+    return '$bill went out today';
+  }
+
+  @override
+  String reminderTitleCard(String bill) {
+    return '$bill bill is due today';
+  }
+
+  @override
+  String get reminderText => 'Tap to add how much';
+
+  @override
+  String get reminderChannel => 'Bill reminders';
+
+  @override
+  String get reminderChannelDescription =>
+      'One note on the day a bill that changes, or a card bill, is due';
+
+  @override
+  String get remindAskTitle => 'Remind you on the day it\'s due?';
+
+  @override
+  String get remindAskYes => 'Remind me';
+
+  @override
+  String get remindAskNo => 'Not now';
 }
 
 /// The translations for English, as used in India (`en_IN`).

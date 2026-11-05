@@ -1,19 +1,35 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/fakes/fake_budget_settings_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_ledger_repository.dart';
+import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 
 void main() {
   late FakeLedgerRepository ledger;
+  late FakeRecurringRepository recurring;
   late GetBillStatus getStatus;
 
   setUp(() {
     ledger = FakeLedgerRepository(WorkedExample.entries);
-    getStatus = GetBillStatus(ledger: ledger, clock: FakeClock(WorkedExample.now));
+    recurring = FakeRecurringRepository(WorkedExample.rules);
+    final FakeClock clock = FakeClock(WorkedExample.now);
+    getStatus = GetBillStatus(
+      ledger: ledger,
+      clock: clock,
+      summary: GetCycleSummary(
+        ledger: ledger,
+        recurring: recurring,
+        settings: FakeBudgetSettingsRepository(),
+        periods: const PeriodCalculator(),
+        clock: clock,
+      ),
+    );
   });
 
   Future<BillStatus> status(RecurringRule rule) async =>
@@ -82,6 +98,49 @@ void main() {
     test('returns the ledger failure', () async {
       ledger.failure = DatabaseFailure('closed');
       expect((await getStatus(WorkedExample.rent).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
+  group('GetBillStatus, a bill waiting for its amount (D123)', () {
+    RecurringRule waiting(AmountMode mode, CalendarDate due) => WorkedExample.electricity.copyWith(
+          amountMode: mode,
+          schedule: Schedule(frequency: Frequency.monthly, anchor: due),
+          nextDue: due,
+        );
+    void use(RecurringRule rule) => recurring.rules = <RecurringRule>[WorkedExample.salary, WorkedExample.rent, rule];
+
+    test('a changing bill that went out today waits, dated today', () async {
+      final RecurringRule bill = waiting(AmountMode.varies, WorkedExample.today);
+      use(bill);
+      final BillStatus result = await status(bill);
+      expect(result.stamp, const BillStampWaiting(WorkedExample.today));
+      expect((result.nextDate, result.daysAway), (WorkedExample.today, 0));
+    });
+
+    test('a card bill from an earlier day waits, dated that day', () async {
+      final RecurringRule card = waiting(AmountMode.card, const CalendarDate(2026, 10, 24));
+      use(card);
+      final BillStatus result = await status(card);
+      expect(result.stamp, const BillStampWaiting(CalendarDate(2026, 10, 24)));
+      expect(result.daysAway, -2);
+    });
+
+    test('once entered it is counted, not waiting', () async {
+      final RecurringRule bill = waiting(AmountMode.varies, const CalendarDate(2026, 10, 24));
+      use(bill);
+      ledger.entries.add(postedFor(bill, const CalendarDate(2026, 10, 24)));
+      expect((await status(bill)).stamp, const BillStampCounted(CalendarDate(2026, 10, 24)));
+    });
+
+    test('when the waiting bills can\'t be worked out, it shows as usual', () async {
+      final RecurringRule bill = waiting(AmountMode.varies, WorkedExample.today);
+      use(bill);
+      recurring.failure = DatabaseFailure('locked');
+      expect((await getStatus(bill).run()).isRight(), isTrue);
+    });
+
+    test('the waiting stamp compares by its date', () {
+      expect(const BillStampWaiting(WorkedExample.today).props, <Object?>[WorkedExample.today]);
     });
   });
 }

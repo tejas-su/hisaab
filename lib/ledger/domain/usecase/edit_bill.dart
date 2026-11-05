@@ -7,6 +7,7 @@ import '../../../core/time/clock.dart';
 import '../../../core/usecases/use_case.dart';
 import '../bill_validator.dart';
 import '../entities/amount_mode.dart';
+import '../entities/bill_icon.dart';
 import '../entities/category.dart';
 import '../entities/bill_input.dart';
 import '../entities/frequency.dart';
@@ -50,15 +51,17 @@ final class EditBill implements UseCase<RecurringRule, EditBillParams> {
       );
 
   // why: a card bill is filed under the hidden card category so it never shows as spending;
-  // leaving card files it back under Bills (D123).
+  // leaving card files it back where its icon says it belongs: Home for rent, Bills for the rest (D123).
   TaskEither<Failure, int> _categoryFor(RecurringRule rule, AmountMode mode) {
     final bool wasCard = rule.amountMode == AmountMode.card;
     final bool isCard = mode == AmountMode.card;
     if (wasCard == isCard) {
       return TaskEither<Failure, int>.right(rule.categoryId);
     }
-    return _categories.idOf(isCard ? CategoryKeys.cardPaid : CategoryKeys.bills);
+    return _categories.idOf(isCard ? CategoryKeys.cardPaid : _spendingKey(rule));
   }
+
+  static String _spendingKey(RecurringRule rule) => rule.shownIcon == BillIcon.home ? CategoryKeys.home : CategoryKeys.bills;
 
   RecurringRule _withMode(RecurringRule edited, AmountMode mode, int categoryId) {
     final bool startsPosting = edited.amountMode != AmountMode.fixed && mode == AmountMode.fixed;

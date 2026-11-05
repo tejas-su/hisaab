@@ -2,7 +2,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
 
-/// App preferences owned by the settings feature: onboarding progress (DECISIONS D20).
+/// App preferences owned by the settings feature: onboarding progress (DECISIONS D20) and the
+/// answer to "Remind you on the day it's due?" (D126).
 abstract interface class AppPreferencesRepository {
   /// Whether onboarding was finished (SPEC FR-ON-1).
   ///
@@ -24,4 +25,15 @@ abstract interface class AppPreferencesRepository {
   ///
   /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
   TaskEither<Failure, Unit> saveOnboardingDraft(String json);
+
+  /// The answer to "Remind you on the day it's due?" (spec §6).
+  ///
+  /// Returns [Right] with [Some] true for *Remind me*, [Some] false for *Not now*, or [None]
+  /// when it was never asked; or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Option<bool>> billRemindersChoice();
+
+  /// Remembers the answer, [remind] or not; it is never asked again.
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind});
 }

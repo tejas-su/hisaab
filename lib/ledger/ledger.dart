@@ -2,6 +2,7 @@
 /// safe-to-spend maths. Other features import the ledger only through this file.
 library;
 
+export 'domain/bill_reminder_plan.dart';
 export 'domain/bill_validator.dart';
 export 'domain/entities/bill_icon.dart';
 export 'domain/entities/bill_input.dart';
@@ -39,6 +40,7 @@ export 'domain/repository/ledger_repository.dart';
 export 'domain/repository/recurring_repository.dart';
 export 'domain/safe_to_spend.dart';
 export 'domain/usecase/add_bill.dart';
+export 'domain/usecase/arm_bill_reminders.dart';
 export 'domain/usecase/apply_suggested_limits.dart';
 export 'domain/usecase/delete_bill.dart';
 export 'domain/usecase/delete_entry.dart';

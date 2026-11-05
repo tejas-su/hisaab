@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bill_sheet_bloc.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bill_sheet_event.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
+import '../../../helpers/fakes/fake_budget_settings_repository.dart';
 import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
@@ -29,7 +31,17 @@ void main() {
     return BillSheetBloc(
       rule: rule,
       editBill: EditBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
-      getStatus: GetBillStatus(ledger: ledger, clock: clock),
+      getStatus: GetBillStatus(
+        ledger: ledger,
+        clock: clock,
+        summary: GetCycleSummary(
+          ledger: ledger,
+          recurring: recurring,
+          settings: FakeBudgetSettingsRepository(),
+          periods: const PeriodCalculator(),
+          clock: clock,
+        ),
+      ),
       haptics: haptics,
     );
   }

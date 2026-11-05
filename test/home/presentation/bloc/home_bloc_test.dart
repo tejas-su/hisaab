@@ -215,6 +215,11 @@ void main() {
       await reloaded;
     });
 
+    test('names each bill by its rule, so a bill row can say which bill it is', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().billNames, <int, String>{1: 'Salary', 2: 'Rent', 3: 'Electricity'});
+    });
+
     test('emits HomeFailed when the summary can\'t be read', () async {
       ledger.failure = DatabaseFailure('locked');
       await bloc.dispatch(const HomeLoadRequested());
@@ -474,6 +479,21 @@ void main() {
       skip: const BillSkip(ruleId: 3, date: WorkedExample.today),
     )));
     expect(bloc.state, isA<HomeLoading>());
+  });
+
+  test('an amount done while Home has failed is offered once Home loads again, and only once', () async {
+    final BillAmountWasSkipped skipped = BillAmountWasSkipped(
+      occurrence: Occurrence(rule: WorkedExample.electricity, date: WorkedExample.today),
+      skip: const BillSkip(ruleId: 3, date: WorkedExample.today),
+    );
+    ledger.failure = DatabaseFailure('locked');
+    await bloc.dispatch(const HomeLoadRequested());
+    await bloc.dispatch(HomeBillAmountDone(skipped));
+    ledger.failure = null;
+    await bloc.dispatch(const HomeLoadRequested());
+    expect(ready().amountUndo, Option<BillAmountOutcome>.of(skipped));
+    await bloc.dispatch(const HomeLoadRequested());
+    expect(ready().amountUndo, const Option<BillAmountOutcome>.none());
   });
 
   test('a bill delete does nothing before Home has loaded', () async {

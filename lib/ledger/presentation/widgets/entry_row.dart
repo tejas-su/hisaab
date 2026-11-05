@@ -28,10 +28,14 @@ class EntryRow extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onThresholdReached,
+    this.billName,
   });
 
   final Entry entry;
   final Category? category;
+
+  /// The name of the bill that posted [entry], when known; it says which bill a row is.
+  final String? billName;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -90,8 +94,9 @@ class EntryRow extends StatelessWidget {
       };
 
   // why: a bill the app posted would otherwise look like typed spending that the Today total leaves out (D119).
+  // Its name says that and which bill; "Bill" stands in when the rule is gone.
   String? _billTag(AppLocalizations strings) =>
-      entry.recurringId != null && entry.kind == EntryKind.spent ? strings.entryFixedBill : null;
+      entry.recurringId != null && entry.kind == EntryKind.spent ? billName ?? strings.entryFixedBill : null;
 
   Widget _content(BuildContext context, AppLocalizations strings) {
     final TextTheme text = Theme.of(context).textTheme;

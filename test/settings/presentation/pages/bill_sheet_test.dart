@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/widgets/keypad.dart';
+import 'package:expense_tracker/core/time/period_calculator.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bill_sheet_bloc.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bill_sheet_state.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
+import '../../../helpers/fakes/fake_budget_settings_repository.dart';
 import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
@@ -47,7 +49,17 @@ void main() {
       () => BillSheetBloc(
         rule: rule ?? WorkedExample.electricity,
         editBill: EditBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
-        getStatus: GetBillStatus(ledger: ledger, clock: clock),
+        getStatus: GetBillStatus(
+        ledger: ledger,
+        clock: clock,
+        summary: GetCycleSummary(
+          ledger: ledger,
+          recurring: recurring,
+          settings: FakeBudgetSettingsRepository(),
+          periods: const PeriodCalculator(),
+          clock: clock,
+        ),
+      ),
         haptics: FakeHaptics(),
       ),
     );
@@ -105,7 +117,7 @@ void main() {
       await tester.settle();
       expect(recurring.updates.single.amountMode, AmountMode.varies);
       expect(find.text('Changes every month'), findsOneWidget);
-      expect(find.text('Saved.'), findsOneWidget);
+      expect(find.text('Changed.'), findsOneWidget);
     });
 
     testWidgets('a changing bill\'s amount question asks about how much', (WidgetTester tester) async {
@@ -169,10 +181,10 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('bill-sheet-save')));
       await tester.settle();
       expect(find.byType(Keypad), findsNothing);
-      expect(find.text('Saved.'), findsOneWidget);
+      expect(find.text('Changed.'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 2400));
       await tester.settle();
-      expect(find.text('Saved.'), findsNothing);
+      expect(find.text('Changed.'), findsNothing);
       await tester.binding.handlePopRoute();
       await tester.settle();
       expect(await outcome, isA<BillSheetChanged>());

@@ -85,6 +85,24 @@ void main() {
       expect(find.text('Bill'), findsOneWidget);
     });
 
+    testWidgets('a rule-posted Spent entry with no note names its bill when the name is known', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: EntryRow(
+            entry: bill(),
+            category: seedCategories.first,
+            billName: 'Electricity',
+            onEdit: () {},
+            onDelete: () {},
+            onThresholdReached: () {},
+          ),
+        ),
+      );
+      expect(find.text('Electricity'), findsOneWidget);
+      expect(find.text('Bill'), findsNothing);
+    });
+
     testWidgets('a typed entry shows no bill tag', (WidgetTester tester) async {
       await pumpRow(tester, bill(recurringId: null));
       expect(find.text('Bill'), findsNothing);

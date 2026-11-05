@@ -1183,6 +1183,12 @@ abstract class AppLocalizations {
   /// **'Every month on day {day}'**
   String billEveryMonth(int day);
 
+  /// A changing or card bill's amount in the Bills list, an estimate, e.g. "about ₹1,200"
+  ///
+  /// In en, this message translates to:
+  /// **'about {amount}'**
+  String billAmountAbout(String amount);
+
   /// Screen-reader label of one fixed bill row
   ///
   /// In en, this message translates to:
@@ -1231,6 +1237,36 @@ abstract class AppLocalizations {
   /// **'Counted {date}'**
   String billStampCounted(String date);
 
+  /// Stamp on a credit card bill recorded as paid this month, e.g. "Paid 5 Oct"; a card bill is never counted (D123)
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {date}'**
+  String billStampPaid(String date);
+
+  /// Stamp on a credit card bill recorded as paid today
+  ///
+  /// In en, this message translates to:
+  /// **'Paid today'**
+  String get billStampPaidToday;
+
+  /// Stamp on a changing or card bill that went out and waits for its amount (D123)
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get billStampWaiting;
+
+  /// Bill sheet footer of a changing bill waiting for its amount, e.g. "Went out on 24 Oct. Home asks how much."
+  ///
+  /// In en, this message translates to:
+  /// **'Went out on {date}. Home asks how much.'**
+  String billWaitingVaries(String date);
+
+  /// Bill sheet footer of a card bill waiting to be recorded as paid, e.g. "Was due on 24 Oct. Home asks what you paid."
+  ///
+  /// In en, this message translates to:
+  /// **'Was due on {date}. Home asks what you paid.'**
+  String billWaitingCard(String date);
+
   /// Stamp on a bill the app counted as spent today
   ///
   /// In en, this message translates to:
@@ -1276,7 +1312,7 @@ abstract class AppLocalizations {
   /// Bill sheet footer for 2.4 s after an answer is saved
   ///
   /// In en, this message translates to:
-  /// **'Saved.'**
+  /// **'Changed.'**
   String get billSaved;
 
   /// Full-width key at the foot of the bill sheet
@@ -1602,6 +1638,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid, not counted again'**
   String get entryCardPaid;
+
+  /// Due-day notification title for a changing bill, e.g. "Electricity went out today"; never an amount (spec §6)
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} went out today'**
+  String reminderTitleVaries(String bill);
+
+  /// Due-day notification title for a card bill, e.g. "Credit card bill is due today"
+  ///
+  /// In en, this message translates to:
+  /// **'{bill} bill is due today'**
+  String reminderTitleCard(String bill);
+
+  /// Due-day notification text
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add how much'**
+  String get reminderText;
+
+  /// Android notification channel name, shown in the system's notification settings
+  ///
+  /// In en, this message translates to:
+  /// **'Bill reminders'**
+  String get reminderChannel;
+
+  /// Android notification channel description
+  ///
+  /// In en, this message translates to:
+  /// **'One note on the day a bill that changes, or a card bill, is due'**
+  String get reminderChannelDescription;
+
+  /// Asked once, after the first changing or card bill is saved (spec §5)
+  ///
+  /// In en, this message translates to:
+  /// **'Remind you on the day it\'s due?'**
+  String get remindAskTitle;
+
+  /// Yes to bill reminders; Android then asks for the permission
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get remindAskYes;
+
+  /// No to bill reminders; never asked again
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get remindAskNo;
 }
 
 class _AppLocalizationsDelegate

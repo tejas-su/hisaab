@@ -99,6 +99,9 @@ abstract final class SettingKeys {
   static const String themeMode = 'theme_mode';
   static const String onboardingDone = 'onboarding_done';
   static const String onboardingDraft = 'onboarding_draft';
+
+  /// Whether the user wants bill reminders: '1' yes, '0' no, unset when never asked (D126).
+  static const String billReminders = 'bill_reminders';
 }
 
 /// Stored values of the `kind` column.

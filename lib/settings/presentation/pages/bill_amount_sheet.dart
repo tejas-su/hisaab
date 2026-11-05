@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart' hide State;
@@ -24,18 +26,23 @@ class BillAmountSheet extends StatelessWidget {
 
   static const double _keyHeight = 56;
 
-  /// Opens the sheet for [bloc] over [context]; the sheet closes [bloc] when it goes. Completes
-  /// after the exit animation with what was done, or [None] when it was closed with Back.
+  /// Opens the sheet for [bloc] over [context] and closes [bloc] once it is done. Completes after
+  /// the exit animation with what was done, or [None] when it was closed with Back before a save.
   static Future<Option<BillAmountOutcome>> show(BuildContext context, BillAmountBloc bloc) async {
     final ModalBottomSheetRoute<void> route = BillSheet.route(
       context,
-      builder: (BuildContext _) => BlocProvider<BillAmountBloc>(create: (BuildContext _) => bloc, child: const BillAmountSheet()),
+      builder: (BuildContext _) => BlocProvider<BillAmountBloc>.value(value: bloc, child: const BillAmountSheet()),
     );
     await Navigator.of(context).push(route);
     await route.completed;
-    final BillAmountState last = bloc.state;
+    // why: Back during a save closes the sheet, but the write still lands; waiting for it keeps
+    // its Undo.
+    final BillAmountState last = _settled(bloc.state) ? bloc.state : await bloc.stream.firstWhere(_settled);
+    unawaited(bloc.close());
     return last is BillAmountDone ? Option<BillAmountOutcome>.of(last.outcome) : const Option<BillAmountOutcome>.none();
   }
+
+  static bool _settled(BillAmountState state) => state is! BillAmountEditing || !state.saving;
 
   @override
   Widget build(BuildContext context) => BlocConsumer<BillAmountBloc, BillAmountState>(
