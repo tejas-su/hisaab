@@ -186,6 +186,18 @@ void main() {
       expect(fresh.state, const BillAmountLoading());
     });
 
+    test('events and states compare by their fields', () {
+      expect(const BillAmountLoadRequested().props, isEmpty);
+      expect(const BillAmountKeyPressed('5').props, <Object?>['5']);
+      expect(const BillAmountSkipPressed(), const BillAmountSkipPressed());
+      expect(const BillAmountLoading().props, isEmpty);
+      final BillAmountOutcome skipped = BillAmountWasSkipped(
+        occurrence: Occurrence(rule: _electricity, date: _oct20),
+        skip: const BillSkip(ruleId: 8, date: _oct20),
+      );
+      expect(BillAmountDone(skipped).props, <Object?>[skipped]);
+    });
+
     test('closing mid-save completes', () async {
       bloc.add(const BillAmountSavePressed());
       await expectLater(bloc.close(), completes);

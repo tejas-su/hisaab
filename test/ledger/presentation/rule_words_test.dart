@@ -56,6 +56,15 @@ void main() {
       expect(AmountMode.values.map(_strings.amountModeName), <String>['Same every month', 'Changes every month', 'Credit card']);
     });
 
+    test('the waiting line, today or earlier, changing or card (D123)', () {
+      final RecurringRule varies = WorkedExample.electricity.copyWith(amountMode: AmountMode.varies);
+      final RecurringRule card = WorkedExample.electricity.copyWith(label: 'HDFC card', amountMode: AmountMode.card);
+      expect(_strings.ruleWaiting(varies, '24 Oct', isToday: true), 'Electricity went out today. How much?');
+      expect(_strings.ruleWaiting(varies, '24 Oct', isToday: false), 'Electricity went out on 24 Oct. How much?');
+      expect(_strings.ruleWaiting(card, '24 Oct', isToday: true), 'HDFC card bill is due today. How much did you pay?');
+      expect(_strings.ruleWaiting(card, '24 Oct', isToday: false), 'HDFC card bill was due on 24 Oct. How much did you pay?');
+    });
+
     test('every list and sheet word has a saving form', () {
       expect(
         <String>[

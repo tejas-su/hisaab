@@ -108,6 +108,21 @@ void main() {
       expect(await outcome, const Option<BillAmountOutcome>.none());
     });
 
+    testWidgets('the keys replace, shorten and clear the amount', (WidgetTester tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-4')));
+      await tester.settle();
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-6')));
+      await tester.settle();
+      expect(find.text('₹46'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('₹4'), findsOneWidget);
+      await tester.longPress(find.bySemanticsLabel('Delete last digit. Long-press to clear'));
+      await tester.settle();
+      expect(find.text('₹0'), findsOneWidget);
+    });
+
     testWidgets('a card bill says why it isn\'t counted', (WidgetTester tester) async {
       recurring.rules = <RecurringRule>[_rule(AmountMode.card)];
       await open(tester, mode: AmountMode.card);

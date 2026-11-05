@@ -346,5 +346,6 @@ void main() {
     expect(const BillSheetIconChosen(BillIcon.gas).props, <Object?>[BillIcon.gas]);
     expect(const BillSheetStatusRequested().props, isEmpty);
     expect(const BillSheetUnchanged().props, isEmpty);
+    expect(const BillSheetModeChosen(AmountMode.card).props, <Object?>[AmountMode.card]);
   });
 }

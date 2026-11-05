@@ -544,4 +544,13 @@ void main() {
     expect(HomeDeleteRequested(WorkedExample.entries.last).props, <Object?>[WorkedExample.entries.last]);
     expect(HomeUndoRequested(WorkedExample.entries.last), HomeUndoRequested(WorkedExample.entries.last));
   });
+
+  test('the bill amount events compare by their outcome (D123)', () {
+    final BillAmountOutcome skipped = BillAmountWasSkipped(
+      occurrence: Occurrence(rule: WorkedExample.electricity, date: WorkedExample.today),
+      skip: const BillSkip(ruleId: 3, date: WorkedExample.today),
+    );
+    expect(HomeBillAmountDone(skipped).props, <Object?>[skipped]);
+    expect(HomeBillAmountUndoRequested(skipped).props, <Object?>[skipped]);
+  });
 }

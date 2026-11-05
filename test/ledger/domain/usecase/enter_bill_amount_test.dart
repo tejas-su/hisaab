@@ -61,6 +61,24 @@ void main() {
       expect(done.entry.categoryId, SeedCategoryIds.cardPaid);
     });
 
+    test('params and result compare by their fields', () {
+      expect(params(AmountMode.varies, 5), params(AmountMode.varies, 5));
+      final BillAmountEntered done = BillAmountEntered(
+        entry: Entry(
+          id: 1,
+          amount: Money.fromMajor(5),
+          kind: EntryKind.spent,
+          categoryId: 5,
+          date: _oct20,
+          createdAt: DateTime(2026, 10, 26),
+          recurringId: 8,
+        ),
+        previous: _rule(AmountMode.varies),
+      );
+      expect(BillAmountWasEntered(done).props, <Object?>[done]);
+      expect(done.props, <Object?>[done.entry, done.previous]);
+    });
+
     test('₹0 is refused and nothing is written', () async {
       expect((await enter(params(AmountMode.varies, 0)).run()).getLeft().toNullable(), isA<InvalidAmountFailure>());
       expect(ledger.entries, isEmpty);
