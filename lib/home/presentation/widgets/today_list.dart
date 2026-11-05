@@ -40,6 +40,8 @@ class TodayList extends StatelessWidget {
     final TextTheme text = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsetsDirectional.only(top: 6, bottom: HisaabSpacing.s),
+      // why: a swiped row and its Delete background would otherwise slide past the card's corners.
+      clipBehavior: Clip.antiAlias,
       decoration: ShapeDecoration(color: context.colors.surface, shape: HisaabShapes.squircle(HisaabRadii.card)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -369,6 +369,14 @@ void main() {
       expect(find.text('Chai & samosa'), findsOneWidget);
     });
 
+    testWidgets('a swiped row and its Delete stay inside the Today card\'s rounded shape', (WidgetTester tester) async {
+      await pump(tester);
+      final Container card = tester.widget<Container>(
+        find.descendant(of: find.byType(TodayList), matching: find.byType(Container)).first,
+      );
+      expect(card.clipBehavior, Clip.antiAlias);
+    });
+
     testWidgets('swiping away a saving its rule put in says the month is skipped (case study 17)', (WidgetTester tester) async {
       services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
       services.ledger.entries.add(Entry(

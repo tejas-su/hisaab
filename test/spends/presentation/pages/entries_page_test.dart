@@ -143,6 +143,14 @@ void main() {
       expect(find.text('Chai & samosa'), findsOneWidget);
     });
 
+    testWidgets('a swiped row and its Delete stay inside the day card\'s rounded shape', (WidgetTester tester) async {
+      await pump(tester);
+      final Container card = tester.widget<Container>(
+        find.ancestor(of: find.byType(EntryRow).first, matching: find.byType(Container)).first,
+      );
+      expect(card.clipBehavior, Clip.antiAlias);
+    });
+
     testWidgets('Back pops the page', (WidgetTester tester) async {
       await pump(tester);
       await tester.tap(find.byTooltip('Back'));
