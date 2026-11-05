@@ -5,6 +5,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/money/currency_spec.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
+import '../../domain/entities/amount_mode.dart';
 import '../../domain/entities/bill_icon.dart';
 import '../../domain/entities/entry_kind.dart';
 import '../../domain/entities/frequency.dart';
@@ -17,10 +18,11 @@ import 'entry_kind_mapper.dart';
 /// Converts between [RecurringModel] rows and recurring rule entities.
 abstract final class RecurringMapper {
   /// Returns [Right] with the rule, or [Left] with `InvalidDataFailure` for an unknown kind,
-  /// frequency or currency, a bad date or a row without an id.
+  /// amount mode, frequency or currency, a bad date or a row without an id.
   static Either<Failure, RecurringRule> toEntity(RecurringModel model) => CurrencySpec.fromCode(model.currency).flatMap(
         (CurrencySpec currency) => EntryKindMapper.fromValue(model.kind).flatMap(
-          (EntryKind kind) => _frequencyOf(model.frequency).flatMap(
+          (EntryKind kind) => _amountModeOf(model.amountMode).flatMap(
+            (AmountMode amountMode) => _frequencyOf(model.frequency).flatMap(
             (Frequency frequency) => CalendarDate.parse(model.anchorDate).flatMap(
               (CalendarDate anchor) => CalendarDate.parse(model.nextDue).flatMap(
                 (CalendarDate nextDue) => Option<int>.fromNullable(model.id)
@@ -37,12 +39,14 @@ abstract final class RecurringMapper {
                         isIncomeSource: model.isIncomeSource,
                         // why: an icon from a newer version maps to none, so the bill still loads.
                         icon: BillIcon.fromValue(model.icon),
+                        amountMode: amountMode,
                       ),
                     ),
               ),
             ),
           ),
         ),
+          ),
       );
 
   /// The row for [draft]: a new rule, or rule [id] when given.
@@ -59,7 +63,19 @@ abstract final class RecurringMapper {
         nextDue: draft.nextDue.toIso(),
         isIncomeSource: draft.isIncomeSource,
         icon: draft.icon.map((BillIcon icon) => icon.value).toNullable(),
+        amountMode: switch (draft.amountMode) {
+          AmountMode.fixed => AmountModeValues.fixed,
+          AmountMode.varies => AmountModeValues.varies,
+          AmountMode.card => AmountModeValues.card,
+        },
       );
+
+  static Either<Failure, AmountMode> _amountModeOf(String value) => switch (value) {
+        AmountModeValues.fixed => Either<Failure, AmountMode>.right(AmountMode.fixed),
+        AmountModeValues.varies => Either<Failure, AmountMode>.right(AmountMode.varies),
+        AmountModeValues.card => Either<Failure, AmountMode>.right(AmountMode.card),
+        _ => Either<Failure, AmountMode>.left(InvalidDataFailure('Unknown amount mode "$value"')),
+      };
 
   static String _valueOf(Frequency frequency) => switch (frequency) {
         Frequency.weekly => FrequencyValues.weekly,

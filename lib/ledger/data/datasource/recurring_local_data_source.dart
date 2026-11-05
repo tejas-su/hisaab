@@ -11,7 +11,7 @@ abstract interface class RecurringLocalDataSource {
   /// Every active rule.
   Future<List<RecurringModel>> activeRules();
 
-  /// Inserts [entries] (skipping any `(recurring_id, date)` already posted) and sets each rule's
+  /// Inserts [entries] (skipping any `(recurring_id, date)` already posted or skipped) and sets each rule's
   /// `next_due` from [nextDueByRuleId], atomically. Returns how many entries were inserted.
   Future<int> post(List<EntryModel> entries, Map<int, String> nextDueByRuleId);
 
@@ -26,6 +26,15 @@ abstract interface class RecurringLocalDataSource {
 
   /// Sets rule [id]'s `active` flag; returns the number of rows changed (0 or 1).
   Future<int> setActive(int id, {required bool active});
+
+  /// Records that rule [ruleId]'s occurrence on [dateIso] didn't go out; a repeat is ignored.
+  Future<void> skip(int ruleId, String dateIso);
+
+  /// Removes that skip, if any.
+  Future<void> unskip(int ruleId, String dateIso);
+
+  /// The skips dated [fromIso] to [toIso] inclusive, as `(recurring_id, date)` pairs.
+  Future<List<({int ruleId, String date})>> skipsBetween(String fromIso, String toIso);
 }
 
 /// [RecurringLocalDataSource] backed by the app's sqflite database.
@@ -51,6 +60,9 @@ final class SqfliteRecurringLocalDataSource implements RecurringLocalDataSource 
       _database.db.transaction((Transaction txn) async {
         int inserted = 0;
         for (final EntryModel entry in entries) {
+          if (await _isSkipped(txn, entry)) {
+            continue;
+          }
           final int before = await _changes(txn);
           await txn.insert(Tables.transactions, entry.toRow(), conflictAlgorithm: ConflictAlgorithm.ignore);
           inserted += await _changes(txn) - before;
@@ -97,6 +109,45 @@ final class SqfliteRecurringLocalDataSource implements RecurringLocalDataSource 
         where: '${RecurringColumns.id} = ?',
         whereArgs: <Object?>[id],
       );
+
+  @override
+  Future<void> skip(int ruleId, String dateIso) => _database.db.insert(
+        Tables.recurringSkips,
+        <String, Object?>{RecurringSkipColumns.recurringId: ruleId, RecurringSkipColumns.date: dateIso},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+
+  @override
+  Future<void> unskip(int ruleId, String dateIso) => _database.db.delete(
+        Tables.recurringSkips,
+        where: '${RecurringSkipColumns.recurringId} = ? AND ${RecurringSkipColumns.date} = ?',
+        whereArgs: <Object?>[ruleId, dateIso],
+      );
+
+  @override
+  Future<List<({int ruleId, String date})>> skipsBetween(String fromIso, String toIso) async {
+    final List<Map<String, Object?>> rows = await _database.db.query(
+      Tables.recurringSkips,
+      where: '${RecurringSkipColumns.date} BETWEEN ? AND ?',
+      whereArgs: <Object?>[fromIso, toIso],
+      orderBy: '${RecurringSkipColumns.date}, ${RecurringSkipColumns.recurringId}',
+    );
+    return rows
+        .map((Map<String, Object?> row) =>
+            (ruleId: row.intAt(RecurringSkipColumns.recurringId), date: row.stringAt(RecurringSkipColumns.date)))
+        .toList();
+  }
+
+  // why: a skipped occurrence of a rule switched back to fixed must not be posted (E-f, D124).
+  static Future<bool> _isSkipped(Transaction txn, EntryModel entry) async {
+    final List<Map<String, Object?>> rows = await txn.query(
+      Tables.recurringSkips,
+      where: '${RecurringSkipColumns.recurringId} = ? AND ${RecurringSkipColumns.date} = ?',
+      whereArgs: <Object?>[entry.recurringId, entry.date],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
 
   // why: sqflite's insert result is unreliable after an ignored conflict, but SQLite's
   // total_changes() counts only rows actually written.

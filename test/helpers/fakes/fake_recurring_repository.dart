@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_skip.dart';
 import 'package:expense_tracker/ledger/domain/entities/ledger_setup.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_draft.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_posting.dart';
@@ -70,6 +72,7 @@ final class FakeRecurringRepository implements RecurringRepository {
               nextDue: draft.nextDue,
               isIncomeSource: draft.isIncomeSource,
               icon: draft.icon,
+              amountMode: draft.amountMode,
             ),
         ];
         return unit;
@@ -126,6 +129,27 @@ final class FakeRecurringRepository implements RecurringRepository {
     });
   }
 
+  /// The skips recorded by [skip], in order; [unskip] removes one.
+  List<BillSkip> skips = <BillSkip>[];
+
+  @override
+  TaskEither<Failure, Unit> skip(BillSkip skip) => _run(() {
+        skips = <BillSkip>[...skips.where((BillSkip s) => s != skip), skip];
+        _changes.add(null);
+        return unit;
+      });
+
+  @override
+  TaskEither<Failure, Unit> unskip(BillSkip skip) => _run(() {
+        skips = <BillSkip>[...skips.where((BillSkip s) => s != skip)];
+        _changes.add(null);
+        return unit;
+      });
+
+  @override
+  TaskEither<Failure, List<BillSkip>> skipsBetween(CalendarDate from, CalendarDate to) =>
+      _run(() => skips.where((BillSkip s) => !s.date.isBefore(from) && !s.date.isAfter(to)).toList());
+
   @override
   Stream<void> get changes => _changes.stream;
 
@@ -142,5 +166,6 @@ final class FakeRecurringRepository implements RecurringRepository {
         nextDue: draft.nextDue,
         isIncomeSource: draft.isIncomeSource,
         icon: draft.icon,
+        amountMode: draft.amountMode,
       );
 }

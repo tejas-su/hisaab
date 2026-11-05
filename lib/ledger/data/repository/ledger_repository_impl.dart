@@ -38,6 +38,11 @@ final class LedgerRepositoryImpl implements LedgerRepository {
       ).flatMap(_found).map(_notify);
 
   @override
+  TaskEither<Failure, Entry> addForRule(EntryDraft draft, {required int recurringId}) => dbTask(
+        () => _entries.insert(EntryMapper.toModel(draft, createdAt: _clock.now(), recurringId: recurringId)),
+      ).flatMap(_found).map(_notify);
+
+  @override
   TaskEither<Failure, Entry> replace(int id, EntryDraft draft) => _found(id)
       .flatMap(
         (Entry current) => dbTask(

@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/ledger/data/mapper/recurring_mapper.dart';
 import 'package:expense_tracker/ledger/data/model/recurring_model.dart';
+import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
 import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
@@ -18,6 +19,7 @@ RecurringModel _model({
   String anchor = '2026-01-31',
   String nextDue = '2026-10-31',
   String? icon,
+  String amountMode = 'fixed',
 }) =>
     RecurringModel(
       id: id,
@@ -32,6 +34,7 @@ RecurringModel _model({
       nextDue: nextDue,
       isIncomeSource: false,
       icon: icon,
+      amountMode: amountMode,
     );
 
 const RecurringDraft _draft = RecurringDraft(
@@ -44,6 +47,35 @@ const RecurringDraft _draft = RecurringDraft(
 );
 
 void main() {
+  group('RecurringMapper amount mode (D123)', () {
+    test('reads each stored mode', () {
+      expect(RecurringMapper.toEntity(_model(amountMode: 'varies')).map((RecurringRule r) => r.amountMode),
+          Either<Failure, AmountMode>.right(AmountMode.varies));
+      expect(RecurringMapper.toEntity(_model(amountMode: 'card')).map((RecurringRule r) => r.amountMode),
+          Either<Failure, AmountMode>.right(AmountMode.card));
+      expect(RecurringMapper.toEntity(_model()).map((RecurringRule r) => r.amountMode),
+          Either<Failure, AmountMode>.right(AmountMode.fixed));
+    });
+
+    test('an unknown mode is InvalidDataFailure', () {
+      expect(RecurringMapper.toEntity(_model(amountMode: 'weird')).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+
+    test('writes the mode', () {
+      const RecurringDraft card = RecurringDraft(
+        label: 'Credit card',
+        amount: Money(800000),
+        kind: EntryKind.spent,
+        categoryId: 12,
+        schedule: Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 5)),
+        nextDue: CalendarDate(2026, 11, 5),
+        amountMode: AmountMode.card,
+      );
+      expect(RecurringMapper.toModel(card).amountMode, 'card');
+      expect(RecurringMapper.toModel(_draft).amountMode, 'fixed');
+    });
+  });
+
   group('RecurringMapper', () {
     test('maps a row to a rule', () {
       expect(

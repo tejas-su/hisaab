@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
+import 'amount_mode.dart';
 import 'bill_icon.dart';
 import 'entry_kind.dart';
 import 'recurring_draft.dart';
@@ -20,6 +21,7 @@ final class RecurringRule extends Equatable {
     required this.nextDue,
     this.isIncomeSource = false,
     this.icon = const Option<BillIcon>.none(),
+    this.amountMode = AmountMode.fixed,
   });
 
   final int id;
@@ -40,6 +42,10 @@ final class RecurringRule extends Equatable {
   /// The bill icon the user picked; none follows the name (D118).
   final Option<BillIcon> icon;
 
+  /// Whether the amount is fixed, changes, or is a card bill; only fixed rules are posted by the
+  /// engine (D123).
+  final AmountMode amountMode;
+
   /// The icon the bill shows: the picked one, or the one its name suggests (SPEC BR-9).
   BillIcon get shownIcon => icon.getOrElse(() => BillIcon.forName(label));
 
@@ -53,6 +59,7 @@ final class RecurringRule extends Equatable {
         nextDue: nextDue,
         isIncomeSource: isIncomeSource,
         icon: icon,
+        amountMode: amountMode,
       );
 
   /// Returns a copy with the given fields replaced.
@@ -62,17 +69,20 @@ final class RecurringRule extends Equatable {
     Schedule? schedule,
     CalendarDate? nextDue,
     Option<BillIcon>? icon,
+    AmountMode? amountMode,
+    int? categoryId,
   }) =>
       RecurringRule(
         id: id,
         label: label ?? this.label,
         amount: amount ?? this.amount,
         kind: kind,
-        categoryId: categoryId,
+        categoryId: categoryId ?? this.categoryId,
         schedule: schedule ?? this.schedule,
         nextDue: nextDue ?? this.nextDue,
         isIncomeSource: isIncomeSource,
         icon: icon ?? this.icon,
+        amountMode: amountMode ?? this.amountMode,
       );
 
   @override
@@ -86,5 +96,6 @@ final class RecurringRule extends Equatable {
     nextDue,
     isIncomeSource,
     icon,
+    amountMode,
   ];
 }

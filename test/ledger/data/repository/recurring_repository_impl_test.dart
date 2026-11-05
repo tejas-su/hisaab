@@ -6,7 +6,9 @@ import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/usecases/use_case.dart';
 import 'package:expense_tracker/ledger/data/datasource/recurring_local_data_source.dart';
 import 'package:expense_tracker/ledger/data/repository/recurring_repository_impl.dart';
+import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
 import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
+import 'package:expense_tracker/ledger/domain/entities/bill_skip.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_draft.dart';
 import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
@@ -168,6 +170,67 @@ void main() {
     test('returns DatabaseFailure when the database is closed', () async {
       await database.close();
       expect((await repository.activeRules().run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
+  group('RecurringRepositoryImpl skips (D123)', () {
+    late RecurringRule electricity;
+    late List<void> changes;
+    const CalendarDate oct20 = CalendarDate(2026, 10, 20);
+
+    setUp(() async {
+      electricity = right(await repository.add(RecurringDraft(
+        label: 'Electricity',
+        amount: Money.fromMajor(1200),
+        kind: EntryKind.spent,
+        categoryId: SeedCategoryIds.bills,
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: oct20),
+        nextDue: oct20,
+        amountMode: AmountMode.varies,
+      )).run());
+      changes = <void>[];
+      repository.changes.listen(changes.add);
+      addTearDown(repository.dispose);
+    });
+
+    Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+    test('the amount mode is stored and read back', () async {
+      expect(right(await repository.activeRules().run()).single.amountMode, AmountMode.varies);
+    });
+
+    test('skip is listed by skipsBetween, notifies, and unskip removes it', () async {
+      final BillSkip skip = BillSkip(ruleId: electricity.id, date: oct20);
+      right(await repository.skip(skip).run());
+      await settle();
+      expect(right(await repository.skipsBetween(const CalendarDate(2026, 10, 4), const CalendarDate(2026, 10, 26)).run()), <BillSkip>[skip]);
+      expect(changes, hasLength(1));
+      right(await repository.unskip(skip).run());
+      await settle();
+      expect(right(await repository.skipsBetween(const CalendarDate(2026, 10, 4), const CalendarDate(2026, 10, 26)).run()), isEmpty);
+      expect(changes, hasLength(2));
+    });
+
+    test('skipsBetween leaves out dates outside the range', () async {
+      right(await repository.skip(BillSkip(ruleId: electricity.id, date: oct20)).run());
+      expect(right(await repository.skipsBetween(const CalendarDate(2026, 10, 21), const CalendarDate(2026, 11, 3)).run()), isEmpty);
+    });
+
+    test('skipping twice keeps one row', () async {
+      final BillSkip skip = BillSkip(ruleId: electricity.id, date: oct20);
+      right(await repository.skip(skip).run());
+      right(await repository.skip(skip).run());
+      expect(await database.db.query(Tables.recurringSkips), hasLength(1));
+    });
+
+    test('post leaves out an occurrence that was skipped (E-f)', () async {
+      right(await repository.skip(BillSkip(ruleId: electricity.id, date: oct20)).run());
+      final int posted = right(await repository.post(RecurringPosting(
+        occurrences: <Occurrence>[Occurrence(rule: electricity, date: oct20)],
+        nextDueByRuleId: <int, CalendarDate>{electricity.id: const CalendarDate(2026, 11, 20)},
+      )).run());
+      expect(posted, 0);
+      expect(await entries(), isEmpty);
     });
   });
 

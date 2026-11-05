@@ -48,4 +48,7 @@ abstract final class CategoryKeys {
 
   /// The hidden category every *Saved* entry and saving rule uses; never shown (D120).
   static const String saved = 'saved';
+
+  /// The hidden category every card bill uses; never shown (D123).
+  static const String cardPaid = 'card_paid';
 }

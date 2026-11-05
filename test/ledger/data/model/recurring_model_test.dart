@@ -17,6 +17,7 @@ const Map<String, Object?> _row = <String, Object?>{
   RecurringColumns.active: 1,
   RecurringColumns.isIncomeSource: 1,
   RecurringColumns.icon: null,
+  RecurringColumns.amountMode: 'fixed',
 };
 
 void main() {
@@ -66,6 +67,13 @@ void main() {
       final RecurringModel model = RecurringModel.fromRow(<String, Object?>{..._row}..remove(RecurringColumns.icon))
           .getOrElse((Failure f) => fail(f.message));
       expect(model.icon, isNull);
+    });
+
+    test('reads and writes the amount mode (D123)', () {
+      final RecurringModel model = RecurringModel.fromRow(<String, Object?>{..._row, RecurringColumns.amountMode: 'varies'})
+          .getOrElse((Failure f) => fail(f.message));
+      expect(model.amountMode, 'varies');
+      expect(model.toRow()[RecurringColumns.amountMode], 'varies');
     });
 
     test('returns InvalidDataFailure for a bad column', () {

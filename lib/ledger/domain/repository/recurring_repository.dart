@@ -1,6 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
+import '../../../core/time/calendar_date.dart';
+import '../entities/bill_skip.dart';
 import '../entities/ledger_setup.dart';
 import '../entities/recurring_draft.dart';
 import '../entities/recurring_posting.dart';
@@ -14,8 +16,8 @@ abstract interface class RecurringRepository {
   /// Returns [Right] with the rules (possibly empty), or [Left] with `DatabaseFailure`.
   TaskEither<Failure, List<RecurringRule>> activeRules();
 
-  /// Posts [posting] in one transaction: inserts each occurrence (skipping any already posted
-  /// for that rule and date) and moves each rule's `next_due`.
+  /// Posts [posting] in one transaction: inserts each occurrence (leaving out any already posted
+  /// or skipped for that rule and date) and moves each rule's `next_due`.
   ///
   /// Returns [Right] with the number of entries actually inserted, or [Left] with
   /// `DatabaseFailure`, in which case nothing was written.
@@ -44,6 +46,23 @@ abstract interface class RecurringRepository {
   /// `DatabaseFailure`.
   TaskEither<Failure, Unit> setActive(int id, {required bool active});
 
-  /// Emits once after each successful [add], [update] or [setActive]; never errors.
+  /// Records [skip]: that occurrence didn't go out, so it no longer waits (D123). A repeat is
+  /// harmless. Emits on [changes].
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> skip(BillSkip skip);
+
+  /// Removes [skip], so the occurrence waits again (Undo). Emits on [changes].
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> unskip(BillSkip skip);
+
+  /// Loads the skips dated [from] to [to] inclusive, by date then rule.
+  ///
+  /// Returns [Right] with the skips (possibly empty), or [Left] with `DatabaseFailure` or
+  /// `InvalidDataFailure` for a bad stored date.
+  TaskEither<Failure, List<BillSkip>> skipsBetween(CalendarDate from, CalendarDate to);
+
+  /// Emits once after each successful [add], [update], [setActive], [skip] or [unskip]; never errors.
   Stream<void> get changes;
 }

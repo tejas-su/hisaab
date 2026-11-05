@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
+import 'amount_mode.dart';
 import 'bill_icon.dart';
 import 'entry_kind.dart';
 import 'schedule.dart';
@@ -18,6 +19,7 @@ final class RecurringDraft extends Equatable {
     required this.nextDue,
     this.isIncomeSource = false,
     this.icon = const Option<BillIcon>.none(),
+    this.amountMode = AmountMode.fixed,
   });
 
   final String label;
@@ -33,6 +35,9 @@ final class RecurringDraft extends Equatable {
   /// The bill icon the user picked; none follows the name (D118).
   final Option<BillIcon> icon;
 
+  /// Whether the amount is fixed, changes, or is a card bill (D123).
+  final AmountMode amountMode;
+
   @override
-  List<Object?> get props => <Object?>[label, amount, kind, categoryId, schedule, nextDue, isIncomeSource, icon];
+  List<Object?> get props => <Object?>[label, amount, kind, categoryId, schedule, nextDue, isIncomeSource, icon, amountMode];
 }

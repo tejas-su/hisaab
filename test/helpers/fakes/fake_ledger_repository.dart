@@ -51,6 +51,16 @@ final class FakeLedgerRepository implements LedgerRepository {
     }).flatMap((Unit _) => read);
   }
 
+  /// Like [add], linked to [recurringId]; records the draft in [saved] too.
+  @override
+  TaskEither<Failure, Entry> addForRule(EntryDraft draft, {required int recurringId}) => _run(() {
+        saved.add(draft);
+        final Entry entry = _entryFrom(_nextId++, draft, recurringId: recurringId);
+        entries.add(entry);
+        _notify();
+        return entry;
+      });
+
   @override
   TaskEither<Failure, Entry> add(EntryDraft draft) => _run(() {
         saved.add(draft);

@@ -18,6 +18,13 @@ abstract interface class LedgerRepository {
   /// Returns [Right] with the saved entry, or [Left] with `DatabaseFailure`.
   TaskEither<Failure, Entry> add(EntryDraft draft);
 
+  /// Saves a new entry from an already validated [draft], linked to recurring rule [recurringId]:
+  /// a changing bill's amount, entered on its occurrence's date (D123). Emits on [changes].
+  ///
+  /// Returns [Right] with the saved entry, or [Left] with `DatabaseFailure`, also when that rule
+  /// already has an entry on that date.
+  TaskEither<Failure, Entry> addForRule(EntryDraft draft, {required int recurringId});
+
   /// Overwrites entry [id] with [draft], keeping its recurring link and created time.
   ///
   /// Returns [Right] with the updated entry, [Left] with `EntryNotFoundFailure` when [id] is

@@ -1,3 +1,4 @@
+import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
@@ -81,6 +82,35 @@ void main() {
       expect(posting.occurrences.map((Occurrence o) => o.date).toList(),
           <CalendarDate>[const CalendarDate(2026, 10, 10), const CalendarDate(2026, 11, 10)]);
       expect(posting.nextDueByRuleId, <int, CalendarDate>{4: const CalendarDate(2026, 12, 10)});
+    });
+
+    test('the engine posts nothing for a changing bill or a card bill, and leaves next_due (D123)', () async {
+      const Schedule day20 = Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 20));
+      final RecurringRule electricity = RecurringRule(
+        id: 8,
+        label: 'Electricity',
+        amount: Money.fromMajor(1200),
+        kind: EntryKind.spent,
+        categoryId: 5,
+        schedule: day20,
+        nextDue: const CalendarDate(2026, 10, 20),
+        amountMode: AmountMode.varies,
+      );
+      final RecurringRule card = RecurringRule(
+        id: 9,
+        label: 'Credit card',
+        amount: Money.fromMajor(8000),
+        kind: EntryKind.spent,
+        categoryId: 12,
+        schedule: day20,
+        nextDue: const CalendarDate(2026, 10, 20),
+        amountMode: AmountMode.card,
+      );
+      recurring.rules = <RecurringRule>[electricity, card, _weeklyMilk];
+      await postDue(const NoParams()).run();
+      final RecurringPosting posting = recurring.postings.single;
+      expect(posting.occurrences.map((Occurrence o) => o.rule.id).toSet(), <int>{_weeklyMilk.id});
+      expect(posting.nextDueByRuleId.keys, <int>[_weeklyMilk.id]);
     });
 
     test('posts an occurrence due today', () async {

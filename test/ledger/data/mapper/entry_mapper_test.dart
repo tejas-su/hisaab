@@ -75,8 +75,9 @@ void main() {
       expect(EntryKindMapper.fromValue('save'), Either<Failure, EntryKind>.right(EntryKind.saved));
     });
 
-    test('"card" stays unknown until Phase 2', () {
-      expect(EntryKindMapper.fromValue('card').getLeft().toNullable(), isA<InvalidDataFailure>());
+    test('a card bill paid round-trips as "card" (D123)', () {
+      expect(EntryKindMapper.toValue(EntryKind.cardPaid), 'card');
+      expect(EntryKindMapper.fromValue('card'), Either<Failure, EntryKind>.right(EntryKind.cardPaid));
     });
 
     test('round-trips both kinds', () {

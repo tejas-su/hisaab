@@ -6,6 +6,7 @@ import '../../../core/db/db_row.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
+import '../../domain/entities/bill_skip.dart';
 import '../../domain/entities/entry_draft.dart';
 import '../../domain/entities/entry_kind.dart';
 import '../../domain/entities/ledger_setup.dart';
@@ -74,6 +75,23 @@ final class RecurringRepositoryImpl implements RecurringRepository {
   TaskEither<Failure, Unit> setActive(int id, {required bool active}) =>
       dbTask(() => _recurring.setActive(id, active: active)).flatMap((int changed) => _changedOne(changed, id)).map(_notify);
 
+  @override
+  TaskEither<Failure, Unit> skip(BillSkip skip) =>
+      dbTask(() => _recurring.skip(skip.ruleId, skip.date.toIso())).map((void _) => _notify(unit));
+
+  @override
+  TaskEither<Failure, Unit> unskip(BillSkip skip) =>
+      dbTask(() => _recurring.unskip(skip.ruleId, skip.date.toIso())).map((void _) => _notify(unit));
+
+  @override
+  TaskEither<Failure, List<BillSkip>> skipsBetween(CalendarDate from, CalendarDate to) =>
+      dbTask(() => _recurring.skipsBetween(from.toIso(), to.toIso())).chainEither(
+        (List<({int ruleId, String date})> rows) => rows.traverseEither(
+          (({int ruleId, String date}) row) =>
+              CalendarDate.parse(row.date).map((CalendarDate date) => BillSkip(ruleId: row.ruleId, date: date)),
+        ),
+      );
+
   /// Closes [changes]; called when the app's services are torn down.
   Future<void> dispose() => _changes.close();
 
@@ -96,6 +114,7 @@ final class RecurringRepositoryImpl implements RecurringRepository {
         nextDue: draft.nextDue,
         isIncomeSource: draft.isIncomeSource,
         icon: draft.icon,
+        amountMode: draft.amountMode,
       );
 
   Either<Failure, EntryModel> _validatedModel(Occurrence occurrence) {

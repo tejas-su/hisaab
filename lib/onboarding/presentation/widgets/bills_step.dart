@@ -58,7 +58,9 @@ class BillsStep extends StatelessWidget {
             spacing: HisaabSpacing.s,
             runSpacing: HisaabSpacing.s,
             children: <Widget>[
-              for (final BillKind kind in BillKind.values)
+              // why: onboarding asks for a bill's amount once and posts it every month, so only the
+              // fixed bills are offered; changing and card bills live in Settings (D125).
+              for (final BillKind kind in BillKind.values.where((BillKind kind) => kind.amountMode == AmountMode.fixed))
                 HisaabChip(
                   key: ValueKey<String>('bill-${kind.name}'),
                   label: strings.billName(kind.name),

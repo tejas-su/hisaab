@@ -4,13 +4,15 @@ import '../../../core/errors/failure.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/usecases/use_case.dart';
+import '../entities/amount_mode.dart';
 import '../entities/occurrence.dart';
 import '../entities/recurring_posting.dart';
 import '../entities/recurring_rule.dart';
 import '../recurring_schedule.dart';
 import '../repository/recurring_repository.dart';
 
-/// The recurring engine: posts every occurrence due up to today, catching up missed ones (SPEC BR-9).
+/// The recurring engine: posts every fixed rule's occurrences due up to today, catching up missed
+/// ones (SPEC BR-9). Changing and card bills are never posted; they wait (D123).
 ///
 /// Run at app start, on resume and when onboarding finishes. Idempotent: a repeat run or a crash
 /// mid-run never double-posts, and a clock moved backwards posts nothing (E7–E9).
@@ -32,7 +34,10 @@ final class PostDueRecurring implements UseCase<int, NoParams> {
   }
 
   static RecurringPosting _postingFor(List<RecurringRule> rules, CalendarDate today) {
+    // why: a changing or card bill waits for the user to say how much; posting it would count
+    // it twice (D123).
     final List<(RecurringRule, List<CalendarDate>)> due = rules
+        .where((RecurringRule rule) => rule.amountMode == AmountMode.fixed)
         .map((RecurringRule rule) => (rule, RecurringSchedule.datesFrom(rule.schedule, rule.nextDue, through: today)))
         .where(((RecurringRule, List<CalendarDate>) item) => item.$2.isNotEmpty)
         .toList();

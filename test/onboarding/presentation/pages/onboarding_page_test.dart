@@ -112,6 +112,20 @@ void main() {
       expect(services.recurring.setups.single.entries.single.note, 'Starting guess');
     });
 
+    testWidgets('the bills step offers only the six fixed bills, no Credit card or Electricity (D125)', (WidgetTester tester) async {
+      await pump(tester);
+      await tapKeys(tester, '45000');
+      await tester.tap(find.text('Next'));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('payday-date')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('day-4')));
+      await settle(tester);
+      expect(find.byKey(const ValueKey<String>('bill-subscriptions')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('bill-creditCard')), findsNothing);
+      expect(find.byKey(const ValueKey<String>('bill-electricity')), findsNothing);
+    });
+
     testWidgets('a bill amount has no privacy note', (WidgetTester tester) async {
       await pump(tester);
       await tapKeys(tester, '45000');

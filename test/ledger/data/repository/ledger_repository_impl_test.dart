@@ -39,6 +39,38 @@ void main() {
     addTearDown(repository.dispose);
   });
 
+  group('LedgerRepositoryImpl.addForRule (D123)', () {
+    Future<int> rule() => database.db.insert(Tables.recurring, <String, Object?>{
+          RecurringColumns.label: 'Electricity',
+          RecurringColumns.amountMinor: 120000,
+          RecurringColumns.currency: 'INR',
+          RecurringColumns.kind: 'out',
+          RecurringColumns.categoryId: 5,
+          RecurringColumns.frequency: 'monthly',
+          RecurringColumns.anchorDate: '2026-10-20',
+          RecurringColumns.lastDayOfMonth: 0,
+          RecurringColumns.nextDue: '2026-10-20',
+          RecurringColumns.active: 1,
+          RecurringColumns.isIncomeSource: 0,
+          RecurringColumns.amountMode: 'varies',
+        });
+
+    test('adds an entry linked to its rule and notifies', () async {
+      final int id = await rule();
+      final Entry entry = _right(await repository.addForRule(_draft(rupees: 1460, note: null), recurringId: id).run());
+      await Future<void>.delayed(Duration.zero);
+      expect(entry.recurringId, id);
+      expect(entry.amount, Money.fromMajor(1460));
+      expect(changes, hasLength(1));
+    });
+
+    test('a second entry for the same rule and date is DatabaseFailure', () async {
+      final int id = await rule();
+      _right(await repository.addForRule(_draft(note: null), recurringId: id).run());
+      expect((await repository.addForRule(_draft(note: null), recurringId: id).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
   group('LedgerRepositoryImpl.savedTotal (D120)', () {
     EntryDraft saved(int rupees, CalendarDate date) =>
         EntryDraft(amount: Money.fromMajor(rupees), kind: EntryKind.saved, categoryId: 11, date: date);

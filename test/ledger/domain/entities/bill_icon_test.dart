@@ -1,3 +1,5 @@
+import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
+import 'package:expense_tracker/ledger/domain/entities/category.dart';
 import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
 import 'package:expense_tracker/ledger/domain/entities/bill_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,9 +46,23 @@ void main() {
 
   group('BillKind.icon', () {
     test('gives each onboarding chip its icon', () {
-      expect(<BillIcon>[for (final BillKind kind in BillKind.values) kind.icon], <BillIcon>[
+      expect(<BillIcon>[for (final BillKind kind in BillKind.values.where((BillKind k) => k.amountMode == AmountMode.fixed)) kind.icon], <BillIcon>[
         BillIcon.home, BillIcon.loan, BillIcon.phone, BillIcon.internet, BillIcon.school, BillIcon.tv, //
       ]);
+    });
+
+    test('a credit card shows the card and electricity the power glyph (D123)', () {
+      expect(BillKind.creditCard.icon, BillIcon.card);
+      expect(BillKind.electricity.icon, BillIcon.power);
+    });
+
+    test('each kind says how its amount behaves and where its entries go (D123)', () {
+      expect(BillKind.creditCard.amountMode, AmountMode.card);
+      expect(BillKind.creditCard.categoryKey, CategoryKeys.cardPaid);
+      expect(BillKind.electricity.amountMode, AmountMode.varies);
+      expect(BillKind.electricity.categoryKey, CategoryKeys.bills);
+      expect(BillKind.rent.amountMode, AmountMode.fixed);
+      expect(BillKind.rent.categoryKey, CategoryKeys.home);
     });
   });
 }
