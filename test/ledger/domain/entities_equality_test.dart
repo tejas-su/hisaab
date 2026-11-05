@@ -2,7 +2,6 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/ledger/domain/entities/cycle_inputs.dart';
-import 'package:expense_tracker/ledger/domain/entities/occurrence.dart';
 import 'package:expense_tracker/ledger/domain/entities/recurring_posting.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';

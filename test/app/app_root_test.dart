@@ -6,7 +6,6 @@ import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
-import 'package:expense_tracker/ledger/domain/entities/occurrence.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/settings/settings.dart';
