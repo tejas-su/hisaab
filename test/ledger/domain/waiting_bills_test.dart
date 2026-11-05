@@ -65,6 +65,24 @@ void main() {
       expect(_of(<RecurringRule>[_bill()], entries: <Entry>[_entered(9, _oct20)]), hasLength(1));
     });
 
+    test('an entry moved to another day of the same month still answers it', () {
+      expect(_of(<RecurringRule>[_bill()], entries: <Entry>[_entered(8, const CalendarDate(2026, 10, 21))]), isEmpty);
+    });
+
+    test('a day moved later after the month was entered does not ask again', () {
+      final RecurringRule moved = _bill(day: 24, nextDue: const CalendarDate(2026, 10, 24));
+      expect(_of(<RecurringRule>[moved], entries: <Entry>[_entered(8, _oct20)]), isEmpty);
+    });
+
+    test('a skip earlier in the month answers a moved day too', () {
+      final RecurringRule moved = _bill(day: 24, nextDue: const CalendarDate(2026, 10, 24));
+      expect(_of(<RecurringRule>[moved], skips: const <BillSkip>[BillSkip(ruleId: 8, date: _oct20)]), isEmpty);
+    });
+
+    test('last month\'s entry does not answer this month', () {
+      expect(_of(<RecurringRule>[_bill(nextDue: const CalendarDate(2026, 9, 20))], entries: <Entry>[_entered(8, const CalendarDate(2026, 9, 20))]), hasLength(1));
+    });
+
     test('a skip answers it', () {
       expect(_of(<RecurringRule>[_bill()], skips: const <BillSkip>[BillSkip(ruleId: 8, date: _oct20)]), isEmpty);
     });

@@ -188,7 +188,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 - All inserts for one run happen in **one DB transaction**.
 - **Amount changes? (D123).** A bill is *Same every month* (fixed, posted as above), *Changes every month* or a *Credit card*. Savings and income are always fixed.
   - The engine **never posts** a changing or card bill and never moves its `next_due`, which stays the first date it may wait from (D33).
-  - An occurrence **waits** when it falls in this cycle on or before today, not before `next_due`, and has neither an entry nor a skip. Nothing else is stored: deleting an entered bill makes it wait again, and a bill left unanswered drops out when the cycle ends (it is never posted; it can still be added by hand, E6).
+  - An occurrence **waits** when it falls in this cycle on or before today, not before `next_due`, and its month has neither an entry nor a skip of that bill. A month is answered once, so moving the bill's day or an entry's date never asks (or reserves) the same month twice. Nothing else is stored: deleting an entered bill makes it wait again, and a bill left unanswered drops out when the cycle ends (it is never posted; it can still be added by hand, E6).
   - **Entering** an amount posts an entry dated on the occurrence, linked to the rule: *Spent* for a changing bill, a card bill paid (kind `card`, in a hidden category, named after the card) for a card. The amount becomes the estimate for next time. Undo deletes the entry and puts the old estimate back.
   - **Didn't go out this month** records a skip for that date; Undo removes it.
   - **Switching to *Same every month*** moves `next_due` up to the latest occurrence on or before today, when that is later, so at most that one is posted, at the estimate; one already entered or skipped is left out. Older unanswered months are never back-posted (D124, D34).
@@ -446,6 +446,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E23 | A changing bill on the 31st in a 30-day month | Waits on the 30th, as BR-1 clamps (D123) |
 | E24 | A changing bill never entered by the cycle's end | Drops out of `B` and stops waiting; never posted; can be added by hand (E6) |
 | E25 | Entering a bill twice for the same date | Not offered (it no longer waits); the unique `(recurring_id, date)` index refuses a second entry |
+| E29 | A changing bill's day moved, or its entry's date edited, after the month was entered | The month stays answered: nothing more is reserved or asked for (D123) |
 | E26 | Undo after entering | The entry goes and the bill waits again, with its old estimate |
 | E27 | A long-ignored changing bill switched to *Same every month* | Only the latest occurrence on or before today is posted, at the estimate; older months never (D124) |
 | E28 | A card bill with income that changes | No difference: a card bill never touches the pool |

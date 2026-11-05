@@ -67,8 +67,8 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
       endsAtMonthEnd: _periods.endsAtMonthEnd(rule: payRule, monthStart: settings.monthStart),
     );
     return _ledger.firstLoggedOn().flatMap(
-          (Option<CalendarDate> firstLogged) => _ledger.entriesBetween(cycle.start, cycle.end).flatMap(
-                (List<Entry> entries) => _recurring.skipsBetween(cycle.start, today).map(
+          (Option<CalendarDate> firstLogged) => _ledger.entriesBetween(WaitingBills.answersFrom(cycle), cycle.end).flatMap(
+                (List<Entry> entries) => _recurring.skipsBetween(WaitingBills.answersFrom(cycle), cycle.end).map(
                       (List<BillSkip> skips) => _compute(
                         context,
                         (rules: rules, entries: entries, skips: skips),
@@ -82,30 +82,33 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
   static CycleSummary _compute(_Cycle context, _Data data, Option<CalendarDate> firstLogged) {
     final CalendarDate today = context.today;
     final PayCycle cycle = context.day.cycle;
-    final List<Occurrence> waiting =
-        WaitingBills.of(data.rules, entries: data.entries, skips: data.skips, today: today, cycle: cycle);
-    final _Ledger ledger = (entries: data.entries, due: _due(data.rules, waiting, today, cycle));
+    final List<Occurrence> unanswered =
+        WaitingBills.unanswered(data.rules, entries: data.entries, skips: data.skips, through: cycle.end, cycle: cycle);
+    // why: entries are read from the start of the month for the answers; the sums use the cycle's own.
+    final List<Entry> entries = data.entries.where((Entry e) => cycle.contains(e.date)).toList();
+    final _Ledger ledger = (entries: entries, due: _due(data.rules, unanswered, today, cycle));
     return SafeToSpend.compute(
-      context.day.inputs(today, data.entries, ledger.due),
+      context.day.inputs(today, entries, ledger.due),
       earliestEntryDate: context.previousStart,
-      spentThisWeek: _spentThisWeek(data.entries, today),
+      spentThisWeek: _spentThisWeek(entries, today),
       yesterday: _trackedYesterday(firstLogged, today).flatMap((CalendarDate _) => _yesterday(context.day, today, ledger)),
       week: _week(context.day, today, ledger),
       endsAtMonthEnd: context.endsAtMonthEnd,
-      waitingBills: waiting,
+      waitingBills: unanswered.where((Occurrence o) => !o.date.isAfter(today)).toList(),
     );
   }
 
-  // why: a changing bill is reserved at its estimate while it waits and on its later dates; a
-  // card bill is never reserved, because its card buys were counted when made (D123).
-  static _Due _due(List<RecurringRule> rules, List<Occurrence> waiting, CalendarDate today, PayCycle cycle) {
-    final Iterable<RecurringRule> bills =
-        rules.where((RecurringRule r) => r.kind == EntryKind.spent && r.amountMode != AmountMode.card);
-    final Money waitingVaries = _sum(
-      waiting.where((Occurrence o) => o.rule.amountMode == AmountMode.varies).map((Occurrence o) => o.rule.amount),
+  // why: a changing bill is reserved at its estimate on every date of the cycle still unanswered,
+  // waiting or to come; a card bill is never reserved, because its card buys were counted when
+  // made (D123).
+  static _Due _due(List<RecurringRule> rules, List<Occurrence> unanswered, CalendarDate today, PayCycle cycle) {
+    final Iterable<RecurringRule> fixedBills =
+        rules.where((RecurringRule r) => r.kind == EntryKind.spent && r.amountMode == AmountMode.fixed);
+    final Money changing = _sum(
+      unanswered.where((Occurrence o) => o.rule.amountMode == AmountMode.varies).map((Occurrence o) => o.rule.amount),
     );
     return (
-      bills: DueAmounts.after(bills, today: today, cycle: cycle) + waitingVaries,
+      bills: DueAmounts.after(fixedBills, today: today, cycle: cycle) + changing,
       savings: DueAmounts.after(rules.where((RecurringRule r) => r.kind == EntryKind.saved), today: today, cycle: cycle),
     );
   }

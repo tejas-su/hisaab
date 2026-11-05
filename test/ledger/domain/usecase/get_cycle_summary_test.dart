@@ -281,6 +281,26 @@ void main() {
       expect(result.waitingBills, isEmpty);
     });
 
+    test('a day moved later after this month was entered reserves nothing more', () async {
+      useRules(bill(AmountMode.varies, due: const CalendarDate(2026, 10, 30)));
+      addEntry(1460, const CalendarDate(2026, 10, 20), recurringId: 3);
+      final CycleSummary result = await summary();
+      expect(result.pool, Money.fromMajor(17850 - 1460));
+      expect(result.waitingBills, isEmpty);
+    });
+
+    test('an entry from earlier in the month, in the last cycle, still answers a moved day', () async {
+      useRules(bill(AmountMode.varies, due: oct26).copyWith(
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 11, 5)),
+        nextDue: const CalendarDate(2026, 11, 5),
+      ));
+      setToday(const CalendarDate(2026, 11, 5));
+      addEntry(45000, const CalendarDate(2026, 11, 4), kind: EntryKind.got);
+      addEntry(1460, const CalendarDate(2026, 11, 1), recurringId: 3);
+      final CycleSummary result = await summary();
+      expect(result.waitingBills, isEmpty);
+    });
+
     test('returns DatabaseFailure when reading skips fails', () async {
       useRules(bill(AmountMode.varies));
       recurring.skipsFailure = DatabaseFailure('skips');
