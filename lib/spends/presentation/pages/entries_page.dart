@@ -12,6 +12,7 @@ import '../../../core/widgets/hisaab_snackbar.dart';
 import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
+import '../../../ledger/presentation/rule_words.dart';
 import '../bloc/entries_bloc.dart';
 import '../bloc/entries_event.dart';
 import '../bloc/entries_state.dart';
@@ -167,8 +168,8 @@ class EntriesPage extends StatelessWidget {
     final EntriesBloc bloc = context.read<EntriesBloc>();
     HisaabSnackbarHost.of(context).show(
       HisaabSnackbar(
-        message: strings.entryDeleted(context.money.format(deleted.amount)),
-        semanticsLabel: strings.entryDeleted(strings.spokenAmount(context.money.digits(deleted.amount))),
+        message: strings.entryRemoved(deleted, context.money.format(deleted.amount)),
+        semanticsLabel: strings.entryRemoved(deleted, strings.spokenAmount(context.money.digits(deleted.amount))),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(EntriesUndoRequested(deleted))),
       ),
     );

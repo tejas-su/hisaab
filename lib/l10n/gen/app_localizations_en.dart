@@ -712,6 +712,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteSaving => 'Delete saving';
 
   @override
+  String get savingSkipped => 'Skipped this month';
+
+  @override
   String savingDeleted(String saving) {
     return 'Deleted $saving';
   }

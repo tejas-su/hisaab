@@ -39,7 +39,7 @@ class PutInSheet extends StatelessWidget {
         listener: (BuildContext context, PutInExtraState _) => Navigator.of(context).pop(),
         buildWhen: (PutInExtraState _, PutInExtraState current) => current is! PutInExtraDone,
         builder: (BuildContext context, PutInExtraState state) => SingleChildScrollView(
-          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.l, 0, HisaabSpacing.l, HisaabSpacing.gutter),
+          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, 0, HisaabSpacing.gutter, HisaabSpacing.gutter),
           child: switch (state) {
             PutInExtraReady() => _keypad(context, state),
             PutInExtraFailed() => Text(AppLocalizations.of(context).loadFailed, style: Theme.of(context).textTheme.bodyLarge),

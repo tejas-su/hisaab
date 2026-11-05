@@ -310,6 +310,22 @@ void main() {
       expect(tester.getTopLeft(line).dy, lessThan(tester.getTopLeft(find.text('Where it went')).dy));
     });
 
+    testWidgets('the Spent · Saved line starts on the cards\' outer edge', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      services.ledger.entries.add(Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: const CalendarDate(2026, 10, 10),
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+          note: 'RD',
+        ));
+      await pump(tester);
+      expect(tester.getTopLeft(find.text('Spent ₹27,570 · Saved ₹5,000')).dx, tester.getTopLeft(find.byType(WhereItWentCard)).dx);
+    });
+
     testWidgets('no saves: no line', (WidgetTester tester) async {
       await pump(tester);
       expect(find.textContaining('Saved'), findsNothing);

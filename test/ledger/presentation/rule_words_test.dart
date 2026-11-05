@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/design/app_icons.dart';
+import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/l10n/gen/app_localizations.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/ledger/presentation/rule_glyph.dart';
@@ -19,6 +20,30 @@ void main() {
       expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Rent'), 'How much is Rent?');
       expect(_strings.ruleDeleted(WorkedExample.rd), 'Deleted RD');
       expect(_strings.ruleDeleted(WorkedExample.rent), 'Deleted Rent');
+    });
+
+    group('entryRemoved', () {
+      Entry entry({required EntryKind kind, int? recurringId}) => Entry(
+            id: 50,
+            amount: Money.fromMajor(500),
+            kind: kind,
+            categoryId: 1,
+            date: WorkedExample.today,
+            createdAt: WorkedExample.now,
+            recurringId: recurringId,
+          );
+
+      test('a saving its rule put in reads as a skipped month (case study 17)', () {
+        expect(_strings.entryRemoved(entry(kind: EntryKind.saved, recurringId: 4), '₹500'), 'Skipped this month');
+      });
+
+      test('an extra put in by hand is deleted like any entry', () {
+        expect(_strings.entryRemoved(entry(kind: EntryKind.saved), '₹500'), 'Deleted ₹500');
+      });
+
+      test('a bill a rule posted is deleted like any entry', () {
+        expect(_strings.entryRemoved(entry(kind: EntryKind.spent, recurringId: 1), '₹500'), 'Deleted ₹500');
+      });
     });
 
     test('every list and sheet word has a saving form', () {

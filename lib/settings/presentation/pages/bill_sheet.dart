@@ -115,9 +115,9 @@ class _BillSheetState extends State<BillSheet> {
             },
             child: SingleChildScrollView(
               padding: EdgeInsetsDirectional.fromSTEB(
-                HisaabSpacing.l,
+                HisaabSpacing.gutter,
                 0,
-                HisaabSpacing.l,
+                HisaabSpacing.gutter,
                 HisaabSpacing.gutter + MediaQuery.viewInsetsOf(context).bottom,
               ),
               child: AnimatedSwitcher(

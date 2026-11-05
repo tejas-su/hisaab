@@ -172,8 +172,8 @@ class HomePage extends StatelessWidget {
     final HomeBloc bloc = context.read<HomeBloc>();
     HisaabSnackbarHost.of(context).show(
       HisaabSnackbar(
-        message: strings.entryDeleted(context.money.format(deleted.amount)),
-        semanticsLabel: strings.entryDeleted(strings.spokenAmount(context.money.digits(deleted.amount))),
+        message: strings.entryRemoved(deleted, context.money.format(deleted.amount)),
+        semanticsLabel: strings.entryRemoved(deleted, strings.spokenAmount(context.money.digits(deleted.amount))),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeUndoRequested(deleted))),
       ),
     );

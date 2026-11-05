@@ -787,6 +787,10 @@
   "@deleteSaving": {
     "description": "Delete key on a saving's sheet"
   },
+  "savingSkipped": "Skipped this month",
+  "@savingSkipped": {
+    "description": "Snackbar after swiping away a saving its rule put in. Deleting it skips this month, never 'missed' (case study 17)."
+  },
   "savingDeleted": "Deleted {saving}",
   "@savingDeleted": {
     "description": "Snackbar after deleting a saving",

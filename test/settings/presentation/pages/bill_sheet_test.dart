@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'dart:ui';
@@ -72,6 +73,12 @@ void main() {
       expect(find.bySemanticsLabel('Change Icon, Power'), findsOneWidget);
       expect(find.text('Next goes out on 29 Oct'), findsOneWidget);
       handle.dispose();
+    });
+
+    testWidgets('the content starts on the page gutter, like the Add tray', (WidgetTester tester) async {
+      await open(tester);
+      final double sheet = tester.getTopLeft(find.byType(BillSheet)).dx;
+      expect(tester.getTopLeft(find.byKey(const ValueKey<String>('bill-slip'))).dx - sheet, HisaabSpacing.gutter);
     });
 
     testWidgets('the slip reads as one sentence', (WidgetTester tester) async {

@@ -1,4 +1,5 @@
 import '../../l10n/gen/app_localizations.dart';
+import '../domain/entities/entry.dart';
 import '../domain/entities/entry_kind.dart';
 import '../domain/entities/recurring_rule.dart';
 
@@ -51,6 +52,11 @@ extension RuleWords on AppLocalizations {
 
   /// The snackbar after [rule] is deleted.
   String ruleDeleted(RecurringRule rule) => _isSaving(rule.kind) ? savingDeleted(rule.label) : billDeleted(rule.label);
+
+  /// The snackbar after [entry], of [amount], is deleted: a saving its rule put in reads as a
+  /// skipped month, never a loss (case study 17); anything else says what was deleted.
+  String entryRemoved(Entry entry, String amount) =>
+      _isSaving(entry.kind) && entry.recurringId != null ? savingSkipped : entryDeleted(amount);
 
   /// Home's nudge for [rule], [days] away; a saving names the [weekday] (D120).
   String ruleGoesOut(RecurringRule rule, String amount, int days, String weekday) =>

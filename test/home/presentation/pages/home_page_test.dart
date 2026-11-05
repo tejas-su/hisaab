@@ -22,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fake_services.dart';
+import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
@@ -248,6 +249,25 @@ void main() {
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       await tester.pumpAndSettle();
       expect(find.text('Chai & samosa'), findsOneWidget);
+    });
+
+    testWidgets('swiping away a saving its rule put in says the month is skipped (case study 17)', (WidgetTester tester) async {
+      services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
+      services.ledger.entries.add(Entry(
+          id: 50,
+          amount: Money.fromMajor(5000),
+          kind: EntryKind.saved,
+          categoryId: SeedCategoryIds.saved,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          recurringId: 4,
+          note: 'RD',
+        ));
+      await pump(tester);
+      await tester.drag(find.text('RD'), const Offset(-500, 0));
+      await tester.settle();
+      expect(find.text('Skipped this month'), findsOneWidget);
+      expect(find.text('Deleted ₹5,000'), findsNothing);
     });
 
     testWidgets('TalkBack users can delete a row without swiping', (WidgetTester tester) async {

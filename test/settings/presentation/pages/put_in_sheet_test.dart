@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
@@ -82,6 +83,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(PutInSheet), findsNothing);
       expect(ledger.entries.last.amount, Money.fromMajor(500));
+    });
+
+    testWidgets('the content starts on the page gutter, like the Add tray', (WidgetTester tester) async {
+      await open(tester);
+      final double sheet = tester.getTopLeft(find.byType(PutInSheet)).dx;
+      expect(tester.getTopLeft(find.text('How much extra are you putting in?')).dx - sheet, HisaabSpacing.gutter);
     });
 
     testWidgets('month-end wording', (WidgetTester tester) async {

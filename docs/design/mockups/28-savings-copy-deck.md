@@ -32,6 +32,7 @@ Status: **final copy for Phase 1 Savings** (plan `docs/superpowers/plans/2026-11
 | `savingSheetEyebrow` | Saving | no | Mirrors `billSheetEyebrow`. |
 | `deleteSaving` | Delete saving | no | Mirrors `deleteBill`. Past *Saved* entries stay (BR-9), as for bills. |
 | `savingDeleted` | Deleted {saving} | no | Mirrors `billDeleted`. Shown with Undo. |
+| `savingSkipped` | Skipped this month | no | Snackbar after swiping away a saving its rule put in (Home, Entries). Never "missed"; no count (case study 17). An extra put in by hand still says "Deleted ₹500". |
 | `savingStampDue` | `{days, plural, =1{Goes in tomorrow} other{Goes in {days} days from now}}` | **yes** | The default's other form, "In 3 days", has no verb, so on its own (and to TalkBack) it doesn't say what happens. It also doesn't match its own `=1` form or the bill stamp ("Due in 3 days"). "Goes in in 3 days" would say "in" twice, which trips up slow readers, so it says "from now" instead. The `=1` form is unchanged. At up to 26 characters it is the longest stamp, so check it fits on the `smallPhone` sheet head. |
 | `savingStampCounted` | Put in {date} | no | Mirrors `billStampCounted` ("Counted 5 Oct"). It says the act, with no "saved" ambiguity. `bill_sheet_test` asserts "Put in 10 Oct". |
 | `savingStampCountedToday` | Put in today | no | Mirrors `billStampCountedToday`. |

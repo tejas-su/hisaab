@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/money/money.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -15,11 +14,8 @@ class SpentSavedLine extends StatelessWidget {
   final Money saved;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs),
-        child: Text(
-          AppLocalizations.of(context).spentAndSaved(context.money.format(spent), context.money.format(saved)),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
-        ),
+  Widget build(BuildContext context) => Text(
+        AppLocalizations.of(context).spentAndSaved(context.money.format(spent), context.money.format(saved)),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
       );
 }

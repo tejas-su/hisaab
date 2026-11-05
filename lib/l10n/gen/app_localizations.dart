@@ -1069,6 +1069,12 @@ abstract class AppLocalizations {
   /// **'Delete saving'**
   String get deleteSaving;
 
+  /// Snackbar after swiping away a saving its rule put in. Deleting it skips this month, never 'missed' (case study 17).
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped this month'**
+  String get savingSkipped;
+
   /// Snackbar after deleting a saving
   ///
   /// In en, this message translates to:
