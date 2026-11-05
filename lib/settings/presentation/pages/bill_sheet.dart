@@ -16,6 +16,7 @@ import '../bloc/bill_sheet_state.dart';
 import '../widgets/bill_sheet/bill_amount_question.dart';
 import '../widgets/bill_sheet/bill_day_question.dart';
 import '../widgets/bill_sheet/bill_icon_question.dart';
+import '../widgets/bill_sheet/bill_mode_question.dart';
 import '../widgets/bill_sheet/bill_name_question.dart';
 import '../widgets/bill_sheet/bill_summary.dart';
 
@@ -135,5 +136,6 @@ class _BillSheetState extends State<BillSheet> {
         BillAnswer.day => BillDayQuestion(state: state),
         BillAnswer.name => BillNameQuestion(state: state),
         BillAnswer.icon => BillIconQuestion(state: state),
+        BillAnswer.mode => BillModeQuestion(state: state),
       };
 }

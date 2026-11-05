@@ -22,7 +22,7 @@ import 'bill_slip.dart';
 import 'bill_stamp_badge.dart';
 import 'bill_wide_key.dart';
 
-/// The whole bill on its slip: head, amount and stamp, the four answer rows, the next date,
+/// The whole bill on its slip: head, amount and stamp, the answer rows (with *Amount changes?*, D123), the next date,
 /// then *Delete bill* (SPEC FR-SE-1 AC-2, AC-6). A saving has no Icon row and says "goes in"
 /// and "put in" (D120).
 class BillSummary extends StatelessWidget {
@@ -105,6 +105,8 @@ class BillSummary extends StatelessWidget {
     final String icon = context.iconName(rule.shownIcon);
     return <Widget>[
       _row(context, BillAnswer.amount, strings.billAnswerAmount, amount, spoken: context.spokenMoney(rule)),
+      // why: a saving always goes in by itself, so only a bill asks whether its amount changes (D123).
+      if (!_isSaving) _row(context, BillAnswer.mode, strings.billModeRow, strings.amountModeName(rule.amountMode)),
       _row(context, BillAnswer.day, strings.billAnswerDay, '${_day(rule)}'),
       _row(context, BillAnswer.name, strings.billAnswerName, rule.label),
       // why: a saving always shows the piggy bank, so it has no icon to change (D120).

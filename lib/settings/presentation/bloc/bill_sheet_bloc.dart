@@ -42,6 +42,7 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     // why: a second tap while a save is in flight must not save twice.
     on<BillSheetAmountSaved>(_onAmountSaved, transformer: droppable());
     on<BillSheetDayChosen>(_onDayChosen, transformer: droppable());
+    on<BillSheetModeChosen>(_onModeChosen, transformer: droppable());
     on<BillSheetNameChanged>(_onNameChanged);
     on<BillSheetNameSaved>(_onNameSaved, transformer: droppable());
     on<BillSheetIconChosen>(_onIconChosen, transformer: droppable());
@@ -105,6 +106,15 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
           emit,
           form,
           event.day == form.rule.schedule.anchor.day ? none() : Option<BillInput>.of(_inputOf(form.rule, dueDay: event.day)),
+        ),
+      );
+
+  Future<void> _onModeChosen(BillSheetModeChosen event, Emitter<BillSheetState> emit) => _whenAt(
+        BillAnswer.mode,
+        (BillSheetReady form) => _save(
+          emit,
+          form,
+          event.mode == form.rule.amountMode ? none() : Option<BillInput>.of(_inputOf(form.rule, amountMode: event.mode)),
         ),
       );
 
@@ -209,10 +219,21 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     }
   }
 
-  static BillInput _inputOf(RecurringRule rule, {String? label, Money? amount, int? dueDay, Option<BillIcon>? icon}) => BillInput(
+  // why: every answer saves the whole input, so each one carries the rule's mode; a default
+  // here would quietly turn a changing bill back into a fixed one (D123).
+  static BillInput _inputOf(
+    RecurringRule rule, {
+    String? label,
+    Money? amount,
+    int? dueDay,
+    Option<BillIcon>? icon,
+    AmountMode? amountMode,
+  }) =>
+      BillInput(
         label: label ?? rule.label,
         amount: amount ?? rule.amount,
         dueDay: dueDay ?? rule.schedule.anchor.day,
         icon: icon ?? rule.icon,
+        amountMode: amountMode ?? rule.amountMode,
       );
 }

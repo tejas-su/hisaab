@@ -78,7 +78,9 @@ class BillAnswerRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     if (glyph != null) ...<Widget>[AppIcon(glyph, size: 18), const SizedBox(width: 6)],
-                    Flexible(child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.titleMedium)),
+                    // why: "Changes every month" is wider than the value column on a phone, so it may take a
+                    // second line rather than be cut (D123).
+                    Flexible(child: Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: text.titleMedium)),
                   ],
                 ),
               ),

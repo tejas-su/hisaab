@@ -11,6 +11,7 @@ import '../../../core/widgets/amount_display.dart';
 import '../../../core/widgets/keypad.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../ledger/ledger.dart';
 import '../../../ledger/presentation/rule_words.dart';
 import '../bloc/bill_editor_bloc.dart';
 import '../bloc/bill_editor_event.dart';
@@ -28,10 +29,16 @@ class BillAmountStep extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final BillEditorBloc bloc = context.read<BillEditorBloc>();
     final bool short = context.layout.heightClass == HeightClass.compact;
+    final AmountMode mode = form.kind.match(() => AmountMode.fixed, (BillKind kind) => kind.amountMode);
     return AdaptiveSplit(
       header: BillQuestion(
-        question: strings.ruleAmountQuestion(context.read<BillEditorBloc>().kind, form.label),
+        question: strings.ruleAmountQuestion(bloc.kind, form.label, mode),
         children: <Widget>[
+          // why: a card bill must say why it isn't counted, or the user adds it twice (D123).
+          if (mode == AmountMode.card) ...<Widget>[
+            const SizedBox(height: HisaabSpacing.s),
+            Text(strings.billCardHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2)),
+          ],
           const SizedBox(height: 22),
           AmountDisplay(amount: Money.fromMajor(form.rupees), rejections: form.rejections),
         ],

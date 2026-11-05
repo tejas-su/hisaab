@@ -31,7 +31,7 @@ class BillAmountQuestion extends StatelessWidget {
     final Money typed = Money.fromMajor(state.rupees);
     final bool changed = typed != state.rule.amount;
     return BillQuestionFrame(
-      question: strings.ruleAmountQuestion(state.rule.kind, state.rule.label),
+      question: strings.ruleAmountQuestion(state.rule.kind, state.rule.label, state.rule.amountMode),
       name: state.rule.label,
       glyph: state.rule.glyph,
       figure: AmountDisplay(amount: typed, rejections: state.rejections),

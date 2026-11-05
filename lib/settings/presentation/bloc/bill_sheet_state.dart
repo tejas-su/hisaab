@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../ledger/ledger.dart';
 
 /// The bill's answers, each a row on the bill sheet, in row order.
-enum BillAnswer { amount, day, name, icon }
+enum BillAnswer { amount, mode, day, name, icon }
 
 /// What the bill sheet did, for the screen that opened it to act on (D118).
 sealed class BillSheetOutcome extends Equatable {

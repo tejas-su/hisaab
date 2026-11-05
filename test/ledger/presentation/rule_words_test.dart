@@ -16,8 +16,8 @@ void main() {
     test('bill and saving words differ only where they should', () {
       expect(_strings.ruleDayQuestion(EntryKind.spent, 'Rent'), 'Which day does Rent go out?');
       expect(_strings.ruleDayQuestion(EntryKind.saved, 'RD'), 'Which day does RD go in?');
-      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD'), 'How much goes into RD?');
-      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Rent'), 'How much is Rent?');
+      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD', AmountMode.fixed), 'How much goes into RD?');
+      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Rent', AmountMode.fixed), 'How much is Rent?');
       expect(_strings.ruleDeleted(WorkedExample.rd), 'Deleted RD');
       expect(_strings.ruleDeleted(WorkedExample.rent), 'Deleted Rent');
     });
@@ -44,6 +44,16 @@ void main() {
       test('a bill a rule posted is deleted like any entry', () {
         expect(_strings.entryRemoved(entry(kind: EntryKind.spent, recurringId: 1), '₹500'), 'Deleted ₹500');
       });
+    });
+
+    test('a changing or card bill asks about how much (D123)', () {
+      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'Electricity', AmountMode.varies), 'About how much is Electricity?');
+      expect(_strings.ruleAmountQuestion(EntryKind.spent, 'HDFC card', AmountMode.card), 'About how much is the HDFC card bill?');
+      expect(_strings.ruleAmountQuestion(EntryKind.saved, 'RD', AmountMode.fixed), 'How much goes into RD?');
+    });
+
+    test('the mode words (D123)', () {
+      expect(AmountMode.values.map(_strings.amountModeName), <String>['Same every month', 'Changes every month', 'Credit card']);
     });
 
     test('every list and sheet word has a saving form', () {

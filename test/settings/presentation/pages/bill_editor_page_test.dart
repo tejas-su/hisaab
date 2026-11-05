@@ -227,6 +227,32 @@ void main() {
       expect(tester.getSemantics(find.byKey(const ValueKey<String>('bill-rent'))).flagsCollection.isSelected, Tristate.isTrue);
     });
 
+    testWidgets('end with Credit card and Electricity (D123)', (WidgetTester tester) async {
+      await open(tester);
+      final Rect subscriptions = tester.getRect(find.byKey(const ValueKey<String>('bill-subscriptions')));
+      final Rect card = tester.getRect(find.byKey(const ValueKey<String>('bill-creditCard')));
+      final Rect electricity = tester.getRect(find.byKey(const ValueKey<String>('bill-electricity')));
+      expect(card.top, greaterThan(subscriptions.top));
+      expect(electricity.top, card.top);
+    });
+
+    testWidgets('Electricity asks about how much, since it changes (D123)', (WidgetTester tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-electricity')));
+      await tester.settle();
+      await next(tester);
+      expect(find.text('About how much is Electricity?'), findsOneWidget);
+    });
+
+    testWidgets('Credit card asks about the card bill and says why it isn\'t counted (D123)', (WidgetTester tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-creditCard')));
+      await tester.settle();
+      await next(tester);
+      expect(find.text('About how much is the Credit card bill?'), findsOneWidget);
+      expect(find.textContaining("It isn't counted again."), findsOneWidget);
+    });
+
     testWidgets('sit right under the field, not down by Next (D85)', (WidgetTester tester) async {
       await open(tester);
       final Rect field = tester.getRect(find.byKey(const ValueKey<String>('bill-name')));

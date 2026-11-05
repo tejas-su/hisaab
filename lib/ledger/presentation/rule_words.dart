@@ -1,4 +1,5 @@
 import '../../l10n/gen/app_localizations.dart';
+import '../domain/entities/amount_mode.dart';
 import '../domain/entities/entry.dart';
 import '../domain/entities/entry_kind.dart';
 import '../domain/entities/recurring_rule.dart';
@@ -25,9 +26,25 @@ extension RuleWords on AppLocalizations {
   /// The name field's hint.
   String ruleNameHint(EntryKind kind) => _isSaving(kind) ? savingNameHint : billNameHint;
 
-  /// "How much is {label}?" or "How much goes into {label}?".
-  String ruleAmountQuestion(EntryKind kind, String label) =>
-      _isSaving(kind) ? savingAmountQuestion(label) : billAmountQuestion(label);
+  /// "How much is {label}?", "How much goes into {label}?", or "About how much…" for a bill
+  /// whose amount changes or a card bill (D123).
+  String ruleAmountQuestion(EntryKind kind, String label, AmountMode mode) {
+    if (_isSaving(kind)) {
+      return savingAmountQuestion(label);
+    }
+    return switch (mode) {
+      AmountMode.fixed => billAmountQuestion(label),
+      AmountMode.varies => billAmountQuestionVaries(label),
+      AmountMode.card => billAmountQuestionCard(label),
+    };
+  }
+
+  /// The *Amount changes?* answer for [mode] (D123).
+  String amountModeName(AmountMode mode) => switch (mode) {
+        AmountMode.fixed => billModeFixed,
+        AmountMode.varies => billModeVaries,
+        AmountMode.card => billModeCard,
+      };
 
   /// "Which day does {label} go out?" or "… go in?".
   String ruleDayQuestion(EntryKind kind, String label) => _isSaving(kind) ? savingDayQuestion(label) : billDayQuestion(label);

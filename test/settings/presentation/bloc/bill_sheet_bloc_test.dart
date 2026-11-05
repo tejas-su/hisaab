@@ -196,6 +196,38 @@ void main() {
     });
   });
 
+  group('BillSheetBloc: Amount changes? (D123)', () {
+    test('choosing Changes every month saves the mode alone and returns to the bill', () async {
+      await bloc.dispatch(const BillSheetAnswerOpened(BillAnswer.mode));
+      await bloc.dispatch(const BillSheetModeChosen(AmountMode.varies));
+      final RecurringRule saved = recurring.updates.single;
+      expect(saved.amountMode, AmountMode.varies);
+      expect((saved.amount, saved.nextDue, saved.label), (WorkedExample.electricity.amount, WorkedExample.electricity.nextDue, 'Electricity'));
+      expect(ready().justSaved, const Option<BillAnswer>.of(BillAnswer.mode));
+      expect(ready().rule.amountMode, AmountMode.varies);
+    });
+
+    test('the same mode writes nothing', () async {
+      await bloc.dispatch(const BillSheetAnswerOpened(BillAnswer.mode));
+      await bloc.dispatch(const BillSheetModeChosen(AmountMode.fixed));
+      expect(recurring.updates, isEmpty);
+      expect(ready().open, const Option<BillAnswer>.none());
+    });
+
+    test('a mode tap off the question is ignored', () async {
+      await bloc.dispatch(const BillSheetModeChosen(AmountMode.card));
+      expect(recurring.updates, isEmpty);
+    });
+
+    test('changing the amount of a changing bill keeps it changing', () async {
+      await rebuild(WorkedExample.electricity.copyWith(amountMode: AmountMode.varies));
+      await bloc.dispatch(const BillSheetAnswerOpened(BillAnswer.amount));
+      await type('1500');
+      await bloc.dispatch(const BillSheetAmountSaved());
+      expect(recurring.updates.single.amountMode, AmountMode.varies);
+    });
+  });
+
   group('BillSheetBloc: name (AC-4)', () {
     test('opening Name starts the draft from the current name', () async {
       await bloc.dispatch(const BillSheetAnswerOpened(BillAnswer.name));

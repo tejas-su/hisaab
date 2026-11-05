@@ -82,6 +82,40 @@ void main() {
       expect(tester.getTopLeft(find.byKey(const ValueKey<String>('bill-slip'))).dx - sheet, HisaabSpacing.gutter);
     });
 
+    testWidgets('a bill shows Amount changes? with its answer (D123)', (WidgetTester tester) async {
+      await open(tester);
+      expect(find.text('Amount changes?'), findsOneWidget);
+      expect(find.text('Same every month'), findsOneWidget);
+    });
+
+    testWidgets('a saving has no Amount changes? row', (WidgetTester tester) async {
+      await open(tester, rule: WorkedExample.rd);
+      expect(find.text('Amount changes?'), findsNothing);
+    });
+
+    testWidgets('Amount changes? offers three answers; one tap saves it (D123)', (WidgetTester tester) async {
+      await open(tester);
+      await tapRow(tester, 'mode');
+      for (final String answer in <String>['fixed', 'varies', 'card']) {
+        expect(find.byKey(ValueKey<String>('bill-mode-$answer')), findsOneWidget);
+      }
+      final double sheet = tester.getTopLeft(find.byType(BillSheet)).dx;
+      expect(tester.getTopLeft(find.byKey(const ValueKey<String>('bill-mode-fixed'))).dx - sheet, HisaabSpacing.gutter);
+      await tester.tap(find.byKey(const ValueKey<String>('bill-mode-varies')));
+      await tester.settle();
+      expect(recurring.updates.single.amountMode, AmountMode.varies);
+      expect(find.text('Changes every month'), findsOneWidget);
+      expect(find.text('Saved.'), findsOneWidget);
+    });
+
+    testWidgets('a changing bill\'s amount question asks about how much', (WidgetTester tester) async {
+      final RecurringRule varies = WorkedExample.electricity.copyWith(amountMode: AmountMode.varies);
+      recurring.rules = <RecurringRule>[varies];
+      await open(tester, rule: varies);
+      await tapRow(tester, 'amount');
+      expect(find.text('About how much is Electricity?'), findsOneWidget);
+    });
+
     testWidgets('the slip reads as one sentence', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await open(tester);
@@ -251,7 +285,7 @@ void main() {
       TestWindows.tablet,
     ];
     for (final Size size in sizes) {
-      for (final String answer in <String>['bill', 'amount', 'day', 'name', 'icon']) {
+      for (final String answer in <String>['bill', 'amount', 'mode', 'day', 'name', 'icon']) {
         testWidgets('$answer fits at $size', (WidgetTester tester) async {
           await open(tester, size: size);
           if (answer != 'bill') {
