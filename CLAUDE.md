@@ -45,6 +45,7 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
   | `intl` + `flutter_localizations` | Formatting and l10n, via gen-l10n |
   | `hugeicons` | Icons |
   | `fpdart` | `Either` / `TaskEither` errors |
+  | `file_picker` | The system *Save to* and open screens for backup and restore, used only in `lib/backup/data/platform/` (D139) |
   | Bundled fonts | Anek Latin and Mukta in `assets/fonts/`, with OFL licences |
 
 - `path` is also installed. Planned later: `animations`, `fl_chart`, `share_plus`, `url_launcher`. **Ask before adding any dependency not listed in PLAN §11.**

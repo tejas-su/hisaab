@@ -17,3 +17,9 @@ final class LaunchStarted extends LaunchEvent {
 final class LaunchOnboardingFinished extends LaunchEvent {
   const LaunchOnboardingFinished();
 }
+
+/// A restore, an undo or *Delete everything* replaced the data under the app (D139); read
+/// onboarding again and rebuild the root screen from scratch.
+final class LaunchDataReplaced extends LaunchEvent {
+  const LaunchDataReplaced();
+}

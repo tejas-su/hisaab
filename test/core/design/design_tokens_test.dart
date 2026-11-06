@@ -7,6 +7,7 @@ import 'package:expense_tracker/core/design/hisaab_glyphs.dart';
 import 'package:expense_tracker/core/design/hisaab_motion.dart';
 import 'package:expense_tracker/core/design/hisaab_theme.dart';
 import 'package:expense_tracker/core/design/hisaab_type.dart';
+import 'package:expense_tracker/ledger/domain/category_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -133,6 +134,17 @@ void main() {
       ]) {
         expect(AppIcons.byKey.containsKey(key), isTrue, reason: key);
       }
+    });
+
+    test('every curated icon key a category can carry has a glyph (D138)', () {
+      expect(CategoryIcon.keys.where((String key) => !AppIcons.byKey.containsKey(key)), isEmpty);
+    });
+
+    test('the drawn glyphs back the keys the free set lacks (D138)', () {
+      expect(AppIcons.forKey('chai'), same(HisaabGlyphs.cuttingChai));
+      expect(AppIcons.forKey('auto'), same(HisaabGlyphs.autoRickshaw));
+      expect(AppIcons.forKey('hookah'), same(HisaabGlyphs.hookah));
+      expect(AppIcons.forKey('paan'), same(HisaabGlyphs.paan));
     });
 
     test('unknown keys fall back to "other"', () {

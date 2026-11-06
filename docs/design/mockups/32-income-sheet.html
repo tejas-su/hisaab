@@ -10,7 +10,8 @@
      Slice 1 = the amount (takes effect from the next payday). Slice 2 = when it comes (needs a new BR-1 bridge rule).
      Numbers follow the worked example (docs/design/README.md): ₹45,000 on the 4th, today Mon 26 Oct 2026, cycle
      4 Oct to 3 Nov, P = 16,650, D = 9, A = ₹1,850, ₹420 spent today, hero ₹1,430.
-     Payday moved to the 25th: the cycle bridges 4 Oct to 24 Nov, so D = 30, A = floor(16,650 / 30) = ₹555, hero ₹135.
+     Payday moved to the 25th: the cycle bridges 4 Oct to 24 Nov, so D = 30. Rent ₹8,200 on 5 Nov now falls inside it, so
+     P = 45,000 − 9,400 − 27,150 = 8,450 and A = floor(8,450 / 30) = ₹281; ₹420 spent today is ₹139 over (SPEC BR-1a, D140).
      Payday moved to the 1st: the cycle ends 31 Oct, so D = 6, A = floor(16,650 / 6) = ₹2,775.
      Shared CSS copied from mockup 28. Icons are hand-drawn stand-ins for Hugeicons stroke-rounded. */
   @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
@@ -304,18 +305,19 @@ const dayQ = () => `${settings()}<div class="scrim"></div><div class="sheet">
   <div class="handle"></div>
   <div class="stepHd"><span class="well40" style="margin-inline-end:8px">${ic('back', 'Back')}</span><div class="q">Which day of the month?</div></div>
   <div class="grid31">${days.map(d => `<span class="${d === 4 ? 'was' : d === 25 ? 'on' : ''}">${d}</span>`).join('')}</div>
-  <div class="effect"><b>This month's money lasts till 24 Nov.</b><span>That's 30 days, so about ₹555 a day. Then every month runs from the 25th.</span></div>
+  <div class="effect"><b>This money lasts till 24 Nov.</b><span>That's 30 days, about ₹281 a day.</span></div>
 </div>`;
 
 const homeBridge = () => `<div class="page dense">
   <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
   <div class="hero">
     <div class="ttl">Safe to spend today</div>
-    <div class="amt"><span class="rs">₹</span>135</div>
-    <div class="tbar"><span class="f" style="flex:135"></span><span class="bite" style="flex:380"></span><span class="bite end" style="flex:40;min-width:4px"></span></div>
-    <div class="names"><span style="flex:135"></span><span style="flex:380">Food</span><span style="flex:40;min-width:4px"></span></div>
-    <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹555</b> for today</span></div>
-    <div class="rail"><span class="dots" style="gap:4px">${'<i class="t"></i>' + '<i style="width:4px;height:4px"></i>'.repeat(29)}</span><span class="pf">${ic('flag', 'Payday')} 25 Nov</span></div>
+    <div class="amt"><span class="rs">₹</span>0</div>
+    <div class="capRow" style="margin-top:4px"><span><b>₹139</b> over today</span></div>
+    <div class="tbar"><span class="bite" style="flex:281;border-radius:14px 6px 6px 14px"></span><span style="flex:139;border-radius:6px 14px 14px 6px;background:repeating-linear-gradient(135deg,var(--displayInk2) 0 2px,transparent 2px 6px)"></span></div>
+    <div class="names"><span style="flex:281">Food</span><span style="flex:139"></span></div>
+    <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹281</b> for today</span></div>
+    <div class="rail"><span class="dots" style="gap:4px">${'<i style="width:10px;height:10px;border-radius:5px;background:repeating-linear-gradient(135deg,var(--displayInk2) 0 1.5px,transparent 1.5px 3.5px);box-shadow:inset 0 0 0 1.5px var(--displayInk2)"></i>' + '<i style="width:4px;height:4px"></i>'.repeat(29)}</span><span class="pf">${ic('flag', 'Payday')} 25 Nov</span></div>
     <div class="capRow"><span>Today</span><span>30 days to payday</span></div>
   </div>
   <div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>
@@ -344,8 +346,8 @@ const FRAMES = [
   ['3. Changing the amount', 1, amountQ, 'Onboarding\'s question and keypad, prefilled; the first key replaces the amount. The effect card says when the change counts <b>before</b> you save. Saving an unchanged amount writes nothing, ₹0 can\'t be saved, the 9-digit cap applies, and a failed save keeps the keypad open with "Couldn\'t save. Try again."'],
   ['4. Saved', 1, () => slip({ amt: '50,000', flash: 'amt', foot: '<b>Changed.</b> From payday, 4 Nov.', extra: '<br><span class="tc">Change this month too</span>' }), 'Saving returns to the slip and flashes the Amount row. The stamp still says <i>Came 4 Oct</i> (that pay was ₹45,000), and today\'s ₹1,430 doesn\'t move. The optional chip fixes a mistyped amount from setup (see <i>For you to decide</i>).'],
   ['5. When it comes', 2, whenQ, 'Onboarding\'s five choices with the current one outlined and checked. <i>1st</i>, <i>Last day</i> and <i>It changes</i> save on tap. <i>Pick a date</i> and <i>Every week</i> open one more grid.'],
-  ['6. Picking a new day', 2, dayQ, 'The old day (4) has a faint outline and the new one (25) a strong one. Before the tap that saves, the effect card shows what the change does: this month\'s ₹45,000 must last till 24 Nov, about ₹555 a day. Moving payday <b>earlier</b>, to the 1st, would end this month on 31 Oct and give about ₹2,775 a day.'],
-  ['7. Home after moving payday', 2, homeBridge, 'The bridge cycle: 4 Oct to 24 Nov. Today\'s share is floor(16,650 ÷ 30) = ₹555, and the hero shows ₹135. The rail shows 30 dots (drawn smaller, as BR-6 allows), ending at the 25 Nov flag. Without the bridge, the 4 Oct pay would fall outside the cycle and Home would show "No income".'],
+  ['6. Picking a new day', 2, dayQ, 'The old day (4) has a faint outline and the new one (25) a strong one. Before the tap that saves, the effect card shows what the change does: this month\'s ₹45,000 must last till 24 Nov and now also pays rent on 5 Nov, so about ₹281 a day. Moving payday <b>earlier</b>, to the 1st, would end this month on 31 Oct and give about ₹2,775 a day.'],
+  ['7. Home after moving payday', 2, homeBridge, 'The bridge cycle: 4 Oct to 24 Nov. Rent ₹8,200 on 5 Nov falls inside it, so today\'s share is floor(8,450 ÷ 30) = ₹281; the ₹420 already spent is ₹139 over, so the hero shows ₹0 and "₹139 over today" with the bar hatched past the share (BR-5). The rail shows 30 dots (drawn smaller, as BR-6 allows), ending at the 25 Nov flag. Without the bridge, the 4 Oct pay would fall outside the cycle and Home would show "No income".'],
   ['8. If it changes', 2, itChanges, 'With no fixed day there is no amount to edit, so the slip has only <i>When it comes</i>. Picking a day there goes straight to the amount keypad, prefilled with this month\'s <i>Got</i> total, and one Save stores the rule.'],
 ];
 document.getElementById('frames').innerHTML = FRAMES.map(([t, s, f, why]) => `<h2>${t}<span class="slice">Slice ${s}</span></h2>

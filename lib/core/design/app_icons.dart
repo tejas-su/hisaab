@@ -42,6 +42,18 @@ abstract final class AppIcons {
   static const AppIconData askOnTrack = HugeIcons.strokeRoundedRoute01;
   static const AppIconData askOwn = HugeIcons.strokeRoundedPencilEdit02;
 
+  /// *Back up* and *Back up first* (D139).
+  static const AppIconData backUp = HugeIcons.strokeRoundedFileExport;
+
+  /// *Restore* and onboarding's *Restore a backup* (D139).
+  static const AppIconData restore = HugeIcons.strokeRoundedFileImport;
+
+  /// *Undo restore* (D139).
+  static const AppIconData undoRestore = HugeIcons.strokeRoundedUndo02;
+
+  /// A row or key that is working (D139).
+  static const AppIconData busy = HugeIcons.strokeRoundedLoading03;
+
   /// Category icons by the `icon_key` stored in the database (SPEC BR-11).
   static const Map<String, AppIconData> byKey = <String, AppIconData>{
     'food': HugeIcons.strokeRoundedRestaurant01,
@@ -54,6 +66,59 @@ abstract final class AppIcons {
     'other': HugeIcons.strokeRoundedPackageOpen,
     'salary': HugeIcons.strokeRoundedMoneyReceiveCircle,
     'other_income': HugeIcons.strokeRoundedMoneyAdd02,
+    // why: the curated keys a category of the user's own can carry (D138), in the icon step's
+    // order; each is permanent once shipped, and only its glyph may ever change.
+    'groceries': HugeIcons.strokeRoundedShoppingBasket03,
+    'vegetables': HugeIcons.strokeRoundedLeafyGreen,
+    'fruit': HugeIcons.strokeRoundedApple,
+    'milk': HugeIcons.strokeRoundedMilkBottle,
+    'chai': HisaabGlyphs.cuttingChai,
+    'coffee': HugeIcons.strokeRoundedCoffee02,
+    'snacks': HugeIcons.strokeRoundedFrenchFries01,
+    'eating_out': HugeIcons.strokeRoundedHamburger01,
+    'cigarettes': HugeIcons.strokeRoundedCigarette,
+    'beer': HugeIcons.strokeRoundedBeer,
+    'cold_drink': HugeIcons.strokeRoundedSodaCan,
+    'drinks': HugeIcons.strokeRoundedDrink,
+    'sweets': HugeIcons.strokeRoundedCandy,
+    'gaming': HugeIcons.strokeRoundedGameController01,
+    'cards': HugeIcons.strokeRoundedCards01,
+    'lottery': HugeIcons.strokeRoundedTicket01,
+    'paan': HisaabGlyphs.paan,
+    'hookah': HisaabGlyphs.hookah,
+    'fuel': HugeIcons.strokeRoundedPetrolPump,
+    'auto': HisaabGlyphs.autoRickshaw,
+    'cab': HugeIcons.strokeRoundedTaxi,
+    'bike': HugeIcons.strokeRoundedMotorbike01,
+    'car': HugeIcons.strokeRoundedCar01,
+    'metro': HugeIcons.strokeRoundedMetro,
+    'train': HugeIcons.strokeRoundedTrain01,
+    'parking': HugeIcons.strokeRoundedCircleParking,
+    'trip': HugeIcons.strokeRoundedPlane,
+    'kids': HugeIcons.strokeRoundedBaby01,
+    'school': HugeIcons.strokeRoundedSchool,
+    'family': HugeIcons.strokeRoundedUserGroup,
+    'pet': HugeIcons.strokeRoundedPawPrint,
+    'cleaning': HugeIcons.strokeRoundedClean,
+    'laundry': HugeIcons.strokeRoundedWashingMachine,
+    'repair': HugeIcons.strokeRoundedWrench01,
+    'plants': HugeIcons.strokeRoundedPlant02,
+    'medicine': HugeIcons.strokeRoundedMedicine02,
+    'gym': HugeIcons.strokeRoundedDumbbell01,
+    'yoga': HugeIcons.strokeRoundedYoga01,
+    'salon': HugeIcons.strokeRoundedScissor,
+    'prayer': HugeIcons.strokeRoundedHandPrayer,
+    'giving': HugeIcons.strokeRoundedHandHeart,
+    'gift': HugeIcons.strokeRoundedGift,
+    'wedding': HugeIcons.strokeRoundedWedding,
+    'clothes': HugeIcons.strokeRoundedTShirt,
+    'shoes': HugeIcons.strokeRoundedSneaker,
+    'jewellery': HugeIcons.strokeRoundedEarRings01,
+    'phone': HugeIcons.strokeRoundedSmartphone,
+    'recharge': HugeIcons.strokeRoundedSimcard01,
+    'movies': HugeIcons.strokeRoundedFilm01,
+    'books': HugeIcons.strokeRoundedBook03,
+    'tag': HugeIcons.strokeRoundedTag01,
   };
 
   /// The icon for a stored [key], falling back to "other" for unknown keys.

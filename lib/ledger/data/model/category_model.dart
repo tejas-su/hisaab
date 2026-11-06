@@ -5,7 +5,8 @@ import '../../../core/db/db_row.dart';
 import '../../../core/db/db_schema.dart';
 import '../../../core/errors/failure.dart';
 
-/// A row of the `categories` table (`custom_name` is the user's rename, `budget_minor` its limit).
+/// A row of the `categories` table (`custom_name` is the user's rename, `budget_minor` its limit,
+/// `archived` 1 when hidden).
 final class CategoryModel extends Equatable {
   const CategoryModel({
     required this.id,
@@ -15,6 +16,7 @@ final class CategoryModel extends Equatable {
     required this.sort,
     this.customName,
     this.budgetMinor,
+    this.archived = false,
   });
 
   /// Reads a `categories` row.
@@ -30,6 +32,7 @@ final class CategoryModel extends Equatable {
           kind: row.stringAt(CategoryColumns.kind),
           sort: row.intAt(CategoryColumns.sort),
           budgetMinor: row.intOrNullAt(CategoryColumns.budgetMinor),
+          archived: row.intAt(CategoryColumns.archived) == 1,
         ),
       );
 
@@ -40,7 +43,8 @@ final class CategoryModel extends Equatable {
   final String kind;
   final int sort;
   final int? budgetMinor;
+  final bool archived;
 
   @override
-  List<Object?> get props => <Object?>[id, key, customName, iconKey, kind, sort, budgetMinor];
+  List<Object?> get props => <Object?>[id, key, customName, iconKey, kind, sort, budgetMinor, archived];
 }

@@ -36,6 +36,7 @@ void main() {
   AddEntryBloc bloc({Option<Entry> editing = const Option<Entry>.none()}) => AddEntryBloc(
         saveEntry: SaveEntry(ledger: services.ledger, recurring: services.recurring, clock: services.clock),
         deleteEntry: DeleteEntry(ledger: services.ledger),
+        addOwnCategory: AddOwnCategory(categories: services.categories),
         haptics: services.haptics,
         clock: services.clock,
         categories: seedCategories,

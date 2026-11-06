@@ -5,10 +5,16 @@ import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../ledger/ledger.dart';
 
-/// The tray's two steps (SPEC FR-AD-1, FR-AD-5).
+/// The tray's steps (SPEC FR-AD-1, FR-AD-5, FR-AD-9).
 enum AddEntryStep {
   amount,
   category,
+
+  /// Naming a new category of the user's own, from the *New* tile.
+  newName,
+
+  /// Picking that new category's icon.
+  newIcon,
 }
 
 /// Everything the tray has collected so far.
@@ -24,6 +30,8 @@ final class EntryForm extends Equatable {
     this.step = AddEntryStep.amount,
     this.editing = const Option<Entry>.none(),
     this.preview = const Option<SpendPreview>.none(),
+    this.draftName = '',
+    this.draftIcon = const Option<String>.none(),
   });
 
   final EntryKind kind;
@@ -47,7 +55,19 @@ final class EntryForm extends Equatable {
   /// What this amount does to today, for *Spent* entries dated today (FR-AD-3).
   final Option<SpendPreview> preview;
 
+  /// The name typed for a new category (FR-AD-9); kept until the tray closes.
+  final String draftName;
+
+  /// The icon key the user picked for the new category; [None] follows the name.
+  final Option<String> draftIcon;
+
   Money get amount => Money.fromMajor(rupees);
+
+  /// The new category's icon: the one picked, or the one its name suggests (D138).
+  String get draftIconKey => draftIcon.getOrElse(() => CategoryIcon.forName(draftName));
+
+  /// Whether the *New* tile shows: *Spent*, with fewer than 4 of the user's own (D138).
+  bool get canAddOwn => kind == EntryKind.spent && tiles.where((Category c) => c.isOwn).length < OwnCategories.max;
 
   /// Returns a copy with the given fields replaced.
   EntryForm copyWith({
@@ -58,6 +78,8 @@ final class EntryForm extends Equatable {
     String? note,
     AddEntryStep? step,
     Option<SpendPreview>? preview,
+    String? draftName,
+    Option<String>? draftIcon,
   }) =>
       EntryForm(
         kind: kind ?? this.kind,
@@ -70,10 +92,13 @@ final class EntryForm extends Equatable {
         step: step ?? this.step,
         editing: editing,
         preview: preview ?? this.preview,
+        draftName: draftName ?? this.draftName,
+        draftIcon: draftIcon ?? this.draftIcon,
       );
 
   @override
-  List<Object?> get props => <Object?>[kind, rupees, date, today, earliestDate, tiles, note, step, editing, preview];
+  List<Object?> get props =>
+      <Object?>[kind, rupees, date, today, earliestDate, tiles, note, step, editing, preview, draftName, draftIcon];
 }
 
 /// The Add tray's situation.
@@ -97,9 +122,10 @@ final class AddEntryEditing extends AddEntryState {
 
 /// Saving after a tile tap; that tile shows the ink flash and further taps are ignored.
 final class AddEntrySaving extends AddEntryState {
-  const AddEntrySaving(super.form, {required this.categoryId});
+  const AddEntrySaving(super.form, {this.categoryId});
 
-  final int categoryId;
+  /// The tile that was tapped; null while a new category is being made (FR-AD-9).
+  final int? categoryId;
 
   @override
   List<Object?> get props => <Object?>[form, categoryId];

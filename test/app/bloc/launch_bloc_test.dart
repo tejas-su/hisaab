@@ -44,6 +44,39 @@ void main() {
       expect(bloc.state, const LaunchReady(assemble: true));
     });
 
+    test('replaced data rebuilds the app under a new generation (D139)', () async {
+      final LaunchBloc bloc = LaunchBloc(preferences: FakeAppPreferencesRepository(done: true));
+      addTearDown(bloc.close);
+      await bloc.dispatch(const LaunchStarted());
+
+      final Future<void> expectation = expectLater(
+        bloc.stream,
+        emitsInOrder(<Matcher>[
+          const LaunchLoading(),
+          isA<LaunchReady>().having((LaunchReady s) => s.generation, 'generation', 1),
+          const LaunchLoading(),
+          isA<LaunchReady>().having((LaunchReady s) => s.generation, 'generation', 2),
+        ]),
+      );
+
+      await bloc.dispatch(const LaunchDataReplaced());
+      await bloc.dispatch(const LaunchDataReplaced());
+
+      await expectation;
+    });
+
+    test('after Delete everything the app goes back to onboarding (FR-SE-4 AC-8)', () async {
+      final FakeAppPreferencesRepository preferences = FakeAppPreferencesRepository(done: true);
+      final LaunchBloc bloc = LaunchBloc(preferences: preferences);
+      addTearDown(bloc.close);
+      await bloc.dispatch(const LaunchStarted());
+      preferences.done = false;
+
+      await bloc.dispatch(const LaunchDataReplaced());
+
+      expect(bloc.state, const LaunchNeedsOnboarding());
+    });
+
     test('closing before the read finishes does not throw', () async {
       final LaunchBloc bloc = LaunchBloc(preferences: FakeAppPreferencesRepository())..add(const LaunchStarted());
       await expectLater(bloc.close(), completes);

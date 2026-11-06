@@ -95,3 +95,46 @@ final class AddEntryCategoryPicked extends AddEntryEvent {
 final class AddEntryDeleteRequested extends AddEntryEvent {
   const AddEntryDeleteRequested();
 }
+
+/// The user tapped the *New* tile to make a category of their own (FR-AD-9).
+final class AddEntryNewCategoryOpened extends AddEntryEvent {
+  const AddEntryNewCategoryOpened();
+}
+
+/// The user typed [name] for the new category, or tapped a name chip.
+final class AddEntryNewCategoryNameChanged extends AddEntryEvent {
+  const AddEntryNewCategoryNameChanged(this.name);
+
+  final String name;
+
+  @override
+  List<Object?> get props => <Object?>[name];
+}
+
+/// The user tapped *Change* to pick the new category's icon.
+final class AddEntryIconStepOpened extends AddEntryEvent {
+  const AddEntryIconStepOpened();
+}
+
+/// The user picked the icon with app-owned [iconKey] on the icon step.
+final class AddEntryIconPicked extends AddEntryEvent {
+  const AddEntryIconPicked(this.iconKey);
+
+  final String iconKey;
+
+  @override
+  List<Object?> get props => <Object?>[iconKey];
+}
+
+/// The user tapped *Save in {name}*: file the entry under the typed name (FR-AD-9 AC-4).
+///
+/// [labels] holds each category's shown name by id, so a typed name that matches a built-in
+/// category (whose name is localised) saves there.
+final class AddEntryNewCategorySaved extends AddEntryEvent {
+  const AddEntryNewCategorySaved(this.labels);
+
+  final Map<int, String> labels;
+
+  @override
+  List<Object?> get props => <Object?>[labels];
+}

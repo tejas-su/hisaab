@@ -12,8 +12,11 @@ import '../bloc/add_entry_event.dart';
 import '../bloc/add_entry_state.dart';
 import '../widgets/amount_step.dart';
 import '../widgets/category_step.dart';
+import '../widgets/new_category_icon_step.dart';
+import '../widgets/new_category_name_step.dart';
 
 /// The Add tray: amount, then category; tapping a tile saves and the tray drops (SPEC FR-AD).
+/// The *New* tile adds a name step and an optional icon step (FR-AD-9).
 ///
 /// Open it with [show]. Back on step 2 returns to step 1 with the amount kept; back on step 1
 /// closes without saving (FR-AD-7).
@@ -85,6 +88,10 @@ class AddEntryTray extends StatelessWidget {
           : MediaQuery.sizeOf(context).height - _gapAbove - HisaabSpacing.xxl;
       return SizedBox(height: height, child: AmountStep(state: state, sideBySide: panes is TabletopPanes));
     }
-    return CategoryStep(state: state);
+    return switch (state.form.step) {
+      AddEntryStep.newName => NewCategoryNameStep(state: state),
+      AddEntryStep.newIcon => NewCategoryIconStep(form: state.form),
+      AddEntryStep.amount || AddEntryStep.category => CategoryStep(state: state),
+    };
   }
 }

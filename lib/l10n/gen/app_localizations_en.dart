@@ -1369,6 +1369,393 @@ class AppLocalizationsEn extends AppLocalizations {
   String incomeComesEvery(String weekday) {
     return 'Comes every $weekday';
   }
+
+  @override
+  String get settingsYourHisaab => 'Your hisaab';
+
+  @override
+  String get backUpRow => 'Back up';
+
+  @override
+  String backUpLast(String date) {
+    return 'Last backed up $date';
+  }
+
+  @override
+  String get backUpToday => 'Backed up today';
+
+  @override
+  String get backUpNever => 'Not backed up yet';
+
+  @override
+  String get backUpBusy => 'Backing up…';
+
+  @override
+  String get backUpNoLock =>
+      'The backup file has no password. Anyone who has it can read your entries and notes, so keep it safe.';
+
+  @override
+  String backUpDone(String fileName) {
+    return 'Backed up as $fileName';
+  }
+
+  @override
+  String get backUpDoneNoName => 'Backed up';
+
+  @override
+  String get backUpFailed => 'Couldn\'t back up there. Try another folder.';
+
+  @override
+  String get backUpReadFailed =>
+      'Couldn\'t make the backup. Nothing changed. Try again.';
+
+  @override
+  String get restoreRow => 'Restore';
+
+  @override
+  String get restoreRowHint => 'Bring back from a backup file';
+
+  @override
+  String get restoreChecking => 'Checking the backup…';
+
+  @override
+  String get restoreRevertRow => 'Undo restore';
+
+  @override
+  String restoreRevertHint(String date) {
+    return 'Go back to what you had before $date';
+  }
+
+  @override
+  String restoreRevertLoses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The $count entries added since will go.',
+      one: 'The 1 entry added since will go.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get restoreNotBackup =>
+      'That\'s not a hisaab backup. Pick a file whose name starts with hisaab-backup.';
+
+  @override
+  String get restoreBroken =>
+      'This backup can\'t be opened. It may be cut short. Try another copy.';
+
+  @override
+  String get restoreNewer =>
+      'This backup is from a newer hisaab. Update hisaab from Play Store, then try again.';
+
+  @override
+  String get restoreOpenFailed =>
+      'Couldn\'t open that file. Try again or pick another.';
+
+  @override
+  String get restoreConfirmTitle => 'Replace with this backup?';
+
+  @override
+  String restoreConfirmFrom(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Made on $date, with $count entries.',
+      one: 'Made on $date, with 1 entry.',
+      zero: 'Made on $date, with no entries.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String restoreConfirmReplaces(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'It replaces everything on this phone now, including $count entries. You can undo right after.',
+      one: 'It replaces everything on this phone now, including 1 entry. You can undo right after.',
+      zero:
+          'It replaces everything on this phone now. You can undo right after.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get restoreConfirmYes => 'Replace';
+
+  @override
+  String get restoreConfirmNo => 'Keep what\'s here';
+
+  @override
+  String get restoreWorking => 'Bringing back your hisaab…';
+
+  @override
+  String restoreDone(String date) {
+    return 'Backup from $date restored';
+  }
+
+  @override
+  String get restoreUndone => 'Back to what you had before';
+
+  @override
+  String get restoreFailed => 'Couldn\'t restore. Nothing changed. Try again.';
+
+  @override
+  String get restoreUndoFailed =>
+      'Couldn\'t go back. The backup is still in use.';
+
+  @override
+  String get restoreLink => 'Restore a backup';
+
+  @override
+  String get restoreLinkSpoken => 'Restore a backup from another phone';
+
+  @override
+  String get deleteAllRow => 'Delete everything';
+
+  @override
+  String get deleteAllRowHint => 'Clear it all and start again';
+
+  @override
+  String get deleteAllTitle => 'Delete everything';
+
+  @override
+  String get deleteAllLead =>
+      'This clears hisaab on this phone. It opens again at the first step, like new.';
+
+  @override
+  String get deleteAllListTitle => 'This goes:';
+
+  @override
+  String get deleteAllItemEntries => 'Every entry you added';
+
+  @override
+  String get deleteAllItemIncome => 'Money coming in';
+
+  @override
+  String get deleteAllItemBills => 'Bills and their reminders';
+
+  @override
+  String get deleteAllItemSavings => 'Savings';
+
+  @override
+  String get deleteAllItemCategories => 'Categories you added or changed';
+
+  @override
+  String get deleteAllItemSettings => 'Look and your other settings';
+
+  @override
+  String get deleteAllNoUndo => 'There\'s no Undo for this.';
+
+  @override
+  String get deleteAllStays => 'Backup files you made stay where you put them.';
+
+  @override
+  String get deleteAllPhoneSafe =>
+      'Only hisaab is cleared. Your phone and other apps stay as they are.';
+
+  @override
+  String get deleteAllNoBackup =>
+      'Not backed up yet. Back up first to keep a copy.';
+
+  @override
+  String get deleteAllBackUpFirst => 'Back up first';
+
+  @override
+  String get deleteAllHold => 'Hold to delete everything';
+
+  @override
+  String get deleteAllHoldFull => 'Let go to delete';
+
+  @override
+  String deleteAllHoldCaption(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Keep your finger on it for $seconds seconds',
+      one: 'Keep your finger on it for 1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAllHoldShort => 'Keep holding till it fills up.';
+
+  @override
+  String get deleteAllHoldSpoken => 'Delete everything in hisaab';
+
+  @override
+  String get deleteAllHoldArmed => 'Double-tap again to delete everything';
+
+  @override
+  String get deleteAllHoldHint => 'Double-tap twice to delete';
+
+  @override
+  String get deleteAllWorking => 'Deleting…';
+
+  @override
+  String get deleteAllDoneSpoken =>
+      'Everything deleted. hisaab is starting again.';
+
+  @override
+  String get deleteAllFailed => 'Couldn\'t delete. Nothing changed. Try again.';
+
+  @override
+  String get newCategoryTile => 'New';
+
+  @override
+  String get newCategory => 'New category';
+
+  @override
+  String get ownCategoriesRule => 'Your own';
+
+  @override
+  String get ownCategoriesFull =>
+      '4 of your own is the most. Hide one in Settings to make room.';
+
+  @override
+  String get newCategoryQuestion => 'What\'s it called?';
+
+  @override
+  String get newCategoryHint => 'Petrol, kids, gym…';
+
+  @override
+  String get newCategoryFieldLabel => 'Name for the new category';
+
+  @override
+  String categoryIconFromName(String icon) {
+    return 'Icon from the name: $icon';
+  }
+
+  @override
+  String categoryIconPicked(String icon) {
+    return 'Icon: $icon';
+  }
+
+  @override
+  String get categoryIconNoMatch => 'Icon: Tag. No match yet';
+
+  @override
+  String get categoryIconWaiting => 'The name picks an icon';
+
+  @override
+  String get changeIcon => 'Change';
+
+  @override
+  String categoryIconSemantics(String icon) {
+    return 'Icon, $icon. Double tap to change';
+  }
+
+  @override
+  String categoryExists(String name) {
+    return 'You have $name already. It saves there.';
+  }
+
+  @override
+  String categoryComesBack(String name) {
+    return 'You hid $name. Saving brings it back.';
+  }
+
+  @override
+  String saveInCategory(String name) {
+    return 'Save in $name';
+  }
+
+  @override
+  String pickIconFor(String name) {
+    return 'Pick an icon for $name';
+  }
+
+  @override
+  String categoryIconFromNameShort(String icon) {
+    return 'From the name: $icon';
+  }
+
+  @override
+  String categoryIconName(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'groceries': 'Groceries',
+      'vegetables': 'Vegetables',
+      'fruit': 'Fruit',
+      'milk': 'Milk',
+      'chai': 'Chai',
+      'coffee': 'Coffee',
+      'snacks': 'Snacks',
+      'eating_out': 'Eating out',
+      'cigarettes': 'Cigarettes',
+      'beer': 'Beer',
+      'cold_drink': 'Cold drink',
+      'drinks': 'Drinks',
+      'sweets': 'Sweets',
+      'gaming': 'Gaming',
+      'cards': 'Cards',
+      'lottery': 'Lottery',
+      'paan': 'Paan',
+      'hookah': 'Hookah',
+      'fuel': 'Fuel',
+      'auto': 'Auto',
+      'cab': 'Cab',
+      'bike': 'Bike',
+      'car': 'Car',
+      'metro': 'Metro',
+      'train': 'Train',
+      'parking': 'Parking',
+      'trip': 'Trip',
+      'kids': 'Kids',
+      'school': 'School',
+      'family': 'Family',
+      'pet': 'Pet',
+      'cleaning': 'Cleaning',
+      'laundry': 'Laundry',
+      'repair': 'Repair',
+      'plants': 'Plants',
+      'medicine': 'Medicine',
+      'gym': 'Gym',
+      'yoga': 'Yoga',
+      'salon': 'Salon',
+      'prayer': 'Prayer',
+      'giving': 'Giving',
+      'gift': 'Gift',
+      'wedding': 'Wedding',
+      'clothes': 'Clothes',
+      'shoes': 'Shoes',
+      'jewellery': 'Jewellery',
+      'phone': 'Phone',
+      'recharge': 'Recharge',
+      'movies': 'Movies',
+      'books': 'Books',
+      'other': 'Tag',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String categoryIconGroup(String group) {
+    String _temp0 = intl.Intl.selectLogic(group, {
+      'food': 'Food and drink',
+      'habits': 'Treats and habits',
+      'around': 'Getting around',
+      'home': 'Home and family',
+      'care': 'Care and giving',
+      'other': 'Things and fun',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String newCategorySuggestion(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'groceries': 'Groceries',
+      'kids': 'Kids',
+      'family': 'Family',
+      'pets': 'Pets',
+      'petrol': 'Petrol',
+      'other': 'Salon',
+    });
+    return '$_temp0';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

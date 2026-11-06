@@ -32,6 +32,14 @@ void main() {
       expect(category.limit, const Option<Money>.none());
     });
 
+    test('an archived row of the user\'s own is a hidden category (D138)', () {
+      final Category category = CategoryMapper.toEntity(
+        const CategoryModel(id: 13, key: 'own_13', iconKey: 'fuel', kind: 'out', sort: 8, customName: 'Petrol', archived: true),
+      ).getOrElse((Failure f) => fail(f.message));
+      expect(category.hidden, isTrue);
+      expect(category.isOwn, isTrue);
+    });
+
     test('returns InvalidDataFailure for an unknown kind', () {
       expect(
         CategoryMapper.toEntity(const CategoryModel(id: 1, key: 'x', iconKey: 'x', kind: '?', sort: 0)).isLeft(),

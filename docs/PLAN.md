@@ -117,7 +117,7 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 
 | Table | Columns |
 |---|---|
-| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived. Hidden `saved` and `card_paid` rows (`archived = 1`) hold saved and card-bill entries and are never shown |
+| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived. Hidden `saved` and `card_paid` rows (`archived = 1`) hold saved and card-bill entries and are never shown. A category the user made has key `own_<n>` and sort after the 8; hiding it sets `archived = 1`, which takes it out of the Add tray and Settings but keeps it in Spends, filters and exports (D138) |
 | `transactions` | id, amount_minor, currency, kind (in/out/save/card), category_id, date, note NULL, recurring_id NULL, created_at |
 | `recurring` | id, label, amount_minor, currency, kind (in/out/save), category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active, icon NULL, amount_mode (fixed/varies/card) |
 | `recurring_skips` | recurring_id, date (primary key together): a month a changing bill didn't go out |
@@ -182,7 +182,7 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 |---|---|---|
 | M0 | Design tokens + theme (light/dark), AppIcon, l10n wiring, Money/formatter, Clock, AppLogger, DI, DB + migrations, seeded categories; add `fpdart`, `path`; bundle fonts; `git init` | App boots in `en_IN`, ₹ formats Indian-style, analyze clean, coverage script runs |
 | M1 ✓ | Onboarding, Home hero (all BR-5 states, range line), Add tray, Today list, undo, core motion. Pulled forward because the hero needs them: `SafeToSpend` (BR-3..BR-7) and the recurring engine on start/resume | Log an expense in < 5 s, Add → digits → Next → tile |
-| M2 ✓ | Recurring: midnight re-run (BR-8), due-soon nudge (FR-HO-3), bills in Settings | Payday auto-adds income at midnight; nudge shows the soonest bill |
+| M2 ✓ | Recurring: midnight re-run (BR-8), due-soon nudge (FR-HO-3), bills in Settings, Money coming in: the amount and the payday (D137, D140) | Payday auto-adds income at midnight; nudge shows the soonest bill |
 | M3 | *This week* toggle (FR-HO-2), "you saved yesterday" (BR-8), auto-suggested budgets (BR-12: `BudgetSuggester`, `GetSuggestedLimits`, `ApplySuggestedLimits`, category limits saved; the "Use these limits?" offer is shown by Spends in M4 as BR-14 insight #4) | Weekly view and morning note work |
 | M4 ✓ | Spends: pace chart (a painter, not `fl_chart`), *Where it went* with limits, insights (BR-14), *Every entry* (FR-SP-6); Home's *See all* and over card. The Ask AI card comes with M5 and *Set a limit* waits for a design (DECISIONS D49–D54) | vs-last-cycle shown, 3 tips max |
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |

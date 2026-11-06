@@ -26,6 +26,12 @@ void main() {
       );
     });
 
+    test('reads a hidden row as archived (D138)', () {
+      final CategoryModel model = CategoryModel.fromRow(<String, Object?>{..._row, CategoryColumns.archived: 1})
+          .getOrElse((Failure f) => fail(f.message));
+      expect(model.archived, isTrue);
+    });
+
     test('keeps a rename', () {
       final CategoryModel model = CategoryModel.fromRow(<String, Object?>{..._row, CategoryColumns.customName: 'Khana'})
           .getOrElse((Failure f) => fail(f.message));

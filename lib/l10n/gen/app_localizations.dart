@@ -1926,6 +1926,486 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Comes every {weekday}'**
   String incomeComesEvery(String weekday);
+
+  /// Settings group heading for Back up, Restore and Delete everything (D139). 'Data' reads as the mobile internet pack, so the group names the user's money record
+  ///
+  /// In en, this message translates to:
+  /// **'Your hisaab'**
+  String get settingsYourHisaab;
+
+  /// Settings row that opens the system Save screen to make a backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Back up'**
+  String get backUpRow;
+
+  /// Second line of the Back up row; date like 12 Oct
+  ///
+  /// In en, this message translates to:
+  /// **'Last backed up {date}'**
+  String backUpLast(String date);
+
+  /// Second line of the Back up row when the last backup was today
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up today'**
+  String get backUpToday;
+
+  /// Second line of the Back up row when no backup was made on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Not backed up yet'**
+  String get backUpNever;
+
+  /// Second line of the Back up row while the file is written
+  ///
+  /// In en, this message translates to:
+  /// **'Backing up…'**
+  String get backUpBusy;
+
+  /// Note under the Back up and Restore rows
+  ///
+  /// In en, this message translates to:
+  /// **'The backup file has no password. Anyone who has it can read your entries and notes, so keep it safe.'**
+  String get backUpNoLock;
+
+  /// Snackbar after the backup file is written; fileName like hisaab-backup-2026-11-06.json
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up as {fileName}'**
+  String backUpDone(String fileName);
+
+  /// Snackbar after the backup file is written, when the picker gives no file name
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up'**
+  String get backUpDoneNoName;
+
+  /// Snackbar when writing the backup file fails
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t back up there. Try another folder.'**
+  String get backUpFailed;
+
+  /// Snackbar when hisaab can't read its own data to make the file
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t make the backup. Nothing changed. Try again.'**
+  String get backUpReadFailed;
+
+  /// Settings row that opens the file picker to bring back a backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreRow;
+
+  /// Second line of the Restore row
+  ///
+  /// In en, this message translates to:
+  /// **'Bring back from a backup file'**
+  String get restoreRowHint;
+
+  /// Second line of the Restore row while the picked file is read and checked
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the backup…'**
+  String get restoreChecking;
+
+  /// Settings row, for 7 days after a restore, that puts back what was there before
+  ///
+  /// In en, this message translates to:
+  /// **'Undo restore'**
+  String get restoreRevertRow;
+
+  /// Second line of the Undo restore row; date is the restore day like 6 Nov
+  ///
+  /// In en, this message translates to:
+  /// **'Go back to what you had before {date}'**
+  String restoreRevertHint(String date);
+
+  /// Second line of the Undo restore row when entries were added after the restore (E42)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{The 1 entry added since will go.} other{The {count} entries added since will go.}}'**
+  String restoreRevertLoses(int count);
+
+  /// Snackbar when the picked file isn't a hisaab backup
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s not a hisaab backup. Pick a file whose name starts with hisaab-backup.'**
+  String get restoreNotBackup;
+
+  /// Snackbar when the file is a hisaab backup but parts are missing or broken
+  ///
+  /// In en, this message translates to:
+  /// **'This backup can\'t be opened. It may be cut short. Try another copy.'**
+  String get restoreBroken;
+
+  /// Snackbar when the backup was made by a newer version; nothing is changed
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is from a newer hisaab. Update hisaab from Play Store, then try again.'**
+  String get restoreNewer;
+
+  /// Snackbar when the picked file can't be read at all
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open that file. Try again or pick another.'**
+  String get restoreOpenFailed;
+
+  /// Title of the restore dialog, the app's only confirmation dialog (BR-16)
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with this backup?'**
+  String get restoreConfirmTitle;
+
+  /// Restore dialog line 1: when the backup was made and how many entries it holds; date like 12 Oct
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Made on {date}, with no entries.} =1{Made on {date}, with 1 entry.} other{Made on {date}, with {count} entries.}}'**
+  String restoreConfirmFrom(int count, String date);
+
+  /// Restore dialog line 2: what is on this phone now
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{It replaces everything on this phone now. You can undo right after.} =1{It replaces everything on this phone now, including 1 entry. You can undo right after.} other{It replaces everything on this phone now, including {count} entries. You can undo right after.}}'**
+  String restoreConfirmReplaces(int count);
+
+  /// Restore dialog key that restores the backup
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get restoreConfirmYes;
+
+  /// Restore dialog key that closes it and changes nothing
+  ///
+  /// In en, this message translates to:
+  /// **'Keep what\'s here'**
+  String get restoreConfirmNo;
+
+  /// Shown in the restore dialog while the restore runs
+  ///
+  /// In en, this message translates to:
+  /// **'Bringing back your hisaab…'**
+  String get restoreWorking;
+
+  /// Snackbar after a restore, with Undo; date like 12 Oct
+  ///
+  /// In en, this message translates to:
+  /// **'Backup from {date} restored'**
+  String restoreDone(String date);
+
+  /// Snackbar after Undo on a restore
+  ///
+  /// In en, this message translates to:
+  /// **'Back to what you had before'**
+  String get restoreUndone;
+
+  /// Snackbar when the restore stops part way and is rolled back
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore. Nothing changed. Try again.'**
+  String get restoreFailed;
+
+  /// Snackbar when Undo of a restore fails
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t go back. The backup is still in use.'**
+  String get restoreUndoFailed;
+
+  /// Text chip on the first onboarding screen for someone moving from another phone
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get restoreLink;
+
+  /// TalkBack label for the onboarding Restore a backup chip
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup from another phone'**
+  String get restoreLinkSpoken;
+
+  /// Settings row that opens the Delete everything page
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything'**
+  String get deleteAllRow;
+
+  /// Second line of the Delete everything row
+  ///
+  /// In en, this message translates to:
+  /// **'Clear it all and start again'**
+  String get deleteAllRowHint;
+
+  /// Title of the Delete everything page
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything'**
+  String get deleteAllTitle;
+
+  /// First sentence on the Delete everything page
+  ///
+  /// In en, this message translates to:
+  /// **'This clears hisaab on this phone. It opens again at the first step, like new.'**
+  String get deleteAllLead;
+
+  /// Heading over the list of what is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'This goes:'**
+  String get deleteAllListTitle;
+
+  /// Delete everything list item
+  ///
+  /// In en, this message translates to:
+  /// **'Every entry you added'**
+  String get deleteAllItemEntries;
+
+  /// Delete everything list item: the income
+  ///
+  /// In en, this message translates to:
+  /// **'Money coming in'**
+  String get deleteAllItemIncome;
+
+  /// Delete everything list item
+  ///
+  /// In en, this message translates to:
+  /// **'Bills and their reminders'**
+  String get deleteAllItemBills;
+
+  /// Delete everything list item
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get deleteAllItemSavings;
+
+  /// Delete everything list item; the built-in categories come back as new
+  ///
+  /// In en, this message translates to:
+  /// **'Categories you added or changed'**
+  String get deleteAllItemCategories;
+
+  /// Delete everything list item
+  ///
+  /// In en, this message translates to:
+  /// **'Look and your other settings'**
+  String get deleteAllItemSettings;
+
+  /// Line after the list of what is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no Undo for this.'**
+  String get deleteAllNoUndo;
+
+  /// Line saying backup files are not touched
+  ///
+  /// In en, this message translates to:
+  /// **'Backup files you made stay where you put them.'**
+  String get deleteAllStays;
+
+  /// Line that answers the fear of wiping the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Only hisaab is cleared. Your phone and other apps stay as they are.'**
+  String get deleteAllPhoneSafe;
+
+  /// Last-backup line on the Delete everything page when there is no backup
+  ///
+  /// In en, this message translates to:
+  /// **'Not backed up yet. Back up first to keep a copy.'**
+  String get deleteAllNoBackup;
+
+  /// Key on the Delete everything page that makes a backup and comes back
+  ///
+  /// In en, this message translates to:
+  /// **'Back up first'**
+  String get deleteAllBackUpFirst;
+
+  /// Label on the hold key; it fills while pressed and deletes when let go full
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to delete everything'**
+  String get deleteAllHold;
+
+  /// Label on the hold key once it is full
+  ///
+  /// In en, this message translates to:
+  /// **'Let go to delete'**
+  String get deleteAllHoldFull;
+
+  /// Caption under the hold key, always shown
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1{Keep your finger on it for 1 second} other{Keep your finger on it for {seconds} seconds}}'**
+  String deleteAllHoldCaption(int seconds);
+
+  /// Caption after the hold key is let go early; nothing was deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Keep holding till it fills up.'**
+  String get deleteAllHoldShort;
+
+  /// TalkBack label for the hold key
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything in hisaab'**
+  String get deleteAllHoldSpoken;
+
+  /// Hold key label for TalkBack and switch users after the first activation; a second within 10 s deletes
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap again to delete everything'**
+  String get deleteAllHoldArmed;
+
+  /// TalkBack hint on the hold key
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap twice to delete'**
+  String get deleteAllHoldHint;
+
+  /// Hold key label while everything is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get deleteAllWorking;
+
+  /// TalkBack announcement as the app lands on onboarding after deleting
+  ///
+  /// In en, this message translates to:
+  /// **'Everything deleted. hisaab is starting again.'**
+  String get deleteAllDoneSpoken;
+
+  /// Snackbar when the delete fails and is rolled back
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete. Nothing changed. Try again.'**
+  String get deleteAllFailed;
+
+  /// The dashed tile after the categories that makes a new one (FR-AD-9)
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get newCategoryTile;
+
+  /// TalkBack label of the New tile
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get newCategory;
+
+  /// Small label over the row of the user's own categories in the Add tray
+  ///
+  /// In en, this message translates to:
+  /// **'Your own'**
+  String get ownCategoriesRule;
+
+  /// Replaces the New tile when 4 of the user's own are shown (D138)
+  ///
+  /// In en, this message translates to:
+  /// **'4 of your own is the most. Hide one in Settings to make room.'**
+  String get ownCategoriesFull;
+
+  /// Under the amount on the new-category name step
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s it called?'**
+  String get newCategoryQuestion;
+
+  /// Hint in the empty new-category name field
+  ///
+  /// In en, this message translates to:
+  /// **'Petrol, kids, gym…'**
+  String get newCategoryHint;
+
+  /// TalkBack label of the name field
+  ///
+  /// In en, this message translates to:
+  /// **'Name for the new category'**
+  String get newCategoryFieldLabel;
+
+  /// Icon line when the icon follows the name
+  ///
+  /// In en, this message translates to:
+  /// **'Icon from the name: {icon}'**
+  String categoryIconFromName(String icon);
+
+  /// Icon line after the user picked an icon
+  ///
+  /// In en, this message translates to:
+  /// **'Icon: {icon}'**
+  String categoryIconPicked(String icon);
+
+  /// Icon line when nothing in the name matches an icon
+  ///
+  /// In en, this message translates to:
+  /// **'Icon: Tag. No match yet'**
+  String get categoryIconNoMatch;
+
+  /// Icon line while the name is empty
+  ///
+  /// In en, this message translates to:
+  /// **'The name picks an icon'**
+  String get categoryIconWaiting;
+
+  /// Link at the end of the icon line; opens the icon step
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeIcon;
+
+  /// TalkBack for the icon line
+  ///
+  /// In en, this message translates to:
+  /// **'Icon, {icon}. Double tap to change'**
+  String categoryIconSemantics(String icon);
+
+  /// When the typed name matches a shown category
+  ///
+  /// In en, this message translates to:
+  /// **'You have {name} already. It saves there.'**
+  String categoryExists(String name);
+
+  /// When the typed name matches a hidden category
+  ///
+  /// In en, this message translates to:
+  /// **'You hid {name}. Saving brings it back.'**
+  String categoryComesBack(String name);
+
+  /// The marigold key on the name step
+  ///
+  /// In en, this message translates to:
+  /// **'Save in {name}'**
+  String saveInCategory(String name);
+
+  /// Under the amount on the icon step
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an icon for {name}'**
+  String pickIconFor(String name);
+
+  /// Line on the icon step saying which icon the name suggests
+  ///
+  /// In en, this message translates to:
+  /// **'From the name: {icon}'**
+  String categoryIconFromNameShort(String icon);
+
+  /// The word under a curated category icon, by its app-owned key (D138)
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, groceries{Groceries} vegetables{Vegetables} fruit{Fruit} milk{Milk} chai{Chai} coffee{Coffee} snacks{Snacks} eating_out{Eating out} cigarettes{Cigarettes} beer{Beer} cold_drink{Cold drink} drinks{Drinks} sweets{Sweets} gaming{Gaming} cards{Cards} lottery{Lottery} paan{Paan} hookah{Hookah} fuel{Fuel} auto{Auto} cab{Cab} bike{Bike} car{Car} metro{Metro} train{Train} parking{Parking} trip{Trip} kids{Kids} school{School} family{Family} pet{Pet} cleaning{Cleaning} laundry{Laundry} repair{Repair} plants{Plants} medicine{Medicine} gym{Gym} yoga{Yoga} salon{Salon} prayer{Prayer} giving{Giving} gift{Gift} wedding{Wedding} clothes{Clothes} shoes{Shoes} jewellery{Jewellery} phone{Phone} recharge{Recharge} movies{Movies} books{Books} other{Tag}}'**
+  String categoryIconName(String key);
+
+  /// Heading of a group on the icon step
+  ///
+  /// In en, this message translates to:
+  /// **'{group, select, food{Food and drink} habits{Treats and habits} around{Getting around} home{Home and family} care{Care and giving} other{Things and fun}}'**
+  String categoryIconGroup(String group);
+
+  /// A name chip on the new-category name step
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, groceries{Groceries} kids{Kids} family{Family} pets{Pets} petrol{Petrol} other{Salon}}'**
+  String newCategorySuggestion(String key);
 }
 
 class _AppLocalizationsDelegate

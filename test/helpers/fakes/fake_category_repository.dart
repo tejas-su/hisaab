@@ -1,14 +1,17 @@
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/ledger/domain/entities/category.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:expense_tracker/ledger/domain/repository/category_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../fixtures/ledger/categories.dart';
 
-/// A [CategoryRepository] returning [categories]; set [failure] to make it fail.
+/// A [CategoryRepository] over an in-memory [categories] list; set [failure] to make it fail.
+///
+/// Adding, renaming, re-iconing and hiding change [categories] in place, as the database would.
 final class FakeCategoryRepository implements CategoryRepository {
-  FakeCategoryRepository([this.categories = seedCategories]);
+  FakeCategoryRepository([List<Category> categories = seedCategories]) : categories = List<Category>.of(categories);
 
   final List<Category> categories;
   Failure? failure;
@@ -39,6 +42,55 @@ final class FakeCategoryRepository implements CategoryRepository {
     return id == null
         ? TaskEither<Failure, int>.left(InvalidDataFailure('No "$key" category'))
         : TaskEither<Failure, int>.right(id);
+  }
+
+  /// The next id [addOwn] gives; past the hidden `saved` and `card_paid` rows.
+  int nextId = 13;
+
+  @override
+  TaskEither<Failure, Category> addOwn({required String name, required String iconKey}) => _guard(() {
+        final int sort = categories.where((Category c) => c.kind == EntryKind.spent).fold(-1, (int a, Category c) => c.sort > a ? c.sort : a) + 1;
+        final Category added = Category(
+          id: nextId,
+          key: '${CategoryKeys.ownPrefix}$nextId',
+          customName: name,
+          iconKey: iconKey,
+          kind: EntryKind.spent,
+          sort: sort,
+        );
+        nextId++;
+        categories.add(added);
+        return added;
+      });
+
+  @override
+  TaskEither<Failure, Unit> rename(int id, String name) =>
+      _change(id, (Category c) => true, (Category c) => c.copyWith(customName: name));
+
+  @override
+  TaskEither<Failure, Unit> changeIcon(int id, String iconKey) =>
+      _change(id, (Category c) => true, (Category c) => c.copyWith(iconKey: iconKey));
+
+  @override
+  TaskEither<Failure, Unit> setHidden(int id, {required bool hidden}) =>
+      _change(id, (Category c) => c.isOwn, (Category c) => c.copyWith(hidden: hidden));
+
+  TaskEither<Failure, T> _guard<T>(T Function() run) {
+    final Failure? current = failure;
+    return current == null ? TaskEither<Failure, T>.right(run()) : TaskEither<Failure, T>.left(current);
+  }
+
+  TaskEither<Failure, Unit> _change(int id, bool Function(Category) allowed, Category Function(Category) changed) {
+    final Failure? current = failure;
+    if (current != null) {
+      return TaskEither<Failure, Unit>.left(current);
+    }
+    final int index = categories.indexWhere((Category c) => c.id == id && allowed(c));
+    if (index < 0) {
+      return TaskEither<Failure, Unit>.left(InvalidDataFailure('No category $id to change'));
+    }
+    categories[index] = changed(categories[index]);
+    return TaskEither<Failure, Unit>.right(unit);
   }
 
   @override

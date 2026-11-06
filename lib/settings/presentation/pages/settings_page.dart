@@ -6,6 +6,7 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
+import '../../../core/widgets/hisaab_snackbar_host.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../bloc/income_bloc.dart';
@@ -25,6 +26,7 @@ class SettingsPage extends StatelessWidget {
     required this.onOpenBills,
     required this.onOpenSavings,
     required this.themeBloc,
+    this.yourHisaab,
   });
 
   /// The income shown on the *Money coming in* row (D137).
@@ -41,10 +43,15 @@ class SettingsPage extends StatelessWidget {
   /// The app-wide look (FR-SE-3), shown and changed by the Look group.
   final ThemeBloc themeBloc;
 
+  /// The *Your hisaab* group under Look (FR-SE-4, D139), built by the route with its bloc; none
+  /// leaves the group out.
+  final Widget? yourHisaab;
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextTheme text = Theme.of(context).textTheme;
+    final Widget? data = yourHisaab;
     return Scaffold(
       appBar: AppBar(
         leadingWidth: HisaabBackButton.leadingWidth,
@@ -56,7 +63,9 @@ class SettingsPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
+        // why: the Your hisaab group shows its messages here (FR-SE-4 AC-2, AC-3).
+        child: HisaabSnackbarHost(
+          child: ListView(
           padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.xl),
           children: <Widget>[
             Padding(
@@ -92,7 +101,15 @@ class SettingsPage extends StatelessWidget {
               child: Semantics(header: true, child: Text(strings.settingsLook, style: text.titleLarge)),
             ),
             LookGroup(themeBloc: themeBloc),
+            if (data != null) ...<Widget>[
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, top: HisaabSpacing.xl, bottom: HisaabSpacing.s),
+                child: Semantics(header: true, child: Text(strings.settingsYourHisaab, style: text.titleLarge)),
+              ),
+              data,
+            ],
           ],
+        ),
         ),
       ),
     );

@@ -1819,5 +1819,326 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsYourHisaab": "Your hisaab",
+  "@settingsYourHisaab": {
+    "description": "Settings group heading for Back up, Restore and Delete everything (D139). 'Data' reads as the mobile internet pack, so the group names the user's money record"
+  },
+  "backUpRow": "Back up",
+  "@backUpRow": {
+    "description": "Settings row that opens the system Save screen to make a backup file"
+  },
+  "backUpLast": "Last backed up {date}",
+  "@backUpLast": {
+    "description": "Second line of the Back up row; date like 12 Oct",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backUpToday": "Backed up today",
+  "@backUpToday": {
+    "description": "Second line of the Back up row when the last backup was today"
+  },
+  "backUpNever": "Not backed up yet",
+  "@backUpNever": {
+    "description": "Second line of the Back up row when no backup was made on this phone"
+  },
+  "backUpBusy": "Backing up…",
+  "@backUpBusy": {
+    "description": "Second line of the Back up row while the file is written"
+  },
+  "backUpNoLock": "The backup file has no password. Anyone who has it can read your entries and notes, so keep it safe.",
+  "@backUpNoLock": {
+    "description": "Note under the Back up and Restore rows"
+  },
+  "backUpDone": "Backed up as {fileName}",
+  "@backUpDone": {
+    "description": "Snackbar after the backup file is written; fileName like hisaab-backup-2026-11-06.json",
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "backUpDoneNoName": "Backed up",
+  "@backUpDoneNoName": {
+    "description": "Snackbar after the backup file is written, when the picker gives no file name"
+  },
+  "backUpFailed": "Couldn't back up there. Try another folder.",
+  "@backUpFailed": {
+    "description": "Snackbar when writing the backup file fails"
+  },
+  "backUpReadFailed": "Couldn't make the backup. Nothing changed. Try again.",
+  "@backUpReadFailed": {
+    "description": "Snackbar when hisaab can't read its own data to make the file"
+  },
+  "restoreRow": "Restore",
+  "@restoreRow": {
+    "description": "Settings row that opens the file picker to bring back a backup file"
+  },
+  "restoreRowHint": "Bring back from a backup file",
+  "@restoreRowHint": {
+    "description": "Second line of the Restore row"
+  },
+  "restoreChecking": "Checking the backup…",
+  "@restoreChecking": {
+    "description": "Second line of the Restore row while the picked file is read and checked"
+  },
+  "restoreRevertRow": "Undo restore",
+  "@restoreRevertRow": {
+    "description": "Settings row, for 7 days after a restore, that puts back what was there before"
+  },
+  "restoreRevertHint": "Go back to what you had before {date}",
+  "@restoreRevertHint": {
+    "description": "Second line of the Undo restore row; date is the restore day like 6 Nov",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreRevertLoses": "{count, plural, =1{The 1 entry added since will go.} other{The {count} entries added since will go.}}",
+  "@restoreRevertLoses": {
+    "description": "Second line of the Undo restore row when entries were added after the restore (E42)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreNotBackup": "That's not a hisaab backup. Pick a file whose name starts with hisaab-backup.",
+  "@restoreNotBackup": {
+    "description": "Snackbar when the picked file isn't a hisaab backup"
+  },
+  "restoreBroken": "This backup can't be opened. It may be cut short. Try another copy.",
+  "@restoreBroken": {
+    "description": "Snackbar when the file is a hisaab backup but parts are missing or broken"
+  },
+  "restoreNewer": "This backup is from a newer hisaab. Update hisaab from Play Store, then try again.",
+  "@restoreNewer": {
+    "description": "Snackbar when the backup was made by a newer version; nothing is changed"
+  },
+  "restoreOpenFailed": "Couldn't open that file. Try again or pick another.",
+  "@restoreOpenFailed": {
+    "description": "Snackbar when the picked file can't be read at all"
+  },
+  "restoreConfirmTitle": "Replace with this backup?",
+  "@restoreConfirmTitle": {
+    "description": "Title of the restore dialog, the app's only confirmation dialog (BR-16)"
+  },
+  "restoreConfirmFrom": "{count, plural, =0{Made on {date}, with no entries.} =1{Made on {date}, with 1 entry.} other{Made on {date}, with {count} entries.}}",
+  "@restoreConfirmFrom": {
+    "description": "Restore dialog line 1: when the backup was made and how many entries it holds; date like 12 Oct",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreConfirmReplaces": "{count, plural, =0{It replaces everything on this phone now. You can undo right after.} =1{It replaces everything on this phone now, including 1 entry. You can undo right after.} other{It replaces everything on this phone now, including {count} entries. You can undo right after.}}",
+  "@restoreConfirmReplaces": {
+    "description": "Restore dialog line 2: what is on this phone now",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreConfirmYes": "Replace",
+  "@restoreConfirmYes": {
+    "description": "Restore dialog key that restores the backup"
+  },
+  "restoreConfirmNo": "Keep what's here",
+  "@restoreConfirmNo": {
+    "description": "Restore dialog key that closes it and changes nothing"
+  },
+  "restoreWorking": "Bringing back your hisaab…",
+  "@restoreWorking": {
+    "description": "Shown in the restore dialog while the restore runs"
+  },
+  "restoreDone": "Backup from {date} restored",
+  "@restoreDone": {
+    "description": "Snackbar after a restore, with Undo; date like 12 Oct",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUndone": "Back to what you had before",
+  "@restoreUndone": {
+    "description": "Snackbar after Undo on a restore"
+  },
+  "restoreFailed": "Couldn't restore. Nothing changed. Try again.",
+  "@restoreFailed": {
+    "description": "Snackbar when the restore stops part way and is rolled back"
+  },
+  "restoreUndoFailed": "Couldn't go back. The backup is still in use.",
+  "@restoreUndoFailed": {
+    "description": "Snackbar when Undo of a restore fails"
+  },
+  "restoreLink": "Restore a backup",
+  "@restoreLink": {
+    "description": "Text chip on the first onboarding screen for someone moving from another phone"
+  },
+  "restoreLinkSpoken": "Restore a backup from another phone",
+  "@restoreLinkSpoken": {
+    "description": "TalkBack label for the onboarding Restore a backup chip"
+  },
+  "deleteAllRow": "Delete everything",
+  "@deleteAllRow": {
+    "description": "Settings row that opens the Delete everything page"
+  },
+  "deleteAllRowHint": "Clear it all and start again",
+  "@deleteAllRowHint": {
+    "description": "Second line of the Delete everything row"
+  },
+  "deleteAllTitle": "Delete everything",
+  "@deleteAllTitle": {
+    "description": "Title of the Delete everything page"
+  },
+  "deleteAllLead": "This clears hisaab on this phone. It opens again at the first step, like new.",
+  "@deleteAllLead": {
+    "description": "First sentence on the Delete everything page"
+  },
+  "deleteAllListTitle": "This goes:",
+  "@deleteAllListTitle": {
+    "description": "Heading over the list of what is deleted"
+  },
+  "deleteAllItemEntries": "Every entry you added",
+  "@deleteAllItemEntries": {
+    "description": "Delete everything list item"
+  },
+  "deleteAllItemIncome": "Money coming in",
+  "@deleteAllItemIncome": {
+    "description": "Delete everything list item: the income"
+  },
+  "deleteAllItemBills": "Bills and their reminders",
+  "@deleteAllItemBills": {
+    "description": "Delete everything list item"
+  },
+  "deleteAllItemSavings": "Savings",
+  "@deleteAllItemSavings": {
+    "description": "Delete everything list item"
+  },
+  "deleteAllItemCategories": "Categories you added or changed",
+  "@deleteAllItemCategories": {
+    "description": "Delete everything list item; the built-in categories come back as new"
+  },
+  "deleteAllItemSettings": "Look and your other settings",
+  "@deleteAllItemSettings": {
+    "description": "Delete everything list item"
+  },
+  "deleteAllNoUndo": "There's no Undo for this.",
+  "@deleteAllNoUndo": {
+    "description": "Line after the list of what is deleted"
+  },
+  "deleteAllStays": "Backup files you made stay where you put them.",
+  "@deleteAllStays": {
+    "description": "Line saying backup files are not touched"
+  },
+  "deleteAllPhoneSafe": "Only hisaab is cleared. Your phone and other apps stay as they are.",
+  "@deleteAllPhoneSafe": {
+    "description": "Line that answers the fear of wiping the phone"
+  },
+  "deleteAllNoBackup": "Not backed up yet. Back up first to keep a copy.",
+  "@deleteAllNoBackup": {
+    "description": "Last-backup line on the Delete everything page when there is no backup"
+  },
+  "deleteAllBackUpFirst": "Back up first",
+  "@deleteAllBackUpFirst": {
+    "description": "Key on the Delete everything page that makes a backup and comes back"
+  },
+  "deleteAllHold": "Hold to delete everything",
+  "@deleteAllHold": {
+    "description": "Label on the hold key; it fills while pressed and deletes when let go full"
+  },
+  "deleteAllHoldFull": "Let go to delete",
+  "@deleteAllHoldFull": {
+    "description": "Label on the hold key once it is full"
+  },
+  "deleteAllHoldCaption": "{seconds, plural, =1{Keep your finger on it for 1 second} other{Keep your finger on it for {seconds} seconds}}",
+  "@deleteAllHoldCaption": {
+    "description": "Caption under the hold key, always shown",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAllHoldShort": "Keep holding till it fills up.",
+  "@deleteAllHoldShort": {
+    "description": "Caption after the hold key is let go early; nothing was deleted"
+  },
+  "deleteAllHoldSpoken": "Delete everything in hisaab",
+  "@deleteAllHoldSpoken": {
+    "description": "TalkBack label for the hold key"
+  },
+  "deleteAllHoldArmed": "Double-tap again to delete everything",
+  "@deleteAllHoldArmed": {
+    "description": "Hold key label for TalkBack and switch users after the first activation; a second within 10 s deletes"
+  },
+  "deleteAllHoldHint": "Double-tap twice to delete",
+  "@deleteAllHoldHint": {
+    "description": "TalkBack hint on the hold key"
+  },
+  "deleteAllWorking": "Deleting…",
+  "@deleteAllWorking": {
+    "description": "Hold key label while everything is deleted"
+  },
+  "deleteAllDoneSpoken": "Everything deleted. hisaab is starting again.",
+  "@deleteAllDoneSpoken": {
+    "description": "TalkBack announcement as the app lands on onboarding after deleting"
+  },
+  "deleteAllFailed": "Couldn't delete. Nothing changed. Try again.",
+  "@deleteAllFailed": {
+    "description": "Snackbar when the delete fails and is rolled back"
+  },
+  "newCategoryTile": "New",
+  "@newCategoryTile": {"description": "The dashed tile after the categories that makes a new one (FR-AD-9)"},
+  "newCategory": "New category",
+  "@newCategory": {"description": "TalkBack label of the New tile"},
+  "ownCategoriesRule": "Your own",
+  "@ownCategoriesRule": {"description": "Small label over the row of the user's own categories in the Add tray"},
+  "ownCategoriesFull": "4 of your own is the most. Hide one in Settings to make room.",
+  "@ownCategoriesFull": {"description": "Replaces the New tile when 4 of the user's own are shown (D138)"},
+  "newCategoryQuestion": "What's it called?",
+  "@newCategoryQuestion": {"description": "Under the amount on the new-category name step"},
+  "newCategoryHint": "Petrol, kids, gym…",
+  "@newCategoryHint": {"description": "Hint in the empty new-category name field"},
+  "newCategoryFieldLabel": "Name for the new category",
+  "@newCategoryFieldLabel": {"description": "TalkBack label of the name field"},
+  "categoryIconFromName": "Icon from the name: {icon}",
+  "@categoryIconFromName": {"description": "Icon line when the icon follows the name", "placeholders": {"icon": {"type": "String"}}},
+  "categoryIconPicked": "Icon: {icon}",
+  "@categoryIconPicked": {"description": "Icon line after the user picked an icon", "placeholders": {"icon": {"type": "String"}}},
+  "categoryIconNoMatch": "Icon: Tag. No match yet",
+  "@categoryIconNoMatch": {"description": "Icon line when nothing in the name matches an icon"},
+  "categoryIconWaiting": "The name picks an icon",
+  "@categoryIconWaiting": {"description": "Icon line while the name is empty"},
+  "changeIcon": "Change",
+  "@changeIcon": {"description": "Link at the end of the icon line; opens the icon step"},
+  "categoryIconSemantics": "Icon, {icon}. Double tap to change",
+  "@categoryIconSemantics": {"description": "TalkBack for the icon line", "placeholders": {"icon": {"type": "String"}}},
+  "categoryExists": "You have {name} already. It saves there.",
+  "@categoryExists": {"description": "When the typed name matches a shown category", "placeholders": {"name": {"type": "String"}}},
+  "categoryComesBack": "You hid {name}. Saving brings it back.",
+  "@categoryComesBack": {"description": "When the typed name matches a hidden category", "placeholders": {"name": {"type": "String"}}},
+  "saveInCategory": "Save in {name}",
+  "@saveInCategory": {"description": "The marigold key on the name step", "placeholders": {"name": {"type": "String"}}},
+  "pickIconFor": "Pick an icon for {name}",
+  "@pickIconFor": {"description": "Under the amount on the icon step", "placeholders": {"name": {"type": "String"}}},
+  "categoryIconFromNameShort": "From the name: {icon}",
+  "@categoryIconFromNameShort": {"description": "Line on the icon step saying which icon the name suggests", "placeholders": {"icon": {"type": "String"}}},
+  "categoryIconName": "{key, select, groceries{Groceries} vegetables{Vegetables} fruit{Fruit} milk{Milk} chai{Chai} coffee{Coffee} snacks{Snacks} eating_out{Eating out} cigarettes{Cigarettes} beer{Beer} cold_drink{Cold drink} drinks{Drinks} sweets{Sweets} gaming{Gaming} cards{Cards} lottery{Lottery} paan{Paan} hookah{Hookah} fuel{Fuel} auto{Auto} cab{Cab} bike{Bike} car{Car} metro{Metro} train{Train} parking{Parking} trip{Trip} kids{Kids} school{School} family{Family} pet{Pet} cleaning{Cleaning} laundry{Laundry} repair{Repair} plants{Plants} medicine{Medicine} gym{Gym} yoga{Yoga} salon{Salon} prayer{Prayer} giving{Giving} gift{Gift} wedding{Wedding} clothes{Clothes} shoes{Shoes} jewellery{Jewellery} phone{Phone} recharge{Recharge} movies{Movies} books{Books} other{Tag}}",
+  "@categoryIconName": {"description": "The word under a curated category icon, by its app-owned key (D138)", "placeholders": {"key": {"type": "String"}}},
+  "categoryIconGroup": "{group, select, food{Food and drink} habits{Treats and habits} around{Getting around} home{Home and family} care{Care and giving} other{Things and fun}}",
+  "@categoryIconGroup": {"description": "Heading of a group on the icon step", "placeholders": {"group": {"type": "String"}}},
+  "newCategorySuggestion": "{key, select, groceries{Groceries} kids{Kids} family{Family} pets{Pets} petrol{Petrol} other{Salon}}",
+  "@newCategorySuggestion": {"description": "A name chip on the new-category name step", "placeholders": {"key": {"type": "String"}}}
 }

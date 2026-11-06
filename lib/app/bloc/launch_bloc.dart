@@ -1,3 +1,4 @@
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -13,11 +14,24 @@ class LaunchBloc extends Bloc<LaunchEvent, LaunchState> {
   LaunchBloc({required this._preferences}) : super(const LaunchLoading()) {
     on<LaunchStarted>(_onStarted);
     on<LaunchOnboardingFinished>(_onOnboardingFinished);
+    // why: the newest replacement wins, so an older read can't land a stale root screen.
+    on<LaunchDataReplaced>(_onDataReplaced, transformer: restartable());
   }
 
   final AppPreferencesRepository _preferences;
 
-  Future<void> _onStarted(LaunchStarted event, Emitter<LaunchState> emit) async {
+  /// How many times the data was replaced; it keys the rebuilt root screen.
+  int _generation = 0;
+
+  Future<void> _onStarted(LaunchStarted event, Emitter<LaunchState> emit) => _read(emit);
+
+  Future<void> _onDataReplaced(LaunchDataReplaced event, Emitter<LaunchState> emit) {
+    _generation++;
+    emit(const LaunchLoading());
+    return _read(emit);
+  }
+
+  Future<void> _read(Emitter<LaunchState> emit) async {
     final Either<Failure, bool> done = await _preferences.onboardingDone().run();
     emit(
       done.match(
@@ -25,7 +39,7 @@ class LaunchBloc extends Bloc<LaunchEvent, LaunchState> {
           AppLogger.log(tag: 'launch.preferences_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
           return LaunchFailed(failure);
         },
-        (bool done) => done ? const LaunchReady() : const LaunchNeedsOnboarding(),
+        (bool done) => done ? LaunchReady(generation: _generation) : const LaunchNeedsOnboarding(),
       ),
     );
   }

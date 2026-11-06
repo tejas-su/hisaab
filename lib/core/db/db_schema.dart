@@ -104,6 +104,16 @@ abstract final class SettingKeys {
 
   /// Whether the user wants bill reminders: '1' yes, '0' no, unset when never asked (D126).
   static const String billReminders = 'bill_reminders';
+
+  /// Backup-feature-owned, and local to this phone: never written into a backup file (D139).
+  /// The day of the last backup made here, `YYYY-MM-DD`.
+  static const String lastBackup = 'last_backup';
+
+  /// The backup JSON of the data a restore replaced, kept for *Undo restore* (SPEC BR-16).
+  static const String restoreSnapshot = 'restore_snapshot';
+
+  /// When that restore ran, an ISO instant comparable with entries' `created_at`.
+  static const String restoredAt = 'restored_at';
 }
 
 /// Stored values of the `kind` column.

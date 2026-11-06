@@ -14,6 +14,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_budget_settings_repository.dart';
+import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/fakes/fake_ledger_repository.dart';
@@ -26,11 +27,13 @@ void main() {
   late FakeHaptics haptics;
   late FakeClock clock;
   late CycleSummary summary;
+  late FakeCategoryRepository categoryRepository;
 
   setUp(() async {
     ledger = FakeLedgerRepository(WorkedExample.entries);
     haptics = FakeHaptics();
     clock = FakeClock(WorkedExample.now);
+    categoryRepository = FakeCategoryRepository();
     summary = (await GetCycleSummary(
       ledger: ledger,
       recurring: FakeRecurringRepository(WorkedExample.rules),
@@ -44,13 +47,19 @@ void main() {
 
   tearDown(() => ledger.dispose());
 
-  AddEntryBloc build({Option<Entry> editing = const Option<Entry>.none(), EntryKind kind = EntryKind.spent, bool withSummary = true}) {
+  AddEntryBloc build({
+    Option<Entry> editing = const Option<Entry>.none(),
+    EntryKind kind = EntryKind.spent,
+    bool withSummary = true,
+    List<Category> categories = seedCategories,
+  }) {
     final AddEntryBloc bloc = AddEntryBloc(
       saveEntry: SaveEntry(ledger: ledger, recurring: FakeRecurringRepository(WorkedExample.rules), clock: clock),
       deleteEntry: DeleteEntry(ledger: ledger),
+      addOwnCategory: AddOwnCategory(categories: categoryRepository),
       haptics: haptics,
       clock: clock,
-      categories: seedCategories,
+      categories: categories,
       summary: withSummary ? Option<CycleSummary>.of(summary) : const Option<CycleSummary>.none(),
       editing: editing,
       kind: kind,
@@ -339,5 +348,126 @@ void main() {
     expect(const AddEntryNoteChanged('Chai').props, <Object?>['Chai']);
     expect(const AddEntryCategoryPicked(1).props, <Object?>[1]);
     expect(const AddEntryNextPressed().props, isEmpty);
+  });
+
+  group('AddEntryBloc new category (FR-AD-9, D138)', () {
+    const Category petrol = Category(id: 13, key: 'own_13', iconKey: 'fuel', kind: EntryKind.spent, sort: 8, customName: 'Petrol');
+    const Category gym = Category(id: 14, key: 'own_14', iconKey: 'gym', kind: EntryKind.spent, sort: 9, customName: 'Gym', hidden: true);
+    final Map<int, String> labels = <int, String>{SeedCategoryIds.food: 'Food'};
+
+    Future<AddEntryBloc> onNameStep() async {
+      final AddEntryBloc bloc = build();
+      await type(bloc, '250');
+      await bloc.dispatch(const AddEntryNextPressed());
+      await bloc.dispatch(const AddEntryNewCategoryOpened());
+      return bloc;
+    }
+
+    test('the user\'s own tiles follow the 8 in order; hidden ones leave the tray', () {
+      final EntryForm form = build(categories: <Category>[...seedCategories, gym, petrol]).state.form;
+      expect(form.tiles.map((Category c) => c.key).skip(8), <String>['own_13']);
+      expect(form.canAddOwn, isTrue);
+    });
+
+    test('with 4 of the user\'s own shown, no more can be added', () {
+      final List<Category> four = <Category>[
+        for (int i = 0; i < 4; i++)
+          Category(id: 20 + i, key: 'own_${20 + i}', iconKey: 'tag', kind: EntryKind.spent, sort: 8 + i, customName: 'C$i'),
+      ];
+      expect(build(categories: <Category>[...seedCategories, ...four]).state.form.canAddOwn, isFalse);
+    });
+
+    test('Got never offers a new category', () {
+      expect(build(kind: EntryKind.got).state.form.canAddOwn, isFalse);
+    });
+
+    test('New opens the name step with nothing typed and the icon following the name', () async {
+      final EntryForm form = (await onNameStep()).state.form;
+      expect((form.step, form.draftName, form.draftIcon), (AddEntryStep.newName, '', const Option<String>.none()));
+      expect(form.draftIconKey, CategoryIcon.fallback);
+    });
+
+    test('typing a name picks its icon', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('Petrol'));
+      expect((bloc.state.form.draftName, bloc.state.form.draftIconKey), ('Petrol', 'fuel'));
+    });
+
+    test('a picked icon stays when the name changes, and back on the name step', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('Petrol'));
+      await bloc.dispatch(const AddEntryIconStepOpened());
+      expect(bloc.state.form.step, AddEntryStep.newIcon);
+
+      await bloc.dispatch(const AddEntryIconPicked('car'));
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('Petrol pump'));
+
+      expect((bloc.state.form.step, bloc.state.form.draftIconKey), (AddEntryStep.newName, 'car'));
+    });
+
+    test('picking the name\'s own icon goes back to following the name', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('Petrol'));
+      await bloc.dispatch(const AddEntryIconPicked('fuel'));
+      expect(bloc.state.form.draftIcon, const Option<String>.none());
+    });
+
+    test('back goes icon step → name step → grid, keeping what was typed and the amount', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('Petrol'));
+      await bloc.dispatch(const AddEntryIconStepOpened());
+
+      await bloc.dispatch(const AddEntryBackPressed());
+      expect(bloc.state.form.step, AddEntryStep.newName);
+      await bloc.dispatch(const AddEntryBackPressed());
+      expect((bloc.state.form.step, bloc.state.form.draftName, bloc.state.form.rupees), (AddEntryStep.category, 'Petrol', 250));
+    });
+
+    test('Save in Petrol makes the category and saves the entry in it, then finishes', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged(' Petrol '));
+
+      await bloc.dispatch(AddEntryNewCategorySaved(labels));
+
+      final Category made = categoryRepository.categories.singleWhere((Category c) => c.isOwn);
+      expect((made.customName, made.iconKey), ('Petrol', 'fuel'));
+      expect(ledger.saved.single.categoryId, made.id);
+      expect(ledger.saved.single.amount, Money.fromMajor(250));
+      expect(bloc.state, isA<AddEntryFinished>());
+      expect(haptics.events.last, 'success');
+    });
+
+    test('a name that matches a built-in category saves there and makes nothing', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('food'));
+
+      await bloc.dispatch(AddEntryNewCategorySaved(labels));
+
+      expect(categoryRepository.categories.where((Category c) => c.isOwn), isEmpty);
+      expect(ledger.saved.single.categoryId, SeedCategoryIds.food);
+    });
+
+    test('an empty name saves nothing', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('   '));
+
+      await bloc.dispatch(AddEntryNewCategorySaved(labels));
+
+      expect(ledger.saved, isEmpty);
+      expect(bloc.state, isA<AddEntryEditing>());
+    });
+
+    test('a refused category keeps the name step open with "Couldn\'t save" and nothing lost', () async {
+      final AddEntryBloc bloc = await onNameStep();
+      await bloc.dispatch(const AddEntryNewCategoryNameChanged('Petrol'));
+      categoryRepository.failure = DatabaseFailure('locked');
+
+      await bloc.dispatch(AddEntryNewCategorySaved(labels));
+
+      final AddEntryState state = bloc.state;
+      expect(state, isA<AddEntryEditing>().having((AddEntryEditing s) => s.failed, 'failed', isTrue));
+      expect((state.form.step, state.form.draftName), (AddEntryStep.newName, 'Petrol'));
+      expect(ledger.saved, isEmpty);
+    });
   });
 }

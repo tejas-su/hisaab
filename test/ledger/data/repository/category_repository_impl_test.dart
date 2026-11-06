@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/ledger/data/datasource/categories_local_data_source.dart';
 import 'package:expense_tracker/ledger/data/repository/category_repository_impl.dart';
 import 'package:expense_tracker/ledger/domain/entities/category.dart';
+import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -87,6 +88,108 @@ void main() {
       final Either<Failure, Unit> saved =
           await repository.setLimits(<int, Money>{SeedCategoryIds.food: Money.fromMajor(500)}).run();
       expect(saved.getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
+  group('CategoryRepositoryImpl, categories of the user\'s own (D138)', () {
+    late AppDatabase database;
+    late CategoryRepositoryImpl repository;
+
+    setUp(() async {
+      database = await openTestDatabase();
+      repository = CategoryRepositoryImpl(categories: SqfliteCategoriesLocalDataSource(database));
+    });
+
+    Future<List<Category>> all() async => (await repository.all().run()).getOrElse((Failure f) => fail(f.message));
+    Future<Category> addOwn(String name, String iconKey) async =>
+        (await repository.addOwn(name: name, iconKey: iconKey).run()).getOrElse((Failure f) => fail(f.message));
+
+    test('addOwn adds a Spent category after the 8 built-in ones, with a key of its own', () async {
+      final Category petrol = await addOwn('Petrol', 'fuel');
+
+      expect(petrol.customName, 'Petrol');
+      expect(petrol.iconKey, 'fuel');
+      expect(petrol.kind, EntryKind.spent);
+      expect(petrol.isOwn, isTrue);
+      expect(petrol.hidden, isFalse);
+      final List<Category> spent = (await all()).where((Category c) => c.kind == EntryKind.spent).toList();
+      expect(spent.last, petrol);
+      expect(spent.take(8).map((Category c) => c.key), seedCategories.take(8).map((Category c) => c.key));
+    });
+
+    test('addOwn keeps the order categories were made in, and gives each a distinct key', () async {
+      final Category petrol = await addOwn('Petrol', 'fuel');
+      final Category kids = await addOwn('Kids', 'kids');
+
+      expect(petrol.key, isNot(kids.key));
+      expect(petrol.sort, lessThan(kids.sort));
+      expect((await all()).where((Category c) => c.isOwn), <Category>[petrol, kids]);
+    });
+
+    test('the built-in categories are not the user\'s own', () async {
+      expect((await all()).where((Category c) => c.isOwn), isEmpty);
+    });
+
+    test('rename gives any category a new name', () async {
+      expect(await repository.rename(SeedCategoryIds.food, 'Khana').run(), Either<Failure, Unit>.right(unit));
+      expect((await all()).first.customName, 'Khana');
+    });
+
+    test('changeIcon gives any category a new icon key', () async {
+      expect(await repository.changeIcon(SeedCategoryIds.food, 'chai').run(), Either<Failure, Unit>.right(unit));
+      expect((await all()).first.iconKey, 'chai');
+    });
+
+    test('a hidden category of the user\'s own is still listed, flagged hidden, so its entries keep their name', () async {
+      final Category petrol = await addOwn('Petrol', 'fuel');
+
+      expect(await repository.setHidden(petrol.id, hidden: true).run(), Either<Failure, Unit>.right(unit));
+
+      final Category listed = (await all()).singleWhere((Category c) => c.id == petrol.id);
+      expect(listed.hidden, isTrue);
+      expect(listed.customName, 'Petrol');
+    });
+
+    test('setHidden false brings a hidden category back', () async {
+      final Category petrol = await addOwn('Petrol', 'fuel');
+      await repository.setHidden(petrol.id, hidden: true).run();
+
+      await repository.setHidden(petrol.id, hidden: false).run();
+
+      expect((await all()).singleWhere((Category c) => c.id == petrol.id).hidden, isFalse);
+    });
+
+    test('a built-in category can never be hidden', () async {
+      final Either<Failure, Unit> result = await repository.setHidden(SeedCategoryIds.food, hidden: true).run();
+
+      expect(result.getLeft().toNullable(), isA<InvalidDataFailure>());
+      expect((await all()).first.hidden, isFalse);
+    });
+
+    test('the system-hidden saved and card_paid categories stay out of the list', () async {
+      expect((await all()).map((Category c) => c.key), isNot(anyOf(contains('saved'), contains('card_paid'))));
+    });
+
+    for (final String operation in <String>['rename', 'changeIcon', 'setHidden']) {
+      test('$operation of an unknown id is InvalidDataFailure', () async {
+        final Either<Failure, Unit> result = await switch (operation) {
+          'rename' => repository.rename(999, 'Ghost'),
+          'changeIcon' => repository.changeIcon(999, 'tag'),
+          _ => repository.setHidden(999, hidden: true),
+        }
+            .run();
+        expect(result.getLeft().toNullable(), isA<InvalidDataFailure>());
+      });
+    }
+
+    test('addOwn returns DatabaseFailure when the database is closed', () async {
+      await database.close();
+      expect((await repository.addOwn(name: 'Petrol', iconKey: 'fuel').run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
+    test('rename returns DatabaseFailure when the database is closed', () async {
+      await database.close();
+      expect((await repository.rename(SeedCategoryIds.food, 'Khana').run()).getLeft().toNullable(), isA<DatabaseFailure>());
     });
   });
 }

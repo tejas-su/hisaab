@@ -8,9 +8,10 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/focus_ring.dart';
 
 /// One Settings entry: an icon well, its [label] (with an optional [detail] line under it) and an
-/// arrow; tapping it opens [onTap]'s page, and a null [onTap] disables it.
+/// arrow; tapping it opens [onTap]'s page, and a null [onTap] disables it. A [busy] row shows the
+/// loading glyph in place of the arrow (D139).
 class SettingsRow extends StatelessWidget {
-  const SettingsRow({super.key, required this.icon, required this.label, required this.onTap, this.detail});
+  const SettingsRow({super.key, required this.icon, required this.label, required this.onTap, this.detail, this.busy = false});
 
   final AppIconData icon;
   final String label;
@@ -18,6 +19,9 @@ class SettingsRow extends StatelessWidget {
 
   /// A second, quieter line, e.g. "₹45,000 · on day 4".
   final String? detail;
+
+  /// Whether the row's request is running, such as a backup being written.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) => FocusRing(
@@ -44,7 +48,7 @@ class SettingsRow extends StatelessWidget {
               ),
               const SizedBox(width: HisaabSpacing.m),
               Expanded(child: _texts(context)),
-              AppIcon(AppIcons.next, color: context.colors.ink2),
+              AppIcon(busy ? AppIcons.busy : AppIcons.next, color: context.colors.ink2),
             ],
           ),
         ),

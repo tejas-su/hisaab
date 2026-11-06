@@ -23,7 +23,8 @@ class AppRoot extends StatelessWidget {
           builder: (BuildContext context, LaunchState state) => switch (state) {
             LaunchLoading() => ColoredBox(color: context.colors.background, child: const SizedBox.expand()),
             LaunchNeedsOnboarding() => AppRoutes.onboarding(getIt, onFinished: () => context.read<LaunchBloc>().add(const LaunchOnboardingFinished())),
-            LaunchReady(:final bool assemble) => AppRoutes.main(getIt, assemble: assemble),
+            LaunchReady(:final bool assemble, :final int generation) =>
+              KeyedSubtree(key: ValueKey<int>(generation), child: AppRoutes.main(getIt, assemble: assemble)),
             LaunchFailed() => const StartupFailureView(),
           },
         ),

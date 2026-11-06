@@ -20,6 +20,7 @@ abstract final class CategoryMapper {
           sort: model.sort,
           // why: limits are stored without a currency; v1 ships rupees only.
           limit: Option<int>.fromNullable(model.budgetMinor).map(Money.new),
+          hidden: model.archived,
         ),
       );
 }

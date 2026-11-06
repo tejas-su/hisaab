@@ -314,6 +314,7 @@ abstract final class AppRoutes {
     final AddEntryBloc bloc = AddEntryBloc(
       saveEntry: getIt<SaveEntry>(),
       deleteEntry: getIt<DeleteEntry>(),
+      addOwnCategory: getIt<AddOwnCategory>(),
       haptics: getIt<Haptics>(),
       clock: getIt<Clock>(),
       categories: categories,

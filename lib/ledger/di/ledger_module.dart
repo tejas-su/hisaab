@@ -17,8 +17,10 @@ import '../domain/repository/category_repository.dart';
 import '../domain/repository/ledger_repository.dart';
 import '../domain/repository/recurring_repository.dart';
 import '../domain/usecase/add_bill.dart';
+import '../domain/usecase/add_own_category.dart';
 import '../domain/usecase/apply_suggested_limits.dart';
 import '../domain/usecase/arm_bill_reminders.dart';
+import '../domain/usecase/change_category_icon.dart';
 import '../domain/usecase/delete_bill.dart';
 import '../domain/usecase/edit_bill.dart';
 import '../domain/usecase/enter_bill_amount.dart';
@@ -40,8 +42,10 @@ import '../domain/usecase/get_income.dart';
 import '../domain/usecase/get_saved_total.dart';
 import '../domain/usecase/put_in_extra.dart';
 import '../domain/usecase/post_due_recurring.dart';
+import '../domain/usecase/rename_category.dart';
 import '../domain/usecase/restore_entry.dart';
 import '../domain/usecase/save_entry.dart';
+import '../domain/usecase/set_category_hidden.dart';
 
 /// Registers the ledger's repositories and use cases; needs the core services registered first.
 void registerLedgerServices(GetIt getIt) {
@@ -110,5 +114,9 @@ void registerLedgerServices(GetIt getIt) {
         clock: clock,
       ),
     )
-    ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: getIt<CategoryRepository>()));
+    ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: getIt<CategoryRepository>()))
+    ..registerSingleton<AddOwnCategory>(AddOwnCategory(categories: getIt<CategoryRepository>()))
+    ..registerSingleton<RenameCategory>(RenameCategory(categories: getIt<CategoryRepository>()))
+    ..registerSingleton<ChangeCategoryIcon>(ChangeCategoryIcon(categories: getIt<CategoryRepository>()))
+    ..registerSingleton<SetCategoryHidden>(SetCategoryHidden(categories: getIt<CategoryRepository>()));
 }

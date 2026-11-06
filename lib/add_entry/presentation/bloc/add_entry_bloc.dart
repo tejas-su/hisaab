@@ -23,6 +23,7 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
   AddEntryBloc({
     required this._saveEntry,
     required this._deleteEntry,
+    required this._addOwnCategory,
     required this._haptics,
     required Clock clock,
     required List<Category> categories,
@@ -58,6 +59,20 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     // delete twice; Delete has no in-between state to guard on.
     on<AddEntryCategoryPicked>(_onCategoryPicked, transformer: droppable());
     on<AddEntryDeleteRequested>(_onDeleteRequested, transformer: droppable());
+    on<AddEntryNewCategoryOpened>(
+      (AddEntryNewCategoryOpened event, Emitter<AddEntryState> emit) =>
+          _update(emit, (EntryForm form) => form.copyWith(step: AddEntryStep.newName)),
+    );
+    on<AddEntryNewCategoryNameChanged>(
+      (AddEntryNewCategoryNameChanged event, Emitter<AddEntryState> emit) =>
+          _update(emit, (EntryForm form) => form.copyWith(draftName: event.name)),
+    );
+    on<AddEntryIconStepOpened>(
+      (AddEntryIconStepOpened event, Emitter<AddEntryState> emit) =>
+          _update(emit, (EntryForm form) => form.copyWith(step: AddEntryStep.newIcon)),
+    );
+    on<AddEntryIconPicked>(_onIconPicked);
+    on<AddEntryNewCategorySaved>(_onNewCategorySaved, transformer: droppable());
   }
 
   /// How far back dates may go when no summary is available (about two months).
@@ -65,8 +80,13 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
 
   final SaveEntry _saveEntry;
   final DeleteEntry _deleteEntry;
+  final AddOwnCategory _addOwnCategory;
   final Haptics _haptics;
   final List<Category> _categories;
+
+  /// Every category the tray was opened with, hidden ones too, so the name step can say what a
+  /// typed name already belongs to (FR-AD-9 AC-4).
+  List<Category> get categories => _categories;
   final Option<CycleSummary> _summary;
 
   /// Switches between *Spent* and *Got*; the amount is kept.
@@ -82,12 +102,46 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     }
   }
 
-  /// Goes back from step 2 to step 1; on step 1 the page closes the tray instead.
+  /// Goes back one step: icon → name → grid → amount; on the amount step the page closes the
+  /// tray instead. What was typed is kept (FR-AD-7, FR-AD-9 AC-5).
   void _onBackPressed(AddEntryBackPressed event, Emitter<AddEntryState> emit) {
-    if (state.form.step != AddEntryStep.amount) {
-      _update(emit, (EntryForm form) => form.copyWith(step: AddEntryStep.amount));
+    final AddEntryStep? previous = switch (state.form.step) {
+      AddEntryStep.amount => null,
+      AddEntryStep.category => AddEntryStep.amount,
+      AddEntryStep.newName => AddEntryStep.category,
+      AddEntryStep.newIcon => AddEntryStep.newName,
+    };
+    if (previous != null) {
+      _update(emit, (EntryForm form) => form.copyWith(step: previous));
     }
   }
+
+  /// Sets the new category's icon and returns to the name step; the name's own icon means
+  /// "follow the name" again (FR-AD-9 AC-3).
+  void _onIconPicked(AddEntryIconPicked event, Emitter<AddEntryState> emit) => _update(
+        emit,
+        (EntryForm form) => form.copyWith(
+          step: AddEntryStep.newName,
+          draftIcon: event.iconKey == CategoryIcon.forName(form.draftName) ? const Option<String>.none() : Option<String>.of(event.iconKey),
+        ),
+      );
+
+  /// Finds or makes the category the typed name belongs to, then saves the entry in it (FR-AD-9 AC-4).
+  Future<void> _onNewCategorySaved(AddEntryNewCategorySaved event, Emitter<AddEntryState> emit) async {
+    final AddEntryState current = state;
+    if (current is! AddEntryEditing || current.form.draftName.trim().isEmpty) {
+      return;
+    }
+    final EntryForm form = current.form;
+    emit(AddEntrySaving(form));
+    final Either<Failure, Entry> saved = await _addOwnCategory(
+      NewCategory(name: form.draftName, iconKey: form.draftIconKey, labels: event.labels),
+    ).flatMap((Category category) => _saveEntry(SaveEntryParams(_draftIn(form, category.id), replacing: form.editing.map((Entry e) => e.id)))).run();
+    _finishOrFail(emit, saved, form);
+  }
+
+  static EntryDraft _draftIn(EntryForm form, int categoryId) =>
+      EntryDraft(amount: form.amount, kind: form.kind, categoryId: categoryId, date: form.date, note: form.note);
 
   /// Sets the entry's date, kept between the earliest allowed day and today (BR-10).
   void _onDateChanged(AddEntryDateChanged event, Emitter<AddEntryState> emit) => _update(emit, (EntryForm form) {
@@ -103,15 +157,8 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     final EntryForm form = current.form;
     final int categoryId = event.categoryId;
     emit(AddEntrySaving(form, categoryId: categoryId));
-    final EntryDraft draft = EntryDraft(
-      amount: form.amount,
-      kind: form.kind,
-      categoryId: categoryId,
-      date: form.date,
-      note: form.note,
-    );
     final Either<Failure, Entry> saved = await _saveEntry(
-      SaveEntryParams(draft, replacing: form.editing.map((Entry entry) => entry.id)),
+      SaveEntryParams(_draftIn(form, categoryId), replacing: form.editing.map((Entry entry) => entry.id)),
     ).run();
     _finishOrFail(emit, saved, form, categoryId: categoryId);
   }
@@ -191,8 +238,9 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     return form.copyWith(preview: _previewFor(form, summary));
   }
 
+  // why: a hidden category of the user's own keeps its entries but leaves the tray (D138).
   static List<Category> _tilesFor(List<Category> categories, EntryKind kind) =>
-      categories.where((Category category) => category.kind == kind).toList()
+      categories.where((Category category) => category.kind == kind && !category.hidden).toList()
         ..sort((Category a, Category b) => a.sort.compareTo(b.sort));
 
   // why: an edited entry from today is already inside spentToday, so only the change counts. A bill
