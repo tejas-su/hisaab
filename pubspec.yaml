@@ -39,6 +39,7 @@ flutter:
   assets:
     - assets/fonts/OFL-AnekLatin.txt
     - assets/fonts/OFL-Mukta.txt
+    - assets/illustrations/
 
   fonts:
     - family: AnekLatin

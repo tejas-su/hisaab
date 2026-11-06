@@ -2237,7 +2237,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{seconds, plural, =1{Keep your finger on it for 1 second} other{Keep your finger on it for {seconds} seconds}}'**
-  String deleteAllHoldCaption(int seconds);
+  String deleteAllHoldCaption(num seconds);
 
   /// Caption after the hold key is let go early; nothing was deleted
   ///

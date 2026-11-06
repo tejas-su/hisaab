@@ -57,6 +57,7 @@ enum _Swatch {
   blockIdle,
   displayEdge,
   inverse,
+  danger,
   focus,
   focusGap,
   displayUnderScrim,
@@ -103,6 +104,7 @@ enum _Swatch {
       blockIdle => c.blockIdle,
       displayEdge => c.displayEdge,
       inverse => c.inverse,
+      danger => c.danger,
       focus => c.focus,
       focusGap => c.focusGap,
       displayUnderScrim => Color.alphaBlend(c.scrim, c.display),
@@ -176,6 +178,11 @@ final List<_Pair> _pairs = <_Pair>[
   _pair(_Swatch.ink, _Swatch.control, _Rule.nonText, 'a focused field’s ink edge on its control fill (D100)'),
   _pair(_Swatch.ink, _Swatch.hairline, _Rule.nonText, 'a focused field’s ink edge on a hairline fill (D100)'),
   _pair(_Swatch.focus, _Swatch.signal, _Rule.nonText, 'the focus ring beside a marigold key', only: Brightness.light),
+  // The Delete everything key: a danger edge and label at rest on the page, a danger fill with
+  // page-coloured text while held or armed (D142).
+  _pair(_Swatch.danger, _Swatch.background, _Rule.text, 'the hold key’s edge, glyph and label at rest (D142)'),
+  _pair(_Swatch.background, _Swatch.danger, _Rule.text, 'the hold key’s label on its danger fill (D142)'),
+  _pair(_Swatch.focusGap, _Swatch.danger, _Rule.nonText, 'the focus gap against the held hold key (D142)'),
   _pair(_Swatch.focusGap, _Swatch.signal, _Rule.nonText, 'the focus gap against a marigold key', only: Brightness.dark),
   // Material roles, which Material widgets draw on their own (D94, D95).
   _pair(_Swatch.outline, _Swatch.surface, _Rule.nonText, 'the Switch’s off thumb and edge on a card'),

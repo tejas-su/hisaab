@@ -154,6 +154,12 @@ void main() {
       expect(HisaabColors.light.lerp(HisaabColors.dark, 1).inverse, HisaabColors.dark.inverse);
     });
 
+    test('copyWith and lerp carry danger', () {
+      expect(HisaabColors.light.copyWith(danger: HisaabColors.dark.danger).danger, HisaabColors.dark.danger);
+      expect(HisaabColors.light.copyWith().danger, HisaabColors.light.danger);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 1).danger, HisaabColors.dark.danger);
+    });
+
     test('inverse is a charcoal between ink2 and ink in light, and ink in dark (D105)', () {
       final double light = HisaabColors.light.inverse.computeLuminance();
       expect(light, lessThan(HisaabColors.light.ink2.computeLuminance()));

@@ -14,6 +14,7 @@ import '../../domain/entities/onboarding_step.dart';
 import '../../domain/entities/setup_labels.dart';
 import '../bloc/onboarding_bloc.dart';
 import '../bloc/onboarding_event.dart';
+import 'onboarding_illustration.dart';
 import 'step_header.dart';
 
 /// Step 3: "Any fixed bills?" with a chip per common bill and Skip always visible (FR-ON-4).
@@ -39,6 +40,7 @@ class BillsStep extends StatelessWidget {
     final OnboardingBloc bloc = context.read<OnboardingBloc>();
     final Map<BillKind, BillDraft> added = <BillKind, BillDraft>{for (final BillDraft bill in draft.bills) bill.kind: bill};
     return AdaptiveSplit(
+      art: const OnboardingIllustration(OnboardingPicture.bills),
       header: StepHeader(
         step: OnboardingStep.bills,
         question: strings.billsQuestion,

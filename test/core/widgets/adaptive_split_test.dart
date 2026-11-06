@@ -8,6 +8,20 @@ import '../../helpers/pump_app.dart';
 
 const Key _header = ValueKey<String>('header');
 const Key _controls = ValueKey<String>('controls');
+const Key _art = ValueKey<String>('art');
+
+Widget _splitWithArt({double headerHeight = 120, void Function(double)? onArtHeight}) => Scaffold(
+      body: AdaptiveSplit(
+        header: SizedBox(key: _header, height: headerHeight, width: 200),
+        art: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints space) {
+            onArtHeight?.call(space.maxHeight);
+            return const SizedBox.expand(key: _art);
+          },
+        ),
+        controls: const SizedBox(key: _controls, height: 200, width: 200),
+      ),
+    );
 
 Widget _split({bool fullWindow = true}) => const Scaffold(
       body: AdaptiveSplit(
@@ -78,6 +92,30 @@ void main() {
     testWidgets('inside a tray on a short window: side by side', (WidgetTester tester) async {
       await pumpApp(tester, _split(fullWindow: false), size: const Size(700, 412));
       expect(tester.getRect(find.byKey(_header)).right, lessThanOrEqualTo(tester.getRect(find.byKey(_controls)).left));
+    });
+
+    testWidgets('phone with art: the art fills the gap between header and controls', (WidgetTester tester) async {
+      await pumpApp(tester, _splitWithArt());
+
+      final Rect art = tester.getRect(find.byKey(_art));
+      expect(art.top, greaterThan(tester.getRect(find.byKey(_header)).bottom));
+      expect(art.bottom, lessThan(tester.getRect(find.byKey(_controls)).top));
+      expect(art.height, greaterThan(300));
+    });
+
+    testWidgets('a header that fills the screen leaves the art no room, and nothing overflows', (WidgetTester tester) async {
+      double? artHeight;
+      await pumpApp(tester, _splitWithArt(headerHeight: 800, onArtHeight: (double height) => artHeight = height));
+
+      expect(artHeight, 0);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('short window: side by side, with no art', (WidgetTester tester) async {
+      await pumpApp(tester, _splitWithArt(), size: TestWindows.phoneLandscape);
+
+      expect(find.byKey(_header), findsOneWidget);
+      expect(find.byKey(_art), findsNothing);
     });
   });
 }

@@ -11,6 +11,7 @@ import '../bloc/onboarding_bloc.dart';
 import '../bloc/onboarding_event.dart';
 import '../bloc/onboarding_state.dart';
 import '../../../core/widgets/day_of_month_grid.dart';
+import 'onboarding_illustration.dart';
 import 'step_header.dart';
 import 'weekday_picker.dart';
 
@@ -40,6 +41,7 @@ class PaydayStep extends StatelessWidget {
     };
     return AdaptiveSplit(
       header: StepHeader(step: OnboardingStep.payday, question: question, hint: strings.paydayHint),
+      art: OnboardingIllustration(state.picker == PaydayPicker.none ? OnboardingPicture.payday : OnboardingPicture.pickDay),
       controls: controls,
     );
   }

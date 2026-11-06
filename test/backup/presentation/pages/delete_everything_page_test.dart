@@ -84,7 +84,7 @@ void main() {
       expect(find.text('Backup files you made stay where you put them.'), findsOneWidget);
       expect(find.text('Not backed up yet. Back up first to keep a copy.'), findsOneWidget);
       expect(find.text('Hold to delete everything'), findsWidgets);
-      expect(find.text('Keep your finger on it for 2 seconds'), findsOneWidget);
+      expect(find.text('Keep your finger on it for 1.5 seconds'), findsOneWidget);
     });
 
     testWidgets('shows the last backup day when there is one', (WidgetTester tester) async {
@@ -97,11 +97,11 @@ void main() {
       expect(find.text('Last backed up 12 Oct'), findsOneWidget);
     });
 
-    testWidgets('a full 2 s hold deletes on release, with a tick and a threshold (AC-6)', (WidgetTester tester) async {
+    testWidgets('a full 1.5 s hold deletes on release, with a tick and a threshold (AC-6)', (WidgetTester tester) async {
       await pumpPage(tester);
 
       final TestGesture finger = await press(tester);
-      await tester.pump(const Duration(milliseconds: 2100));
+      await tester.pump(const Duration(milliseconds: 1600));
       expect(find.text('Let go to delete'), findsWidgets);
       expect(backups.wipes, 0);
       await finger.up();
@@ -126,7 +126,7 @@ void main() {
       await pumpPage(tester);
 
       final TestGesture finger = await press(tester);
-      await tester.pump(const Duration(milliseconds: 2100));
+      await tester.pump(const Duration(milliseconds: 1600));
       await finger.moveBy(const Offset(0, -200));
       await finger.up();
       await tester.settle();
@@ -137,7 +137,7 @@ void main() {
     testWidgets('with reduced motion a full hold still deletes', (WidgetTester tester) async {
       await pumpPage(tester, reduceMotion: true);
 
-      await holdFor(tester, const Duration(milliseconds: 2100));
+      await holdFor(tester, const Duration(milliseconds: 1600));
 
       expect(backups.wipes, 1);
     });
@@ -218,7 +218,7 @@ void main() {
       backups.gate = Completer<void>();
       await pumpPage(tester);
 
-      await holdFor(tester, const Duration(milliseconds: 2100));
+      await holdFor(tester, const Duration(milliseconds: 1600));
 
       expect(find.text('Deleting…'), findsWidgets);
       backups.gate!.complete();
@@ -230,7 +230,7 @@ void main() {
       backups.writeAnswer = Either<Failure, Unit>.left(DatabaseFailure('x'));
       await pumpPage(tester);
 
-      await holdFor(tester, const Duration(milliseconds: 2100));
+      await holdFor(tester, const Duration(milliseconds: 1600));
 
       expect(deleted, 0);
       expect(find.text("Couldn't delete. Nothing changed. Try again."), findsOneWidget);

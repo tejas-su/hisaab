@@ -13,6 +13,7 @@ import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
 import 'package:expense_tracker/onboarding/presentation/bloc/onboarding_state.dart';
+import 'package:expense_tracker/onboarding/presentation/widgets/onboarding_illustration.dart';
 import 'package:expense_tracker/core/widgets/signal_key.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -373,6 +374,57 @@ void main() {
       );
       expect(tester.getRect(find.byKey(const ValueKey<String>('keypad-1'))).top, greaterThanOrEqualTo(420));
       expect(tester.getRect(find.text('How much money comes in each month?')).bottom, lessThanOrEqualTo(420));
+    });
+
+    OnboardingPicture shownPicture(WidgetTester tester) => tester.widget<OnboardingIllustration>(find.byType(OnboardingIllustration)).picture;
+
+    testWidgets('When does it come? shows the calendar in hand (D144)', (WidgetTester tester) async {
+      services.preferences.draftJson = OnboardingDraftMapper.toJson(
+        OnboardingDraft(step: OnboardingStep.payday, income: Money.fromMajor(45000)),
+      );
+      await pump(tester);
+
+      expect(shownPicture(tester), OnboardingPicture.payday);
+      expect(find.byType(Image), findsOneWidget);
+    });
+
+    final List<(String, String)> pickers = <(String, String)>[
+      ('payday-date', 'Which day of the month?'),
+      ('payday-week', 'Which day of the week?'),
+    ];
+    for (final (String key, String question) in pickers) {
+      testWidgets('$question shows the pencil ringing a day (D144)', (WidgetTester tester) async {
+        services.preferences.draftJson = OnboardingDraftMapper.toJson(
+          OnboardingDraft(step: OnboardingStep.payday, income: Money.fromMajor(45000)),
+        );
+        await pump(tester);
+        await tester.tap(find.byKey(ValueKey<String>(key)));
+        await settle(tester);
+
+        expect(find.text(question), findsOneWidget);
+        expect(shownPicture(tester), OnboardingPicture.pickDay);
+      });
+    }
+
+    testWidgets('Any fixed bills? shows the receipt in hand (D144)', (WidgetTester tester) async {
+      services.preferences.draftJson = OnboardingDraftMapper.toJson(
+        OnboardingDraft(step: OnboardingStep.bills, income: Money.fromMajor(45000), payRule: const Option<PayRule>.of(MonthlyOnDay(4))),
+      );
+      await pump(tester);
+
+      expect(shownPicture(tester), OnboardingPicture.bills);
+      expect(find.byType(Image), findsOneWidget);
+    });
+
+    testWidgets('on a 320dp phone at 2× text the picture steps aside and nothing overflows (D144)', (WidgetTester tester) async {
+      services.preferences.draftJson = OnboardingDraftMapper.toJson(
+        OnboardingDraft(step: OnboardingStep.payday, income: Money.fromMajor(45000)),
+      );
+      await pump(tester, size: TestWindows.smallPhone, textScale: 2);
+
+      expect(find.byType(Image), findsNothing);
+      expect(find.byKey(const ValueKey<String>('payday-changes')), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('meets tap-target, label and contrast guidelines', (WidgetTester tester) async {

@@ -74,6 +74,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `focus` | `#161615` (alias of `ink`) | The keyboard and D-pad focus ring, 2dp, and nothing else (§9, D99) |
 | `focusGap` | `#F1EBE4` (alias of `bg`) | The 2dp band between a control and its `focus` ring (D99) |
 | `inverse` | `#312E29` | The snackbar's fill, with `bg` text (11.42:1). A charcoal, not `ink`, so it is dark without being a slab (D105) |
+| `danger` | `#B42318` | **The *Delete everything* hold key only** (D142): its edge, glyph and label at rest (5.55:1 on `bg`), and its fill with `bg` text (5.55:1). Never a state, an amount or an error |
 
 **Dark** (D92: designed, not inverted. Each layer steps **lighter** by about the contrast its light counterpart steps.)
 
@@ -92,6 +93,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `focus` | `#F2F1EC` | alias of `ink` (D99) |
 | `focusGap` | `#131210` | alias of `bg` (D99) |
 | `inverse` | `#F2F1EC` | alias of `ink`: the snackbar is a light pill on the dark page (D105) |
+| `danger` | `#F97066` | lighter, so it keeps 6.72:1 on `bg`, and `bg` text on its fill 6.72:1 (D142) |
 
 **The grey scale.** The neutrals are one ordered scale per theme, and every grey role is a step on it. A state moves a set number of steps: **a press moves one step** (a `sunk` key or well presses to `hairline`; a `control` chip or well presses to `sunk`), and a pick goes to the far end of the scale (a chip's rest to an `ink` fill, D100). A role that equals another names the same step in code, so the two can't drift (D97).
 
@@ -150,6 +152,7 @@ Aliases stay separate public tokens so the hero can change later without touchin
 | `focus` ring on `bg` · `surface` · `sunk` · `display` (D99) | 15.30 · 17.97 · 13.84 · 17.97 | 16.55 · 14.54 · 12.41 · 14.54 |
 | `focus` ring against a resting chip: `control` · `hairline` (D100) | 17.97 · 11.75 | 10.59 · 10.59 |
 | `focus` against `focusGap`: two tones ≥ 9:1 apart (WCAG C40) | 15.30 | 16.55 |
+| The hold key: `danger` on `bg` at rest; `bg` text and `focusGap` on its `danger` fill (D142) | 5.55 · 5.55 | 6.72 · 6.72 |
 | Against the control's own fill, the band that touches it: `focusGap` on an `ink` pick (D100); on marigold, `focus` in light and `focusGap` in dark | 15.30 · 9.90 | 16.55 · 10.24 |
 
 Every row is an entry in **one list of contrast pairs**, `test/core/design/contrast_pairs_test.dart` (D98). Each entry names its foreground and background, the rule it meets and where it shows. The rule sets the floor: `text` 4.5:1 (WCAG 1.4.3), `nonText` 3:1 (WCAG 1.4.11, boundaries and graphics), `pressStep` 1.15:1 (§3.3), `idleBlock` 1.5:1, `focusTwoTone` 9:1 (the ring against its gap, WCAG C40). The list runs against every theme, and each theme has its own floor per rule, so an increased-contrast theme reuses the same list with higher floors. A new pair is one line in the list, never a one-off assertion.
@@ -425,7 +428,7 @@ Two layers only: the grey page and near-white cards, the same build as the Today
     3. What stays, outside the card with `ink2` ticks.
     4. The last-backup line and a full-width *Back up first* key (`sunk`).
     5. 24dp below it, the hold key, in the page flow (not pinned).
-  - **The hold key:** at rest, a 2dp `inverse` edge with the Delete02 glyph and label in `ink`. While held, an `inverse` fill sweeps from the start edge and the label turns `bg` where the fill has passed. The caption under it is always shown. Its weight comes from the 2dp edge and the fill, so in a squint test it reads before *Back up first*. Never marigold, and no red (D9).
+  - **The hold key:** at rest, a 2dp `danger` edge with the Delete02 glyph and label in `danger`. While held, a `danger` fill sweeps from the start edge and the label turns `bg` where the fill has passed. The caption under it is always shown. Its weight comes from the 2dp edge and the fill, so in a squint test it reads before *Back up first*. Never marigold. It is the app's only red: the owner wanted the one irreversible act to look destructive (D142, amends D9).
   - **Marigold is never on an act that removes or replaces data** (*Replace*, the hold key). Marigold means *today / act*, and these are acts to slow down for, not to invite.
 - **About.**
 
@@ -466,7 +469,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
   | Daily | The rail loses a dot at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
-- **Hold to delete (D139):** the fill is linear over exactly 2.0 s, with no spring, so the time is honest and predictable. Letting go early drains it on `snap`. With reduced motion the fill steps in quarters on the same clock; the caption carries the timing.
+- **Hold to delete (D139):** the fill is linear over exactly 1.5 s (D143), with no spring, so the time is honest and predictable. Letting go early drains it on `snap`. With reduced motion the fill steps in quarters on the same clock; the caption carries the timing.
 - **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
 - **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no fill in and no sheen.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).

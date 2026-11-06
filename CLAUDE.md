@@ -85,7 +85,7 @@ These are app-specific, and the rules files carry the details.
   - Motion uses the spring tokens and respects reduced motion. Haptics go through the `Haptics` wrapper.
   - Never use `Color(0xFF…)`, `Colors.*` or `Icons.*` in a widget.
 - **One signal colour:** marigold `#FFB020` means *today / act* only. It is never placed bare on the light background.
-- **No red, no green, no category colours.** State is shown by fill, outline, hatch and words.
+- **No red, no green, no category colours.** State is shown by fill, outline, hatch and words. The one exception is the `danger` token on the *Delete everything* hold key (D142).
 - **Icons:** Hugeicons only, through `AppIcon`, always with a label. A glyph the free set lacks is drawn in Hugeicons' format in `HisaabGlyphs` (`lib/core/design/hisaab_glyphs.dart`), reusing an original's corner curves (D48).
 - **Adaptive layout:** never lock orientation or assume a portrait phone. Read `context.layout` (`lib/core/layout/`), never raw `MediaQuery` widths. Nothing straddles a fold. New screens are tested at the `TestWindows` sizes (UI_DESIGN §13).
 - **Entry speed:** the Add flow is Add → digits → Next → tile. Never add a tap or a field to it, and never reorder categories, the keypad or the dock. The one control off that path is the *New* tile after the categories (D138); it moves nothing.

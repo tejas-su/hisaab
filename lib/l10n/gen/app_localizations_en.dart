@@ -1570,11 +1570,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAllHoldFull => 'Let go to delete';
 
   @override
-  String deleteAllHoldCaption(int seconds) {
+  String deleteAllHoldCaption(num seconds) {
+    final intl.NumberFormat secondsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String secondsString = secondsNumberFormat.format(seconds);
+
     String _temp0 = intl.Intl.pluralLogic(
       seconds,
       locale: localeName,
-      other: 'Keep your finger on it for $seconds seconds',
+      other: 'Keep your finger on it for $secondsString seconds',
       one: 'Keep your finger on it for 1 second',
     );
     return '$_temp0';

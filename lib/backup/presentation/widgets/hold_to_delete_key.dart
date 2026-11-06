@@ -15,7 +15,7 @@ import 'hold_fill_clipper.dart';
 
 /// The *Delete everything* key (SPEC FR-SE-4 AC-6, AC-7; UI_DESIGN §5.6, §6).
 ///
-/// Pressed, an `inverse` fill sweeps across it evenly over [holdFor]; let go when full, it calls
+/// Pressed, a `danger` fill sweeps across it evenly over [holdFor]; let go when full, it calls
 /// [onConfirmed]. Letting go early, or sliding off, drains it and changes nothing. With TalkBack,
 /// Switch Access or a keyboard it is arm-then-confirm instead: a first activation arms it for
 /// [armedFor] and a second confirms. [busy] shows it working and disables it.
@@ -27,7 +27,7 @@ class HoldToDeleteKey extends StatefulWidget {
   final bool busy;
 
   /// How long the finger stays down before a release deletes.
-  static const Duration holdFor = Duration(seconds: 2);
+  static const Duration holdFor = Duration(milliseconds: 1500);
 
   /// How long an assistive first activation stays armed.
   static const Duration armedFor = Duration(seconds: 10);
@@ -46,7 +46,7 @@ class HoldToDeleteKey extends StatefulWidget {
 
 class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProviderStateMixin {
   // why: preserve, not the default: with "Remove animations" on, Flutter would otherwise finish the
-  // fill almost at once, and a short tap would delete everything. The 2 s is the guard, not a look.
+  // fill almost at once, and a short tap would delete everything. The 1.5 s is the guard, not a look.
   late final AnimationController _fill = AnimationController(
     vsync: this,
     duration: HoldToDeleteKey.holdFor,
@@ -169,7 +169,7 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
       decoration: ShapeDecoration(
         shape: HisaabShapes.squircle(
           HisaabRadii.key,
-          side: BorderSide(color: context.colors.inverse, width: HoldToDeleteKey._edge),
+          side: BorderSide(color: context.colors.danger, width: HoldToDeleteKey._edge),
         ),
       ),
       child: ClipPath(
@@ -177,10 +177,10 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
-            _face(context, label, foreground: context.colors.ink),
+            _face(context, label, foreground: context.colors.danger),
             ClipRect(
               clipper: HoldFillClipper(fraction: filled, textDirection: Directionality.of(context)),
-              child: ColoredBox(color: context.colors.inverse, child: _face(context, label, foreground: context.colors.background)),
+              child: ColoredBox(color: context.colors.danger, child: _face(context, label, foreground: context.colors.background)),
             ),
           ],
         ),
@@ -216,7 +216,7 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
       );
     }
     return Text(
-      strings.deleteAllHoldCaption(HoldToDeleteKey.holdFor.inSeconds),
+      strings.deleteAllHoldCaption(HoldToDeleteKey.holdFor.inMilliseconds / Duration.millisecondsPerSecond),
       textAlign: TextAlign.center,
       style: text.bodyMedium?.copyWith(color: context.colors.ink2),
     );

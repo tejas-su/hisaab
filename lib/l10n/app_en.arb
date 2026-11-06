@@ -2067,7 +2067,8 @@
     "description": "Caption under the hold key, always shown",
     "placeholders": {
       "seconds": {
-        "type": "int"
+        "type": "num",
+        "format": "decimalPattern"
       }
     }
   },

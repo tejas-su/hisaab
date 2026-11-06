@@ -4,6 +4,7 @@ import '../design/hisaab_dimensions.dart';
 import '../extensions/build_context_extensions.dart';
 import '../layout/app_layout.dart';
 import '../layout/window_class.dart';
+import 'no_intrinsic_height.dart';
 import 'pane.dart';
 
 /// Places a screen's [header] (question, amount) and [controls] (keypad, keys) for the window
@@ -21,12 +22,19 @@ class AdaptiveSplit extends StatelessWidget {
     super.key,
     required this.header,
     required this.controls,
+    this.art,
     this.fullWindow = true,
     this.sideBySide = false,
   });
 
   final Widget header;
   final Widget controls;
+
+  /// A picture for the gap between [header] and [controls], given only the space left over in
+  /// the header-on-top arrangement and left out of the others (UI_DESIGN §5.1). It must size
+  /// itself to the space it gets, including none.
+  final Widget? art;
+
   final bool fullWindow;
 
   /// Put header and controls side by side even in a tall window, e.g. in a short, wide tray.
@@ -66,7 +74,7 @@ class AdaptiveSplit extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: readableWidth),
           child: Column(
             children: <Widget>[
-              Expanded(child: _scrolling(header)),
+              Expanded(child: art == null ? _scrolling(header) : _withArt(header, art!)),
               Padding(padding: _padding.copyWith(top: 0), child: controls),
             ],
           ),
@@ -93,4 +101,19 @@ class AdaptiveSplit extends StatelessWidget {
   }
 
   static Widget _scrolling(Widget child) => SingleChildScrollView(padding: _padding, child: child);
+
+  // why: the header keeps its natural height and still scrolls when it can't fit (large text);
+  // the art takes only what is left below it.
+  static Widget _withArt(Widget header, Widget art) => CustomScrollView(
+        slivers: <Widget>[
+          SliverPadding(padding: _padding.copyWith(bottom: 0), sliver: SliverToBoxAdapter(child: header)),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: _padding.copyWith(top: HisaabSpacing.l),
+              child: NoIntrinsicHeight(child: art),
+            ),
+          ),
+        ],
+      );
 }

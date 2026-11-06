@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// The app's colour tokens (UI_DESIGN §3.2): warm monochrome plus one marigold signal.
+/// The app's colour tokens (UI_DESIGN §3.2): warm monochrome plus one marigold signal, and one
+/// [danger] red kept for the act that wipes everything.
 ///
 /// [signal] means "today / act" only and must never sit bare on a light surface (about
 /// 1.6:1); in light theme it always carries an [ink]/[displayEdge] edge or [onSignal] text.
@@ -25,6 +26,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.displayShadow,
     required this.displaySheen,
     required this.inverse,
+    required this.danger,
     required this.scrim,
     required this.clear,
     required this.focus,
@@ -65,6 +67,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displaySheen: Color(0xB3FFFEFC),
     // why: a charcoal, not ink, so a short-lived bar reads as dark without being a black slab (D105).
     inverse: Color(0xFF312E29),
+    danger: Color(0xFFB42318),
     scrim: Color(0x52161615),
     clear: Color(0x00F1EBE4),
     focus: _lightInk,
@@ -93,6 +96,8 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displayShadow: Color(0x00000000),
     displaySheen: Color(0x1AF2F1EC),
     inverse: _darkInk,
+    // why: lighter than the light red so it keeps ≥ 4.5:1 on the dark page, and page-dark text on it.
+    danger: Color(0xFFF97066),
     // why: a light scrim on a dark page lifts it above the tray, inverting the layers (D93).
     scrim: Color(0x66000000),
     clear: Color(0x00131210),
@@ -169,6 +174,10 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// in light, an alias of [ink] in dark. Text on it is [background] (D105).
   final Color inverse;
 
+  /// The one destructive act, *Delete everything*: the hold key's edge, glyph and label at rest,
+  /// and its fill, with [background] text on it. Nothing else is red; state is never red (D142).
+  final Color danger;
+
   /// Dims the page under a tray, sheet or dialog: ink at 32% in light, black at 40% in dark, so
   /// the raised layer is always the lighter one.
   final Color scrim;
@@ -208,6 +217,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? displayShadow,
     Color? displaySheen,
     Color? inverse,
+    Color? danger,
     Color? scrim,
     Color? clear,
     Color? focus,
@@ -232,6 +242,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
         displayShadow: displayShadow ?? this.displayShadow,
         displaySheen: displaySheen ?? this.displaySheen,
         inverse: inverse ?? this.inverse,
+        danger: danger ?? this.danger,
         scrim: scrim ?? this.scrim,
         clear: clear ?? this.clear,
         focus: focus ?? this.focus,
@@ -263,6 +274,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       displayShadow: mix(displayShadow, other.displayShadow),
       displaySheen: mix(displaySheen, other.displaySheen),
       inverse: mix(inverse, other.inverse),
+      danger: mix(danger, other.danger),
       scrim: mix(scrim, other.scrim),
       clear: mix(clear, other.clear),
       focus: mix(focus, other.focus),
