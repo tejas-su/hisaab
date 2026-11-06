@@ -1782,6 +1782,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reminders are off. Home still shows bills that need an amount.'**
   String get remindRefused;
+
+  /// Settings row and income sheet eyebrow for the income (FR-SE-1, D137)
+  ///
+  /// In en, this message translates to:
+  /// **'Money coming in'**
+  String get moneyComingIn;
+
+  /// Second line of the Money coming in row for a monthly payday
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · on day {day}'**
+  String incomeRowMonthly(String amount, int day);
+
+  /// Second line of the Money coming in row when pay comes on the last day
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · last day of the month'**
+  String incomeRowLastDay(String amount);
+
+  /// Second line of the Money coming in row for weekly pay; amount is the monthly figure, weekday a full name
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · every {weekday}'**
+  String incomeRowWeekly(String amount, String weekday);
+
+  /// Second line of the Money coming in row for It changes (no fixed day)
+  ///
+  /// In en, this message translates to:
+  /// **'Changes each month'**
+  String get incomeRowIrregular;
+
+  /// Line under the amount on the income slip, monthly payday
+  ///
+  /// In en, this message translates to:
+  /// **'Comes every month on day {day}'**
+  String incomeComesOnDay(int day);
+
+  /// Line under the amount on the income slip, last-day payday
+  ///
+  /// In en, this message translates to:
+  /// **'Comes on the last day of the month'**
+  String get incomeComesLastDay;
+
+  /// Line under the monthly amount on the income slip for weekly pay (D26)
+  ///
+  /// In en, this message translates to:
+  /// **'Comes every {weekday}, about {amount} a week'**
+  String incomeComesWeekly(String weekday, String amount);
+
+  /// Row label on the income slip for the payday
+  ///
+  /// In en, this message translates to:
+  /// **'When it comes'**
+  String get incomeAnswerWhen;
+
+  /// Value of the When it comes row for a monthly payday
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String incomeWhenDay(int day);
+
+  /// Value of the When it comes row for a last-day payday
+  ///
+  /// In en, this message translates to:
+  /// **'Last day'**
+  String get incomeWhenLastDay;
+
+  /// Stamp on the income slip: the day the latest pay was added; date like 4 Oct
+  ///
+  /// In en, this message translates to:
+  /// **'Came {date}'**
+  String incomeStampCame(String date);
+
+  /// Footer of the income slip; date like 4 Nov
+  ///
+  /// In en, this message translates to:
+  /// **'Next payday {date}'**
+  String incomeNextPayday(String date);
+
+  /// When a new income amount counts; date is the next payday like 4 Nov (D137)
+  ///
+  /// In en, this message translates to:
+  /// **'From payday, {date}.'**
+  String incomeFromPayday(String date);
+
+  /// Under From payday: the pay already added keeps its amount (D137)
+  ///
+  /// In en, this message translates to:
+  /// **'{period, select, week{This week\'s} other{This month\'s}} {amount} stays as it came.'**
+  String incomeStays(String period, String amount);
+
+  /// Chip after a new income amount: also change the pay already added (D137)
+  ///
+  /// In en, this message translates to:
+  /// **'{period, select, week{Change this week too} other{Change this month too}}'**
+  String incomeChangeThisToo(String period);
+
+  /// Footer after Change this month too, beside Undo
+  ///
+  /// In en, this message translates to:
+  /// **'{period, select, week{This week\'s} other{This month\'s}} pay is now {amount}.'**
+  String incomeNowIs(String period, String amount);
+
+  /// Line on the income slip for It changes, under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Each month runs from the 1st'**
+  String get incomeIrregularEvery;
+
+  /// Footer of the income slip for It changes
+  ///
+  /// In en, this message translates to:
+  /// **'Add money when it comes. Tap Add, then Got.'**
+  String get incomeIrregularFoot;
+
+  /// TalkBack for the income slip; when is the Comes… line
+  ///
+  /// In en, this message translates to:
+  /// **'Money coming in, {amount}, {when}'**
+  String incomeSlipSpoken(String amount, String when);
+
+  /// Effect of a new payday before saving, and the footer after: the current cycle now ends on date, like 24 Nov (BR-1a, D140)
+  ///
+  /// In en, this message translates to:
+  /// **'This money lasts till {date}.'**
+  String incomeLastsTill(String date);
+
+  /// Under incomeLastsTill: days left including today and today's share with the new payday (D140)
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{That\'s 1 day, about {amount} a day.} other{That\'s {days} days, about {amount} a day.}}'**
+  String incomeLastsDays(int days, String amount);
+
+  /// TalkBack for the When it comes row on the income slip
+  ///
+  /// In en, this message translates to:
+  /// **'Change When it comes, {value}'**
+  String incomeWhenSpoken(String value);
+
+  /// Line on the amount question after picking a weekly payday for a new salary rule
+  ///
+  /// In en, this message translates to:
+  /// **'Comes every {weekday}'**
+  String incomeComesEvery(String weekday);
 }
 
 class _AppLocalizationsDelegate

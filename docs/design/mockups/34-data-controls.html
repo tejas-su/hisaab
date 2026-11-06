@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Your hisaab: Back up, Restore, Delete everything (proposal)</title>
+<style>
+  /* Your hisaab: Back up, Restore, Delete everything (proposal; BR-16, FR-SE-4, FR-ON-1, E14; case study 23).
+     Nothing here is built. Words are verbatim from 34-data-controls-copy-deck.md; a string the deck lacks is listed under
+     "Strings the deck doesn't have yet" and marked draft in its caption.
+     Worked example: today Fri 6 Nov 2026. ₹45,000 on the 4th, so the cycle is 4 Nov to 3 Dec (28 days left, today included).
+     The phone has 37 entries and no backup yet. The backup from the old phone is hisaab-backup-2026-10-12.json:
+     made 12 Oct, 214 entries, the electricity bill (₹1,200 on the 29th). Today's backup is hisaab-backup-2026-11-06.json.
+     Home after restoring: the file ends on 12 Oct, so nothing is spent this cycle yet. P = 45,000 - 1,200 = 43,800,
+     D = 28, A = floor(43,800 / 28) = ₹1,564; ₹0 today, so the hero shows ₹1,564 and payday is 4 Dec.
+     Home after Undo restore (the phone's own 37 entries; illustrative): ₹3,150 spent before today, so
+     P = 45,000 - 1,200 - 3,150 = 40,650, A = floor(40,650 / 28) = ₹1,451; ₹220 spent today, so the hero shows ₹1,231.
+     Geometry follows the build: SettingsPage (gutter 20, headers xs 4 in, titleLarge, s 8 under, xl 24 between groups),
+     SettingsRow (gutter x m padding, 42dp sunk well at 14, m 12 gap, bodyLarge + bodySmall ink2, ArrowRight02 in ink2),
+     HisaabSnackbarBar (inverse, card 28, 56 min, 20 start, bodyMedium in bg, labelLarge action), SignalKey (58, key 16).
+     Glyphs are the real Hugeicons stroke-rounded paths (hugeicons 1.2.0) and HisaabGlyphs.backspace; stroke 1.6. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #312E29;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #3A3632; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; text-align: inherit; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 56px 0 4px; }
+  h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--canvasInk2); box-shadow: inset 0 0 0 1px var(--canvasInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 4px; vertical-align: 1px; white-space: nowrap; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 1040px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; }
+  .toggles { position: sticky; top: 0; z-index: 20; display: flex; gap: 8px; padding: 12px 0; flex-wrap: wrap; background: var(--canvas); }
+  .toggles button { min-height: 40px; padding: 0 14px; border-radius: 12px; background: #FFFEFC; font: 600 14px/20px 'Mukta', sans-serif; }
+  .toggles button[aria-pressed="true"] { background: #161615; color: #F1EBE4; }
+
+  /* Frames grid: one figure per state, caption under it */
+  .grid { display: flex; flex-wrap: wrap; gap: 24px 16px; margin-top: 16px; align-items: flex-start; }
+  .grid figure { margin: 0; width: 360px; }
+  .grid figure.w320 { width: 320px; }
+  .grid figcaption { font-size: 14px; line-height: 20px; color: var(--canvasInk2); margin-top: 8px; }
+  .grid figcaption b:first-child { display: block; font: 600 15px/22px 'Mukta', sans-serif; color: var(--canvasInk); }
+  .anno { max-width: 1112px; margin-top: 20px; }
+  .anno td:first-child { white-space: nowrap; }
+
+  /* Phone */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; font-family: 'Mukta', sans-serif; }
+  .phone.w320 { width: 320px; height: 568px; }
+  .phone.long { height: auto; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .edges { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 30;
+    background: linear-gradient(90deg, transparent 20px, #6B48FF 20px 21px, transparent 21px 24px, #6B48FF66 24px 25px, transparent 25px 74px, #6B48FF66 74px 75px, transparent 75px calc(100% - 21px), #6B48FF calc(100% - 21px) calc(100% - 20px), transparent calc(100% - 20px)); }
+  body.showEdges .edges { display: block; }
+
+  /* Pushed page: 12dp top, 48dp bar, list scrolls under it (Scaffold body below the AppBar) */
+  .bar { position: absolute; left: 0; right: 0; top: 0; height: 60px; padding: 12px 20px 0; display: flex; align-items: center; gap: 8px; background: var(--bg); z-index: 2; }
+  .bar .ttl { flex: 1; min-width: 0; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .well40 svg { width: 20px; height: 20px; }
+  .bar.dim .well40 { opacity: .38; }
+  .scroll { position: absolute; left: 0; right: 0; top: 60px; bottom: 0; overflow-y: auto; scrollbar-width: none; padding: 8px 20px 24px; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .secHd { font: 600 22px/28px 'Anek Latin', sans-serif; padding-inline-start: 4px; margin: 24px 0 8px; }
+  .secHd:first-child { margin-top: 0; }
+
+  /* Settings card of rows (SettingsRow): 66dp, hairline at the text start (74dp) */
+  .card { background: var(--surface); border-radius: 28px; overflow: hidden; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 12px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: 16px; line-height: 24px; }
+  .row .t span { display: block; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .row > svg:last-child { color: var(--ink2); }
+  .row.fresh { background: var(--sunk); }
+  .note { font-size: 13px; line-height: 18px; color: var(--ink2); padding: 8px 4px 0; margin: 0; }
+  .note + .card { margin-top: 24px; }
+  .lookRow { display: flex; align-items: center; gap: 12px; padding: 12px 20px; }
+  .lookRow .t { flex: 1; font-size: 16px; line-height: 24px; }
+  .lookRow .t span { display: block; font-size: 15px; line-height: 20px; color: var(--ink2); }
+  .track { background: var(--sunk); border-radius: 16px; padding: 4px; display: flex; gap: 4px; flex: none; }
+  .track span { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; }
+  .track span.on { background: var(--ink); color: var(--bg); }
+
+  /* Snackbar (D105, HisaabSnackbarBar) */
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 24px; min-height: 56px; border-radius: 28px; background: var(--inverse); color: var(--bg); display: flex; align-items: center; gap: 12px; padding: 8px 20px; font-size: 15px; line-height: 20px; z-index: 6; overflow-wrap: anywhere; }
+  .snack.act { padding-inline-end: 8px; }
+  .snack .m { flex: 1; min-width: 0; }
+  .snack .a { font: 600 14px/20px 'Mukta', sans-serif; min-width: 48px; min-height: 48px; padding: 0 12px; display: grid; place-items: center; }
+  .snack.overDock { bottom: 88px; }
+  .snack.overKey { bottom: 82px; }
+
+  /* Delete everything page */
+  .lead { font-size: 16px; line-height: 24px; padding-inline-start: 4px; margin: 0; }
+  .goes { background: var(--surface); border-radius: 28px; padding: 16px 20px; margin-top: 16px; }
+  .goes h4 { font: 600 16px/20px 'Mukta', sans-serif; margin: 0 0 4px; }
+  .goes .it { display: flex; align-items: center; gap: 12px; min-height: 36px; font-size: 16px; line-height: 24px; }
+  .goes .it svg { width: 20px; height: 20px; }
+  .goes .no { font: 600 16px/20px 'Mukta', sans-serif; margin: 8px 0 0; }
+  .stays { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding-inline-start: 4px; }
+  .stays div { display: flex; gap: 8px; font-size: 15px; line-height: 20px; color: var(--ink2); }
+  .stays svg { width: 20px; height: 20px; }
+  .last { font-size: 15px; line-height: 20px; color: var(--ink2); padding-inline-start: 4px; margin: 16px 0 0; }
+  .last b { color: var(--ink); font-weight: 400; }
+  .wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; padding: 8px 16px; border-radius: 16px; font: 600 17px/22px 'Mukta', sans-serif; text-align: center; }
+  .wide.quiet { background: var(--control); color: var(--ink); margin-top: 8px; }
+  .wide.quiet.busy { color: var(--ink2); }
+
+  /* The hold key: 2dp inverse edge at rest, an inverse fill sweeps start to end, the label flips to bg under it */
+  .hold { position: relative; display: block; width: 100%; margin-top: 24px; border-radius: 16px; box-shadow: inset 0 0 0 2px var(--inverse); color: var(--ink); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .hold .face { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; padding: 8px 16px; font: 600 17px/22px 'Mukta', sans-serif; text-align: center; }
+  .hold .fill { position: absolute; inset: 0; background: var(--inverse); color: var(--bg); clip-path: inset(0 calc(100% - var(--p, 0%)) 0 0); }
+  .hold.drain .fill { transition: clip-path 250ms cubic-bezier(.2,0,0,1); }
+  .holdCap { text-align: center; font-size: 13px; line-height: 18px; color: var(--ink2); margin: 8px 0 0; min-height: 18px; }
+  .holdCap.short { font-weight: 600; color: var(--ink); }
+  .tbFocus { position: absolute; inset: -6px; border-radius: 20px; border: 3px dashed var(--ink2); pointer-events: none; }
+  .holdWrap { position: relative; }
+
+  /* Dialog (AlertDialog, the one dialog, BR-16): surface, card 28, 24 padding, 280dp wide at 360 */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 4; }
+  .dialog { position: absolute; left: 40px; right: 40px; top: 50%; transform: translateY(-50%); background: var(--surface); border-radius: 28px; padding: 24px; z-index: 5; }
+  .dark .dialog { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dialog h4 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 0; }
+  .dialog p { font-size: 15px; line-height: 20px; margin: 16px 0 0; }
+  .dialog p + p { margin-top: 8px; }
+  .dialog .keys { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+  .dialog .k { display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 8px 16px; border-radius: 16px; font: 600 17px/22px 'Mukta', sans-serif; text-align: center; }
+  .dialog .k.strong { background: var(--inverse); color: var(--bg); }
+  .dialog .k.calm { background: var(--hairline); color: var(--ink); }
+  .dialog .busy { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 120px; color: var(--ink2); font-size: 15px; line-height: 20px; margin-top: 24px; }
+
+  /* System pickers (Android's DocumentsUI, drawn neutral; not ours) */
+  .sys { position: absolute; inset: 0; background: var(--surface); z-index: 3; font-family: Roboto, 'Mukta', sans-serif; }
+  .sys .sbar { display: flex; align-items: center; gap: 16px; height: 64px; padding: 0 16px; }
+  .sys .sbar b { flex: 1; font: 500 20px/28px Roboto, 'Mukta', sans-serif; }
+  .sys .crumb { display: flex; align-items: center; gap: 8px; padding: 4px 16px 12px; font-size: 14px; color: var(--ink2); }
+  .sys .crumb svg { width: 18px; height: 18px; }
+  .sys .f { display: flex; align-items: center; gap: 16px; padding: 12px 16px; font-size: 15px; line-height: 20px; }
+  .sys .f span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .sys .f small { display: block; color: var(--ink2); font-size: 13px; }
+  .sys .f.pick { background: var(--sunk); }
+  .sys .save { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 24px; border-top: 1px solid var(--hairline); display: flex; align-items: center; gap: 12px; background: var(--surface); }
+  .sys .save .fld { flex: 1; border-bottom: 2px solid var(--ink); padding: 8px 0; font-size: 15px; overflow-wrap: anywhere; }
+  .sys .save .btn { font: 500 14px/20px Roboto, 'Mukta', sans-serif; letter-spacing: .06em; padding: 10px 16px; border-radius: 20px; background: var(--ink); color: var(--bg); }
+  .sysTag { position: absolute; right: 12px; top: 72px; z-index: 4; font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 2px 6px; background: var(--surface); }
+
+  /* Onboarding step 1 */
+  .ob { position: absolute; inset: 0; padding: 12px 20px 16px; display: flex; flex-direction: column; }
+  .obTop { display: flex; justify-content: flex-end; min-height: 48px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px 0 12px; border-radius: 12px; background: var(--control); font: 600 14px/20px 'Mukta', sans-serif; }
+  .chip svg { width: 20px; height: 20px; }
+  .dotsRow { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+  .dotsRow i { width: 12px; height: 6px; border-radius: 3px; background: var(--hairline); }
+  .dotsRow i.on { width: 28px; background: var(--ink); }
+  .q { font: 600 30px/34px 'Anek Latin', sans-serif; margin-top: 24px; }
+  .qHint { font-size: 15px; line-height: 20px; color: var(--ink2); margin-top: 6px; }
+  .obAmt { font: 600 60px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; margin-top: 22px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .obCtl { margin-top: auto; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .key { height: 64px; border-radius: 16px; background: var(--sunk); font: 400 26px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .priv { display: flex; justify-content: center; align-items: flex-start; gap: 8px; margin-top: 14px; font-size: 15px; line-height: 20px; color: var(--ink2); text-align: center; }
+  .priv svg { width: 18px; height: 18px; margin-top: 1px; }
+  .next { display: grid; place-items: center; min-height: 58px; margin-top: 12px; border-radius: 16px; background: var(--sunk); box-shadow: inset 0 0 0 1.5px var(--hairline); color: var(--ink2); font: 600 21px/28px 'Anek Latin', sans-serif; }
+
+  /* Home (hero after mockup 25, trimmed) */
+  .home { position: absolute; inset: 0; padding: 12px 20px 0; display: flex; flex-direction: column; gap: 16px; }
+  .homeTop { display: flex; align-items: center; justify-content: space-between; height: 48px; }
+  .wm { font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 24px 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .tbar { display: flex; gap: 3px; height: 48px; margin-top: 24px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px; }
+  .tbar .f.part { border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px 14px 14px 6px; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 6px; }
+  .capRow b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rail { display: flex; align-items: center; gap: 10px; height: 18px; margin-top: 16px; }
+  .dots { flex: 1; display: flex; align-items: center; gap: 4px; }
+  .dots i { width: 4px; height: 4px; border-radius: 2px; background: var(--blockIdle); }
+  .dots i.t { width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; white-space: nowrap; }
+  .pf svg { width: 16px; height: 16px; }
+  .listHd { display: flex; align-items: baseline; gap: 8px; padding-inline-start: 4px; }
+  .listHd .h { flex: 1; font: 600 17px/24px 'Anek Latin', sans-serif; }
+  .listHd b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .homeCard { background: var(--surface); border-radius: 28px; }
+  .homeCard .row b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  /* 2x text on a 320dp phone (Android 14 non-linear scale at 200%: 13→25, 15→27, 16→28, 17→29, 22→35, 30→38) */
+  .x2 .bar .ttl { font-size: 35px; line-height: 44px; }
+  .x2 .bar { height: auto; min-height: 60px; position: relative; }
+  .x2 .scroll.flow { position: static; overflow: visible; }
+  .x2 .lead { font-size: 28px; line-height: 42px; }
+  .x2 .goes h4, .x2 .goes .no { font-size: 28px; line-height: 35px; }
+  .x2 .goes .it { font-size: 28px; line-height: 42px; align-items: flex-start; padding: 4px 0; }
+  .x2 .goes .it svg { margin-top: 11px; }
+  .x2 .stays div, .x2 .last { font-size: 27px; line-height: 36px; }
+  .x2 .stays svg { margin-top: 8px; }
+  .x2 .wide, .x2 .hold .face { font-size: 29px; line-height: 38px; }
+  .x2 .holdCap { font-size: 25px; line-height: 35px; }
+  .x2 .dialog { left: 20px; right: 20px; top: 24px; bottom: 24px; transform: none; display: flex; flex-direction: column; }
+  .x2 .dialog h4 { font-size: 35px; line-height: 45px; }
+  .x2 .dialog .body { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+  .x2 .dialog .body::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 32px; background: linear-gradient(transparent, var(--surface)); }
+  .x2 .dialog p { font-size: 27px; line-height: 36px; }
+  .x2 .dialog .k { font-size: 29px; line-height: 38px; }
+  .fold { position: absolute; left: 0; right: 0; top: 568px; border-top: 2px dashed #6B48FF; z-index: 7; pointer-events: none; }
+  .fold span { position: absolute; right: 8px; top: 4px; font: 600 11px/14px 'Mukta', sans-serif; color: #fff; background: #6B48FF; padding: 2px 6px; border-radius: 6px; }
+
+  /* Hold-key options compared */
+  .opts { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .opt { width: 352px; border-radius: 28px; background: var(--bg); color: var(--ink); padding: 20px; }
+  .opt h5 { font: 600 15px/20px 'Mukta', sans-serif; margin: 0; }
+  .opt p { font-size: 13px; line-height: 18px; color: var(--ink2); margin: 8px 0 0; }
+  .opt .hold { margin-top: 16px; }
+  .opt.marigold .hold { box-shadow: inset 0 0 0 1.5px var(--onSignal); }
+  .opt.marigold .hold .fill { background: var(--signal); color: var(--onSignal); }
+  .opt.slab .hold { background: var(--ink); color: var(--bg); box-shadow: none; }
+  .opt.slab .hold .fill { background: var(--ink2); color: var(--bg); }
+  .opt.hatch .hold { box-shadow: inset 0 0 0 2px var(--ink2); }
+  .opt.hatch .hold .fill { background: repeating-linear-gradient(-45deg, var(--ink2) 0 2px, transparent 2px 7px), var(--bg); color: var(--ink); }
+  .opt .verdict { display: inline-block; margin-top: 12px; font: 600 12px/16px 'Mukta', sans-serif; padding: 2px 8px; border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--ink2); color: var(--ink2); }
+  .opt.chosen { box-shadow: inset 0 0 0 2px var(--ink); }
+  .opt.chosen .verdict { background: var(--ink); color: var(--bg); box-shadow: none; }
+</style>
+</head>
+<body>
+
+<h1>Your hisaab: Back up, Restore, Delete everything <span class="tag">proposal</span></h1>
+<p class="lede">SPEC <b>BR-16</b>, <b>FR-SE-4</b>, <b>FR-ON-1</b> and <b>E14</b>, drawn from the product brief, the UX flows and <a href="34-data-controls-copy-deck.md">copy deck 34</a> (every string is verbatim), with research in <a href="../../design-research/case-studies/23-backup-reset-delete.md">case study 23</a>. Nothing here is built. A new Settings group, <b>Your hisaab</b>, sits under <i>Look</i>. Card 1 holds <i>Back up</i> and <i>Restore</i>, plus <i>Undo restore</i> for 7 days after a restore. Card 2 holds <i>Delete everything</i> on its own, 24dp away, so a slip off <i>Restore</i> can't land on it.</p>
+<p class="lede">Today is <b>Fri 6 Nov 2026</b>, with ₹45,000 coming in on the 4th. The phone has <b>37 entries</b> and no backup yet. The old phone's file, <b>hisaab-backup-2026-10-12.json</b>, was made on 12 Oct and holds <b>214 entries</b>. Today's backup is <b>hisaab-backup-2026-11-06.json</b>. Frames are 360dp; the last section has 320dp frames at 2× text. Use the switches to change theme or show the 20, 24 and 74dp edges.</p>
+
+<div class="toggles" role="group" aria-label="Mockup switches">
+  <button data-theme="light" aria-pressed="true">Light</button>
+  <button data-theme="dark" aria-pressed="false">Dark</button>
+  <button data-edges aria-pressed="false">Show edges (20 · 24 · 74dp)</button>
+</div>
+
+<div id="flows"></div>
+
+<h2>The hold key without red</h2>
+<p class="lede">The hold key is the only strong action on the delete page, and the only key in the app that can't be undone. Four ways to make it strong were compared, in both themes. Try each one: press and hold for 2 seconds, or let go early.</p>
+<div class="opts" id="opts"></div>
+<table>
+  <tr><th>Why</th><th></th></tr>
+  <tr><td>Not marigold</td><td>Marigold means <i>today / act</i>. It is Add, Next and Save: the everyday "go ahead" key the hand already trusts. On a page meant to make you stop, the brightest colour in the app would pull the eye and thumb to the one act that can't be undone. It would also make Delete look like Save. That breaks the brief ("the hold key is never marigold") and the colour's job. The rule drawn here: <b>marigold never goes on an act that removes data</b>. So the restore dialog's <i>Replace</i> isn't marigold either.</td></tr>
+  <tr><td>Not an <code>ink</code> slab</td><td>A black key at rest is the "black slab" the colour process rules out (D105). An <code>ink</code> fill also already means <i>picked</i> (D100), and a filled key at rest leaves nothing for the progress to fill.</td></tr>
+  <tr><td>Not a hatch</td><td>Hatching already means <i>over your share / over the limit</i> (§3.3, Spends). Using it here would blur a money state with a danger state. It also reads as "disabled" on a pale page.</td></tr>
+  <tr><td>Chosen: outline, then fill</td><td>At rest, a <b>2dp <code>inverse</code> edge</b> and an <code>ink</code> label with the Delete02 glyph. Every other key in the app is fill-only (D88, D100), so this is the only outlined key: different in kind, not louder. While held, an <b><code>inverse</code> fill sweeps start → end, linear over 2.0 s</b>, so its length tells the time. The label flips to <code>bg</code> under the fill, so every letter stays readable at every point. When full, the key is one solid <code>inverse</code> block reading "Let go to delete". The caption "Keep your finger on it for 2 seconds" is always shown, so it works with reduced motion and for people who can't see the fill. The words carry the meaning; the fill only shows progress.</td></tr>
+  <tr><td>Measured</td><td>Edge and fill <code>inverse</code> on <code>bg</code>: <b>11.42</b> light / <b>16.55</b> dark (≥ 3:1 for UI parts). Label under the fill, <code>bg</code> on <code>inverse</code>: 11.42 / 16.55. Resting label <code>ink</code> on <code>bg</code>: 15.30 / 16.55. Caption <code>ink2</code> on <code>bg</code>: 6.14 / 7.31. OKLCH L: <code>inverse</code> 0.303 light (a charcoal; <code>ink</code> is 0.200) and 0.958 dark (a light pill on the 0.183 page, the snackbar's step). <i>Back up first</i> beside it is <code>control</code> on <code>bg</code>, 1.17 / 1.56, with an <code>ink</code> label at 17.97 / 10.59, so the squint test reads the hold key first. No new colour: it reuses <code>inverse</code>, the token for a dark fill.</td></tr>
+</table>
+
+<h2>Strings the deck doesn't have yet</h2>
+<p class="lede">These appear in the frames. They come from the UX flow or are new, and need design-content to approve them before going into <code>app_en.arb</code>.</p>
+<table>
+  <tr><th>Where</th><th>Draft text</th><th>Source</th></tr>
+  <tr><td>Back up row, while writing</td><td>Backing up…</td><td>New. The UX flow says "Saving…", but the deck bans "saved" about a file. Mirrors <code>restoreChecking</code></td></tr>
+  <tr><td>Hold key, full</td><td>Let go to delete</td><td>UX flow step 4</td></tr>
+  <tr><td>Hold key, TalkBack armed</td><td>Double-tap again to delete everything</td><td>UX flow U2. Shown on the key and announced</td></tr>
+  <tr><td>Hold key, TalkBack hint</td><td>Double-tap twice to delete</td><td>UX flow U2. Replaces the deck's <code>deleteAllHoldSpokenHint</code>, which assumed a long press</td></tr>
+  <tr><td>Undo restore row, entries added since</td><td>The 3 entries added since will go.</td><td>UX flow step 12. Replaces <code>restoreRevertHint</code> when it applies</td></tr>
+</table>
+<p class="lede">The deck's <code>restoreFirstTitle</code>, <code>restoreFirstYes</code> and <code>restoreFirstNo</code> are unused: restoring from onboarding has no dialog. <code>deleteAllType*</code> (option B) is unused because the hold was chosen.</p>
+
+<h2>Tokens used</h2>
+<table>
+  <tr><th>Kind</th><th>Tokens</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>control</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>inverse</code> (snackbar, hold key edge and fill, dialog <i>Replace</i>), <code>scrim</code>; on Home only, <code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEdge</code>, <code>displayShadow</code>, <code>blockIdle</code>, and <code>signal</code> / <code>onSignal</code> (today's bar and dot, Add, nothing else). <b>No new colour. Marigold appears nowhere in this feature's own UI.</b></td></tr>
+  <tr><td>Type</td><td><code>titleLarge</code> Anek 22/28 (app bars, group headers, dialog title) · <code>headlineSmall</code> at 30/34 (onboarding question, as built) · <code>titleMedium</code> Mukta 600 16/20 (<i>This goes:</i>, <i>There's no Undo for this.</i>) · <code>bodyLarge</code> 16/24 (row titles, lead, list) · <code>bodyMedium</code> 15/20 (dialog lines, snackbars, the stays and last-backup lines, Look's name) · <code>bodySmall</code> 13/18 <code>ink2</code> (row second lines, the no-password note, the hold caption) · <code>labelLarge</code> 14/20 (Undo, the onboarding chip) · keys Mukta 600 17/22 · amounts Anek 600 with tabular figures (hero 76/76 at width 85; onboarding 60/60). Two weights, 400 and 600</td></tr>
+  <tr><td>Spacing</td><td><code>xs</code> 4 (header and prose inset), <code>s</code> 8 (header to card; last-backup line to its key; dialog keys), <code>m</code> 12 (row padding, well to text), <code>l</code> 16 (page blocks; goes-card padding), <code>gutter</code> 20 (page edge; row inset), <code>xl</code> 24 (between groups; <i>Back up first</i> to the hold key; dialog padding; snackbar off the bottom). Hairlines start at 74dp, the text start</td></tr>
+  <tr><td>Radius</td><td><code>card</code> 28 (cards, dialog, snackbar), <code>key</code> 16 (hold key, <i>Back up first</i>, dialog keys, keypad, Look track), <code>chip</code> 12 (onboarding chip, Back well, Look buttons), 14 (row wells, as built)</td></tr>
+  <tr><td>Sizes</td><td>Rows 66dp; keys 56dp (<i>Next</i> 58); dialog 280dp wide (232dp inside); snackbar 56dp minimum; glyphs 24 (20 in the list and wells40), stroke 1.6</td></tr>
+  <tr><td>Glyphs</td><td>FileExport (Back up, <i>Back up first</i>), FileImport (Restore, onboarding chip), Undo02 (Undo restore), Delete02 (Delete everything, hold key), Loading03 (busy), ArrowRight02, ArrowLeft01, Note01, MoneyReceiveCircle, Repeat, PiggyBank, DashboardSquare01, SlidersHorizontal, Tick02, Lock, InformationCircle, SmartPhone01, Sun03, Moon02, Flag02, Add01; <code>HisaabGlyphs.backspace</code></td></tr>
+</table>
+
+<h2>For you to decide</h2>
+<ul>
+  <li><b>Hairline indent.</b> Drawn at 74dp, the text start (the pixel rule and mockups 32 and 33). The build's <code>settings_page.dart</code> indents the Money dividers by <code>gutter</code> (20dp). One should change, and this group should follow whichever wins.</li>
+  <li><b>The onboarding chip costs a 48dp row.</b> The progress dots are centred, and at 320dp a 150dp chip can't share their row without overlapping them. So the chip gets its own row above them on step 1 only. Step 1 still fits a 760dp phone. On <code>smallPhone</code>, step 1 already scrolls.</li>
+  <li><b>A snackbar on the delete page covers the hold key</b> for its 4 s after <i>Back up first</i> (frame D2). That's a short pause, which is fine. The alternative is to show no snackbar here and let the updated "Backed up today" line say it, but then the file name is lost.</li>
+  <li><b><i>Back up first</i> stays quiet.</b> It is a <code>control</code> key, not a strong one. If the hallway test shows people skip it, raise it to a <code>sunk</code> well with the last-backup line inside, still never marigold.</li>
+</ul>
+
+<script>
+const P = {
+  backup: "<path d=\"M20 14V10.6569C20 9.83935 20 9.4306 19.8478 9.06306C19.6955 8.69552 19.4065 8.40649 18.8284 7.82843L14.0919 3.09188C13.593 2.593 13.3436 2.34355 13.0345 2.19575C12.9702 2.165 12.9044 2.13772 12.8372 2.11401C12.5141 2 12.1614 2 11.4558 2C8.21082 2 6.58831 2 5.48933 2.88607C5.26731 3.06508 5.06508 3.26731 4.88607 3.48933C4 4.58831 4 6.21082 4 9.45584V14C4 17.7712 4 19.6569 5.17157 20.8284C6.34315 22 8.22876 22 12 22M13 2.5V3C13 5.82843 13 7.24264 13.8787 8.12132C14.7574 9 16.1716 9 19 9H19.5\"/><path d=\"M17 22C17.6068 21.4102 20 19.8403 20 19C20 18.1597 17.6068 16.5898 17 16M19 19H12\"/>",
+  restore: "<path d=\"M20 15.0057V10.6606C20 9.84276 20 9.43383 19.8478 9.06613C19.6955 8.69843 19.4065 8.40927 18.8284 7.83096L14.0919 3.09236C13.593 2.59325 13.3436 2.3437 13.0345 2.19583C12.9702 2.16508 12.9044 2.13778 12.8372 2.11406C12.5141 2 12.1614 2 11.4558 2C8.21082 2 6.58831 2 5.48933 2.88646C5.26731 3.06554 5.06508 3.26787 4.88607 3.48998C4 4.58943 4 6.21265 4 9.45908V14.0052C4 17.7781 4 19.6645 5.17157 20.8366C6.11466 21.7801 7.52043 21.9641 10 22M13 2.50022V3.00043C13 5.83009 13 7.24492 13.8787 8.12398C14.7574 9.00304 16.1716 9.00304 19 9.00304H19.5\"/><path d=\"M15 22C14.3932 21.4102 12 19.8403 12 19C12 18.1597 14.3932 16.5898 15 16M13 19H20\"/>",
+  undo: "<path d=\"M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C8.66873 3 5.76018 4.80989 4.20404 7.5\"/><path d=\"M3 3V4.27816C3 6.47004 3 7.56599 3.70725 8.16512C4.4145 8.76425 5.49553 8.58408 7.6576 8.22373L9 8\"/>",
+  del: "<path d=\"M19.5 5.5L18.8803 15.5251C18.7219 18.0864 18.6428 19.3671 18.0008 20.2879C17.6833 20.7431 17.2747 21.1273 16.8007 21.416C15.8421 22 14.559 22 11.9927 22C9.42312 22 8.1383 22 7.17905 21.4149C6.7048 21.1257 6.296 20.7408 5.97868 20.2848C5.33688 19.3626 5.25945 18.0801 5.10461 15.5152L4.5 5.5\"/><path d=\"M3 5.5H21M16.0557 5.5L15.3731 4.09173C14.9196 3.15626 14.6928 2.68852 14.3017 2.39681C14.215 2.3321 14.1231 2.27454 14.027 2.2247C13.5939 2 13.0741 2 12.0345 2C10.9688 2 10.436 2 9.99568 2.23412C9.8981 2.28601 9.80498 2.3459 9.71729 2.41317C9.32164 2.7167 9.10063 3.20155 8.65861 4.17126L8.05292 5.5\"/><path d=\"M9.5 16.5L9.5 10.5\"/><path d=\"M14.5 16.5L14.5 10.5\"/>",
+  back: "<path d=\"M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18\"/>",
+  next: "<path d=\"M18.5 12L4.99997 12\"/><path d=\"M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6\"/>",
+  info: "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16V12\"/><path d=\"M12.125 8.25H12M12.25 8.25C12.25 8.11193 12.1381 8 12 8C11.8619 8 11.75 8.11193 11.75 8.25C11.75 8.38807 11.8619 8.5 12 8.5C12.1381 8.5 12.25 8.38807 12.25 8.25Z\"/>",
+  tick: "<path d=\"M5 14L8.5 17.5L19 6.5\"/>",
+  lock: "<path d=\"M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z\"/><path d=\"M12 13C13.1046 13 14 12.1046 14 11C14 9.89543 13.1046 9 12 9C10.8954 9 10 9.89543 10 11C10 12.1046 10.8954 13 12 13ZM12 13L12 16\"/>",
+  folder: "<path d=\"M8 7H16.75C18.8567 7 19.91 7 20.6667 7.50559C20.9943 7.72447 21.2755 8.00572 21.4944 8.33329C22 9.08996 22 10.1433 22 12.25C22 15.7612 22 17.5167 21.1573 18.7779C20.7926 19.3238 20.3238 19.7926 19.7779 20.1573C18.5167 21 16.7612 21 13.25 21H12C7.28595 21 4.92893 21 3.46447 19.5355C2 18.0711 2 15.714 2 11V7.94427C2 6.1278 2 5.21956 2.38032 4.53806C2.65142 4.05227 3.05227 3.65142 3.53806 3.38032C4.21956 3 5.1278 3 6.94427 3C8.10802 3 8.6899 3 9.19926 3.19101C10.3622 3.62712 10.8418 4.68358 11.3666 5.73313L12 7\"/>",
+  file: "<path d=\"M8 7L16 7\"/><path d=\"M8 11L12 11\"/><path d=\"M13 21.5V21C13 18.1716 13 16.7574 13.8787 15.8787C14.7574 15 16.1716 15 19 15H19.5M20 13.3431V10C20 6.22876 20 4.34315 18.8284 3.17157C17.6569 2 15.7712 2 12 2C8.22877 2 6.34315 2 5.17157 3.17157C4 4.34314 4 6.22876 4 10L4 14.5442C4 17.7892 4 19.4117 4.88607 20.5107C5.06508 20.7327 5.26731 20.9349 5.48933 21.1139C6.58831 22 8.21082 22 11.4558 22C12.1614 22 12.5141 22 12.8372 21.886C12.9044 21.8623 12.9702 21.835 13.0345 21.8043C13.3436 21.6564 13.593 21.407 14.0919 20.9081L18.8284 16.1716C19.4065 15.5935 19.6955 15.3045 19.8478 14.9369C20 14.5694 20 14.1606 20 13.3431Z\"/>",
+  gear: "<path d=\"M3.99963 5.00055L9.99963 5.00031\"/><path d=\"M12.9996 5.00031L19.9996 5.00031\"/><path d=\"M15.9996 9.00031L15.9996 15.0003\"/><path d=\"M9.99963 2.00031L9.99963 8.00031\"/><path d=\"M11.9996 16.0003L11.9996 22.0003\"/><path d=\"M15.9996 12.0001L19.9996 12.0003\"/><path d=\"M3.99963 12.0005L12.9996 12.0003\"/><path d=\"M11.9996 19.0003L19.9996 19.0003\"/><path d=\"M3.99963 19.0005L8.99963 19.0003\"/>",
+  plus: "<path d=\"M12.001 5.00003V19.002\"/><path d=\"M19.002 12.002L4.99998 12.002\"/>",
+  flag: "<path d=\"M4 7L4 21\"/><path d=\"M11.7576 3.90865C8.45236 2.22497 5.85125 3.21144 4.55426 4.2192C4.32048 4.40085 4.20358 4.49167 4.10179 4.69967C4 4.90767 4 5.10138 4 5.4888V14.7319C4.9697 13.6342 7.87879 11.9328 11.7576 13.9086C15.224 15.6744 18.1741 14.9424 19.5697 14.1795C19.7633 14.0737 19.8601 14.0207 19.9301 13.9028C20 13.7849 20 13.6569 20 13.4009V5.87389C20 5.04538 20 4.63113 19.8027 4.48106C19.6053 4.33099 19.1436 4.459 18.2202 4.71504C16.64 5.15319 14.3423 5.22532 11.7576 3.90865Z\"/>",
+  alert: "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 8V12\"/><path d=\"M12.125 15.75H12M12.25 15.75C12.25 15.8881 12.1381 16 12 16C11.8619 16 11.75 15.8881 11.75 15.75C11.75 15.6119 11.8619 15.5 12 15.5C12.1381 15.5 12.25 15.6119 12.25 15.75Z\"/>",
+  home: "<path d=\"M3 11.9896V14.5C3 17.7998 3 19.4497 4.02513 20.4749C5.05025 21.5 6.70017 21.5 10 21.5H14C17.2998 21.5 18.9497 21.5 19.9749 20.4749C21 19.4497 21 17.7998 21 14.5V11.9896C21 10.3083 21 9.46773 20.6441 8.74005C20.2882 8.01237 19.6247 7.49628 18.2976 6.46411L16.2976 4.90855C14.2331 3.30285 13.2009 2.5 12 2.5C10.7991 2.5 9.76689 3.30285 7.70242 4.90855L5.70241 6.46411C4.37533 7.49628 3.71179 8.01237 3.3559 8.74005C3 9.46773 3 10.3083 3 11.9896Z\"/>",
+  spends: "<path d=\"M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3\"/><path d=\"M13 10L13 21\"/><path d=\"M18 13L18 21\"/><path d=\"M8 13L8 20\"/><path d=\"M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3\"/>",
+  sun: "<path d=\"M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z\"/><path d=\"M12 2V3.5M12 20.5V22M19.0708 19.0713L18.0101 18.0106M5.98926 5.98926L4.9286 4.9286M22 12H20.5M3.5 12H2M19.0713 4.92871L18.0106 5.98937M5.98975 18.0107L4.92909 19.0714\"/>",
+  moon: "<path d=\"M21.5 14.0784C20.3003 14.7189 18.9301 15.0821 17.4751 15.0821C12.7491 15.0821 8.91792 11.2509 8.91792 6.52485C8.91792 5.06986 9.28105 3.69968 9.92163 2.5C5.66765 3.49698 2.5 7.31513 2.5 11.8731C2.5 17.1899 6.8101 21.5 12.1269 21.5C16.6849 21.5 20.503 18.3324 21.5 14.0784Z\"/>",
+  phone: "<path d=\"M13.5 2H10.5C8.14298 2 6.96447 2 6.23223 2.73223C5.5 3.46447 5.5 4.64298 5.5 7V17C5.5 19.357 5.5 20.5355 6.23223 21.2678C6.96447 22 8.14298 22 10.5 22H13.5C15.857 22 17.0355 22 17.7678 21.2678C18.5 20.5355 18.5 19.357 18.5 17V7C18.5 4.64298 18.5 3.46447 17.7678 2.73223C17.0355 2 15.857 2 13.5 2Z\"/><path d=\"M12.125 19H12M12.25 19C12.25 19.1381 12.1381 19.25 12 19.25C11.8619 19.25 11.75 19.1381 11.75 19C11.75 18.8619 11.8619 18.75 12 18.75C12.1381 18.75 12.25 18.8619 12.25 19Z\"/>",
+  money: "<path d=\"M14 2.22179C13.3538 2.09076 12.6849 2.02197 12 2.02197C6.47715 2.02197 2 6.49421 2 12.011C2 17.5277 6.47715 22 12 22C17.5228 22 22 17.5277 22 12.011C22 11.3269 21.9311 10.6587 21.8 10.0132\"/><path d=\"M12 9.01428C10.8954 9.01428 10 9.68512 10 10.5126C10 11.3401 10.8954 12.011 12 12.011C13.1046 12.011 14 12.6819 14 13.5093C14 14.3368 13.1046 15.0077 12 15.0077M12 9.01428C12.8708 9.01428 13.6116 9.43123 13.8862 10.0132M12 9.01428V8.01538M12 15.0077C11.1292 15.0077 10.3884 14.5908 10.1138 14.0088M12 15.0077V16.0066\"/><path d=\"M21.9951 2L17.8193 6.17362M16.9951 2.52119L17.1133 5.60928C17.1133 6.33713 17.5484 6.79062 18.3409 6.84782L21.465 6.99451\"/>",
+  bill: "<path d=\"M16.3884 3L17.3913 3.97574C17.8393 4.41165 18.0633 4.62961 17.9844 4.81481C17.9056 5 17.5888 5 16.9552 5H9.19422C5.22096 5 2 8.13401 2 12C2 13.4872 2.47668 14.8662 3.2895 16\"/><path d=\"M7.61156 21L6.60875 20.0243C6.16074 19.5883 5.93673 19.3704 6.01557 19.1852C6.09441 19 6.4112 19 7.04478 19H14.8058C18.779 19 22 15.866 22 12C22 10.5128 21.5233 9.13383 20.7105 8\"/>",
+  piggy: "<path d=\"M14.5 5.5H10.5C6.91015 5.5 4 8.41015 4 12C4 14.3012 5.19584 16.3231 7 17.4782L7.28751 19.2158C7.35758 19.6393 7.39262 19.851 7.4905 20.0143C7.6037 20.2031 7.77604 20.3492 7.98078 20.4301C8.1578 20.5 8.37243 20.5 8.80169 20.5C9.19947 20.5 9.39836 20.5 9.56635 20.4378C9.76071 20.3659 9.92792 20.2353 10.0449 20.0642C10.1459 19.9163 10.1942 19.7234 10.2906 19.3375L10.5 18.5H13.5L13.7094 19.3375C13.8058 19.7234 13.8541 19.9163 13.9551 20.0642C14.0721 20.2353 14.2393 20.3659 14.4337 20.4378C14.6016 20.5 14.8005 20.5 15.1983 20.5C15.6276 20.5 15.8422 20.5 16.0192 20.4301C16.224 20.3492 16.3963 20.2031 16.5095 20.0143C16.6074 19.851 16.6424 19.6393 16.7125 19.2158L17 17.4782C18.1096 16.7678 18.9891 15.7295 19.5018 14.5L20.3925 14.3217C21.162 14.1677 21.5468 14.0907 21.7734 13.8142C22 13.5378 22 13.1454 22 12.3606V12.0616C22 11.3116 22 10.9366 21.7882 10.6654C21.5764 10.3941 21.2126 10.3032 20.4851 10.1213L20 10C20 8.5 18.8333 7.16667 18 6.5V3.5H17.7361C16.3657 3.5 15.1129 4.27427 14.5 5.5Z\"/><path d=\"M15.875 9.75H15.75M16 9.75C16 9.88807 15.8881 10 15.75 10C15.6119 10 15.5 9.88807 15.5 9.75C15.5 9.61193 15.6119 9.5 15.75 9.5C15.8881 9.5 16 9.61193 16 9.75Z\"/><path d=\"M2 8V10C2 11.1046 2.89543 12 4 12\"/>",
+  search: "<path d=\"M17 17L21 21\"/><path d=\"M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z\"/>",
+  more: "<path d=\"M11.9967 12.5V12M11.9967 6.5V6M11.9967 18.5V18M12.9967 12.5C12.9967 11.9477 12.549 11.5 11.9967 11.5C11.4444 11.5 10.9967 11.9477 10.9967 12.5C10.9967 13.0523 11.4444 13.5 11.9967 13.5C12.549 13.5 12.9967 13.0523 12.9967 12.5ZM12.9967 6.5C12.9967 5.94772 12.549 5.5 11.9967 5.5C11.4444 5.5 10.9967 5.94772 10.9967 6.5C10.9967 7.05228 11.4444 7.5 11.9967 7.5C12.549 7.5 12.9967 7.05228 12.9967 6.5ZM12.9967 18.5C12.9967 17.9477 12.549 17.5 11.9967 17.5C11.4444 17.5 10.9967 17.9477 10.9967 18.5C10.9967 19.0523 11.4444 19.5 11.9967 19.5C12.549 19.5 12.9967 19.0523 12.9967 18.5Z\"/>",
+  menu: "<path d=\"M4 5L20 5\"/><path d=\"M4 12L20 12\"/><path d=\"M4 19L20 19\"/>",
+  entries: "<path d=\"M16.5 2V5M7.5 2V5M12 2V5\"/><path d=\"M13 3.5H11C7.70017 3.5 6.05025 3.5 5.02513 4.52513C4 5.55025 4 7.20017 4 10.5V15C4 18.2998 4 19.9497 5.02513 20.9749C6.05025 22 7.70017 22 11 22H13C16.2998 22 17.9497 22 18.9749 20.9749C20 19.9497 20 18.2998 20 15V10.5C20 7.20017 20 5.55025 18.9749 4.52512C17.9497 3.5 16.2998 3.5 13 3.5Z\"/><path d=\"M8 15H12M8 11H16\"/>",
+  cats: "<path d=\"M13.6903 19.4567C13.5 18.9973 13.5 18.4149 13.5 17.25C13.5 16.0851 13.5 15.5027 13.6903 15.0433C13.944 14.4307 14.4307 13.944 15.0433 13.6903C15.5027 13.5 16.0851 13.5 17.25 13.5C18.4149 13.5 18.9973 13.5 19.4567 13.6903C20.0693 13.944 20.556 14.4307 20.8097 15.0433C21 15.5027 21 16.0851 21 17.25C21 18.4149 21 18.9973 20.8097 19.4567C20.556 20.0693 20.0693 20.556 19.4567 20.8097C18.9973 21 18.4149 21 17.25 21C16.0851 21 15.5027 21 15.0433 20.8097C14.4307 20.556 13.944 20.0693 13.6903 19.4567Z\"/><path d=\"M13.6903 8.95671C13.5 8.49728 13.5 7.91485 13.5 6.75C13.5 5.58515 13.5 5.00272 13.6903 4.54329C13.944 3.93072 14.4307 3.44404 15.0433 3.1903C15.5027 3 16.0851 3 17.25 3C18.4149 3 18.9973 3 19.4567 3.1903C20.0693 3.44404 20.556 3.93072 20.8097 4.54329C21 5.00272 21 5.58515 21 6.75C21 7.91485 21 8.49728 20.8097 8.95671C20.556 9.56928 20.0693 10.056 19.4567 10.3097C18.9973 10.5 18.4149 10.5 17.25 10.5C16.0851 10.5 15.5027 10.5 15.0433 10.3097C14.4307 10.056 13.944 9.56928 13.6903 8.95671Z\"/><path d=\"M3.1903 19.4567C3 18.9973 3 18.4149 3 17.25C3 16.0851 3 15.5027 3.1903 15.0433C3.44404 14.4307 3.93072 13.944 4.54329 13.6903C5.00272 13.5 5.58515 13.5 6.75 13.5C7.91485 13.5 8.49728 13.5 8.95671 13.6903C9.56928 13.944 10.056 14.4307 10.3097 15.0433C10.5 15.5027 10.5 16.0851 10.5 17.25C10.5 18.4149 10.5 18.9973 10.3097 19.4567C10.056 20.0693 9.56928 20.556 8.95671 20.8097C8.49728 21 7.91485 21 6.75 21C5.58515 21 5.00272 21 4.54329 20.8097C3.93072 20.556 3.44404 20.0693 3.1903 19.4567Z\"/><path d=\"M3.1903 8.95671C3 8.49728 3 7.91485 3 6.75C3 5.58515 3 5.00272 3.1903 4.54329C3.44404 3.93072 3.93072 3.44404 4.54329 3.1903C5.00272 3 5.58515 3 6.75 3C7.91485 3 8.49728 3 8.95671 3.1903C9.56928 3.44404 10.056 3.93072 10.3097 4.54329C10.5 5.00272 10.5 5.58515 10.5 6.75C10.5 7.91485 10.5 8.49728 10.3097 8.95671C10.056 9.56928 9.56928 10.056 8.95671 10.3097C8.49728 10.5 7.91485 10.5 6.75 10.5C5.58515 10.5 5.00272 10.5 4.54329 10.3097C3.93072 10.056 3.44404 9.56928 3.1903 8.95671Z\"/>",
+  loading: "<path d=\"M12 3V6\"/><path d=\"M12 18V21\"/><path d=\"M21 12L18 12\"/><path d=\"M6 12L3 12\"/><path d=\"M18.3635 5.63672L16.2422 7.75804\"/><path d=\"M7.75804 16.2422L5.63672 18.3635\"/><path d=\"M18.3635 18.3635L16.2422 16.2422\"/><path d=\"M7.75804 7.75804L5.63672 5.63672\"/>",
+  food: "<path d=\"M15 10L4 21.001\"/><path d=\"M17.9999 3.00098L14.9999 6.00098C14.4547 6.54623 14.1821 6.81885 14.0363 7.11295C13.759 7.6725 13.759 8.32945 14.0363 8.88901C14.1821 9.1831 14.4547 9.45573 14.9999 10.001C15.5452 10.5462 15.8178 10.8189 16.1119 10.9646C16.6715 11.2419 17.3284 11.2419 17.888 10.9646C18.1821 10.8189 18.4547 10.5462 18.9999 10.001L21.9999 7.00098\"/><path d=\"M20 4.99902L17 7.99902\"/><path d=\"M8.84473 9.84571C7.47968 11.2108 5.60771 11.552 3.90145 9.84571C2.19514 8.13939 1.30058 5.03166 2.66563 3.66661C4.03069 2.30156 7.13841 3.19611 8.84473 4.90243C10.551 6.60868 10.2098 8.48065 8.84473 9.84571ZM8.84473 9.84571L20 21.001\"/>",
+  bs: "<path d=\"M3.4408 10.3375L7.4521 5.7091C8.0285 5.0441 9.22 4.5 10.1 4.5H14.5C17.7875 4.5 19.4312 4.5 20.5376 5.408C20.7401 5.5742 20.9258 5.7599 21.092 5.9624C22 7.0688 22 8.7125 22 12C22 15.2875 22 16.9312 21.092 18.0376C20.9258 18.2401 20.7401 18.4258 20.5376 18.592C19.4312 19.5 17.7875 19.5 14.5 19.5H10.1C9.22 19.5 8.0285 18.9559 7.4521 18.2909L3.4408 13.6625C2.6484 12.7481 2.6484 11.2519 3.4408 10.3375Z\"/><path d=\"M17.5 9.5L12.5 14.5M17.5 14.5L12.5 9.5\"/>"
+};
+const ic = (k, label, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" role="img" aria-label="${label || k}">${P[k]}</svg>`;
+const FILE = 'hisaab-backup-2026-11-06.json';
+const OLD = 'hisaab-backup-2026-10-12.json';
+const S = {
+  yourHisaab: 'Your hisaab', backUp: 'Back up', backUpNever: 'Not backed up yet', backUpToday: 'Backed up today', backing: 'Backing up…',
+  restore: 'Restore', restoreHint: 'Bring back from a backup file', checking: 'Checking the backup…',
+  revert: 'Undo restore', revertHint: 'Go back to what you had before 6 Nov',
+  delAll: 'Delete everything', delAllHint: 'Clear it all and start again',
+  noLock: 'The backup file has no password. Anyone who has it can read your entries and notes, so keep it safe.',
+};
+
+const edges = '<div class="edges" aria-hidden="true"></div>';
+const bar = (title, dim) => `<div class="bar${dim ? ' dim' : ''}"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">${title}</span></div>`;
+const row = (icon, label, detail, opts = {}) => `<div class="row${opts.fresh ? ' fresh' : ''}"><span class="w">${ic(icon, label)}</span><span class="t">${label}${detail ? `<span>${detail}</span>` : ''}</span>${opts.busy ? ic('loading', 'Busy') : ic('next', 'Opens')}</div>`;
+const snack = (msg, action, where = '') => `<div class="snack${action ? ' act' : ''} ${where}" role="status"><span class="m">${msg}</span>${action ? `<span class="a">${action}</span>` : ''}</div>`;
+
+// Settings, scrolled to its end so the new group shows (Money is under the bar)
+function settings({ backDetail = S.backUpNever, backBusy = false, restoreDetail = S.restoreHint, restoreBusy = false, revert = false, fresh = '' } = {}) {
+  return `${bar('Settings')}<div class="scroll" data-at="top">
+    <div class="secHd">Money</div>
+    <div class="card">
+      ${row('money', 'Money coming in', '₹45,000 · on the 4th')}
+      ${row('bill', 'Bills')}
+      ${row('piggy', 'Savings')}
+    </div>
+    <div class="secHd">Look</div>
+    <div class="card"><div class="lookRow"><span class="t">Light or dark<span>Match phone</span></span><span class="track"><span class="on">${ic('phone', 'Match phone')}</span><span>${ic('sun', 'Light')}</span><span>${ic('moon', 'Dark')}</span></span></div></div>
+    <div class="secHd">${S.yourHisaab}</div>
+    <div class="card">
+      ${row('backup', S.backUp, backDetail, { busy: backBusy, fresh: fresh === 'backup' })}
+      ${row('restore', S.restore, restoreDetail, { busy: restoreBusy })}
+      ${revert ? row('undo', S.revert, revert === true ? S.revertHint : revert) : ''}
+    </div>
+    <p class="note">${S.noLock}</p>
+    <div class="card">${row('del', S.delAll, S.delAllHint)}</div>
+  </div>`;
+}
+
+// Android's own Save and Open screens, drawn neutral
+const sysSave = () => `${settings()}<div class="sys">
+  <div class="sbar">${ic('menu', 'Menu')}<b>Save to Downloads</b>${ic('more', 'More')}</div>
+  <div class="crumb">${ic('folder', 'Folder')} Internal storage › Downloads</div>
+  <div class="f">${ic('file', 'File')}<span>Rent receipt Oct.pdf<small>212 kB · 2 Nov</small></span></div>
+  <div class="f">${ic('file', 'File')}<span>IMG_2041.jpg<small>3.1 MB · 30 Oct</small></span></div>
+  <div class="save"><span class="fld">${FILE}</span><span class="btn">SAVE</span></div>
+</div><div class="sysTag">Android's screen</div>`;
+
+const sysOpen = () => `${settings()}<div class="sys">
+  <div class="sbar">${ic('menu', 'Menu')}<b>Recent</b>${ic('search', 'Search')}</div>
+  <div class="crumb">${ic('folder', 'Folder')} All files</div>
+  <div class="f pick">${ic('file', 'File')}<span>${OLD}<small>148 kB · 12 Oct · Drive</small></span></div>
+  <div class="f">${ic('file', 'File')}<span>Rent receipt Oct.pdf<small>212 kB · 2 Nov</small></span></div>
+  <div class="f">${ic('file', 'File')}<span>IMG_2041.jpg<small>3.1 MB · 30 Oct</small></span></div>
+  <div class="f">${ic('file', 'File')}<span>School fees.pdf<small>88 kB · 21 Oct</small></span></div>
+</div><div class="sysTag">Android's screen</div>`;
+
+// The one dialog
+const dialog = ({ busy = false } = {}) => `${settings()}<div class="scrim"></div><div class="dialog" role="dialog" aria-label="Replace with this backup?">
+  <h4>Replace with this backup?</h4>
+  <div class="body">
+    <p>Made on 12 Oct, with 214 entries.</p>
+    <p>It replaces everything on this phone now, including 37 entries. You can undo right after.</p>
+  </div>
+  ${busy ? `<div class="busy">${ic('loading', 'Busy')}Bringing back your hisaab…</div>` : `<div class="keys"><span class="k strong">Replace</span><span class="k calm">Keep what's here</span></div>`}
+</div>`;
+
+// Home
+const dock = `<div class="dock"><span class="on">Home</span><span class="add">${ic('plus', 'Add')}</span><span>Spends</span></div>`;
+function home({ amt = '1,564', spent = 0, share = '1,564', msg, action }) {
+  const left = Number(amt.replace(',', '')), sh = Number(share.replace(',', ''));
+  const tbar = spent ? `<span class="f part" style="flex:${left}"></span><span class="bite" style="flex:${spent}"></span>` : `<span class="f" style="flex:1"></span>`;
+  return `<div class="home">
+    <div class="homeTop"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+    <div class="hero">
+      <div class="ttl">Safe to spend today</div>
+      <div class="amt"><span class="rs">₹</span>${amt}</div>
+      <div class="tbar">${tbar}</div>
+      <div class="capRow"><span><b>₹${spent ? spent : 0}</b> spent</span><span>of <b>₹${share}</b> for today</span></div>
+      <div class="rail"><span class="dots"><i class="t"></i>${'<i></i>'.repeat(27)}</span><span class="pf">${ic('flag', 'Payday')} 4 Dec</span></div>
+      <div class="capRow"><span>Today</span><span>28 days to payday</span></div>
+    </div>
+    ${spent ? `<div class="listHd"><span class="h">Today</span><b>₹${spent}</b></div><div class="homeCard"><div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Lunch<span>Food</span></span><b>₹${spent}</b></div></div>` : ''}
+  </div>${dock}${snack(msg, action, 'overDock')}`;
+}
+
+// Onboarding step 1, with the Restore a backup chip at the top end
+const keypad = `<div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<div class="key">${k}</div>`).join('')}<div class="key">${ic('bs', 'Delete last digit')}</div></div>`;
+const onboarding = (msg) => `<div class="ob">
+  <div class="obTop"><span class="chip" aria-label="Restore a backup from another phone">${ic('restore', '')}Restore a backup</span></div>
+  <div class="dotsRow" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+  <div class="q">How much money comes in each month?</div>
+  <div class="qHint">Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month.</div>
+  <div class="obAmt"><span class="rs">₹</span>0</div>
+  <div class="obCtl">${keypad}<div class="priv">${ic('lock', 'Private')}<span>What you type stays on this phone. The app never uses the internet.</span></div><div class="next">Next</div></div>
+</div>${msg ? snack(msg, null, 'overKey') : ''}`;
+
+// Delete everything page
+function delPage({ last = 'Not backed up yet. Back up first to keep a copy.', backingUp = false, p = 0, label = 'Hold to delete everything', cap = 'Keep your finger on it for 2 seconds', short = false, tb = false, msg, live = false, flow = false, dim = false } = {}) {
+  const face = `${ic('del', '')}<span>${label}</span>`;
+  return `${bar(S.delAll, dim)}<div class="scroll${flow ? ' flow' : ''}" data-at="${p || msg || short || tb ? 'end' : 'top'}">
+    <p class="lead">This clears hisaab on this phone. It opens again at the first step, like new.</p>
+    <div class="goes">
+      <h4>This goes:</h4>
+      <div class="it">${ic('entries', '')}Every entry you added</div>
+      <div class="it">${ic('money', '')}Money coming in</div>
+      <div class="it">${ic('bill', '')}Bills and their reminders</div>
+      <div class="it">${ic('piggy', '')}Savings</div>
+      <div class="it">${ic('cats', '')}Categories you added or changed</div>
+      <div class="it">${ic('gear', '')}Look and your other settings</div>
+      <p class="no">There's no Undo for this.</p>
+    </div>
+    <div class="stays">
+      <div>${ic('tick', '')}<span>Backup files you made stay where you put them.</span></div>
+      <div>${ic('tick', '')}<span>Only hisaab is cleared. Your phone and other apps stay as they are.</span></div>
+    </div>
+    <p class="last">${last}</p>
+    <div class="wide quiet${backingUp ? ' busy' : ''}">${ic(backingUp ? 'loading' : 'backup', '')}Back up first</div>
+    <div class="holdWrap">
+      <div class="hold${live ? ' live' : ''}" role="button" aria-label="Delete everything in hisaab" style="--p:${p}%">
+        <div class="face">${face}</div><div class="fill" aria-hidden="true"><div class="face">${face}</div></div>
+      </div>${tb ? '<div class="tbFocus" aria-hidden="true"></div>' : ''}
+    </div>
+    <p class="holdCap${short ? ' short' : ''}">${cap}</p>
+  </div>${msg ? snack(msg) : ''}`;
+}
+
+const FLOWS = [
+  { id: 'backup', title: '1 · Back up',
+    intro: 'One tap opens Android\'s Save screen with the dated name filled in. Nothing comes before it, and nothing is said if the user backs out.',
+    frames: [
+      ['B1 · Settings: Your hisaab', () => settings(), 'The group sits after <i>Look</i>. Card 1: <i>Back up</i> ("Not backed up yet": a fact, never a badge, never marigold) and <i>Restore</i>, whose second line explains the word. The no-password note sits under card 1, <code>bodySmall</code> <code>ink2</code>, 4dp in like the headers. Card 2, 24dp below, holds <i>Delete everything</i> alone. Every row is a plain <code>SettingsRow</code>; the delete row gets no colour, only its own card.'],
+      ['B2 · Android\'s Save screen', sysSave, 'System UI, drawn neutral. The name <i>' + FILE + '</i> is filled in and the user picks Downloads, Drive or a pen drive. <b>Backed out:</b> back on B1, no message, nothing changes.'],
+      ['B3 · Backing up', () => settings({ backDetail: S.backing, backBusy: true }), 'The row\'s second line reads "Backing up…" <span class="draft">draft</span>, and its arrow becomes Loading03 in <code>ink2</code>. The row ignores taps meanwhile (<code>droppable()</code>). It shows only if writing takes over 400 ms, which is rare for about 300 kB.'],
+      ['B4 · Backed up', () => settings({ backDetail: S.backUpToday, fresh: 'backup' }) + snack('Backed up as ' + FILE), 'The snackbar names the file exactly as Android saved it (a second backup the same day shows "(1)"). If no name comes back, it says "Backed up". The row line becomes "Backed up today" and the row flashes <code>sunk</code> once. Haptic <code>success()</code>.'],
+      ['B5 · Couldn\'t back up', () => settings() + snack('Couldn\'t back up there. Try another folder.'), 'Writing failed: the line stays "Not backed up yet". Haptic <code>reject()</code>. The same frame covers <b>"Not enough space there. Free some space or pick another folder."</b> (only if the space error can be told apart) and <b>"Couldn\'t make the backup. Nothing changed. Try again."</b> (hisaab couldn\'t read its own data).'],
+    ],
+    anno: [
+      ['Taps', '<b>3</b>: Settings, <i>Back up</i>, Android\'s <i>Save</i>. Changing folder is optional.'],
+      ['Haptic', '<code>success()</code> when the file is written; <code>reject()</code> when it fails. Backing out: none.'],
+      ['TalkBack', 'Row: "Back up, Not backed up yet, button". The snackbar is a live region: "Backed up as hisaab-backup-2026-11-06.json", read without moving focus (the name is spelled out, which is fine here).'],
+    ] },
+  { id: 'restore', title: '2 · Restore (from Settings)',
+    intro: 'Android\'s Open screen shows all files. hisaab checks the file before anything changes. A good file gets the app\'s one dialog; the result can be undone right away from the snackbar, and for 7 days from Settings.',
+    frames: [
+      ['R1 · Android\'s Open screen', sysOpen, 'All files are shown and nothing is greyed out, so a renamed file is still found. The bytes are read now, so a Drive file that goes offline later can\'t break the restore. <b>Backed out:</b> back on Settings, no message.'],
+      ['R2 · Checking the backup', () => settings({ restoreDetail: S.checking, restoreBusy: true }), 'Only shown if checking takes more than a moment. The Restore row\'s line reads "Checking the backup…" and its arrow becomes Loading03, as in B3.'],
+      ['R3 · Not a hisaab backup', () => settings() + snack('That\'s not a hisaab backup. Pick a file whose name starts with hisaab-backup.'), 'Nothing changed. Haptic <code>reject()</code>. The same frame covers <b>"This backup can\'t be opened. It may be cut short. Try another copy."</b> (only if it can be told apart) and <b>"Couldn\'t open that file. Try again or pick another."</b>'],
+      ['R4 · From a newer hisaab', () => settings() + snack('This backup is from a newer hisaab. Update hisaab from Play Store, then try again.'), 'E14: refused before anything changes. It names the fix and never says "corrupt". At 3 lines this is the longest snackbar; at 320dp it reaches 4 lines (about 30 characters a line beside no action). An older file is converted quietly and goes straight to R5.'],
+      ['R5 · The one dialog', () => dialog(), 'BR-16\'s only dialog. The title names the outcome. Line 1 gives the file\'s facts (12 Oct, 214 entries), line 2 the phone\'s (37 entries) and the safety net. Both lines are <code>ink</code> because both are facts to check. <i>Replace</i> is <code>inverse</code> with <code>bg</code> text: strong, not marigold, because it removes data. <i>Keep what\'s here</i> is a <code>hairline</code> key, as a control on a <code>surface</code> layer (D100). The keys are stacked because, side by side, they would need 236dp of the 232dp available. Back and the scrim both keep what\'s here.'],
+      ['R6 · Bringing back', () => dialog({ busy: true }), 'After <i>Replace</i> the keys give way to Loading03 and "Bringing back your hisaab…" in the same 120dp, so the dialog doesn\'t change size. It can\'t be dismissed while it runs (one transaction, usually under a second).'],
+      ['R7 · Restored, with Undo', () => home({ msg: 'Backup from 12 Oct restored', action: 'Undo' }), 'It lands on Home, so the user\'s own number is the proof: the file ends on 12 Oct, so this cycle starts fresh at ₹1,564 a day. <i>Undo</i> is a Semibold word in <code>bg</code>, never marigold. With TalkBack the bar stays until Undo or Dismiss (D128). Haptic <code>success()</code>.'],
+      ['R8 · Couldn\'t restore', () => settings() + snack('Couldn\'t restore. Nothing changed. Try again.'), 'The transaction rolled back and the snapshot was dropped, so the user stays on Settings with their 37 entries. Haptic <code>reject()</code>.'],
+      ['R9 · Undo restore, for 7 days', () => settings({ revert: true }), 'The third row in card 1, with Undo02. It stays 7 days, or until the next restore or <i>Delete everything</i>. If entries were added since, the second line reads "The 3 entries added since will go." <span class="draft">draft</span>. One tap swaps back with no dialog, because the backup file still exists to redo it.'],
+      ['R10 · Back to before', () => home({ amt: '1,231', spent: 220, share: '1,451', msg: 'Back to what you had before' }), 'After Undo (from the snackbar or R9) it lands on Home with the phone\'s own entries back: ₹1,231 left of today\'s ₹1,451. The rare failure, <b>"Couldn\'t go back. The backup is still in use."</b>, uses the same bar.'],
+    ],
+    anno: [
+      ['Taps', '<b>4</b>: Settings, <i>Restore</i>, the file, <i>Replace</i>. Undo is 1 more.'],
+      ['Haptic', '<code>reject()</code> for a file that can\'t be used or a failed restore; <code>success()</code> on landing on Home restored. Opening the dialog: none.'],
+      ['TalkBack', 'Row: "Restore, Bring back from a backup file, button". The dialog reads its title, then both lines in order; focus starts on the title, not <i>Replace</i>. Keys: "Replace, button", "Keep what\'s here, button". Undo restore row: "Undo restore, Go back to what you had before 6 Nov, button".'],
+    ] },
+  { id: 'onboarding', title: '3 · Restore from onboarding',
+    intro: 'On a new phone, restoring is the first thing to do. Step 1 gets a quiet chip at its top end, so nobody has to make up an income to reach Settings. There is nothing to replace, so there is no dialog, and nothing to go back to, so there is no Undo.',
+    frames: [
+      ['O1 · Step 1 with the chip', () => onboarding(), '<i>Restore a backup</i> is a page chip (<code>control</code>, <code>labelLarge</code>, FileImport) in its own 48dp row at the top end, on step 1 only. It is never marigold: the act on this screen stays <i>Next</i>, which is grey until an amount is typed. It sits away from the thumb on purpose: it\'s used once per phone. Its end edge is on the 20dp gutter, the same edge as the keypad.'],
+      ['O2 · Not a hisaab backup, on step 1', () => onboarding('That\'s not a hisaab backup. Pick a file whose name starts with hisaab-backup.'), 'Every Settings error (R3, R4) shows here too, right above <i>Next</i>, as on Ask AI\'s pinned actions. The amount and the step stay as they were. Haptic <code>reject()</code>.'],
+      ['O3 · Restored, no Undo', () => home({ msg: 'Backup from 12 Oct restored' }), 'A good file restores at once: the chip shows Loading03 and "Bringing back your hisaab…" while it runs, then onboarding is marked done and it lands on Home. The same words as R7, but without <i>Undo</i>. Haptic <code>success()</code>. Back from Home leaves the app; onboarding is gone from the stack.'],
+    ],
+    anno: [
+      ['Taps', '<b>2</b>: the chip, the file. Without the chip it would take about 8: making up an income, Settings, Restore, the file, Replace.'],
+      ['Haptic', '<code>success()</code> on landing; <code>reject()</code> on a bad file.'],
+      ['TalkBack', 'Chip: "Restore a backup from another phone, button" (<code>restoreLinkSpoken</code>, so it makes sense heard alone). It comes after the question in reading order, although it sits above it, so the question is still heard first.'],
+    ] },
+  { id: 'delete', title: '4 · Delete everything',
+    intro: 'A full page, not a dialog, so BR-16 keeps its only dialog. It says what goes, what stays and when the last backup was, offers <i>Back up first</i>, and ends in the hold key. Deleting happens when the finger lifts off the full key.',
+    frames: [
+      ['D1 · The page', () => delPage({ live: true }), 'Read top to bottom: what happens; what goes, in one <code>surface</code> card (each item with its glyph, so the list can be read without reading); what stays, outside the card with Tick02 in <code>ink2</code>; the backup fact; then the two keys. <i>Back up first</i> is a quiet <code>control</code> key. The hold key sits 24dp below it, the strong one: see <i>The hold key without red</i>. <b>This one is live: press and hold it.</b>'],
+      ['D2 · After Back up first', () => delPage({ last: 'Backed up today', msg: 'Backed up as ' + FILE }), '<i>Back up first</i> runs B2 to B4 and comes back here; the page never moves on by itself. With an older backup the line reads "Last backed up 12 Oct. Entries after that aren\'t in it." The snackbar sits 24dp off the bottom, over the hold key for its 4 s (see <i>For you to decide</i>).'],
+      ['D3 · Holding', () => delPage({ p: 45 }), 'Touch down: <code>tick()</code>. The <code>inverse</code> fill sweeps start → end, linear over 2.0 s (here at 0.9 s), and the label flips to <code>bg</code> under it, so every letter stays readable. Sliding off the key cancels. With reduced motion the fill still moves, because it is the progress itself; only the drain is instant.'],
+      ['D4 · Full: let go', () => delPage({ p: 100, label: 'Let go to delete', cap: 'Keep your finger on it for 2 seconds' }), 'At 2.0 s: <code>threshold()</code>, and the label reads "Let go to delete" <span class="draft">draft</span>. Lifting the finger deletes (WCAG 2.5.2: the act happens on release); sliding off, then lifting, cancels. While it deletes (under a second) the key shows Loading03 and Back is disabled.'],
+      ['D5 · Let go too early', () => delPage({ p: 0, cap: 'Keep holding till it fills up.', short: true }), 'The fill drains back on <code>snap</code> and the caption steps up to Semibold <code>ink</code>: "Keep holding till it fills up." Nothing was deleted, and it isn\'t an error, so there\'s no <code>reject()</code>. A plain tap lands here too, which is how someone who taps learns to hold.'],
+      ['D6 · Couldn\'t delete', () => delPage({ msg: 'Couldn\'t delete. Nothing changed. Try again.' }), 'The transaction rolled back, so the user stays on the page with their data. Haptic <code>reject()</code>.'],
+      ['D7 · TalkBack: armed', () => delPage({ p: 100, label: 'Double-tap again to delete everything', cap: 'Keep your finger on it for 2 seconds', tb: true }), 'TalkBack, Switch Access and keyboard users can\'t feel a 2 s hold. The first activation <b>arms</b> the key: it shows full, its label reads "Double-tap again to delete everything" <span class="draft">draft</span>, and the label is announced. A second activation within 10 s deletes. It disarms after 10 s or when focus leaves. The dashed box stands for TalkBack\'s own focus box, which hisaab doesn\'t draw.'],
+      ['D8 · Starting again', () => onboarding(), 'It lands on onboarding step 1 with the stack cleared, so Back leaves the app. Look follows the phone again. There is no snackbar and no second haptic, because <code>threshold()</code> already fired: the fresh step is the message. TalkBack alone hears "Everything deleted. hisaab is starting again."'],
+    ],
+    anno: [
+      ['Taps', '<b>3</b>: Settings, <i>Delete everything</i>, one 2 s hold. Typing RESET used to take about 9, plus a keyboard switch for Hindi users.'],
+      ['Haptic', '<code>tick()</code> on touch down; <code>threshold()</code> when full; nothing on release (one effect per event). <code>reject()</code> only if deleting fails.'],
+      ['TalkBack', 'Row: "Delete everything, Clear it all and start again, button". Hold key: "Delete everything in hisaab, button, Double-tap twice to delete" <span class="draft">draft hint</span>. Armed: announces "Double-tap again to delete everything". After deleting: "Everything deleted. hisaab is starting again."'],
+    ] },
+  { id: 'x2', title: '5 · 320dp at 2× text',
+    intro: 'The smallest <code>TestWindows</code> size, <code>smallPhone</code> (320×568), at Android\'s largest font size. Text uses Android 14\'s non-linear scale (16 → 28, 22 → 35); glyphs, padding and radii stay the same.',
+    frames: [
+      ['X1 · Delete page, full length', () => delPage({ flow: true }) + '<div class="fold"><span>568dp: end of the first screen</span></div>', 'The whole page is drawn; the dashed line is where the first screen ends. Nothing is cut and words break only at spaces. Keys grow to fit two lines. The hold key stays in the flow, not pinned, so it comes after everything it deletes has been read. The caption stays right under it.', 'w320 long x2'],
+      ['X2 · The dialog', () => dialog(), 'Dialog insets shrink to 20dp, so it is 280 wide and 232 inside. The title and both keys stay put while the two lines scroll between them, with a fade showing there is more (<code>AlertDialog(scrollable: true)</code>). <i>Keep what\'s here</i> wraps to two lines; the keys were already stacked at 1×, so nothing changes layout.', 'w320 x2'],
+    ],
+    anno: [
+      ['Checks', 'Widget tests at <code>TestWindows.smallPhone</code> with <code>textScaler: TextScaler.linear(2)</code>: no overflow; the hold key\'s label wraps rather than clips; the dialog\'s actions stay on screen; and the snackbars\' longest string, <code>restoreNewer</code>, fits on 4 lines.'],
+    ] },
+];
+
+let theme = 'light';
+function render() {
+  document.getElementById('flows').innerHTML = FLOWS.map(f => `<h2 id="${f.id}">${f.title}</h2><p class="lede">${f.intro}</p>
+    <div class="grid">${f.frames.map(([t, fn, cap, cls = '']) => `<figure class="${cls.includes('w320') ? 'w320' : ''}"><div class="phone ${theme} ${cls}">${fn()}${edges}</div><figcaption><b>${t}</b>${cap}</figcaption></figure>`).join('')}</div>
+    <table class="anno"><tr><th colspan="2">${f.title.replace(/^\d · /, '')}: taps, haptic, TalkBack</th></tr>${f.anno.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>`).join('');
+  document.querySelectorAll('.scroll[data-at="end"]').forEach(s => { s.scrollTop = s.scrollHeight; });
+  renderOpts();
+  wireHolds();
+}
+
+function renderOpts() {
+  const face = (l) => `${ic('del', '')}<span>${l}</span>`;
+  const key = `<div class="hold live" role="button" aria-label="Delete everything in hisaab"><div class="face">${face('Hold to delete everything')}</div><div class="fill" aria-hidden="true"><div class="face">${face('Hold to delete everything')}</div></div></div><p class="holdCap">Keep your finger on it for 2 seconds</p>`;
+  const O = [
+    ['marigold', 'A · Marigold fill', 'The Add / Next / Save colour, with its ink edge, filling as you hold.', 'Rejected: invites the one act that can\'t be undone, and looks like Save'],
+    ['slab', 'B · Ink slab', 'A solid ink key at rest; the fill steps it to ink2.', 'Rejected: a black slab, and ink fill already means picked'],
+    ['hatch', 'C · Hatch fill', 'An ink2 outline; the fill is the Spends over-limit hatch.', 'Rejected: hatch means over your share; it reads as disabled'],
+    ['chosen', 'D · Inverse edge, inverse fill (chosen)', 'The only outlined key in the app. The fill is the snackbar\'s inverse step, and the label flips to bg under it.', 'Chosen'],
+  ];
+  document.getElementById('opts').innerHTML = O.map(([c, h, p, v]) => `<div class="opt ${c} ${theme}"><h5>${h}</h5><p>${p}</p>${key}<span class="verdict">${v}</span></div>`).join('');
+}
+
+// Live hold: 2.0 s linear fill, act on release when full, drain on early release or slide off
+function wireHolds() {
+  document.querySelectorAll('.hold.live').forEach(k => {
+    const cap = k.parentElement.querySelector('.holdCap') || k.parentElement.parentElement.querySelector('.holdCap');
+    const labels = k.querySelectorAll('.face span');
+    const setLabel = t => labels.forEach(l => { l.textContent = t; });
+    let start = 0, raf = 0, full = false;
+    const tickFn = now => {
+      const p = Math.min(1, (now - start) / 2000);
+      k.style.setProperty('--p', (p * 100) + '%');
+      if (p >= 1 && !full) { full = true; setLabel('Let go to delete'); }
+      if (p < 1) raf = requestAnimationFrame(tickFn);
+    };
+    const reset = (short) => {
+      cancelAnimationFrame(raf); k.classList.add('drain'); k.style.setProperty('--p', '0%'); full = false;
+      setLabel('Hold to delete everything');
+      if (cap) { cap.textContent = short ? 'Keep holding till it fills up.' : 'Keep your finger on it for 2 seconds'; cap.classList.toggle('short', short); }
+    };
+    k.addEventListener('pointerdown', e => { k.setPointerCapture(e.pointerId); k.classList.remove('drain'); full = false; start = performance.now(); raf = requestAnimationFrame(tickFn); });
+    k.addEventListener('pointerup', e => {
+      const inside = document.elementFromPoint(e.clientX, e.clientY)?.closest('.hold') === k;
+      if (full && inside) { cancelAnimationFrame(raf); if (cap) { cap.textContent = 'Deleted. In the app, onboarding step 1 opens now.'; cap.classList.add('short'); } setTimeout(() => reset(false), 1800); }
+      else reset(true);
+    });
+    k.addEventListener('pointercancel', () => reset(true));
+  });
+}
+
+document.querySelectorAll('[data-theme]').forEach(b => b.addEventListener('click', () => {
+  theme = b.dataset.theme;
+  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+}));
+document.querySelector('[data-edges]').addEventListener('click', e => {
+  const on = document.body.classList.toggle('showEdges');
+  e.currentTarget.setAttribute('aria-pressed', String(on));
+});
+render();
+</script>
+</body>
+</html>

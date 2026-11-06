@@ -19,6 +19,8 @@ import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
 import 'package:expense_tracker/ledger/domain/entities/week_day.dart';
 import 'package:expense_tracker/ledger/domain/entities/yesterday_saving.dart';
 import 'package:expense_tracker/ledger/domain/usecase/get_cycle_summary.dart';
+import 'package:expense_tracker/core/time/pay_switch.dart';
+import 'package:expense_tracker/core/time/pay_rule.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -558,6 +560,40 @@ void main() {
     test('on payday yesterday was the last cycle, so no note', () async {
       setToday(const CalendarDate(2026, 10, 4));
       expect((await summary()).savedYesterday, const Option<YesterdaySaving>.none());
+    });
+  });
+
+  group('GetCycleSummary — a changed payday (BR-1a, D140)', () {
+    CycleSummary right(Either<Failure, CycleSummary> result) => result.getOrElse((Failure f) => fail('unexpected $f'));
+
+    test('preview: payday to the 25th bridges to 24 Nov, and rent on 5 Nov comes out of it', () async {
+      final CycleSummary summary = right(await getCycleSummary.preview(const MonthlyOnDay(25)).run());
+      expect(summary.cycle, const PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 24)));
+      expect(summary.todayShare, Money.fromMajor(281));
+    });
+
+    test('preview: payday to the 1st ends this cycle on 31 Oct', () async {
+      final CycleSummary summary = right(await getCycleSummary.preview(const MonthlyOnDay(1)).run());
+      expect(summary.cycle.end, const CalendarDate(2026, 10, 31));
+      expect(summary.todayShare, Money.fromMajor(2775));
+    });
+
+    test('preview: the same rule changes nothing', () async {
+      final CycleSummary now = right(await getCycleSummary(const NoParams()).run());
+      expect(right(await getCycleSummary.preview(const MonthlyOnDay(4)).run()), now);
+    });
+
+    test('a stored switch shapes today\'s cycle', () async {
+      settings.settings = const BudgetSettings(
+        paySwitches: <PaySwitch>[PaySwitch(on: CalendarDate(2026, 10, 26), from: MonthlyOnDay(25))],
+      );
+      final CycleSummary summary = right(await getCycleSummary(const NoParams()).run());
+      expect(summary.cycle, const PayCycle(start: CalendarDate(2026, 10, 25), end: CalendarDate(2026, 11, 3)));
+    });
+
+    test('preview passes a settings failure through', () async {
+      settings.failure = DatabaseFailure('boom');
+      expect((await getCycleSummary.preview(const MonthlyOnDay(1)).run()).getLeft().toNullable(), isA<DatabaseFailure>());
     });
   });
 }

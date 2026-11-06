@@ -121,7 +121,7 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 | `transactions` | id, amount_minor, currency, kind (in/out/save/card), category_id, date, note NULL, recurring_id NULL, created_at |
 | `recurring` | id, label, amount_minor, currency, kind (in/out/save), category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active, icon NULL, amount_mode (fixed/varies/card) |
 | `recurring_skips` | recurring_id, date (primary key together): a month a changing bill didn't go out |
-| `settings` | key, value. Ledger-owned keys: `currency`, `month_start` (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). The pay rule lives on the income `recurring` row (DECISIONS D20) |
+| `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `pay_switches` (JSON list of earlier pay rules, D140) (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). The pay rule lives on the income `recurring` row (DECISIONS D20) |
 
 Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transactions(recurring_id, date)`.
 

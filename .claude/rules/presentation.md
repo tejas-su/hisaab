@@ -46,7 +46,7 @@ The visual and interaction spec is `docs/UI_DESIGN.md`. Read the relevant sectio
 
 ## Design system (non-negotiable; tokens from `docs/UI_DESIGN.md` §3)
 - **Colours:** only through `Theme.of(context).extension<HisaabColors>()` (or its `context` extension). No `Color(0xFF…)` or `Colors.*` in widgets
-- **Signal colour (marigold):** means "today / act" only — today's day block, the Add key, the keypad Next key, the Ask AI well. Never decoration, never on the bare light background (always on `ink` or carrying `ink` text/outline)
+- **Signal colour (marigold):** means "today / act" only — today's day block, the Add key, the keypad Next key, the Ask AI well, and a screen's one pinned primary key (the editor's Next, *Remind me*, *Add a bill*). Never decoration, never on the bare light background (always on `ink` or carrying `ink` text/outline)
 - **No red, no green, no category colours.** State is shown by fill, outline, hatch and words
 - **Type:** only through the theme's `TextTheme` built in `core/design/hisaab_type.dart` (Anek Latin for amounts and titles, Mukta for body). Every amount style has `FontFeature.tabularFigures()`
 - **Icons:** Hugeicons only, through `AppIcon(AppIcons.x)`; never `Icon(Icons.*)`. A glyph Hugeicons lacks goes in `HisaabGlyphs` in Hugeicons' path format (24 grid, 1.5 stroke, round caps and joins, corners copied from a Hugeicons original), never a hand-drawn `CustomPainter`. Every icon has a visible label or a semantics label

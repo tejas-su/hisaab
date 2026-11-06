@@ -92,6 +92,8 @@ abstract final class SettingKeys {
   /// Ledger-owned.
   static const String currency = 'currency';
   static const String monthStart = 'month_start';
+  /// JSON list of earlier pay rules and when they changed (D140).
+  static const String paySwitches = 'pay_switches';
   /// Removed by migration 003 (D120); only that migration reads it.
   static const String keepAsideMinor = 'keep_aside_minor';
 

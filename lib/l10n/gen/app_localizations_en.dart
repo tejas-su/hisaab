@@ -1244,6 +1244,131 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get remindRefused =>
       'Reminders are off. Home still shows bills that need an amount.';
+
+  @override
+  String get moneyComingIn => 'Money coming in';
+
+  @override
+  String incomeRowMonthly(String amount, int day) {
+    return '$amount · on day $day';
+  }
+
+  @override
+  String incomeRowLastDay(String amount) {
+    return '$amount · last day of the month';
+  }
+
+  @override
+  String incomeRowWeekly(String amount, String weekday) {
+    return '$amount · every $weekday';
+  }
+
+  @override
+  String get incomeRowIrregular => 'Changes each month';
+
+  @override
+  String incomeComesOnDay(int day) {
+    return 'Comes every month on day $day';
+  }
+
+  @override
+  String get incomeComesLastDay => 'Comes on the last day of the month';
+
+  @override
+  String incomeComesWeekly(String weekday, String amount) {
+    return 'Comes every $weekday, about $amount a week';
+  }
+
+  @override
+  String get incomeAnswerWhen => 'When it comes';
+
+  @override
+  String incomeWhenDay(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get incomeWhenLastDay => 'Last day';
+
+  @override
+  String incomeStampCame(String date) {
+    return 'Came $date';
+  }
+
+  @override
+  String incomeNextPayday(String date) {
+    return 'Next payday $date';
+  }
+
+  @override
+  String incomeFromPayday(String date) {
+    return 'From payday, $date.';
+  }
+
+  @override
+  String incomeStays(String period, String amount) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'This week\'s',
+      'other': 'This month\'s',
+    });
+    return '$_temp0 $amount stays as it came.';
+  }
+
+  @override
+  String incomeChangeThisToo(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'Change this week too',
+      'other': 'Change this month too',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String incomeNowIs(String period, String amount) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'This week\'s',
+      'other': 'This month\'s',
+    });
+    return '$_temp0 pay is now $amount.';
+  }
+
+  @override
+  String get incomeIrregularEvery => 'Each month runs from the 1st';
+
+  @override
+  String get incomeIrregularFoot =>
+      'Add money when it comes. Tap Add, then Got.';
+
+  @override
+  String incomeSlipSpoken(String amount, String when) {
+    return 'Money coming in, $amount, $when';
+  }
+
+  @override
+  String incomeLastsTill(String date) {
+    return 'This money lasts till $date.';
+  }
+
+  @override
+  String incomeLastsDays(int days, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'That\'s $days days, about $amount a day.',
+      one: 'That\'s 1 day, about $amount a day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomeWhenSpoken(String value) {
+    return 'Change When it comes, $value';
+  }
+
+  @override
+  String incomeComesEvery(String weekday) {
+    return 'Comes every $weekday';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

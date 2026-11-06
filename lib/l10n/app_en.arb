@@ -1617,5 +1617,207 @@
   "remindRefused": "Reminders are off. Home still shows bills that need an amount.",
   "@remindRefused": {
     "description": "Shown in the reminder ask after Android's permission is refused (E-i)"
+  },
+  "moneyComingIn": "Money coming in",
+  "@moneyComingIn": {
+    "description": "Settings row and income sheet eyebrow for the income (FR-SE-1, D137)"
+  },
+  "incomeRowMonthly": "{amount} · on day {day}",
+  "@incomeRowMonthly": {
+    "description": "Second line of the Money coming in row for a monthly payday",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "incomeRowLastDay": "{amount} · last day of the month",
+  "@incomeRowLastDay": {
+    "description": "Second line of the Money coming in row when pay comes on the last day",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeRowWeekly": "{amount} · every {weekday}",
+  "@incomeRowWeekly": {
+    "description": "Second line of the Money coming in row for weekly pay; amount is the monthly figure, weekday a full name",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeRowIrregular": "Changes each month",
+  "@incomeRowIrregular": {
+    "description": "Second line of the Money coming in row for It changes (no fixed day)"
+  },
+  "incomeComesOnDay": "Comes every month on day {day}",
+  "@incomeComesOnDay": {
+    "description": "Line under the amount on the income slip, monthly payday",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "incomeComesLastDay": "Comes on the last day of the month",
+  "@incomeComesLastDay": {
+    "description": "Line under the amount on the income slip, last-day payday"
+  },
+  "incomeComesWeekly": "Comes every {weekday}, about {amount} a week",
+  "@incomeComesWeekly": {
+    "description": "Line under the monthly amount on the income slip for weekly pay (D26)",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeAnswerWhen": "When it comes",
+  "@incomeAnswerWhen": {
+    "description": "Row label on the income slip for the payday"
+  },
+  "incomeWhenDay": "Day {day}",
+  "@incomeWhenDay": {
+    "description": "Value of the When it comes row for a monthly payday",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "incomeWhenLastDay": "Last day",
+  "@incomeWhenLastDay": {
+    "description": "Value of the When it comes row for a last-day payday"
+  },
+  "incomeStampCame": "Came {date}",
+  "@incomeStampCame": {
+    "description": "Stamp on the income slip: the day the latest pay was added; date like 4 Oct",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeNextPayday": "Next payday {date}",
+  "@incomeNextPayday": {
+    "description": "Footer of the income slip; date like 4 Nov",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeFromPayday": "From payday, {date}.",
+  "@incomeFromPayday": {
+    "description": "When a new income amount counts; date is the next payday like 4 Nov (D137)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeStays": "{period, select, week{This week's} other{This month's}} {amount} stays as it came.",
+  "@incomeStays": {
+    "description": "Under From payday: the pay already added keeps its amount (D137)",
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeChangeThisToo": "{period, select, week{Change this week too} other{Change this month too}}",
+  "@incomeChangeThisToo": {
+    "description": "Chip after a new income amount: also change the pay already added (D137)",
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeNowIs": "{period, select, week{This week's} other{This month's}} pay is now {amount}.",
+  "@incomeNowIs": {
+    "description": "Footer after Change this month too, beside Undo",
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeIrregularEvery": "Each month runs from the 1st",
+  "@incomeIrregularEvery": {
+    "description": "Line on the income slip for It changes, under the title"
+  },
+  "incomeIrregularFoot": "Add money when it comes. Tap Add, then Got.",
+  "@incomeIrregularFoot": {
+    "description": "Footer of the income slip for It changes"
+  },
+  "incomeSlipSpoken": "Money coming in, {amount}, {when}",
+  "@incomeSlipSpoken": {
+    "description": "TalkBack for the income slip; when is the Comes… line",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeLastsTill": "This money lasts till {date}.",
+  "@incomeLastsTill": {
+    "description": "Effect of a new payday before saving, and the footer after: the current cycle now ends on date, like 24 Nov (BR-1a, D140)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeLastsDays": "{days, plural, =1{That's 1 day, about {amount} a day.} other{That's {days} days, about {amount} a day.}}",
+  "@incomeLastsDays": {
+    "description": "Under incomeLastsTill: days left including today and today's share with the new payday (D140)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeWhenSpoken": "Change When it comes, {value}",
+  "@incomeWhenSpoken": {
+    "description": "TalkBack for the When it comes row on the income slip",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeComesEvery": "Comes every {weekday}",
+  "@incomeComesEvery": {
+    "description": "Line on the amount question after picking a weekly payday for a new salary rule",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      }
+    }
   }
 }

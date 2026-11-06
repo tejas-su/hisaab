@@ -1,7 +1,10 @@
 import 'package:expense_tracker/core/db/app_database.dart';
 import 'package:expense_tracker/core/db/db_schema.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/month_start.dart';
+import 'package:expense_tracker/core/time/pay_rule.dart';
+import 'package:expense_tracker/core/time/pay_switch.dart';
 import 'package:expense_tracker/ledger/data/datasource/budget_settings_local_data_source.dart';
 import 'package:expense_tracker/ledger/data/repository/budget_settings_repository_impl.dart';
 import 'package:expense_tracker/ledger/domain/entities/budget_settings.dart';
@@ -58,6 +61,35 @@ void main() {
     test('returns DatabaseFailure when the database is closed', () async {
       await database.close();
       expect((await repository.read().run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
+  group('BudgetSettingsRepositoryImpl pay switches (D140)', () {
+    const PaySwitch first = PaySwitch(on: CalendarDate(2026, 10, 26), from: MonthlyOnDay(4));
+    const PaySwitch second = PaySwitch(on: CalendarDate(2026, 11, 10), from: MonthlyOnDay(25));
+
+    List<PaySwitch> switches(Either<Failure, BudgetSettings> read) =>
+        read.getOrElse((Failure f) => fail('unexpected $f')).paySwitches;
+
+    test('a fresh install has none', () async {
+      expect(switches(await repository.read().run()), isEmpty);
+    });
+
+    test('appends each switch in order', () async {
+      await repository.addPaySwitch(first).run();
+      await repository.addPaySwitch(second).run();
+      expect(switches(await repository.read().run()), <PaySwitch>[first, second]);
+    });
+
+    test('an unreadable stored value is InvalidDataFailure', () async {
+      await store(SettingKeys.paySwitches, 'garbage');
+      expect((await repository.read().run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+      expect((await repository.addPaySwitch(first).run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+
+    test('a failed write is DatabaseFailure', () async {
+      await database.db.close();
+      expect((await repository.addPaySwitch(first).run()).getLeft().toNullable(), isA<DatabaseFailure>());
     });
   });
 }

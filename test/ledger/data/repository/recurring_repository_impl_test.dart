@@ -75,6 +75,12 @@ void main() {
       expect(await entries(), hasLength(1));
     });
 
+    test('clears earlier pay switches (D140)', () async {
+      await database.db.insert(Tables.settings, <String, Object?>{SettingsColumns.key: SettingKeys.paySwitches, SettingsColumns.value: '[]'});
+      right(await repository.startFresh(LedgerSetup(rules: <RecurringDraft>[_salary])).run());
+      expect(await database.db.query(Tables.settings, where: '${SettingsColumns.key} = ?', whereArgs: <Object?>[SettingKeys.paySwitches]), isEmpty);
+    });
+
     test('repeating it replaces everything instead of duplicating', () async {
       final LedgerSetup setup = LedgerSetup(rules: <RecurringDraft>[_salary]);
       right(await repository.startFresh(setup).run());

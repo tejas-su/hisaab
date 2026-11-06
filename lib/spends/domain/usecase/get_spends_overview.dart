@@ -58,7 +58,8 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
     final PayRule rule = PayRuleSchedule.payRuleOf(
       Option<RecurringRule>.fromNullable(rules.where((RecurringRule r) => r.isIncomeSource).firstOrNull),
     );
-    PayCycle cycleOf(CalendarDate day) => _periods.cycleFor(today: day, rule: rule, monthStart: settings.monthStart);
+    PayCycle cycleOf(CalendarDate day) =>
+        _periods.cycleFor(today: day, rule: rule, monthStart: settings.monthStart, switches: settings.paySwitches);
     return Iterable<int>.generate(count).fold(
       <PayCycle>[cycleOf(today)],
       (List<PayCycle> cycles, int _) => <PayCycle>[...cycles, cycleOf(cycles.last.start.addDays(-1))],

@@ -1,10 +1,14 @@
+import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/layout/window_class.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/core/widgets/signal_key.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bills_bloc.dart';
 import 'package:expense_tracker/settings/presentation/bloc/bills_event.dart';
 import 'package:expense_tracker/settings/presentation/pages/bills_page.dart';
+import 'package:expense_tracker/settings/presentation/widgets/bills_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -89,6 +93,41 @@ void main() {
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey<String>('add-bill')));
       expect(calls, <Object>['add']);
+    });
+
+    testWidgets('Add a bill is a marigold key pinned to the bottom, on the card\'s edges (D136)', (WidgetTester tester) async {
+      await pump(tester);
+      final Finder add = find.byKey(const ValueKey<String>('add-bill'));
+      expect(tester.widget(add), isA<SignalKey>());
+      expect(tester.getBottomLeft(add).dy, TestWindows.phone.height - HisaabSpacing.l);
+      expect(tester.getTopLeft(add).dx, tester.getTopLeft(find.byType(BillsList)).dx);
+      expect(tester.getTopRight(add).dx, tester.getTopRight(find.byType(BillsList)).dx);
+    });
+
+    testWidgets('a failed load shows no Add key; Try again is the only act', (WidgetTester tester) async {
+      recurring.failure = DatabaseFailure('locked');
+      await pump(tester);
+      expect(find.byKey(const ValueKey<String>('add-bill')), findsNothing);
+    });
+
+    testWidgets('the Undo bar sits above the pinned key, never over it', (WidgetTester tester) async {
+      await pump(tester);
+      await tester.drag(find.text('Rent'), const Offset(-500, 0));
+      await tester.settle();
+      expect(
+        tester.getBottomLeft(find.text('Rent deleted')).dy,
+        lessThan(tester.getTopLeft(find.byKey(const ValueKey<String>('add-bill'))).dy),
+      );
+    });
+
+    testWidgets('on a tablet the list and key share one 560dp column', (WidgetTester tester) async {
+      await pump(tester, size: TestWindows.tablet);
+      final Rect add = tester.getRect(find.byKey(const ValueKey<String>('add-bill')));
+      final Rect card = tester.getRect(find.byType(BillsList));
+      expect(add.width, lessThanOrEqualTo(LayoutBreakpoints.singlePaneMaxWidth));
+      expect(add.left, card.left);
+      expect(add.right, card.right);
+      expect(add.center.dx, TestWindows.tablet.width / 2);
     });
 
     testWidgets('tapping a bill edits it', (WidgetTester tester) async {
@@ -193,15 +232,17 @@ void main() {
       );
     }
 
-    void addPostedRd() => ledger.entries.add(Entry(
-          id: 50,
-          amount: Money.fromMajor(5000),
-          kind: EntryKind.saved,
-          categoryId: SeedCategoryIds.saved,
-          date: const CalendarDate(2026, 10, 10),
-          createdAt: WorkedExample.now,
-          recurringId: 4,
-        ));
+    void addPostedRd() => ledger.entries.add(
+      Entry(
+        id: 50,
+        amount: Money.fromMajor(5000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        date: const CalendarDate(2026, 10, 10),
+        createdAt: WorkedExample.now,
+        recurringId: 4,
+      ),
+    );
 
     testWidgets('the Savings list: title, add, rows, footer, Put in extra', (WidgetTester tester) async {
       addPostedRd();
@@ -212,6 +253,23 @@ void main() {
       expect(find.text('₹5,000 put in since Oct'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('put-in-extra')));
       expect(calls, <Object>['put-in']);
+    });
+
+    testWidgets('Put in extra is a chip under the pinned Add a saving, on its edges (D136)', (WidgetTester tester) async {
+      await pumpSavings(tester);
+      final Rect add = tester.getRect(find.byKey(const ValueKey<String>('add-bill')));
+      final Rect putIn = tester.getRect(find.byKey(const ValueKey<String>('put-in-extra')));
+      expect(putIn.top, add.bottom + HisaabSpacing.s);
+      expect(putIn.bottom, TestWindows.phone.height - HisaabSpacing.l);
+      expect((putIn.left, putIn.right), (add.left, add.right));
+    });
+
+    testWidgets('in a short window Add a saving and Put in extra share one row', (WidgetTester tester) async {
+      await pumpSavings(tester, size: TestWindows.phoneLandscape);
+      final Rect add = tester.getRect(find.byKey(const ValueKey<String>('add-bill')));
+      final Rect putIn = tester.getRect(find.byKey(const ValueKey<String>('put-in-extra')));
+      expect((putIn.top, putIn.bottom), (add.top, add.bottom));
+      expect(putIn.left, greaterThan(add.right));
     });
 
     testWidgets('no saves yet: no footer', (WidgetTester tester) async {

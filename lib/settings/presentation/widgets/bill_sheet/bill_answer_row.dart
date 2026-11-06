@@ -25,7 +25,8 @@ class BillAnswerRow extends StatelessWidget {
   final String label;
   final String value;
   final String semanticLabel;
-  final VoidCallback onPressed;
+  /// Opens the answer's question; null shows the answer read-only, with no arrow.
+  final VoidCallback? onPressed;
 
   /// A glyph before [value], for the icon row.
   final AppIconData? leading;
@@ -84,8 +85,10 @@ class BillAnswerRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
-              AppIcon(AppIcons.next, size: 18, color: context.colors.displayInk2),
+              if (onPressed != null) ...<Widget>[
+                const SizedBox(width: 6),
+                AppIcon(AppIcons.next, size: 18, color: context.colors.displayInk2),
+              ],
             ],
           );
         },

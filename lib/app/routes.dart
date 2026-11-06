@@ -199,15 +199,35 @@ abstract final class AppRoutes {
       );
 
   /// Settings, one level deep (FR-SE).
-  static Widget settings(GetIt getIt) => Builder(
-        builder: (BuildContext context) => SettingsPage(
-          onOpenBills: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt)),
+  static Widget settings(GetIt getIt) => BlocProvider<IncomeBloc>(
+        create: (BuildContext _) => IncomeBloc(
+          getIncome: getIt<GetIncome>(),
+          recurring: getIt<RecurringRepository>(),
+          ledger: getIt<LedgerRepository>(),
+        )..add(const IncomeLoadRequested()),
+        child: Builder(
+          builder: (BuildContext context) => SettingsPage(
+            incomeBloc: context.read<IncomeBloc>(),
+            onOpenIncome: (Income income) => IncomeSheet.show(
+              context,
+              IncomeSheetBloc(
+                income: income,
+                changeAmount: getIt<ChangeIncomeAmount>(),
+                correctPay: getIt<CorrectLatestPay>(),
+                changeRule: getIt<ChangePayRule>(),
+                summary: getIt<GetCycleSummary>(),
+                newRuleLabel: AppLocalizations.of(context).categoryName(CategoryKeys.salary),
+                haptics: getIt<Haptics>(),
+              ),
+            ),
+            onOpenBills: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt)),
+            ),
+            onOpenSavings: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt, kind: EntryKind.saved)),
+            ),
+            themeBloc: context.read<ThemeBloc>(),
           ),
-          onOpenSavings: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt, kind: EntryKind.saved)),
-          ),
-          themeBloc: context.read<ThemeBloc>(),
         ),
       );
 

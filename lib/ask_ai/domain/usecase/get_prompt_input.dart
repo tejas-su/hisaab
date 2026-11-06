@@ -49,7 +49,12 @@ final class GetPromptInput implements UseCase<PromptInput, PayCycle> {
           <PayCycle>[params],
           (List<PayCycle> cycles, int _) => <PayCycle>[
             ...cycles,
-            _periods.cycleFor(today: cycles.last.start.addDays(-1), rule: payRule, monthStart: settings.monthStart),
+            _periods.cycleFor(
+              today: cycles.last.start.addDays(-1),
+              rule: payRule,
+              monthStart: settings.monthStart,
+              switches: settings.paySwitches,
+            ),
           ],
         );
         final CalendarDate to = params.end.isAfter(today) ? today : params.end;

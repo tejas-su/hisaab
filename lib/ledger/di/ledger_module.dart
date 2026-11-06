@@ -33,6 +33,10 @@ import '../domain/usecase/get_suggested_limits.dart';
 import '../domain/usecase/restore_bill.dart';
 import '../domain/usecase/delete_entry.dart';
 import '../domain/usecase/get_cycle_summary.dart';
+import '../domain/usecase/change_income_amount.dart';
+import '../domain/usecase/change_pay_rule.dart';
+import '../domain/usecase/correct_latest_pay.dart';
+import '../domain/usecase/get_income.dart';
 import '../domain/usecase/get_saved_total.dart';
 import '../domain/usecase/put_in_extra.dart';
 import '../domain/usecase/post_due_recurring.dart';
@@ -82,6 +86,12 @@ void registerLedgerServices(GetIt getIt) {
     )
     ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock, summary: getIt<GetCycleSummary>()))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
+    ..registerSingleton<GetIncome>(GetIncome(recurring: recurring, ledger: ledger, clock: clock))
+    ..registerSingleton<ChangeIncomeAmount>(ChangeIncomeAmount(recurring: recurring))
+    ..registerSingleton<CorrectLatestPay>(CorrectLatestPay(ledger: ledger))
+    ..registerSingleton<ChangePayRule>(
+      ChangePayRule(recurring: recurring, settings: getIt<BudgetSettingsRepository>(), categories: getIt<CategoryRepository>(), clock: clock),
+    )
     ..registerSingleton<PutInExtra>(
       PutInExtra(
         getCycleSummary: getIt<GetCycleSummary>(),

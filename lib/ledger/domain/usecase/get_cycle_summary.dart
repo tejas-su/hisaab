@@ -6,6 +6,7 @@ import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/time/pay_rule.dart';
+import '../../../core/time/pay_switch.dart';
 import '../../../core/time/period_calculator.dart';
 import '../../../core/usecases/use_case.dart';
 import '../entities/amount_mode.dart';
@@ -45,25 +46,47 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
   /// Returns [Right] with today's summary (state [NoIncome] when there is nothing to share), or
   /// [Left] with `DatabaseFailure` or `InvalidDataFailure` when a read fails.
   @override
-  TaskEither<Failure, CycleSummary> call(NoParams params) {
+  TaskEither<Failure, CycleSummary> call(NoParams params) => _load(const Option<PayRule>.none());
+
+  /// Today's summary as it would be if the pay rule became [rule] today (BR-1a, D140): the
+  /// payday question shows its cycle end and daily share before the change is saved.
+  ///
+  /// Returns [Right] with the summary, or [Left] as [call].
+  // why: a second entry point rather than a separate use case, so the preview runs exactly the
+  // maths Home will show after the change and can't drift from it.
+  TaskEither<Failure, CycleSummary> preview(PayRule rule) => _load(Option<PayRule>.of(rule));
+
+  TaskEither<Failure, CycleSummary> _load(Option<PayRule> change) {
     final CalendarDate today = _clock.today();
     return _settings.read().flatMap(
           (BudgetSettings settings) => _recurring.activeRules().flatMap(
-                (List<RecurringRule> rules) => _summarise(today, settings, rules),
+                (List<RecurringRule> rules) => _summarise(today, settings, rules, change),
               ),
         );
   }
 
-  TaskEither<Failure, CycleSummary> _summarise(CalendarDate today, BudgetSettings settings, List<RecurringRule> rules) {
+  TaskEither<Failure, CycleSummary> _summarise(
+    CalendarDate today,
+    BudgetSettings settings,
+    List<RecurringRule> rules,
+    Option<PayRule> change,
+  ) {
     final Option<RecurringRule> income = Option<RecurringRule>.fromNullable(
       rules.where((RecurringRule rule) => rule.isIncomeSource).firstOrNull,
     );
-    final PayRule payRule = PayRuleSchedule.payRuleOf(income);
-    final PayCycle cycle = _periods.cycleFor(today: today, rule: payRule, monthStart: settings.monthStart);
+    final PayRule current = PayRuleSchedule.payRuleOf(income);
+    final PayRule payRule = change.getOrElse(() => current);
+    final List<PaySwitch> switches = change.match(
+      () => settings.paySwitches,
+      (PayRule _) => <PaySwitch>[...settings.paySwitches, PaySwitch(on: today, from: current)],
+    );
+    final PayCycle cycle = _periods.cycleFor(today: today, rule: payRule, monthStart: settings.monthStart, switches: switches);
     final _Cycle context = (
       day: _DayTotals(cycle: cycle, hasIncomeRule: income.isSome()),
       today: today,
-      previousStart: _periods.cycleFor(today: cycle.start.addDays(-1), rule: payRule, monthStart: settings.monthStart).start,
+      previousStart: _periods
+          .cycleFor(today: cycle.start.addDays(-1), rule: payRule, monthStart: settings.monthStart, switches: switches)
+          .start,
       endsAtMonthEnd: _periods.endsAtMonthEnd(rule: payRule, monthStart: settings.monthStart),
     );
     return _ledger.firstLoggedOn().flatMap(

@@ -1,4 +1,4 @@
-# 20. Custom spending categories with a custom icon
+# 22. Custom spending categories with a custom icon
 
 ## Job
 Let someone file a spend that none of the 8 fixed *Spent* tiles fits (Food, Travel, Shopping, Bills, Fun, Health, Home, Other; BR-11) under a name of their own, with an icon, **without** slowing the Add flow (Add → digits → Next → tile), moving a tile (D13), or adding colour (D10).

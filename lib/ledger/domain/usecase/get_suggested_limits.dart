@@ -55,11 +55,17 @@ final class GetSuggestedLimits implements UseCase<Option<Map<int, Money>>, NoPar
             rules.where((RecurringRule rule) => rule.isIncomeSource).firstOrNull,
           );
           final PayCycle current =
-              _periods.cycleFor(today: _clock.today(), rule: PayRuleSchedule.payRuleOf(income), monthStart: settings.monthStart);
+              _periods.cycleFor(
+                today: _clock.today(),
+                rule: PayRuleSchedule.payRuleOf(income),
+                monthStart: settings.monthStart,
+                switches: settings.paySwitches,
+              );
           return _periods.cycleFor(
             today: current.start.addDays(-1),
             rule: PayRuleSchedule.payRuleOf(income),
             monthStart: settings.monthStart,
+            switches: settings.paySwitches,
           );
         }),
       );

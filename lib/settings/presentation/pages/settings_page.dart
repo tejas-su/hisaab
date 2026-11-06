@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
@@ -6,15 +7,31 @@ import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
 import '../../../l10n/gen/app_localizations.dart';
+import '../../../ledger/ledger.dart';
+import '../bloc/income_bloc.dart';
 import '../bloc/theme_bloc.dart';
+import '../widgets/income_row.dart';
 import '../widgets/look_group.dart';
 import '../widgets/settings_row.dart';
 
-/// Settings (SPEC FR-SE), one level deep. Today it holds the Money group (Bills, which
-/// [onOpenBills] opens, and Savings) and the Look group, which [themeBloc] drives; the other
-/// groups arrive with their milestones.
+/// Settings (SPEC FR-SE), one level deep. Today it holds the Money group (Money coming in, which
+/// [incomeBloc] shows and [onOpenIncome] opens; Bills, which [onOpenBills] opens; and Savings) and
+/// the Look group, which [themeBloc] drives; the other groups arrive with their milestones.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.onOpenBills, required this.onOpenSavings, required this.themeBloc});
+  const SettingsPage({
+    super.key,
+    required this.incomeBloc,
+    required this.onOpenIncome,
+    required this.onOpenBills,
+    required this.onOpenSavings,
+    required this.themeBloc,
+  });
+
+  /// The income shown on the *Money coming in* row (D137).
+  final IncomeBloc incomeBloc;
+
+  /// Opens the income sheet for the loaded income.
+  final ValueChanged<Income> onOpenIncome;
 
   final VoidCallback onOpenBills;
 
@@ -52,6 +69,8 @@ class SettingsPage extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: <Widget>[
+                  BlocProvider<IncomeBloc>.value(value: incomeBloc, child: IncomeRow(onOpen: onOpenIncome)),
+                  Divider(height: 1, thickness: 1, indent: HisaabSpacing.gutter, color: context.colors.hairline),
                   SettingsRow(
                     key: const ValueKey<String>('open-bills'),
                     icon: AppIcons.recurring,

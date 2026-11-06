@@ -83,6 +83,8 @@ final class SqfliteRecurringLocalDataSource implements RecurringLocalDataSource 
       _database.db.transaction((Transaction txn) async {
         await txn.delete(Tables.transactions);
         await txn.delete(Tables.recurring);
+        // why: a fresh start has no earlier pay rules, so old switches would bend its cycles (D140).
+        await txn.delete(Tables.settings, where: '${SettingsColumns.key} = ?', whereArgs: <Object?>[SettingKeys.paySwitches]);
         for (final RecurringModel rule in rules) {
           await txn.insert(Tables.recurring, rule.toRow());
         }

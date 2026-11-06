@@ -1,26 +1,48 @@
 import 'dart:ui';
 
 import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
+import 'package:expense_tracker/core/money/money.dart';
+import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/bloc_dispatch.dart';
+import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_app_preferences_repository.dart';
+import '../../../helpers/fakes/fake_ledger_repository.dart';
+import '../../../helpers/fakes/fake_recurring_repository.dart';
+import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
   late FakeAppPreferencesRepository preferences;
   late ThemeBloc themeBloc;
+  late FakeRecurringRepository recurring;
+  late IncomeBloc incomeBloc;
 
   setUp(() {
     preferences = FakeAppPreferencesRepository();
     themeBloc = ThemeBloc(preferences: preferences);
+    recurring = FakeRecurringRepository(WorkedExample.rules);
+    final FakeLedgerRepository ledger = FakeLedgerRepository(WorkedExample.entries);
+    final FakeClock clock = FakeClock(WorkedExample.now);
+    incomeBloc = IncomeBloc(getIncome: GetIncome(recurring: recurring, ledger: ledger, clock: clock), recurring: recurring, ledger: ledger);
   });
-  tearDown(() => themeBloc.close());
+  tearDown(() async {
+    await themeBloc.close();
+    await incomeBloc.close();
+  });
 
-  SettingsPage page({VoidCallback? onOpenBills, VoidCallback? onOpenSavings}) =>
-      SettingsPage(onOpenBills: onOpenBills ?? () {}, onOpenSavings: onOpenSavings ?? () {}, themeBloc: themeBloc);
+  SettingsPage page({VoidCallback? onOpenBills, VoidCallback? onOpenSavings, ValueChanged<Income>? onOpenIncome}) => SettingsPage(
+        incomeBloc: incomeBloc,
+        onOpenIncome: onOpenIncome ?? (Income _) {},
+        onOpenBills: onOpenBills ?? () {},
+        onOpenSavings: onOpenSavings ?? () {},
+        themeBloc: themeBloc,
+      );
 
   group('SettingsPage (FR-SE)', () {
     testWidgets('shows the Money group with Bills, which opens (D123)', (WidgetTester tester) async {
@@ -158,6 +180,72 @@ void main() {
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       await expectLater(tester, meetsGuideline(textContrastGuideline));
       handle.dispose();
+    });
+  });
+
+  group('SettingsPage money coming in (FR-SE-1, D137)', () {
+    final Finder row = find.byKey(const ValueKey<String>('open-income'));
+
+    testWidgets('is the first Money row and shows the income once loaded', (WidgetTester tester) async {
+      await tester.runAsync(() => incomeBloc.dispatch(const IncomeLoadRequested()));
+      await pumpApp(tester, page());
+      expect(find.descendant(of: row, matching: find.text('Money coming in')), findsOneWidget);
+      expect(find.descendant(of: row, matching: find.text('₹45,000 · on day 4')), findsOneWidget);
+      expect(tester.getTopLeft(row).dy, lessThan(tester.getTopLeft(find.byKey(const ValueKey<String>('open-bills'))).dy));
+    });
+
+    testWidgets('opens the income sheet with the loaded income', (WidgetTester tester) async {
+      await tester.runAsync(() => incomeBloc.dispatch(const IncomeLoadRequested()));
+      Income? opened;
+      await pumpApp(tester, page(onOpenIncome: (Income income) => opened = income));
+      await tester.tap(row);
+      expect(opened?.rule.toNullable(), WorkedExample.salary);
+    });
+
+    testWidgets('shows the label only and doesn\'t open while loading', (WidgetTester tester) async {
+      Income? opened;
+      await pumpApp(tester, page(onOpenIncome: (Income income) => opened = income));
+      expect(find.descendant(of: row, matching: find.text('Money coming in')), findsOneWidget);
+      expect(find.textContaining('₹45,000'), findsNothing);
+      await tester.tap(row);
+      expect(opened, isNull);
+    });
+
+    for (final (String name, RecurringRule? rule, String value) in <(String, RecurringRule?, String)>[
+      (
+        'last day',
+        WorkedExample.salary.copyWith(
+          schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 31), lastDayOfMonth: true),
+        ),
+        '₹45,000 · last day of the month',
+      ),
+      (
+        'weekly',
+        WorkedExample.salary.copyWith(
+          amount: Money.fromMajor(10384),
+          schedule: const Schedule(frequency: Frequency.weekly, anchor: CalendarDate(2026, 10, 23)),
+        ),
+        '₹44,998 · every Friday',
+      ),
+      ('it changes', null, 'Changes each month'),
+      (
+        'biweekly',
+        WorkedExample.salary.copyWith(schedule: const Schedule(frequency: Frequency.biweekly, anchor: CalendarDate(2026, 10, 16))),
+        'Changes each month',
+      ),
+    ]) {
+      testWidgets('names a $name income', (WidgetTester tester) async {
+        recurring.rules = <RecurringRule>[?rule, WorkedExample.rent];
+        await tester.runAsync(() => incomeBloc.dispatch(const IncomeLoadRequested()));
+        await pumpApp(tester, page());
+        expect(find.descendant(of: row, matching: find.text(value)), findsOneWidget);
+      });
+    }
+
+    testWidgets('lays out with the income on a 320dp phone at 2× text', (WidgetTester tester) async {
+      await tester.runAsync(() => incomeBloc.dispatch(const IncomeLoadRequested()));
+      await pumpApp(tester, page(), size: TestWindows.smallPhone, textScale: 2);
+      expect(tester.takeException(), isNull);
     });
   });
 }

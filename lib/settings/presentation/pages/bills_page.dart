@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/layout/window_class.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
@@ -18,9 +18,11 @@ import '../bloc/bills_bloc.dart';
 import '../bloc/bills_event.dart';
 import '../bloc/bills_state.dart';
 import '../widgets/bills_list.dart';
+import '../widgets/rule_list_actions.dart';
 
-/// Fixed bills, or Savings when [kind] is *Saved* (SPEC FR-SE-1, D120): the list, Add, tap to open
-/// the sheet, swipe to delete with Undo. Savings add the "put in" total and *Put in extra*.
+/// Fixed bills, or Savings when [kind] is *Saved* (SPEC FR-SE-1, D120): the list, tap to open
+/// the sheet, swipe to delete with Undo, and Add pinned to the bottom in thumb reach (D136).
+/// Savings add the "put in" total and *Put in extra*. The list and key share one 560dp column.
 ///
 /// Needs a [BillsBloc] above it. [onAdd] opens the editor, [onEdit] the sheet, and
 /// [onPutInExtra] the *Put in extra* keypad (savings only; hidden when null).
@@ -52,17 +54,26 @@ class BillsPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: HisaabSnackbarHost(
-          child: BlocConsumer<BillsBloc, BillsState>(
-            listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
-            listener: _offerUndo,
-            builder: (BuildContext context, BillsState state) => ListView(
-              padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.xl),
-              children: <Widget>[
-                Text(strings.ruleListHint(kind), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2)),
-                const SizedBox(height: HisaabSpacing.l),
-                ..._content(context, state),
-              ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: LayoutBreakpoints.singlePaneMaxWidth),
+            child: BlocBuilder<BillsBloc, BillsState>(
+              builder: (BuildContext context, BillsState state) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Expanded(child: _undoAboveActions(_list(context, state))),
+                  if (state is BillsReady)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        HisaabSpacing.gutter,
+                        HisaabSpacing.s,
+                        HisaabSpacing.gutter,
+                        HisaabSpacing.l,
+                      ),
+                      child: RuleListActions(kind: kind, onAdd: onAdd, onPutInExtra: onPutInExtra),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -70,42 +81,61 @@ class BillsPage extends StatelessWidget {
     );
   }
 
+  Widget _list(BuildContext context, BillsState state) => ListView(
+    padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+    children: <Widget>[
+      Text(
+        AppLocalizations.of(context).ruleListHint(kind),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
+      ),
+      const SizedBox(height: HisaabSpacing.l),
+      ..._content(context, state),
+    ],
+  );
+
+  // why: the host wraps only the list, so the Undo bar rises right above the pinned key and never
+  // covers it; the key's own top padding is the gap. Undo exists only once the list is ready.
+  Widget _undoAboveActions(Widget list) => HisaabSnackbarHost(
+    bottom: 0,
+    child: BlocListener<BillsBloc, BillsState>(
+      listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
+      listener: _offerUndo,
+      child: list,
+    ),
+  );
+
   List<Widget> _content(BuildContext context, BillsState state) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final BillsBloc bloc = context.read<BillsBloc>();
     return switch (state) {
       BillsLoading() => const <Widget>[],
       BillsFailed() => <Widget>[
-          Text(strings.loadFailed, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2)),
-          const SizedBox(height: HisaabSpacing.m),
-          Align(alignment: AlignmentDirectional.centerStart, child: HisaabChip(label: strings.tryAgain, onPressed: () => bloc.add(const BillsLoadRequested()))),
-        ],
+        Text(strings.loadFailed, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2)),
+        const SizedBox(height: HisaabSpacing.m),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: HisaabChip(label: strings.tryAgain, onPressed: () => bloc.add(const BillsLoadRequested())),
+        ),
+      ],
       BillsReady(:final List<RecurringRule> bills, :final Option<SavedTotal> saved) => <Widget>[
-          Wrap(
-            spacing: HisaabSpacing.s,
-            runSpacing: HisaabSpacing.s,
-            children: <Widget>[
-              HisaabChip(key: const ValueKey<String>('add-bill'), label: strings.ruleAdd(kind), icon: AppIcons.add, onPressed: onAdd),
-              if (onPutInExtra case final VoidCallback putIn)
-                HisaabChip(key: const ValueKey<String>('put-in-extra'), label: strings.putInExtra, icon: AppIcons.saving, onPressed: putIn),
-            ],
+        if (bills.isEmpty)
+          Text(strings.ruleNone(kind), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2))
+        else
+          BillsList(
+            bills: bills,
+            onEdit: onEdit,
+            onDelete: (RecurringRule bill) => bloc.add(BillsDeleteRequested(bill)),
+            onThresholdReached: () => bloc.add(const BillsSwipeThresholdReached()),
           ),
-          const SizedBox(height: HisaabSpacing.l),
-          if (bills.isEmpty)
-            Text(strings.ruleNone(kind), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2))
-          else
-            BillsList(bills: bills, onEdit: onEdit, onDelete: (RecurringRule bill) => bloc.add(BillsDeleteRequested(bill)),
-              onThresholdReached: () => bloc.add(const BillsSwipeThresholdReached()),
-            ),
-          if (saved case Some<SavedTotal>(:final SavedTotal value)) ...<Widget>[
-            const SizedBox(height: HisaabSpacing.m),
-            Text(
-              strings.savedSince(context.money.format(value.total), _month(context, value.since)),
-              key: const ValueKey<String>('saved-since'),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
-            ),
-          ],
+        if (saved case Some<SavedTotal>(:final SavedTotal value)) ...<Widget>[
+          const SizedBox(height: HisaabSpacing.m),
+          Text(
+            strings.savedSince(context.money.format(value.total), _month(context, value.since)),
+            key: const ValueKey<String>('saved-since'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
+          ),
         ],
+      ],
     };
   }
 

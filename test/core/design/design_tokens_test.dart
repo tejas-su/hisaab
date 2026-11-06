@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/design/app_icons.dart';
 import 'package:expense_tracker/core/design/haptics.dart';
 import 'package:expense_tracker/core/design/hisaab_colors.dart';
+import 'package:expense_tracker/core/design/hisaab_glyphs.dart';
 import 'package:expense_tracker/core/design/hisaab_motion.dart';
 import 'package:expense_tracker/core/design/hisaab_theme.dart';
 import 'package:expense_tracker/core/design/hisaab_type.dart';
@@ -153,6 +154,49 @@ void main() {
         final Iterable<double> coordinates =
             RegExp(r'-?\d+(\.\d+)?').allMatches(attributes['d']!).map((RegExpMatch m) => double.parse(m[0]!));
         expect(coordinates, everyElement(inInclusiveRange(2, 22)));
+      }
+    });
+
+    test('the drawn spend glyphs keep Hugeicons stroke-rounded attributes on its 24 grid', () {
+      final Map<String, AppIconData> glyphs = <String, AppIconData>{
+        'cuttingChai': HisaabGlyphs.cuttingChai,
+        'autoRickshaw': HisaabGlyphs.autoRickshaw,
+        'hookah': HisaabGlyphs.hookah,
+        'paan': HisaabGlyphs.paan,
+      };
+      for (final MapEntry<String, AppIconData> glyph in glyphs.entries) {
+        expect(glyph.value, isNotEmpty, reason: glyph.key);
+        for (final List<dynamic> element in glyph.value) {
+          final Map<String, String> attributes = element[1] as Map<String, String>;
+          expect(attributes['strokeWidth'], '1.5', reason: glyph.key);
+          final List<double> coordinates = switch (element.first) {
+            'path' => <double>[
+                for (final RegExpMatch m in RegExp(r'-?\d+(\.\d+)?').allMatches(attributes['d']!)) double.parse(m[0]!),
+              ],
+            'circle' => <double>[
+                for (final String axis in <String>['cx', 'cy']) ...<double>[
+                  double.parse(attributes[axis]!) - double.parse(attributes['r']!),
+                  double.parse(attributes[axis]!) + double.parse(attributes['r']!),
+                ],
+              ],
+            _ => fail('${glyph.key}: unexpected element ${element.first}'),
+          };
+          if (element.first == 'path') {
+            expect(attributes['strokeLinecap'], 'round', reason: glyph.key);
+            expect(attributes['strokeLinejoin'], 'round', reason: glyph.key);
+          }
+          expect(coordinates, everyElement(inInclusiveRange(2, 22)), reason: glyph.key);
+        }
+      }
+    });
+
+    testWidgets('the drawn spend glyphs render through AppIcon', (WidgetTester tester) async {
+      for (final AppIconData glyph in <AppIconData>[
+        HisaabGlyphs.cuttingChai, HisaabGlyphs.autoRickshaw, HisaabGlyphs.hookah, HisaabGlyphs.paan,
+      ]) {
+        await tester.pumpWidget(Directionality(textDirection: TextDirection.ltr, child: AppIcon(glyph)));
+        expect(tester.takeException(), isNull);
+        expect(find.byType(AppIcon), findsOneWidget);
       }
     });
   });

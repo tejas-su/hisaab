@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:expense_tracker/core/time/pay_switch.dart';
 import 'package:expense_tracker/ledger/domain/entities/budget_settings.dart';
 import 'package:expense_tracker/ledger/domain/repository/budget_settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -16,5 +17,18 @@ final class FakeBudgetSettingsRepository implements BudgetSettingsRepository {
     return current == null
         ? TaskEither<Failure, BudgetSettings>.right(settings)
         : TaskEither<Failure, BudgetSettings>.left(current);
+  }
+
+  /// Failure for [addPaySwitch] only.
+  Failure? switchFailure;
+
+  @override
+  TaskEither<Failure, Unit> addPaySwitch(PaySwitch change) {
+    final Failure? current = switchFailure ?? failure;
+    if (current != null) {
+      return TaskEither<Failure, Unit>.left(current);
+    }
+    settings = BudgetSettings(monthStart: settings.monthStart, paySwitches: <PaySwitch>[...settings.paySwitches, change]);
+    return TaskEither<Failure, Unit>.right(unit);
   }
 }

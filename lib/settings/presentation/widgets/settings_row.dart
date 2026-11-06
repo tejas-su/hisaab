@@ -7,13 +7,17 @@ import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/focus_ring.dart';
 
-/// One Settings entry: an icon well, its [label] and an arrow; tapping it opens [onTap]'s page.
+/// One Settings entry: an icon well, its [label] (with an optional [detail] line under it) and an
+/// arrow; tapping it opens [onTap]'s page, and a null [onTap] disables it.
 class SettingsRow extends StatelessWidget {
-  const SettingsRow({super.key, required this.icon, required this.label, required this.onTap});
+  const SettingsRow({super.key, required this.icon, required this.label, required this.onTap, this.detail});
 
   final AppIconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  /// A second, quieter line, e.g. "₹45,000 · on day 4".
+  final String? detail;
 
   @override
   Widget build(BuildContext context) => FocusRing(
@@ -39,10 +43,25 @@ class SettingsRow extends StatelessWidget {
                 child: AppIcon(icon),
               ),
               const SizedBox(width: HisaabSpacing.m),
-              Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyLarge)),
+              Expanded(child: _texts(context)),
               AppIcon(AppIcons.next, color: context.colors.ink2),
             ],
           ),
         ),
       );
+
+  Widget _texts(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    final String? second = detail;
+    if (second == null) {
+      return Text(label, style: text.bodyLarge);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(label, style: text.bodyLarge),
+        Text(second, style: text.bodySmall?.copyWith(color: context.colors.ink2)),
+      ],
+    );
+  }
 }

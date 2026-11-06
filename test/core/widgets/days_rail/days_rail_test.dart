@@ -92,4 +92,21 @@ void main() {
       expect(painter.shouldRepaint(const DaysRailPainter(data: _nine, colors: _colors, arrived: 0.5)), isTrue);
     });
   });
+
+  testWidgets('a 62-day bridge cycle (BR-1a, D140) still fits on a 320dp phone', (WidgetTester tester) async {
+    await pumpApp(
+      tester,
+      const Center(
+        child: DaysRail(
+          data: DaysRailData(count: 62, style: DaysRailStyle.onTrack),
+          todayCaption: 'Today',
+          laterCaption: '62 days to payday',
+          payday: '25 Dec',
+        ),
+      ),
+      size: TestWindows.smallPhone,
+    );
+    expect(tester.takeException(), isNull);
+    expect(() => _paintOnce(const DaysRailPainter(data: DaysRailData(count: 62, style: DaysRailStyle.onTrack), colors: _colors)), returnsNormally);
+  });
 }

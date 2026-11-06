@@ -204,12 +204,13 @@ Rules: no all-caps eyebrow labels, and no semibold body text.
   - The marigold key has a **2px ink lip** that collapses when pressed, a nod to Braun's physical keys.
   - Trays, sheets and dialogs sit over the `scrim` token: `ink` at 32% in light, black at 40% in dark (D93). A light scrim on the dark page would lift the page above the tray. `HisaabTheme` sets it for every sheet and dialog.
   - **Material roles** (`HisaabTheme._scheme`, D94): `outline` is `ink2`, the 3:1 boundary that Material draws on a Switch's off thumb and track; `outlineVariant` is `hairline`; `primaryContainer` is `sunk`, so a pressed or focused Switch thumb stays visible on its `ink` track; `error` is `ink`.
-  - **The snackbar (D105)** is the one inverse layer: an `inverse` pill with `bg` text, `card` radius, on the dock's gutter edges, no shadow. Undo is a Semibold word in `bg`, never marigold. It sits right above the dock or the Add key on Home, right above the pinned actions on Ask AI, and `xl` above the bottom elsewhere. `HisaabSnackbarHost` (`lib/core/widgets/`).
+  - **The snackbar (D105)** is the one inverse layer: an `inverse` pill with `bg` text, `card` radius, on the dock's gutter edges, no shadow. Undo is a Semibold word in `bg`, never marigold. It sits right above the dock or the Add key on Home, right above the pinned actions on Ask AI and the pinned Add key on Bills and Savings (D136), and `xl` above the bottom elsewhere. `HisaabSnackbarHost` (`lib/core/widgets/`).
   - There is no glass and no blur on content. Apple's Liquid Glass guidance puts glass only on navigation.
   - **Top bars on Home and Spends are pinned and solid (D81, D84):** the wordmark row and the Spends title row stay put while the cards scroll under them. The bar is plain `bg` and reaches behind the status bar. Once content is beneath it, a `hairline` bottom edge fades in (200ms, 150ms crossfade with reduced motion), as Material 3's top app bar marks scrolled content. No blur or tint: on `bg` against `surface` cards (about 3% apart) blur reads as a smudge and smears the marigold signal. The bar is a pinned sliver, so focus and TalkBack scrolling stop items below it, never under it. `TopBarScrollView` (`lib/core/widgets/`).
 - **Icons:**
   - Hugeicons stroke-rounded only, size 24, `strokeWidth` 1.6, in `ink`.
   - The free set has no ⌫, so the keypad's delete key uses a glyph drawn in Hugeicons' format (`HisaabGlyphs.backspace`): `Keyboard`'s body height and squircle corners, a tip rounded like `Tag01`, and `CancelSquare`'s inner × (D48). A plain × would read as "close the tray" and ← as "back", which the app already uses for navigation.
+  - Category icons come from a curated set of 51, keyed by app-owned names (`cigarettes`, `fuel`) in `AppIcons.byKey` (D138). Four the free set lacks are drawn the same way: `HisaabGlyphs.cuttingChai` (`GlassWater`'s taper, `Tea`'s steam), `autoRickshaw` (`Keyboard`'s corners, `Motorbike01`'s wheels), `hookah` and `paan` (a long tip so it never reads as `Heart`).
   - Category icons sit in `sunk` wells and are **monochrome**. Categories are told apart by icon, word and fixed position, not colour.
   - Every icon has a label.
   - **Header icon buttons** (Home's Settings, the tray's Back, and Back on every pushed screen): a 40dp well with 12 corners inside the 48dp tap target (on the page `control`, pressing to `sunk`; the tray's Back stays `sunk`, D100), set flush with the outer edge so the well lines up with the cards or tiles (D57). A full 48dp well outweighed the wordmark. Every pushed screen (Ask AI, Settings, Bills, the bill editor, Every entry) uses the one `HisaabBackButton` (D80).
@@ -288,6 +289,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
    - The hint names the money, not a job: "Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month." Only about a quarter of Indian workers are salaried, so "salary" would leave most users out (D116; mockup [26](design/mockups/26-income-for-everyone.html)).
    - Between the keypad and Next: a lock and "What you type stays on this phone. The app never uses the internet.", centred, `bodyMedium` in `ink2`. It answers the moment the question feels intrusive.
    - A live preview underneath turns the amount into blocks: "That's about **₹1,500 a day**", and the day blocks appear one by one as you type. Its caption is "Every day gets its own share" (`bodyMedium`, `displayInk2`). This is the rare, bold delight moment.
+   - *Restore a backup* (FR-ON-1, D139, mockup [34](design/mockups/34-data-controls.html)): a `hairline` text chip on its own 48dp row at the top end, above the progress dots, so it never overlaps them at 320dp. Never marigold: it is a way out for a new phone, not the question.
 2. **"When does it come?"** Big chips: *1st of the month* · *Last day of the month* · *Pick a date* · *Every week* · *It changes*. The hint ends 'No fixed day? Pick "It changes".' so shop owners, freelancers and daily earners know which chip is theirs.
 3. **"Any fixed bills?"** Chips for Rent · EMI · Phone · Internet · School fees · Subscriptions, plus a big **Skip**.
 4. **Done.** The hero card assembles: today's bar fills marigold, the rail's dots arrive one by one, and `successNotification` fires.
@@ -347,7 +349,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 **Step 2 · What was it for?**
 - The tray gets shorter.
 - The amount flies up into the title.
-- A **2×4 grid of monochrome tiles** (96dp, never scrolls, never reorders).
+- A **2×4 grid of monochrome tiles** for the 8 built-in categories (96dp, never reorders). Under them, a "Your own" rule (`labelSmall` `ink2` with a `hairline` line to the end) and row 3: up to 4 of the user's own, oldest first, then a dashed *New* tile (1.5dp dashed `ink2` edge, no fill, plus glyph and "New"), so it reads as a place for a category, not one. At 4 the tile becomes one `ink2` line with an info glyph (D138).
 - Chips: *Today ▾* · *Add a note*.
 - Chips and text fields are fill-only, with no edges (D88, D100). On the page a chip rests as `control` (white in light, mockups 10 C and 11) and presses to `sunk`; on the tray, a sheet or a card it rests as `hairline` (`HisaabChip.onSurface`) and only shrinks to 0.97 when pressed. A pick fills `ink` with a `background`-coloured label, trailing check and second line, on any layer. A disabled chip has no fill. With keyboard or D-pad focus a chip, picked or not, keeps its fill and gains the `focus` ring (§9, D99). A text field is a `control` well on the page and a `hairline` well on the tray and in the calendar dialog, with a 1.5dp `ink` edge only while focused; its label never floats. A pick is never marigold.
 - Every entry: the category filters are one row that scrolls sideways, and the cycle header names the active filter ("October · Food", D89).
@@ -356,7 +358,8 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   2. The tray drops.
   3. Once the tray is gone, today's yellow pulls back, uncovering the new bite, and the number rolls in the same frame (§6, D91, D114).
   4. Haptic: `successNotification`.
-- Tap path: Add → digits → Next → tile.
+- Tap path: Add → digits → Next → tile. *New* is off that path.
+- **New category** (FR-AD-9, D138, mockup [33](design/mockups/33-own-categories.html)): the grid gives way to a name step in the same tray, the amount kept in the title. A focused field (a `hairline` well with the 1.5dp `ink` edge) with a count at its end; a 48dp icon line ("Icon from the name: Fuel · Change ›") with the icon in a `sunk` well; 6 name chips in a 3-column grid that narrow as typed; the marigold *Save in {name}*. The icon step is a scrolling list of groups (`labelMedium` `ink2` headings: Food and drink, Treats and habits, Getting around, Home and family, Care and giving, Things and fun), each a 4-column grid of 64dp `sunk` wells with the word under the icon; the pick fills `ink2` with a `bg` glyph and a small check (D89). Habit words are plain: no warnings, no nudges.
 
 ### 5.4 Spends
 - **Header:** `‹ October ›`.
@@ -395,8 +398,8 @@ Two layers only: the grey page and near-white cards, the same build as the Today
 
 ### 5.6 Settings (one level)
 - **Money:**
-  - Money coming in (D116)
-  - Bills (renamed from *Fixed bills*, D123): one card of rows (name, "Every month on day 29", amount; "about ₹1,200" for a changing or card bill, D127), soonest first, with *Add a bill* above it. Each row leads with the bill's icon in a `sunk` well. Swipe a row away with Undo. Adding asks one question per screen, like onboarding: the name (a field with 8 bill chips 16dp under it (the onboarding six, then *Credit card* and *Electricity*, D123), in two equal-width columns that share the field's edges and narrow to what is typed; a tap fills the field and marks the pill, and Next moves on; Next alone at the bottom, D83, D85, D86), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
+  - Money coming in (D116, D137, mockup [32](design/mockups/32-income-sheet.html)): the first row of the Money card, a `SettingsRow` with the MoneyReceive glyph and the income as a `bodySmall` `ink2` second line. It opens the bill sheet's slip (below) with two rows, *Amount* and *When it comes*, and no Delete key. The amount question is onboarding's keypad with a `titleMedium` "From payday, 4 Nov." and a `bodyMedium` `ink2` "This month's ₹45,000 stays as it came." above the keys. After a save the footer can show a `HisaabChip` (`onSurface`) *Change this month too*, then "This month's pay is now ₹50,000." with *Undo*. *When it comes* opens onboarding's five choices as full-width `HisaabChip`s (the picked one filled with a check, *Pick a date* and *Every week* showing the picked day as their detail), the shared 1–31 grid or the seven weekday chips as one more step, then a `titleMedium` "This money lasts till 24 Nov." with a `bodyMedium` `ink2` "That's 30 days, about ₹281 a day." and the marigold *Save* (D140).
+  - Bills (renamed from *Fixed bills*, D123): one card of rows (name, "Every month on day 29", amount; "about ₹1,200" for a changing or card bill, D127), soonest first, with *Add a bill* as a full-width marigold `SignalKey` pinned at the bottom (padding 8dp above, 16dp below, on the 20dp gutter; the rows scroll above it with no line or fade; the list and key share one column at most 560dp wide; D136). Each row leads with the bill's icon in a `sunk` well. Swipe a row away with Undo. Adding asks one question per screen, like onboarding: the name (a field with 8 bill chips 16dp under it (the onboarding six, then *Credit card* and *Electricity*, D123), in two equal-width columns that share the field's edges and narrow to what is typed; a tap fills the field and marks the pill, and Next moves on; Next alone at the bottom, D83, D85, D86), the amount on the keypad, then a 1–31 day grid where tapping a day saves.
   - **The bill sheet (FR-SE-1, D118, mockup [27](design/mockups/27-bill-sheet.html)):** tapping a row (or Home's due-soon row) raises a sheet that looks like a paper bill. Changing never pushes a page.
     - The slip is `display` paper, flat (D106: only the hero is raised), with 20dp top corners and a torn bottom edge of 14dp × 8dp teeth.
     - Head: the "Bill" eyebrow, the name, and the bill's icon in a `sunk` well. Then a dashed `hairline` perforation with 16dp half-circle notches cut at both edges.
@@ -408,11 +411,22 @@ Two layers only: the grey page and near-white cards, the same build as the Today
     - Bill icons sit in `sunk` icon wells everywhere: the slip, the Bills rows, the grid and Home's due-soon and waiting rows.
     - *Kind of bill* (D123): a row between Amount and Day; its value ("Changes every month") may take two lines, end-aligned. Its question, "What kind of bill is it?", stacks the three answers as full-width `hairline` chips 8dp apart, the current one picked (`ink` fill, check); a tap saves, like the day grid. A saving has no such row.
   - **Remind ask (FR-SE-1 AC-10, D126):** after the first changing or card bill is saved, a sheet rises in the bill sheet's route: "Remind you on the day it's due?" in `titleLarge` on the 20dp gutter, a full-width marigold *Remind me* key, and the text chip *Not now* under it (`hairline`, never marigold). Asked once. The reminders themselves are system notifications in a *Bill reminders* channel with the monochrome launcher glyph, and a locked screen hides their text.
-  - Savings (D120, mockup [28](design/mockups/28-savings.html)): a second row under Bills with the piggy-bank glyph. The list, wizard and sheet are the bill ones with a saving's words ("goes in", "put in"); the sheet drops the Icon row. Under the list, a `ink2` footer "₹5,000 put in since Oct", and a *Put in extra* chip beside *Add a saving* (never marigold; only the keypad's Save is). *Put in extra* rises in the bill sheet's route: the question, the amount, a `ink2` line saying what it does to the days left, the keypad and a marigold Save.
+  - Savings (D120, mockup [28](design/mockups/28-savings.html)): a second row under Bills with the piggy-bank glyph. The list, wizard and sheet are the bill ones with a saving's words ("goes in", "put in"); the sheet drops the Icon row. Under the list, a `ink2` footer "₹5,000 put in since Oct", and the pinned marigold *Add a saving* with a full-width *Put in extra* chip 8dp under it (never marigold; only the keypad's Save is). In a window under 480dp tall the two share one row, the chip stretched to the key's height (D136). *Put in extra* rises in the bill sheet's route: the question, the amount, a `ink2` line saying what it does to the days left, the keypad and a marigold Save.
   - My month starts on: *Payday* (default) / *1st*
-- **Categories:** rename, change icon.
+- **Categories** (FR-SE-2, D138): *Your own* ("2 of 4") with a dashed-well *Add a category* row, then *Spending* (the 8, with a hint that they keep their places) and *Money in*, each a card of rows with the icon in a `sunk` well. A row opens a sheet in the bill sheet's style: the icon in a 56dp `surface` well beside the name in Anek and the entry count, a card with *Name* and *Icon* rows, then for the user's own a full-width `surface` key *Hide {name}* with an eye-off glyph and a note on what hiding keeps. Never marigold: hiding is undoable, not an act to push.
 - **Look** (D130, mockup [30](design/mockups/30-look-setting.html), case study [19](design-research/case-studies/19-theme-choice.md)): a `titleLarge` header 24dp under the Money card, then one `surface` card holding one row (20dp gutter, 12dp vertical): *Light or dark* in `bodyLarge` with the current look's name under it in `bodyMedium` `ink2`, and at the end a compact icon toggle: a `sunk` track (radius `key`, 4dp inset and gaps) of three 48dp buttons (radius `chip`) with 24dp smartphone, sun and moon glyphs in `ink`. The pick fills `ink` with its glyph in `bg`; a press steps to `hairline`. The words may wrap beside the toggle but never break mid-word; when a word can't fit (2× text on a 320dp phone), the toggle moves under the words, on their start edge. The buttons carry their names for TalkBack and the row's words are excluded, so nothing is read twice. Never marigold: a look is a mode, not an act. One tap applies; `MaterialApp.themeAnimationDuration` is zero, so nothing fades.
-- **Data:** Backup · Restore · Export CSV.
+- **Your hisaab** (FR-SE-4, BR-16, D139, mockup [34](design/mockups/34-data-controls.html), case study [23](design-research/case-studies/23-backup-reset-delete.md)): a `titleLarge` header 24dp under the Look card, then two `surface` cards 24dp apart. Export CSV comes later (M6).
+  - **Card 1:** `SettingsRow`s *Back up* (with the last-backup date as the `ink2` second line), *Restore* ("Bring back from a backup file") and, for 7 days after a restore, *Undo restore* (Undo02 glyph). A busy row swaps its arrow for Loading03 and its second line for "Backing up…" or "Checking the backup…". Under the card, the no-password note in `bodySmall` `ink2`.
+  - **Card 2:** *Delete everything* alone, so the group gap sets it apart. It is a plain row with the Delete02 glyph, not a warning colour.
+  - **Restore dialog** (the app's one dialog, D4): title, two `bodyMedium` lines (the file's facts, then this phone's), and two stacked full-width keys, since side by side they need about 236dp and the dialog has 232dp: *Replace* filled `inverse` and *Keep what's here* `hairline`. While replacing, "Bringing back your hisaab…" with Loading03 fills the keys' 120dp, so the dialog keeps its size. At 2× text the two lines scroll; the title and keys stay put.
+  - **Delete everything page:** a pushed page in reading order:
+    1. The lead sentence.
+    2. "This goes:" in one `surface` card, a glyph per item, ending in "There's no Undo for this."
+    3. What stays, outside the card with `ink2` ticks.
+    4. The last-backup line and a full-width *Back up first* key (`sunk`).
+    5. 24dp below it, the hold key, in the page flow (not pinned).
+  - **The hold key:** at rest, a 2dp `inverse` edge with the Delete02 glyph and label in `ink`. While held, an `inverse` fill sweeps from the start edge and the label turns `bg` where the fill has passed. The caption under it is always shown. Its weight comes from the 2dp edge and the fill, so in a squint test it reads before *Back up first*. Never marigold, and no red (D9).
+  - **Marigold is never on an act that removes or replaces data** (*Replace*, the hold key). Marigold means *today / act*, and these are acts to slow down for, not to invite.
 - **About.**
 
 ---
@@ -452,6 +466,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
   | Daily | The rail loses a dot at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
+- **Hold to delete (D139):** the fill is linear over exactly 2.0 s, with no spring, so the time is honest and predictable. Letting go early drains it on `snap`. With reduced motion the fill steps in quarters on the same clock; the caption carries the timing.
 - **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
 - **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no fill in and no sheen.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
@@ -464,12 +479,15 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 | Save, onboarding done | `successNotification()` | CONFIRM |
 | Invalid amount (more than 9 digits) | `errorNotification()` | REJECT |
 | Swipe-to-delete threshold | `lightImpact()` | VIRTUAL_KEY |
+| Hold-to-delete: finger down / fill full (D139) | `Haptics.tick()` / `Haptics.threshold()` | CLOCK_TICK / VIRTUAL_KEY |
+| Restore or delete failed and rolled back | `Haptics.reject()` | REJECT |
 
 One effect per event, never buzzy.
 
 ## 8. Voice
 - Plain and kind, with "a pinch of humour, not a dollop" (Monzo).
 - Never use: transaction, debit/credit, budget period, Oops, "You overspent!".
+- **Back up** (verb) / **backup** (noun), never *export* for a backup. Deleting is *delete*, never *erase* or *reset* (Indian users hear "erase" as wiping the phone). A file is *backed up*, never *saved*, because *saved* means money put in. After a failure that touched data, say *Nothing changed*. The data group is *Your hisaab*, not *Your data*, since "data" reads as the mobile internet pack (D139, copy deck [34](design/mockups/34-data-controls-copy-deck.md)).
 - **Amounts:**
   - Indian grouping (`₹1,25,000`), and on charts `₹1.25L` / `₹1.25Cr` from `NumberFormat` with `en_IN`.
   - Never show paise, so precision is the same everywhere.

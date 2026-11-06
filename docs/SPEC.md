@@ -63,7 +63,11 @@ Tests should cite the ID they cover.
 | **Waiting** | A changing or card bill whose day has come but whose amount isn't entered yet (BR-9) |
 | **Saving** | Money put in on the same day every month, like an RD; today's share leaves room for it, and it is never spending (D120) |
 | **Limit** | An optional cap on one category's spending in a cycle (BR-12) |
+| **Category** | What an entry was for: 8 built-in *Spent* categories in fixed places, up to 4 of the user's own after them, and 2 *Got* categories (BR-11, D138) |
 | **Starting guess** | The income an *It changes* user typed in onboarding, saved as one *Got* entry with that note (D117) |
+| **Backup** | One file with everything in hisaab, made by *Back up* and saved where the user picks (BR-16). The verb is *back up*; a backup is never called an export or "saved" (that word means money put in) |
+| **Restore** | Replacing everything in hisaab with a backup file's contents (BR-16) |
+| **Delete everything** | Clearing all hisaab data on this phone and opening onboarding. It replaces *Reset app* (FR-SE-4) |
 
 ---
 
@@ -84,6 +88,16 @@ The inputs are the **pay rule** (set in onboarding) and the **month start** sett
 
 - **Clamping:** payday on the 31st gives 30 Sep, 31 Oct, 30 Nov, 28 Feb (29 in a leap year). The next cycle starts on the clamped date, and the day after is never skipped.
 - **Example:** payday on the 4th, `t` = Mon 26 Oct 2026. The cycle is Sun 4 Oct to Tue 3 Nov 2026 (31 days).
+
+### BR-1a A changed payday (D140)
+When the pay rule changes on day `c` (Settings, FR-SE-1), the old rule is kept as a *pay switch* (`c`, old rule), so cycles never jump:
+
+- **The bridge cycle:** the cycle `c` falls in keeps its start (from the old rule) and ends the day before the first new payday **after** `c`. A new payday of `c` itself is first paid next month, never on `c`, so no pay is counted twice.
+- **Before and after:** cycles before the bridge keep the old rule; cycles after it follow the new one.
+- **Several changes:** each change bridges from the cycle as the earlier changes left it. Changing back the same day restores the old cycle exactly.
+- **Month start on the 1st:** cycles stay calendar months; only the day the pay is posted changes.
+- **Pay:** the salary rule moves to the new schedule with its next pay after `c`. A weekly ↔ monthly change keeps the monthly figure (weekly posts month × 12 ÷ 52, D26). *It changes* stops the rule and keeps its past pay; a fixed day after *It changes* adds a rule for the month the person types.
+- **Example:** payday on the 4th moved to the 25th on Mon 26 Oct 2026. The bridge runs Sun 4 Oct to Tue 24 Nov (30 days left). Rent of ₹8,200 on 5 Nov now falls inside it, so `P = 45,000 − (1,200 + 8,200) − 27,150 = 8,450` and `A = floor(8,450 / 30) = ₹281`. Moved to the 1st instead, the cycle ends Sat 31 Oct (6 days) and `A = floor(16,650 / 6) = ₹2,775`. From 25 Nov every cycle runs from the 25th.
 
 ### BR-2 Days left
 `D = end − t + 1`. It counts today, so `D ≥ 1`, and on the last day of the cycle `D = 1`.
@@ -228,7 +242,11 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 - **Seed list (fixed order):**
   - Spent: Food, Travel, Shopping, Bills, Fun, Health, Home, Other.
   - Got: Money in, Other income. The stored key stays `salary`; "Money in" fits pay, pension, pocket money and family money alike (D116).
-- The user may **rename** a category or **change its icon**. Order and count are fixed in v1, so muscle memory survives.
+- The user may **rename** any category or **change its icon** (FR-SE-2). The 8 built-in *Spent* and 2 *Got* categories keep their places, are never hidden, and their count is fixed, so muscle memory survives.
+- **Your own (D138):** the user may add up to **4** *Spent* categories. They come after the 8 in the order they were made and are never sorted by use. *Got* has no categories of the user's own.
+  - **Name:** 1–16 characters after trimming. It must not match any category's name, shown or hidden, ignoring case: a name that matches saves into that category instead (a hidden one comes back). It must not be `savings` or `card bill`, the hidden categories' export names (D120, D123).
+  - **Icon:** `icon_key` stores an app-owned key from the curated set (UI_DESIGN §3.5), never glyph data or a Hugeicons name. `CategoryIcon.forName` suggests a key from the name's words (first match in the table wins; no match is `tag`). A key unknown to the app draws *Other*'s icon. A shipped key never changes meaning.
+  - **Hiding:** only the user's own can be hidden (`archived = 1`), with Undo. A hidden category leaves the Add tray and Settings' count, keeps its entries, name and icon, and still shows in Spends, filters, past cycles and exports. It is never the same as the system-hidden `saved` and `card_paid` rows.
 - Every entry has exactly one category. Entries posted by recurring rules use the rule's category.
 
 ### BR-12 Category limits (optional)
@@ -299,9 +317,25 @@ At most **3** are shown, chosen in priority order:
 - **Own question:** while it is blank, all three actions are disabled.
 
 ### BR-16 Backup, restore, export
-- **Backup:** a single JSON file (`hisaab-backup-YYYY-MM-DD.json`) containing the schema version, settings, categories, rules and entries. It is saved through the system file picker.
-- **Restore** replaces all data after a confirmation dialog, which is the **only** confirmation dialog in the app. The file is validated (version, required fields) before anything is deleted, and the restore runs in one transaction.
-- **CSV export:** entries only, in the same columns as BR-15.
+Mockup [34](design/mockups/34-data-controls.html), copy deck [34](design/mockups/34-data-controls-copy-deck.md), case study 23, DECISIONS D139.
+- **Backup:** a single JSON file (`application/json`, default name `hisaab-backup-YYYY-MM-DD.json`) holding the schema version, the date made, settings (including Look), categories, all rules (inactive too) and all entries with their notes and `created_at`. It is saved only when the user taps *Back up*, through the system *Save to* screen (`file_picker`), in a place the user picks. There is no automatic or scheduled backup. The file has no password.
+  - The phone remembers the date of the last backup and shows it under the row (FR-SE-4). Nothing ever nags about it.
+  - If the picked place already has that name, Android names the new file itself (for example `… (1).json`). The snackbar says the name it got.
+- **Restore** reads the picked file into memory, then validates it before anything changes:
+  - The picker shows all files (`*/*`), so no storage app greys the backup out; the contents are what's checked.
+  - Not JSON, no `hisaab` marker, or required fields missing → refused, "That's not a hisaab backup. Pick a file whose name starts with hisaab-backup."
+  - `schemaVersion` newer than the app → refused, "This backup is from a newer hisaab. Update hisaab from Play Store, then try again."
+  - An older `schemaVersion` is migrated in memory, with no message.
+  - Categories the user made (no seed key) restore like the built-in ones, hidden flag included. An icon key this version doesn't know draws *Other*'s icon and is kept, so a newer version can draw it (D138).
+  - A file with no income rule is refused as not a backup (hisaab can't answer its question without one).
+  - **From Settings:** the one confirmation dialog in the app (D4): "Replace with this backup?", the file's date and entry count, and what it replaces on this phone. Keys *Replace* / *Keep what's here*.
+  - **From onboarding** (FR-ON-1): nothing is there to replace, so there is no dialog and no Undo.
+  - The replace runs in one transaction. Before it, the current data is copied to an app-private snapshot.
+  - Afterwards the app lands on Home with "Backup from {date} restored" and *Undo*. For 7 days Settings also shows an *Undo restore* row. Undo puts the snapshot back. The snapshot is dropped after 7 days, on the next restore, on Undo, or on *Delete everything*.
+  - Reminders are re-armed from the restored bills. The recurring engine then runs once as on any start (BR-9), so no catch-up is posted twice.
+- **Delete everything** (FR-SE-4) wipes the database in one transaction, then the stored preferences (onboarding done, its draft, Look, last-backup date), the restore snapshot and every scheduled reminder. It keeps no hidden copy. Backup files the user saved are not touched.
+- **CSV export:** entries only, in the same columns as BR-15 (M6; not part of the backup work).
+- **Android Auto Backup is off** (`allowBackup="false"` plus `dataExtractionRules` excluding everything), so the only copy of the data that leaves the phone is a backup the user makes (FR-SE-5).
 
 ---
 
@@ -310,7 +344,9 @@ At most **3** are shown, chosen in priority order:
 Acceptance criteria are written as Given / When / Then. Copy in quotes is the English ARB value.
 
 ### 4.1 Onboarding (FR-ON)
-- **FR-ON-1** A fresh install opens onboarding. A finished onboarding never shows again unless the user resets the app.
+- **FR-ON-1** A fresh install opens onboarding. A finished onboarding never shows again unless the user deletes everything (FR-SE-4).
+  - Step 1 has a quiet *Restore a backup* text chip on its own row at the top end (TalkBack: "Restore a backup from another phone"). It is a way out, not a question: onboarding still asks three. It is never marigold.
+  - A valid file restores straight away (BR-16, no dialog) and lands on Home. An invalid or newer file keeps the user on step 1 with BR-16's snackbar.
 - **FR-ON-2** Step 1 asks "How much money comes in each month?" with the keypad open. The hint names money, not a job, so it fits salaried, self-employed, gig, pension and family money alike: "Pay, business, pension or family money. If it changes, a low month is a safe guess. Paid weekly? Add up a month." Between the keypad and Next, a lock and "What you type stays on this phone. The app never uses the internet." (DECISIONS D116).
   - Given 45000 is typed, then the preview reads "That's about ₹1,500 a day", captioned "Every day gets its own share". This is `floor(amount / 30)`, for the preview only.
   - Next is enabled only when the amount is greater than 0.
@@ -367,7 +403,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - The amount shows live Indian grouping.
 - **FR-AD-3** A helper line previews the effect, for example "₹1,020 over today's share · tomorrow's share ₹1,722", using BR-4 with the typed amount.
 - **FR-AD-4** **Next** is enabled when the amount is greater than 0 and opens step 2. The tray shortens, and the amount flies up into the title.
-- **FR-AD-5** Step 2 shows a 2×4 grid of categories for *Spent*, or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a tile saves**, then:
+- **FR-AD-5** Step 2 shows a 2×4 grid of the built-in categories for *Spent*, then the user's own in row 3 and a *New* tile (FR-AD-9), or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a category tile saves**, then:
   1. The tile flashes (120 ms).
   2. The tray closes.
   3. Once the tray has fully closed, Home recomputes. Today's block drains and the hero number rolls to its new value, starting in the same frame. While the tray covers Home, Home holds its last numbers (D91).
@@ -375,6 +411,14 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 - **FR-AD-6** Double-taps while saving are ignored. If the save fails, the tray stays open with "Couldn't save. Try again." and nothing is lost.
 - **FR-AD-7** Back from step 2 returns to step 1 with the amount intact. Back from step 1 closes the tray without saving.
 - **FR-AD-8** Edit mode opens step 1 prefilled. Saving replaces the entry, and *Delete* is shown in step 2.
+- **FR-AD-9** New category (D138, mockup [33](design/mockups/33-own-categories.html)):
+  - **AC-1** On *Spent*, a dashed *New* tile sits in the first free slot after the 8 built-in tiles and the user's own, under a "Your own" rule. With 4 of the user's own it is gone, and one line reads "4 of your own is the most. Hide one in Settings to make room." No category tile ever moves.
+  - **AC-2** Tapping *New* replaces the grid with a name step inside the tray: the amount stays in the title, "What's it called?" under it, a focused name field with the keyboard up, and 6 name chips (Groceries, Kids, Family, Pets, Petrol, Salon) that narrow to what is typed and leave out names already shown. A chip tap fills the field.
+  - **AC-3** A line under the field shows the icon the name picks ("Icon from the name: Fuel", or "The name picks an icon" while empty) and a *Change* link. *Change* opens the icon step: the curated icons in their groups, each with its word under it, the current one picked. A tap picks and returns to the name step without saving; picking the name's own icon goes back to following the name.
+  - **AC-4** The tray's marigold key reads *Save in {name}* and is disabled while the name is empty. One transaction creates the category and saves the entry in it, then FR-AD-5's close sequence runs. A name that matches an existing category reads *Save in {that name}*, says "You have Food already. It saves there." (or "You hid Gym. Saving brings it back."), and saves there.
+  - **AC-5** Back closes the keyboard first, then returns to the grid with the amount intact; back from the icon step returns to the name step. What was typed is kept until the tray closes.
+  - **AC-6** Double-taps while saving are ignored. A failed save keeps the name step open with "Couldn't save. Try again." and nothing is lost.
+  - **AC-7** TalkBack reads "New category, button", "Name for the new category, edit box", "Icon, Fuel, from the name. Double tap to change" and "Save 250 rupees in Petrol"; the "Your own" rule is not read.
 
 ### 4.4 Spends (FR-SP)
 - **FR-SP-1** A cycle switcher `‹ October ›` shows the current and earlier cycles. Next is disabled on the current cycle.
@@ -411,8 +455,17 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
-  - Money coming in (edits the income rule; future cycles only; D116).
-  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
+  - **Money coming in** (D137, mockup [32](design/mockups/32-income-sheet.html), case study 20): the first Money row.
+    - **AC-1** The row reads "Money coming in" with the income under it: "₹45,000 · on day 4", "₹45,000 · last day of the month", "₹44,998 · every Friday" (weekly shows the month that posts that week, D26) or "Changes each month" (*It changes*). Until the income loads it shows the label only and doesn't open.
+    - **AC-2** Tapping it opens the bill sheet's paper slip (D118): the "Money coming in" eyebrow, the monthly amount with the stamp "Came {date}" of the latest pay, "Comes every month on day 4" (or the last day, or "Comes every Friday, about ₹10,384 a week"), the rows *Amount* and *When it comes*, and "Next payday 4 Nov". There is no Delete. TalkBack reads the slip as one sentence.
+    - **AC-3** *Amount* opens onboarding's question "How much money comes in each month?" on the keypad, prefilled (the first key replaces it, FR-AD-8), with "From payday, 4 Nov." and "This month's ₹45,000 stays as it came." above the keys ("This week's" for weekly pay).
+    - **AC-4** *Save* changes only the rule's amount (a weekly rule stores the month × 12 ÷ 52, floored to the rupee). The pay already posted stays, today's share doesn't move, and `next_due` doesn't change: the new amount is posted from the next payday. The slip flashes the row and the footer reads "Changed. From payday, 4 Nov." for 2.4 s. Saving an unchanged amount writes nothing; ₹0 is refused with a shake; the 9-digit cap applies.
+    - **AC-5** When the latest pay was posted by the rule at its old amount, the footer offers *Change this month too* ("…this week…" for weekly pay). It sets that one entry to the new amount and reads "This month's pay is now ₹50,000." with *Undo*. A pay already changed by hand is never offered.
+    - **AC-6** A failed save keeps the question open with "Couldn't save. Try again."
+    - **AC-7** *When it comes* opens onboarding's five choices ("When does it come?") with the current one checked. *1st of the month*, *Last day of the month* and *It changes* pick at once; *Pick a date* opens the 1–31 grid and *Every week* the weekdays, and a pick returns to the choices. A picked change shows, before *Save*, "This money lasts till 24 Nov." and "That's 30 days, about ₹281 a day." from Home's own maths (BR-1a). *Save* records the change (D140); the slip flashes the row and the footer reads "Changed. This money lasts till 24 Nov." Back returns one step at a time; a failed save keeps the choices with "Couldn't save. Try again."
+    - **AC-9** From *It changes*, *Save* on a fixed day asks the amount first: onboarding's keypad, prefilled with every *Got* this month, under "Comes every month on day 1" and the effect of AC-7. One *Save* adds the salary rule and records the change.
+    - **AC-8** *It changes* has no amount: the slip reads "It changes", "Each month runs from the 1st" and "Add money when it comes. Tap Add, then Got."
+  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9). *Add a bill* is a full-width marigold key pinned to the bottom, in thumb reach, shown once the list loads (not while loading, nor beside *Try again*); the rows scroll above it and the Undo bar rises right above it. The list and the key share one column at most 560dp wide (D136).
   - **Changing a bill** happens in the bill sheet (D118, mockup [27](design/mockups/27-bill-sheet.html)):
     - **AC-1** Tapping a bill row, or Home's due-soon row (FR-HO-3), opens the sheet over the current screen. No page is pushed.
     - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then five rows (Amount, Kind of bill, Day of the month, Name, Icon), then "Next due on {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
@@ -424,13 +477,18 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - **AC-8** *Kind of bill* shows *Same every month*, *Changes every month* or *Credit card* (the value may take two lines). Its question, "What kind of bill is it?", is the three answers stacked, the current one picked; a tap saves (BR-9, D123).
     - **AC-10** The first time a changing or card bill exists (added, or switched in *Kind of bill*), a sheet asks once "Remind you on the day it's due?" with *Remind me* (marigold) and *Not now*. *Remind me* then shows Android's permission prompt. Either answer is kept and never asked again; Back leaves it unanswered, to ask next time (D126). If Android refuses the permission, a second sheet says "Reminders are off. Home still shows bills that need an amount." with *Done* (E30, D132).
     - **AC-9** The *Credit card* chip makes a card bill and *Electricity* a changing one; any other name starts fixed. A changing bill's amount question reads "About how much for Electricity each month?", a card's "About how much for Credit card each month?", with the card line of FR-HO-8 AC-2 under it while adding.
-  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "put in" ("How much do you put in RD each month?"). The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today:
+  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "put in" ("How much do you put in RD each month?"). The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Add a saving* is the pinned marigold key, and *Put in extra* a full-width chip under it (beside it, in one row, in a window under 480dp tall; D136). *Put in extra* opens a keypad for a one-off saving today:
     - **AC-1** It opens the keypad in a sheet, in the bill sheet's route.
     - **AC-2** The line under the amount is `tomorrow(remaining) − tomorrow(remaining − x)`: "Each day till payday gets ₹62 less" in the worked example ("…till month end…" for a month-end cycle), or "Payday's tomorrow." when `D = 1` (E-h).
     - **AC-3** The keypad refuses a digit that would go past `remaining`; with nothing left it reads "Nothing left to put in for now." and Save stays off.
     - **AC-4** Save posts a *Saved* entry dated today and closes the sheet with the success haptic. Today's share stays fixed; the later days get the less.
   - My month starts on: *Payday* / *1st*.
-- **FR-SE-2** Categories: rename, change icon.
+- **FR-SE-2** Categories (D138, mockup [33](design/mockups/33-own-categories.html)):
+  - **AC-1** Settings › Categories lists *Your own* ("2 of 4") with an *Add a category* row while under 4, then *Spending* (the 8 built-in) and *Money in* (2). Hidden categories are not listed.
+  - **AC-2** A row opens a sheet with the category's icon, name and entry count, and *Name* and *Icon* rows that open the name and icon steps (FR-AD-9) without an amount. A saved row flashes once.
+  - **AC-3** The user's own also has *Hide {name}*. Hiding closes the sheet and shows "{name} hidden" with *Undo*; the note under the key reads "Its 3 entries stay in Spends. It leaves the Add tray."
+  - **AC-4** A renamed built-in category says "Built in as Fun. The new name shows on its 14 past entries too." It has no *Hide*.
+  - **AC-5** *Add a category* opens the name step without an amount; its key reads *Add {name}*, or *Bring back {name}* for a hidden one, and is disabled for a name already shown.
 - **FR-SE-3** Look: Match phone (default) / Light / Dark (D130, mockup [30](design/mockups/30-look-setting.html), case study [19](design-research/case-studies/19-theme-choice.md)).
   - **AC-1** A *Look* group sits under *Money*: one row reading *Light or dark* with the current look's name under it, and three icon buttons at its end (phone, sun, moon), the current one filled. Nothing is stored until the user taps.
   - **AC-2** One tap on an icon applies the look to the whole app in the same frame (no sheet, no fade, no Save, no message), remembers it in `theme_mode`, and the name under *Light or dark* changes.
@@ -453,7 +511,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - The amount shows live Indian grouping.
 - **FR-AD-3** A helper line previews the effect, for example "₹1,020 over today's share · tomorrow's share ₹1,722", using BR-4 with the typed amount.
 - **FR-AD-4** **Next** is enabled when the amount is greater than 0 and opens step 2. The tray shortens, and the amount flies up into the title.
-- **FR-AD-5** Step 2 shows a 2×4 grid of categories for *Spent*, or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a tile saves**, then:
+- **FR-AD-5** Step 2 shows a 2×4 grid of the built-in categories for *Spent*, then the user's own in row 3 and a *New* tile (FR-AD-9), or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a category tile saves**, then:
   1. The tile flashes (120 ms).
   2. The tray closes.
   3. Once the tray has fully closed, Home recomputes. Today's block drains and the hero number rolls to its new value, starting in the same frame. While the tray covers Home, Home holds its last numbers (D91).
@@ -461,6 +519,14 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 - **FR-AD-6** Double-taps while saving are ignored. If the save fails, the tray stays open with "Couldn't save. Try again." and nothing is lost.
 - **FR-AD-7** Back from step 2 returns to step 1 with the amount intact. Back from step 1 closes the tray without saving.
 - **FR-AD-8** Edit mode opens step 1 prefilled. Saving replaces the entry, and *Delete* is shown in step 2.
+- **FR-AD-9** New category (D138, mockup [33](design/mockups/33-own-categories.html)):
+  - **AC-1** On *Spent*, a dashed *New* tile sits in the first free slot after the 8 built-in tiles and the user's own, under a "Your own" rule. With 4 of the user's own it is gone, and one line reads "4 of your own is the most. Hide one in Settings to make room." No category tile ever moves.
+  - **AC-2** Tapping *New* replaces the grid with a name step inside the tray: the amount stays in the title, "What's it called?" under it, a focused name field with the keyboard up, and 6 name chips (Groceries, Kids, Family, Pets, Petrol, Salon) that narrow to what is typed and leave out names already shown. A chip tap fills the field.
+  - **AC-3** A line under the field shows the icon the name picks ("Icon from the name: Fuel", or "The name picks an icon" while empty) and a *Change* link. *Change* opens the icon step: the curated icons in their groups, each with its word under it, the current one picked. A tap picks and returns to the name step without saving; picking the name's own icon goes back to following the name.
+  - **AC-4** The tray's marigold key reads *Save in {name}* and is disabled while the name is empty. One transaction creates the category and saves the entry in it, then FR-AD-5's close sequence runs. A name that matches an existing category reads *Save in {that name}*, says "You have Food already. It saves there." (or "You hid Gym. Saving brings it back."), and saves there.
+  - **AC-5** Back closes the keyboard first, then returns to the grid with the amount intact; back from the icon step returns to the name step. What was typed is kept until the tray closes.
+  - **AC-6** Double-taps while saving are ignored. A failed save keeps the name step open with "Couldn't save. Try again." and nothing is lost.
+  - **AC-7** TalkBack reads "New category, button", "Name for the new category, edit box", "Icon, Fuel, from the name. Double tap to change" and "Save 250 rupees in Petrol"; the "Your own" rule is not read.
 
 ### 4.4 Spends (FR-SP)
 - **FR-SP-1** A cycle switcher `‹ October ›` shows the current and earlier cycles. Next is disabled on the current cycle.
@@ -497,8 +563,17 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 
 ### 4.6 Settings (FR-SE)
 - **FR-SE-1** Money settings:
-  - Money coming in (edits the income rule; future cycles only; D116).
-  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9).
+  - **Money coming in** (D137, mockup [32](design/mockups/32-income-sheet.html), case study 20): the first Money row.
+    - **AC-1** The row reads "Money coming in" with the income under it: "₹45,000 · on day 4", "₹45,000 · last day of the month", "₹44,998 · every Friday" (weekly shows the month that posts that week, D26) or "Changes each month" (*It changes*). Until the income loads it shows the label only and doesn't open.
+    - **AC-2** Tapping it opens the bill sheet's paper slip (D118): the "Money coming in" eyebrow, the monthly amount with the stamp "Came {date}" of the latest pay, "Comes every month on day 4" (or the last day, or "Comes every Friday, about ₹10,384 a week"), the rows *Amount* and *When it comes*, and "Next payday 4 Nov". There is no Delete. TalkBack reads the slip as one sentence.
+    - **AC-3** *Amount* opens onboarding's question "How much money comes in each month?" on the keypad, prefilled (the first key replaces it, FR-AD-8), with "From payday, 4 Nov." and "This month's ₹45,000 stays as it came." above the keys ("This week's" for weekly pay).
+    - **AC-4** *Save* changes only the rule's amount (a weekly rule stores the month × 12 ÷ 52, floored to the rupee). The pay already posted stays, today's share doesn't move, and `next_due` doesn't change: the new amount is posted from the next payday. The slip flashes the row and the footer reads "Changed. From payday, 4 Nov." for 2.4 s. Saving an unchanged amount writes nothing; ₹0 is refused with a shake; the 9-digit cap applies.
+    - **AC-5** When the latest pay was posted by the rule at its old amount, the footer offers *Change this month too* ("…this week…" for weekly pay). It sets that one entry to the new amount and reads "This month's pay is now ₹50,000." with *Undo*. A pay already changed by hand is never offered.
+    - **AC-6** A failed save keeps the question open with "Couldn't save. Try again."
+    - **AC-7** *When it comes* opens onboarding's five choices ("When does it come?") with the current one checked. *1st of the month*, *Last day of the month* and *It changes* pick at once; *Pick a date* opens the 1–31 grid and *Every week* the weekdays, and a pick returns to the choices. A picked change shows, before *Save*, "This money lasts till 24 Nov." and "That's 30 days, about ₹281 a day." from Home's own maths (BR-1a). *Save* records the change (D140); the slip flashes the row and the footer reads "Changed. This money lasts till 24 Nov." Back returns one step at a time; a failed save keeps the choices with "Couldn't save. Try again."
+    - **AC-9** From *It changes*, *Save* on a fixed day asks the amount first: onboarding's keypad, prefilled with every *Got* this month, under "Comes every month on day 1" and the effect of AC-7. One *Save* adds the salary rule and records the change.
+    - **AC-8** *It changes* has no amount: the slip reads "It changes", "Each month runs from the 1st" and "Add money when it comes. Tap Add, then Got."
+  - Bills (list, add, edit, delete rules; renamed from *Fixed bills*, D123). The list shows each bill's name, day and amount, soonest first; a changing or card bill's amount reads "about ₹1,200", its estimate (D127). Each row shows the bill's icon (BR-9). **Adding** asks three questions: the name (typed, or one of 8 chips: the 6 from onboarding, then *Credit card* and *Electricity*, which fills it in; Next moves on, D86), the amount on the keypad, then the day of the month (1–31), where tapping a day saves. Bills are monthly. Rent goes in *Home*, a credit card in a hidden category (D123); every other bill goes in *Bills*. A bill switched to *Credit card* and back goes back to where its icon puts it: *Home* for the home icon, *Bills* for the rest (D127). A name is 1–40 characters after trimming. Swipe removes a bill with Undo (BR-9). *Add a bill* is a full-width marigold key pinned to the bottom, in thumb reach, shown once the list loads (not while loading, nor beside *Try again*); the rows scroll above it and the Undo bar rises right above it. The list and the key share one column at most 560dp wide (D136).
   - **Changing a bill** happens in the bill sheet (D118, mockup [27](design/mockups/27-bill-sheet.html)):
     - **AC-1** Tapping a bill row, or Home's due-soon row (FR-HO-3), opens the sheet over the current screen. No page is pushed.
     - **AC-2** The sheet is a paper bill: its name, icon, amount, "Every month on day N" and stamp (BR-9), then five rows (Amount, Kind of bill, Day of the month, Name, Icon), then "Next due on {date}". TalkBack reads the bill as one sentence and each row as "Change {answer}, {value}".
@@ -510,20 +585,33 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - **AC-8** *Kind of bill* shows *Same every month*, *Changes every month* or *Credit card* (the value may take two lines). Its question, "What kind of bill is it?", is the three answers stacked, the current one picked; a tap saves (BR-9, D123).
     - **AC-10** The first time a changing or card bill exists (added, or switched in *Kind of bill*), a sheet asks once "Remind you on the day it's due?" with *Remind me* (marigold) and *Not now*. *Remind me* then shows Android's permission prompt. Either answer is kept and never asked again; Back leaves it unanswered, to ask next time (D126). If Android refuses the permission, a second sheet says "Reminders are off. Home still shows bills that need an amount." with *Done* (E30, D132).
     - **AC-9** The *Credit card* chip makes a card bill and *Electricity* a changing one; any other name starts fixed. A changing bill's amount question reads "About how much for Electricity each month?", a card's "About how much for Credit card each month?", with the card line of FR-HO-8 AC-2 under it while adding.
-  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "put in" ("How much do you put in RD each month?"). The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Put in extra* opens a keypad for a one-off saving today:
+  - **Savings** (D120; replaces "Keep aside each month"): the same list, three questions and sheet as fixed bills, worded "put in" ("How much do you put in RD each month?"). The name pills are RD, SIP, Gold scheme and Chit. Savings are monthly and filed in a hidden category; the sheet has no Icon row (the piggy-bank glyph) and its stamp reads "Put in {date}". The list's footer reads "₹X put in since {Mon}": everything ever put in, never "worth" or "balance". *Add a saving* is the pinned marigold key, and *Put in extra* a full-width chip under it (beside it, in one row, in a window under 480dp tall; D136). *Put in extra* opens a keypad for a one-off saving today:
     - **AC-1** It opens the keypad in a sheet, in the bill sheet's route.
     - **AC-2** The line under the amount is `tomorrow(remaining) − tomorrow(remaining − x)`: "Each day till payday gets ₹62 less" in the worked example ("…till month end…" for a month-end cycle), or "Payday's tomorrow." when `D = 1` (E-h).
     - **AC-3** The keypad refuses a digit that would go past `remaining`; with nothing left it reads "Nothing left to put in for now." and Save stays off.
     - **AC-4** Save posts a *Saved* entry dated today and closes the sheet with the success haptic. Today's share stays fixed; the later days get the less.
   - My month starts on: *Payday* / *1st*.
-- **FR-SE-2** Categories: rename, change icon.
+- **FR-SE-2** Categories (D138, mockup [33](design/mockups/33-own-categories.html)):
+  - **AC-1** Settings › Categories lists *Your own* ("2 of 4") with an *Add a category* row while under 4, then *Spending* (the 8 built-in) and *Money in* (2). Hidden categories are not listed.
+  - **AC-2** A row opens a sheet with the category's icon, name and entry count, and *Name* and *Icon* rows that open the name and icon steps (FR-AD-9) without an amount. A saved row flashes once.
+  - **AC-3** The user's own also has *Hide {name}*. Hiding closes the sheet and shows "{name} hidden" with *Undo*; the note under the key reads "Its 3 entries stay in Spends. It leaves the Add tray."
+  - **AC-4** A renamed built-in category says "Built in as Fun. The new name shows on its 14 past entries too." It has no *Hide*.
+  - **AC-5** *Add a category* opens the name step without an amount; its key reads *Add {name}*, or *Bring back {name}* for a hidden one, and is disabled for a name already shown.
 - **FR-SE-3** Look: Match phone (default) / Light / Dark (D130, mockup [30](design/mockups/30-look-setting.html)).
   - **AC-1** A *Look* group sits under *Money*: one row, *Light or dark*, with the current choice under it. Tapping it opens a sheet of the three looks, the current one picked. Nothing is stored until the user picks.
   - **AC-2** A pick closes the sheet and applies the look to the whole app in the same frame (no fade, no Save, no message), and remembers it in `theme_mode`. The row then reads the new choice.
   - **AC-3** TalkBack reads the rows as one group of exclusive choices: "Match phone, light or dark like your phone, selected".
   - **AC-4** A failed read keeps matching the phone. A failed save still applies the look for now, and it is lost at the next launch.
-- **FR-SE-4** Data: Backup, Restore, Export CSV (BR-16), and *Reset app*. Reset asks the user to type "RESET", then wipes all data and returns to onboarding.
-- **FR-SE-5** About: version, licences, and the privacy sentence "Everything stays on this phone."
+- **FR-SE-4** *Your hisaab*: Back up, Restore and Delete everything (BR-16, mockup [34](design/mockups/34-data-controls.html), D139). This replaces *Reset app* and its typed "RESET". Export CSV comes later (M6).
+  - **AC-1** A *Your hisaab* group sits under *Look*. Card 1 holds *Back up* (second line "Last backed up 12 Oct", "Backed up today" or "Not backed up yet"), *Restore* ("Bring back from a backup file"), and, while a restore snapshot exists, *Undo restore*. Under card 1: "The backup file has no password. Anyone who has it can read your entries and notes, so keep it safe." Card 2 holds *Delete everything* ("Clear it all and start again") alone.
+  - **AC-2** *Back up* opens the system *Save to* screen with the default name. While writing, the row reads "Backing up…". On success: "Backed up as {fileName}" and the row's line updates. A cancelled picker shows nothing. A failure shows "Couldn't back up there. Try another folder." and the line is unchanged.
+  - **AC-3** *Restore* follows BR-16. While reading, the row reads "Checking the backup…". The dialog's keys say outcomes; *Keep what's here* changes nothing. During the replace the keys give way to "Bringing back your hisaab…" and the dialog can't be dismissed. A failed replace rolls back: "Couldn't restore. Nothing changed. Try again."
+  - **AC-4** *Delete everything* opens a full page, not a dialog: "This clears hisaab on this phone. It opens again at the first step, like new.", a card listing what goes (every entry, money coming in, bills and their reminders, savings, categories you added or changed, Look and your other settings), "There's no Undo for this.", "Backup files you made stay where you put them." and "Only hisaab is cleared. Your phone and other apps stay as they are."
+  - **AC-5** Above the delete key, the last-backup line ("Not backed up yet. Back up first to keep a copy." when there is none) and a *Back up first* key. It runs AC-2 and returns to this page with the line updated.
+  - **AC-6** The delete key reads "Hold to delete everything", with the caption "Keep your finger on it for 2 seconds" always shown. Pressing fills it evenly over 2.0 s (`tick()` on press). When full it reads "Let go to delete" (`threshold()`), and the delete happens on release. Letting go early, or sliding off, drains the fill and changes nothing; the caption becomes "Keep holding till it fills up." Under reduced motion the fill steps instead of sweeping; the timing is the same.
+  - **AC-7** TalkBack, Switch Access and keyboard users can't feel a timed hold, so the same key is arm-then-confirm: the first activation arms it ("Double-tap again to delete everything"), and a second within 10 s deletes. After 10 s it disarms.
+  - **AC-8** After deleting, BR-16's wipe runs and the app opens onboarding step 1 with the back stack cleared, with no snackbar. TalkBack hears "Everything deleted. hisaab is starting again." A failure rolls back and stays on the page: "Couldn't delete. Nothing changed. Try again."
+- **FR-SE-5** About: version, licences, and the privacy line "Everything stays on this phone. Nothing leaves unless you share it or back it up." It is true because Auto Backup is off (BR-16) and the app has no INTERNET permission (NFR-2).
 
 ---
 
@@ -544,8 +632,8 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E11 | 9-digit amount (₹99,99,99,999) | Accepted; formats `₹99,99,99,999`; compact `₹100Cr` on charts |
 | E12 | Text scale 1.5× | Hero steps down to 56 / 44 with no clipping (UI_DESIGN §3.4) |
 | E13 | Reduce motion on | All motion becomes 150 ms crossfades; values still update |
-| E14 | Restore with a corrupt or older file | Validated first; an invalid file changes nothing; an older version is migrated |
-| E15 | More than 31 days left (weekly cycles can't; monthly can't) | Not possible by BR-1; asserted in a test |
+| E14 | Restore with a corrupt, older or newer file | Validated first; an invalid file changes nothing; an older version is migrated; a newer one is refused with "Update hisaab" (BR-16) |
+| E15 | More than 31 days left (weekly cycles can't; monthly can't) | Not possible by BR-1; asserted in a test. A bridge cycle after a payday change (BR-1a) can run to about 62 days; the days rail still fits (tested at 320dp) |
 | E16 | Foldable opened into book posture while the app is running | Re-lays out into two panes split at the fold, with no data or state loss |
 | E17 | Tabletop posture | Content above the fold, controls below it |
 | E18 | App in a 412×400dp split-screen window | Compact layout; every control still reachable |
@@ -565,6 +653,18 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E32 | A reminder tapped after its bill was entered, skipped or deleted | Opens Home only (D126) |
 | E33 | The phone restarts, or the app is updated | The plugin's boot receiver re-arms the reminders; the next start or resume re-arms them too (D126) |
 | E34 | Entered, then swiped away, then *Undo* on the entered snackbar | The old estimate comes back; the bill waits again (D127) |
+| E35 | The *Save to* or *Open* screen is cancelled | Nothing happens; no message (BR-16) |
+| E36 | Saving the backup fails, or the place is full | A message; the last-backup line is unchanged; a half-written file is removed if the picker allows (FR-SE-4 AC-2) |
+| E37 | The picked file is moved, deleted or goes offline after picking | No effect: its bytes were read when picked. If it can't be read at all: "Couldn't open that file. Try again or pick another." |
+| E38 | The app is killed during a restore | The transaction rolls back, so the old data is intact; a snapshot without its "finished" marker is dropped on the next launch |
+| E39 | The app is killed during *Delete everything* | The database wipe is one transaction. If it finished, the next launch finds no income and opens onboarding, then clears what's left |
+| E40 | Restore, then the next start runs the recurring engine | Each due occurrence posts exactly once; the unique `(recurring_id, date)` index refuses repeats (BR-9) |
+| E41 | A backup with 0 entries (just after onboarding) | Backs up and restores; the dialog says "with no entries" |
+| E42 | *Undo restore* after entries were added since | The row says how many will go ("The 3 entries added since will go."); Undo puts the snapshot back exactly |
+| E43 | A new category's name matches a built-in one, renamed or not ("food", "Movies" after Fun was renamed) | The entry saves into that category; nothing new is made (D138) |
+| E44 | A hidden category's name is typed again | That category comes back with its old entries and icon; no copy is made (D138) |
+| E45 | Hiding one of the user's own leaves a gap in row 3 | The later ones close up within row 3; the 8 never move (D138) |
+| E46 | A restored backup holds an icon key this version doesn't know | The category shows *Other*'s icon; the key is kept, so a newer version can draw it (D138) |
 
 ---
 
@@ -576,7 +676,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | NFR-2 | Fully offline. No network permission is used, except opening ChatGPT through the browser (an intent, not app networking) |
 | NFR-3 | No analytics, no crash reporting that leaves the device, no ads. Logs never contain notes |
 | NFR-4 | Accessibility: WCAG AA contrast (verified in UI_DESIGN §3.2), touch targets of 48dp or more, full TalkBack coverage, 1.5× text, reduced motion |
-| NFR-5 | Data safety: every multi-row write is in a transaction; migrations are tested from each previous schema version; backup/restore round-trips byte-equal data |
+| NFR-5 | Data safety: every multi-row write is in a transaction; migrations are tested from each previous schema version; backup/restore round-trips byte-equal data, including notes, inactive rules and `created_at` |
 | NFR-6 | APK under 15 MB (fonts subset to Latin plus Devanagari) |
 | NFR-7 | Changed-lines test coverage ≥ 90% (target 100%) per change (`.claude/rules/tests.md`) |
 | NFR-8 | Adaptive layout: no orientation or size lock; works from 320dp phones to tablets, in every foldable posture and in multi-window (UI_DESIGN §13) |
