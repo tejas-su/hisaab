@@ -1756,6 +1756,84 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get settingsCategories => 'Categories';
+
+  @override
+  String categoriesOwnCount(int count, int max) {
+    return '$count of $max';
+  }
+
+  @override
+  String get addCategory => 'Add a category';
+
+  @override
+  String get categoriesSpending => 'Spending';
+
+  @override
+  String get categoriesSpendingHint =>
+      'These 8 keep their places. Rename one or change its icon.';
+
+  @override
+  String get categoriesMoneyIn => 'Money in';
+
+  @override
+  String get categoryBuiltIn => 'Built in';
+
+  @override
+  String get categoryNameRow => 'Name';
+
+  @override
+  String get categoryIconRow => 'Icon';
+
+  @override
+  String hideCategory(String name) {
+    return 'Hide $name';
+  }
+
+  @override
+  String get hideCategoryNote =>
+      'Its entries stay in Spends. It leaves the Add tray.';
+
+  @override
+  String builtInRenamedNote(String name) {
+    return 'Built in as $name. The new name shows on its past entries too.';
+  }
+
+  @override
+  String get builtInNote =>
+      'Built in. You can rename it or change its icon. It always keeps its place.';
+
+  @override
+  String categoryHidden(String name) {
+    return '$name hidden';
+  }
+
+  @override
+  String get renameCategoryQuestion => 'What should it be called?';
+
+  @override
+  String addCategoryKey(String name) {
+    return 'Add $name';
+  }
+
+  @override
+  String bringBackCategory(String name) {
+    return 'Bring back $name';
+  }
+
+  @override
+  String get categoryNameTaken => 'Another category is already called that.';
+
+  @override
+  String get categoryNameInvalid =>
+      'Use 1 to 16 letters, and not Savings or Card bill.';
+
+  @override
+  String builtInAs(String name) {
+    return 'Built in as $name';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Payday illustration (options)</title>
+<style>
+  /* Onboarding step 2, "When does it come?" (FR-ON-3): static illustrations for the empty gap
+     between the hint and the five choices. A proposal; nothing is built.
+     Style references (owner's pick): Charco (hand-drawn ink objects with stippled shading on
+     chunky pattern-filled rocks, scattered x/o marks) and Grads v2 (grainy mesh gradients).
+     These are original drawings in that style, recoloured to hisaab tokens: warm greys + one
+     marigold, which always carries an ink edge on the light background. No motion.
+     Faces with expressions depart from D6 / UI_DESIGN "no characters"; a pick needs a DECISIONS row. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --control: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --inverse: #312E29; --onInverse: #F2F1EC; --displayEdge: #161615;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --control: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --inverse: #5B5650; --onInverse: #F2F1EC; --displayEdge: #00000000;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  .toggles { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; position: sticky; top: 0; padding: 8px 0; background: var(--canvas); z-index: 2; }
+  .toggles button { min-height: 40px; padding: 0 14px; border-radius: 12px; background: #FFFEFC; font: 600 14px/20px 'Mukta', sans-serif; }
+  .toggles button[aria-pressed="true"] { background: #312E29; color: #F2F1EC; }
+  .pair { display: flex; flex-wrap: wrap; gap: 24px 16px; margin-top: 16px; align-items: flex-start; }
+  figure { margin: 0; max-width: 360px; }
+  figcaption { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--canvasInk2); }
+  figcaption b { display: block; font: 600 17px/22px 'Anek Latin', sans-serif; color: var(--canvasInk); margin-bottom: 2px; }
+  figcaption .tag { display: inline-block; font: 600 11px/14px 'Mukta', sans-serif; border-radius: 6px; padding: 1px 6px; margin-inline-start: 6px; vertical-align: 2px; background: #312E29; color: #F2F1EC; }
+  figcaption ul { margin: 6px 0 0; padding-inline-start: 18px; }
+  figcaption li { font-size: 14px; line-height: 20px; }
+
+  /* Phone: onboarding step 2 at 360 × 760 */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; padding: 20px 20px 24px; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  .dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+  .dots i { width: 12px; height: 6px; border-radius: 3px; background: var(--hairline); }
+  .dots i.on { width: 28px; background: var(--ink); }
+  .q { font: 600 30px/34px 'Anek Latin', sans-serif; margin: 32px 0 0; }
+  .hint { font-size: 15px; line-height: 22px; color: var(--ink2); margin: 6px 0 0; }
+  .art { flex: 1; display: grid; place-items: center; min-height: 0; }
+  .art svg { width: 100%; max-width: 320px; height: auto; }
+  .chips { display: flex; flex-direction: column; gap: 8px; }
+  .chip { min-height: 48px; border-radius: 12px; background: var(--control); display: flex; align-items: center; padding: 0 16px; font: 600 15px/20px 'Mukta', sans-serif; }
+
+  /* Expression sheet */
+  .faces { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+  .faces figure { width: 120px; background: var(--bg); border-radius: 20px; padding: 12px 8px 10px; text-align: center; }
+  .faces svg { width: 96px; height: 96px; }
+  .faces figcaption { margin-top: 4px; font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink); }
+  .faces figcaption span { display: block; font-weight: 400; color: var(--ink2); }
+
+  /* Illustration ink */
+  .ill text { font-family: 'Anek Latin', sans-serif; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+  .ill .ln { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ill .thin { stroke-width: 1.6; }
+  .ill .paper { fill: var(--surface); }
+  .ill .ink { fill: var(--ink); }
+  .ill .edge { stroke: var(--displayEdge); stroke-width: 2; }
+
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+</style>
+</head>
+<body>
+<h1>When does it come? Illustrations</h1>
+<p class="lede">Static pictures for the empty gap on onboarding step 2, in the style of <b>Charco</b> (ink objects with stippled shading, sitting on chunky patterned rocks) and <b>Grads v2</b> (grainy gradients), with <b>smiling faces</b>. These are original drawings, not copies of either pack. Charco is multicolour, so the rocks here use hisaab's warm greys and one marigold, keeping the app's no-red, no-green rule. There is no motion.</p>
+
+<div class="toggles" role="group" aria-label="View">
+  <button id="tDark" aria-pressed="false">Dark</button>
+</div>
+
+<div class="pair" id="options"></div>
+
+<h2>Expressions</h2>
+<p class="lede">The same face kit fits every character (calendar, coin, envelope). One expression is picked per picture; <b>Smile</b> is the default. If you want, the other steps can reuse the kit later. For example, <i>It changes</i> could get <b>Hmm</b>, and the done screen could get <b>Big grin</b>.</p>
+<div class="faces" id="faces"></div>
+
+<h2>Recommendation</h2>
+<p><b>1, Happy calendar on rocks.</b> It is the closest to Charco, and the calendar answers the question ("when?") without words. The smile and the wave make the step feel friendly rather than like a form. <b>4, Payday friends</b> is the runner-up if you want the coin in it too, but it is busier at phone size. <b>3</b> is the Grads option. It is the warmest, but a large marigold glow stretches the "marigold means today" rule.</p>
+
+<h2>Build notes</h2>
+<table>
+  <tr><th>Concern</th><th>Plan</th></tr>
+  <tr><td>Format</td><td>One static vector per picture. Shipping it as an SVG file needs <code>flutter_svg</code>, which is not in PLAN §11 (I'll ask before adding it). Without it, hand-port the picture to a <code>CustomPainter</code>. Either way, colours come from <code>context.colors</code>, so dark theme works without a second file.</td></tr>
+  <tr><td>Texture</td><td>Stipple and grain are drawn as a fixed dot pattern baked into the vector, not as a live noise filter, so it renders the same on every phone and stays cheap on low-end ones.</td></tr>
+  <tr><td>Semantics</td><td>Decorative: <code>ExcludeSemantics</code>. TalkBack still reads question → hint → choices.</td></tr>
+  <tr><td>Adaptive</td><td>Sits in <code>AdaptiveSplit</code>'s header column and scales down. Dropped on short windows so the choices never scroll.</td></tr>
+  <tr><td>Docs</td><td>Characters with faces reverse D6 and UI_DESIGN's "the concept uses no characters". A pick needs a DECISIONS row and an illustration section in UI_DESIGN (style, palette, face kit).</td></tr>
+</table>
+
+<script>
+  const W = 320, H = 220;
+  let uid = 0;
+
+  // Shared defs per svg: rock patterns, stipple and grain filters.
+  function defs(p) {
+    const pat = (id, w, h, body) => `<pattern id="${p}${id}" width="${w}" height="${h}" patternUnits="userSpaceOnUse">${body}</pattern>`;
+    const st = (c, sw = 1.4) => `style="fill:none;stroke:${c};stroke-width:${sw};stroke-linecap:round;stroke-linejoin:round"`;
+    return `<defs>
+      ${pat('sw', 16, 16, `<path d="M8 8 m-4 0 a4 4 0 1 1 4 4 a2.4 2.4 0 1 1 2.4 -2.4" ${st('var(--onInverse)')}/>`)}
+      ${pat('gr', 9, 9, `<path d="M0 0.5 H9 M0.5 0 V9" ${st('var(--ink)', 1)}/>`)}
+      ${pat('cr', 13, 13, `<path d="M4 4 l4 4 M8 4 l-4 4" ${st('var(--ink2)', 1.5)}/>`)}
+      ${pat('zg', 12, 9, `<path d="M0 6 l3 -4 l3 4 l3 -4 l3 4" ${st('var(--ink)', 1.3)}/>`)}
+      ${pat('dt', 8, 8, `<circle cx="4" cy="4" r="1.3" style="fill:var(--ink)"/>`)}
+      <filter id="${p}stip" x="0" y="0" width="1" height="1">
+        <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="1" seed="4" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  10 0 0 0 -4.6" result="a"/>
+        <feComposite in="SourceGraphic" in2="a" operator="in"/>
+      </filter>
+      <filter id="${p}grain" x="0" y="0" width="1" height="1">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="9" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2.4 0 0 0 -0.55" result="a"/>
+        <feComposite in="SourceGraphic" in2="a" operator="in"/>
+      </filter>
+      <radialGradient id="${p}glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0" style="stop-color:var(--signal);stop-opacity:1"/>
+        <stop offset="0.55" style="stop-color:var(--signal);stop-opacity:0.55"/>
+        <stop offset="1" style="stop-color:var(--signal);stop-opacity:0"/>
+      </radialGradient>
+    </defs>`;
+  }
+  const svg = (p, inner, vb = `0 0 ${W} ${H}`) => `<svg class="ill" viewBox="${vb}" aria-hidden="true">${defs(p)}${inner}</svg>`;
+
+  // A chunky Charco-style rock: flat fill, pattern on top. Marigold rocks keep an ink edge.
+  function rock(p, d, fill, patId) {
+    const edge = fill === 'var(--signal)' ? ' class="edge"' : '';
+    return `<path d="${d}" style="fill:${fill}"${edge}/>${patId ? `<path d="${d}" style="fill:url(#${p}${patId})"/>` : ''}`;
+  }
+  const star = (x, y, s) => `<path class="ink" d="M${x} ${y - s} Q${x} ${y} ${x + s} ${y} Q${x} ${y} ${x} ${y + s} Q${x} ${y} ${x - s} ${y} Q${x} ${y} ${x} ${y - s} Z"/>`;
+  const cross = (x, y) => `<path class="ln thin" d="M${x - 4} ${y - 4} l8 8 M${x + 4} ${y - 4} l-8 8"/>`;
+  const ring = (x, y) => `<circle class="ln thin" cx="${x}" cy="${y}" r="4"/>`;
+  const sprig = (x, y, flip = 1) => {
+    const f = flip;
+    return `<path class="ln thin" d="M${x} ${y} C${x - 2 * f} ${y - 24} ${x + 4 * f} ${y - 44} ${x + 14 * f} ${y - 60}"/>
+      <path class="ln thin paper" d="M${x + 1 * f} ${y - 22} q${-20 * f} -4 ${-24 * f} -22 q${20 * f} 2 ${24 * f} 22 Z"/>
+      <path class="ln thin paper" d="M${x + 5 * f} ${y - 38} q${18 * f} -10 ${18 * f} -28 q${-16 * f} 8 ${-18 * f} 28 Z"/>`;
+  };
+
+  // The face kit. (cx, cy) is the centre between the eyes; s scales it.
+  function face(kind, cx, cy, s = 1) {
+    const g = (b) => `<g transform="translate(${cx} ${cy}) scale(${s})">${b}</g>`;
+    const eye = (x) => `<ellipse class="ink" cx="${x}" cy="0" rx="3.2" ry="3.8"/>`;
+    const happyEye = (x) => `<path class="ln" d="M${x - 5} 2 Q${x} -6 ${x + 5} 2"/>`;
+    const calmEye = (x) => `<path class="ln" d="M${x - 5} -1 Q${x} 4 ${x + 5} -1"/>`;
+    const cheeks = `<ellipse cx="-21" cy="9" rx="5" ry="3" style="fill:var(--signal);opacity:.55"/><ellipse cx="21" cy="9" rx="5" ry="3" style="fill:var(--signal);opacity:.55"/>`;
+    const smile = `<path class="ln" d="M-9 9 Q0 18 9 9"/>`;
+    switch (kind) {
+      case 'smile': return g(cheeks + eye(-12) + eye(12) + smile);
+      case 'grin': return g(cheeks + happyEye(-12) + happyEye(12) + `<path class="ink" d="M-11 8 Q0 26 11 8 Z"/>`);
+      case 'wink': return g(cheeks + eye(-12) + happyEye(12) + smile);
+      case 'calm': return g(cheeks + calmEye(-12) + calmEye(12) + `<path class="ln" d="M-6 10 Q0 15 6 10"/>`);
+      case 'wow': return g(`<ellipse class="ink" cx="-12" cy="-1" rx="3.6" ry="4.4"/><ellipse class="ink" cx="12" cy="-1" rx="3.6" ry="4.4"/><ellipse class="ln" cx="0" cy="13" rx="4" ry="5"/>`);
+      case 'hmm': return g(`<ellipse class="ink" cx="-9" cy="-1" rx="3.2" ry="3.8"/><ellipse class="ink" cx="15" cy="-1" rx="3.2" ry="3.8"/><path class="ln" d="M-8 12 q4 -4 8 0 t8 0"/><path class="ln thin" d="M6 -10 l10 -3"/>`);
+    }
+  }
+
+  // A calendar character: page, stippled header band, rings, face.
+  function calendar(p, x, y, w, h, kind, fs = 1) {
+    const band = 24 * fs;
+    return `<rect class="paper" x="${x}" y="${y}" width="${w}" height="${h}" rx="${14 * fs}"/>
+      <path class="ink" filter="url(#${p}stip)" d="M${x} ${y + band} V${y + 14 * fs} a${14 * fs} ${14 * fs} 0 0 1 ${14 * fs} ${-14 * fs} h${w - 28 * fs} a${14 * fs} ${14 * fs} 0 0 1 ${14 * fs} ${14 * fs} V${y + band} Z"/>
+      <rect class="ln" x="${x}" y="${y}" width="${w}" height="${h}" rx="${14 * fs}"/>
+      <line class="ln" x1="${x}" y1="${y + band}" x2="${x + w}" y2="${y + band}"/>
+      <rect class="ln paper" x="${x + w * 0.27 - 3}" y="${y - 10 * fs}" width="6" height="${18 * fs}" rx="3"/>
+      <rect class="ln paper" x="${x + w * 0.73 - 3}" y="${y - 10 * fs}" width="6" height="${18 * fs}" rx="3"/>
+      ${face(kind, x + w / 2, y + band + (h - band) * 0.42, fs)}`;
+  }
+
+  // A ₹ coin character with a stippled crescent of shade.
+  function coin(p, cx, cy, r, kind, fs = 1) {
+    return `<circle class="paper" cx="${cx}" cy="${cy}" r="${r}"/>
+      <path class="ink" filter="url(#${p}stip)" d="M${cx} ${cy - r} A${r} ${r} 0 0 1 ${cx} ${cy + r} A${r * 0.45} ${r} 0 0 0 ${cx} ${cy - r} Z" transform="rotate(20 ${cx} ${cy})"/>
+      <circle class="ln" cx="${cx}" cy="${cy}" r="${r}"/>
+      <circle class="ln thin" cx="${cx}" cy="${cy}" r="${r - 7}" style="stroke-dasharray:2 5"/>
+      <text x="${cx - 4 * fs}" y="${cy - r * 0.32}" style="font-size:${17 * fs}px">₹</text>
+      ${face(kind, cx - 4 * fs, cy + r * 0.08, fs * 0.9)}`;
+  }
+
+  // 1. Happy calendar on rocks (Charco).
+  function opt1() {
+    const p = 'a' + uid++;
+    return svg(p, `
+      ${sprig(84, 150, 1)}${sprig(246, 150, -1)}
+      ${cross(56, 54)}${ring(268, 48)}${cross(276, 120)}${star(74, 104, 6)}
+      ${calendar(p, 108, 44, 108, 100, 'smile')}
+      <path class="ln" d="M216 100 q16 -2 22 -22"/><circle class="ln paper" cx="240" cy="74" r="5"/>
+      <path class="ln thin" d="M248 60 l5 -6 M252 72 l8 -2"/>
+      ${rock(p, 'M48 200 C36 174 46 146 76 138 C104 130 134 142 140 164 C146 188 130 204 102 206 C82 208 56 208 48 200 Z', 'var(--inverse)', 'sw')}
+      ${rock(p, 'M126 204 C114 180 124 154 156 148 C188 142 216 154 222 178 C228 200 208 210 180 210 C156 210 132 212 126 204 Z', 'var(--signal)', 'gr')}
+      ${rock(p, 'M208 206 C202 186 214 168 238 166 C262 164 276 180 274 196 C272 210 256 212 238 212 C222 212 212 212 208 206 Z', 'var(--hairline)', 'cr')}`);
+  }
+
+  // 2. Yay coin (Charco): the pay itself, arms up.
+  function opt2() {
+    const p = 'b' + uid++;
+    return svg(p, `
+      ${star(70, 50, 7)}${star(252, 40, 5)}${cross(258, 104)}${ring(58, 110)}${star(236, 76, 4)}
+      ${rock(p, 'M58 206 C48 186 58 164 84 160 C110 156 128 170 128 188 C128 206 112 212 92 212 C76 212 62 212 58 206 Z', 'var(--hairline)', 'dt')}
+      ${rock(p, 'M188 206 C182 182 196 160 226 158 C254 156 268 176 264 196 C260 212 242 212 222 212 C204 212 190 212 188 206 Z', 'var(--inverse)', 'zg')}
+      ${rock(p, 'M104 210 C94 184 112 156 150 152 C190 148 214 172 212 196 C210 214 186 214 160 214 C132 214 108 216 104 210 Z', 'var(--signal)', 'cr')}
+      <path class="ln" d="M116 98 q-16 -8 -18 -30"/><circle class="ln paper" cx="98" cy="64" r="5"/>
+      <path class="ln" d="M204 98 q16 -8 18 -30"/><circle class="ln paper" cx="222" cy="64" r="5"/>
+      ${coin(p, 160, 106, 48, 'grin')}`);
+  }
+
+  // 3. Grainy glow envelope (Grads): pay arriving, content face.
+  function opt3() {
+    const p = 'c' + uid++;
+    return svg(p, `
+      <ellipse cx="160" cy="112" rx="132" ry="98" style="fill:url(#${p}glow)" filter="url(#${p}grain)"/>
+      <ellipse cx="164" cy="104" rx="70" ry="54" style="fill:var(--surface);opacity:.35" filter="url(#${p}grain)"/>
+      <ellipse cx="160" cy="194" rx="70" ry="6" style="fill:var(--ink);opacity:.12"/>
+      <g transform="rotate(-8 160 80)">
+        <rect class="paper" x="116" y="50" width="88" height="54" rx="8"/>
+        <rect class="ink" filter="url(#${p}stip)" x="116" y="50" width="88" height="54" rx="8" style="opacity:.5"/>
+        <rect class="ln" x="116" y="50" width="88" height="54" rx="8"/>
+        <circle class="ln paper" cx="160" cy="74" r="13"/><text x="160" y="80" style="font-size:17px">₹</text>
+      </g>
+      <rect class="paper" x="98" y="96" width="124" height="88" rx="14"/>
+      <path class="ln" d="M100 100 L160 140 L220 100"/>
+      <rect class="ln" x="98" y="96" width="124" height="88" rx="14"/>
+      ${face('calm', 160, 158, 0.9)}
+      ${star(250, 62, 6)}${star(72, 80, 4)}${cross(262, 150)}`);
+  }
+
+  // 4. Payday friends (Charco + Grads): calendar and coin side by side.
+  function opt4() {
+    const p = 'd' + uid++;
+    return svg(p, `
+      <circle cx="226" cy="84" r="64" style="fill:url(#${p}glow)" filter="url(#${p}grain)"/>
+      ${cross(40, 50)}${ring(150, 30)}${star(286, 150, 5)}
+      ${calendar(p, 56, 76, 88, 82, 'smile', 0.85)}
+      <path class="ln thin" d="M150 120 Q170 106 186 112" style="stroke-dasharray:2 6"/>
+      ${coin(p, 228, 92, 38, 'wink', 0.85)}
+      <path class="ln thin" d="M208 140 q20 8 40 0 M216 150 q12 5 24 0"/>
+      ${rock(p, 'M26 210 C16 186 30 164 62 160 C94 156 118 168 120 190 C122 210 100 214 76 214 C52 214 30 216 26 210 Z', 'var(--inverse)', 'sw')}
+      ${rock(p, 'M104 212 C100 194 112 180 134 178 C156 176 168 190 166 202 C164 214 148 216 132 216 C118 216 106 216 104 212 Z', 'var(--hairline)', 'dt')}
+      ${rock(p, 'M180 214 C176 194 192 176 224 176 C258 176 292 188 292 204 C292 216 268 216 236 216 C206 216 184 218 180 214 Z', 'var(--signal)', 'gr')}`);
+  }
+
+  const OPTIONS = [
+    { n: 1, name: 'Happy calendar on rocks', tag: 'Recommended', build: opt1, points: [
+      'A calendar waves from the top of three patterned rocks: charcoal swirls, marigold grid, grey crosses. Leaf sprigs, stars and x/o marks around it, as in Charco.',
+      'The calendar is the answer to "when?", and the smile and wave make the step friendly.',
+      'The marigold rock is decoration, not today. That is a small stretch of the signal rule.'] },
+    { n: 2, name: 'Yay coin', build: opt2, points: [
+      'A ₹ coin with a big grin and both arms up, on patterned rocks. Stipple shades its right side, like Charco\'s balloon.',
+      'It is about the money arriving, which is the happiest moment of the month.',
+      'It doesn\'t show a date, so it reads as "money" more than "when".'] },
+    { n: 3, name: 'Grainy glow envelope', build: opt3, points: [
+      'Grads v2: a grainy marigold glow behind a contented envelope with a ₹ note peeking out.',
+      'Warmest and softest, with no rocks. Works well in dark.',
+      'A big marigold glow on the light background bends the "marigold means today" rule the most.'] },
+    { n: 4, name: 'Payday friends', build: opt4, points: [
+      'Both styles together: a smiling calendar and a winking coin hopping towards it, with a grainy glow behind the coin.',
+      'Tells the whole story: money comes on a date.',
+      'Two characters at phone size is busy, and the faces get small.'] },
+  ];
+
+  const CHOICES = ['1st of the month', 'Last day of the month', 'Pick a date', 'Every week', 'It changes'];
+  const host = document.getElementById('options');
+  for (const o of OPTIONS) {
+    const fig = document.createElement('figure');
+    fig.innerHTML = `
+      <div class="phone light">
+        <div class="dots"><i></i><i class="on"></i><i></i></div>
+        <div class="q">When does it come?</div>
+        <p class="hint">Your month runs from one payday to the next. No fixed day? Pick "It changes".</p>
+        <div class="art">${o.build()}</div>
+        <div class="chips">${CHOICES.map((c) => `<div class="chip">${c}</div>`).join('')}</div>
+      </div>
+      <figcaption><b>${o.n}. ${o.name}${o.tag ? `<span class="tag">${o.tag}</span>` : ''}</b>
+        <ul>${o.points.map((pt) => `<li>${pt}</li>`).join('')}</ul></figcaption>`;
+    host.appendChild(fig);
+  }
+
+  const FACES = [['smile', 'Smile', 'default'], ['grin', 'Big grin', 'payday, done'], ['wink', 'Wink', 'a tip'],
+    ['calm', 'Content', 'all set'], ['wow', 'Wow', 'a surprise'], ['hmm', 'Hmm', 'it changes']];
+  const fh = document.getElementById('faces');
+  for (const [k, name, use] of FACES) {
+    const p = 'f' + uid++;
+    const f = document.createElement('figure');
+    f.className = 'light';
+    f.innerHTML = `${svg(p, calendar(p, 10, 18, 76, 70, k, 0.8), '0 0 96 96')}<figcaption>${name}<span>${use}</span></figcaption>`;
+    fh.appendChild(f);
+  }
+
+  const b = document.getElementById('tDark');
+  b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', on);
+    document.querySelectorAll('.phone, .faces figure').forEach((el) => { el.classList.toggle('dark', on); el.classList.toggle('light', !on); });
+  });
+</script>
+</body>
+</html>

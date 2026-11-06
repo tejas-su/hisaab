@@ -15,9 +15,13 @@ import '../widgets/payday_step.dart';
 /// Back steps back through the questions; on the first one it leaves the app. [onFinished]
 /// runs once everything is saved.
 class OnboardingPage extends StatelessWidget {
-  const OnboardingPage({super.key, required this.onFinished});
+  const OnboardingPage({super.key, required this.onFinished, this.restore});
 
   final VoidCallback onFinished;
+
+  /// The *Restore a backup* chip shown at the top of the first question (FR-ON-1, D139); none
+  /// leaves it out.
+  final Widget? restore;
 
   @override
   Widget build(BuildContext context) => BlocConsumer<OnboardingBloc, OnboardingState>(
@@ -30,7 +34,7 @@ class OnboardingPage extends StatelessWidget {
               context.read<OnboardingBloc>().add(const OnboardingBackPressed());
             }
           },
-          child: Scaffold(body: _body(state)),
+          child: Scaffold(body: _body(state, restore)),
         ),
       );
 
@@ -40,15 +44,15 @@ class OnboardingPage extends StatelessWidget {
       state.picker == PaydayPicker.none &&
       state.billEditor.isNone();
 
-  static Widget _body(OnboardingState state) => switch (state) {
+  static Widget _body(OnboardingState state, Widget? restore) => switch (state) {
         OnboardingLoading() || OnboardingDone() => const SizedBox.expand(),
         OnboardingFinishing(:final draft) => BillsStep(draft: draft, busy: true),
-        OnboardingInProgress() => _step(state),
+        OnboardingInProgress() => _step(state, restore),
       };
 
-  static Widget _step(OnboardingInProgress state) => state.billEditor.match(
+  static Widget _step(OnboardingInProgress state, Widget? restore) => state.billEditor.match(
         () => switch (state.draft.step) {
-          OnboardingStep.income => IncomeStep(state: state),
+          OnboardingStep.income => IncomeStep(state: state, restore: restore),
           OnboardingStep.payday => PaydayStep(state: state),
           OnboardingStep.bills => BillsStep(draft: state.draft, saveFailed: state.saveFailed),
         },

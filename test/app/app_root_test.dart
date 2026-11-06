@@ -43,6 +43,19 @@ void main() {
       expect(find.byType(OnboardingPage), findsOneWidget);
     });
 
+    testWidgets('restoring a backup from onboarding reloads into Home (FR-ON-1, D139)', (WidgetTester tester) async {
+      final FakeServices services = FakeServices(onboardingDone: false, entries: <Entry>[], rules: <RecurringRule>[]);
+      await boot(tester, services);
+      // why: the fake restore writes nothing, so stand in for the restored onboarding flag.
+      services.preferences.done = true;
+
+      await tester.tap(find.byKey(const ValueKey<String>('restore-a-backup')));
+      await settle(tester);
+
+      expect(services.backups.restores, hasLength(1));
+      expect(find.byType(OnboardingPage), findsNothing);
+    });
+
     testWidgets('finishing onboarding lands on Home with the hero assembling', (WidgetTester tester) async {
       await boot(tester, FakeServices(onboardingDone: false, entries: <Entry>[], rules: <RecurringRule>[]));
       for (final String key in <String>['4', '5', '0', '0', '0']) {
@@ -107,6 +120,35 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await settle(tester);
       expect(find.byType(SettingsPage), findsNothing);
+    });
+
+    testWidgets('a category added in Settings is a tile the next time Add opens (FR-SE-2, D138)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      await tester.ensureVisible(find.byKey(const ValueKey<String>('open-categories')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey<String>('open-categories')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('add-category')));
+      await settle(tester);
+      await tester.enterText(find.byKey(const ValueKey<String>('category-name-field')), 'Petrol');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey<String>('category-name-save')));
+      await settle(tester);
+      await tester.tap(find.byTooltip('Back'));
+      await settle(tester);
+      await tester.tap(find.byTooltip('Back'));
+      await settle(tester);
+
+      await tester.tap(find.byKey(const ValueKey<String>('add-key')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-3')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey<String>('add-next')));
+      await settle(tester);
+
+      expect(find.bySemanticsLabel('Petrol. Save', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('a bill added in Settings shows up in Home\'s nudge (FR-SE-1, FR-HO-3)', (WidgetTester tester) async {

@@ -26,6 +26,7 @@ class SettingsPage extends StatelessWidget {
     required this.onOpenBills,
     required this.onOpenSavings,
     required this.themeBloc,
+    this.onOpenCategories,
     this.yourHisaab,
   });
 
@@ -42,6 +43,9 @@ class SettingsPage extends StatelessWidget {
 
   /// The app-wide look (FR-SE-3), shown and changed by the Look group.
   final ThemeBloc themeBloc;
+
+  /// Opens Settings › Categories (FR-SE-2, D138); none leaves the *Categories* group out.
+  final VoidCallback? onOpenCategories;
 
   /// The *Your hisaab* group under Look (FR-SE-4, D139), built by the route with its bloc; none
   /// leaves the group out.
@@ -101,6 +105,23 @@ class SettingsPage extends StatelessWidget {
               child: Semantics(header: true, child: Text(strings.settingsLook, style: text.titleLarge)),
             ),
             LookGroup(themeBloc: themeBloc),
+            if (onOpenCategories case final VoidCallback openCategories) ...<Widget>[
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, top: HisaabSpacing.xl, bottom: HisaabSpacing.s),
+                child: Semantics(header: true, child: Text(strings.settingsCategories, style: text.titleLarge)),
+              ),
+              Material(
+                color: context.colors.surface,
+                shape: HisaabShapes.squircle(HisaabRadii.card),
+                clipBehavior: Clip.antiAlias,
+                child: SettingsRow(
+                  key: const ValueKey<String>('open-categories'),
+                  icon: AppIcons.forKey('tag'),
+                  label: strings.settingsCategories,
+                  onTap: openCategories,
+                ),
+              ),
+            ],
             if (data != null) ...<Widget>[
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, top: HisaabSpacing.xl, bottom: HisaabSpacing.s),

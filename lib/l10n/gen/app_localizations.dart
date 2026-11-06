@@ -2406,6 +2406,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{key, select, groceries{Groceries} kids{Kids} family{Family} pets{Pets} petrol{Petrol} other{Salon}}'**
   String newCategorySuggestion(String key);
+
+  /// Settings group heading, row and page title (FR-SE-2)
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get settingsCategories;
+
+  /// Beside the Your own heading: how many of the user's own are shown
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max}'**
+  String categoriesOwnCount(int count, int max);
+
+  /// Row under the user's own categories in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Add a category'**
+  String get addCategory;
+
+  /// Heading over the 8 built-in Spent categories in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Spending'**
+  String get categoriesSpending;
+
+  /// Hint under the Spending heading
+  ///
+  /// In en, this message translates to:
+  /// **'These 8 keep their places. Rename one or change its icon.'**
+  String get categoriesSpendingHint;
+
+  /// Heading over the Got categories in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Money in'**
+  String get categoriesMoneyIn;
+
+  /// Eyebrow on a built-in category's sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Built in'**
+  String get categoryBuiltIn;
+
+  /// Row on the category sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get categoryNameRow;
+
+  /// Row on the category sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get categoryIconRow;
+
+  /// Key on the sheet of one of the user's own categories
+  ///
+  /// In en, this message translates to:
+  /// **'Hide {name}'**
+  String hideCategory(String name);
+
+  /// Under the Hide key
+  ///
+  /// In en, this message translates to:
+  /// **'Its entries stay in Spends. It leaves the Add tray.'**
+  String get hideCategoryNote;
+
+  /// On a renamed built-in category's sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Built in as {name}. The new name shows on its past entries too.'**
+  String builtInRenamedNote(String name);
+
+  /// On a built-in category's sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Built in. You can rename it or change its icon. It always keeps its place.'**
+  String get builtInNote;
+
+  /// Snackbar after hiding a category, with Undo
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hidden'**
+  String categoryHidden(String name);
+
+  /// Question when renaming a category
+  ///
+  /// In en, this message translates to:
+  /// **'What should it be called?'**
+  String get renameCategoryQuestion;
+
+  /// Key when adding a category in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name}'**
+  String addCategoryKey(String name);
+
+  /// Key when the typed name is a hidden category
+  ///
+  /// In en, this message translates to:
+  /// **'Bring back {name}'**
+  String bringBackCategory(String name);
+
+  /// Under the name field when the name is taken
+  ///
+  /// In en, this message translates to:
+  /// **'Another category is already called that.'**
+  String get categoryNameTaken;
+
+  /// Under the name field when the name can't be used
+  ///
+  /// In en, this message translates to:
+  /// **'Use 1 to 16 letters, and not Savings or Card bill.'**
+  String get categoryNameInvalid;
+
+  /// Second line of a renamed built-in category in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Built in as {name}'**
+  String builtInAs(String name);
 }
 
 class _AppLocalizationsDelegate

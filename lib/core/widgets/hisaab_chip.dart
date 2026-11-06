@@ -26,6 +26,7 @@ class HisaabChip extends StatelessWidget {
     this.selected = false,
     this.expand = false,
     this.onSurface = false,
+    this.checksWhenSelected = true,
   });
 
   final String label;
@@ -39,6 +40,10 @@ class HisaabChip extends StatelessWidget {
   /// Fill the available width, for big onboarding choices.
   final bool expand;
 
+  /// Whether [selected] adds the trailing check. Turn it off only where the ink fill plus a
+  /// [detail] line already say the chip is picked and the width is tight (the bills grid).
+  final bool checksWhenSelected;
+
   /// Set when the chip sits on a [HisaabColors.surface] layer (the Add tray, a sheet, a card).
   ///
   /// The page's [HisaabColors.control] fill equals the surface in light, so there the chip would
@@ -50,7 +55,7 @@ class HisaabChip extends StatelessWidget {
     final Color foreground = _foreground(context);
     final TextTheme text = Theme.of(context).textTheme;
     final AppIconData? leading = icon;
-    final AppIconData? trailing = trailingIcon ?? (selected && leading == null ? AppIcons.check : null);
+    final AppIconData? trailing = trailingIcon ?? (selected && checksWhenSelected && leading == null ? AppIcons.check : null);
     final String? second = detail;
     return Pressable(
       semanticLabel: semanticLabel ?? <String?>[label, second].whereType<String>().join(', '),

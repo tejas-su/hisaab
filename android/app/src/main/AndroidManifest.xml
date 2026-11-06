@@ -3,10 +3,15 @@
          permission: reminders are inexact. Boot lets the plugin re-arm them after a restart. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Nothing leaves the phone unless the user makes a backup (SPEC BR-16, FR-SE-5, D139):
+         Auto Backup to Google Drive and device-to-device transfer are both off. -->
     <application
         android:label="hisaab"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"

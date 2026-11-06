@@ -14,9 +14,12 @@ import 'step_header.dart';
 
 /// Step 1: "How much money comes in each month?" with the keypad open (SPEC FR-ON-2).
 class IncomeStep extends StatelessWidget {
-  const IncomeStep({super.key, required this.state});
+  const IncomeStep({super.key, required this.state, this.restore});
 
   final OnboardingInProgress state;
+
+  /// The *Restore a backup* chip above the question (FR-ON-1); none leaves it out.
+  final Widget? restore;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +28,7 @@ class IncomeStep extends StatelessWidget {
     return AdaptiveSplit(
       header: StepHeader(
         step: OnboardingStep.income,
+        top: restore,
         question: strings.incomeQuestion,
         hint: strings.incomeHint,
         children: <Widget>[

@@ -5,12 +5,14 @@ import 'package:get_it/get_it.dart';
 
 import '../add_entry/add_entry.dart';
 import '../ask_ai/ask_ai.dart';
+import '../backup/backup.dart';
 import '../core/design/haptics.dart';
 import '../core/errors/failure.dart';
 import '../core/notifications/bill_reminders.dart';
 import '../core/time/clock.dart';
 import '../core/time/pay_cycle.dart';
 import '../core/usecases/use_case.dart';
+import '../core/widgets/hisaab_snackbar_host.dart';
 import '../home/home.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../ledger/ledger.dart';
@@ -25,18 +27,35 @@ import 'widgets/resume_listener.dart';
 
 /// Builds every screen with its Bloc and dependencies: the app's composition root for UI.
 abstract final class AppRoutes {
-  /// Onboarding; [onFinished] runs once everything is saved.
-  static Widget onboarding(GetIt getIt, {required VoidCallback onFinished}) => BlocProvider<OnboardingBloc>(
-        create: (BuildContext _) => OnboardingBloc(
-          drafts: getIt<OnboardingDraftRepository>(),
-          completeOnboarding: getIt<CompleteOnboarding>(),
-          haptics: getIt<Haptics>(),
-        )..add(const OnboardingStarted()),
-        child: OnboardingPage(onFinished: onFinished),
+  /// Onboarding; [onFinished] runs once everything is saved, and [onRestored] once a backup from
+  /// another phone is brought back instead (FR-ON-1, D139).
+  static Widget onboarding(GetIt getIt, {required VoidCallback onFinished, required VoidCallback onRestored}) =>
+      MultiBlocProvider(
+        providers: <BlocProvider<Object?>>[
+          BlocProvider<OnboardingBloc>(
+            create: (BuildContext _) => OnboardingBloc(
+              drafts: getIt<OnboardingDraftRepository>(),
+              completeOnboarding: getIt<CompleteOnboarding>(),
+              haptics: getIt<Haptics>(),
+            )..add(const OnboardingStarted()),
+          ),
+          BlocProvider<YourHisaabBloc>(
+            create: (BuildContext _) => YourHisaabBloc(
+              backups: getIt<BackupRepository>(),
+              clock: getIt<Clock>(),
+              haptics: getIt<Haptics>(),
+              fromOnboarding: true,
+            ),
+          ),
+        ],
+        child: HisaabSnackbarHost(
+          child: OnboardingPage(onFinished: onFinished, restore: RestoreBackupChip(onRestored: onRestored)),
+        ),
       );
 
-  /// Home and Spends; [assemble] plays the blocks entrance once.
-  static Widget main(GetIt getIt, {bool assemble = false}) => MultiBlocProvider(
+  /// Home and Spends; [assemble] plays the blocks entrance once. [onDataReplaced] reloads the app
+  /// after a restore, an undo or *Delete everything* in Settings (D139).
+  static Widget main(GetIt getIt, {required VoidCallback onDataReplaced, bool assemble = false}) => MultiBlocProvider(
         providers: <BlocProvider<Object?>>[
           BlocProvider<HomeBloc>(
             create: (BuildContext _) => HomeBloc(
@@ -85,9 +104,15 @@ abstract final class AppRoutes {
                 assemble: assemble,
                 onAdd: (EntryKind kind) => openAddTray(context, getIt, kind: kind),
                 onEdit: (Entry entry) => openAddTray(context, getIt, editing: Option<Entry>.of(entry)),
-                onOpenSettings: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt)),
-                ),
+                onOpenSettings: () async {
+                  final HomeBloc home = context.read<HomeBloc>();
+                  await Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt, onDataReplaced: onDataReplaced)),
+                  );
+                  // why: category edits (D138) don't pass through the ledger or rules streams Home
+                  // listens to, so Home re-reads on the way back; the Add tray takes its tiles from it.
+                  home.add(const HomeLoadRequested());
+                },
                 onOpenBill: (RecurringRule rule) async {
                   final HomeBloc home = context.read<HomeBloc>();
                   // why: a change reloads Home through RecurringRepository.changes; a delete goes
@@ -198,8 +223,9 @@ abstract final class AppRoutes {
         },
       );
 
-  /// Settings, one level deep (FR-SE).
-  static Widget settings(GetIt getIt) => BlocProvider<IncomeBloc>(
+  /// Settings, one level deep (FR-SE); [onDataReplaced] reloads the app after a restore, an undo or
+  /// *Delete everything* (D139).
+  static Widget settings(GetIt getIt, {required VoidCallback onDataReplaced}) => BlocProvider<IncomeBloc>(
         create: (BuildContext _) => IncomeBloc(
           getIncome: getIt<GetIncome>(),
           recurring: getIt<RecurringRepository>(),
@@ -227,8 +253,76 @@ abstract final class AppRoutes {
               MaterialPageRoute<void>(builder: (BuildContext _) => bills(getIt, kind: EntryKind.saved)),
             ),
             themeBloc: context.read<ThemeBloc>(),
+            onOpenCategories: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (BuildContext _) => categories(getIt)),
+            ),
+            yourHisaab: _yourHisaab(getIt, onDataReplaced: () {
+              onDataReplaced();
+              context.read<IncomeBloc>().add(const IncomeLoadRequested());
+            }),
           ),
         ),
+      );
+
+  /// Settings › Categories (FR-SE-2, D138).
+  static Widget categories(GetIt getIt) => BlocProvider<CategoriesBloc>(
+        create: (BuildContext _) => CategoriesBloc(
+          categories: getIt<CategoryRepository>(),
+          addOwnCategory: getIt<AddOwnCategory>(),
+          renameCategory: getIt<RenameCategory>(),
+          changeCategoryIcon: getIt<ChangeCategoryIcon>(),
+          setCategoryHidden: getIt<SetCategoryHidden>(),
+        )..add(const CategoriesLoadRequested()),
+        child: const CategoriesPage(),
+      );
+
+  /// Settings' *Your hisaab* group with its bloc (FR-SE-4, D139).
+  static Widget _yourHisaab(GetIt getIt, {required VoidCallback onDataReplaced}) => BlocProvider<YourHisaabBloc>(
+        create: (BuildContext _) => YourHisaabBloc(
+          backups: getIt<BackupRepository>(),
+          clock: getIt<Clock>(),
+          haptics: getIt<Haptics>(),
+        )..add(const YourHisaabLoadRequested()),
+        child: YourHisaabNotices(
+          onDataReplaced: onDataReplaced,
+          child: Builder(
+            builder: (BuildContext context) => YourHisaabGroup(
+              today: getIt<Clock>().today(),
+              onOpenDelete: () {
+                final NavigatorState navigator = Navigator.of(context);
+                navigator.push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext _) => deleteEverything(
+                      getIt,
+                      context.read<YourHisaabBloc>(),
+                      onDeleted: () {
+                        // why: Settings and this page sit on the old data; the root shows
+                        // onboarding once it reloads.
+                        navigator.popUntil((Route<void> route) => route.isFirst);
+                        onDataReplaced();
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+  /// *Delete everything* (FR-SE-4 AC-4..8), sharing Settings' [yourHisaab] bloc for *Back up first*.
+  static Widget deleteEverything(GetIt getIt, YourHisaabBloc yourHisaab, {required VoidCallback onDeleted}) =>
+      MultiBlocProvider(
+        providers: <BlocProvider<Object?>>[
+          BlocProvider<YourHisaabBloc>.value(value: yourHisaab),
+          BlocProvider<DeleteEverythingBloc>(
+            create: (BuildContext _) => DeleteEverythingBloc(
+              deleteEverything: getIt<DeleteEverything>(),
+              haptics: getIt<Haptics>(),
+            ),
+          ),
+        ],
+        child: DeleteEverythingPage(today: getIt<Clock>().today(), haptics: getIt<Haptics>(), onDeleted: onDeleted),
       );
 
   /// The Fixed bills list, or Savings for [kind] *Saved* (FR-SE-1, D120): Add opens the editor,

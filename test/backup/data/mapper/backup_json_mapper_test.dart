@@ -82,6 +82,7 @@ void main() {
       expect(decode(validJson(version: 0)).getLeft().toNullable(), isA<BrokenBackupFailure>());
       expect(decode(<String, Object?>{...validJson(), 'madeOn': '12 Oct'}).getLeft().toNullable(), isA<BrokenBackupFailure>());
       expect(decode(<String, Object?>{...validJson(), 'schemaVersion': '3'}).getLeft().toNullable(), isA<BrokenBackupFailure>());
+      expect(decode(<String, Object?>{...validJson(), 'madeOn': 20261012}).getLeft().toNullable(), isA<BrokenBackupFailure>());
     });
 
     test('a missing table or a row that is not an object is broken', () {

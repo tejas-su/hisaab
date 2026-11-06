@@ -119,9 +119,7 @@ void main() {
 
       test('a second tap while backing up is dropped', () async {
         backups.gate = Completer<void>();
-        final YourHisaabBloc bloc = build();
-
-        bloc
+        build()
           ..add(const YourHisaabBackUpRequested())
           ..add(const YourHisaabBackUpRequested());
         await pumpEventQueue();

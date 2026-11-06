@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../../core/db/app_database.dart';
 import '../../core/notifications/bill_reminders.dart';
@@ -11,9 +10,9 @@ import '../domain/usecase/delete_everything.dart';
 
 /// Registers backup, restore and *Delete everything* (D139); needs the core services first.
 void registerBackupServices(GetIt getIt) {
+  final AppDatabase database = getIt<AppDatabase>();
   final BackupRepository backups = BackupRepositoryImpl(
-    // why: sqflite's own factory opens the in-memory scratch databases that check a backup.
-    source: SqfliteBackupLocalDataSource(database: getIt<AppDatabase>(), scratch: databaseFactory),
+    source: SqfliteBackupLocalDataSource(database: database, scratch: database.factory),
     files: const FilePickerBackupFiles(),
   );
   getIt

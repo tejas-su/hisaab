@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:expense_tracker/core/design/app_icon.dart';
 import 'package:expense_tracker/core/errors/failure.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/pay_rule.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/onboarding/data/mapper/onboarding_draft_mapper.dart';
 import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repository_impl.dart';
+import 'package:expense_tracker/onboarding/domain/entities/bill_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
 import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
 import 'package:expense_tracker/onboarding/onboarding.dart';
@@ -52,11 +54,12 @@ void main() {
     Size size = TestWindows.phone,
     double textScale = 1,
     List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
+    Widget? restore,
   }) async {
     await tester.runAsync(() => bloc.dispatch(const OnboardingStarted()));
     await pumpApp(
       tester,
-      BlocProvider<OnboardingBloc>.value(value: bloc, child: OnboardingPage(onFinished: () => finished++)),
+      BlocProvider<OnboardingBloc>.value(value: bloc, child: OnboardingPage(onFinished: () => finished++, restore: restore)),
       size: size,
       textScale: textScale,
       displayFeatures: displayFeatures,
@@ -76,6 +79,19 @@ void main() {
   }
 
   group('OnboardingPage (FR-ON)', () {
+
+    testWidgets('the first question carries the Restore a backup way out at the top (FR-ON-1, D139)', (WidgetTester tester) async {
+      await pump(tester, restore: const Text('restore-slot'));
+
+      expect(find.text('restore-slot'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('restore-slot')).dy, lessThan(tester.getTopLeft(find.text('How much money comes in each month?')).dy));
+    });
+
+    testWidgets('the way out fits a 320dp phone at 2× text', (WidgetTester tester) async {
+      await pump(tester, size: TestWindows.smallPhone, textScale: 2, restore: const Text('restore-slot'));
+
+      expect(tester.takeException(), isNull);
+    });
     testWidgets('⌫ drops the last digit and a long-press clears the income', (WidgetTester tester) async {
       await pump(tester);
       await tapKeys(tester, '450');
@@ -217,6 +233,57 @@ void main() {
       await settle(tester);
       expect(finished, 1);
     });
+
+    testWidgets('the bill chips start on the same edge as the question and the finish key', (WidgetTester tester) async {
+      services.preferences.draftJson = OnboardingDraftMapper.toJson(
+        OnboardingDraft(step: OnboardingStep.bills, income: Money.fromMajor(45000), payRule: const Option<PayRule>.of(MonthlyOnDay(4))),
+      );
+      await pump(tester);
+      final double questionLeft = tester.getTopLeft(find.text('Any fixed bills?')).dx;
+      final double keyLeft = tester.getTopLeft(find.byKey(const ValueKey<String>('finish-onboarding'))).dx;
+      final double chipLeft = tester.getTopLeft(find.byKey(const ValueKey<String>('bill-rent'))).dx;
+      expect(keyLeft, questionLeft);
+      expect(chipLeft, questionLeft);
+    });
+
+    testWidgets('the six bill chips sit in an even grid of two rows, edge to edge with the finish key', (WidgetTester tester) async {
+      services.preferences.draftJson = OnboardingDraftMapper.toJson(
+        OnboardingDraft(step: OnboardingStep.bills, income: Money.fromMajor(45000), payRule: const Option<PayRule>.of(MonthlyOnDay(4))),
+      );
+      await pump(tester);
+      Rect chip(String kind) => tester.getRect(find.byKey(ValueKey<String>('bill-$kind')));
+      final Rect key = tester.getRect(find.byKey(const ValueKey<String>('finish-onboarding')));
+      expect(<double>[chip('emi').top, chip('phone').top], everyElement(chip('rent').top));
+      expect(<double>[chip('schoolFees').top, chip('subscriptions').top], everyElement(chip('internet').top));
+      expect(chip('internet').top, greaterThan(chip('rent').bottom));
+      expect(<double>[chip('emi').width, chip('phone').width, chip('subscriptions').width], everyElement(closeTo(chip('rent').width, 0.01)));
+      expect(chip('internet').left, chip('rent').left);
+      expect(chip('phone').right, closeTo(key.right, 0.01));
+      expect(chip('subscriptions').right, closeTo(key.right, 0.01));
+    });
+
+    for (final (String name, Size size, double textScale) in <(String, Size, double)>[
+      ('a phone', TestWindows.phone, 1),
+      ('a small phone', TestWindows.smallPhone, 1),
+      ('a phone at 2× text', TestWindows.phone, 2),
+    ]) {
+      testWidgets('an added Subscriptions bill shows its amount in the grid, with no check, on $name', (WidgetTester tester) async {
+        services.preferences.draftJson = OnboardingDraftMapper.toJson(
+          OnboardingDraft(
+            step: OnboardingStep.bills,
+            income: Money.fromMajor(45000),
+            payRule: const Option<PayRule>.of(MonthlyOnDay(4)),
+            bills: <BillDraft>[BillDraft(kind: BillKind.subscriptions, amount: Money.fromMajor(12000), dueDay: 15)],
+          ),
+        );
+        await pump(tester, size: size, textScale: textScale);
+        final Finder chip = find.byKey(const ValueKey<String>('bill-subscriptions'));
+        expect(find.descendant(of: chip, matching: find.text('₹12,000 on day 15')), findsOneWidget);
+        expect(find.descendant(of: chip, matching: find.byType(AppIcon)), findsNothing);
+        expect(tester.getRect(find.byKey(const ValueKey<String>('bill-internet'))).height, tester.getRect(chip).height);
+        expect(tester.takeException(), isNull);
+      });
+    }
 
     testWidgets('a failed save keeps the answers and says so', (WidgetTester tester) async {
       services.preferences.draftJson = OnboardingDraftMapper.toJson(

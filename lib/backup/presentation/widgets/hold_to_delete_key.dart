@@ -45,8 +45,13 @@ class HoldToDeleteKey extends StatefulWidget {
 }
 
 class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProviderStateMixin {
-  late final AnimationController _fill = AnimationController(vsync: this, duration: HoldToDeleteKey.holdFor)
-    ..addStatusListener(_onFillStatus);
+  // why: preserve, not the default: with "Remove animations" on, Flutter would otherwise finish the
+  // fill almost at once, and a short tap would delete everything. The 2 s is the guard, not a look.
+  late final AnimationController _fill = AnimationController(
+    vsync: this,
+    duration: HoldToDeleteKey.holdFor,
+    animationBehavior: AnimationBehavior.preserve,
+  )..addStatusListener(_onFillStatus);
   bool _letGoEarly = false;
   bool _armed = false;
   Timer? _disarm;

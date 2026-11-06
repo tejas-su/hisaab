@@ -1,6 +1,6 @@
 # 34 · Data controls copy deck (Back up, Restore, Delete everything)
 
-Status: **proposal**. Nothing here is in `app_en.arb`, SPEC, UI_DESIGN or DECISIONS yet. Key names are proposals; the UX flow (drafted in parallel) decides which states ship.
+Status: **accepted (D139) and in `app_en.arb`.** Shipped choices: press-and-hold, so the typed-number strings (`deleteAllTypePrompt`, `deleteAllTypeLabel`, `deleteAllTypeSpoken`, `deleteAllTypeButton`) and `deleteAllHoldAction` were not added; the *Undo restore* row uses `restoreRevertRow` / `restoreRevertHint`. Strings added beyond this deck: `backUpBusy` "Backing up…", `restoreRevertLoses` "The {count} entries added since will go.", `deleteAllHoldFull` "Let go to delete", `deleteAllHoldArmed` "Double-tap again to delete everything", `deleteAllHoldHint` "Double-tap twice to delete", `deleteAllWorking` "Deleting…". Not built yet: `restoreOlderNote`, `backUpNoSpace`, `deleteAllBackupOld`, `aboutPrivacy` (the About group isn't built).
 
 **Sources:** the product brief "Your data" (its *User decisions, 2026-11-06* are binding: one *Delete everything*, JSON via the system picker, Auto Backup **off**, `file_picker`, restore keeps a pre-restore copy so it has Undo); case study [23](../../design-research/case-studies/23-backup-reset-delete.md); SPEC BR-16, FR-ON-1, FR-SE-4, FR-SE-5, E14; the `delete*`, `*Deleted`, `incomePrivacy`, `askPrivacyNote`, `moneyComingIn`, `savings` and `lookTile` strings in `lib/l10n/app_en.arb`.
 

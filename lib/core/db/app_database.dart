@@ -6,7 +6,7 @@ import 'migrations/migrations.dart';
 
 /// The app's single SQLite database, opened once at start-up and injected into data sources.
 final class AppDatabase {
-  AppDatabase._(this.db);
+  AppDatabase._(this.db, this.factory);
 
   /// File name inside the platform databases directory.
   static const String fileName = 'hisaab.db';
@@ -16,6 +16,10 @@ final class AppDatabase {
 
   /// The open connection; only data sources may use it.
   final Database db;
+
+  /// The factory that opened [db]; the backup feature opens its in-memory scratch databases with
+  /// it, so tests on `sqflite_common_ffi` get ffi scratch databases too (D139).
+  final DatabaseFactory factory;
 
   /// Opens (creating or upgrading as needed) the database at [path] through [factory].
   ///
@@ -32,6 +36,7 @@ final class AppDatabase {
       TaskEither<Failure, AppDatabase>.tryCatch(
         () async => AppDatabase._(
           await factory.openDatabase(path, options: _options(singleInstance: singleInstance)),
+          factory,
         ),
         (Object error, StackTrace _) => DatabaseFailure(error),
       );

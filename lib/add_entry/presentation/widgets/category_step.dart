@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
-import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/category_tile.dart';
 import '../../../core/widgets/hisaab_chip.dart';
@@ -15,6 +13,8 @@ import '../bloc/add_entry_event.dart';
 import '../bloc/add_entry_state.dart';
 import 'date_chip.dart';
 import 'new_category_tile.dart';
+import 'own_categories_full_line.dart';
+import 'own_categories_rule.dart';
 import 'note_chip.dart';
 import 'tray_step_title.dart';
 
@@ -68,7 +68,7 @@ class CategoryStep extends StatelessWidget {
           ),
           if (form.kind == EntryKind.spent && !form.canAddOwn) ...<Widget>[
             const SizedBox(height: HisaabSpacing.m),
-            _capLine(context, strings),
+            const OwnCategoriesFullLine(),
           ],
           const SizedBox(height: 18),
           // why: the chips span exactly the tile grid's width; the note takes what the date
@@ -114,7 +114,7 @@ class CategoryStep extends StatelessWidget {
             if (row > 0) const SizedBox(height: 10),
             // why: the user's own start on row 3, under a quiet label, so the 8 built-in tiles
             // keep their places and the eye knows where the user's own begin (D138).
-            if (row == _builtInRows && cells.length > _builtInRows * _columns) _ownRule(context, strings),
+            if (row == _builtInRows && cells.length > _builtInRows * _columns) const OwnCategoriesRule(),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -135,29 +135,6 @@ class CategoryStep extends StatelessWidget {
     final Category? category = cells[index];
     return category == null ? NewCategoryTile(onPressed: onNew) : _tile(strings, category, flashed, onPick);
   }
-
-  Widget _ownRule(BuildContext context, AppLocalizations strings) => ExcludeSemantics(
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, bottom: HisaabSpacing.s),
-          child: Row(
-            children: <Widget>[
-              Text(strings.ownCategoriesRule, style: Theme.of(context).textTheme.labelSmall),
-              const SizedBox(width: HisaabSpacing.s),
-              Expanded(child: Divider(height: 1, thickness: 1, color: context.colors.hairline)),
-            ],
-          ),
-        ),
-      );
-
-  Widget _capLine(BuildContext context, AppLocalizations strings) => Row(
-        key: const ValueKey<String>('own-categories-full'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          AppIcon(AppIcons.info, size: 18, color: context.colors.ink2),
-          const SizedBox(width: HisaabSpacing.s),
-          Expanded(child: Text(strings.ownCategoriesFull, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2))),
-        ],
-      );
 
   Widget _tile(AppLocalizations strings, Category category, int? flashed, ValueChanged<int>? onPick) {
     final String label = category.labelIn(strings);

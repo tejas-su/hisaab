@@ -24,7 +24,7 @@ class RestoreDialog extends StatelessWidget {
   /// The dialog's widest content, so the stacked keys and lines read well on a tablet.
   static const double maxWidth = 360;
 
-  /// The keys' block; the busy line takes the same height, so the dialog keeps its size.
+  /// The keys' block at normal text size; the busy line takes the same height.
   static const double keysHeight = DialogKey.height * 2 + HisaabSpacing.s;
 
   /// Shows the dialog over [context] for [bloc]'s pending backup.
@@ -85,7 +85,12 @@ class RestoreDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: HisaabSpacing.xl),
-              SizedBox(height: keysHeight, child: busy ? _working(context, strings) : _keys(context, strings)),
+              // why: a minimum, not a fixed height: the keys grow with large text, and the busy line
+              // takes their height so the dialog doesn't jump when Replace is tapped.
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: keysHeight),
+                child: busy ? SizedBox(height: keysHeight, child: _working(context, strings)) : _keys(context, strings),
+              ),
             ],
           ),
         ),
@@ -96,6 +101,7 @@ class RestoreDialog extends StatelessWidget {
   Widget _keys(BuildContext context, AppLocalizations strings) {
     final YourHisaabBloc bloc = context.read<YourHisaabBloc>();
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         DialogKey(
           key: const ValueKey<String>('restore-replace'),

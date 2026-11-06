@@ -52,9 +52,9 @@ void main() {
       final Future<void> expectation = expectLater(
         bloc.stream,
         emitsInOrder(<Matcher>[
-          const LaunchLoading(),
+          equals(const LaunchLoading()),
           isA<LaunchReady>().having((LaunchReady s) => s.generation, 'generation', 1),
-          const LaunchLoading(),
+          equals(const LaunchLoading()),
           isA<LaunchReady>().having((LaunchReady s) => s.generation, 'generation', 2),
         ]),
       );

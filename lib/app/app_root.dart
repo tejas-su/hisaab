@@ -22,11 +22,23 @@ class AppRoot extends StatelessWidget {
         child: BlocBuilder<LaunchBloc, LaunchState>(
           builder: (BuildContext context, LaunchState state) => switch (state) {
             LaunchLoading() => ColoredBox(color: context.colors.background, child: const SizedBox.expand()),
-            LaunchNeedsOnboarding() => AppRoutes.onboarding(getIt, onFinished: () => context.read<LaunchBloc>().add(const LaunchOnboardingFinished())),
-            LaunchReady(:final bool assemble, :final int generation) =>
-              KeyedSubtree(key: ValueKey<int>(generation), child: AppRoutes.main(getIt, assemble: assemble)),
+            LaunchNeedsOnboarding() => AppRoutes.onboarding(
+                getIt,
+                onFinished: () => context.read<LaunchBloc>().add(const LaunchOnboardingFinished()),
+                onRestored: () => _reload(context),
+              ),
+            LaunchReady(:final bool assemble, :final int generation) => KeyedSubtree(
+                key: ValueKey<int>(generation),
+                child: AppRoutes.main(getIt, assemble: assemble, onDataReplaced: () => _reload(context)),
+              ),
             LaunchFailed() => const StartupFailureView(),
           },
         ),
       );
+
+  /// Rebuilds the app on the data a restore, an undo or *Delete everything* left (D139).
+  static void _reload(BuildContext context) {
+    context.read<LaunchBloc>().add(const LaunchDataReplaced());
+    context.read<ThemeBloc>().add(const ThemeLoadRequested());
+  }
 }

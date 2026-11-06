@@ -45,7 +45,7 @@ Every setting the user must think about is friction. The app decides; power user
 3. **Add tray:** amount keypad, then category tiles; tapping a tile saves (FR-AD).
 4. **Spends:** Ask AI card, pace chart, where-it-went bars (no donut), up to 3 insights, and *See every entry* for the full day-grouped history (FR-SP).
 5. **Ask AI:** goal, period, preview, copy/share/open ChatGPT (FR-AI).
-6. **Settings:** money, categories, look, data (FR-SE).
+6. **Settings:** money, categories, look, Your hisaab (FR-SE, D139).
 
 Navigation: floating dock with **Home · (+ Add) · Spends**. Ask AI is the top card on Spends. The full history opens from Home ("See all") or Spends. Settings is at the top right of Home. See UI_DESIGN.md §4.
 
@@ -121,7 +121,7 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 | `transactions` | id, amount_minor, currency, kind (in/out/save/card), category_id, date, note NULL, recurring_id NULL, created_at |
 | `recurring` | id, label, amount_minor, currency, kind (in/out/save), category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active, icon NULL, amount_mode (fixed/varies/card) |
 | `recurring_skips` | recurring_id, date (primary key together): a month a changing bill didn't go out |
-| `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `pay_switches` (JSON list of earlier pay rules, D140) (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). The pay rule lives on the income `recurring` row (DECISIONS D20) |
+| `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `pay_switches` (JSON list of earlier pay rules, D140) (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). Backup-owned keys, local to the phone and never written into a backup: `last_backup`, `restore_snapshot` (the replaced data's backup JSON, kept 7 days for *Undo restore*), `restored_at` (D139). The pay rule lives on the income `recurring` row (DECISIONS D20) |
 
 Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transactions(recurring_id, date)`.
 
@@ -170,8 +170,8 @@ Rules:
 - Other platform folders (ios/macos/linux/windows/web) left untouched but not built or tested.
 
 ## 11. Dependencies
-Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it.
-To add when the milestone needs them: `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `file_picker` (M6), `home_widget` + `quick_settings_tile` (later).
+Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it. `file_picker` for the system *Save to* and *Open* screens of Back up and Restore (owner-approved, D139); it adds no network permission.
+To add when the milestone needs them: `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `home_widget` + `quick_settings_tile` (later).
 Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/` (M0).
 
 ---
@@ -186,7 +186,7 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | M3 | *This week* toggle (FR-HO-2), "you saved yesterday" (BR-8), auto-suggested budgets (BR-12: `BudgetSuggester`, `GetSuggestedLimits`, `ApplySuggestedLimits`, category limits saved; the "Use these limits?" offer is shown by Spends in M4 as BR-14 insight #4) | Weekly view and morning note work |
 | M4 ✓ | Spends: pace chart (a painter, not `fl_chart`), *Where it went* with limits, insights (BR-14), *Every entry* (FR-SP-6); Home's *See all* and over card. The Ask AI card comes with M5 and *Set a limit* waits for a design (DECISIONS D49–D54) | vs-last-cycle shown, 3 tips max |
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |
-| M6 | CSV/JSON backup & restore, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall; TalkBack reads every control |
+| M6 | JSON backup & restore, Delete everything (D139), CSV export, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall through a backup file; TalkBack reads every control |
 
 Tests: unit tests for all of `domain/` and `core/money`, `core/time`; widget tests for M1 flows.
 

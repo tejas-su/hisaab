@@ -54,6 +54,60 @@ void main() {
       expect(opened, 1);
     });
 
+    testWidgets('shows Your hisaab under Look when the route gives it (FR-SE-4, D139)', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        SettingsPage(
+          incomeBloc: incomeBloc,
+          onOpenIncome: (Income _) {},
+          onOpenBills: () {},
+          onOpenSavings: () {},
+          themeBloc: themeBloc,
+          yourHisaab: const Text('your-hisaab-slot'),
+        ),
+      );
+
+      expect(find.text('Your hisaab'), findsOneWidget);
+      expect(find.text('your-hisaab-slot'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('Your hisaab')).dy, greaterThan(tester.getTopLeft(find.text('Look')).dy));
+    });
+
+    testWidgets('shows Categories between Look and Your hisaab, which opens (FR-SE-2, D138)', (WidgetTester tester) async {
+      int opened = 0;
+      await pumpApp(
+        tester,
+        SettingsPage(
+          incomeBloc: incomeBloc,
+          onOpenIncome: (Income _) {},
+          onOpenBills: () {},
+          onOpenSavings: () {},
+          themeBloc: themeBloc,
+          onOpenCategories: () => opened++,
+          yourHisaab: const Text('your-hisaab-slot'),
+        ),
+      );
+
+      final Finder row = find.byKey(const ValueKey<String>('open-categories'));
+      await tester.ensureVisible(row);
+      await tester.pumpAndSettle();
+      final double categories = tester.getTopLeft(row).dy;
+      expect(categories, greaterThan(tester.getTopLeft(find.text('Look')).dy));
+      expect(categories, lessThan(tester.getTopLeft(find.text('Your hisaab')).dy));
+      await tester.tap(row);
+      expect(opened, 1);
+    });
+
+    testWidgets('leaves Categories out when the route gives no way to open it', (WidgetTester tester) async {
+      await pumpApp(tester, page());
+      expect(find.byKey(const ValueKey<String>('open-categories')), findsNothing);
+    });
+
+    testWidgets('leaves Your hisaab out when the route gives none', (WidgetTester tester) async {
+      await pumpApp(tester, page());
+
+      expect(find.text('Your hisaab'), findsNothing);
+    });
+
     testWidgets('lays out on a 320dp phone at 2× text', (WidgetTester tester) async {
       await pumpApp(tester, page(), size: TestWindows.smallPhone, textScale: 2);
       expect(tester.takeException(), isNull);

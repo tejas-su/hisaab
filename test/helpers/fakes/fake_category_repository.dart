@@ -93,11 +93,19 @@ final class FakeCategoryRepository implements CategoryRepository {
     return TaskEither<Failure, Unit>.right(unit);
   }
 
+  /// When set, [all] fails once this many reads have succeeded (a list that won't reload).
+  int? readsBeforeFailure;
+  int _reads = 0;
+
   @override
   TaskEither<Failure, List<Category>> all() {
+    final int? allowed = readsBeforeFailure;
+    if (allowed != null && _reads++ >= allowed) {
+      return TaskEither<Failure, List<Category>>.left(DatabaseFailure('gone'));
+    }
     final Failure? current = failure;
     return current == null
-        ? TaskEither<Failure, List<Category>>.right(categories)
+        ? TaskEither<Failure, List<Category>>.right(List<Category>.of(categories))
         : TaskEither<Failure, List<Category>>.left(current);
   }
 }

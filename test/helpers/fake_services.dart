@@ -1,4 +1,5 @@
 import 'package:expense_tracker/ask_ai/ask_ai.dart';
+import 'package:expense_tracker/backup/backup.dart';
 import 'package:expense_tracker/core/design/haptics.dart';
 import 'package:expense_tracker/core/notifications/bill_reminders.dart';
 import 'package:expense_tracker/core/time/clock.dart';
@@ -11,6 +12,7 @@ import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repo
 import 'package:expense_tracker/settings/settings.dart';
 import 'package:get_it/get_it.dart';
 
+import 'fakes/fake_backup_repository.dart';
 import 'fakes/fake_ai_handoff.dart';
 import 'fakes/fake_app_preferences_repository.dart';
 import 'fakes/fake_bill_reminders.dart';
@@ -39,6 +41,7 @@ final class FakeServices {
   final FakeAiHandoff handoff = FakeAiHandoff();
   final FakeBillReminders reminders = FakeBillReminders();
   final FakeClock clock = FakeClock(WorkedExample.now);
+  final FakeBackupRepository backups = FakeBackupRepository();
 
   GetCycleSummary get getCycleSummary => GetCycleSummary(
         ledger: ledger,
@@ -157,6 +160,10 @@ final class FakeServices {
     )
     ..registerSingleton<GetSuggestedLimits>(getSuggestedLimits)
     ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: categories))
+    ..registerSingleton<AddOwnCategory>(AddOwnCategory(categories: categories))
+    ..registerSingleton<RenameCategory>(RenameCategory(categories: categories))
+    ..registerSingleton<ChangeCategoryIcon>(ChangeCategoryIcon(categories: categories))
+    ..registerSingleton<SetCategoryHidden>(SetCategoryHidden(categories: categories))
     ..registerSingleton<GetSpendsOverview>(getSpendsOverview)
     ..registerSingleton<GetPromptInput>(
       GetPromptInput(
@@ -169,6 +176,8 @@ final class FakeServices {
       ),
     )
     ..registerSingleton<AiHandoff>(handoff)
+    ..registerSingleton<BackupRepository>(backups)
+    ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: reminders))
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(
       CompleteOnboarding(

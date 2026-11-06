@@ -26,6 +26,9 @@ abstract final class AppIcons {
   static const AppIconData share = HugeIcons.strokeRoundedShare08;
   static const AppIconData askAi = HugeIcons.strokeRoundedAiChat02;
   static const AppIconData delete = HugeIcons.strokeRoundedDelete02;
+
+  /// Hides one of the user's own categories (FR-SE-2, D138); hiding is not deleting.
+  static const AppIconData hide = HugeIcons.strokeRoundedViewOffSlash;
   static const AppIconData limit = HugeIcons.strokeRoundedTarget01;
   static const AppIconData recurring = HugeIcons.strokeRoundedRepeat;
   static const AppIconData themeMatchPhone = HugeIcons.strokeRoundedSmartPhone01;

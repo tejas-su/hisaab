@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/widgets/adaptive_split.dart';
@@ -54,23 +53,20 @@ class BillsStep extends StatelessWidget {
       controls: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Wrap(
-            spacing: HisaabSpacing.s,
-            runSpacing: HisaabSpacing.s,
-            children: <Widget>[
-              // why: onboarding asks for a bill's amount once and posts it every month, so only the
-              // fixed bills are offered; changing and card bills live in Settings (D125).
-              for (final BillKind kind in BillKind.values.where((BillKind kind) => kind.amountMode == AmountMode.fixed))
-                HisaabChip(
-                  key: ValueKey<String>('bill-${kind.name}'),
-                  label: strings.billName(kind.name),
-                  icon: added.containsKey(kind) ? AppIcons.check : AppIcons.add,
-                  detail: _detail(context, strings, added[kind]),
-                  selected: added.containsKey(kind),
-                  onPressed: () => bloc.add(OnboardingBillOpened(kind)),
-                ),
-            ],
-          ),
+          for (final List<BillKind> row in _rows) ...<Widget>[
+            if (row != _rows.first) const SizedBox(height: HisaabSpacing.s),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  for (final BillKind kind in row) ...<Widget>[
+                    if (kind != row.first) const SizedBox(width: HisaabSpacing.s),
+                    Expanded(child: _chip(context, strings, kind, added[kind])),
+                  ],
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: HisaabSpacing.xl),
           SizedBox(
             width: double.infinity,
@@ -84,6 +80,25 @@ class BillsStep extends StatelessWidget {
       ),
     );
   }
+
+  // why: onboarding asks for a bill's amount once and posts it every month, so only the fixed
+  // bills are offered; changing and card bills live in Settings (D125). Three to a row keeps the
+  // six in two even rows on a phone.
+  static final List<BillKind> _fixed =
+      BillKind.values.where((BillKind kind) => kind.amountMode == AmountMode.fixed).toList(growable: false);
+  static final List<List<BillKind>> _rows = <List<BillKind>>[_fixed.sublist(0, 3), _fixed.sublist(3)];
+
+  // why: an equal third of a phone is too narrow for a leading icon or a check beside
+  // "Subscriptions"; the ink fill and the amount line say a bill is added.
+  Widget _chip(BuildContext context, AppLocalizations strings, BillKind kind, BillDraft? bill) => HisaabChip(
+        key: ValueKey<String>('bill-${kind.name}'),
+        label: strings.billName(kind.name),
+        detail: _detail(context, strings, bill),
+        selected: bill != null,
+        checksWhenSelected: false,
+        expand: true,
+        onPressed: () => context.read<OnboardingBloc>().add(OnboardingBillOpened(kind)),
+      );
 
   static String? _detail(BuildContext context, AppLocalizations strings, BillDraft? bill) =>
       bill == null ? null : strings.billDetail(context.money.format(bill.amount), bill.dueDay);
