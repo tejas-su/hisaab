@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/layout/window_class.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../l10n/gen/app_localizations.dart';
@@ -18,7 +19,8 @@ import 'spends_card.dart';
 ///
 /// Without [pace] (no money came in) only the total shows. TalkBack reads the card as one
 /// sentence. [showToday] marks today on the current cycle, with the gap to the steady line and the
-/// forecast (D133). [cycle] names the first and last days under the chart.
+/// forecast, said in a line under the key (D133, D135). [cycle] names the first and last days
+/// under the chart.
 class PaceCard extends StatelessWidget {
   const PaceCard({super.key, required this.spent, required this.pace, required this.cycle, required this.showToday});
 
@@ -27,8 +29,10 @@ class PaceCard extends StatelessWidget {
   final PayCycle cycle;
   final bool showToday;
 
-  static const double _chartMinHeight = 160;
-  static const double _chartMaxHeight = 200;
+  static const double _chartHeightShare = 0.6;
+  static const double _chartMinHeight = 168;
+  static const double _chartMaxHeight = 216;
+  static const double _chartShortWindowHeight = 160;
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +49,16 @@ class PaceCard extends StatelessWidget {
           children: <Widget>[
             _total(context, strings, series),
             if (series != null) ...<Widget>[
-              const SizedBox(height: HisaabSpacing.s),
-              _chart(context, copy, series),
+              const SizedBox(height: HisaabSpacing.m),
+              _chart(context, series),
+              const SizedBox(height: HisaabSpacing.xs),
               _dates(context, copy, strings, series),
-              const SizedBox(height: HisaabSpacing.s),
-              PaceLegend(verdict: series.verdict, showForecast: series.forecastByDay.isNotEmpty),
+              const SizedBox(height: HisaabSpacing.l),
+              PaceLegend(
+                verdict: series.verdict,
+                showForecast: series.forecastByDay.isNotEmpty,
+                line: copy.line(series, showToday: showToday),
+              ),
             ],
           ],
         ),
@@ -76,23 +85,27 @@ class PaceCard extends StatelessWidget {
     );
   }
 
-  // why: a fixed height flattens the slope on wide windows; half the width keeps the gap to the
-  // steady line readable, and the cap keeps "Where it went" in view on a phone (D69).
-  Widget _chart(BuildContext context, PaceCardCopy copy, PaceSeries series) => LayoutBuilder(
+  // why: 0.6 of the width steepens the slope near today on a phone in portrait; the floor keeps a
+  // ₹3,000 gap visible as a bracket, the cap keeps "Where it went" on a phone's first screen, and a
+  // short window (a phone on its side) keeps the plot low so the page still has room (D135).
+  Widget _chart(BuildContext context, PaceSeries series) => LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) => SizedBox(
           key: const ValueKey<String>('pace-chart'),
-          height: (constraints.maxWidth / 2).clamp(_chartMinHeight, _chartMaxHeight),
+          height: _chartHeight(context, constraints.maxWidth),
           width: double.infinity,
-          child: CustomPaint(painter: _painter(context, copy, series)),
+          child: CustomPaint(painter: _painter(context, series)),
         ),
       );
 
-  PaceChartPainter _painter(BuildContext context, PaceCardCopy copy, PaceSeries series) => PaceChartPainter(
+  static double _chartHeight(BuildContext context, double width) => context.layout.heightClass == HeightClass.compact
+      ? _chartShortWindowHeight
+      : (width * _chartHeightShare).clamp(_chartMinHeight, _chartMaxHeight);
+
+  PaceChartPainter _painter(BuildContext context, PaceSeries series) => PaceChartPainter(
         series: series,
         axisLabels: _axisLabels(context, series),
         labelStyle: _labelStyle(context),
-        markStyle: _markStyle(context),
-        words: copy.chartWords(series, showToday: showToday),
+        textScaler: MediaQuery.textScalerOf(context),
         colors: (
           ink: context.colors.ink,
           ink2: context.colors.ink2,
@@ -108,7 +121,6 @@ class PaceCard extends StatelessWidget {
         end: copy.date(cycle.end),
         today: strings.paceToday,
         todayAt: showToday ? series.spentByDay.length / series.cycleDays : null,
-        axisLabels: _axisLabels(context, series),
         labelStyle: _labelStyle(context).copyWith(color: context.colors.ink2),
         todayStyle: _markStyle(context),
       );

@@ -6,10 +6,10 @@ import 'pace_strokes.dart';
 /// The pace chart's date row: the cycle's first and last days, and *Today* under today's point
 /// (FR-SP-3, D133). A date that would touch *Today* gives way to it.
 ///
-/// It sits under the plot, so the plot keeps its height (D69); [axisLabels] and [labelStyle] are
-/// the chart's, so the row lines up with the plot's edges. [todayAt] is today's end-of-day
-/// position as a share of the cycle, or null on a past cycle. Hidden from TalkBack: the card
-/// reads as one sentence.
+/// It sits under the plot, so the plot keeps its height (D135), and spans the plot's width: the
+/// card's left edge to the plot's right inset. [todayAt] is today's end-of-day position as a share
+/// of the cycle, or null on a past cycle. The text grows with the phone's text size. Hidden from
+/// TalkBack: the card reads as one sentence.
 class PaceDates extends StatelessWidget {
   const PaceDates({
     super.key,
@@ -17,7 +17,6 @@ class PaceDates extends StatelessWidget {
     required this.end,
     required this.today,
     required this.todayAt,
-    required this.axisLabels,
     required this.labelStyle,
     required this.todayStyle,
   });
@@ -26,13 +25,13 @@ class PaceDates extends StatelessWidget {
   final String end;
   final String today;
   final double? todayAt;
-  final List<String> axisLabels;
   final TextStyle labelStyle;
   final TextStyle todayStyle;
 
   @override
   Widget build(BuildContext context) {
-    final TextPainter probe = PaceStrokes.layout(today, todayStyle);
+    final TextScaler textScaler = MediaQuery.textScalerOf(context);
+    final TextPainter probe = PaceStrokes.layout(today, todayStyle, textScaler);
     final double height = probe.height;
     probe.dispose();
     return ExcludeSemantics(
@@ -40,38 +39,37 @@ class PaceDates extends StatelessWidget {
         key: const ValueKey<String>('pace-dates'),
         height: height,
         width: double.infinity,
-        child: CustomPaint(painter: _PaceDatesPainter(this, PaceChartPainter.plotLeft(axisLabels, labelStyle))),
+        child: CustomPaint(painter: _PaceDatesPainter(this, textScaler)),
       ),
     );
   }
 }
 
 class _PaceDatesPainter extends CustomPainter {
-  const _PaceDatesPainter(this.row, this.plotLeft);
+  const _PaceDatesPainter(this.row, this.textScaler);
 
   final PaceDates row;
-  final double plotLeft;
+  final TextScaler textScaler;
 
-  // why: matches the chart's right inset, so *3 Nov* ends where the plot does.
-  static const double _plotInset = 6;
   static const double _minGap = 8;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double right = size.width - _plotInset;
-    final TextPainter start = PaceStrokes.layout(row.start, row.labelStyle);
-    final TextPainter end = PaceStrokes.layout(row.end, row.labelStyle);
+    // why: matches the chart's right inset, so *3 Nov* ends where the plot does.
+    final double right = size.width - PaceChartPainter.inset;
+    final TextPainter start = PaceStrokes.layout(row.start, row.labelStyle, textScaler);
+    final TextPainter end = PaceStrokes.layout(row.end, row.labelStyle, textScaler);
     final double? at = row.todayAt;
     Rect? today;
     if (at != null) {
-      final TextPainter label = PaceStrokes.layout(row.today, row.todayStyle);
-      final double x = plotLeft + (right - plotLeft) * at - label.width / 2;
-      today = Offset(PaceStrokes.within(x, label.width, plotLeft, right), 0) & label.size;
+      final TextPainter label = PaceStrokes.layout(row.today, row.todayStyle, textScaler);
+      final double x = right * at - label.width / 2;
+      today = Offset(PaceStrokes.within(x, label.width, 0, right), 0) & label.size;
       label
         ..paint(canvas, today.topLeft)
         ..dispose();
     }
-    final Rect startBox = Offset(plotLeft, 0) & start.size;
+    final Rect startBox = Offset.zero & start.size;
     final Rect endBox = Offset(right - end.width, 0) & end.size;
     if (today == null || startBox.right + _minGap <= today.left) {
       start.paint(canvas, startBox.topLeft);
@@ -85,7 +83,7 @@ class _PaceDatesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PaceDatesPainter oldDelegate) =>
-      oldDelegate.plotLeft != plotLeft ||
+      oldDelegate.textScaler != textScaler ||
       oldDelegate.row.start != row.start ||
       oldDelegate.row.end != row.end ||
       oldDelegate.row.today != row.today ||

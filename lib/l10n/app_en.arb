@@ -63,33 +63,6 @@
       }
     }
   },
-  "paceGapUnder": "{amount} under",
-  "@paceGapUnder": {
-    "description": "Pace chart label beside today's point: how far spending is below the steady line (D133)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "paceGapOver": "{amount} over",
-  "@paceGapOver": {
-    "description": "Pace chart label beside today's point: how far spending is above the steady line (D133)",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "paceRunsOut": "runs out {date}",
-  "@paceRunsOut": {
-    "description": "Pace chart label where the forecast line meets the money there is to spend, e.g. 'runs out 1 Nov' (D133)",
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "paceAtThisPace": "At this pace",
   "@paceAtThisPace": {
     "description": "Pace chart legend key for the dashed forecast line (D133)"
@@ -98,36 +71,36 @@
   "@paceToday": {
     "description": "Pace chart date row: today's mark (D133)"
   },
-  "paceGapUnderSpoken": "{amount} under steady pace.",
-  "@paceGapUnderSpoken": {
-    "description": "TalkBack, after paceSpoken: how far spending is below the steady line (D133)",
+  "paceGapUnder": "{amount} under steady pace.",
+  "@paceGapUnder": {
+    "description": "How far spending is below the steady line: the line under the pace chart (with ₹) and TalkBack after paceSpoken (with rupees) (D133, D135)",
     "placeholders": {
       "amount": {
         "type": "String"
       }
     }
   },
-  "paceGapOverSpoken": "{amount} over steady pace.",
-  "@paceGapOverSpoken": {
-    "description": "TalkBack, after paceSpoken: how far spending is above the steady line (D133)",
+  "paceGapOver": "{amount} over steady pace.",
+  "@paceGapOver": {
+    "description": "How far spending is above the steady line: the line under the pace chart (with ₹) and TalkBack after paceSpoken (with rupees) (D133, D135)",
     "placeholders": {
       "amount": {
         "type": "String"
       }
     }
   },
-  "paceSpareSpoken": "At this pace about {amount} spare.",
-  "@paceSpareSpoken": {
-    "description": "TalkBack, after the gap: the forecast's money left at the cycle's end, rounded to ₹100 (D133)",
+  "paceSpare": "At this pace about {amount} spare.",
+  "@paceSpare": {
+    "description": "After the gap, on the line under the pace chart and in TalkBack: the forecast's money left at the cycle's end, rounded to ₹100 (D133, D135)",
     "placeholders": {
       "amount": {
         "type": "String"
       }
     }
   },
-  "paceRunsOutSpoken": "At this pace it runs out on {date}.",
-  "@paceRunsOutSpoken": {
-    "description": "TalkBack, after the gap: the day the forecast says the money runs out (D133)",
+  "paceRunsOut": "At this pace it runs out on {date}.",
+  "@paceRunsOut": {
+    "description": "After the gap, on the line under the pace chart and in TalkBack: the day the forecast says the money runs out (D133, D135)",
     "placeholders": {
       "date": {
         "type": "String"

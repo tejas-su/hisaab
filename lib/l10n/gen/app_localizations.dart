@@ -199,24 +199,6 @@ abstract class AppLocalizations {
   /// **'{spent} spent so far of {budget}. {verdict}.'**
   String paceSpoken(String spent, String budget, String verdict);
 
-  /// Pace chart label beside today's point: how far spending is below the steady line (D133)
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} under'**
-  String paceGapUnder(String amount);
-
-  /// Pace chart label beside today's point: how far spending is above the steady line (D133)
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} over'**
-  String paceGapOver(String amount);
-
-  /// Pace chart label where the forecast line meets the money there is to spend, e.g. 'runs out 1 Nov' (D133)
-  ///
-  /// In en, this message translates to:
-  /// **'runs out {date}'**
-  String paceRunsOut(String date);
-
   /// Pace chart legend key for the dashed forecast line (D133)
   ///
   /// In en, this message translates to:
@@ -229,29 +211,29 @@ abstract class AppLocalizations {
   /// **'Today'**
   String get paceToday;
 
-  /// TalkBack, after paceSpoken: how far spending is below the steady line (D133)
+  /// How far spending is below the steady line: the line under the pace chart (with ₹) and TalkBack after paceSpoken (with rupees) (D133, D135)
   ///
   /// In en, this message translates to:
   /// **'{amount} under steady pace.'**
-  String paceGapUnderSpoken(String amount);
+  String paceGapUnder(String amount);
 
-  /// TalkBack, after paceSpoken: how far spending is above the steady line (D133)
+  /// How far spending is above the steady line: the line under the pace chart (with ₹) and TalkBack after paceSpoken (with rupees) (D133, D135)
   ///
   /// In en, this message translates to:
   /// **'{amount} over steady pace.'**
-  String paceGapOverSpoken(String amount);
+  String paceGapOver(String amount);
 
-  /// TalkBack, after the gap: the forecast's money left at the cycle's end, rounded to ₹100 (D133)
+  /// After the gap, on the line under the pace chart and in TalkBack: the forecast's money left at the cycle's end, rounded to ₹100 (D133, D135)
   ///
   /// In en, this message translates to:
   /// **'At this pace about {amount} spare.'**
-  String paceSpareSpoken(String amount);
+  String paceSpare(String amount);
 
-  /// TalkBack, after the gap: the day the forecast says the money runs out (D133)
+  /// After the gap, on the line under the pace chart and in TalkBack: the day the forecast says the money runs out (D133, D135)
   ///
   /// In en, this message translates to:
   /// **'At this pace it runs out on {date}.'**
-  String paceRunsOutSpoken(String date);
+  String paceRunsOut(String date);
 
   /// No description provided for @whereItWent.
   ///

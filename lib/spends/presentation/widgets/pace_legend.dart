@@ -8,13 +8,17 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/pace_series.dart';
 
-/// The pace chart's key: *You*, *Steady pace*, *At this pace* when [showForecast], and the
-/// verdict with its glyph (FR-SP-3, D77, D133). It wraps, so the longer words never clip.
+/// The pace chart's key: *You*, *Steady pace* and *At this pace* when [showForecast] on one row,
+/// then the verdict with its glyph, then [line], the gap and forecast in words, when given
+/// (FR-SP-3, D77, D133, D135). The keys wrap, so the longer words never clip.
 class PaceLegend extends StatelessWidget {
-  const PaceLegend({super.key, required this.verdict, required this.showForecast});
+  const PaceLegend({super.key, required this.verdict, required this.showForecast, this.line});
 
   final PaceVerdict verdict;
   final bool showForecast;
+
+  /// "₹7,042 under steady pace. At this pace about ₹9,300 spare."; null on a past cycle.
+  final String? line;
 
   static const double _markWidth = 16;
   static const double _markHeight = 2.5;
@@ -24,19 +28,30 @@ class PaceLegend extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextStyle? caption = Theme.of(context).textTheme.bodySmall;
     final bool below = verdict == PaceVerdict.belowPace;
-    return Wrap(
-      spacing: HisaabSpacing.l,
-      runSpacing: HisaabSpacing.xs,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    final String? words = line;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        _key(Container(width: _markWidth, height: _markHeight, color: context.colors.ink), Text(strings.paceYou, style: caption)),
-        _key(_mark(_KeyDashes(context.colors.ink2, dash: 0, gap: 4)), Text(strings.paceSteady, style: caption)),
-        if (showForecast)
-          _key(_mark(_KeyDashes(context.colors.ink, dash: 6, gap: 5)), Text(strings.paceAtThisPace, style: caption)),
+        Wrap(
+          spacing: HisaabSpacing.m,
+          runSpacing: HisaabSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: <Widget>[
+            _key(Container(width: _markWidth, height: _markHeight, color: context.colors.ink), Text(strings.paceYou, style: caption)),
+            _key(_mark(_KeyDashes(context.colors.ink2, dash: 0, gap: 4)), Text(strings.paceSteady, style: caption)),
+            if (showForecast)
+              _key(_mark(_KeyDashes(context.colors.ink, dash: 6, gap: 5)), Text(strings.paceAtThisPace, style: caption)),
+          ],
+        ),
+        const SizedBox(height: HisaabSpacing.s),
         _key(
           AppIcon(below ? AppIcons.onTrack : AppIcons.alert, size: 16),
           Text(below ? strings.belowPace : strings.abovePace, style: HisaabType.emphasized(caption)?.copyWith(color: context.colors.ink)),
         ),
+        if (words != null) ...<Widget>[
+          const SizedBox(height: HisaabSpacing.xs),
+          Text(words, style: caption?.copyWith(color: context.colors.ink)),
+        ],
       ],
     );
   }

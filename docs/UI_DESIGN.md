@@ -366,11 +366,11 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - Text: "Ask an AI about October" in `bodyLarge`, with "You'll see exactly what it gets." below in `bodySmall` `ink2`. TalkBack reads both as one button (D70).
 - **Pace chart:**
   - A solid `ink` line for your spending and a dotted `ink2` line for steady pace. The steady line steps up on each bill's day, so a bill on the spending line meets a matching step and doesn't read as overspending (D129).
-  - The y-axis is fixed and labelled (₹0 / ₹20K / ₹40K), avoiding Apple Card's rescaling problem.
-  - Its height is half the card's width, kept between 160 and 200 (D69).
-  - On the current cycle (D133, mockup 31): an `ink2` 1.5dp bracket from today's dot to the steady line with the gap ("₹7,042 under") beside it, on the `surface` colour so it reads over the lines; a dashed `ink` 2dp line (6 on 5) for *At this pace*, ending in "about ₹9,300 spare", or in an `ink` ring and "runs out 1 Nov" where it meets the money there is to spend. Marks on the plot are `labelSmall` 600 `ink`.
-  - Under the plot, a `labelSmall` date row: the cycle's first and last days in `ink2`, and *Today* (600, `ink`) under today's dot; a date that would touch *Today* is dropped.
-  - A verdict: "Spending slower" or "Spending faster" (D77). The legend wraps, so the longer words never clip.
+  - The y-axis is fixed, avoiding Apple Card's rescaling problem. Its labels (₹20K / ₹40K) sit just above their gridlines at the plot's left edge, in `labelSmall` `ink2`, painted under the lines; ₹0 is the unlabelled baseline. The plot takes the card's full width (D135).
+  - Its height is 0.6 of the card's width, kept between 168 and 216; 160 in a short window (a phone on its side). 12 of room above the plot, `m` under the total (D135).
+  - On the current cycle (D133, mockup 31): an `ink2` 1.5dp bracket from today's dot to the steady line; a dashed `ink` 2dp line (6 on 5) for *At this pace*, ending at the cycle's end or in an `ink` ring where it meets the money there is to spend. No amounts are painted on the plot (D135).
+  - `xs` under the plot, a `labelSmall` date row: the cycle's first and last days in `ink2`, and *Today* (600, `ink`) under today's dot; a date that would touch *Today* is dropped.
+  - `l` under the dates, the key on one row (it wraps, so the longer words never clip), then `s` below it the verdict, "Spending slower" or "Spending faster" (D77), then `xs` below it on the current cycle one `bodySmall` `ink` line with the gap and forecast: "₹7,042 under steady pace. At this pace about ₹9,300 spare." (D135).
 - **Where it went:**
   - The title row ends in *See all*, built as Home's Today header: an `ink` `labelLarge` 15 text button, no inset, label ending on the rows' content edge, on the title's baseline, in a 48dp target. TalkBack reads "Every entry in October". It opens every entry of the shown cycle, so the way in stays near the top however many rows and insights follow; there is no chip at the end of the page (D131). A cycle with nothing spent has no card and keeps the *See every entry* chip under its sentence.
   - Rows sorted by amount: icon well, name, %, ₹, and an `ink` bar on a `sunk` track. Bars, not donuts: people judge length more accurately than angle.

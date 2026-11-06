@@ -1,9 +1,11 @@
+import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
 import 'package:expense_tracker/core/money/money.dart';
 import 'package:expense_tracker/core/time/calendar_date.dart';
 import 'package:expense_tracker/core/time/pay_cycle.dart';
 import 'package:expense_tracker/ledger/ledger.dart';
 import 'package:expense_tracker/spends/domain/entities/pace_series.dart';
 import 'package:expense_tracker/spends/presentation/widgets/pace_card.dart';
+import 'package:expense_tracker/spends/presentation/widgets/pace_chart_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -57,6 +59,7 @@ void main() {
       await pump(tester, _pace(WorkedExample.entries));
       expect(find.text('At this pace'), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('pace-dates')), findsOneWidget);
+      expect(find.text('₹7,042 under steady pace. At this pace about ₹9,300 spare.'), findsOneWidget);
       await expectSpoken(
         tester,
         '27,570 rupees spent so far of 45,000 rupees. Spending slower. 7,042 rupees under steady pace. '
@@ -67,6 +70,7 @@ void main() {
     testWidgets('spending fast: over the steady line, and it runs out on 1 Nov', (WidgetTester tester) async {
       await pump(tester, _pace(_fast), spent: 36570);
       expect(find.text('Spending faster'), findsOneWidget);
+      expect(find.text('₹1,958 over steady pace. At this pace it runs out on 1 Nov.'), findsOneWidget);
       await expectSpoken(
         tester,
         '36,570 rupees spent so far of 45,000 rupees. Spending faster. 1,958 rupees over steady pace. '
@@ -77,6 +81,7 @@ void main() {
     testWidgets('rent day: too early to forecast, so no forecast key or sentence', (WidgetTester tester) async {
       await pump(tester, _pace(<Entry>[_spent(8200, _rentDay, recurringId: 2)], asOf: _rentDay), spent: 8200);
       expect(find.text('At this pace'), findsNothing);
+      expect(find.text('₹2,296 under steady pace.'), findsOneWidget);
       await expectSpoken(tester, '8,200 rupees spent so far of 45,000 rupees. Spending slower. 2,296 rupees under steady pace.');
     });
 
@@ -94,6 +99,7 @@ void main() {
     testWidgets('a past cycle reads as before: no gap, no forecast, no Today', (WidgetTester tester) async {
       await pump(tester, _pace(WorkedExample.entries, asOf: _cycle.end, isCurrent: false), showToday: false);
       expect(find.text('At this pace'), findsNothing);
+      expect(find.textContaining('steady pace'), findsNothing);
       await expectSpoken(tester, '27,570 rupees spent so far of 45,000 rupees. Spending slower.');
     });
 
@@ -103,17 +109,40 @@ void main() {
       await expectSpoken(tester, 'Spent so far: 27,570 rupees');
     });
 
-    testWidgets('the date row sits under the plot and keeps the plot at half the width (D69)', (WidgetTester tester) async {
+    testWidgets('the plot is 0.6 of its width, 168–216, with the date row just under it (D135)', (WidgetTester tester) async {
       await pump(tester, _pace(WorkedExample.entries));
       final Rect chart = tester.getRect(find.byKey(const ValueKey<String>('pace-chart')));
       final Rect dates = tester.getRect(find.byKey(const ValueKey<String>('pace-dates')));
-      expect(chart.height, chart.width / 2);
-      expect(dates.top, chart.bottom);
+      expect(chart.height, closeTo((chart.width * 0.6).clamp(168, 216), 0.01));
+      expect(dates.top, chart.bottom + HisaabSpacing.xs);
       expect((dates.left, dates.right), (chart.left, chart.right));
+    });
+
+    final List<(String, Size, double)> heights = <(String, Size, double)>[
+      ('a 320dp phone keeps the 168 floor', TestWindows.smallPhone, 168),
+      ('a tablet stops at 216', TestWindows.tablet, 216),
+      ('a phone on its side stays at 160, so the short window keeps room', TestWindows.phoneLandscape, 160),
+    ];
+    for (final (String name, Size size, double height) in heights) {
+      testWidgets('plot height: $name (D135)', (WidgetTester tester) async {
+        await pump(tester, _pace(WorkedExample.entries), size: size);
+        expect(tester.getSize(find.byKey(const ValueKey<String>('pace-chart'))).height, height);
+      });
+    }
+
+    testWidgets('the words on the chart follow the phone\'s text size (WCAG 1.4.4)', (WidgetTester tester) async {
+      await pump(tester, _pace(WorkedExample.entries));
+      final double plain = tester.getSize(find.byKey(const ValueKey<String>('pace-dates'))).height;
+      await pump(tester, _pace(WorkedExample.entries), textScale: 2);
+      expect(tester.getSize(find.byKey(const ValueKey<String>('pace-dates'))).height, closeTo(plain * 2, 1));
+      final CustomPaint chart = tester.widget(find.descendant(of: find.byKey(const ValueKey<String>('pace-chart')), matching: find.byType(CustomPaint)));
+      expect((chart.painter! as PaceChartPainter).textScaler.scale(12), 24);
     });
 
     final List<(String, Size, double)> windows = <(String, Size, double)>[
       ('a 320dp phone at 2× text', TestWindows.smallPhone, 2),
+      ('a phone on its side at 1.5× text', TestWindows.phoneLandscape, 1.5),
+      ('an unfolded foldable', TestWindows.foldableUnfolded, 1),
       ('a tablet', TestWindows.tablet, 1),
     ];
     for (final (String name, Size size, double scale) in windows) {

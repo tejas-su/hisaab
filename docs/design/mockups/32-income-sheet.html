@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Money coming in (proposal)</title>
+<style>
+  /* Money coming in: changing income after onboarding (FR-SE-1, unbuilt; case study 20).
+     Nothing here is built yet. The income rule gets mockup 27's paper-slip sheet with two rows, Amount and When it comes.
+     Slice 1 = the amount (takes effect from the next payday). Slice 2 = when it comes (needs a new BR-1 bridge rule).
+     Numbers follow the worked example (docs/design/README.md): ₹45,000 on the 4th, today Mon 26 Oct 2026, cycle
+     4 Oct to 3 Nov, P = 16,650, D = 9, A = ₹1,850, ₹420 spent today, hero ₹1,430.
+     Payday moved to the 25th: the cycle bridges 4 Oct to 24 Nov, so D = 30, A = floor(16,650 / 30) = ₹555, hero ₹135.
+     Payday moved to the 1st: the cycle ends 31 Oct, so D = 6, A = floor(16,650 / 6) = ₹2,775.
+     Shared CSS copied from mockup 28. Icons are hand-drawn stand-ins for Hugeicons stroke-rounded. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayEtch: #F1EBE4; --displayShadow: #1616152E; --scrim: #16161552;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayEtch: #2F2B27; --displayShadow: #00000000; --scrim: #0000008C;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--ink2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 736px; margin: 8px 0 0; }
+
+  /* Phone */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .page { position: absolute; inset: 0; padding: 12px 20px 0; display: flex; flex-direction: column; gap: 16px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; height: 48px; gap: 8px; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .topbar .mid { flex: 1; text-align: center; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .wm { font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .secHd { font: 600 22px/28px 'Anek Latin', sans-serif; padding-inline-start: 4px; margin-bottom: -8px; }
+  .hint { font-size: 15px; line-height: 20px; color: var(--ink2); margin: 0; }
+  .chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px 0 12px; border-radius: 12px; background: var(--control); font: 600 14px/20px 'Mukta', sans-serif; }
+
+  /* A card of rows: 42dp sunk wells, 20dp inset, hairlines indented to the text (74dp) */
+  .card { background: var(--surface); border-radius: 28px; padding: 8px 0; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 11px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: 16px; line-height: 22px; }
+  .row .t span { display: block; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .row .t span.draft { display: inline; font: 600 11px/14px 'Mukta', sans-serif; }
+  .page.dense { gap: 12px; }
+  .dense .row { min-height: 56px; padding-top: 7px; padding-bottom: 7px; }
+  .row b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row > svg:last-child { color: var(--ink2); }
+  .foot { display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 20px; color: var(--ink2); padding-inline-start: 4px; }
+  .foot b { color: var(--ink); font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+
+  /* Home (the hero follows mockup 25; only the list and the nudge are new) */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .tbar { display: flex; gap: 3px; height: 48px; margin-top: 20px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+  .names { display: flex; gap: 3px; height: 14px; margin-top: 4px; font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); text-align: center; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; }
+  .capRow b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rail { display: flex; align-items: center; gap: 10px; height: 18px; margin-top: 14px; }
+  .dots { flex: 1; display: flex; align-items: center; gap: 12px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .dots i.t { width: 10px; height: 10px; border-radius: 5px; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .pf { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; }
+  .pf svg { width: 16px; height: 16px; }
+  .nudge { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px 8px 8px; border-radius: 18px; background: var(--sunk); }
+  .nudge .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .nudge .t { flex: 1; font-size: 15px; line-height: 20px; }
+  .nudge .t b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .nudge .t span { display: block; font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .nudge > svg { color: var(--ink2); }
+  .listHd { display: flex; align-items: baseline; gap: 8px; padding-inline-start: 4px; margin-bottom: -8px; }
+  .listHd .h { flex: 1; font: 600 17px/24px 'Anek Latin', sans-serif; }
+  .listHd b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd span { font: 600 14px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  /* Spends */
+  .pace { height: 128px; }
+  .pace svg { width: 100%; height: 100%; display: block; }
+  .tally { font-size: 15px; line-height: 20px; color: var(--ink2); padding-inline-start: 4px; }
+  .tally b { color: var(--ink); font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .cardHd { font: 600 17px/24px 'Anek Latin', sans-serif; padding: 12px 20px 4px; }
+  .cat { display: flex; flex-direction: column; gap: 6px; padding: 10px 20px; }
+  .cat .top { display: flex; align-items: center; gap: 12px; }
+  .cat .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .cat .n { flex: 1; font-size: 16px; line-height: 22px; }
+  .cat .pc { font-size: 13px; line-height: 18px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .cat b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
+  .track { margin-inline-start: 54px; height: 6px; border-radius: 3px; background: var(--sunk); }
+  .track i { display: block; height: 100%; border-radius: 3px; background: var(--ink); }
+
+  /* Sheet over a page */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 20px 20px; z-index: 9; }
+  .dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; }
+  .slip { position: relative; background: var(--display); color: var(--displayInk); border-radius: 20px 20px 0 0; padding: 18px 20px 14px; margin-bottom: 8px; }
+  .slip::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px;
+    background: conic-gradient(from -45deg at 50% 100%, var(--display) 0 90deg, transparent 90deg) 0 0 / 14px 100% repeat-x; }
+  .eyebrow { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .12em; color: var(--displayInk2); }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .who .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .who .nm { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .amtRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .big { font: 600 56px/60px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .every { font-size: 15px; line-height: 22px; color: var(--displayInk2); }
+  .stamp { font: 600 12px/14px 'Anek Latin', sans-serif; letter-spacing: .1em; color: var(--displayInk2); white-space: nowrap; padding: 6px 10px; border: 2px solid var(--displayInk2); border-radius: 6px; }
+  .perf { position: relative; height: 20px; margin: 8px -20px; }
+  .perf::before { content: ''; position: absolute; left: 22px; right: 22px; top: 9px; border-top: 2px dashed var(--hairline); }
+  .perf i { position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .perf i.l { left: -8px; } .perf i.r { right: -8px; }
+  .line { display: flex; align-items: center; margin: 0 -8px; min-height: 56px; padding: 12px 8px; font-size: 16px; line-height: 22px; }
+  .line .lead { flex: 1; min-width: 12px; border-bottom: 2px dotted var(--hairline); margin: 0 8px; align-self: flex-end; transform: translateY(-13px); }
+  .line .v { font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .line > svg { width: 18px; height: 18px; margin-inline-start: 6px; color: var(--displayInk2); }
+  .slipFoot { font-size: 14px; line-height: 20px; color: var(--displayInk2); min-height: 22px; padding-top: 2px; }
+  .slipFoot b { color: var(--displayInk); font-weight: 600; }
+  .wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 56px; margin-top: 16px; border-radius: 18px; font: 600 17px/1 'Mukta', sans-serif; }
+  .wide.del { background: var(--sunk); color: var(--ink); }
+  .wide.sig { background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  /* New in 32 */
+  .pf { white-space: nowrap; }
+  .stepHd { display: flex; align-items: center; min-height: 48px; margin-bottom: 8px; padding-inline-start: 4px; }
+  .stepHd .q { font: 600 19px/24px 'Anek Latin', sans-serif; }
+  .slip.compact { padding-bottom: 12px; }
+  .slip.compact .big { font-size: 48px; line-height: 52px; margin-top: 6px; }
+  .caret { display: inline-block; width: 3px; height: 40px; margin-left: 3px; vertical-align: -4px; background: var(--signal); border-radius: 2px; }
+  .preview { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; color: var(--displayInk2); min-height: 20px; }
+  .preview b { color: var(--displayInk); font-weight: 600; }
+  .preview svg { width: 16px; height: 16px; color: var(--displayInk); }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .key { height: 56px; border-radius: 16px; background: var(--sunk); font: 600 24px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .stepHd .q { flex: 1; min-width: 0; }
+  .slice { display: inline-block; font: 600 12px/16px 'Mukta', sans-serif; padding: 2px 8px; border-radius: 10px; box-shadow: inset 0 0 0 1.5px var(--canvasInk2); color: var(--canvasInk2); vertical-align: 4px; margin-inline-start: 8px; }
+  .line.flash { background: var(--sunk); border-radius: 12px; }
+  .slipFoot .tc { display: inline-flex; align-items: center; min-height: 40px; margin-top: 8px; padding: 0 14px; border-radius: 12px; background: var(--sunk); color: var(--displayInk); font: 600 14px/20px 'Mukta', sans-serif; }
+  .opts { display: flex; flex-direction: column; gap: 8px; }
+  .opt { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; border-radius: 16px; background: var(--surface); font-size: 16px; line-height: 22px; }
+  .opt .lbl { flex: 1; }
+  .opt .val { font: 600 15px/20px 'Anek Latin', sans-serif; color: var(--ink2); }
+  .opt.on { box-shadow: inset 0 0 0 2px var(--ink); font-weight: 600; }
+  .opt.on .val { color: var(--ink); }
+  .grid31 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .grid31 span { height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; font: 600 15px/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .grid31 span.was { box-shadow: inset 0 0 0 1.5px var(--hairline); color: var(--ink2); }
+  .grid31 span.on { box-shadow: inset 0 0 0 2px var(--ink); }
+  .effect { background: var(--display); color: var(--displayInk); border-radius: 18px; padding: 12px 16px; font-size: 14px; line-height: 20px; margin-top: 12px; }
+  .effect b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .effect span { display: block; color: var(--displayInk2); }
+</style>
+</head>
+<body>
+
+<h1>Money coming in <span class="tag">proposal</span></h1>
+<p class="lede">Nobody can change their income after onboarding today. SPEC FR-SE-1 promises a <b>Money coming in</b> row, but it was never built (D132). This mockup draws it with <a href="27-bill-sheet.html">mockup 27</a>'s paper slip, with two rows: <b>Amount</b> and <b>When it comes</b>. Research is in <a href="../../design-research/case-studies/20-changing-income-after-onboarding.md">case study 20</a>.</p>
+<p class="lede">Two rules:</p>
+<ul class="lede">
+  <li><b>A new amount takes effect from the next payday.</b> Pay already received stays as it came, so today's number doesn't jump.</li>
+  <li><b>A new payday keeps this month going until that day.</b> The current cycle runs until the day before the new payday, so nobody who was just paid lands on "No income".</li>
+</ul>
+<p class="lede">Today is <b>Mon 26 Oct 2026</b>, with ₹45,000 on the 4th. Each frame is shown in light and dark at 360dp. <span class="slice">Slice 1</span> marks the amount and <span class="slice">Slice 2</span> marks when it comes.</p>
+
+<div id="frames"></div>
+
+<h2>What changes, and what doesn't</h2>
+<table>
+  <tr><th>Element</th><th>How it's drawn</th><th>Why</th></tr>
+  <tr><td>Settings row</td><td>The first <code>SettingsRow</code> in the Money card, above <i>Bills</i>. The second line reads "₹45,000 · on the 4th" (or "every Friday", "last day", "Changes each month")</td><td>Income is the input everything else depends on, so it comes first. The second line lets people check it without opening anything</td></tr>
+  <tr><td>Income slip</td><td>Mockup 27's slip with the eyebrow <i>Money coming in</i> and a straight <code>ink2</code> stamp <i>Came 4 Oct</i>. Two dotted-leader rows. The footer reads <i>Next payday 4 Nov</i>. There's no Delete key</td><td>It's the same kind of object as a bill, so it gets the same shape. Income is switched off by choosing <i>It changes</i>, never by deleting it, so the app is never left with no rule and no prompt</td></tr>
+  <tr><td>Amount question</td><td>Onboarding's question and keypad, prefilled; the first key replaces the amount (FR-AD-8). An effect card above the keys says when it applies. <i>Save</i> is the only marigold</td><td>The one thing to know before saving is <b>when</b> the change counts</td></tr>
+  <tr><td>When it comes question</td><td>Onboarding's five choices stacked, with the current one outlined in <code>ink</code> and a check. <i>Pick a date</i> opens the 1–31 grid, with the old day kept as a faint outline. An effect card shows how long this month's money now lasts and the new daily share</td><td>Moving payday later stretches the money already received over more days, so the new daily share is shown <b>before</b> the tap that saves it</td></tr>
+  <tr><td>After saving</td><td>The changed row flashes <code>sunk</code> and the footer reads "Changed. …" for 2.4 s (AC-4), with the success haptic</td><td>The same feedback as a bill. "Saved" is kept for real saving (D120)</td></tr>
+</table>
+
+<h2>For you to decide</h2>
+<ul>
+  <li><b>Weekly pay.</b> Drawn: the question asks for the <b>monthly</b> amount, as onboarding does, and the slip shows "about ₹10,384 a week" under it (D26). The alternative is to ask the weekly amount actually paid.</li>
+  <li><b><i>Change this month too</i> (frame 4).</b> This is for a mistyped amount at setup. It shows only when this cycle's pay was added by the rule and hasn't been edited, and it edits that one entry, with Undo. Without the chip, the fix is to edit the entry in Spends. Dropping the chip keeps the "never ask this one or all future" principle pure.</li>
+  <li><b>Slice 2 needs a new rule in the spec</b> (the bridge cycle in frames 5 and 6). The income rule then needs a start date, which means a database schema change. Edge case E15 (the longest cycle) grows to about 62 days.</li>
+  <li><b>New payday is today.</b> The first new payday is next month, never today, so pay can't be added twice. The footer adds "Got paid today? Add it with Add, then Got."</li>
+</ul>
+
+<h2>Tokens used</h2>
+<table>
+  <tr><th>Kind</th><th>Tokens</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>control</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEdge</code>, <code>blockIdle</code>, <code>scrim</code>, <code>signal</code> (the hero fill, today's dot, Add and the Save key only), <code>onSignal</code>. No new colour</td></tr>
+  <tr><td>Type</td><td>The same as mockups 27 and 28. Every amount uses Anek Latin with tabular figures</td></tr>
+  <tr><td>Glyphs</td><td>MoneyReceive (income, existing <code>AppIcons</code> for the <i>Money in</i> category), Repeat, PiggyBank, ArrowLeft01, ArrowRight01, Tick02, Backspace, InformationCircle</td></tr>
+</table>
+
+<script>
+const P = {
+  money: '<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/>',
+  bill: '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/>',
+  piggy: '<path d="M19 9.5c.9.8 1.5 1.7 1.8 2.7H22v3.3h-1.4c-.5 1-1.3 1.9-2.3 2.5V20h-2.6v-1.3h-4.4V20H8.7v-2.2C6.4 16.6 5 14.6 5 12.3c0-3.6 3.4-6.5 7.6-6.5 1.2 0 2.4.2 3.4.7L18.8 5z"/><path d="M10.5 8.6h3.6"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  back: '<path d="M15 6l-6 6 6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  tick: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  bs: '<path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  food: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/>',
+};
+const ic = (k, label) => `<svg class="i" viewBox="0 0 24 24" role="img" aria-label="${label || k}">${P[k]}</svg>`;
+const perf = '<div class="perf"><i class="l"></i><i class="r"></i></div>';
+const line = (label, v, flash) => `<div class="line${flash ? ' flash' : ''}"><span>${label}</span><i class="lead"></i><span class="v">${v}</span>${ic('chev', 'Change')}</div>`;
+const keys = `<div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map(k => `<div class="key">${k}</div>`).join('')}<div class="key">${ic('bs', 'Delete last digit')}</div></div>`;
+const dock = `<div class="dock"><span class="on">Home</span><span class="add">${ic('plus', 'Add')}</span><span>Spends</span></div>`;
+
+const settings = (sub = '₹45,000 · on the 4th') => `<div class="page">
+  <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Settings</span></div>
+  <div class="secHd">Money</div>
+  <div class="card">
+    <div class="row"><span class="w">${ic('money', 'Money in')}</span><span class="t">Money coming in<span>${sub}</span></span>${ic('chev', 'Opens')}</div>
+    <div class="row"><span class="w">${ic('bill', 'Bills')}</span><span class="t">Bills</span>${ic('chev', 'Opens')}</div>
+    <div class="row"><span class="w">${ic('piggy', 'Savings')}</span><span class="t">Savings</span>${ic('chev', 'Opens')}</div>
+  </div>
+  <div class="secHd" style="margin-top:16px">Look</div>
+  <div class="card"><div class="row"><span class="t">Light or dark<span>Match phone</span></span></div></div>
+</div>`;
+
+const slip = ({ amt = '45,000', stamp = 'Came 4 Oct', every = 'Comes on the 4th', when = '4th', foot = 'Next payday <b>4 Nov</b>', flash = '', extra = '' } = {}) => `${settings()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="slip">
+    <div class="eyebrow">MONEY COMING IN</div>
+    <div class="amtRow"><div class="big"><span class="rs">₹</span>${amt}</div><div class="stamp">${stamp}</div></div>
+    <div class="every">${every}</div>
+    ${perf}
+    ${line('Amount', '₹' + amt, flash === 'amt')}
+    ${line('When it comes', when, flash === 'when')}
+    ${perf}
+    <div class="slipFoot">${foot}${extra}</div>
+  </div>
+</div>`;
+
+const amountQ = () => `${settings()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="stepHd"><span class="well40" style="margin-inline-end:8px">${ic('back', 'Back to the slip')}</span><div class="q">How much money comes in each month?</div></div>
+  <div class="slip compact">
+    <div class="big"><span class="rs">₹</span>50,000<span class="caret"></span></div>
+    <div class="preview">Was <b>₹45,000</b></div>
+  </div>
+  <div class="effect"><b>From payday, 4 Nov.</b><span>This month's ₹45,000 stays as it came.</span></div>
+  ${keys}
+  <div class="wide sig">Save</div>
+</div>`;
+
+const whenQ = () => `${settings()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="stepHd"><span class="well40" style="margin-inline-end:8px">${ic('back', 'Back to the slip')}</span><div class="q">When does it come?</div></div>
+  <div class="opts">
+    <div class="opt"><span class="lbl">1st of the month</span></div>
+    <div class="opt"><span class="lbl">Last day of the month</span></div>
+    <div class="opt on"><span class="lbl">Pick a date</span><span class="val">4th</span>${ic('tick', 'Picked')}</div>
+    <div class="opt"><span class="lbl">Every week</span></div>
+    <div class="opt"><span class="lbl">It changes</span></div>
+  </div>
+</div>`;
+
+const days = Array.from({ length: 31 }, (_, i) => i + 1);
+const dayQ = () => `${settings()}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="stepHd"><span class="well40" style="margin-inline-end:8px">${ic('back', 'Back')}</span><div class="q">Which day of the month?</div></div>
+  <div class="grid31">${days.map(d => `<span class="${d === 4 ? 'was' : d === 25 ? 'on' : ''}">${d}</span>`).join('')}</div>
+  <div class="effect"><b>This month's money lasts till 24 Nov.</b><span>That's 30 days, so about ₹555 a day. Then every month runs from the 25th.</span></div>
+</div>`;
+
+const homeBridge = () => `<div class="page dense">
+  <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+  <div class="hero">
+    <div class="ttl">Safe to spend today</div>
+    <div class="amt"><span class="rs">₹</span>135</div>
+    <div class="tbar"><span class="f" style="flex:135"></span><span class="bite" style="flex:380"></span><span class="bite end" style="flex:40;min-width:4px"></span></div>
+    <div class="names"><span style="flex:135"></span><span style="flex:380">Food</span><span style="flex:40;min-width:4px"></span></div>
+    <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹555</b> for today</span></div>
+    <div class="rail"><span class="dots" style="gap:4px">${'<i class="t"></i>' + '<i style="width:4px;height:4px"></i>'.repeat(29)}</span><span class="pf">${ic('flag', 'Payday')} 25 Nov</span></div>
+    <div class="capRow"><span>Today</span><span>30 days to payday</span></div>
+  </div>
+  <div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>
+  <div class="card">
+    <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Lunch<span>Food</span></span><b>₹380</b></div>
+    <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Chai<span>Food</span></span><b>₹40</b></div>
+  </div>
+</div>${dock}`;
+
+const itChanges = () => `${settings('Changes each month')}<div class="scrim"></div><div class="sheet">
+  <div class="handle"></div>
+  <div class="slip">
+    <div class="eyebrow">MONEY COMING IN</div>
+    <div class="amtRow"><div class="big" style="font-size:40px;line-height:48px">It changes</div></div>
+    <div class="every">Each month runs from the 1st</div>
+    ${perf}
+    ${line('When it comes', 'It changes')}
+    ${perf}
+    <div class="slipFoot">Add money when it comes. Tap <b>Add</b>, then <b>Got</b>.</div>
+  </div>
+</div>`;
+
+const FRAMES = [
+  ['1. Settings', 1, () => settings(), '<i>Money coming in</i> becomes the first row of the Money card, so you can check your income without opening it. With weekly pay the second line reads "₹10,384 · every Friday".'],
+  ['2. The income slip', 1, () => slip(), 'Tapping the row opens mockup 27\'s paper slip over Settings. The stamp says when this cycle\'s pay came. There are two Change rows and no Delete key.'],
+  ['3. Changing the amount', 1, amountQ, 'Onboarding\'s question and keypad, prefilled; the first key replaces the amount. The effect card says when the change counts <b>before</b> you save. Saving an unchanged amount writes nothing, ₹0 can\'t be saved, the 9-digit cap applies, and a failed save keeps the keypad open with "Couldn\'t save. Try again."'],
+  ['4. Saved', 1, () => slip({ amt: '50,000', flash: 'amt', foot: '<b>Changed.</b> From payday, 4 Nov.', extra: '<br><span class="tc">Change this month too</span>' }), 'Saving returns to the slip and flashes the Amount row. The stamp still says <i>Came 4 Oct</i> (that pay was ₹45,000), and today\'s ₹1,430 doesn\'t move. The optional chip fixes a mistyped amount from setup (see <i>For you to decide</i>).'],
+  ['5. When it comes', 2, whenQ, 'Onboarding\'s five choices with the current one outlined and checked. <i>1st</i>, <i>Last day</i> and <i>It changes</i> save on tap. <i>Pick a date</i> and <i>Every week</i> open one more grid.'],
+  ['6. Picking a new day', 2, dayQ, 'The old day (4) has a faint outline and the new one (25) a strong one. Before the tap that saves, the effect card shows what the change does: this month\'s ₹45,000 must last till 24 Nov, about ₹555 a day. Moving payday <b>earlier</b>, to the 1st, would end this month on 31 Oct and give about ₹2,775 a day.'],
+  ['7. Home after moving payday', 2, homeBridge, 'The bridge cycle: 4 Oct to 24 Nov. Today\'s share is floor(16,650 ÷ 30) = ₹555, and the hero shows ₹135. The rail shows 30 dots (drawn smaller, as BR-6 allows), ending at the 25 Nov flag. Without the bridge, the 4 Oct pay would fall outside the cycle and Home would show "No income".'],
+  ['8. If it changes', 2, itChanges, 'With no fixed day there is no amount to edit, so the slip has only <i>When it comes</i>. Picking a day there goes straight to the amount keypad, prefilled with this month\'s <i>Got</i> total, and one Save stores the rule.'],
+];
+document.getElementById('frames').innerHTML = FRAMES.map(([t, s, f, why]) => `<h2>${t}<span class="slice">Slice ${s}</span></h2>
+  <div class="pair">
+    <figure><div class="phone light">${f()}</div><figcaption>Light</figcaption></figure>
+    <figure><div class="phone dark">${f()}</div><figcaption>Dark</figcaption></figure>
+  </div><p class="why">${why}</p>`).join('');
+</script>
+</body>
+</html>

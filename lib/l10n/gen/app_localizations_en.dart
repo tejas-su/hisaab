@@ -69,43 +69,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String paceGapUnder(String amount) {
-    return '$amount under';
-  }
-
-  @override
-  String paceGapOver(String amount) {
-    return '$amount over';
-  }
-
-  @override
-  String paceRunsOut(String date) {
-    return 'runs out $date';
-  }
-
-  @override
   String get paceAtThisPace => 'At this pace';
 
   @override
   String get paceToday => 'Today';
 
   @override
-  String paceGapUnderSpoken(String amount) {
+  String paceGapUnder(String amount) {
     return '$amount under steady pace.';
   }
 
   @override
-  String paceGapOverSpoken(String amount) {
+  String paceGapOver(String amount) {
     return '$amount over steady pace.';
   }
 
   @override
-  String paceSpareSpoken(String amount) {
+  String paceSpare(String amount) {
     return 'At this pace about $amount spare.';
   }
 
   @override
-  String paceRunsOutSpoken(String date) {
+  String paceRunsOut(String date) {
     return 'At this pace it runs out on $date.';
   }
 

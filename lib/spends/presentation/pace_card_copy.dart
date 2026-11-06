@@ -6,9 +6,8 @@ import '../../core/time/calendar_date.dart';
 import '../../ledger/ledger.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../domain/entities/pace_series.dart';
-import 'widgets/pace_chart_words.dart';
 
-/// The pace card's words: what the chart paints and what TalkBack reads (SPEC FR-SP-3, D133).
+/// The pace card's words: the line under the chart and what TalkBack reads (SPEC FR-SP-3, D133, D135).
 final class PaceCardCopy {
   const PaceCardCopy(this._strings, this._money);
 
@@ -18,15 +17,9 @@ final class PaceCardCopy {
   /// A date as the chart shows it, e.g. "1 Nov".
   String date(CalendarDate day) => DateFormat('d MMM', _money.locale).format(DateTime(day.year, day.month, day.day));
 
-  /// The gap and forecast words; the gap only when [showToday] (the current cycle).
-  PaceChartWords chartWords(PaceSeries series, {required bool showToday}) => PaceChartWords(
-        gap: showToday ? _gap(series.gap, _money.format, under: _strings.paceGapUnder, over: _strings.paceGapOver) : null,
-        forecast: switch (series.forecast.toNullable()) {
-          LastsTillPayday(:final Money spare) => _strings.aboutSpare(_money.format(spare)),
-          RunsOut(date: final CalendarDate day) => _strings.paceRunsOut(date(day)),
-          TooEarlyToForecast() || null => null,
-        },
-      );
+  /// The line under the chart, e.g. "₹7,042 under steady pace. At this pace about ₹9,300 spare."; null
+  /// unless [showToday] (the current cycle). It is TalkBack's gap and forecast with ₹ amounts (D135).
+  String? line(PaceSeries series, {required bool showToday}) => showToday ? _gapAndForecast(series, _money.format) : null;
 
   /// The card as one sentence: the total, the verdict, then on the current cycle the gap and the forecast.
   String spoken(Money spent, PaceSeries? series, {required bool showToday}) {
@@ -38,22 +31,19 @@ final class PaceCardCopy {
     if (!showToday) {
       return total;
     }
-    final String gap = _gap(series.gap, _spokenAmount, under: _strings.paceGapUnderSpoken, over: _strings.paceGapOverSpoken);
+    return <String>[total, _gapAndForecast(series, _spokenAmount)].join(_strings.wordGap);
+  }
+
+  String _gapAndForecast(PaceSeries series, String Function(Money) amount) {
+    final Money gap = series.gap;
+    final String gapWords = gap > Money(0, currency: gap.currency) ? _strings.paceGapOver(amount(gap)) : _strings.paceGapUnder(amount(gap * -1));
     final String? forecast = switch (series.forecast.toNullable()) {
-      LastsTillPayday(:final Money spare) => _strings.paceSpareSpoken(_spokenAmount(spare)),
-      RunsOut(date: final CalendarDate day) => _strings.paceRunsOutSpoken(date(day)),
+      LastsTillPayday(:final Money spare) => _strings.paceSpare(amount(spare)),
+      RunsOut(date: final CalendarDate day) => _strings.paceRunsOut(date(day)),
       TooEarlyToForecast() || null => null,
     };
-    return <String>[total, gap, ?forecast].join(_strings.wordGap);
+    return <String>[gapWords, ?forecast].join(_strings.wordGap);
   }
 
   String _spokenAmount(Money money) => _strings.spokenAmount(_money.digits(money));
-
-  static String _gap(
-    Money gap,
-    String Function(Money) amount, {
-    required String Function(String) under,
-    required String Function(String) over,
-  }) =>
-      gap > Money(0, currency: gap.currency) ? over(amount(gap)) : under(amount(gap * -1));
 }

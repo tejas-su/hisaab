@@ -3,19 +3,20 @@ import 'package:flutter/rendering.dart';
 import '../../../core/money/money.dart';
 import '../../../ledger/ledger.dart';
 import '../../domain/entities/pace_series.dart';
-import 'pace_chart_words.dart';
 import 'pace_strokes.dart';
 
-/// Paints the pace chart: labelled gridlines, the dotted steady line (stepping up on bill days), the
-/// solid spending line and, on the current cycle, the gap at today, the dashed forecast and a
-/// marigold today dot (SPEC FR-SP-3, UI_DESIGN §5.4, D133).
+/// Paints the pace chart: gridlines labelled inside the plot, the dotted steady line (stepping up on
+/// bill days), the solid spending line and, on the current cycle, the gap bracket at today, the
+/// dashed forecast and a marigold today dot (SPEC FR-SP-3, UI_DESIGN §5.4, D133, D135).
+///
+/// It paints no amounts beside the lines: the gap and the forecast are a line of text under the
+/// chart, so they never collide on a narrow phone or at a large text size (D135).
 class PaceChartPainter extends CustomPainter {
   const PaceChartPainter({
     required this.series,
     required this.axisLabels,
     required this.labelStyle,
-    required this.markStyle,
-    required this.words,
+    required this.textScaler,
     required this.colors,
     required this.showToday,
   });
@@ -26,31 +27,25 @@ class PaceChartPainter extends CustomPainter {
   final List<String> axisLabels;
   final TextStyle labelStyle;
 
-  /// The style of [words] on the plot.
-  final TextStyle markStyle;
-  final PaceChartWords words;
+  /// The phone's text size, so the axis labels grow with it (WCAG 1.4.4).
+  final TextScaler textScaler;
   final PaceChartColors colors;
   final bool showToday;
 
-  static const double _labelGap = 8;
-  static const double _inset = 6;
-  static const double _markGap = 8;
+  /// Room above the plot's top, so the steady line's end doesn't press on the total.
+  static const double topInset = 12;
+
+  /// Room at the plot's right and bottom, so round caps and the today dot aren't clipped.
+  static const double inset = 6;
+
+  static const double _labelLift = 2;
   static const double _todayRadius = 5;
   static const double _ringRadius = 4.5;
   static const double _capHalf = 3;
 
-  /// Where the plot starts: the widest axis label plus a gap. The date row lines up with it.
-  static double plotLeft(List<String> axisLabels, TextStyle labelStyle) => axisLabels.fold(0.0, (double widest, String text) {
-        final TextPainter label = PaceStrokes.layout(text, labelStyle);
-        final double width = label.width;
-        label.dispose();
-        return width > widest ? width : widest;
-      }) +
-      _labelGap;
-
   @override
   void paint(Canvas canvas, Size size) {
-    final Rect plot = Rect.fromLTRB(plotLeft(axisLabels, labelStyle), _inset, size.width - _inset, size.height - _inset);
+    final Rect plot = Rect.fromLTRB(0, topInset, size.width - inset, size.height - inset);
     _grid(canvas, plot);
     PaceStrokes.dashed(canvas, <Offset>[
       _point(plot, 0, Money.zero),
@@ -60,13 +55,10 @@ class PaceChartPainter extends CustomPainter {
       _point(plot, 0, Money.zero),
       for (final (int day, Money total) in series.spentByDay.indexed) _point(plot, day + 1, total),
     ];
-    _forecast(canvas, plot, size);
+    _forecast(canvas, plot);
     _spending(canvas, spent);
-    final String? gap = words.gap;
-    if (gap != null) {
-      _gap(canvas, plot, size, (today: spent.last, text: gap));
-    }
     if (showToday) {
+      _gap(canvas, plot, spent.last);
       _today(canvas, spent.last);
     }
   }
@@ -84,37 +76,36 @@ class PaceChartPainter extends CustomPainter {
     ..strokeJoin = StrokeJoin.round
     ..strokeCap = StrokeCap.round;
 
+  // why: each label sits just above its gridline at the plot's left edge, so the plot keeps the
+  // card's full width (HIG: maximise the plot's width); ₹0 is left to the baseline, since its label
+  // would sit where the spending line starts (D135). Painted before the lines, which cross over it.
   void _grid(Canvas canvas, Rect plot) {
     for (final (int i, String text) in axisLabels.indexed) {
       final double y = _point(plot, 0, series.axisLabels[i]).dy;
       canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), Paint()..color = colors.hairline);
-      final TextPainter label = PaceStrokes.layout(text, labelStyle);
-      label.paint(canvas, Offset(plot.left - _labelGap - label.width, y - label.height / 2));
+      if (series.axisLabels[i].amountMinor == 0) {
+        continue;
+      }
+      final TextPainter label = PaceStrokes.layout(text, labelStyle, textScaler);
+      label.paint(canvas, Offset(plot.left, y - _labelLift - label.height));
       label.dispose();
     }
   }
 
   void _spending(Canvas canvas, List<Offset> points) => canvas.drawPath(Path()..addPolygon(points, false), _stroke(colors.ink, 2.5));
 
-  /// The dashed forecast from today, stopped where it meets the budget, with its words at the end.
-  void _forecast(Canvas canvas, Rect plot, Size size) {
-    final String? text = words.forecast;
-    if (series.forecastByDay.isEmpty || text == null) {
+  /// The dashed forecast from today, stopped where it meets the budget, with a ring where it runs out.
+  void _forecast(Canvas canvas, Rect plot) {
+    if (series.forecastByDay.isEmpty) {
       return;
     }
     final List<Offset> points = _untilBudget(plot);
     PaceStrokes.dashed(canvas, points, _stroke(colors.ink, 2), dash: 6, gap: 5);
-    final bool runsOut = series.forecast.toNullable() is RunsOut;
-    if (runsOut) {
+    if (series.forecast.toNullable() is RunsOut) {
       canvas
         ..drawCircle(points.last, _ringRadius, Paint()..color = colors.surface)
         ..drawCircle(points.last, _ringRadius, _stroke(colors.ink, 2));
     }
-    final TextPainter label = PaceStrokes.layout(text, markStyle);
-    final double right = runsOut ? points.last.dx - _markGap : plot.right;
-    final double top = runsOut ? points.last.dy + _markGap : points.last.dy - _markGap - label.height;
-    PaceStrokes.tag(canvas, label, _clamped(label, Offset(right - label.width, top), plot, size), colors.surface);
-    label.dispose();
   }
 
   // why: the line stops where the money does, so it meets the budget mid-day rather than overshooting.
@@ -133,9 +124,8 @@ class PaceChartPainter extends CustomPainter {
     return points;
   }
 
-  /// A bracket from today's point to the steady line, and [mark]'s words for how far apart they are.
-  void _gap(Canvas canvas, Rect plot, Size size, ({Offset today, String text}) mark) {
-    final Offset today = mark.today;
+  /// A bracket from [today]'s point to the steady line.
+  void _gap(Canvas canvas, Rect plot, Offset today) {
     final double steady = _point(plot, 0, series.steadyThrough(series.spentByDay.length - 1)).dy;
     canvas.drawPath(
       Path()
@@ -145,18 +135,7 @@ class PaceChartPainter extends CustomPainter {
         ..lineTo(today.dx + _capHalf, steady),
       _stroke(colors.ink2, 1.5),
     );
-    final TextPainter label = PaceStrokes.layout(mark.text, markStyle);
-    final bool toTheLeft = today.dx > plot.center.dx;
-    final double left = toTheLeft ? today.dx - _markGap - label.width : today.dx + _markGap;
-    final Offset at = Offset(left, (today.dy + steady - label.height) / 2);
-    PaceStrokes.tag(canvas, label, _clamped(label, at, plot, size), colors.surface);
-    label.dispose();
   }
-
-  Offset _clamped(TextPainter label, Offset at, Rect plot, Size size) => Offset(
-        PaceStrokes.within(at.dx, label.width, plot.left, size.width),
-        PaceStrokes.within(at.dy, label.height, 0, plot.bottom),
-      );
 
   // why: marigold is never bare on the light card, so the dot carries an ink ring.
   void _today(Canvas canvas, Offset point) => canvas
@@ -168,8 +147,7 @@ class PaceChartPainter extends CustomPainter {
       oldDelegate.series != series ||
       oldDelegate.showToday != showToday ||
       oldDelegate.labelStyle != labelStyle ||
-      oldDelegate.markStyle != markStyle ||
-      oldDelegate.words != words ||
+      oldDelegate.textScaler != textScaler ||
       oldDelegate.colors != colors ||
       oldDelegate.axisLabels.join() != axisLabels.join();
 }

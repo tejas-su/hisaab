@@ -60,6 +60,11 @@ void main() {
     );
   }
 
+  // why: Spends is a lazy list, so the insights card under the taller pace card (D135) is built
+  // only once it scrolls near the screen.
+  Future<void> scrollToInsights(WidgetTester tester) =>
+      tester.scrollUntilVisible(find.byType(InsightsCard), 100, scrollable: find.byType(Scrollable).first);
+
   // A tracked September makes Food "up" and brings the limit offer.
   void trackSeptember() {
     for (final (int id, int rupees, int category, EntryKind kind, CalendarDate date) in <(int, int, int, EntryKind, CalendarDate)>[
@@ -155,6 +160,7 @@ void main() {
     testWidgets('insights: Food up from last month opens Food\'s entries; the offer saves limits', (WidgetTester tester) async {
       trackSeptember();
       await pump(tester);
+      await scrollToInsights(tester);
       expect(find.text('Worth knowing'), findsOneWidget);
       expect(find.text('Food spending is ₹17,010 more than in September.'), findsOneWidget);
       await tester.ensureVisible(find.text('See Food entries'));
@@ -174,6 +180,7 @@ void main() {
     testWidgets('See every entry lives in Where it went\'s title row, not at the end of the page', (WidgetTester tester) async {
       trackSeptember();
       await pump(tester);
+      await scrollToInsights(tester);
       final Finder link = find.byKey(const ValueKey<String>('see-every-entry'));
       expect(link, findsOneWidget);
       expect(find.descendant(of: find.byType(WhereItWentCard), matching: link), findsOneWidget);
@@ -190,6 +197,7 @@ void main() {
       trackSeptember();
       await pump(tester);
       services.categories.failure = DatabaseFailure('locked');
+      await scrollToInsights(tester);
       await tester.ensureVisible(find.text('Use these limits'));
       await tester.pump();
       await tester.runAsync(() async {
@@ -263,23 +271,23 @@ void main() {
       });
     });
 
-    group('pace chart height (D69)', () {
+    group('pace chart height (D135)', () {
       Size chart(WidgetTester tester) => tester.getSize(find.byKey(const ValueKey<String>('pace-chart')));
 
-      testWidgets('is half the card width on a phone', (WidgetTester tester) async {
+      testWidgets('is 0.6 of the card width on a phone', (WidgetTester tester) async {
         await pump(tester);
-        expect(chart(tester).height, chart(tester).width / 2);
-        expect(chart(tester).height, inInclusiveRange(160, 200));
+        expect(chart(tester).height, closeTo(chart(tester).width * 0.6, 0.01));
+        expect(chart(tester).height, inInclusiveRange(168, 216));
       });
 
-      testWidgets('never drops below 160 on a 320dp phone', (WidgetTester tester) async {
+      testWidgets('never drops below 168 on a 320dp phone', (WidgetTester tester) async {
         await pump(tester, size: TestWindows.smallPhone);
-        expect(chart(tester).height, 160);
+        expect(chart(tester).height, 168);
       });
 
-      testWidgets('stops at 200 on a tablet', (WidgetTester tester) async {
+      testWidgets('stops at 216 on a tablet', (WidgetTester tester) async {
         await pump(tester, size: TestWindows.tablet);
-        expect(chart(tester).height, 200);
+        expect(chart(tester).height, 216);
       });
     });
 
