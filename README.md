@@ -59,3 +59,7 @@ flutter test
 | [docs/PLAN.md](docs/PLAN.md) | Scope, data model, architecture and milestones |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log |
 | [docs/design/](docs/design/README.md) | HTML mockups and brand assets |
+
+## License
+
+Released under the [MIT License](LICENSE). Copyright (c) 2026 tejas-su. You're free to use, change and share this code, as long as you keep the copyright notice and credit tejas-su.
