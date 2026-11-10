@@ -2,7 +2,7 @@
 
 **Name:** Hisaab (हिसाब, "keeping account").
 **Direction:** calm monochrome plus one signal colour.
-**Mascot:** none; the concept uses no characters.
+**Mascot:** none; the concept uses no characters. Onboarding's pictures show only a hand (D144).
 
 Every decision below traces to research (§12). Colours, fonts and formatting were checked on 2026-10-26. Exact behaviour and formulas are in [SPEC.md](SPEC.md), mockups are in [design/](design/README.md), and the reasons are in [DECISIONS.md](DECISIONS.md).
 
@@ -295,6 +295,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
    - *Restore a backup* (FR-ON-1, D139, mockup [34](design/mockups/34-data-controls.html)): a `hairline` text chip on its own 48dp row at the top end, above the progress dots, so it never overlaps them at 320dp. Never marigold: it is a way out for a new phone, not the question.
 2. **"When does it come?"** Big chips: *1st of the month* · *Last day of the month* · *Pick a date* · *Every week* · *It changes*. The hint ends 'No fixed day? Pick "It changes".' so shop owners, freelancers and daily earners know which chip is theirs.
 3. **"Any fixed bills?"** Chips for Rent · EMI · Phone · Internet · School fees · Subscriptions in an even grid of two rows of three, sharing the question's and the key's edges; no leading icon, and an added bill shows ink with its amount line, no check (D141). Then a big **Skip**.
+   - **Pictures (D144, mockup [36](design/mockups/36-payday-illustration.html), Set A):** steps 2 and 3 show a static picture in the gap between the hint and the controls. A hand holds up a calendar (*When does it come?*), rings one day with a pencil (*Which day of the month?* and *Which day of the week?*), and holds up a receipt (*Any fixed bills?*). The style follows Charco Plus: three rough rocks scribbled in charcoal, taupe and marigold, one ink object with stipple shading on one side, sparkles and burst lines, and no faces. The rock tones live only in the pictures. Each picture is a light and a dark WebP in `assets/illustrations/`, at most 320dp wide, centred, and sized to the gap (`AdaptiveSplit.art`). It is dropped when the gap is under 120dp (a 320dp phone at 2× text) and in the side-by-side and fold layouts, so the controls never scroll. It is hidden from TalkBack and never animates.
 4. **Done.** The hero card assembles: today's bar fills marigold, the rail's dots arrive one by one, and `successNotification` fires.
 
 ### 5.2 Home
