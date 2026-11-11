@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab — Home-screen widget and Quick Settings tile (proposal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Mockup 38. Proposal, nothing adopted. Case study 31 items 1 and 2.
+     Numbers follow SPEC's worked example: A = ₹1,850, chai ₹40 then lunch ₹380, hero ₹1,430,
+     9 days to payday on 4 Nov, "about ₹9,300 spare". Tokens are UI_DESIGN §3.2 light and dark.
+     Glyphs are stand-ins for Hugeicons. Android system chrome (launcher, shade, dialogs) is drawn generically. */
+  :root {
+    --bg:#F1EDE8; --surface:#FFFEFC; --sunk:#E7E0D8; --hairline:#D7CFC5; --blockIdle:#D7CFC5;
+    --ink2:#5B5650; --ink:#161615; --signal:#FFB020; --edge:#161615; --etch:#F1EDE8;
+    --sys:#EDEAE6; --sysTile:#DCD8D2; --sysInk:#1D1B19; --sysInk2:#56524D; --scrim:rgba(0,0,0,.32);
+    --wall: radial-gradient(120% 80% at 20% 0%, #C9B9A6 0%, #9E8E80 45%, #6F6A70 100%);
+    --page:#E6E3DF; --pageInk:#161615; --pageInk2:#55514C; --chip:#FFFFFF; --rule:#D5D0CA;
+  }
+  body.dark {
+    --bg:#131210; --surface:#211F1C; --sunk:#2F2B27; --hairline:#3A3632; --blockIdle:#413D38;
+    --ink2:#A7A199; --ink:#F2F1EC; --edge:transparent; --etch:#2F2B27;
+    --sys:#1C1B1A; --sysTile:#2E2C2A; --sysInk:#ECE9E5; --sysInk2:#B4AFA9; --scrim:rgba(0,0,0,.55);
+    --wall: radial-gradient(120% 80% at 20% 0%, #4B4238 0%, #2C2724 50%, #17161A 100%);
+    --page:#0E0D0C; --pageInk:#ECE9E5; --pageInk2:#A8A29B; --chip:#1E1C1A; --rule:#34312D;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px 80px; background:var(--page); color:var(--pageInk); font-family:'Mukta',system-ui,sans-serif; line-height:1.45; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  h1 { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-size:32px; margin:0 0 4px; }
+  h2 { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-size:24px; margin:48px 0 6px; }
+  h3 { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-size:18px; margin:0 0 4px; }
+  p.lede { margin:0 0 12px; color:var(--pageInk2); max-width:84ch; }
+  .muted { color:var(--pageInk2); }
+  code { font-size:12.5px; }
+  .pill { display:inline-block; font-size:12px; font-weight:600; padding:2px 10px; border-radius:999px; background:var(--chip); border:1px solid var(--rule); color:var(--pageInk2); }
+  .pill.rec { background:var(--signal); border-color:var(--signal); color:#161615; }
+
+  .bar { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; padding:10px 12px; margin:14px -12px; background:var(--page); border-bottom:1px solid var(--rule); }
+  .grp { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+  .grp > span { font-size:13px; font-weight:700; color:var(--pageInk2); margin-right:4px; }
+  .grp button { font:600 14px 'Mukta',sans-serif; height:34px; padding:0 12px; border-radius:10px; border:1px solid var(--rule); background:var(--chip); color:var(--pageInk); cursor:pointer; }
+  .grp button[aria-pressed="true"] { background:var(--pageInk); color:var(--page); border-color:var(--pageInk); }
+
+  .num { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-variation-settings:'wdth' 85; font-feature-settings:'tnum'; letter-spacing:-.01em; }
+  svg.g { fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+
+  /* ===== Widget shell (hisaab tokens) ===== */
+  .w { background:var(--surface); color:var(--ink); border-radius:28px; position:relative; overflow:hidden; font-family:'Mukta',sans-serif; }
+  body:not(.dark) .w { box-shadow:0 0 0 1px rgba(22,22,21,.06); }
+  /* The hero's finish (D106, D107): drawn by etch() below from DisplayEtchPainter's numbers. */
+  .w > canvas.etch { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+  .w > :not(canvas) { position:relative; z-index:1; }
+  .w .divider { height:1px; background:var(--etch); }
+  .hero-raised { box-shadow:0 10px 28px -12px rgba(22,22,21,.18), 0 0 0 1px rgba(22,22,21,.06) !important; }
+  body.dark .hero-raised { box-shadow:0 0 0 1px var(--hairline) !important; }
+  .compare { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
+  .compare figure { margin:0; display:flex; flex-direction:column; gap:10px; }
+  .compare .ground { border-radius:28px; padding:20px; }
+  .compare .ground.app { background:var(--bg); }
+  .compare .ground.wall { background:var(--wall); }
+  .compare figcaption { font-size:13px; line-height:18px; max-width:360px; }
+  .compare figcaption b { font-family:'Anek Latin','Mukta',sans-serif; font-size:16px; }
+  .w .lab { font-size:13px; line-height:18px; color:var(--ink2); }
+  .w .amt { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-variation-settings:'wdth' 85; font-feature-settings:'tnum'; line-height:1; color:var(--ink); }
+  .w .amt.muted { color:var(--ink2); }
+  .w .sub { font-size:12px; line-height:16px; color:var(--ink2); }
+  .w .words { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-variation-settings:'wdth' 85; line-height:1.1; }
+  .addk { width:48px; height:48px; border-radius:16px; background:var(--signal); color:#161615; display:grid; place-items:center; box-shadow:inset 0 0 0 1.5px var(--edge); flex:none; }
+  .addk.wide { width:100%; height:40px; border-radius:14px; display:flex; gap:6px; justify-content:center; align-items:center; font:600 14px 'Mukta',sans-serif; }
+  .setk { height:40px; padding:0 16px; border-radius:14px; background:var(--ink); color:var(--surface); display:inline-flex; align-items:center; font:600 14px 'Mukta',sans-serif; }
+  .mark { font-family:'Anek Latin','Mukta',sans-serif; font-weight:700; font-size:17px; color:var(--ink); }
+  .mark i { display:inline-block; width:6px; height:6px; border-radius:3px; background:var(--signal); box-shadow:0 0 0 1px var(--edge); margin-left:1px; vertical-align:1px; }
+
+  /* Today's bar, as BR-6, shortened for widgets */
+  .tb { position:relative; display:flex; gap:3px; width:100%; }
+  .tb > b { display:block; min-width:3px; border-radius:5px; background:var(--blockIdle); }
+  .tb > b.y { background:var(--signal); box-shadow:inset 0 0 0 1.5px var(--edge); border-radius:9px 5px 5px 9px; }
+  .tb > b.y.slow { background:var(--blockIdle); box-shadow:inset 0 0 0 2.5px var(--signal), inset 0 0 0 4px var(--edge); }
+  body.dark .tb > b.y.slow { box-shadow:inset 0 0 0 2.5px var(--signal); }
+  .tb > b:last-child { border-top-right-radius:9px; border-bottom-right-radius:9px; }
+  .tb > b.y:only-child { border-radius:9px; }
+  .tb .hatch { position:absolute; top:0; bottom:0; right:0; border-radius:5px 9px 9px 5px; background:repeating-linear-gradient(135deg, var(--ink2) 0 1.5px, var(--surface) 1.5px 4.2px); box-shadow:inset 0 0 0 1.5px var(--ink2); }
+  .tb .tick { position:absolute; top:-4px; bottom:-4px; width:2px; margin-left:-1px; background:var(--ink); box-shadow:0 0 0 1px var(--surface); }
+  .tb.empty > b { flex:1; border-radius:9px; }
+
+  .rail { display:flex; align-items:center; gap:8px; }
+  .dots { flex:1; display:flex; justify-content:space-between; align-items:center; height:10px; }
+  .dots i { width:6px; height:6px; border-radius:3px; background:var(--blockIdle); }
+  .dots i.t { width:10px; height:10px; border-radius:5px; background:var(--signal); box-shadow:inset 0 0 0 1.5px var(--edge); }
+  .dots i.t.ring { background:transparent; box-shadow:inset 0 0 0 2.5px var(--signal), 0 0 0 1px var(--edge); }
+  body.dark .dots i.t.ring { box-shadow:inset 0 0 0 2.5px var(--signal); }
+  .dots i.t.h { background:repeating-linear-gradient(135deg, var(--ink2) 0 1.3px, var(--surface) 1.3px 3.4px); box-shadow:inset 0 0 0 1.5px var(--ink2); }
+  .dots i.o { background:transparent; box-shadow:inset 0 0 0 1.3px var(--ink2); }
+  .flag { display:flex; align-items:center; gap:3px; font:600 12px/16px 'Mukta',sans-serif; color:var(--ink); }
+
+  /* ===== Phone and home screen ===== */
+  .phones { display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; }
+  .phone { width:360px; max-width:100%; height:760px; border-radius:36px; overflow:hidden; position:relative; background:var(--wall); box-shadow:0 0 0 8px #1b1a19, 0 0 0 9px #3a3835; flex:none; }
+  .status { height:32px; display:flex; justify-content:space-between; align-items:center; padding:0 22px; font:600 13px 'Mukta',sans-serif; color:#fff; }
+  .home { position:absolute; inset:32px 0 0; padding:12px 16px; display:grid; grid-template-columns:repeat(4, 1fr); grid-auto-rows:92px; gap:0 0; }
+  .cell { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font:500 12px 'Mukta',sans-serif; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.4); }
+  .ico { width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.82); display:grid; place-items:center; color:#3c3a37; }
+  body.dark .ico { background:rgba(60,57,54,.9); color:#e9e6e2; }
+  .ico.hisaab { background:#161615; color:#F2F1EC; font:700 20px 'Anek Latin',sans-serif; }
+  .ico.hisaab i { display:inline-block; width:6px; height:6px; border-radius:3px; background:#FFB020; margin-left:1px; }
+  .span4x2 { grid-column:span 4; grid-row:span 2; padding:4px 0; }
+  .span2x1 { grid-column:span 2; padding:4px 4px; }
+  .span2x2 { grid-column:span 2; grid-row:span 2; padding:4px 4px; }
+  .span4x1 { grid-column:span 4; padding:4px 0; }
+  .search { position:absolute; left:16px; right:16px; bottom:22px; height:52px; border-radius:26px; background:rgba(255,255,255,.85); display:flex; align-items:center; padding:0 20px; color:#4a4744; font:500 14px 'Mukta',sans-serif; }
+  body.dark .search { background:rgba(50,47,45,.92); color:#cfcac4; }
+  .hotseat { position:absolute; left:16px; right:16px; bottom:86px; display:grid; grid-template-columns:repeat(4,1fr); justify-items:center; }
+
+  /* ===== Sizes board ===== */
+  .board { background:var(--wall); border-radius:24px; padding:24px; display:flex; flex-wrap:wrap; gap:28px 24px; align-items:flex-start; }
+  .board figure { margin:0; display:flex; flex-direction:column; gap:8px; }
+  .board figcaption { color:#fff; font-size:13px; line-height:18px; text-shadow:0 1px 2px rgba(0,0,0,.45); max-width:330px; }
+  .board figcaption b { font-family:'Anek Latin','Mukta',sans-serif; font-size:16px; }
+
+  /* ===== Cards around the page ===== */
+  .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; margin-top:12px; }
+  .card { background:var(--chip); border:1px solid var(--rule); border-radius:18px; padding:16px 18px; }
+  .card ul, .card ol { margin:6px 0 0; padding-left:1.2em; } .card li { margin:3px 0; }
+  .scroll { overflow-x:auto; max-width:100%; }
+  table.t { border-collapse:collapse; width:100%; min-width:720px; font-size:14px; background:var(--chip); border-radius:14px; overflow:hidden; }
+  table.t th, table.t td { text-align:left; vertical-align:top; padding:8px 12px; border-bottom:1px solid var(--rule); }
+  table.t th { font-size:12.5px; color:var(--pageInk2); }
+  table.t td:first-child { font-weight:600; white-space:nowrap; }
+
+  /* ===== Flow frames ===== */
+  .flow { display:flex; flex-wrap:wrap; gap:14px; align-items:stretch; }
+  .frame { width:250px; background:var(--wall); border-radius:24px; padding:14px; display:flex; flex-direction:column; gap:10px; position:relative; }
+  .frame .cap { color:#fff; font-size:13px; line-height:18px; text-shadow:0 1px 2px rgba(0,0,0,.45); }
+  .frame .cap b { font-family:'Anek Latin','Mukta',sans-serif; font-size:15px; }
+  .arrow { align-self:center; font-size:22px; color:var(--pageInk2); }
+  .tap { position:absolute; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.55); box-shadow:0 0 0 3px rgba(255,255,255,.35); pointer-events:none; }
+  .tray { background:var(--surface); color:var(--ink); border-radius:24px 24px 18px 18px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+  .tray .amtline { font-size:34px; text-align:center; }
+  .kp { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+  .kp b { height:30px; border-radius:10px; background:var(--sunk); display:grid; place-items:center; font:600 14px 'Anek Latin',sans-serif; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+  .tiles b { height:44px; border-radius:12px; background:var(--sunk); font:500 10px 'Mukta',sans-serif; display:flex; align-items:flex-end; justify-content:center; padding-bottom:3px; }
+  .tiles b.flash { background:var(--ink); color:var(--surface); }
+  .nextk { height:34px; border-radius:12px; background:var(--signal); box-shadow:inset 0 0 0 1.5px var(--edge); display:grid; place-items:center; font:600 14px 'Mukta',sans-serif; color:#161615; }
+
+  /* ===== System shade and tiles (generic Android) ===== */
+  .shade { width:340px; max-width:100%; background:var(--sys); color:var(--sysInk); border-radius:28px; padding:16px 14px 18px; display:flex; flex-direction:column; gap:10px; }
+  .shade .top { display:flex; justify-content:space-between; font:600 13px 'Mukta',sans-serif; color:var(--sysInk2); padding:0 6px 4px; }
+  .qs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .qt { height:68px; border-radius:22px; background:var(--sysTile); display:flex; align-items:center; gap:10px; padding:0 12px; position:relative; }
+  .qt.on { background:var(--sysInk); color:var(--sys); }
+  .qt .qi { width:36px; height:36px; border-radius:18px; display:grid; place-items:center; flex:none; }
+  .qt .ql { font:600 14px/18px 'Mukta',sans-serif; } .qt .qs2 { font:400 12px/16px 'Mukta',sans-serif; opacity:.75; }
+  .qt.ours { outline:2px dashed var(--signal); outline-offset:3px; }
+  .bright { height:44px; border-radius:22px; background:var(--sysTile); position:relative; overflow:hidden; }
+  .bright::before { content:""; position:absolute; inset:0 45% 0 0; background:var(--sysInk2); opacity:.35; border-radius:22px; }
+  .lockchip { display:inline-flex; gap:6px; align-items:center; font:600 12px 'Mukta',sans-serif; color:var(--sysInk2); }
+
+  .dialog { width:300px; max-width:100%; background:var(--sys); color:var(--sysInk); border-radius:28px; padding:22px; display:flex; flex-direction:column; gap:12px; }
+  .dialog h4 { margin:0; font:600 19px 'Mukta',sans-serif; }
+  .dialog .acts { display:flex; justify-content:flex-end; gap:16px; font:600 14px 'Mukta',sans-serif; }
+  .dialog .acts .p { padding:8px 16px; border-radius:20px; background:var(--sysInk); color:var(--sys); }
+
+  /* Settings rows (hisaab) */
+  .settings { width:360px; max-width:100%; background:var(--bg); color:var(--ink); border-radius:28px; padding:18px 16px; display:flex; flex-direction:column; gap:10px; }
+  .settings .sh { font:600 13px 'Mukta',sans-serif; color:var(--ink2); padding:0 4px; }
+  .settings .grpc { background:var(--surface); border-radius:22px; overflow:hidden; }
+  .srow { display:flex; align-items:center; gap:12px; min-height:64px; padding:10px 14px; border-bottom:1px solid var(--hairline); }
+  .srow:last-child { border-bottom:0; }
+  .well { width:40px; height:40px; border-radius:12px; background:var(--sunk); display:grid; place-items:center; flex:none; }
+  .srow .tt { font:400 15px/20px 'Mukta',sans-serif; } .srow .ss { font:400 13px/18px 'Mukta',sans-serif; color:var(--ink2); }
+  .srow .chev { margin-left:auto; color:var(--ink2); }
+
+  .states { display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:20px; }
+  .states figure { margin:0; background:var(--wall); border-radius:24px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .states figcaption { color:#fff; font-size:13px; text-shadow:0 1px 2px rgba(0,0,0,.45); }
+  .states figcaption b { font-family:'Anek Latin','Mukta',sans-serif; font-size:16px; }
+  .states .row { display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="muted" style="margin:0 0 4px;font-size:13px">Mockup 38 · 2026-11-11 · <span class="pill">Proposal · nothing adopted</span> · from <a href="../../design-research/case-studies/31-play-store-competitive-landscape.md">case study 31</a>, items 1 and 2</p>
+<h1>Home-screen widget and Quick Settings tile</h1>
+<p class="lede">Two ways to reach hisaab without opening it. The <b>widget</b> is for glancing: today's safe-to-spend, without a tap. The <b>tile</b> is for entering: one swipe down, then the keypad. Both open the Add tray at the keypad, so the path stays <i>Add → digits → Next → tile</i>; they only skip finding and opening the app.</p>
+<p class="lede">Numbers follow the spec's worked example: today's share ₹1,850, chai ₹40 then lunch ₹380, <b>₹1,430</b> left, 9 days to payday on 4 Nov.</p>
+
+<div class="bar" role="toolbar" aria-label="Mockup controls">
+  <div class="grp" data-k="theme"><span>Look</span><button data-v="light" aria-pressed="true">Light</button><button data-v="dark" aria-pressed="false">Dark</button></div>
+  <div class="grp" data-k="state"><span>State</span><button data-v="on" aria-pressed="true">On track</button><button data-v="slow" aria-pressed="false">Slow down</button><button data-v="overToday" aria-pressed="false">Over today</button><button data-v="overCycle" aria-pressed="false">Over the cycle</button><button data-v="none" aria-pressed="false">Not set up</button></div>
+  <div class="grp" data-k="priv"><span>Amount</span><button data-v="shown" aria-pressed="true">Shown</button><button data-v="hidden" aria-pressed="false">Private</button></div>
+</div>
+
+<!-- ============ 1. On a home screen ============ -->
+<h2>1 · On a home screen</h2>
+<p class="lede">The 4×2 widget is the hero card in miniature, as UI_DESIGN §10 already sketches. Its background is hisaab's <code>surface</code> and it keeps the app's tokens, not the wallpaper's Material You colours, so marigold still means only <i>today / act</i>. The left phone has the 4×2 widget; the right one has the 2×2 and 2×1.</p>
+<div class="phones">
+  <div class="phone" aria-label="Home screen with the 4 by 2 widget">
+    <div class="status"><span>9:41</span><span>▾ ▴ ▮</span></div>
+    <div class="home">
+      <div class="span4x2" data-w="L"></div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>Clock</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l5-4 4 3 2-2 3 3"/></svg></div>Photos</div>
+      <div class="cell"><div class="ico hisaab">h<i></i></div>hisaab</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/><circle cx="12" cy="12" r="8"/></svg></div>Browser</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></svg></div>Maps</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M4 7l8 6 8-6"/><rect x="4" y="5" width="16" height="14" rx="3"/></svg></div>Mail</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4z"/></svg></div>Chat</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M10 6h4"/></svg></div>Pay</div>
+    </div>
+    <div class="hotseat">
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M6 4l3 4-2 2c1 2 3 4 5 5l2-2 4 3-2 3C9 19 5 15 4 6z"/></svg></div>
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4z"/></svg></div>
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/></svg></div>
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="3"/><circle cx="12" cy="12" r="3"/></svg></div>
+    </div>
+    <div class="search"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>&nbsp;&nbsp;Search</div>
+  </div>
+
+  <div class="phone" aria-label="Home screen with the 2 by 2 and 2 by 1 widgets">
+    <div class="status"><span>9:41</span><span>▾ ▴ ▮</span></div>
+    <div class="home">
+      <div class="span2x2" data-w="M2"></div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>Clock</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l5-4 4 3 2-2 3 3"/></svg></div>Photos</div>
+      <div class="cell"><div class="ico hisaab">h<i></i></div>hisaab</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></svg></div>Maps</div>
+      <div class="span2x1" data-w="S"></div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M4 7l8 6 8-6"/><rect x="4" y="5" width="16" height="14" rx="3"/></svg></div>Mail</div>
+      <div class="cell"><div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M10 6h4"/></svg></div>Pay</div>
+    </div>
+    <div class="hotseat">
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M6 4l3 4-2 2c1 2 3 4 5 5l2-2 4 3-2 3C9 19 5 15 4 6z"/></svg></div>
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4z"/></svg></div>
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/></svg></div>
+      <div class="ico"><svg class="g" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="3"/><circle cx="12" cy="12" r="3"/></svg></div>
+    </div>
+    <div class="search"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg>&nbsp;&nbsp;Search</div>
+  </div>
+</div>
+
+<!-- ============ 2. Same card ============ -->
+<h2>2 · The same card as Home</h2>
+<p class="lede">The widget is cut from the hero's paper. It uses the same finish (D106, D107), drawn from the numbers in <code>DisplayEtchPainter</code>:</p>
+<ul class="lede" style="margin-top:0">
+  <li>the guilloché rosette, 14 rippled rings centred 80dp in from the top end corner</li>
+  <li>the fixed-seed grain, one dot per 60 sq dp</li>
+  <li>the solid keyline in <code>displayEtch</code>, 6dp inside the edge</li>
+  <li>the dashed <code>hairline</code> keyline 10dp inside, with 4dp dashes and 3dp gaps</li>
+  <li>the <code>displayEtch</code> divider above the range line</li>
+</ul>
+<p class="lede" style="margin-top:-4px">On a 360dp phone, Home's hero and the 4×2 widget are both 320dp wide, so the rosette and frame land in the same place on both.</p>
+<div class="compare">
+  <figure><div class="ground app"><div data-w="H" style="width:320px"></div></div><figcaption><b>The hero on Home</b><br><span class="muted">As built: 48dp today's bar with its captions, the days rail with "Today" and "9 days to payday", the divider, the range line. Raised with <code>displayShadow</code>; the sheen crosses when Home appears.</span></figcaption></figure>
+  <figure><div class="ground wall"><div data-w="L" style="width:320px"></div></div><figcaption><b>The 4×2 widget</b><br><span class="muted">The same paper, rosette and frame, shorter: the Add key takes the rosette's corner, the bar is 20dp with no captions, and the rail and range line share the bottom. No shadow or sheen: a launcher clips a widget at its edge and doesn't animate it.</span></figcaption></figure>
+</div>
+
+<!-- ============ 3. Sizes ============ -->
+<h2>3 · Four sizes, one widget</h2>
+<p class="lede">One widget that resizes (Android 12+ responsive layouts), so there's only one entry in the launcher's widget list for this, not four. Each size keeps the hero's order: the amount first, then today's bar, then the days. Every size has the marigold <b>Add</b> key at the same corner: 48dp, or a 40dp key in a 48dp tap target on the 2×1. Every size carries the hero's rosette, grain and double keyline.</p>
+<div class="board">
+  <figure><div data-w="S" style="width:152px"></div><figcaption><b>2×1 · Glance</b><br>≈ 152 × 84dp. The amount and "left today", then Add. No bar: at this size it would be a sliver.</figcaption></figure>
+  <figure><div data-w="M2" style="width:152px"></div><figcaption><b>2×2 · Square</b><br>≈ 152 × 184dp. Amount, today's bar, days to payday, and a full-width Add.</figcaption></figure>
+  <figure><div data-w="M" style="width:320px"></div><figcaption><b>4×1 · Strip</b><br>≈ 320 × 84dp. Amount, a short today's bar, Add.</figcaption></figure>
+  <figure><div data-w="L" style="width:320px"></div><figcaption><b>4×2 · Hero</b> <span class="pill rec">default size</span><br>≈ 320 × 184dp. The hero in miniature: amount, today's bar, the days rail with the payday flag, and the range line.</figcaption></figure>
+</div>
+
+<div class="cards">
+  <div class="card"><h3>What the widget leaves out</h3><ul>
+    <li>The bar's captions ("₹420 spent", "of ₹1,850 for today") and the category names under bites. TalkBack still reads them.</li>
+    <li>The <i>This week</i> view. A widget can't be toggled without a tap that also opens something; a tap opens Home instead.</li>
+    <li>Motion. The bar doesn't drain on the widget; it redraws when you come back to the home screen.</li>
+    <li>Room around the frame. The hero keeps 24dp above and below its content; the widget keeps the 10dp gap inside the dashed line and no more, because 84dp and 184dp are fixed by the launcher's grid.</li>
+  </ul></div>
+  <div class="card"><h3>Private, as a second widget</h3>
+    <p style="margin:0">Switch <b>Amount → Private</b> above. The amount gives way to words ("Plenty left today", "A little left today", "Over today's share") and the bar stays, so a glance still says how today is going without a rupee figure for others to read.</p>
+    <p class="muted" style="margin:8px 0 0">Proposed as a separate entry in the widget list (<i>hisaab</i> and <i>hisaab · private</i>), so the choice is made by picking one, not by a setting (PLAN §2).</p>
+  </div>
+</div>
+
+<!-- ============ 3. Taps ============ -->
+<h2>4 · What a tap does</h2>
+<p class="lede">Two tap zones, never more. <b>Add</b> opens the tray at the keypad. <b>Anywhere else</b> opens Home. After a save, the app pushes the new figures and the widget is already updated when you're back on the home screen.</p>
+<div class="flow">
+  <div class="frame"><div data-w="L"></div><span class="tap" style="right:28px;top:26px"></span><div class="cap"><b>1 · Tap Add</b><br>On the widget.</div></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="frame">
+    <div class="tray"><div class="amtline num">₹300</div><div class="kp"><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b><b>⌫</b><b>0</b><b>00</b></div><div class="nextk">Next</div></div>
+    <div class="cap"><b>2 · Digits, Next</b><br>The Add tray opens on Home at the keypad, just as the dock's Add does.</div></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="frame">
+    <div class="tray"><div class="sub" style="text-align:center;color:var(--ink2);font-size:12px">₹300 · Today</div><div class="tiles"><b>Food</b><b class="flash">Travel</b><b>Shopping</b><b>Bills</b><b>Home</b><b>Health</b><b>Fun</b><b>Other</b></div></div>
+    <div class="cap"><b>3 · Tile</b><br>Saved. Home, the widget and the tile's subtitle (if shown) all update.</div></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="frame"><div data-w="L" data-force="after"></div><div class="cap"><b>4 · Back home</b><br>₹1,130 left; the Travel bite sits next to the yellow.</div></div>
+</div>
+<p class="muted" style="font-size:13px">The tile names in frame 3 are placeholders, not the real 8.</p>
+
+<!-- ============ 4. Quick Settings tile ============ -->
+<h2>5 · Quick Settings tile</h2>
+<p class="lede">The tile does one thing: <b>Add a spend</b>. It is an action tile, so it never shows as "on" and uses the system's colours (Android draws tiles, not the app). The icon is a monochrome Hugeicons glyph; the label is the verb.</p>
+<div class="phones" style="gap:24px">
+  <figure style="margin:0">
+    <div class="shade">
+      <div class="top"><span>Tue, 27 Oct</span><span>9:41</span></div>
+      <div class="bright"></div>
+      <div class="qs">
+        <div class="qt on"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><path d="M3 9a13 13 0 0 1 18 0M6 12.5a8 8 0 0 1 12 0M9.5 16a3 3 0 0 1 5 0"/></svg></div><div><div class="ql">Internet</div><div class="qs2">Home Wi-Fi</div></div></div>
+        <div class="qt"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></svg></div><div><div class="ql">Bluetooth</div><div class="qs2">Off</div></div></div>
+        <div class="qt"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><path d="M8 3h8l-2 6h-4zM10 9v12h4V9"/></svg></div><div><div class="ql">Torch</div><div class="qs2">Off</div></div></div>
+        <div class="qt ours" id="tileA"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M12 13v4M10 15h4"/></svg></div><div><div class="ql">Add a spend</div><div class="qs2">hisaab</div></div></div>
+      </div>
+    </div>
+    <figcaption style="margin-top:8px;max-width:340px"><b class="num" style="font-size:16px">T1 · Always the same</b> <span class="pill rec">recommended</span><br><span class="muted">Label "Add a spend", subtitle "hisaab". It never shows money, so the shade is safe on the lock screen, and the tile never needs data, so it's never stale.</span></figcaption>
+  </figure>
+
+  <figure style="margin:0">
+    <div class="shade">
+      <div class="top"><span>Tue, 27 Oct</span><span>9:41</span></div>
+      <div class="bright"></div>
+      <div class="qs">
+        <div class="qt on"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><path d="M3 9a13 13 0 0 1 18 0M6 12.5a8 8 0 0 1 12 0M9.5 16a3 3 0 0 1 5 0"/></svg></div><div><div class="ql">Internet</div><div class="qs2">Home Wi-Fi</div></div></div>
+        <div class="qt"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><path d="M7 7l10 10-5 4V3l5 4L7 17"/></svg></div><div><div class="ql">Bluetooth</div><div class="qs2">Off</div></div></div>
+        <div class="qt"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><path d="M8 3h8l-2 6h-4zM10 9v12h4V9"/></svg></div><div><div class="ql">Torch</div><div class="qs2">Off</div></div></div>
+        <div class="qt ours"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M12 13v4M10 15h4"/></svg></div><div><div class="ql">Add a spend</div><div class="qs2" id="t2sub">₹1,430 left today</div></div></div>
+      </div>
+      <div class="lockchip"><svg class="g" width="14" height="14" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> On the lock screen the subtitle falls back to "hisaab"</div>
+    </div>
+    <figcaption style="margin-top:8px;max-width:340px"><b class="num" style="font-size:16px">T2 · Today's amount when unlocked</b><br><span class="muted">The subtitle shows the hero figure only while the phone is unlocked. It's useful, but it puts money on a surface anyone near you sees, and the tile needs fresh data each time the shade opens. It overlaps with the widget's job.</span></figcaption>
+  </figure>
+
+  <div class="card" style="max-width:340px;align-self:stretch">
+    <h3>Tile behaviour</h3>
+    <ol>
+      <li><b>Tap:</b> the shade collapses and the Add tray opens at the keypad.</li>
+      <li><b>Tapped while locked:</b> Android asks to unlock first (<code>unlockAndRun</code>), then step 1. Nothing about money shows before unlocking.</li>
+      <li><b>Long-press:</b> opens hisaab's Home (the tile's preferences activity).</li>
+      <li><b>TalkBack:</b> "Add a spend, hisaab. Button."</li>
+    </ol>
+    <h3 style="margin-top:14px">Also free: an app shortcut</h3>
+    <p style="margin:0">Long-press the launcher icon → <b>Add a spend</b>. A static shortcut with no UI to design and no settings; it opens the same tray at the keypad.</p>
+  </div>
+</div>
+
+<!-- ============ 5. Getting them on the phone ============ -->
+<h2>6 · How people add them</h2>
+<p class="lede">Most people never open the widget list or edit their tiles. Android lets the app ask: <code>requestPinAppWidget</code> for the widget and <code>requestAddTileService</code> (Android 13+) for the tile, each answered in a system dialog. Proposed: one Settings group, <b>Shortcuts</b>, with a row for each. A row hides itself when the launcher or Android version can't do it.</p>
+<div class="phones" style="gap:24px;align-items:flex-start">
+  <div class="settings" aria-label="Settings, Shortcuts group">
+    <div class="sh">Shortcuts</div>
+    <div class="grpc">
+      <div class="srow"><div class="well"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></div><div><div class="tt">Add a widget</div><div class="ss">See what's safe to spend from your home screen</div></div><svg class="g chev" width="18" height="18" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      <div class="srow"><div class="well"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M12 13v4M10 15h4"/></svg></div><div><div class="tt">Add to quick settings</div><div class="ss">Add a spend from the pull-down</div></div><svg class="g chev" width="18" height="18" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+    </div>
+    <p class="muted" style="font-size:12.5px;margin:2px 4px 0;color:var(--ink2)">Shown here in hisaab's tokens. Where the group sits in Settings is a question for design-ia.</p>
+  </div>
+
+  <div class="dialog" aria-label="System dialog: add widget">
+    <h4>Add to home screen?</h4>
+    <div style="background:var(--wall);border-radius:20px;padding:12px"><div data-w="L"></div></div>
+    <div class="muted" style="color:var(--sysInk2);font-size:13px">hisaab · 4 × 2</div>
+    <div class="acts"><span>Cancel</span><span class="p">Add</span></div>
+  </div>
+
+  <div class="dialog" aria-label="System dialog: add tile">
+    <div style="display:flex;justify-content:center"><div class="qt" style="width:180px"><div class="qi"><svg class="g" width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M12 13v4M10 15h4"/></svg></div><div><div class="ql">Add a spend</div><div class="qs2">hisaab</div></div></div></div>
+    <h4 style="text-align:center">Add tile to Quick Settings?</h4>
+    <div class="acts" style="justify-content:center"><span>Don't add tile</span><span class="p">Add tile</span></div>
+  </div>
+</div>
+<p class="muted" style="font-size:13px">Both dialogs belong to Android and the launcher, so the words and look vary by phone. Drawn generically.</p>
+
+<!-- ============ 6. Every state ============ -->
+<h2>7 · Every state</h2>
+<p class="lede">The 4×2 and 2×1 in each BR-5 state, in the current look and amount setting. No red or green anywhere: state is fill, outline, hatch and words, as in the app.</p>
+<div class="states" id="states"></div>
+
+<!-- ============ 7. Copy ============ -->
+<h2>8 · Copy (for design-content)</h2>
+<div class="scroll"><table class="t">
+  <thead><tr><th>Where</th><th>Proposed text</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Widget title (4×2, 2×2, 4×1)</td><td>Safe to spend today</td><td>Reuses <code>safeToSpendToday</code></td></tr>
+    <tr><td>Widget, 2×1 under the amount</td><td>left today</td><td>New. The title doesn't fit at 2×1</td></tr>
+    <tr><td>Add key</td><td>Add (TalkBack: "Add a spend")</td><td>Glyph only on 2×1, 4×1, 4×2; word + glyph on 2×2</td></tr>
+    <tr><td>Over today</td><td>₹220 over today</td><td>Hero copy, BR-5 #3</td></tr>
+    <tr><td>Over the cycle</td><td>Over by ₹3,200 this cycle</td><td>Hero copy, BR-5 #2</td></tr>
+    <tr><td>Private: on track / slow / over today / over the cycle</td><td>Plenty left today · A little left today · Over today's share · Over this cycle</td><td>New; words only, no rupees</td></tr>
+    <tr><td>Not set up</td><td>Set up hisaab to see what's safe to spend today. · <b>Set up</b></td><td>New</td></tr>
+    <tr><td>Widget list description</td><td>What's safe to spend today, and an Add key · <i>Private:</i> How today is going, without the amount</td><td>Shown by the launcher's widget picker</td></tr>
+    <tr><td>Tile label / subtitle</td><td>Add a spend / hisaab</td><td>"Spend" as a noun: check against the app's word list (the app says "Spent", "Add")</td></tr>
+    <tr><td>App shortcut</td><td>Add a spend</td><td>Same as the tile</td></tr>
+    <tr><td>Settings group and rows</td><td>Shortcuts · Add a widget · Add to quick settings</td><td>Subtitles as drawn in section 6</td></tr>
+    <tr><td>Widget TalkBack summary</td><td>"Safe to spend today, 1,430 rupees. 420 rupees spent of 1,850. 9 days to payday, on 4 November. Lasts till payday, about 9,300 rupees spare."</td><td>Spoken amounts, as accessibility.md</td></tr>
+  </tbody>
+</table></div>
+
+<!-- ============ 8. Build notes ============ -->
+<h2>9 · Build notes and open points</h2>
+<div class="cards">
+  <div class="card"><h3>Never stale at midnight</h3>
+    <p style="margin:0">A widget lives when the app is closed, but all money maths stays in Dart (<code>SafeToSpend</code>, <code>PeriodCalculator</code>). Proposal: each time the app saves anything, it writes a <b>day-by-day table until the next payday and one cycle past it</b>: hero, share, state, days left, range line. Kotlin only picks today's row. This works because nothing changes the ledger without the app being open: with no new entries, every future day's figure is already known, bills and payday included.</p>
+    <p class="muted" style="margin:8px 0 0">Refresh: on every save, delete, undo, restore and settings change; a widget update at about 00:01 and on date, time or time-zone change. Past the table's end (months unopened) the widget shows the wordmark and "Open hisaab to update".</p>
+  </div>
+  <div class="card"><h3>Drawing it</h3><ul>
+    <li><code>home_widget</code> is already named in PLAN §11. Layouts are native RemoteViews XML; Android 12+ size mapping gives the four sizes from one provider.</li>
+    <li><b>To verify on device:</b> whether RemoteViews keeps bundled Anek Latin with tabular figures (an XML <code>fontFamily</code> from <code>res/font</code>). If not, the amount is drawn as a bitmap.</li>
+    <li>Today's bar with bites: a bitmap from <code>home_widget</code>'s render-a-Flutter-widget call, reusing the real painter; the table's future rows draw a plain full bar natively.</li>
+    <li>The look follows the app's <i>Look</i> setting, not just the phone's, so the app writes its theme into the snapshot.</li>
+    <li>Corners follow <code>system_app_widget_background_radius</code> on Android 12+.</li>
+  </ul></div>
+  <div class="card"><h3>The tile</h3><ul>
+    <li>A plain Kotlin <code>TileService</code>; no Flutter package needed (<code>quick_settings_tile</code> in PLAN §11 is optional).</li>
+    <li>Opens with <code>startActivityAndCollapse(PendingIntent)</code> on Android 14+, the Intent form below it; <code>unlockAndRun</code> when locked.</li>
+    <li>The app routes an <i>add</i> launch straight to the tray's keypad, the same route the widget and the app shortcut use.</li>
+  </ul></div>
+  <div class="card"><h3>Docs this would change</h3><ul>
+    <li>PLAN §12–13: move the widget and tile from <i>Later</i> into a milestone.</li>
+    <li>SPEC: new FR for the widget and tile (states, taps, refresh), and FR-SE for the Shortcuts rows.</li>
+    <li>UI_DESIGN §10: replace "Later quick-add options" with this; NFR-10 gains the private widget and the tile's no-money rule.</li>
+    <li>DECISIONS: a row once picked. ARB strings via design-content.</li>
+  </ul></div>
+  <div class="card"><h3>Questions for you</h3><ol>
+    <li>Ship the <b>private</b> widget as a second entry in the widget list, or only the one with the amount?</li>
+    <li>Tile: <b>T1</b> (never shows money) or <b>T2</b> (amount while unlocked)?</li>
+    <li>Do the <b>Shortcuts</b> rows go in Settings, or should hisaab offer the widget once (say, after the first week)?</li>
+    <li>Default widget size: 4×2 (the hero) or 2×2?</li>
+  </ol></div>
+</div>
+
+</div>
+
+<script>
+const S = {
+  on:        { A:1850, bites:[{n:'Chai',v:40},{n:'Lunch',v:380}], hero:1430, kind:'on',
+               range:'Lasts till payday · about ₹9,300 spare', words:'Plenty left today' },
+  slow:      { A:1850, bites:[{n:'Chai',v:40},{n:'Lunch',v:380},{n:'Groceries',v:1030}], hero:400, kind:'slow',
+               range:'At this pace it runs out on 1 Nov', words:'A little left today' },
+  overToday: { A:1850, bites:[{n:'Chai',v:40},{n:'Lunch',v:380},{n:'Groceries',v:1650}], hero:0, kind:'over',
+               note:'₹220 over today', range:'Later days get ₹1,822 each', words:"Over today's share" },
+  overCycle: { A:0, bites:[{n:'Chai',v:40},{n:'Lunch',v:380}], hero:0, kind:'cycle',
+               note:'Over by ₹3,200 this cycle', range:'Payday in 9 days', words:'Over this cycle' },
+  after:     { A:1850, bites:[{n:'Chai',v:40},{n:'Lunch',v:380},{n:'Travel',v:300}], hero:1130, kind:'on',
+               range:'Lasts till payday · about ₹9,000 spare', words:'Plenty left today' },
+};
+const cur = { theme: location.search.includes('dark') ? 'dark' : 'light', state:'on', priv:'shown' };
+if (cur.theme === 'dark') document.querySelectorAll('[data-k="theme"] button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === 'dark'));
+const inr = v => '₹' + v.toLocaleString('en-IN');
+const plus = s => `<svg class="g" width="${s}" height="${s}" viewBox="0 0 24 24" style="stroke-width:2.2"><path d="M12 5v14M5 12h14"/></svg>`;
+const flag = `<svg class="g" width="14" height="14" viewBox="0 0 24 24"><path d="M5 21V4h11l-2 4 2 4H5"/></svg>`;
+
+function bar(s, h) {
+  const spent = s.bites.reduce((a,b)=>a+b.v,0);
+  if (s.kind === 'over' || s.kind === 'cycle') {
+    const span = spent, tick = s.A / span * 100;
+    const parts = s.bites.slice().reverse().map(b=>`<b style="flex:${b.v}"></b>`).join('');
+    return `<div class="tb" style="height:${h}px">${parts}<span class="hatch" style="left:${tick}%"></span>${s.A>0?`<span class="tick" style="left:${tick}%"></span>`:''}</div>`;
+  }
+  const left = s.A - spent;
+  const parts = s.bites.slice().reverse().map(b=>`<b style="flex:${b.v}"></b>`).join('');
+  return `<div class="tb" style="height:${h}px"><b class="y ${s.kind==='slow'?'slow':''}" style="flex:${left}"></b>${parts}</div>`;
+}
+function dots(s) {
+  let t = 't' + (s.kind==='slow' ? ' ring' : (s.kind==='over'||s.kind==='cycle') ? ' h' : '');
+  let out = `<i class="${t}"></i>`;
+  for (let i=0;i<8;i++) out += `<i class="${s.kind==='cycle'?'o':''}"></i>`;
+  return out;
+}
+function amountBlock(s, size, priv, inlineNote) {
+  if (priv) return `<div class="words" style="font-size:${Math.round(size*0.62)}px">${s.words}</div>`;
+  const muted = s.hero === 0 ? ' muted' : '';
+  const amt = `<div class="amt${muted}" style="font-size:${size}px">${inr(s.hero)}</div>`;
+  if (!s.note) return amt;
+  if (inlineNote) return `<div style="display:flex;align-items:baseline;gap:10px">${amt}<div class="sub">${s.note}</div></div>`;
+  return amt + `<div class="sub" style="margin-top:4px">${s.note}</div>`;
+}
+// Content keeps 10dp clear of the dashed keyline (10dp in), so it starts 20dp from the edge, as on the hero.
+function notSetUp(size) {
+  if (size === 'S') return `<div class="w" style="height:84px;padding:0 20px;display:flex;align-items:center"><div><div class="mark">hisaab<i></i></div><div class="sub">Set up to see today</div></div></div>`;
+  const h = size === 'M' ? 84 : size === 'H' ? 300 : 184;
+  return `<div class="w" style="height:${h}px;padding:${size==='M'?'0 20px':'22px 20px'};display:flex;${size==='M'?'align-items:center;justify-content:space-between':'flex-direction:column;justify-content:space-between'};gap:10px"><div><div class="mark">hisaab<i></i></div><div class="sub" style="font-size:13px;line-height:18px;margin-top:4px">Set up hisaab to see what's safe to spend today.</div></div><div><span class="setk">Set up</span></div></div>`;
+}
+function widget(size, key, priv) {
+  if (key === 'none') return notSetUp(size);
+  const s = S[key];
+  if (size === 'S') {
+    const body = priv ? `<div class="words" style="font-size:15px;margin-bottom:6px">${s.words}</div>${bar(s,10)}`
+      : `<div class="amt${s.hero===0?' muted':''}" style="font-size:24px">${inr(s.hero)}</div><div class="sub" style="margin-top:3px">${s.note ? s.note.replace(' this cycle','') : 'left today'}</div>`;
+    return `<div class="w" style="height:84px;padding:0 16px 0 20px;display:flex;align-items:center;gap:6px"><div style="flex:1;min-width:0">${body}</div><div class="addk" style="width:40px;height:40px;border-radius:14px">${plus(20)}</div></div>`;
+  }
+  if (size === 'M') {
+    return `<div class="w" style="height:84px;padding:0 18px 0 20px;display:flex;align-items:center;gap:14px">
+      <div style="width:112px;flex:none"><div class="lab" style="font-size:12px;line-height:16px">Safe to spend today</div>${amountBlock(s,28,priv).replace('margin-top:4px','margin-top:1px')}</div>
+      <div style="flex:1">${bar(s,20)}</div><div class="addk">${plus(22)}</div></div>`;
+  }
+  if (size === 'M2') {
+    return `<div class="w" style="height:184px;padding:20px;display:flex;flex-direction:column;gap:6px">
+      <div><div class="lab" style="font-size:12px;line-height:16px">Safe to spend today</div>${amountBlock(s,30,priv)}</div>
+      ${bar(s,14)}
+      <div class="sub" style="display:flex;justify-content:space-between;white-space:nowrap"><span>9 days left</span><span class="flag">${flag}4 Nov</span></div>
+      <div class="addk wide" style="margin-top:auto;height:36px">${plus(18)}Add</div></div>`;
+  }
+  if (size === 'H') {
+    const spent = s.bites.reduce((a,b)=>a+b.v,0);
+    return `<div class="w hero-raised" style="padding:24px 20px;display:flex;flex-direction:column">
+      <div class="lab" style="font-size:14px;line-height:20px">Safe to spend today</div>
+      <div style="margin-top:8px">${amountBlock(s,52,priv)}</div>
+      <div style="margin-top:24px">${bar(s,48)}</div>
+      <div class="sub" style="margin-top:8px;display:flex;justify-content:space-between;font-size:13px;line-height:18px"><span>${inr(spent)} spent</span><span>of ${inr(s.A)} for today</span></div>
+      <div class="rail" style="margin-top:16px"><div class="dots">${dots(s)}</div><span class="flag" style="font-size:13px">${flag}4 Nov</span></div>
+      <div class="sub" style="margin-top:4px;display:flex;justify-content:space-between;font-size:13px;line-height:18px;padding-inline-end:64px"><span>Today</span><span>9 days to payday</span></div>
+      <div class="divider" style="margin-top:20px"></div>
+      <div class="sub" style="margin-top:16px;font-size:13px;line-height:18px;color:var(--ink)">${s.range}</div>
+    </div>`;
+  }
+  return `<div class="w" style="height:184px;padding:20px 20px 18px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div><div class="lab">Safe to spend today</div>${amountBlock(s,36,priv,true)}</div>
+        <div class="addk">${plus(24)}</div></div>
+      <div style="margin-top:auto">${bar(s,20)}</div>
+      <div class="rail" style="margin-top:10px"><div class="dots">${dots(s)}</div><span class="flag">${flag}4 Nov</span></div>
+      <div class="divider" style="margin-top:8px"></div>
+      <div class="sub" style="margin-top:6px;display:flex;justify-content:space-between;gap:8px"><span>${s.range}</span><span style="white-space:nowrap">9 days</span></div>
+    </div>`;
+}
+
+// ---- The hero's finish, from lib/core/widgets/display_etch.dart ----
+let ROSETTE = null;
+function rosette() {
+  if (ROSETTE) return ROSETTE;
+  const p = new Path2D(), steps = 720;
+  for (let ring = 0; ring < 14; ring++) {
+    const base = 40 + ring * 7.5;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps * 2 * Math.PI;
+      const r = base + 6 * Math.sin(18 * t + ring * 0.35) + 3 * Math.sin(5 * t);
+      const x = r * Math.cos(t), y = r * Math.sin(t);
+      if (i) p.lineTo(x, y); else p.moveTo(x, y);
+    }
+    p.closePath();
+  }
+  return ROSETTE = p;
+}
+function seeded(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function etch(w) {
+  const W = w.offsetWidth, H = w.offsetHeight; if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1, cv = document.createElement('canvas');
+  cv.className = 'etch'; cv.width = W * dpr; cv.height = H * dpr;
+  const c = cv.getContext('2d'); c.scale(dpr, dpr);
+  const cs = getComputedStyle(document.body), etchC = cs.getPropertyValue('--etch').trim(), hair = cs.getPropertyValue('--hairline').trim();
+  c.strokeStyle = etchC; c.fillStyle = etchC;
+  c.save(); c.translate(W - 80, 60); c.lineWidth = 0.6; c.stroke(rosette()); c.restore();   // rosette, 80dp in from the top end corner
+  const rnd = seeded(7), n = Math.floor(W * H / 60);                                        // grain, one dot per 60 sq dp
+  for (let i = 0; i < n; i++) c.fillRect(rnd() * W, rnd() * H, 1, 1);
+  c.lineWidth = 1;
+  c.beginPath(); c.roundRect(6, 6, W - 12, H - 12, 28 - 6); c.stroke();                     // solid keyline, 6dp in
+  c.strokeStyle = hair; c.setLineDash([4, 3]);
+  c.beginPath(); c.roundRect(10, 10, W - 20, H - 20, 28 - 10); c.stroke();                  // dashed keyline, 10dp in
+  w.prepend(cv);
+}
+function render() {
+  document.body.classList.toggle('dark', cur.theme === 'dark');
+  const priv = cur.priv === 'hidden';
+  document.querySelectorAll('[data-w]').forEach(el => {
+    const key = el.dataset.force || cur.state;
+    el.innerHTML = widget(el.dataset.w, key, priv && !el.dataset.force);
+  });
+  const st = document.getElementById('states');
+  const names = { on:'On track', slow:'Slow down', overToday:'Over today', overCycle:'Over the cycle', none:'Not set up' };
+  st.innerHTML = Object.keys(names).map(k => `<figure><figcaption><b>${names[k]}</b></figcaption>
+     <div style="width:100%;max-width:320px">${widget('L',k,priv)}</div>
+     <div style="width:152px">${widget('S',k,priv)}</div></figure>`).join('');
+  const s = S[cur.state];
+  document.getElementById('t2sub').textContent = cur.state==='none' ? 'hisaab' : (s.hero > 0 ? inr(s.hero)+' left today' : s.note);
+  document.querySelectorAll('.w').forEach(etch);
+}
+window.addEventListener('resize', () => { clearTimeout(window.__rt); window.__rt = setTimeout(render, 150); });
+if (document.fonts) document.fonts.ready.then(render);
+document.querySelectorAll('.grp').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  cur[g.dataset.k] = b.dataset.v; render();
+}));
+render();
+</script>
+</body>
+</html>

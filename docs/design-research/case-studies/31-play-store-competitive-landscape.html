@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• vs the Play Store</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@85,500;85,700&family=Mukta:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1EBE4; --card: #FFFFFF; --sunk: #E8E1D9; --ink: #1E1B17; --ink2: #5E574F;
+    --hair: #D9D1C7; --signal: #FFB020; --on-signal: #1E1B17;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131210; --card: #1E1C19; --sunk: #191714; --ink: #F3EEE8; --ink2: #B3ABA1;
+      --hair: #34302B; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 "Mukta", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1, h2, h3, .num { font-family: "Anek Latin", "Mukta", system-ui, sans-serif; font-stretch: 85%;
+    font-variant-numeric: tabular-nums; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.05; margin: 8px 0 12px; font-weight: 700; }
+  h2 { font-size: 1.6rem; margin: 56px 0 6px; font-weight: 700; }
+  h3 { font-size: 1.15rem; margin: 0 0 6px; font-weight: 700; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--ink2); }
+  .dot { display: inline-block; width: .32em; height: .32em; border-radius: 50%; background: var(--signal);
+    margin-left: .06em; vertical-align: .55em; }
+  .eyebrow { font-size: .85rem; color: var(--ink2); letter-spacing: .02em; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--hair);
+    font-size: .8rem; color: var(--ink2); background: var(--card); }
+  .lede { font-size: 1.15rem; max-width: 46em; }
+  .card { background: var(--card); border: 1px solid var(--hair); border-radius: 16px; padding: 20px; }
+  .hero { margin-top: 28px; display: grid; gap: 16px; grid-template-columns: 1.3fr 1fr; }
+  .hero .card.big { background: var(--ink); color: var(--bg); border: 0; }
+  .hero .card.big .muted { color: color-mix(in oklab, var(--bg) 70%, var(--ink)); }
+  .hero .big .num { font-size: 1.9rem; line-height: 1.15; display: block; margin: 6px 0 10px; }
+  .mark { background: var(--signal); color: var(--on-signal); padding: 0 .25em; border-radius: 4px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--hair); border-radius: 16px; background: var(--card); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .95rem; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th { font-weight: 600; color: var(--ink2); font-size: .82rem; background: var(--sunk); }
+  tr:last-child td { border-bottom: 0; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bar { height: 10px; border-radius: 5px; background: var(--ink); min-width: 4px; }
+  .bar.hollow { background: transparent; border: 1.5px solid var(--ink); }
+  .barcell { width: 32%; }
+  .sev { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 8px; }
+  .sev i { width: 10px; height: 10px; border-radius: 2px; border: 1.5px solid var(--ink); }
+  .sev i.on { background: var(--ink); }
+  .camp { counter-increment: camp; }
+  .camp h3::before { content: counter(camp) " · "; color: var(--ink2); }
+  .camps { counter-reset: camp; }
+  .tier { margin-top: 18px; }
+  .tier-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .tag { font-family: "Anek Latin", sans-serif; font-stretch: 85%; font-weight: 700; font-size: .9rem;
+    padding: 3px 12px; border-radius: 999px; border: 1.5px solid var(--ink); }
+  .tag.now { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
+  .tag.explore { background: repeating-linear-gradient(135deg, transparent 0 5px, var(--hair) 5px 7px); }
+  .tag.dont { border-style: dashed; color: var(--ink2); border-color: var(--ink2); }
+  .rec { position: relative; padding-left: 52px; }
+  .rec .k { position: absolute; left: 18px; top: 18px; font-family: "Anek Latin", sans-serif; font-stretch: 85%;
+    font-weight: 700; font-size: 1.3rem; color: var(--ink2); }
+  .rec .why { font-size: .9rem; color: var(--ink2); margin: 0; }
+  ul.plain { margin: 0; padding-left: 1.1em; }
+  ul.plain li { margin: 4px 0; }
+  .callout { border-left: 4px solid var(--signal); padding: 14px 18px; background: var(--card);
+    border-radius: 0 12px 12px 0; }
+  .qs { counter-reset: q; display: grid; gap: 10px; }
+  .qs .card { counter-increment: q; display: flex; gap: 14px; }
+  .qs .card::before { content: counter(q); font-family: "Anek Latin", sans-serif; font-weight: 700; font-size: 1.4rem;
+    width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 50%;
+    background: var(--sunk); }
+  footer { margin-top: 56px; font-size: .85rem; color: var(--ink2); }
+  footer a { color: var(--ink2); }
+  a { color: inherit; }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Case study 31 · 2026-11-11 · <span class="pill">Research only · nothing adopted · local, not published</span></div>
+  <h1>Where hisaab<span class="dot"></span> stands on the Play Store</h1>
+  <p class="lede muted">A look at the expense trackers an Indian Android user would compare us with: what they do, what we do that they don't, what we lack, and what's worth building without breaking the "5-year-old can use it" bar.</p>
+
+  <div class="hero">
+    <div class="card big">
+      <div class="muted">The headline</div>
+      <span class="num">No popular India-first Android app answers “how much can I spend today?”</span>
+      <p class="muted" style="margin:0">The apps that do are US-only and bank-linked (PocketGuard), abandoned (Daily Budget, last updated 2019) or iOS-only (Today's Budget).</p>
+    </div>
+    <div class="card">
+      <div class="muted">Our biggest gaps</div>
+      <ul class="plain">
+        <li>Every spend is typed by hand</li>
+        <li>No widget or quick tile</li>
+        <li>English only</li>
+        <li>Nothing brings people back to log</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>The field</h2>
+  <p class="muted">Play listings, India store, read by script on 2026-11-11 (aggregate rating from the page's structured data).</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>App</th><th>Downloads</th><th class="barcell"></th><th>Rating</th><th>Reviews</th><th>How spends get in</th></tr></thead>
+      <tbody>
+        <tr><td>Money Manager <span class="muted">(Realbyte)</span></td><td class="n">10M+</td><td class="barcell"><div class="bar" style="width:100%"></div></td><td class="n">4.65</td><td class="n">469K</td><td>Typed; double-entry accounts · ads</td></tr>
+        <tr><td>Wallet <span class="muted">(BudgetBakers)</span></td><td class="n">10M+</td><td class="barcell"><div class="bar" style="width:100%"></div></td><td class="n">4.69</td><td class="n">389K</td><td>Typed + bank sync (not India) + CSV import</td></tr>
+        <tr><td>Monefy</td><td class="n">10M+</td><td class="barcell"><div class="bar" style="width:100%"></div></td><td class="n">3.99</td><td class="n">195K</td><td>Typed; pie-chart home</td></tr>
+        <tr><td>axio <span class="muted">(ex-Walnut)</span></td><td class="n">10M+</td><td class="barcell"><div class="bar" style="width:100%"></div></td><td class="n">4.46</td><td class="n">267K</td><td><b>Reads bank SMS</b>; also loans, BNPL, FDs</td></tr>
+        <tr><td>Money Lover</td><td class="n">5M+</td><td class="barcell"><div class="bar" style="width:50%"></div></td><td class="n">4.25</td><td class="n">208K</td><td>Typed · ads</td></tr>
+        <tr><td>Spendee</td><td class="n">1M+</td><td class="barcell"><div class="bar" style="width:10%"></div></td><td class="n">4.32</td><td class="n">64K</td><td>Typed + bank sync; shared wallets</td></tr>
+        <tr><td>Cashew</td><td class="n">500K+</td><td class="barcell"><div class="bar" style="width:5%"></div></td><td class="n">4.87</td><td class="n">28K</td><td>Typed; local-first, open source, Flutter</td></tr>
+        <tr><td>Fold</td><td class="n">100K+</td><td class="barcell"><div class="bar" style="width:1%"></div></td><td class="n">4.58</td><td class="n">1.5K</td><td><b>Account Aggregator</b> (RBI AA) import</td></tr>
+        <tr><td>PennyWise</td><td class="n">5K+</td><td class="barcell"><div class="bar" style="width:.2%"></div></td><td class="n">4.52</td><td class="n">187</td><td>Reads bank SMS, on-device</td></tr>
+        <tr><td><b>hisaab<span class="dot"></span></b></td><td class="n">—</td><td class="barcell"><div class="bar hollow" style="width:4px"></div></td><td class="n">—</td><td class="n">0</td><td>Typed, 4 taps; daily safe-to-spend</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" style="font-size:.85rem;margin-top:8px">Bars show the downloads bucket on a linear scale; 10M+ is full width.</p>
+
+  <h2>Five camps</h2>
+  <div class="grid camps">
+    <div class="card camp"><h3>Manual ledgers</h3><p class="muted">Money Manager, Monefy, Money Lover</p><p>Huge user base; accounts, calendars, charts. None answers “how much today?”. Reviews complain about ads, moves to subscriptions and recurring entries that are hard to edit. One Money Manager reviewer asks outright for a “safe to spend” figure.</p></div>
+    <div class="card camp"><h3>Feature-rich hybrids</h3><p class="muted">Wallet, Spendee, Cashew</p><p>Multiple accounts and currencies, sync, widgets, goals, CSV in and out. They win on depth and pay with a learning curve. Cashew shows a local-first app with no sign-in can earn 4.9★.</p></div>
+    <div class="card camp"><h3>SMS auto-capture</h3><p class="muted">axio, PennyWise, FinArt, Kharch Log</p><p>They remove typing, the #1 reason people quit. Reliability is the weak spot: axio's 2026 reviews describe missed banks, duplicates, and an app that won't open. Play needs a separate SMS declaration.</p></div>
+    <div class="card camp"><h3>Account Aggregator</h3><p class="muted">Fold, CRED Money</p><p>Your bank data, imported with consent. Needs a network and an account; works only for banks that have joined.</p></div>
+    <div class="card camp"><h3>Daily-number apps</h3><p class="muted">PocketGuard, Daily Budget, Today's Budget, Plan &amp; Multiply</p><p>Reviewers say the one number “changes behaviour on day one”. <span class="mark">This is hisaab's camp, and in India it's empty.</span></p></div>
+  </div>
+
+  <h2>What we have that they mostly don't</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Strength</th><th>Who else has it</th></tr></thead>
+      <tbody>
+        <tr><td><b>One daily number</b> that already takes out bills, savings and the days to payday</td><td>PocketGuard (bank-linked, US). Nothing in the manual-ledger camp</td></tr>
+        <tr><td><b>Bills that change and card bills</b> done right: changing bills wait with an estimate, card bills never counted twice</td><td>None found. Card double-counting is a real flaw in SMS trackers</td></tr>
+        <tr><td><b>The month follows payday</b> by itself, no “budget period” setting</td><td>Cashew has custom periods, but you set them</td></tr>
+        <tr><td><b>No internet, no account, no analytics</b></td><td>Monefy and Cashew are local-first but keep optional cloud. None found with no internet permission at all</td></tr>
+        <tr><td><b>Ask AI with a full preview</b> before anything leaves</td><td>Fold AI and Mera Kharcha send data to a server-side AI</td></tr>
+        <tr><td><b>No shaming colours</b>; an underspend rolls into tomorrow</td><td>Vendor survey lists “shame from seeing overspending” as a quit reason (66%)</td></tr>
+        <tr><td><b>4-tap entry</b> with quick-amount chips</td><td>Monefy praised for speed; Money Manager has quick-add widgets</td></tr>
+        <tr><td><b>Adaptive layout, TalkBack, reduced motion</b></td><td>Rarely mentioned by anyone</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>What we lack</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Gap</th><th>How much it matters</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><b>Every spend is typed by hand</b></td><td><span class="sev"><i class="on"></i><i class="on"></i><i class="on"></i></span>High</td><td>The top quit reason in every source. Fast entry only softens it</td></tr>
+        <tr><td><b>No home-screen widget or quick tile</b></td><td><span class="sev"><i class="on"></i><i class="on"></i><i class="on"></i></span>High</td><td>Money Manager, Monefy, Cashew all have one. Our number is the most glanceable thing in the field, and it sits behind opening the app</td></tr>
+        <tr><td><b>English only</b></td><td><span class="sev"><i class="on"></i><i class="on"></i><i></i></span>Medium–high</td><td>Mera Kharcha has 29 languages; others do Hindi/Hinglish. Our architecture is ready, but no Hindi strings exist</td></tr>
+        <tr><td><b>Nothing brings people back to log</b></td><td><span class="sev"><i class="on"></i><i class="on"></i><i></i></span>Medium</td><td>Only bill reminders today. “Forgot to open it” is a 42% quit reason (vendor data)</td></tr>
+        <tr><td><b>No app lock</b></td><td><span class="sev"><i class="on"></i><i class="on"></i><i></i></span>Medium</td><td>Common in rivals. Hiding amounts in recent apps covers only half of this</td></tr>
+        <tr><td><b>No ratings yet</b></td><td><span class="sev"><i class="on"></i><i class="on"></i><i></i></span>Medium</td><td>The store listing must sell the daily-number idea in one screenshot</td></tr>
+        <tr><td>No CSV import from another app</td><td><span class="sev"><i class="on"></i><i></i><i></i></span>Low–medium</td><td>Would make switching from Money Manager or Monefy painless</td></tr>
+        <tr><td>No CSV export on its own</td><td><span class="sev"><i class="on"></i><i></i><i></i></span>Low</td><td>Planned for M6; CSV exists only inside the Ask AI prompt today</td></tr>
+        <tr><td>No cash / UPI / card split</td><td><span class="sev"><i class="on"></i><i></i><i></i></span>Low</td><td>Left out on purpose (PLAN §2)</td></tr>
+        <tr><td>Only one device</td><td><span class="sev"><i class="on"></i><i></i><i></i></span>Low</td><td>File backup covers reinstalls; fits the privacy pitch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>What to build</h2>
+  <p class="muted">Each item is weighed on how much users want it against how well it fits hisaab's rules: zero setup, 4-tap entry, no internet, one signal colour.</p>
+
+  <div class="tier">
+    <div class="tier-head"><span class="tag now">Do next</span><span class="muted">High demand, good fit</span></div>
+    <div class="grid">
+      <div class="card rec"><span class="k">1</span><h3>Home-screen widget</h3><p>Shows “₹1,240 left today” and opens the Add tray at the keypad.</p><p class="why">The core value becomes glanceable, and every entry loses a step. Needs <code>home_widget</code> (already in PLAN §11). Open question: should it show the amount by default?</p></div>
+      <div class="card rec"><span class="k">2</span><h3>Quick Settings tile</h3><p>“Add a spend” from the pull-down shade.</p><p class="why">Tiny to build; saves taps for heavy users. Already in PLAN §11.</p></div>
+      <div class="card rec"><span class="k">3</span><h3>Hindi</h3><p>A full Hindi version of the app.</p><p class="why">Best match for our audience. Our fonts already have Devanagari. The copy needs native review, especially the hero sentence and plurals.</p></div>
+      <div class="card rec"><span class="k">4</span><h3>Evening nudge, opt-in</h3><p>About 9 pm, only on a day with no entries: “Anything to add for today?” Opens on the keypad.</p><p class="why">Reuses the bill-reminder plumbing. Asked once. No streaks, no guilt.</p></div>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-head"><span class="tag explore">Look into first</span><span class="muted">High demand, risky fit</span></div>
+    <div class="grid">
+      <div class="card rec"><span class="k">5</span><h3>Spends from payment notifications</h3><p>When GPay, PhonePe or a bank app says “Paid ₹240”, hisaab offers a one-tap confirm with the amount filled in. You still pick the tile.</p><p class="why">Avoids SMS: Play approval is hard, and SMS readers miss and duplicate spends, including card bills we're careful not to count twice. Needs a research spike and a prototype, not a build.</p></div>
+      <div class="card rec"><span class="k">6</span><h3>Voice entry</h3><p>“Chai 40.”</p><p class="why">Indian rivals push Hinglish voice but send audio to a server. Android's offline recogniser could keep us off the internet; Hinglish quality unknown. Test with 5 users.</p></div>
+      <div class="card rec"><span class="k">7</span><h3>Phone-lock unlock</h3><p>Open hisaab with the phone's own fingerprint or PIN.</p><p class="why">Little work, but it's a setting. One row in <i>Your hisaab</i>, or test whether hiding amounts in recent apps already covers what people fear.</p></div>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-head"><span class="tag">Later</span><span class="muted">Medium demand, good fit</span></div>
+    <div class="grid">
+      <div class="card rec"><span class="k">8</span><h3>CSV import</h3><p>From Money Manager, Monefy and Wallet exports, offered next to Restore on the first onboarding screen.</p></div>
+      <div class="card rec"><span class="k">9</span><h3>CSV export</h3><p>As M6 plans, reusing the Ask AI CSV writer.</p></div>
+    </div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-head"><span class="tag dont">Don't</span><span class="muted">These fight the product</span></div>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td><b>Bank sync / Account Aggregator</b></td><td>Needs internet, an account and a partner; breaks our sharpest difference</td></tr>
+          <tr><td><b>Accounts, net worth, investments, loans</b></td><td>Someone else's job; adds setup</td></tr>
+          <tr><td><b>Cloud sync, sign-in</b></td><td>The privacy pitch; file backup covers reinstalls</td></tr>
+          <tr><td><b>Shared budgets, bill splitting</b></td><td>A different job (case study 25)</td></tr>
+          <tr><td><b>In-app AI chat</b></td><td>Sends data out; the previewed export is the better story</td></tr>
+          <tr><td><b>Category colours, red/green, streaks, badges</b></td><td>D9, case study 11</td></tr>
+          <tr><td><b>Ads, or switching to subscriptions</b></td><td>The top complaint in Money Lover and Monefy reviews. If we ever charge, a one-time unlock is what reviewers reward</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>For the store listing</h2>
+  <div class="grid">
+    <div class="callout"><b>Screenshot 1 is today's number, not a chart.</b><br><span class="muted">Every big rival leads with a chart or a list.</span></div>
+    <div class="callout"><b>“No sign-in. No bank login. No internet. No ads.”</b><br><span class="muted">True, and checkable on the Data safety form; some rivals' “on device” copy contradicts their own policy.</span></div>
+    <div class="callout"><b>Name the Indian details.</b><br><span class="muted">Payday on any date, rent and EMI out before your daily share, card bills not counted twice.</span></div>
+  </div>
+
+  <h2>Decisions for you</h2>
+  <div class="qs">
+    <div class="card"><div>Will hisaab ever make money? If so, “no ads” can't be promised for good.</div></div>
+    <div class="card"><div>Is Hindi in scope for the first release?</div></div>
+    <div class="card"><div>Should the widget show today's amount by default? Same privacy question as hiding amounts in recent apps.</div></div>
+    <div class="card"><div>Is reading payment notifications on the phone acceptable in principle?</div></div>
+  </div>
+
+  <footer>
+    <p><b>Method.</b> Ratings and downloads read by script from the Play listings (India store, 2026-11-11). Feature lists from 2026 roundups, review sites, developer sites and Play policy pages. Most roundups are written by competing app makers, so they were used for features only, never verdicts; quit-reason figures are vendor data. No apps installed, no screens, no user interviews.</p>
+    <p><b>Sources.</b>
+      <a href="https://aayushbhaskar.com/best-monthly-expenses-tracking-apps-india/">aayushbhaskar.com</a> ·
+      <a href="https://jupiter.money/blog/best-expense-tracker-app/">Jupiter</a> ·
+      <a href="https://www.realbyteapps.com/">Realbyte</a> ·
+      <a href="https://ledgerly.download/blog/budget-app-android">Ledgerly</a> ·
+      <a href="https://www.monefy.com/">Monefy</a> ·
+      <a href="https://github.com/jameskokoska/Cashew">Cashew on GitHub</a> ·
+      <a href="https://www.androidpolice.com/best-open-source-expense-manager-on-android/">Android Police</a> ·
+      <a href="https://technofino.in/community/threads/please-suggest-good-app-to-track-expenses.4583/page-4">TechnoFino</a> ·
+      <a href="https://apps.apple.com/in/app/fold-money/id1626994334">Fold</a> ·
+      <a href="https://apps.apple.com/us/app/money-lover-money-manager/id486312413?see-all=reviews">Money Lover reviews</a> ·
+      <a href="https://www.thepennyhoarder.com/budgeting/pocketguard-review/">Penny Hoarder</a> ·
+      <a href="https://spendalyst.com/blog/pocketguard-review">Spendalyst</a> ·
+      <a href="https://www.appbrain.com/app/daily-budget/com.kvannli.simonkvannli.dailybudget">Daily Budget</a> ·
+      <a href="https://www.todays-budget.com/">Today's Budget</a> ·
+      <a href="https://spendtrak.app/blog/why-people-quit-budgeting-apps">SpendTrak</a> ·
+      <a href="https://aimoneyvault.app/resources/articles/expense-tracking-statistics-2026">AI Money Vault</a> ·
+      <a href="https://support.google.com/googleplay/android-developer/answer/17225965?hl=en">Play SMS policy</a> ·
+      <a href="https://merakharcha.in/">Mera Kharcha</a> ·
+      <a href="https://kharchlog.com/">Kharch Log</a>.
+      Full list in <code>31-play-store-competitive-landscape.md</code>.</p>
+  </footer>
+</div>
+</body>
+</html>
