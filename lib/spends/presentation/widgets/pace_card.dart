@@ -1,5 +1,5 @@
 import '../../../core/design/hisaab_type.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';

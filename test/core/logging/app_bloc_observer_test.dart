@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/logging/app_bloc_observer.dart';
+import 'package:hisaab/core/logging/app_bloc_observer.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 

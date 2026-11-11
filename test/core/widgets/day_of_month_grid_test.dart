@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/widgets/day_of_month_grid.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/widgets/day_of_month_grid.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

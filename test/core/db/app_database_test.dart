@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:expense_tracker/core/db/app_database.dart';
-import 'package:expense_tracker/core/db/db_schema.dart';
-import 'package:expense_tracker/core/db/migrations/migration_001_initial.dart';
-import 'package:expense_tracker/core/db/migrations/migration_002_bill_icon.dart';
-import 'package:expense_tracker/ledger/domain/entities/category.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
+import 'package:hisaab/core/db/app_database.dart';
+import 'package:hisaab/core/db/db_schema.dart';
+import 'package:hisaab/core/db/migrations/migration_001_initial.dart';
+import 'package:hisaab/core/db/migrations/migration_002_bill_icon.dart';
+import 'package:hisaab/ledger/domain/entities/category.dart';
+import 'package:hisaab/core/errors/failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:path/path.dart' as p;

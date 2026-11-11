@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/layout/app_layout.dart';
-import 'package:expense_tracker/core/layout/app_layout_scope.dart';
-import 'package:expense_tracker/core/layout/window_class.dart';
+import 'package:hisaab/core/layout/app_layout.dart';
+import 'package:hisaab/core/layout/app_layout_scope.dart';
+import 'package:hisaab/core/layout/window_class.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 

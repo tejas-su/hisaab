@@ -1,8 +1,8 @@
-import 'package:expense_tracker/core/design/hisaab_motion.dart';
-import 'package:expense_tracker/core/widgets/day_blocks/day_blocks.dart';
-import 'package:expense_tracker/core/widgets/day_blocks/day_blocks_data.dart';
-import 'package:expense_tracker/core/widgets/day_blocks/day_blocks_painter.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_motion.dart';
+import 'package:hisaab/core/widgets/day_blocks/day_blocks.dart';
+import 'package:hisaab/core/widgets/day_blocks/day_blocks_data.dart';
+import 'package:hisaab/core/widgets/day_blocks/day_blocks_painter.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';

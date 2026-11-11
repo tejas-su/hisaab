@@ -1,10 +1,10 @@
-import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_bloc.dart';
-import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_state.dart';
-import 'package:expense_tracker/add_entry/presentation/widgets/category_step.dart';
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/widgets/category_tile.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/add_entry/presentation/bloc/add_entry_bloc.dart';
+import 'package:hisaab/add_entry/presentation/bloc/add_entry_state.dart';
+import 'package:hisaab/add_entry/presentation/widgets/category_step.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/widgets/category_tile.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

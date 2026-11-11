@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/time/clock.dart';
+import 'package:hisaab/core/time/clock.dart';
 
 /// A [Clock] pinned to [current]; move it with [advance] to test midnight and catch-up.
 final class FakeClock extends Clock {

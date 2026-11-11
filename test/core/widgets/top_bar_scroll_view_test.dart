@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/widgets/top_bar_scroll_view.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/widgets/top_bar_scroll_view.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/pump_app.dart';

@@ -1,5 +1,5 @@
-import 'package:expense_tracker/ask_ai/ask_ai.dart';
-import 'package:expense_tracker/ask_ai/domain/ask_goal.dart';
+import 'package:hisaab/ask_ai/ask_ai.dart';
+import 'package:hisaab/ask_ai/domain/ask_goal.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

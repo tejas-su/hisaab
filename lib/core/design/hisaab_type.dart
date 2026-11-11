@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Builds the app [TextTheme] (UI_DESIGN §3.4): Anek Latin for amounts and titles, Mukta for text.
 ///

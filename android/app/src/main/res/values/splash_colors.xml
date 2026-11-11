@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Launch splash colours, light (UI_DESIGN §3.7). The splash background is Home's `bg`, so tap to Home is one colour. -->
 <resources>
-    <color name="splash_bg">#F1EBE4</color>
+    <color name="splash_bg">#F1EDE8</color>
     <color name="splash_mark">#161615</color>
     <!-- Marigold never sits bare on the light background, so today's dot carries an ink outline, like the wordmark. -->
     <color name="splash_outline">#161615</color>

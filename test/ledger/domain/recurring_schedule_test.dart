@@ -1,7 +1,7 @@
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
-import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
-import 'package:expense_tracker/ledger/domain/recurring_schedule.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/domain/entities/frequency.dart';
+import 'package:hisaab/ledger/domain/entities/schedule.dart';
+import 'package:hisaab/ledger/domain/recurring_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 CalendarDate _d(int year, int month, int day) => CalendarDate(year, month, day);

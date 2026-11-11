@@ -1,10 +1,10 @@
-import 'package:expense_tracker/ask_ai/domain/ask_goal.dart';
-import 'package:expense_tracker/ask_ai/domain/entities/prompt_choice.dart';
-import 'package:expense_tracker/ask_ai/domain/entities/prompt_text.dart';
-import 'package:expense_tracker/ask_ai/domain/prompt_builder.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:hisaab/ask_ai/domain/ask_goal.dart';
+import 'package:hisaab/ask_ai/domain/entities/prompt_choice.dart';
+import 'package:hisaab/ask_ai/domain/entities/prompt_text.dart';
+import 'package:hisaab/ask_ai/domain/prompt_builder.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/fixtures/ask_ai/prompt_input.dart';

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:expense_tracker/onboarding/presentation/widgets/onboarding_illustration.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/onboarding/presentation/widgets/onboarding_illustration.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';

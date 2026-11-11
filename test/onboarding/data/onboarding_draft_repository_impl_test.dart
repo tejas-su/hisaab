@@ -1,8 +1,8 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repository_impl.dart';
-import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
-import 'package:expense_tracker/onboarding/domain/entities/onboarding_step.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/onboarding/data/repository/onboarding_draft_repository_impl.dart';
+import 'package:hisaab/onboarding/domain/entities/onboarding_draft.dart';
+import 'package:hisaab/onboarding/domain/entities/onboarding_step.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

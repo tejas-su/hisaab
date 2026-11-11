@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab — Light palette options (Today, A, B, C)</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  /* Comparison board for case study 28 "Candidate light palettes". Light theme only.
+     Screens read only --tokens, so columns differ by neutral tint alone. Hex values are from the case study;
+     "Today" is lib/core/design/hisaab_colors.dart (light). Not a decision: nothing here is adopted. */
+  :root { --page:#E6E6E6; --pageInk:#161615; --pageInk2:#4A4A4A; --chip:#FFFFFF; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px 64px; background:var(--page); color:var(--pageInk); font-family:'Mukta',system-ui,sans-serif; }
+  h1 { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-size:30px; margin:0 0 4px; }
+  h2 { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-size:22px; margin:36px 0 6px; }
+  p.lede { margin:0 0 12px; color:var(--pageInk2); max-width:80ch; line-height:22px; }
+  code { font-size:12px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0; }
+  .bar span { font-size:13px; font-weight:700; color:var(--pageInk2); }
+  .bar button { font:600 14px 'Mukta',sans-serif; height:36px; padding:0 12px; border-radius:10px; border:1px solid #BDBDBD; background:var(--chip); color:var(--pageInk); cursor:pointer; }
+  .bar button[aria-pressed="true"] { background:var(--pageInk); color:#fff; border-color:var(--pageInk); }
+
+  /* Full-width page backgrounds */
+  .bands { display:flex; flex-direction:column; border-radius:14px; overflow:hidden; }
+  .bands.side { flex-direction:row; }
+  .band { flex:1; padding:14px 16px; min-height:150px; display:flex; flex-direction:column; gap:10px; color:var(--ink); }
+  .band b { font-family:'Anek Latin','Mukta',sans-serif; font-size:17px; }
+  .band .mini { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; }
+  .band .mini i { font-style:normal; font-size:12px; font-weight:600; padding:10px 12px; border-radius:12px; min-width:70px; }
+  @media (max-width:700px) { .bands.side { flex-direction:column; } }
+
+  /* Swatch strips */
+  .cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+  .scard { background:var(--chip); border-radius:16px; padding:12px 14px; font-size:13px; line-height:18px; }
+  .scard b { font-family:'Anek Latin','Mukta',sans-serif; font-size:17px; display:block; }
+  .strip { display:flex; height:44px; border-radius:10px; overflow:hidden; margin:8px 0; box-shadow:inset 0 0 0 1px rgba(0,0,0,.12); }
+  .strip i { flex:1; display:flex; align-items:flex-end; justify-content:center; font:600 10px 'Mukta',sans-serif; font-style:normal; padding-bottom:3px; }
+  .scard table { border-collapse:collapse; width:100%; font-size:12px; }
+  .scard td { padding:2px 0; border-bottom:1px solid #E4E4E4; } .scard td:last-child { text-align:right; font-weight:700; font-feature-settings:'tnum'; }
+  .hexes { font-size:12px; color:var(--pageInk2); }
+  .scroll { overflow-x:auto; max-width:100%; }
+  table.big { border-collapse:collapse; background:var(--chip); border-radius:14px; overflow:hidden; font-size:13px; }
+  table.big th, table.big td { padding:6px 10px; text-align:left; border-bottom:1px solid #E4E4E4; white-space:nowrap; }
+  table.big th { background:#F0F0F0; }
+  .sw { display:inline-block; width:24px; height:18px; border-radius:5px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(0,0,0,.15); margin-right:6px; }
+  .caveats { background:var(--chip); border-radius:16px; padding:6px 18px 10px 36px; max-width:90ch; }
+  .caveats li { margin:8px 0; line-height:22px; }
+
+  /* Screen grid: one row per screen, one column per palette */
+  .screenrow { margin-top:12px; display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:18px; justify-items:center; }
+  figure { margin:0; width:100%; max-width:390px; }
+  figcaption { font-size:14px; line-height:18px; margin-bottom:6px; } figcaption b { font-family:'Anek Latin','Mukta',sans-serif; font-size:17px; }
+
+  /* ===== Phone ===== */
+  .phone { width:100%; height:800px; position:relative; overflow:hidden; border-radius:32px; background:var(--bg); color:var(--ink); font-family:'Mukta',sans-serif; }
+  .pad { position:absolute; inset:0; padding:40px 20px 0; display:flex; flex-direction:column; }
+  .anek { font-family:'Anek Latin','Mukta',sans-serif; }
+  .num { font-family:'Anek Latin','Mukta',sans-serif; font-weight:600; font-variation-settings:'wdth' 85; font-feature-settings:'tnum'; }
+  .ink2 { color:var(--ink2); }
+  .row { display:flex; align-items:center; }
+  .well { width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--sunk); }
+  .control { width:44px; height:44px; border-radius:14px; background:var(--control); display:flex; align-items:center; justify-content:center; }
+  .card { background:var(--surface); border-radius:28px; }
+  .divider { height:1px; background:var(--hairline); }
+  .signalBtn { height:58px; border-radius:18px; background:var(--signal); border:1.5px solid var(--ink); box-shadow:0 2px 0 var(--ink); display:flex; align-items:center; justify-content:center; gap:8px; color:var(--onSignal); font-family:'Anek Latin','Mukta',sans-serif; font-size:21px; font-weight:600; }
+  .key { height:60px; border-radius:16px; background:var(--sunk); color:var(--ink); font-family:'Anek Latin','Mukta',sans-serif; font-size:27px; font-weight:500; display:flex; align-items:center; justify-content:center; }
+  .chip { height:40px; border-radius:12px; background:var(--control); color:var(--ink); display:flex; align-items:center; justify-content:center; gap:6px; font-size:15px; font-weight:600; padding:0 14px; white-space:nowrap; }
+  .chip.pick { background:var(--ink); color:var(--bg); font-weight:700; }
+  svg.i { fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  .dock { position:absolute; left:20px; right:20px; bottom:20px; height:76px; border-radius:30px; background:var(--surface); box-shadow:inset 0 0 0 1px var(--hairline); display:flex; align-items:center; justify-content:space-between; padding:0 14px; }
+  .dock .tab { width:84px; height:56px; border-radius:18px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:13px; font-weight:600; color:var(--ink2); }
+  .dock .tab.on { background:var(--sunk); color:var(--ink); }
+  .dock .add { width:136px; height:56px; margin-top:-6px; font-size:21px; }
+  .hero { position:relative; overflow:hidden; isolation:isolate; border-radius:28px; padding:22px 20px; background:var(--display); color:var(--displayInk); box-shadow:0 1px 0 rgba(22,22,21,.04),0 10px 28px -12px rgba(22,22,21,.30); }
+  .hero > .c { position:relative; z-index:2; }
+  .hero .k1 { position:absolute; inset:6px; border-radius:22px; border:1px solid var(--displayEtch); z-index:1; }
+  .hero .k2 { position:absolute; inset:10px; border-radius:18px; border:1px dashed var(--hairline); z-index:1; }
+  .hero .etch { position:absolute; z-index:1; right:-70px; top:-90px; width:300px; height:300px; }
+  .hero .t { font-size:15px; font-weight:500; line-height:20px; color:var(--displayInk2); }
+  .hero .amt { margin-top:6px; font-size:72px; line-height:72px; letter-spacing:-.8px; display:block; }
+  .days { margin-top:20px; display:flex; align-items:flex-end; gap:10px; }
+  .days .set { flex:1; display:flex; gap:6px; align-items:flex-end; }
+  .day { flex:1; height:40px; border-radius:8px; background:var(--blockIdle); position:relative; overflow:hidden; }
+  .day.today { box-shadow:inset 0 0 0 1.5px var(--displayEdge); }
+  .day .fill { position:absolute; left:0; right:0; bottom:0; background:var(--signal); }
+  .flag { width:40px; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:12px; font-weight:600; line-height:14px; color:var(--displayInk2); }
+  .cap { display:flex; justify-content:space-between; margin-top:6px; padding-right:50px; font-size:12px; line-height:14px; color:var(--displayInk2); }
+  .range { margin-top:16px; padding-top:14px; border-top:1px solid var(--displayEtch); display:flex; align-items:center; gap:8px; font-size:15px; line-height:20px; }
+  .range span { color:var(--displayInk2); }
+  .scrim { position:absolute; inset:0; background:rgba(22,22,21,.32); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:var(--surface); border-radius:32px 32px 0 0; padding:10px 20px 24px; display:flex; flex-direction:column; }
+  .grab { align-self:center; width:40px; height:5px; border-radius:3px; background:var(--hairline); }
+</style>
+</head>
+<body>
+
+<h1>Light palette options: Today, A, B, C, D</h1>
+<p class="lede">Three candidate light neutral palettes from <a href="../../design-research/case-studies/28-light-theme-colours.md">case study 28</a>, plus D, a lighter page from the Play Store survey in <a href="../../design-research/case-studies/30-play-store-colours.md">case study 30</a>, beside what ships today, on the same three screens. Only the neutral tint changes: layout, type, the marigold block with its ink edge and the hero material are identical. Light theme only. Nothing here is adopted; it is for the owner to choose. Worked example: ₹1,430 safe today, 9 days to payday, 77% of today's block left.</p>
+
+<h2>1. Page backgrounds, full width</h2>
+<p class="lede">Each band is the page <code>bg</code> with a <code>surface</code> card, a <code>sunk</code> well and a <code>hairline</code> rule on it. Judge the tint here first. Colour on a monitor is not colour on a phone in daylight, so look again on a device.</p>
+<div class="bar"><span>Layout</span><button id="b-stack" aria-pressed="true">Stacked</button><button id="b-side" aria-pressed="false">Side by side</button></div>
+<div class="bands" id="bands"></div>
+
+<h2>2. Swatches and measured contrast</h2>
+<div class="cols" id="swatches"></div>
+<p class="lede" style="margin-top:10px">Contrast and OKLCH figures are the case study's measured table (2026-11-11, by script). "Today" equals A except <code>displayInk2</code>, whose ratio is computed live here. Floors: text 4.5, idleBlock 1.5, pressStep 1.15.</p>
+<div class="scroll" id="measured"></div>
+
+<h2>3. Home</h2>
+<div class="screenrow" id="row-home"></div>
+<h2>4. Add: amount keypad</h2>
+<div class="screenrow" id="row-add"></div>
+<h2>5. Every entry</h2>
+<div class="screenrow" id="row-list"></div>
+
+<h2>6. Caveats from the case study</h2>
+<ul class="caveats">
+  <li><b>B's <code>bg</code> #EEECE7 is close to the pre-D108 page #EEECE6</b> that the owner called "unpainted". B is a return to a value already seen, with a graded step beneath it. It only helps if the problem is the page reading beige, not dull.</li>
+  <li><b>B mixes hues.</b> <code>bg</code> sits at OKLCH hue 89 and <code>ink2</code> at 85, but <code>sunk</code> and <code>hairline</code> fall back to about 72. A final B should pick one hue. B also supersedes D108's "hue about 75°, warm toward marigold" rule.</li>
+  <li><b>C's <code>ink2</code> drifts to hue 54</b>, toward brown-red, and should be re-solved near 72 before any trial. C is also the "stronger tint" D108 rejected, and its page is stronger than any sourced warm product (Jupiter's beige drew a "dull" comment).</li>
+  <li><b>D changes only the page.</b> <code>bg</code> #F5F1EC is CRED's page: lighter (L 0.960 against 0.943) and fainter (chroma 0.008), still at hue 74, so D108's hue rule holds. Every other token is today's. The cost: cards, chips and the Back well on the page lift 1.12:1 instead of 1.17, about a third less, and outdoors the step is near case study 29's glare margin (about 1.06 at F 1.0). The hero etch, drawn in <code>bg</code>, gets fainter. Marigold on <code>bg</code> is 1.63:1, so it keeps its ink edge.</li>
+  <li><b>Same for all:</b> every contrast floor passes on A, B, C and D. On A, B and C marigold on <code>bg</code> stays 1.55:1, so the ink edge is permanent. Not measured: APCA, and anything on a device. Hex values are hand-built starting points to be re-solved with the <code>better-colors</code> skill.</li>
+</ul>
+
+<script>
+const BASE = { surface:'#FFFEFC', control:'#FFFEFC', display:'#FFFEFC', ink:'#161615', signal:'#FFB020', onSignal:'#161615', inverse:'#312E29', displayInk:'#161615', displayEdge:'#161615' };
+function mk(bg, sunk, hair, ink2, dInk2) { return { ...BASE, bg, sunk, hairline:hair, blockIdle:hair, displayEtch:bg, ink2, displayInk2:dInk2 || ink2 }; }
+const OK_A = ['.943 .011 72', '.910 .013 71', '.858 .016 74', '.456 .012 73'];
+const PALS = [
+  { id:'today', name:'Today (shipped)', sub:'hisaab_colors.dart, light', t: mk('#F1EBE4','#E7E0D8','#D7CFC5','#5B5650','#65605A'),
+    ratios:['7.20','6.14','5.55','4.71'], hair:'1.53', ok:OK_A },
+  { id:'a', name:'A. D108, small fix', sub:'displayInk2 becomes an alias of ink2', t: mk('#F1EBE4','#E7E0D8','#D7CFC5','#5B5650'),
+    ratios:['7.20','6.14','5.55','4.71'], hair:'1.53', ok:OK_A },
+  { id:'b', name:'B. Graded paper', sub:'nearly neutral page, tint grows with depth', t: mk('#EEECE7','#E5E0DA','#D6CFC7','#595753'),
+    ratios:['7.15','6.11','5.49','4.67'], hair:'1.53', ok:['.943 .007 89','.909 .010 73','.858 .013 71','.457 .007 85'] },
+  { id:'c', name:'C. Stronger warm paper', sub:'cream page, hue 72', t: mk('#F3EBE1','#E9DFD5','#D9CEC1','#5D5550'),
+    ratios:['7.23','6.17','5.55','4.70'], hair:'1.54', ok:['.944 .016 74','.909 .017 68','.857 .022 72','.456 .013 54'] },
+  { id:'d', name:'D. Lighter page (recommended)', sub:'only bg changes, to CRED\'s #F5F1EC (case study 30); displayInk2 = ink2', t: mk('#F5F1EC','#E7E0D8','#D7CFC5','#5B5650'),
+    ratios:['7.20','6.46','5.55','4.71'], hair:'1.53', ok:['.960 .008 74','.910 .013 71','.858 .016 74','.456 .012 73'] },
+];
+const style = t => Object.entries(t).map(([k,v]) => `--${k}:${v}`).join(';');
+
+function lum(h){const c=h.slice(1);const v=[0,2,4].map(i=>parseInt(c.substr(i,2),16)/255).map(x=>x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4));return .2126*v[0]+.7152*v[1]+.0722*v[2];}
+const cr=(a,b)=>{const [x,y]=[lum(a),lum(b)].sort((p,q)=>q-p);return (x+.05)/(y+.05);};
+const txtOn = h => lum(h) > .5 ? '#161615' : '#FFFEFC';
+
+function renderBands(){
+  document.getElementById('bands').innerHTML = PALS.map(p => `<div class="band" style="${style(p.t)};background:var(--bg)">
+    <b>${p.name} <span class="ink2" style="font-family:Mukta;font-size:13px;font-weight:600">${p.t.bg.toUpperCase()}</span></b>
+    <div class="mini"><i style="background:var(--surface)">surface<br>${p.t.surface.toUpperCase()}</i><i style="background:var(--sunk)">sunk<br>${p.t.sunk.toUpperCase()}</i><i style="background:var(--hairline)">hairline<br>${p.t.hairline.toUpperCase()}</i>
+    <i style="background:var(--surface);color:var(--ink2)">ink2<br>${p.t.ink2.toUpperCase()}</i></div></div>`).join('');
+}
+function pr(on, off){ document.getElementById(on).setAttribute('aria-pressed','true'); document.getElementById(off).setAttribute('aria-pressed','false'); }
+document.getElementById('b-stack').onclick = () => { document.getElementById('bands').classList.remove('side'); pr('b-stack','b-side'); };
+document.getElementById('b-side').onclick = () => { document.getElementById('bands').classList.add('side'); pr('b-side','b-stack'); };
+
+function renderSwatches(){
+  document.getElementById('swatches').innerHTML = PALS.map(p => {
+    const t = p.t, keys = ['bg','surface','sunk','hairline','ink2','ink','signal','inverse'];
+    const strip = keys.map(k => `<i style="background:${t[k]};color:${txtOn(t[k])}">${k}</i>`).join('');
+    const rows = [['ink2 on surface',p.ratios[0]],['ink2 on bg',p.ratios[1]],['ink2 on sunk',p.ratios[2]],['ink2 on hairline (floor 4.5)',p.ratios[3]],['hairline on surface (floor 1.5)',p.hair],['surface on bg',cr(t.surface,t.bg).toFixed(2)],['sunk vs surface',cr(t.sunk,t.surface).toFixed(2)],['signal on bg (never bare)',cr(t.signal,t.bg).toFixed(2)],['ink on signal','9.90']];
+    const dI = cr(t.displayInk2, t.display).toFixed(2);
+    return `<div class="scard"><b>${p.name}</b>${p.sub}<div class="strip">${strip}</div>
+      <div class="hexes">bg ${t.bg.toUpperCase()} · sunk ${t.sunk.toUpperCase()} · hairline ${t.hairline.toUpperCase()} · ink2 ${t.ink2.toUpperCase()} · displayInk2 ${t.displayInk2.toUpperCase()}</div>
+      <table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}<tr><td>displayInk2 on display (live)</td><td>${dI}</td></tr></table></div>`;
+  }).join('');
+  const sw = h => `<span class="sw" style="background:${h}"></span>`;
+  document.getElementById('measured').innerHTML = `<table class="big"><tr><th>Token</th>${PALS.map(p=>`<th>${p.name}</th>`).join('')}</tr>
+    ${['bg','sunk','hairline','ink2'].map((k,i)=>`<tr><td><code>${k}</code> (OKLCH L, C, h)</td>${PALS.map(p=>`<td>${sw(p.t[k])}${p.t[k].toUpperCase()} · ${p.ok[i]}</td>`).join('')}</tr>`).join('')}</table>`;
+}
+
+const P = {
+  settings:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>',
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>', spends:'<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', next:'<path d="M5 12h14M13 6l6 6-6 6"/>', back:'<path d="M15 5l-7 7 7 7"/>',
+  del:'<path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>',
+  food:'<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/>',
+  travel:'<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/>',
+  shopping:'<path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  bills:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+};
+const ic=(k,s=22,w)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24"${w?` style="stroke-width:${w}"`:''} aria-hidden="true">${P[k]}</svg>`;
+
+const ETCH = (()=>{let s='';for(let r=0;r<14;r++){const b=40+r*7.5;let d='';for(let i=0;i<=360;i++){const t=i/360*Math.PI*2;const rr=b+6*Math.sin(18*t+r*.35)+3*Math.sin(5*t);d+=(i?'L':'M')+(rr*Math.cos(t)).toFixed(1)+' '+(rr*Math.sin(t)).toFixed(1);}s+=`<path d="${d}Z" fill="none" stroke="var(--hairline)" stroke-width=".6" opacity=".45"/>`;}return `<svg class="etch" viewBox="-150 -150 300 300" aria-hidden="true">${s}</svg>`;})();
+
+function hero(compact){
+  const days = Array.from({length:9},(_,i)=> i===0 ? '<div class="day today"><div class="fill" style="height:77%"></div></div>' : '<div class="day"></div>').join('');
+  return `<section class="hero"><span class="k1"></span><span class="k2"></span>${ETCH}<div class="c">
+    <span class="t">Safe to spend today</span><span class="amt num">₹1,430</span>
+    <div class="days"><div class="set">${days}</div><div class="flag">${ic('flag',18)}<span>4 Nov</span></div></div>
+    <div class="cap"><span>Today</span><span>9 days to payday</span></div>
+    ${compact?'':`<div class="range">${ic('check',18,1.8)}<span>Lasts till payday · about</span><b>₹9,300 spare</b></div>`}</div></section>`;
+}
+const header = () => `<div class="row" style="justify-content:space-between;height:44px">
+  <div class="row" style="align-items:baseline;gap:2px"><span class="anek" style="font-size:26px;font-weight:600;letter-spacing:-.4px">hisaab</span><span style="width:8px;height:8px;border-radius:4px;background:var(--signal);box-shadow:0 0 0 1px var(--ink)"></span></div>
+  <div class="row" style="gap:12px"><span class="ink2" style="font-size:15px;font-weight:600">Mon, 26 Oct</span><span class="control">${ic('settings')}</span></div></div>`;
+const dock = on => `<nav class="dock"><span class="tab${on==='home'?' on':''}">${ic('home')}<span>Home</span></span>
+  <span class="signalBtn add">${ic('plus',22,2.2)}<span>Add</span></span><span class="tab${on==='spends'?' on':''}">${ic('spends')}<span>Spends</span></span></nav>`;
+const entry = (cat,label,note,amt) => `<div class="row" style="gap:12px;padding:9px 20px">
+  <div class="well">${ic(cat)}</div><div style="display:flex;flex-direction:column;flex-grow:1;min-width:0"><span style="font-size:16px;font-weight:600;line-height:20px">${label}</span><span class="ink2" style="font-size:14px;line-height:18px">${note}</span></div>
+  <span style="font-size:17px;font-weight:700;font-feature-settings:'tnum'">${amt}</span></div>`;
+const rule = '<div class="divider" style="margin:0 20px 0 74px"></div>';
+const keypad = h => `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${['1','2','3','4','5','6','7','8','9','00','0'].map(k=>`<span class="key" style="height:${h}px">${k}</span>`).join('')}<span class="key" style="height:${h}px">${ic('del',26)}</span></div>`;
+
+const SCR = {
+  home: () => `<div class="pad">${header()}<div style="margin-top:12px">${hero()}</div>
+    <div class="card" style="margin-top:12px;padding:6px 0 8px">
+      <div class="row" style="justify-content:space-between;padding:8px 20px 6px"><div class="row" style="align-items:baseline;gap:10px"><span class="anek" style="font-weight:600;font-size:22px">Today</span><span class="ink2" style="font-size:15px;font-weight:700">₹420</span></div><span style="font-size:15px;font-weight:600;text-decoration:underline;text-underline-offset:3px">See all</span></div>
+      ${entry('food','Food','Chai &amp; samosa','₹60')}${rule}${entry('travel','Travel','Auto to office','₹120')}${rule}${entry('shopping','Shopping','DMart','₹240')}
+    </div>${dock('home')}</div>`,
+  add: () => `<div style="position:absolute;left:20px;right:20px;top:40px">${hero(true)}</div><div class="scrim"></div>
+    <section class="sheet" style="top:84px"><span class="grab"></span>
+      <div class="row" style="margin-top:14px;align-self:center;gap:4px;padding:4px;border-radius:16px;background:var(--sunk)"><span class="chip" style="width:112px;background:var(--surface)">Spent</span><span class="chip ink2" style="width:112px;background:transparent">Got</span></div>
+      <div class="row" style="margin-top:22px;justify-content:center;gap:4px"><span class="num" style="font-size:60px;line-height:60px">₹2,450</span><span style="width:3px;height:46px;border-radius:2px;background:var(--ink)"></span></div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px">${['+₹10','+₹20','+₹50','+₹100','+₹500'].map(c=>`<span class="chip" style="padding:0;background:var(--sunk)">${c}</span>`).join('')}</div>
+      <div style="flex-grow:1"></div>${keypad(60)}<span class="signalBtn" style="margin-top:12px">Next ${ic('next',22,2.2)}</span></section>`,
+  list: () => `<div class="pad">
+    <div class="row" style="gap:12px;height:44px"><span class="control">${ic('back')}</span><h1 class="anek" style="margin:0;font-weight:600;font-size:26px">Every entry</h1></div>
+    <div class="row" style="margin-top:14px;gap:8px;overflow:hidden"><span class="chip pick">All</span><span class="chip">Food</span><span class="chip">Travel</span><span class="chip">Bills</span></div>
+    <div class="card" style="margin-top:14px;padding:6px 0 8px">
+      <div class="row" style="padding:8px 20px 6px"><span class="anek" style="font-weight:600;font-size:20px">Today</span></div>
+      ${entry('food','Food','Chai &amp; samosa','₹60')}${rule}${entry('travel','Travel','Auto to office','₹120')}${rule}${entry('shopping','Shopping','DMart','₹240')}</div>
+    <div class="card" style="margin-top:12px;padding:6px 0 8px">
+      <div class="row" style="padding:8px 20px 6px"><span class="anek" style="font-weight:600;font-size:20px">Yesterday</span></div>
+      ${entry('bills','Bills','Electricity','₹1,200')}${rule}${entry('food','Food','Lunch','₹180')}</div></div>`,
+};
+function fill(id, key){
+  document.getElementById(id).innerHTML = PALS.map(p => `<figure><figcaption><b>${p.name}</b></figcaption><div class="phone" style="${style(p.t)}">${SCR[key]()}</div></figure>`).join('');
+}
+renderBands(); renderSwatches(); fill('row-home','home'); fill('row-add','add'); fill('row-list','list');
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/notifications/bill_reminder.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:hisaab/core/notifications/bill_reminder.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/fixtures/ledger/worked_example.dart';

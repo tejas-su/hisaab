@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:expense_tracker/core/notifications/bill_reminder.dart';
-import 'package:expense_tracker/core/notifications/bill_reminders.dart';
+import 'package:hisaab/core/notifications/bill_reminder.dart';
+import 'package:hisaab/core/notifications/bill_reminders.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// An in-memory [BillReminders]: records what was armed and lets a test tap a reminder.

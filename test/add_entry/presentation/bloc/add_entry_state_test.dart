@@ -1,5 +1,5 @@
-import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_state.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:hisaab/add_entry/presentation/bloc/add_entry_state.dart';
+import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fixtures/ledger/categories.dart';

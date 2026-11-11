@@ -1,15 +1,15 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/data/mapper/recurring_mapper.dart';
-import 'package:expense_tracker/ledger/data/model/recurring_model.dart';
-import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
-import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
-import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_draft.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
-import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/data/mapper/recurring_mapper.dart';
+import 'package:hisaab/ledger/data/model/recurring_model.dart';
+import 'package:hisaab/ledger/domain/entities/amount_mode.dart';
+import 'package:hisaab/ledger/domain/entities/bill_icon.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/ledger/domain/entities/frequency.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_draft.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_rule.dart';
+import 'package:hisaab/ledger/domain/entities/schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

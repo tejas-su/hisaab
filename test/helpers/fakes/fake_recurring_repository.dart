@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/domain/entities/bill_skip.dart';
-import 'package:expense_tracker/ledger/domain/entities/ledger_setup.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_draft.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_posting.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
-import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
-import 'package:expense_tracker/ledger/domain/repository/recurring_repository.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/domain/entities/bill_skip.dart';
+import 'package:hisaab/ledger/domain/entities/ledger_setup.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_draft.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_posting.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_rule.dart';
+import 'package:hisaab/ledger/domain/failures/ledger_failures.dart';
+import 'package:hisaab/ledger/domain/repository/recurring_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// An in-memory [RecurringRepository] that records what was posted and set up. [rules] are the

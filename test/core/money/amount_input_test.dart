@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/money/amount_input.dart';
+import 'package:hisaab/core/money/amount_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

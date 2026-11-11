@@ -1,7 +1,7 @@
-import 'package:expense_tracker/add_entry/presentation/widgets/kind_switch.dart';
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/add_entry/presentation/widgets/kind_switch.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';

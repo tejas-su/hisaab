@@ -1,14 +1,15 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/settings/presentation/bloc/bill_editor_bloc.dart';
-import 'package:expense_tracker/settings/presentation/pages/bill_editor_page.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/settings/presentation/bloc/bill_editor_bloc.dart';
+import 'package:hisaab/settings/presentation/pages/bill_editor_page.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/tooltip_finder.dart';
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
@@ -153,10 +154,10 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey<String>('bill-name')), 'Water');
       await tester.settle();
       await next(tester);
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(findTooltip('Back'));
       await tester.settle();
       expect(find.text('Water'), findsOneWidget);
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(findTooltip('Back'));
       await tester.settle();
       expect(find.byType(BillEditorPage), findsNothing);
       expect(recurring.rules, WorkedExample.rules);
@@ -313,7 +314,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('bill-emi')));
       await tester.settle();
       await next(tester);
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(findTooltip('Back'));
       await tester.settle();
       expect(find.byKey(const ValueKey<String>('bill-emi')), findsOneWidget);
     });

@@ -1,14 +1,14 @@
-import 'package:expense_tracker/app/app_services.dart';
-import 'package:expense_tracker/ask_ai/ask_ai.dart';
-import 'package:expense_tracker/core/db/app_database.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/pay_cycle.dart';
-import 'package:expense_tracker/core/usecases/use_case.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/onboarding/onboarding.dart';
-import 'package:expense_tracker/settings/settings.dart';
-import 'package:expense_tracker/spends/spends.dart';
+import 'package:hisaab/app/app_services.dart';
+import 'package:hisaab/ask_ai/ask_ai.dart';
+import 'package:hisaab/core/db/app_database.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/pay_cycle.dart';
+import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/onboarding/onboarding.dart';
+import 'package:hisaab/settings/settings.dart';
+import 'package:hisaab/spends/spends.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/fakes/fake_bill_reminders.dart';

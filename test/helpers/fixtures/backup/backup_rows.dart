@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/db/db_schema.dart';
+import 'package:hisaab/core/db/db_schema.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Seeds a finished-onboarding database: an income rule, an inactive bill, and one entry with a

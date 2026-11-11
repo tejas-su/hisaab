@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/settings/presentation/bloc/bill_amount_bloc.dart';
-import 'package:expense_tracker/settings/presentation/bloc/bill_amount_event.dart';
-import 'package:expense_tracker/settings/presentation/pages/bill_amount_sheet.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/settings/presentation/bloc/bill_amount_bloc.dart';
+import 'package:hisaab/settings/presentation/bloc/bill_amount_event.dart';
+import 'package:hisaab/settings/presentation/pages/bill_amount_sheet.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

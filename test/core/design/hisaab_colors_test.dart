@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -35,10 +35,10 @@ void main() {
       expect(light.display, light.surface);
     });
 
-    test('the hero card’s main text and today’s edge are ink; its secondary text is its own grey (D90)', () {
+    test('the hero card’s text and today’s edge are ink, and its secondary text is ink2 (D145)', () {
       expect(light.displayInk, light.ink);
       expect(light.displayEdge, light.ink);
-      expect(light.displayInk2, isNot(light.ink2));
+      expect(light.displayInk2, light.ink2);
     });
 
     test('idle day blocks are the hairline step', () {

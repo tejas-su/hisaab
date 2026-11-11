@@ -1,9 +1,9 @@
-import 'package:expense_tracker/core/db/app_database.dart';
-import 'package:expense_tracker/core/db/db_schema.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/settings/data/datasource/preferences_local_data_source.dart';
-import 'package:expense_tracker/settings/data/repository/app_preferences_repository_impl.dart';
-import 'package:expense_tracker/settings/domain/entities/theme_choice.dart';
+import 'package:hisaab/core/db/app_database.dart';
+import 'package:hisaab/core/db/db_schema.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/settings/data/datasource/preferences_local_data_source.dart';
+import 'package:hisaab/settings/data/repository/app_preferences_repository_impl.dart';
+import 'package:hisaab/settings/domain/entities/theme_choice.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

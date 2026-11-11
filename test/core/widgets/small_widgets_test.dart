@@ -1,15 +1,15 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/design/app_icon.dart';
-import 'package:expense_tracker/core/design/app_icons.dart';
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/extensions/build_context_extensions.dart';
-import 'package:expense_tracker/core/widgets/category_tile.dart';
-import 'package:expense_tracker/core/widgets/display_card.dart';
-import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
-import 'package:expense_tracker/core/widgets/shake.dart';
-import 'package:expense_tracker/core/widgets/wordmark.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/app_icon.dart';
+import 'package:hisaab/core/design/app_icons.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/extensions/build_context_extensions.dart';
+import 'package:hisaab/core/widgets/category_tile.dart';
+import 'package:hisaab/core/widgets/display_card.dart';
+import 'package:hisaab/core/widgets/hisaab_chip.dart';
+import 'package:hisaab/core/widgets/shake.dart';
+import 'package:hisaab/core/widgets/wordmark.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

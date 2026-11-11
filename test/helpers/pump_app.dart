@@ -1,10 +1,10 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/design/hisaab_theme.dart';
-import 'package:expense_tracker/core/design/hisaab_type.dart';
-import 'package:expense_tracker/core/layout/app_layout_scope.dart';
-import 'package:expense_tracker/l10n/gen/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_theme.dart';
+import 'package:hisaab/core/design/hisaab_type.dart';
+import 'package:hisaab/core/layout/app_layout_scope.dart';
+import 'package:hisaab/l10n/gen/app_localizations.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -67,7 +67,7 @@ Future<void> pumpApp(
       darkTheme: HisaabTheme.dark(),
       themeMode: themeMode,
       locale: const Locale('en', 'IN'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: const <LocalizationsDelegate<dynamic>>[AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (BuildContext context, Widget? app) => AppLayoutScope(child: app ?? const SizedBox()),
       home: child,

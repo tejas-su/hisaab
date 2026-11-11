@@ -1,13 +1,13 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/period_calculator.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
-import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
-import 'package:expense_tracker/ledger/domain/usecase/get_cycle_summary.dart';
-import 'package:expense_tracker/ledger/domain/usecase/put_in_extra.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/ledger/domain/entities/entry.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_rule.dart';
+import 'package:hisaab/ledger/domain/failures/ledger_failures.dart';
+import 'package:hisaab/ledger/domain/usecase/get_cycle_summary.dart';
+import 'package:hisaab/ledger/domain/usecase/put_in_extra.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes/fake_budget_settings_repository.dart';

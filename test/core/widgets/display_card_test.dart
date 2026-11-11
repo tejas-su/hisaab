@@ -1,9 +1,9 @@
 import 'dart:ui' as ui;
 
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/widgets/display_card.dart';
-import 'package:expense_tracker/core/widgets/display_etch.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/widgets/display_card.dart';
+import 'package:hisaab/core/widgets/display_etch.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/pump_app.dart';

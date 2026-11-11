@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/widgets/day_blocks/day_blocks_layout.dart';
+import 'package:hisaab/core/widgets/day_blocks/day_blocks_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

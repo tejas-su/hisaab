@@ -1,8 +1,8 @@
-import 'package:expense_tracker/settings/presentation/widgets/bill_row.dart';
-import 'package:expense_tracker/core/design/app_icon.dart';
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/settings/presentation/widgets/bill_row.dart';
+import 'package:hisaab/core/design/app_icon.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

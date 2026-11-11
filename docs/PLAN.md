@@ -170,7 +170,7 @@ Rules:
 - Other platform folders (ios/macos/linux/windows/web) left untouched but not built or tested.
 
 ## 11. Dependencies
-Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it. `file_picker` for the system *Save to* and *Open* screens of Back up and Restore (owner-approved, D139); it adds no network permission.
+Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it. `file_picker` for the system *Save to* and *Open* screens of Back up and Restore (owner-approved, D139); it adds no network permission. `material_ui` (Flutter's Material library, now a separate package; owner-requested, D146): every `package:flutter/material.dart` import became `package:material_ui/material_ui.dart`, and the app's localization delegates come from `material_ui`.
 To add when the milestone needs them: `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `home_widget` + `quick_settings_tile` (later).
 Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/` (M0).
 

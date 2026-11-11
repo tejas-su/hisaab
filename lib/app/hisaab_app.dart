@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -53,7 +53,9 @@ class HisaabApp extends StatelessWidget {
         // the wrong system-bar icons.
         themeAnimationDuration: Duration.zero,
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        // why: gen-l10n's own list still carries flutter_localizations' Material delegate; the
+        // material_ui widgets read material_ui's, which also covers Cupertino and widgets.
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (BuildContext context, Widget? child) => _EdgeToEdge(child: AppLayoutScope(child: child ?? const SizedBox())),
         home: home,

@@ -1,11 +1,11 @@
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/pay_rule.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
-import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
-import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
-import 'package:expense_tracker/ledger/domain/pay_rule_schedule.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/pay_rule.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/ledger/domain/entities/frequency.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_rule.dart';
+import 'package:hisaab/ledger/domain/entities/schedule.dart';
+import 'package:hisaab/ledger/domain/pay_rule_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

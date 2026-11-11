@@ -1,5 +1,5 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/spends/spends.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/spends/spends.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,5 +1,5 @@
-import 'package:expense_tracker/ledger/domain/entities/category.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/ledger/domain/entities/category.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
 
 /// The seed categories exactly as migration v1 creates them (SPEC BR-11).
 const List<Category> seedCategories = <Category>[

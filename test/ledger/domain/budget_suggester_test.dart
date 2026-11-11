@@ -1,8 +1,8 @@
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/domain/budget_suggester.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/domain/budget_suggester.dart';
+import 'package:hisaab/ledger/domain/entities/entry.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/fixtures/ledger/categories.dart';

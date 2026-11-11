@@ -1,5 +1,5 @@
-import 'package:expense_tracker/core/design/app_icons.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:hisaab/core/design/app_icons.dart';
+import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hugeicons/hugeicons.dart';
 

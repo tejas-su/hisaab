@@ -43,6 +43,7 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
   | `equatable` | Value equality |
   | `sqflite` | Local database |
   | `intl` + `flutter_localizations` | Formatting and l10n, via gen-l10n |
+  | `material_ui` | Material widgets and theming: import `package:material_ui/material_ui.dart`, never `package:flutter/material.dart` (D146) |
   | `hugeicons` | Icons |
   | `fpdart` | `Either` / `TaskEither` errors |
   | `file_picker` | The system *Save to* and open screens for backup and restore, used only in `lib/backup/data/platform/` (D139) |

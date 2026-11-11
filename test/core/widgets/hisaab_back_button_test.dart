@@ -1,10 +1,11 @@
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/widgets/hisaab_back_button.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/widgets/hisaab_back_button.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/tooltip_finder.dart';
 import '../../helpers/focus_helpers.dart';
 import '../../helpers/pump_app.dart';
 
@@ -67,7 +68,7 @@ void main() {
     testWidgets('reads "Back" once and keeps the long-press tooltip', (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await pushScreen(tester);
-      expect(find.byTooltip('Back'), findsOneWidget);
+      expect(findTooltip('Back'), findsOneWidget);
       expect(find.bySemanticsLabel('Back'), findsOneWidget);
       expect(tester.getSemantics(find.byType(HisaabBackButton)).tooltip, isEmpty);
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));

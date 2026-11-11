@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The top of a bill editor step: the question as a heading, then the step's own [children].
 class BillQuestion extends StatelessWidget {

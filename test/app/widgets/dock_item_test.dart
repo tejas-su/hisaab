@@ -1,7 +1,7 @@
-import 'package:expense_tracker/app/widgets/dock_item.dart';
-import 'package:expense_tracker/core/design/app_icons.dart';
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/app/widgets/dock_item.dart';
+import 'package:hisaab/core/design/app_icons.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

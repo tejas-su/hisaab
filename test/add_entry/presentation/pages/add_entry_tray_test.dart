@@ -1,13 +1,13 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/add_entry/add_entry.dart';
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/usecases/use_case.dart';
-import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/add_entry/add_entry.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/core/widgets/hisaab_chip.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

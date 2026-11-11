@@ -1,11 +1,11 @@
-import 'package:expense_tracker/core/db/app_database.dart';
-import 'package:expense_tracker/core/db/db_schema.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/ledger/data/datasource/categories_local_data_source.dart';
-import 'package:expense_tracker/ledger/data/repository/category_repository_impl.dart';
-import 'package:expense_tracker/ledger/domain/entities/category.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/core/db/app_database.dart';
+import 'package:hisaab/core/db/db_schema.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/ledger/data/datasource/categories_local_data_source.dart';
+import 'package:hisaab/ledger/data/repository/category_repository_impl.dart';
+import 'package:hisaab/ledger/domain/entities/category.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

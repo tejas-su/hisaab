@@ -1,6 +1,6 @@
 import 'dart:ui' show PathMetric;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';

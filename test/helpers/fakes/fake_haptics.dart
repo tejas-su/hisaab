@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/design/haptics.dart';
+import 'package:hisaab/core/design/haptics.dart';
 
 /// Records haptic events instead of buzzing, so tests can assert one effect per event.
 final class FakeHaptics implements Haptics {

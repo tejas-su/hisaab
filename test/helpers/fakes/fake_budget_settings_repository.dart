@@ -1,7 +1,7 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/time/pay_switch.dart';
-import 'package:expense_tracker/ledger/domain/entities/budget_settings.dart';
-import 'package:expense_tracker/ledger/domain/repository/budget_settings_repository.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/time/pay_switch.dart';
+import 'package:hisaab/ledger/domain/entities/budget_settings.dart';
+import 'package:hisaab/ledger/domain/repository/budget_settings_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// A [BudgetSettingsRepository] returning [settings]; set [failure] to make it fail.

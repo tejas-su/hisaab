@@ -1,5 +1,5 @@
-import 'package:expense_tracker/core/widgets/focus_ring.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/widgets/focus_ring.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Forces Flutter's focus highlight mode for one test: `alwaysTraditional` is a keyboard, D-pad or

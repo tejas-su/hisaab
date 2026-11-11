@@ -1,7 +1,7 @@
-import 'package:expense_tracker/backup/data/datasource/backup_local_data_source.dart';
-import 'package:expense_tracker/core/db/app_database.dart';
-import 'package:expense_tracker/core/db/db_schema.dart';
-import 'package:expense_tracker/core/db/migrations/migrations.dart';
+import 'package:hisaab/backup/data/datasource/backup_local_data_source.dart';
+import 'package:hisaab/core/db/app_database.dart';
+import 'package:hisaab/core/db/db_schema.dart';
+import 'package:hisaab/core/db/migrations/migrations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';

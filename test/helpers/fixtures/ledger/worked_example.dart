@@ -1,10 +1,10 @@
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
-import 'package:expense_tracker/ledger/domain/entities/frequency.dart';
-import 'package:expense_tracker/ledger/domain/entities/recurring_rule.dart';
-import 'package:expense_tracker/ledger/domain/entities/schedule.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/domain/entities/entry.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/ledger/domain/entities/frequency.dart';
+import 'package:hisaab/ledger/domain/entities/recurring_rule.dart';
+import 'package:hisaab/ledger/domain/entities/schedule.dart';
 
 import 'categories.dart';
 

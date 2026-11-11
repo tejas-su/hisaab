@@ -1,6 +1,6 @@
-import 'package:expense_tracker/ask_ai/ask_ai.dart';
-import 'package:expense_tracker/ask_ai/domain/entities/prompt_choice.dart';
-import 'package:expense_tracker/ask_ai/domain/entities/prompt_text.dart';
+import 'package:hisaab/ask_ai/ask_ai.dart';
+import 'package:hisaab/ask_ai/domain/entities/prompt_choice.dart';
+import 'package:hisaab/ask_ai/domain/entities/prompt_text.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fixtures/ask_ai/prompt_input.dart';

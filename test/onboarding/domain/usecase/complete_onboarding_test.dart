@@ -1,11 +1,11 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/pay_rule.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
-import 'package:expense_tracker/onboarding/domain/entities/setup_labels.dart';
-import 'package:expense_tracker/onboarding/domain/usecase/complete_onboarding.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/pay_rule.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/onboarding/domain/entities/onboarding_draft.dart';
+import 'package:hisaab/onboarding/domain/entities/setup_labels.dart';
+import 'package:hisaab/onboarding/domain/usecase/complete_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

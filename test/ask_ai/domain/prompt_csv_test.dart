@@ -1,4 +1,4 @@
-import 'package:expense_tracker/ask_ai/domain/prompt_csv.dart';
+import 'package:hisaab/ask_ai/domain/prompt_csv.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

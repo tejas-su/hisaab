@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
-import 'package:expense_tracker/settings/presentation/pages/remind_ask_sheet.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
+import 'package:hisaab/settings/presentation/pages/remind_ask_sheet.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

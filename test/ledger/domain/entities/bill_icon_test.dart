@@ -1,7 +1,7 @@
-import 'package:expense_tracker/ledger/domain/entities/amount_mode.dart';
-import 'package:expense_tracker/ledger/domain/entities/category.dart';
-import 'package:expense_tracker/ledger/domain/entities/bill_icon.dart';
-import 'package:expense_tracker/ledger/domain/entities/bill_kind.dart';
+import 'package:hisaab/ledger/domain/entities/amount_mode.dart';
+import 'package:hisaab/ledger/domain/entities/category.dart';
+import 'package:hisaab/ledger/domain/entities/bill_icon.dart';
+import 'package:hisaab/ledger/domain/entities/bill_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

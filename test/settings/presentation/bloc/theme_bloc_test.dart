@@ -1,8 +1,8 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/settings/domain/entities/theme_choice.dart';
-import 'package:expense_tracker/settings/presentation/bloc/theme_bloc.dart';
-import 'package:expense_tracker/settings/presentation/bloc/theme_event.dart';
-import 'package:expense_tracker/settings/presentation/bloc/theme_state.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/settings/domain/entities/theme_choice.dart';
+import 'package:hisaab/settings/presentation/bloc/theme_bloc.dart';
+import 'package:hisaab/settings/presentation/bloc/theme_event.dart';
+import 'package:hisaab/settings/presentation/bloc/theme_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/bloc_dispatch.dart';

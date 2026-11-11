@@ -1,8 +1,8 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/ledger/domain/entities/category.dart';
-import 'package:expense_tracker/ledger/domain/entities/entry_kind.dart';
-import 'package:expense_tracker/ledger/domain/repository/category_repository.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/ledger/domain/entities/category.dart';
+import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
+import 'package:hisaab/ledger/domain/repository/category_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../fixtures/ledger/categories.dart';

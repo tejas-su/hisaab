@@ -1,9 +1,9 @@
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
-import 'package:expense_tracker/core/widgets/hisaab_snackbar.dart';
-import 'package:expense_tracker/core/widgets/hisaab_snackbar_bar.dart';
-import 'package:expense_tracker/core/widgets/hisaab_snackbar_host.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
+import 'package:hisaab/core/widgets/hisaab_snackbar.dart';
+import 'package:hisaab/core/widgets/hisaab_snackbar_bar.dart';
+import 'package:hisaab/core/widgets/hisaab_snackbar_host.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

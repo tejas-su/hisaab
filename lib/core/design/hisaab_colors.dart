@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The app's colour tokens (UI_DESIGN §3.2): warm monochrome plus one marigold signal, and one
 /// [danger] red kept for the act that wipes everything.
@@ -35,10 +35,11 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
 
   // why: an alias names the same constant as the token it equals, so the two can't drift apart
   // (principle 27, D97). Only values that more than one token uses get a name here.
-  static const Color _lightBackground = Color(0xFFF1EBE4);
+  static const Color _lightBackground = Color(0xFFF1EDE8);
   static const Color _lightSurface = Color(0xFFFFFEFC);
   static const Color _lightHairline = Color(0xFFD7CFC5);
   static const Color _lightInk = Color(0xFF161615);
+  static const Color _lightInk2 = Color(0xFF5B5650);
   static const Color _darkBackground = Color(0xFF131210);
   static const Color _darkSurface = Color(0xFF211F1C);
   static const Color _darkSunk = Color(0xFF2F2B27);
@@ -54,12 +55,12 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     hairline: _lightHairline,
     control: _lightSurface,
     ink: _lightInk,
-    ink2: Color(0xFF5B5650),
+    ink2: _lightInk2,
     signal: Color(0xFFFFB020),
     onSignal: Color(0xFF161615),
     display: _lightSurface,
     displayInk: _lightInk,
-    displayInk2: Color(0xFF65605A),
+    displayInk2: _lightInk2,
     blockIdle: _lightHairline,
     displayEdge: _lightInk,
     displayEtch: _lightBackground,
@@ -69,7 +70,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     inverse: Color(0xFF312E29),
     danger: Color(0xFFB42318),
     scrim: Color(0x52161615),
-    clear: Color(0x00F1EBE4),
+    clear: Color(0x00F1EDE8),
     focus: _lightInk,
     focusGap: _lightBackground,
   );
@@ -146,8 +147,8 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// The hero's main text. An alias of [ink] in both themes (D97).
   final Color displayInk;
 
-  /// The hero's secondary text and the over-state hatch. Its own grey (#62615C) in light, which
-  /// stayed put when [ink2] darkened (D90); an alias of [ink2] in dark (D97).
+  /// The hero's secondary text and the over-state hatch. An alias of [ink2] in both themes (D97,
+  /// D145).
   final Color displayInk2;
 
   /// Day blocks that are not today. An alias of [hairline] in light; its own step in dark, between

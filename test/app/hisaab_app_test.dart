@@ -1,14 +1,14 @@
-import 'package:expense_tracker/app/app_shell.dart';
-import 'package:expense_tracker/app/hisaab_app.dart';
-import 'package:expense_tracker/core/db/app_database.dart';
-import 'package:expense_tracker/core/design/haptics.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money_formatter.dart';
-import 'package:expense_tracker/core/time/clock.dart';
-import 'package:expense_tracker/core/time/period_calculator.dart';
-import 'package:expense_tracker/settings/settings.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/app/app_shell.dart';
+import 'package:hisaab/app/hisaab_app.dart';
+import 'package:hisaab/core/db/app_database.dart';
+import 'package:hisaab/core/design/haptics.dart';
+import 'package:hisaab/core/di/service_locator.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money_formatter.dart';
+import 'package:hisaab/core/time/clock.dart';
+import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/settings/settings.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/fakes/fake_bill_reminders.dart';

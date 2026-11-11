@@ -1,7 +1,7 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/ledger/domain/entities/category.dart';
-import 'package:expense_tracker/ledger/domain/failures/ledger_failures.dart';
-import 'package:expense_tracker/ledger/domain/usecase/add_own_category.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/ledger/domain/entities/category.dart';
+import 'package:hisaab/ledger/domain/failures/ledger_failures.dart';
+import 'package:hisaab/ledger/domain/usecase/add_own_category.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

@@ -1,4 +1,4 @@
-import 'package:expense_tracker/ledger/domain/category_icon.dart';
+import 'package:hisaab/ledger/domain/category_icon.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

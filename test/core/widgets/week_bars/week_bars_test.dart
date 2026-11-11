@@ -1,10 +1,10 @@
 import 'dart:ui' as ui;
 
-import 'package:expense_tracker/core/widgets/week_bars/week_bars.dart';
-import 'package:expense_tracker/core/widgets/week_bars/week_bars_data.dart';
-import 'package:expense_tracker/core/widgets/week_bars/week_bars_painter.dart';
-import 'package:expense_tracker/core/widgets/week_bars/week_letters.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/widgets/week_bars/week_bars.dart';
+import 'package:hisaab/core/widgets/week_bars/week_bars_data.dart';
+import 'package:hisaab/core/widgets/week_bars/week_bars_painter.dart';
+import 'package:hisaab/core/widgets/week_bars/week_letters.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';

@@ -1,9 +1,9 @@
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/spends/domain/entities/category_spend.dart';
-import 'package:expense_tracker/spends/presentation/widgets/category_spend_row.dart';
-import 'package:expense_tracker/spends/presentation/widgets/limit_bar_painter.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/spends/domain/entities/category_spend.dart';
+import 'package:hisaab/spends/presentation/widgets/category_spend_row.dart';
+import 'package:hisaab/spends/presentation/widgets/limit_bar_painter.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

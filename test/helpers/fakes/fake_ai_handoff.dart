@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:expense_tracker/ask_ai/domain/ai_handoff.dart';
+import 'package:hisaab/ask_ai/domain/ai_handoff.dart';
 
 /// Records every hand-off instead of touching the clipboard, browser or share sheet.
 final class FakeAiHandoff implements AiHandoff {

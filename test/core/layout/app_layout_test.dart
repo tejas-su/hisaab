@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/layout/app_layout.dart';
-import 'package:expense_tracker/core/layout/window_class.dart';
+import 'package:hisaab/core/layout/app_layout.dart';
+import 'package:hisaab/core/layout/window_class.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 DisplayFeature _fold(Rect bounds, {DisplayFeatureState state = DisplayFeatureState.postureFlat}) =>

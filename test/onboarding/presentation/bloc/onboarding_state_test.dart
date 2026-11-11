@@ -1,7 +1,7 @@
-import 'package:expense_tracker/ledger/domain/entities/bill_kind.dart';
-import 'package:expense_tracker/onboarding/domain/entities/onboarding_draft.dart';
-import 'package:expense_tracker/onboarding/domain/entities/setup_labels.dart';
-import 'package:expense_tracker/onboarding/presentation/bloc/onboarding_state.dart';
+import 'package:hisaab/ledger/domain/entities/bill_kind.dart';
+import 'package:hisaab/onboarding/domain/entities/onboarding_draft.dart';
+import 'package:hisaab/onboarding/domain/entities/setup_labels.dart';
+import 'package:hisaab/onboarding/presentation/bloc/onboarding_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

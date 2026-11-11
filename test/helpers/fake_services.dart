@@ -1,15 +1,15 @@
-import 'package:expense_tracker/ask_ai/ask_ai.dart';
-import 'package:expense_tracker/backup/backup.dart';
-import 'package:expense_tracker/core/design/haptics.dart';
-import 'package:expense_tracker/core/notifications/bill_reminders.dart';
-import 'package:expense_tracker/core/time/clock.dart';
-import 'package:expense_tracker/core/time/period_calculator.dart';
-import 'package:expense_tracker/home/home.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/spends/spends.dart';
-import 'package:expense_tracker/onboarding/onboarding.dart';
-import 'package:expense_tracker/onboarding/data/repository/onboarding_draft_repository_impl.dart';
-import 'package:expense_tracker/settings/settings.dart';
+import 'package:hisaab/ask_ai/ask_ai.dart';
+import 'package:hisaab/backup/backup.dart';
+import 'package:hisaab/core/design/haptics.dart';
+import 'package:hisaab/core/notifications/bill_reminders.dart';
+import 'package:hisaab/core/time/clock.dart';
+import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/home/home.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/spends/spends.dart';
+import 'package:hisaab/onboarding/onboarding.dart';
+import 'package:hisaab/onboarding/data/repository/onboarding_draft_repository_impl.dart';
+import 'package:hisaab/settings/settings.dart';
 import 'package:get_it/get_it.dart';
 
 import 'fakes/fake_backup_repository.dart';

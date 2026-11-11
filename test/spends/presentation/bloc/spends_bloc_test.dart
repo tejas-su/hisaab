@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/period_calculator.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/spends/domain/entities/insight.dart';
-import 'package:expense_tracker/spends/domain/usecase/get_spends_overview.dart';
-import 'package:expense_tracker/spends/presentation/bloc/spends_bloc.dart';
-import 'package:expense_tracker/spends/presentation/bloc/spends_event.dart';
-import 'package:expense_tracker/spends/presentation/bloc/spends_state.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/spends/domain/entities/insight.dart';
+import 'package:hisaab/spends/domain/usecase/get_spends_overview.dart';
+import 'package:hisaab/spends/presentation/bloc/spends_bloc.dart';
+import 'package:hisaab/spends/presentation/bloc/spends_event.dart';
+import 'package:hisaab/spends/presentation/bloc/spends_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/bloc_dispatch.dart';

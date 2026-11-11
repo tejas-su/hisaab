@@ -1,8 +1,8 @@
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/pay_cycle.dart';
-import 'package:expense_tracker/ledger/domain/waiting_bills.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/pay_cycle.dart';
+import 'package:hisaab/ledger/domain/waiting_bills.dart';
+import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const PayCycle _october = PayCycle(start: CalendarDate(2026, 10, 4), end: CalendarDate(2026, 11, 3));

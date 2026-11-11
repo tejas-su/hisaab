@@ -1,10 +1,10 @@
 import 'dart:ui' as ui;
 
-import 'package:expense_tracker/core/design/app_icon.dart';
-import 'package:expense_tracker/core/widgets/days_rail/days_rail.dart';
-import 'package:expense_tracker/core/widgets/days_rail/days_rail_data.dart';
-import 'package:expense_tracker/core/widgets/days_rail/days_rail_painter.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/app_icon.dart';
+import 'package:hisaab/core/widgets/days_rail/days_rail.dart';
+import 'package:hisaab/core/widgets/days_rail/days_rail_data.dart';
+import 'package:hisaab/core/widgets/days_rail/days_rail_painter.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';

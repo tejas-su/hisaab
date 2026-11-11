@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/settings/settings.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/settings/settings.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// An in-memory [AppPreferencesRepository]; set [failure] to make every call fail.

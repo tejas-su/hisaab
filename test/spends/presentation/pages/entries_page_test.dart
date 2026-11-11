@@ -1,15 +1,16 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/pay_cycle.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/spends/presentation/widgets/entries_day.dart';
-import 'package:expense_tracker/spends/spends.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/pay_cycle.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/spends/presentation/widgets/entries_day.dart';
+import 'package:hisaab/spends/spends.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/tooltip_finder.dart';
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fake_services.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
@@ -162,7 +163,7 @@ void main() {
 
     testWidgets('Back pops the page', (WidgetTester tester) async {
       await pump(tester);
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(findTooltip('Back'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });

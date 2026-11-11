@@ -1,13 +1,13 @@
-import 'package:expense_tracker/ask_ai/ask_ai.dart';
-import 'package:expense_tracker/add_entry/add_entry.dart';
-import 'package:expense_tracker/app/hisaab_app.dart';
-import 'package:expense_tracker/app/main_screen.dart';
-import 'package:expense_tracker/app/widgets/hisaab_dock.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/home/home.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/spends/spends.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/ask_ai/ask_ai.dart';
+import 'package:hisaab/add_entry/add_entry.dart';
+import 'package:hisaab/app/hisaab_app.dart';
+import 'package:hisaab/app/main_screen.dart';
+import 'package:hisaab/app/widgets/hisaab_dock.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/home/home.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/spends/spends.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 

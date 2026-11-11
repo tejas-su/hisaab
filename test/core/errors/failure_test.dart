@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/logging/app_logger.dart';
-import 'package:expense_tracker/core/usecases/use_case.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/logging/app_logger.dart';
+import 'package:hisaab/core/usecases/use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

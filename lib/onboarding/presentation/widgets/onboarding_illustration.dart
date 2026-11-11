@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The pictures onboarding shows between a question and its controls (UI_DESIGN §5.1, D144).
 enum OnboardingPicture {

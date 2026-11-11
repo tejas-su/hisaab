@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/design/hisaab_motion.dart';
-import 'package:expense_tracker/core/widgets/pressable.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_motion.dart';
+import 'package:hisaab/core/widgets/pressable.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'pace_chart_painter.dart';
 import 'pace_strokes.dart';

@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/design/hisaab_colors.dart';
-import 'package:expense_tracker/core/design/hisaab_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/design/hisaab_theme.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Every colour role a [ColorScheme] exposes, by name (deprecated aliases left out).

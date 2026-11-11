@@ -1,5 +1,5 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/currency_spec.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/currency_spec.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

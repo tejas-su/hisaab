@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_bloc.dart';
-import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_event.dart';
-import 'package:expense_tracker/add_entry/presentation/bloc/add_entry_state.dart';
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/period_calculator.dart';
-import 'package:expense_tracker/core/usecases/use_case.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
+import 'package:hisaab/add_entry/presentation/bloc/add_entry_bloc.dart';
+import 'package:hisaab/add_entry/presentation/bloc/add_entry_event.dart';
+import 'package:hisaab/add_entry/presentation/bloc/add_entry_state.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

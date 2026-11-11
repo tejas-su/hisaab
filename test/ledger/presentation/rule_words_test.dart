@@ -1,9 +1,9 @@
-import 'package:expense_tracker/core/design/app_icons.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/l10n/gen/app_localizations.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/ledger/presentation/rule_glyph.dart';
-import 'package:expense_tracker/ledger/presentation/rule_words.dart';
+import 'package:hisaab/core/design/app_icons.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/l10n/gen/app_localizations.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/ledger/presentation/rule_glyph.dart';
+import 'package:hisaab/ledger/presentation/rule_words.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 

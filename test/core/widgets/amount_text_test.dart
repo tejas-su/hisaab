@@ -1,6 +1,6 @@
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/widgets/amount_text.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/widgets/amount_text.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/pump_app.dart';

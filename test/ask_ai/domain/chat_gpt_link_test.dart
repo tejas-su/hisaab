@@ -1,4 +1,4 @@
-import 'package:expense_tracker/ask_ai/domain/chat_gpt_link.dart';
+import 'package:hisaab/ask_ai/domain/chat_gpt_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 

@@ -1,10 +1,10 @@
-import 'package:expense_tracker/core/errors/failure.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
+import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:expense_tracker/core/time/month_start.dart';
-import 'package:expense_tracker/core/time/pay_cycle.dart';
-import 'package:expense_tracker/core/time/pay_rule.dart';
-import 'package:expense_tracker/core/time/period_calculator.dart';
+import 'package:hisaab/core/time/month_start.dart';
+import 'package:hisaab/core/time/pay_cycle.dart';
+import 'package:hisaab/core/time/pay_rule.dart';
+import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

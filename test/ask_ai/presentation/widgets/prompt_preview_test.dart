@@ -1,7 +1,7 @@
-import 'package:expense_tracker/ask_ai/domain/entities/prompt_text.dart';
-import 'package:expense_tracker/ask_ai/presentation/widgets/prompt_preview.dart';
-import 'package:expense_tracker/core/widgets/hisaab_chip.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/ask_ai/domain/entities/prompt_text.dart';
+import 'package:hisaab/ask_ai/presentation/widgets/prompt_preview.dart';
+import 'package:hisaab/core/widgets/hisaab_chip.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/pump_app.dart';

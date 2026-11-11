@@ -1,5 +1,5 @@
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/core/time/clock.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/core/time/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/fakes/fake_clock.dart';

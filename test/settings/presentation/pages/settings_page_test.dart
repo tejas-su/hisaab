@@ -1,11 +1,11 @@
 import 'dart:ui';
 
-import 'package:expense_tracker/core/design/hisaab_dimensions.dart';
-import 'package:expense_tracker/core/money/money.dart';
-import 'package:expense_tracker/core/time/calendar_date.dart';
-import 'package:expense_tracker/ledger/ledger.dart';
-import 'package:expense_tracker/settings/settings.dart';
-import 'package:flutter/material.dart';
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
+import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
+import 'package:hisaab/ledger/ledger.dart';
+import 'package:hisaab/settings/settings.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

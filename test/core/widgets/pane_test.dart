@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/widgets/pane.dart';
+import 'package:hisaab/core/widgets/pane.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
