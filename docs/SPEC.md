@@ -30,12 +30,12 @@ Tests should cite the ID they cover.
 - Manual expenses and manual income ("Got").
 - Daily "safe to spend", today's bar and the days rail, the range forecast, Spends insights, and the Ask AI export.
 - Optional category limits, local backup/restore and CSV export.
+- A home-screen widget, a Quick Settings tile and an app shortcut (FR-WG, D147).
 
 ### 1.2 Not in v1
 - Accounts, wallets, transfers and splitting.
 - Bank or UPI SMS reading.
 - Sync, login, multiple devices and multiple currencies.
-- Widgets and the Quick Settings tile (planned for M6+).
 - Hindi (the ARB file is ready for it).
 - Calling any AI service from the app. The app only prepares text; the user sends it.
 
@@ -505,6 +505,40 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **AC-7** TalkBack, Switch Access and keyboard users can't feel a timed hold, so the same key is arm-then-confirm: the first activation arms it ("Double-tap again to delete everything"), and a second within 10 s deletes. After 10 s it disarms.
   - **AC-8** After deleting, BR-16's wipe runs and the app opens onboarding step 1 with the back stack cleared, with no snackbar. TalkBack hears "Everything deleted. hisaab is starting again." A failure rolls back and stays on the page: "Couldn't delete. Nothing changed. Try again."
 - **FR-SE-5** About: version, licences, and the privacy line "Everything stays on this phone. Nothing leaves unless you share it or back it up." It is true because Auto Backup is off (BR-16) and the app has no INTERNET permission (NFR-2).
+- **FR-SE-6** *Shortcuts* (D147, mockup [38](design/mockups/38-widget-and-tile.html) §6): a group with two rows.
+  - **AC-1** *Add a widget* ("See what's safe to spend from your home screen") calls `requestPinAppWidget`, which opens the launcher's own dialog. The row is hidden when `isRequestPinAppWidgetSupported()` is false.
+  - **AC-2** *Add to quick settings* ("Add a spend from the pull-down") calls `requestAddTileService`, which opens Android's own dialog. The row is hidden below Android 13.
+  - **AC-3** When neither row can show, the group is hidden. Nothing in the app ever offers either one unasked.
+
+### 4.7 Widget, tile and shortcut (FR-WG)
+Everything here only opens hisaab sooner. The entry path is unchanged: Add → digits → Next → tile (D147).
+- **FR-WG-1** **One resizable widget**, *hisaab*, in four sizes. On Android 12+ these use size-mapped layouts; below that, the layout is chosen from the widget's reported size. It is placed at 4×2.
+  | Size | Shows |
+  |---|---|
+  | 2×1 | The amount, "left today" (or the over line), Add |
+  | 2×2 | "Safe to spend today", the amount, today's bar, "{D} days left" and the payday flag, a full-width *Add* key |
+  | 4×1 | "Safe to spend today", the amount, today's bar, Add |
+  | 4×2 | "Safe to spend today", the amount, Add, today's bar, the days rail with the payday flag, the divider, the range line (BR-7) and "{D} days" |
+- **FR-WG-2** **Look:** the hero's paper (`display`), with `DisplayEtchPainter`'s rosette, grain and solid and dashed keylines (D106, D107) at every size. It has no shadow and no sheen. Content stays 10dp clear of the dashed keyline. Today's bar keeps BR-6's drawing, without the captions and category names. The widget follows the app's *Look* setting (FR-SE-3), not only the phone's.
+- **FR-WG-3** **States:** BR-5's hero and bar rules apply. Over today and over for the cycle show `₹0` in `displayInk2` with "₹X over today" or "Over by ₹X this cycle". *No income* shows the wordmark, "Set up hisaab to see what's safe to spend today." and a *Set up* key. **The amount is always shown** (D147).
+- **FR-WG-4** **Taps:**
+  - **AC-1** The marigold Add key opens Home with the Add tray at the keypad.
+  - **AC-2** A tap anywhere else opens Home. *Set up* opens onboarding.
+  - **AC-3** No other tap targets.
+- **FR-WG-5** **Fresh without the app** (BR-8):
+  - The app writes a snapshot after every save, edit, delete, Undo, restore and settings change. The snapshot is one row per day from today until a cycle past the next payday, each row holding that day's hero, `A`, state, `D`, payday and range line.
+  - The rows assume no new entries. This is exact, because the ledger can only change while the app is open.
+  - The widget picks today's row on every update: about 00:01, on a date, time or time-zone change, and at Android's periodic refresh.
+  - All maths stays in Dart (`SafeToSpend`, `PeriodCalculator`). Native code only picks a row.
+- **FR-WG-6** **Quick Settings tile:**
+  - **AC-1** Label "Add a spend", subtitle "hisaab", a Hugeicons glyph, inactive state. It never shows money.
+  - **AC-2** A tap collapses the shade and opens the Add tray at the keypad. If the phone is locked, it unlocks first (`unlockAndRun`).
+  - **AC-3** A long-press opens Home.
+- **FR-WG-7** **App shortcut:** long-pressing the launcher icon offers "Add a spend", which opens the Add tray at the keypad.
+- **FR-WG-8** **TalkBack:**
+  - The widget reads one summary, with amounts spoken: "Safe to spend today, 1,430 rupees. 420 rupees spent of 1,850. 9 days to payday, on 4 November. Lasts till payday, about 9,300 rupees spare."
+  - The Add key reads "Add a spend".
+  - The tile reads "Add a spend, hisaab".
 
 ---
 
@@ -562,6 +596,13 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | E48 | Payday changed and changed back the same day | The old cycle comes back exactly; both switches stay recorded |
 | E49 | Weekly ↔ monthly payday (BR-1a) | The monthly figure is kept (weekly posts month × 12 ÷ 52, D26); the bridge ends with the new week or month |
 | E50 | *It changes* moved to a fixed day | The amount is asked first, prefilled with every *Got* this month; the bridge starts on the 1st |
+| E51 | Widget placed before onboarding is finished | The *Set up* state (FR-WG-3); finishing onboarding updates it |
+| E52 | *Delete everything* (FR-SE-4) | The snapshot is wiped with the data and the widget returns to *Set up* |
+| E53 | App not opened past the snapshot's last row | The widget shows the wordmark and "Open hisaab to update"; a tap opens Home, which writes a new snapshot |
+| E54 | Restore, or *Undo restore* | The widget updates to the restored data at once |
+| E55 | Midnight, payday, a clock or time-zone change while the app is closed | The widget picks the matching row (FR-WG-5); a bill posted that day is already in the row (D119) |
+| E56 | Tile tapped on the lock screen | Android asks to unlock; nothing about money shows before it |
+| E57 | Launcher can't pin widgets, or Android below 13 | The matching *Shortcuts* row is hidden (FR-SE-6) |
 
 ---
 
@@ -578,7 +619,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
 | NFR-7 | Changed-lines test coverage ≥ 90% (target 100%) per change (`.claude/rules/tests.md`) |
 | NFR-8 | Adaptive layout: no orientation or size lock; works from 320dp phones to tablets, in every foldable posture and in multi-window (UI_DESIGN §13) |
 | NFR-9 | The launch splash never delays Home: it is dismissed on Flutter's first frame. Its icon animation lasts 800 ms or less. Its background matches Home's in light and dark (UI_DESIGN §3.7) |
-| NFR-10 | The recent-apps preview never shows amounts on Android 13+ (`setRecentsScreenshotEnabled(false)`); screenshots keep working. The placeholder is Home's `bg` edge to edge, never the system's white card (D134). Android 7–12 are unchanged, since `FLAG_SECURE` would block screenshots (D109) |
+| NFR-10 | The recent-apps preview never shows amounts on Android 13+ (`setRecentsScreenshotEnabled(false)`); screenshots keep working. The placeholder is Home's `bg` edge to edge, never the system's white card (D134). Android 7–12 are unchanged, since `FLAG_SECURE` would block screenshots (D109). The Quick Settings tile never shows money, so the lock screen shows none. The home-screen widget shows the amount, because the user places it (D147) |
 
 ---
 

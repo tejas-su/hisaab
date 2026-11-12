@@ -519,10 +519,17 @@ One effect per event, never buzzy.
   - It is native: the Android 12+ `SplashScreen` API, and a static icon below that.
   - It is one colour from tap to Home in each mode.
   - It follows the phone's dark mode. When the in-app look setting (FR-SE-3) is built, it must also call `UiModeManager.setApplicationNightMode()` (API 31+) so the splash follows the app's choice.
-- Later quick-add options:
-  - App shortcut.
-  - Home-screen widget showing the hero card in miniature (`home_widget`).
-  - Quick Settings tile using `startActivityAndCollapse(PendingIntent)`.
+- **Widget, tile and shortcut (D147, SPEC FR-WG, mockup [38](design/mockups/38-widget-and-tile.html)).** These open hisaab sooner without changing the entry path.
+  - **The widget is the hero card in miniature, cut from the same paper.** Every size uses `display` with `DisplayEtchPainter`'s rosette (80dp in from the top end corner), the grain, and the solid (6dp in) and dashed (10dp in) keylines. It has 28dp corners and content 10dp clear of the dashed line. There is no `displayShadow` and no sheen, because a launcher clips a widget at its edges and doesn't animate it. On a 360dp phone the 4×2 is as wide as Home's hero (320dp), so the rosette and frame land in the same place.
+  - **Sizes** 2×1, 2×2, 4×1 and 4×2 (placed at 4×2):
+    - Every size has the marigold Add key at the top end corner: 48dp, with 16 corners. The 2×1 has a 40dp key inside a 48dp target; the 2×2 has a full-width *Add* key at the foot.
+    - Today's bar is 20dp on the 4×2 and 4×1, and 14dp on the 2×2. It has no captions or names.
+    - The 4×2 keeps the days rail, the `displayEtch` divider and the range line.
+  - The widget follows the app's *Look*. Its colours are hisaab's tokens, never the wallpaper's dynamic colours, so marigold still means only *today / act*.
+  - **Tile:** "Add a spend", subtitle "hisaab", a monochrome Hugeicons glyph, inactive state, never money. It opens with `startActivityAndCollapse(PendingIntent)` on Android 14+ (the Intent form below that), and `unlockAndRun` when the phone is locked.
+  - **App shortcut:** "Add a spend".
+  - **Settings › Shortcuts:** *Add a widget* and *Add to quick settings*, each opening the system's own pin dialog (FR-SE-6).
+  - **Build note:** draw the paper as a bitmap from `DisplayEtchPainter` at each size, so it can never drift from Home. Check on a device whether RemoteViews keeps the bundled Anek Latin with tabular figures; if not, draw the amount as a bitmap too.
 
 ## 11. Flutter implementation notes
 - `core/design/hisaab_colors.dart`: `ThemeExtension<HisaabColors>` with light and dark instances, including the `display*` aliases, `clear`, `focus` and `focusGap`. `contrast_pairs_test.dart` fails the build if any pair in its list drops below its floor in any theme, and `hard_coded_colours_test.dart` fails on a raw colour outside `core/design/` (§3.2).

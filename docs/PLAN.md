@@ -171,7 +171,7 @@ Rules:
 
 ## 11. Dependencies
 Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it. `file_picker` for the system *Save to* and *Open* screens of Back up and Restore (owner-approved, D139); it adds no network permission. `material_ui` (Flutter's Material library, now a separate package; owner-requested, D146): every `package:flutter/material.dart` import became `package:material_ui/material_ui.dart`, and the app's localization delegates come from `material_ui`.
-To add when the milestone needs them: `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `home_widget` + `quick_settings_tile` (later).
+To add when the milestone needs them: `animations` (not needed in M1; the tray slides up), `fl_chart` (M4), `share_plus` + `url_launcher` (M5), `path` (M0), `home_widget` (M7, D147; the tile is a plain Kotlin `TileService`, so `quick_settings_tile` is not needed).
 Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/` (M0).
 
 ---
@@ -187,8 +187,9 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | M4 ✓ | Spends: pace chart (a painter, not `fl_chart`), *Where it went* with limits, insights (BR-14), *Every entry* (FR-SP-6); Home's *See all* and over card. The Ask AI card comes with M5 and *Set a limit* waits for a design (DECISIONS D49–D54) | vs-last-cycle shown, 3 tips max |
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |
 | M6 | JSON backup & restore, Delete everything (D139), CSV export, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall through a backup file; TalkBack reads every control |
+| M7 | Home-screen widget (4 sizes, the hero's paper, the day-by-day snapshot), Quick Settings tile, app shortcut, Settings › Shortcuts (SPEC FR-WG, FR-SE-6, D147, mockup 38) | The widget is right after midnight and payday with the app closed; Add on the widget, tile or shortcut opens the keypad |
 
 Tests: unit tests for all of `domain/` and `core/money`, `core/time`; widget tests for M1 flows.
 
 ## 13. Later (not v1)
-UPI/bank SMS auto-read · home-screen quick-add widget · Hindi · cloud sync · multi-currency.
+UPI/bank SMS auto-read (as payment-notification capture, case study 31) · Hindi · cloud sync · multi-currency.

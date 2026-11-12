@@ -1,6 +1,6 @@
 # 31 · Where hisaab stands among popular Play Store expense trackers
 
-Date: 2026-11-11. Status: **research only, nothing adopted.** Kept local: not published or shared.
+Date: 2026-11-11. Status: **items 1, 2 and the app shortcut adopted (D147, [mockup 38](../../design/mockups/38-widget-and-tile.html)); the rest is research only.** Kept local: not published or shared.
 
 ## The question
 
@@ -120,7 +120,7 @@ Each item is scored on two counts: user pull (in the evidence above) and fit wit
 
 1. Is monetisation planned at all? **Answered (2026-11-11): never.** hisaab is a hobby project, so "no ads" can be promised for good.
 2. Is Hindi in scope for v1, or after launch? **Answered: later.**
-3. Should the widget show the amount by default, given D109's stance on the recent-apps preview? Open; [mockup 38](../../design/mockups/38-widget-and-tile.html) proposes a second, private widget.
+3. Should the widget show the amount by default, given D109's stance on the recent-apps preview? **Answered (2026-11-12): yes, always, with no private variant (D147).**
 4. Is assisted capture (item 5) acceptable in principle, given that it means reading payment notifications on the device? **Answered: later.**
 
 Next step: the widget and tile (items 1 and 2) are drawn in [mockup 38](../../design/mockups/38-widget-and-tile.html).
