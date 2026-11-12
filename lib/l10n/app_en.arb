@@ -2034,7 +2034,7 @@
   "@deleteAllItemSettings": {
     "description": "Delete everything list item"
   },
-  "deleteAllNoUndo": "There's no Undo for this.",
+  "deleteAllNoUndo": "Once it's deleted, there's no getting it back.",
   "@deleteAllNoUndo": {
     "description": "Line after the list of what is deleted"
   },
@@ -2056,21 +2056,15 @@
   },
   "deleteAllHold": "Hold to delete everything",
   "@deleteAllHold": {
-    "description": "Label on the hold key; it fills while pressed and deletes when let go full"
+    "description": "Label on the hold key; it fills while pressed, and when let go full it counts down 5 s with Undo, then deletes"
   },
   "deleteAllHoldFull": "Let go to delete",
   "@deleteAllHoldFull": {
     "description": "Label on the hold key once it is full"
   },
-  "deleteAllHoldCaption": "{seconds, plural, =1{Keep your finger on it for 1 second} other{Keep your finger on it for {seconds} seconds}}",
+  "deleteAllHoldCaption": "Press and hold to delete.",
   "@deleteAllHoldCaption": {
-    "description": "Caption under the hold key, always shown",
-    "placeholders": {
-      "seconds": {
-        "type": "num",
-        "format": "decimalPattern"
-      }
-    }
+    "description": "Caption under the hold key at rest; names no duration, the fill shows it (D149)"
   },
   "deleteAllHoldShort": "Keep holding till it fills up.",
   "@deleteAllHoldShort": {
@@ -2087,6 +2081,36 @@
   "deleteAllHoldHint": "Double-tap twice to delete",
   "@deleteAllHoldHint": {
     "description": "TalkBack hint on the hold key"
+  },
+  "deleteAllUndo": "Undo",
+  "@deleteAllUndo": {
+    "description": "Label on the hold key while its fill drains back for 5 s after a full hold; a tap stops the delete"
+  },
+  "deleteAllUndoCaption": "{seconds, plural, =1{Deleting in 1 second. Tap Undo to stop.} other{Deleting in {seconds} seconds. Tap Undo to stop.}}",
+  "@deleteAllUndoCaption": {
+    "description": "Caption under the hold key while it counts down to the delete; it counts down each second",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAllUndoSpoken": "Undo. Keep everything",
+  "@deleteAllUndoSpoken": {
+    "description": "TalkBack label for the hold key while it counts down to the delete"
+  },
+  "deleteAllUndoAnnounced": "Deleting everything in {seconds} seconds. Double-tap to undo.",
+  "@deleteAllUndoAnnounced": {
+    "description": "TalkBack announcement when the countdown to the delete starts",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAllUndone": "Stopped. Nothing was deleted.",
+  "@deleteAllUndone": {
+    "description": "Caption under the hold key after Undo stopped the delete"
   },
   "deleteAllWorking": "Deleting…",
   "@deleteAllWorking": {

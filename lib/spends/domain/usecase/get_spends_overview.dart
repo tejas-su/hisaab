@@ -129,6 +129,8 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
       pace: PaceSeries.of(current, cycle: viewed.cycle, asOf: viewed.asOf, budget: budget, billsDue: due.bills, isCurrent: viewed.cyclesBack == 0),
       rows: CategoryShares.of(current, categories),
       insights: <Insight>[...rules, ...offer.match(() => const <Insight>[], (Insight o) => <Insight>[o])].take(_maxInsights).toList(),
+      // why: the entry list shows the whole cycle, later-dated entries too, so this ignores asOf.
+      hasEntries: entries.any((Entry e) => viewed.cycle.contains(e.date)),
     );
   }
 

@@ -1547,7 +1547,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAllItemSettings => 'Look and your other settings';
 
   @override
-  String get deleteAllNoUndo => 'There\'s no Undo for this.';
+  String get deleteAllNoUndo =>
+      'Once it\'s deleted, there\'s no getting it back.';
 
   @override
   String get deleteAllStays => 'Backup files you made stay where you put them.';
@@ -1570,19 +1571,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAllHoldFull => 'Let go to delete';
 
   @override
-  String deleteAllHoldCaption(num seconds) {
-    final intl.NumberFormat secondsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String secondsString = secondsNumberFormat.format(seconds);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      seconds,
-      locale: localeName,
-      other: 'Keep your finger on it for $secondsString seconds',
-      one: 'Keep your finger on it for 1 second',
-    );
-    return '$_temp0';
-  }
+  String get deleteAllHoldCaption => 'Press and hold to delete.';
 
   @override
   String get deleteAllHoldShort => 'Keep holding till it fills up.';
@@ -1595,6 +1584,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAllHoldHint => 'Double-tap twice to delete';
+
+  @override
+  String get deleteAllUndo => 'Undo';
+
+  @override
+  String deleteAllUndoCaption(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Deleting in $seconds seconds. Tap Undo to stop.',
+      one: 'Deleting in 1 second. Tap Undo to stop.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAllUndoSpoken => 'Undo. Keep everything';
+
+  @override
+  String deleteAllUndoAnnounced(int seconds) {
+    return 'Deleting everything in $seconds seconds. Double-tap to undo.';
+  }
+
+  @override
+  String get deleteAllUndone => 'Stopped. Nothing was deleted.';
 
   @override
   String get deleteAllWorking => 'Deleting…';

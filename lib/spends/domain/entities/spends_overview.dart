@@ -20,6 +20,7 @@ final class SpendsOverview extends Equatable {
     required this.pace,
     required this.rows,
     required this.insights,
+    required this.hasEntries,
   });
 
   final PayCycle cycle;
@@ -51,6 +52,11 @@ final class SpendsOverview extends Equatable {
   /// At most 3, in BR-14 priority order.
   final List<Insight> insights;
 
+  /// Whether the cycle's entry list has anything to show: any spend, income or saving in it.
+  ///
+  /// An empty cycle (nothing spent) offers *See every entry* only when this is true (D148).
+  final bool hasEntries;
+
   /// The current cycle has no Next.
   bool get isCurrent => cyclesBack == 0;
 
@@ -58,5 +64,5 @@ final class SpendsOverview extends Equatable {
   bool get isEmpty => rows.isEmpty;
 
   @override
-  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, saved, pace, rows, insights];
+  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, saved, pace, rows, insights, hasEntries];
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/semantics.dart';
 
 import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';
@@ -15,10 +16,12 @@ import 'hold_fill_clipper.dart';
 
 /// The *Delete everything* key (SPEC FR-SE-4 AC-6, AC-7; UI_DESIGN §5.6, §6).
 ///
-/// Pressed, a `danger` fill sweeps across it evenly over [holdFor]; let go when full, it calls
-/// [onConfirmed]. Letting go early, or sliding off, drains it and changes nothing. With TalkBack,
-/// Switch Access or a keyboard it is arm-then-confirm instead: a first activation arms it for
-/// [armedFor] and a second confirms. [busy] shows it working and disables it.
+/// Pressed, a `danger` fill sweeps across it evenly over [holdFor]. Let go when full, it reads
+/// *Undo* and the fill drains back over [undoFor] (D149); a tap in that time stops it, and when
+/// the fill is empty it calls [onConfirmed]. Letting go early, or sliding off, drains it and
+/// changes nothing. With TalkBack, Switch Access or a keyboard it is arm-then-confirm instead: a
+/// first activation arms it for [armedFor], a second starts the same countdown, and a third undoes.
+/// [busy] shows it working and disables it.
 class HoldToDeleteKey extends StatefulWidget {
   const HoldToDeleteKey({super.key, required this.onConfirmed, required this.haptics, this.busy = false});
 
@@ -28,6 +31,9 @@ class HoldToDeleteKey extends StatefulWidget {
 
   /// How long the finger stays down before a release deletes.
   static const Duration holdFor = Duration(milliseconds: 1500);
+
+  /// How long the fill drains back after a full hold, while a tap still undoes it.
+  static const Duration undoFor = Duration(seconds: 5);
 
   /// How long an assistive first activation stays armed.
   static const Duration armedFor = Duration(seconds: 10);
@@ -50,10 +56,13 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
   late final AnimationController _fill = AnimationController(
     vsync: this,
     duration: HoldToDeleteKey.holdFor,
+    reverseDuration: HoldToDeleteKey.undoFor,
     animationBehavior: AnimationBehavior.preserve,
   )..addStatusListener(_onFillStatus);
   bool _letGoEarly = false;
   bool _armed = false;
+  bool _counting = false;
+  bool _undone = false;
   Timer? _disarm;
 
   @override
@@ -67,20 +76,61 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
     if (status.isCompleted) {
       widget.haptics.threshold();
     }
+    if (status.isDismissed && _counting) {
+      setState(() => _counting = false);
+      widget.onConfirmed();
+    }
   }
 
   void _onDown(TapDownDetails _) {
+    if (_counting) {
+      return;
+    }
     widget.haptics.tick();
-    setState(() => _letGoEarly = false);
+    setState(() {
+      _letGoEarly = false;
+      _undone = false;
+    });
     _fill.forward(from: 0);
   }
 
   void _onUp(TapUpDetails _) {
+    if (_counting) {
+      _undo();
+      return;
+    }
     if (_fill.isCompleted) {
-      widget.onConfirmed();
+      _startCountdown();
       return;
     }
     setState(() => _letGoEarly = true);
+    _drain();
+  }
+
+  void _onCancel() {
+    // why: a press that slides off during the countdown is neither an Undo nor a new hold.
+    if (!_counting) {
+      _drain();
+    }
+  }
+
+  void _startCountdown() {
+    setState(() => _counting = true);
+    _fill.reverse(from: 1);
+    final AppLocalizations strings = AppLocalizations.of(context);
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      strings.deleteAllUndoAnnounced(HoldToDeleteKey.undoFor.inSeconds),
+      Directionality.of(context),
+    );
+  }
+
+  void _undo() {
+    widget.haptics.tick();
+    setState(() {
+      _counting = false;
+      _undone = true;
+    });
     _drain();
   }
 
@@ -93,10 +143,14 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
   }
 
   void _activate() {
+    if (_counting) {
+      _undo();
+      return;
+    }
     if (_armed) {
       _disarm?.cancel();
       setState(() => _armed = false);
-      widget.onConfirmed();
+      _startCountdown();
       return;
     }
     widget.haptics.tick();
@@ -117,8 +171,8 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
         Semantics(
           button: true,
           enabled: enabled,
-          label: _armed ? strings.deleteAllHoldArmed : strings.deleteAllHoldSpoken,
-          hint: strings.deleteAllHoldHint,
+          label: _spokenLabel(strings),
+          hint: _counting ? null : strings.deleteAllHoldHint,
           onTap: enabled ? _activate : null,
           excludeSemantics: true,
           child: FocusableActionDetector(
@@ -132,13 +186,15 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
               onTap: enabled && assistive ? _activate : null,
               onTapDown: enabled && !assistive ? _onDown : null,
               onTapUp: enabled && !assistive ? _onUp : null,
-              onTapCancel: enabled && !assistive ? _drain : null,
+              onTapCancel: enabled && !assistive ? _onCancel : null,
               child: AnimatedBuilder(animation: _fill, builder: (BuildContext context, Widget? _) => _key(context, strings)),
             ),
           ),
         ),
         const SizedBox(height: HisaabSpacing.s),
-        ExcludeSemantics(child: _caption(context, strings)),
+        ExcludeSemantics(
+          child: AnimatedBuilder(animation: _fill, builder: (BuildContext context, Widget? _) => _caption(context, strings)),
+        ),
       ],
     );
   }
@@ -151,9 +207,19 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
     return (value * HoldToDeleteKey._reducedSteps).floor() / HoldToDeleteKey._reducedSteps;
   }
 
+  String _spokenLabel(AppLocalizations strings) {
+    if (_counting) {
+      return strings.deleteAllUndoSpoken;
+    }
+    return _armed ? strings.deleteAllHoldArmed : strings.deleteAllHoldSpoken;
+  }
+
   String _label(AppLocalizations strings) {
     if (widget.busy) {
       return strings.deleteAllWorking;
+    }
+    if (_counting) {
+      return strings.deleteAllUndo;
     }
     if (_armed) {
       return strings.deleteAllHoldArmed;
@@ -193,7 +259,7 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            AppIcon(widget.busy ? AppIcons.busy : AppIcons.delete, color: foreground),
+            AppIcon(_glyph, color: foreground),
             const SizedBox(width: HisaabSpacing.s),
             Flexible(
               child: Text(
@@ -206,17 +272,29 @@ class _HoldToDeleteKeyState extends State<HoldToDeleteKey> with SingleTickerProv
         ),
       );
 
+  AppIconData get _glyph {
+    if (widget.busy) {
+      return AppIcons.busy;
+    }
+    return _counting ? AppIcons.undoDelete : AppIcons.delete;
+  }
+
+  int get _secondsLeft => (_fill.value * HoldToDeleteKey.undoFor.inSeconds).ceil();
+
   Widget _caption(BuildContext context, AppLocalizations strings) {
     final TextTheme text = Theme.of(context).textTheme;
+    final TextStyle? loud = text.bodyMedium?.copyWith(color: context.colors.ink, fontWeight: FontWeight.w600);
+    if (_counting) {
+      return Text(strings.deleteAllUndoCaption(_secondsLeft), textAlign: TextAlign.center, style: loud);
+    }
     if (_letGoEarly && !_fill.isCompleted) {
-      return Text(
-        strings.deleteAllHoldShort,
-        textAlign: TextAlign.center,
-        style: text.bodyMedium?.copyWith(color: context.colors.ink, fontWeight: FontWeight.w600),
-      );
+      return Text(strings.deleteAllHoldShort, textAlign: TextAlign.center, style: loud);
+    }
+    if (_undone) {
+      return Text(strings.deleteAllUndone, textAlign: TextAlign.center, style: loud);
     }
     return Text(
-      strings.deleteAllHoldCaption(HoldToDeleteKey.holdFor.inMilliseconds / Duration.millisecondsPerSecond),
+      strings.deleteAllHoldCaption,
       textAlign: TextAlign.center,
       style: text.bodyMedium?.copyWith(color: context.colors.ink2),
     );

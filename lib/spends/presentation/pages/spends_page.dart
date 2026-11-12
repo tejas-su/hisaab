@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/time/calendar_date.dart';
@@ -22,7 +21,9 @@ import '../widgets/ask_ai_card.dart';
 import '../widgets/cycle_switcher.dart';
 import '../widgets/insights_card.dart';
 import '../widgets/pace_card.dart';
+import '../widgets/see_every_entry_button.dart';
 import '../widgets/spends_card.dart';
+import '../widgets/spends_empty_illustration.dart';
 import '../widgets/spent_saved_line.dart';
 import '../widgets/where_it_went_card.dart';
 
@@ -41,6 +42,10 @@ class SpendsPage extends StatelessWidget {
   Widget build(BuildContext context) => BlocBuilder<SpendsBloc, SpendsState>(
         builder: (BuildContext context, SpendsState state) => TopBarScrollView(
           bar: _header(context, state),
+          fill: switch (state) {
+            SpendsReady(:final SpendsOverview overview) when overview.isEmpty => const SpendsEmptyIllustration(),
+            _ => null,
+          },
           children: _content(context, state),
         ),
       );
@@ -75,13 +80,7 @@ class SpendsPage extends StatelessWidget {
         SpendsLoading() => const <Widget>[],
         SpendsFailed() => <Widget>[_failed(context)],
         SpendsReady(:final SpendsOverview overview) when overview.isEmpty => <Widget>[
-            SpendsCard(
-              child: Text(
-                AppLocalizations.of(context).nothingSpentIn(_label(context, overview.cycle), overview.isCurrent ? 'current' : 'past'),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
-              ),
-            ),
-            ..._seeEveryEntry(context, overview),
+            _nothingSpent(context, overview),
           ],
         SpendsReady(:final SpendsOverview overview, :final bool limitsFailed) => <Widget>[
             AskAiCard(
@@ -115,18 +114,32 @@ class SpendsPage extends StatelessWidget {
           ],
       };
 
-  List<Widget> _seeEveryEntry(BuildContext context, SpendsOverview overview) => <Widget>[
-        const SizedBox(height: HisaabSpacing.l),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: HisaabChip(
-            key: const ValueKey<String>('see-every-entry'),
-            label: AppLocalizations.of(context).seeEveryEntry,
-            trailingIcon: AppIcons.next,
-            onPressed: () => onSeeEntries(overview.cycle, const Option<int>.none()),
+  /// The empty state: one sentence, and *See every entry* inside the card when the cycle has
+  /// income or savings to list; with no entries at all it would open an empty list (D148).
+  Widget _nothingSpent(BuildContext context, SpendsOverview overview) {
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final String cycleLabel = _label(context, overview.cycle);
+    return SpendsCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(
+            strings.nothingSpentIn(cycleLabel, overview.isCurrent ? 'current' : 'past'),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
           ),
-        ),
-      ];
+          if (overview.hasEntries)
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: SeeEveryEntryButton(
+                label: strings.seeEveryEntry,
+                cycleLabel: cycleLabel,
+                onPressed: () => onSeeEntries(overview.cycle, const Option<int>.none()),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _failed(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);

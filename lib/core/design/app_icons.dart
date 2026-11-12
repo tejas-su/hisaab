@@ -54,6 +54,9 @@ abstract final class AppIcons {
   /// *Undo restore* (D139).
   static const AppIconData undoRestore = HugeIcons.strokeRoundedUndo02;
 
+  /// *Undo* on the *Delete everything* key during its countdown (D149).
+  static const AppIconData undoDelete = HugeIcons.strokeRoundedUndo02;
+
   /// A row or key that is working (D139).
   static const AppIconData busy = HugeIcons.strokeRoundedLoading03;
 

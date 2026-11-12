@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Spends empty-state illustration (concepts)</title>
+<style>
+  /* Spends empty-state illustration (proposal; nothing is built). Same Charco Plus grammar as D144 / mockup 36 Set A:
+     three scribbled rocks (charcoal, taupe, ONE marigold rock), one ink object with spray stipple, sparkles, no faces.
+     The rocks, stipple filter, sparkle, burst and hand below are copied unchanged from mockup 36.
+     Marigold appears only as the one marigold rock. Static, decorative (ExcludeSemantics), light and dark. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --hairline: #D7CFC5; --switch: #E5DED6;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --rockDark: #312E29; --rockDarkMark: #6B655D;
+    --rockMid: #A39A8F; --rockMidMark: #D7CFC5;
+    --rockLight: #FFB020; --rockLightMark: #C98400;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --hairline: #3A3632; --switch: #2D2A26;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --rockDark: #4A453F; --rockDarkMark: #7A746C;
+    --rockMid: #2F2B27; --rockMidMark: #5B5650;
+    --rockLight: #FFB020; --rockLightMark: #C98400;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h2 .tag { display: inline-block; font: 600 11px/14px 'Mukta', sans-serif; border-radius: 6px; padding: 1px 6px; margin-inline-start: 8px; vertical-align: 4px; background: #312E29; color: #F2F1EC; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  b { font-weight: 600; color: var(--canvasInk); }
+  .toggles { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; position: sticky; top: 0; padding: 8px 0; background: var(--canvas); z-index: 2; }
+  .toggles button { min-height: 40px; padding: 0 14px; border-radius: 12px; background: #FFFEFC; font: 600 14px/20px 'Mukta', sans-serif; }
+  .toggles button[aria-pressed="true"] { background: #312E29; color: #F2F1EC; }
+  .pair { display: flex; flex-wrap: wrap; gap: 24px 16px; margin-top: 16px; align-items: flex-start; }
+  figure { margin: 0; max-width: 360px; }
+  figcaption { margin-top: 10px; font-size: 14px; line-height: 20px; color: var(--canvasInk2); }
+  .dl { margin-top: 8px; display: flex; gap: 8px; }
+  .dl button { min-height: 36px; padding: 0 12px; border-radius: 10px; background: #FFFEFC; font: 600 13px/18px 'Mukta', sans-serif; }
+
+  /* The real Spends screen at 360 x 760: title row, month switcher, SpendsCard, floating dock */
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); padding: 44px 18px 0; display: flex; flex-direction: column; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  .head { display: flex; align-items: center; justify-content: space-between; height: 48px; margin: 0 0 14px 2px; }
+  .head .t { font: 700 30px/36px 'Anek Latin', sans-serif; letter-spacing: -.3px; }
+  .sw { display: flex; align-items: center; height: 48px; min-width: 152px; padding: 0 12px; border-radius: 16px; background: var(--switch); font: 600 16px/20px 'Mukta', sans-serif; justify-content: space-between; gap: 14px; }
+  .sw svg { width: 18px; height: 18px; stroke: var(--ink); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .sw svg.off { stroke: var(--hairline); }
+  .card { background: var(--surface); border-radius: 24px; padding: 18px; }
+  .card .s { font: 400 17px/24px 'Mukta', sans-serif; color: var(--ink2); margin: 0; max-width: none; }
+  .card .lnk { display: flex; justify-content: flex-end; margin-top: 4px; }
+  .card .lnk span { min-height: 48px; display: flex; align-items: center; padding: 0 4px 0 12px; font: 600 16px/20px 'Mukta', sans-serif; color: var(--ink); }
+  .card .in { display: grid; place-items: center; margin: -4px 0 6px; }
+  .card .in svg, .art svg { width: 100%; height: auto; overflow: visible; }
+  .card .in svg { max-width: 250px; }
+  .art { flex: 1; min-height: 0; display: grid; place-items: center; margin-bottom: 112px; }
+  .art.top { place-items: start center; padding-top: 18px; }
+  .art svg { max-width: 300px; max-height: 100%; }
+  .dock { position: absolute; left: 18px; right: 18px; bottom: 22px; height: 70px; border-radius: 35px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--hairline); display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 10px; }
+  .dock .d { width: 82px; height: 50px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font: 600 12px/14px 'Mukta', sans-serif; color: var(--ink2); gap: 2px; }
+  .dock .d svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dock .d.on { background: var(--switch); color: var(--ink); }
+  .dock .add { width: 90px; height: 50px; border-radius: 18px; background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 2px var(--onSignal); display: flex; align-items: center; justify-content: center; gap: 6px; font: 700 18px/22px 'Anek Latin', sans-serif; }
+  .dock .add svg { width: 20px; height: 20px; stroke: var(--onSignal); fill: none; stroke-width: 1.6; stroke-linecap: round; }
+
+  .ill text { font-family: 'Anek Latin', sans-serif; font-weight: 700; fill: var(--ink); text-anchor: middle; }
+  .ill .ln { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .ill .thin { stroke-width: 1.8; }
+  .ill .paper { fill: var(--surface); }
+  .ill .ink { fill: var(--ink); }
+
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+</style>
+</head>
+<body>
+<h1>Spends empty state: illustration concepts</h1>
+<p class="lede">The owner finds the empty Spends card bland and wants a picture "as done for the onboarding screens". Each concept below uses the <b>D144 Charco Plus grammar</b> exactly: three scribbled rocks in charcoal, taupe and <b>one marigold rock</b>, one ink object with spray stipple, sparkles, no faces. It is static and decorative (<code>ExcludeSemantics</code>). The tone is calm: nothing is wrong and nothing is celebrated. Every frame is the real 360dp Spends screen. The left column is the current cycle (<i>"Nothing spent in November yet."</i> with <i>See every entry</i>, D148). The right column is a past cycle (<i>"Nothing was spent in September."</i>), shown without the link because that cycle has no entries.</p>
+
+<div class="toggles" role="group" aria-label="View">
+  <button id="tDark" aria-pressed="false">Dark</button>
+</div>
+
+<div id="concepts"></div>
+
+<h2>Placement: three options for the recommended concept</h2>
+<p class="lede">Same picture, same sentences, three homes. The card stays one <code>SpendsCard</code> in all three.</p>
+<div class="pair" id="placement"></div>
+
+<h2>Recommendation</h2>
+<p><b>Concept 1, Potli held up</b>, placed <b>in the empty space below the card</b>, centred in the gap above the dock.</p>
+<ul>
+  <li><b>It says "nothing spent" without words.</b> A drawstring pouch pulled shut is a purse nobody has opened. A gullak reads as saving, which collides with the savings entries Spends can list. A blank bill reads as a receipt you forgot.</li>
+  <li><b>It is the onboarding family.</b> The same fist that holds up the calendar and receipt in D144 holds the potli, so Spends feels like the same hand, still helping. Concepts 2 and 3 have no hand and would look like a different set.</li>
+  <li><b>Indian, plain, not a mascot.</b> A potli is everyday and familiar. The ₹ on its face is the only text, as on the onboarding receipt.</li>
+  <li><b>The gap is the problem.</b> About 70% of the page is blank. Inside the card the art would grow the card but leave the same void under it. In the gap it fills the void, as onboarding fills the gap above its controls, and the card stays a quiet sentence with its link. The card keeps its height, so nothing jumps when the first spend arrives and the picture goes.</li>
+</ul>
+<p><b>Runner-up: Concept 3, Clean bill on the spike.</b> It is the closest to a ledger and the most Indian (a kirana bill spike), but with no hand it breaks from the onboarding set.</p>
+
+<h2>Build notes</h2>
+<table>
+  <tr><th>Concern</th><th>Plan</th></tr>
+  <tr><td>Asset</td><td><code>assets/illustrations/spends_empty_light.webp</code> and <code>spends_empty_dark.webp</code>, exported at 3x (960 x 750) from the recommended SVG (download buttons under the figures; Anek Latin Bold must be installed for the rupee sign). <code>Image.asset</code>, no new package, no new colour tokens.</td></tr>
+  <tr><td>Fit</td><td>Fills the gap under the card with <code>BoxFit.contain</code>, centred, max 300dp wide. Left out when the gap is under 120dp, and in side-by-side and fold layouts (D144). It never moves.</td></tr>
+  <tr><td>When</td><td>Only in the empty state, current or past cycle. It goes with the empty-state card once the cycle has a spend. It stays when the cycle has only income or savings entries, because the sentence is the same.</td></tr>
+  <tr><td>Semantics</td><td>Decorative: <code>ExcludeSemantics</code>. The sentence carries the meaning, so nothing needs translating.</td></tr>
+  <tr><td>Marigold</td><td>Only the one marigold rock, as in Set A. The dock's Add key is the only other marigold on screen, and it is the action.</td></tr>
+  <tr><td>Docs</td><td>A pick needs a DECISIONS row (extends D144 from onboarding to Spends) and a line in UI_DESIGN Spends.</td></tr>
+</table>
+
+<script>
+  const W = 320, H = 250;
+  let uid = 0;
+  const F = (n) => +n.toFixed(1);
+
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  function defs(p) {
+    return `<defs>
+      <filter id="${p}rough" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="7" result="t"/>
+        <feDisplacementMap in="SourceGraphic" in2="t" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="${p}spray" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="11" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="na"/>
+        <feComposite in="SourceGraphic" in2="na" operator="arithmetic" k1="0" k2="1" k3="-1.5" k4="0.75" result="d"/>
+        <feComponentTransfer in="d" result="m"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer>
+        <feFlood style="flood-color:var(--ink)"/>
+        <feComposite in2="m" operator="in"/>
+      </filter>
+      ${['l', 'r', 't', 'b'].map((s) => {
+        const [x1, y1, x2, y2] = { l: [0, 0, 1, 0], r: [1, 0, 0, 0], t: [0, 0, 0, 1], b: [0, 1, 0, 0] }[s];
+        return `<linearGradient id="${p}g${s}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="#000" stop-opacity="1"/><stop offset=".42" stop-color="#000" stop-opacity="0"/></linearGradient>`;
+      }).join('')}
+    </defs>`;
+  }
+  const svg = (p, inner, id) => `<svg class="ill" ${id ? `id="${id}" ` : ""}viewBox="0 0 ${W} ${H}" aria-hidden="true">${defs(p)}${inner}</svg>`;
+
+  // An ink object part: paper fill, spray-stipple shade from one side, outline.
+  const shaded = (p, d, side) =>
+    `<path class="paper" d="${d}"/><path d="${d}" fill="url(#${p}g${side})" filter="url(#${p}spray)"/><path class="ln" d="${d}"/>`;
+  const rr = (x, y, w, h, r) => `M${x + r} ${y} H${x + w - r} a${r} ${r} 0 0 1 ${r} ${r} V${y + h - r} a${r} ${r} 0 0 1 ${-r} ${r} H${x + r} a${r} ${r} 0 0 1 ${-r} ${-r} V${y + r} a${r} ${r} 0 0 1 ${r} ${-r} Z`;
+
+  const MOTIF = {
+    spiral: (x, y, s) => `M${x} ${y} m${-s} 0 a${s} ${s} 0 1 1 ${s} ${s} a${s * .62} ${s * .62} 0 1 1 ${s * .62} ${-s * .62}`,
+    loops: (x, y, s) => `M${x - 2 * s} ${y + s * .4} c${s * .6} ${-s * 1.6} ${s * 1.8} ${-s * 1.6} ${s * 1.4} ${-s * .2} c${-s * .3} ${s} ${-s * 1.4} ${s * .6} ${-s * .9} ${-s * .5} c${s * .5} ${-s * 1.2} ${s * 1.9} ${-s * .9} ${s * 1.8} ${s * .4}`,
+    ring: (x, y, s) => `M${x - s * .7} ${y} a${s * .7} ${s * .7} 0 1 0 ${s * 1.4} 0 a${s * .7} ${s * .7} 0 1 0 ${-s * 1.4} 0`,
+    hatch: (x, y, s) => `M${x - s} ${y + s * .8} l${s * .7} ${-s * 1.6} M${x - s * .2} ${y + s * .8} l${s * .7} ${-s * 1.6} M${x + s * .6} ${y + s * .8} l${s * .7} ${-s * 1.6}`,
+    tri: (x, y, s) => `M${x} ${y - s * .7} l${s * .7} ${s * 1.2} l${-s * 1.4} 0 Z`,
+    zig: (x, y, s) => `M${x - s} ${y} l${s * .5} ${-s * .6} l${s * .5} ${s * .6} l${s * .5} ${-s * .6} l${s * .5} ${s * .6}`,
+  };
+  function rock(p, pts, tone, motifs, seed) {
+    const [fill, mark] = { dark: ['var(--rockDark)', 'var(--rockDarkMark)'], mid: ['var(--rockMid)', 'var(--rockMidMark)'], light: ['var(--rockLight)', 'var(--rockLightMark)'] }[tone];
+    const r = rng(seed), id = `${p}c${seed}`;
+    const d = 'M' + pts.map((q) => q.join(' ')).join(' L') + ' Z';
+    const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    let marks = '';
+    for (let y = y0 + 4; y < y1 + 10; y += 24) for (let x = x0 - 4 + (r() * 14); x < x1 + 10; x += 28 + r() * 8) {
+      const m = motifs[Math.floor(r() * motifs.length)], s = 7 + r() * 3;
+      marks += `<path d="${MOTIF[m](x + r() * 6, y + r() * 6, s)}" transform="rotate(${Math.round(r() * 60 - 30)} ${x} ${y})"/>`;
+    }
+    return `<clipPath id="${id}"><path d="${d}" style="stroke:#000;stroke-width:14;stroke-linejoin:round"/></clipPath>
+      <g filter="url(#${p}rough)">
+        <path d="${d}" style="fill:${fill};stroke:${fill};stroke-width:14;stroke-linejoin:round"/>
+        <g clip-path="url(#${id})" style="fill:none;stroke:${mark};stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round">${marks}</g>
+      </g>`;
+  }
+  // Three rock layouts, so a set doesn't repeat the same pile.
+  const PILE = {
+    a: (p, t, m, s) => rock(p, [[30, 238], [24, 196], [48, 164], [96, 156], [134, 178], [138, 222], [112, 244]], t[0], m[0], s) +
+      rock(p, [[192, 244], [178, 202], [202, 170], [250, 166], [286, 188], [292, 228], [262, 246]], t[1], m[1], s + 1) +
+      rock(p, [[108, 248], [102, 222], [130, 202], [196, 204], [220, 226], [206, 250]], t[2], m[2], s + 2),
+    b: (p, t, m, s) => rock(p, [[40, 246], [34, 210], [64, 184], [116, 182], [146, 206], [142, 240], [112, 250]], t[0], m[0], s) +
+      rock(p, [[170, 248], [162, 214], [192, 190], [246, 192], [284, 212], [282, 242], [244, 252]], t[1], m[1], s + 1) +
+      rock(p, [[118, 252], [116, 232], [144, 216], [196, 220], [208, 240], [192, 254]], t[2], m[2], s + 2),
+    c: (p, t, m, s) => rock(p, [[34, 244], [30, 204], [56, 172], [104, 166], [140, 186], [140, 228], [110, 248]], t[0], m[0], s) +
+      rock(p, [[186, 246], [176, 204], [204, 172], [256, 170], [290, 196], [290, 236], [258, 250]], t[1], m[1], s + 1) +
+      rock(p, [[96, 250], [92, 226], [120, 206], [184, 206], [212, 228], [200, 252]], t[2], m[2], s + 2),
+  };
+
+  const sparkle = (x, y, s) => `<path class="ink" d="M${x} ${y - s} C${x + s * .12} ${y - s * .2} ${x + s * .2} ${y - s * .12} ${x + s} ${y} C${x + s * .2} ${y + s * .12} ${x + s * .12} ${y + s * .2} ${x} ${y + s} C${x - s * .12} ${y + s * .2} ${x - s * .2} ${y + s * .12} ${x - s} ${y} C${x - s * .2} ${y - s * .12} ${x - s * .12} ${y - s * .2} ${x} ${y - s} Z"/>`;
+  const burst = (x, y, rot) => `<g transform="rotate(${rot} ${x} ${y})"><path class="ln" d="M${x} ${y - 4} v-12 M${x + 10} ${y + 2} l9 -8 M${x + 14} ${y + 14} h12"/></g>`;
+  const hand = (x, y, a) => `<g transform="translate(${x} ${y}) rotate(${a})">
+      <path class="paper" d="M-11 14 L-12 80 L12 80 L11 14 Z"/>
+      <path class="ln" d="M-11 16 C-11 40 -12 60 -12 80 M11 16 C11 40 11 60 12 80"/>
+      <path class="paper ln" d="M-17 -6 C-18 -12 -14 -14 -11 -11 C-8 -15 -3 -15 -1 -11 C2 -15 7 -15 9 -11 C12 -14 17 -12 17 -6 C18 4 16 14 10 18 L-10 18 C-16 14 -18 4 -17 -6 Z"/>
+      <path class="ln thin" d="M-15 0 Q-6 3 2 0 M-14 8 Q-6 11 2 8"/>
+      <path class="paper ln" d="M17 -4 C8 -7 1 -3 1 4 C1 9 7 10 12 8"/>
+    </g>`;
+  const rupee = (x, y, r, fs) => `<circle class="ln paper" cx="${x}" cy="${y}" r="${r}"/><text x="${x}" y="${y + fs * .36}" style="font-size:${fs}px">₹</text>`;
+  const dotGrid = (x, y, cols, rows, gx, gy, r = 2.4) => {
+    let d = '';
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) d += `<circle class="ink" cx="${x + i * gx}" cy="${y + j * gy}" r="${r}"/>`;
+    return d;
+  };
+  // A hand-drawn ring round (x, y), overshooting like a pen circle.
+  const ringed = (x, y, s = 1) => `<path class="ln" d="M${x - 11 * s} ${y - 3 * s} C${x - 9 * s} ${y - 11 * s} ${x + 7 * s} ${y - 13 * s} ${x + 11 * s} ${y - 3 * s} C${x + 14 * s} ${y + 7 * s} ${x - 1 * s} ${y + 11 * s} ${x - 9 * s} ${y + 5 * s} C${x - 13 * s} ${y + 1 * s} ${x - 9 * s} ${y - 7 * s} ${x + 1 * s} ${y - 9 * s}"/>`;
+  const calendarSheet = (p, x, y, w, h) => `${shaded(p, rr(x, y, w, h, 12), 'l')}
+      <path class="ln" d="M${x} ${y + 26} H${x + w}"/>
+      <rect class="ln paper" x="${x + w * .27 - 3.5}" y="${y - 10}" width="7" height="18" rx="3.5"/><rect class="ln paper" x="${x + w * .73 - 3.5}" y="${y - 10}" width="7" height="18" rx="3.5"/>`;
+  function genda(cx, cy, r) {
+    const ruff = (rad, n) => {
+      let d = `M${F(cx + rad)} ${F(cy)}`;
+      for (let i = 0; i < n; i++) {
+        const b = (i + .5) / n * Math.PI * 2, a2 = (i + 1) / n * Math.PI * 2;
+        d += ` Q${F(cx + rad * 1.22 * Math.cos(b))} ${F(cy + rad * 1.22 * Math.sin(b))} ${F(cx + rad * Math.cos(a2))} ${F(cy + rad * Math.sin(a2))}`;
+      }
+      return d + ' Z';
+    };
+    return `<path d="${ruff(r, 14)}" style="fill:var(--signal);stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round"/>
+      <path class="ln thin" d="${ruff(r * .62, 10)}"/><circle class="ink" cx="${cx}" cy="${cy}" r="${r * .16}"/>`;
+  }
+  const flower = (x, y, r, stemTo, leafSide = -1) => `<path class="ln" d="M${x} ${stemTo} C${x - 2} ${stemTo - 30} ${x - 2} ${y + 40} ${x} ${y + 12}"/>
+      <path class="paper ln thin" d="M${x - 1} ${y + 54} q${20 * leafSide} -4 ${24 * leafSide} -20 q${-18 * leafSide} 0 ${-24 * leafSide} 20 Z"/>${genda(x, y, r)}`;
+
+
+  // ---------- Spends empty-state concepts (new; everything above is copied from mockup 36) ----------
+  const CONCEPT = {
+    // 1. Potli held up: the D144 fist holds a drawstring pouch pulled shut.
+    potli(p, id) {
+      const body = 'M148 66 C138 74 110 92 110 114 C110 134 132 142 160 142 C188 142 210 134 210 114 C210 92 182 74 172 66 Z';
+      return svg(p, `${sparkle(80, 78, 11)}${sparkle(112, 34, 6)}${sparkle(252, 104, 8)}${burst(232, 40, 0)}
+        <g transform="rotate(-4 160 100)">
+          <path class="ln" d="M172 70 C192 72 198 88 195 102"/>
+          <path class="paper ln thin" d="${rr(189, 102, 12, 15, 4)}"/>
+          ${shaded(p, body, 'l')}
+          <path class="ln thin" d="M126 98 C120 108 121 120 126 130"/>
+          <path class="paper ln" d="M140 48 Q150 62 160 56 Q170 62 180 48 L173 68 L147 68 Z"/>
+          <path class="ln thin" d="M147 70 Q160 78 173 70"/>
+          <text x="162" y="127" style="font-size:32px">₹</text>
+        </g>
+        ${hand(160, 152, 0)}
+        ${PILE.a(p, ['dark', 'mid', 'light'], [['spiral', 'zig'], ['loops', 'ring'], ['hatch']], 3)}`, id);
+    },
+    // 2. Gullak, still sealed: a clay pot on the rocks, a coin resting beside it.
+    gullak(p, id) {
+      const pot = 'M160 74 C196 74 220 106 218 146 C216 184 192 212 160 212 C128 212 104 184 102 146 C100 106 124 74 160 74 Z';
+      return svg(p, `${sparkle(76, 70, 10)}${sparkle(254, 66, 9)}${sparkle(98, 120, 5)}${burst(228, 30, 14)}
+        ${PILE.c(p, ['mid', 'dark', 'light'], [['tri', 'ring'], ['spiral'], ['hatch', 'zig']], 13)}
+        <path class="paper ln" d="${rr(150, 54, 20, 10, 5)}"/>
+        <path class="paper ln" d="${rr(146, 64, 28, 14, 5)}"/>
+        ${shaded(p, pot, 'l')}
+        <path class="ln" d="M134 108 q26 -9 52 0" style="stroke-width:4"/>
+        <path class="ln thin" d="M106 158 Q160 176 214 158"/>
+        ${dotGrid(130, 186, 4, 1, 20, 0, 2.2)}
+        <g transform="rotate(10 248 156)">${rupee(248, 156, 14, 17)}</g>`, id);
+    },
+    // 3. Clean bill on the spike: a kirana bill spike with one blank bill (dotted lines, empty total).
+    bill(p, id) {
+      let sheet = 'M118 56 a6 6 0 0 1 6 -6 H196 a6 6 0 0 1 6 6 V170';
+      for (let i = 0; i < 7; i++) sheet += ' l-6 6 l-6 -6';
+      sheet += ' V56 Z';
+      const dots = (y) => `<path class="ln thin" d="M130 ${y} H190" style="stroke-dasharray:.1 7"/>`;
+      return svg(p, `${sparkle(78, 64, 10)}${sparkle(250, 92, 9)}${sparkle(240, 34, 5)}${burst(92, 120, -80)}
+        ${PILE.b(p, ['dark', 'mid', 'light'], [['spiral', 'loops'], ['ring'], ['hatch', 'tri']], 41)}
+        <path class="paper ln" d="${rr(136, 208, 48, 10, 4)}"/>
+        <path class="ln" d="M160 208 V26" style="stroke-width:3.6"/>
+        <circle class="paper ln" cx="160" cy="22" r="5"/>
+        <g transform="rotate(-4 160 110)">
+          ${shaded(p, sheet, 'l')}
+          ${rupee(160, 76, 11, 15)}
+          <path class="ln thin" d="M130 98 H190"/>
+          ${dots(114)}${dots(128)}${dots(142)}
+          <path class="ln thin" d="M130 158 H152"/><path class="ln thin" d="M174 158 H190" style="stroke-dasharray:.1 7"/>
+        </g>`, id);
+    },
+  };
+
+  const CONCEPTS = [
+    { k: 'potli', n: 1, name: 'Potli held up', tag: 'Recommended',
+      why: 'The same fist as D144 holds up a drawstring pouch pulled shut, with a ₹ on its face: a purse nobody has opened.' },
+    { k: 'gullak', n: 2, name: 'Gullak, still sealed',
+      why: 'A clay gullak sits on the rocks with its slit untouched and one coin resting beside it. Warm and Indian, but it reads as saving, and Spends can list savings entries.' },
+    { k: 'bill', n: 3, name: 'Clean bill on the spike', tag: 'Runner-up',
+      why: 'A kirana bill spike with one blank bill: dotted lines and an empty total. The closest to a ledger. No hand, so it breaks from the onboarding set.' },
+  ];
+
+  // ---------- The Spends screen ----------
+  const chev = (dir, off) => `<svg class="${off ? 'off' : ''}" viewBox="0 0 24 24"><path d="${dir < 0 ? 'M15 5 L8 12 L15 19' : 'M9 5 L16 12 L9 19'}"/></svg>`;
+  const DOCK = `<div class="dock">
+      <div class="d"><svg viewBox="0 0 24 24"><path d="M4 11 L12 4 L20 11 V19 a1.5 1.5 0 0 1 -1.5 1.5 H5.5 A1.5 1.5 0 0 1 4 19 Z"/></svg>Home</div>
+      <div class="add"><svg viewBox="0 0 24 24"><path d="M12 4 V20 M4 12 H20"/></svg>Add</div>
+      <div class="d on"><svg viewBox="0 0 24 24"><path d="M5 20 V11 M10 20 V6 M15 20 V13 M20 20 V9 M3 20 H21"/></svg>Spends</div>
+    </div>`;
+  // placement: 'gap' (centred in the space under the card), 'card' (inside the card, above the sentence), 'hug' (just under the card)
+  function phone(mode, past, place, art) {
+    const sentence = past ? 'Nothing was spent in September.' : 'Nothing spent in November yet.';
+    const link = past ? '' : '<div class="lnk"><span>See every entry</span></div>';
+    return `<div class="phone ${mode}">
+      <div class="head"><div class="t">Spends</div><div class="sw">${chev(-1, false)}${past ? 'September' : 'November'}${chev(1, !past)}</div></div>
+      <div class="card">${place === 'card' ? `<div class="in">${art}</div>` : ''}<p class="s">${sentence}</p>${link}</div>
+      ${place === 'card' ? '<div class="art"></div>' : `<div class="art${place === 'hug' ? ' top' : ''}">${art}</div>`}
+      ${DOCK}
+    </div>`;
+  }
+
+  let dark = false;
+  const mode = () => (dark ? 'dark' : 'light');
+  const fig = (past, place, key, cap, id) => {
+    const f = document.createElement('figure');
+    f.innerHTML = `<div class="holder">${phone(mode(), past, place, CONCEPT[key]('p' + uid++, id))}</div><figcaption>${cap}</figcaption>`;
+    return f;
+  };
+
+  const host = document.getElementById('concepts');
+  for (const c of CONCEPTS) {
+    const sec = document.createElement('section');
+    sec.innerHTML = `<h2>Concept ${c.n}: ${c.name}${c.tag ? `<span class="tag">${c.tag}</span>` : ''}</h2><p class="lede">${c.why}</p><div class="pair"></div>`;
+    const row = sec.querySelector('.pair');
+    const rec = c.k === 'potli';
+    row.appendChild(fig(false, 'gap', c.k, '<b>Current cycle.</b> "Nothing spent in November yet." with <i>See every entry</i>. The picture sits in the gap under the card.', rec ? 'spends-empty-recommended' : null));
+    row.appendChild(fig(true, 'gap', c.k, '<b>Past cycle.</b> "Nothing was spent in September." No <i>yet</i>, no link.'));
+    if (rec) {
+      const d = document.createElement('div');
+      d.className = 'dl';
+      d.innerHTML = '<button data-m="light">Download SVG (light)</button><button data-m="dark">Download SVG (dark)</button>';
+      row.children[0].appendChild(d);
+    }
+    host.appendChild(sec);
+  }
+
+  const place = document.getElementById('placement');
+  place.appendChild(fig(false, 'card', 'potli', '<b>A. In the card, above the sentence.</b> The card grows to about 300dp and still leaves a blank page under it. The card changes height when the picture goes.'));
+  place.appendChild(fig(false, 'gap', 'potli', '<b>B. In the gap, centred (recommended).</b> It fills the void between the card and the dock, as onboarding fills its gap. The card stays slim.'));
+  place.appendChild(fig(false, 'hug', 'potli', '<b>C. In the gap, hugging the card.</b> Reads with the sentence, but leaves a blank band above the dock and looks top-heavy.'));
+
+  // ---------- Dark switch ----------
+  const b = document.getElementById('tDark');
+  b.addEventListener('click', () => {
+    dark = !dark;
+    b.setAttribute('aria-pressed', dark);
+    document.querySelectorAll('.phone').forEach((el) => { el.classList.toggle('dark', dark); el.classList.toggle('light', !dark); });
+  });
+
+  // ---------- Standalone SVG export of the recommended concept (colours resolved, no CSS variables) ----------
+  const TONES = {
+    light: { surface: '#FFFEFC', ink: '#161615', signal: '#FFB020', rockDark: '#312E29', rockDarkMark: '#6B655D', rockMid: '#A39A8F', rockMidMark: '#D7CFC5', rockLight: '#FFB020', rockLightMark: '#C98400' },
+    dark: { surface: '#211F1C', ink: '#F2F1EC', signal: '#FFB020', rockDark: '#4A453F', rockDarkMark: '#7A746C', rockMid: '#2F2B27', rockMidMark: '#5B5650', rockLight: '#FFB020', rockLightMark: '#C98400' },
+  };
+  function standalone(m) {
+    const t = TONES[m];
+    const markup = CONCEPT.potli('x', null).replace(/var\(--(\w+)\)/g, (_, n) => t[n]);
+    const css = `text{font-family:'Anek Latin',sans-serif;font-weight:700;fill:${t.ink};text-anchor:middle}.ln{fill:none;stroke:${t.ink};stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.thin{stroke-width:1.8}.paper{fill:${t.surface}}.ink{fill:${t.ink}}`;
+    return markup.replace('<svg class="ill"', '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="750"').replace('aria-hidden="true">', `aria-hidden="true"><style>${css}</style>`);
+  }
+  document.addEventListener('click', (e) => {
+    const m = e.target.dataset && e.target.dataset.m;
+    if (!m) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([standalone(m)], { type: 'image/svg+xml' }));
+    a.download = `spends_empty_${m}.svg`;
+    a.click();
+  });
+</script>
+</body>
+</html>

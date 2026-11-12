@@ -1,3 +1,4 @@
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
 import 'package:hisaab/core/design/hisaab_colors.dart';
 import 'package:hisaab/core/widgets/top_bar_scroll_view.dart';
 import 'package:material_ui/material_ui.dart';
@@ -108,6 +109,43 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -5000));
       await tester.pumpAndSettle();
       expect(tester.getBottomLeft(find.byKey(const ValueKey<int>(29))).dy, TestWindows.phone.height - 20 - 32);
+    });
+
+    group('fill', () {
+      Widget withFill({required double childHeight}) => Builder(
+        builder: (BuildContext context) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(padding: const EdgeInsets.only(bottom: 20)),
+          child: Scaffold(
+            body: TopBarScrollView(
+              bar: const Text('Title'),
+              fill: const SizedBox.expand(key: ValueKey<String>('fill')),
+              children: <Widget>[SizedBox(key: const ValueKey<String>('card'), height: childHeight)],
+            ),
+          ),
+        ),
+      );
+      final Finder fill = find.byKey(const ValueKey<String>('fill'));
+
+      testWidgets('takes the height left under the children, down to the fade and the inset', (WidgetTester tester) async {
+        await pumpApp(tester, withFill(childHeight: 100));
+        expect(tester.getTopLeft(fill).dy, tester.getBottomLeft(find.byKey(const ValueKey<String>('card'))).dy + HisaabSpacing.l);
+        expect(tester.getBottomLeft(fill).dy, TestWindows.phone.height - 20 - 32);
+        expect(tester.getTopLeft(fill).dx, 20);
+        expect(tester.getTopRight(fill).dx, TestWindows.phone.width - 20);
+      });
+
+      testWidgets('never makes a short page scroll', (WidgetTester tester) async {
+        await pumpApp(tester, withFill(childHeight: 100));
+        final ScrollPosition position = tester.state<ScrollableState>(find.byType(Scrollable)).position;
+        expect(position.maxScrollExtent, 0);
+      });
+
+      testWidgets('gets no height when the children fill the screen', (WidgetTester tester) async {
+        await pumpApp(tester, withFill(childHeight: 2000));
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -5000));
+        await tester.pumpAndSettle();
+        expect(tester.getSize(fill).height, lessThanOrEqualTo(HisaabSpacing.l + 32 + 20));
+      });
     });
 
     testWidgets('revealing an item scrolls it below the bar, not under it', (WidgetTester tester) async {

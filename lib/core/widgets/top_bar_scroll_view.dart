@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../design/hisaab_dimensions.dart';
 import '../design/hisaab_motion.dart';
 import '../extensions/build_context_extensions.dart';
+import 'no_intrinsic_height.dart';
 
 /// A screen's pinned top [bar] over a scrolling list of [children] (UI_DESIGN §3.5, D84). Used by
 /// Home and Spends.
@@ -17,10 +18,14 @@ import '../extensions/build_context_extensions.dart';
 ///
 /// [bar] is laid out [barHeight] tall; whatever it holds must scale down to fit.
 class TopBarScrollView extends StatelessWidget {
-  const TopBarScrollView({super.key, required this.bar, required this.children});
+  const TopBarScrollView({super.key, required this.bar, required this.children, this.fill});
 
   final Widget bar;
   final List<Widget> children;
+
+  /// Optional content, such as an empty state's picture, given only the height left under
+  /// [children]; it never makes the list scroll, so it must cope with a small or zero height.
+  final Widget? fill;
 
   /// The bar's row height: a tap target plus the cycle switcher's 2dp rim on each side.
   static const double barHeight = HisaabSizes.minTouchTarget + 4;
@@ -63,24 +68,31 @@ class TopBarScrollView extends StatelessWidget {
     );
   }
 
-  Widget _list(BuildContext context) => CustomScrollView(
-    slivers: <Widget>[
-      SliverPersistentHeader(
-        pinned: true,
-        delegate: _TopBarDelegate(bar: bar, statusBar: MediaQuery.paddingOf(context).top),
-      ),
-      SliverPadding(
-        // why: the last card comes to rest just above the fade, fully visible.
-        padding: EdgeInsetsDirectional.fromSTEB(
-          HisaabSpacing.gutter,
-          _contentTop,
-          HisaabSpacing.gutter,
-          bottomFade + MediaQuery.paddingOf(context).bottom,
+  Widget _list(BuildContext context) {
+    // why: the last card, or the fill under it, comes to rest just above the fade, fully visible.
+    final double bottom = bottomFade + MediaQuery.paddingOf(context).bottom;
+    final Widget? filler = fill;
+    return CustomScrollView(
+      slivers: <Widget>[
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _TopBarDelegate(bar: bar, statusBar: MediaQuery.paddingOf(context).top),
         ),
-        sliver: SliverList.list(children: children),
-      ),
-    ],
-  );
+        SliverPadding(
+          padding: EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, _contentTop, HisaabSpacing.gutter, filler == null ? bottom : 0),
+          sliver: SliverList.list(children: children),
+        ),
+        if (filler != null)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.l, HisaabSpacing.gutter, bottom),
+              child: NoIntrinsicHeight(child: filler),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _TopBarDelegate extends SliverPersistentHeaderDelegate {

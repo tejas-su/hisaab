@@ -379,7 +379,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - `xs` under the plot, a `labelSmall` date row: the cycle's first and last days in `ink2`, and *Today* (600, `ink`) under today's dot; a date that would touch *Today* is dropped.
   - `l` under the dates, the key on one row (it wraps, so the longer words never clip), then `s` below it the verdict, "Spending slower" or "Spending faster" (D77), then `xs` below it on the current cycle one `bodySmall` `ink` line with the gap and forecast: "₹7,042 under steady pace. At this pace about ₹9,300 spare." (D135).
 - **Where it went:**
-  - The title row ends in *See all*, built as Home's Today header: an `ink` `labelLarge` 15 text button, no inset, label ending on the rows' content edge, on the title's baseline, in a 48dp target. TalkBack reads "Every entry in October". It opens every entry of the shown cycle, so the way in stays near the top however many rows and insights follow; there is no chip at the end of the page (D131). A cycle with nothing spent has no card and keeps the *See every entry* chip under its sentence.
+  - The title row ends in *See all*, built as Home's Today header: an `ink` `labelLarge` 15 text button, no inset, label ending on the rows' content edge, on the title's baseline, in a 48dp target. TalkBack reads "Every entry in October". It opens every entry of the shown cycle, so the way in stays near the top however many rows and insights follow; there is no chip at the end of the page (D131). A cycle with nothing spent has one card holding its sentence. When the cycle has any entry to list (income, a saving), the same text button, labelled *See every entry*, sits under the sentence at the card's trailing content edge and reads "Every entry in October". With no entries at all the sentence stands alone, since the list would be empty (D148). Under the card, the empty page holds a static picture in the onboarding pictures' Charco Plus style: a blank kirana bill on a spike over the three rocks (one marigold). It is centred in the height left above the dock (`TopBarScrollView.fill`), at most 300dp wide, hidden from TalkBack, and left out when that height is under 120dp, so it never makes the page scroll. Light and dark WebP files at 3× are in `assets/illustrations/spends_empty_*.webp` ([mockup 39](design/mockups/39-spends-empty-illustration.html), D150).
   - Rows sorted by amount: icon well, name, %, ₹, and an `ink` bar on a `sunk` track. Bars, not donuts: people judge length more accurately than angle.
   - If a category has a limit, the bar shows a limit tick. Overspend shows as a hatched segment past the tick, not as red.
   - A row with a limit says what is left: "Food · ₹200 left", "Bills · ₹0 left", or "Shopping · ₹840 over limit" (D110).
@@ -425,11 +425,11 @@ Two layers only: the grey page and near-white cards, the same build as the Today
   - **Restore dialog** (the app's one dialog, D4): title, two `bodyMedium` lines (the file's facts, then this phone's), and two stacked full-width keys, since side by side they need about 236dp and the dialog has 232dp: *Replace* filled `inverse` and *Keep what's here* `hairline`. While replacing, "Bringing back your hisaab…" with Loading03 fills the keys' 120dp, so the dialog keeps its size. At 2× text the two lines scroll; the title and keys stay put.
   - **Delete everything page:** a pushed page in reading order:
     1. The lead sentence.
-    2. "This goes:" in one `surface` card, a glyph per item, ending in "There's no Undo for this."
+    2. "This goes:" in one `surface` card, a glyph per item, ending in "Once it's deleted, there's no getting it back."
     3. What stays, outside the card with `ink2` ticks.
     4. The last-backup line and a full-width *Back up first* key (`sunk`).
     5. 24dp below it, the hold key, in the page flow (not pinned).
-  - **The hold key:** at rest, a 2dp `danger` edge with the Delete02 glyph and label in `danger`. While held, a `danger` fill sweeps from the start edge and the label turns `bg` where the fill has passed. The caption under it is always shown. Its weight comes from the 2dp edge and the fill, so in a squint test it reads before *Back up first*. Never marigold. It is the app's only red: the owner wanted the one irreversible act to look destructive (D142, amends D9).
+  - **The hold key:** at rest, a 2dp `danger` edge with the Delete02 glyph and label in `danger`. While held, a `danger` fill sweeps from the start edge and the label turns `bg` where the fill has passed. Let go full, it reads *Undo* with the Undo02 glyph and the fill drains back towards the start edge over 5 s while the caption counts down; a tap stops it and nothing is deleted (D149). The caption under it is always shown. Its weight comes from the 2dp edge and the fill, so in a squint test it reads before *Back up first*. Never marigold. It is the app's only red: the owner wanted the one irreversible act to look destructive (D142, amends D9).
   - **Marigold is never on an act that removes or replaces data** (*Replace*, the hold key). Marigold means *today / act*, and these are acts to slow down for, not to invite.
 - **About.**
 
@@ -470,7 +470,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
   | Daily | The rail loses a dot at midnight |
   | Monthly | Cycle summary: "You kept ₹4,300", with a share card |
 
-- **Hold to delete (D139):** the fill is linear over exactly 1.5 s (D143), with no spring, so the time is honest and predictable. Letting go early drains it on `snap`. With reduced motion the fill steps in quarters on the same clock; the caption carries the timing.
+- **Hold to delete (D139):** the fill is linear over exactly 1.5 s (D143), with no spring, so the time is honest and predictable. Letting go early drains it on `snap`. Let go full, the fill drains back linearly over exactly 5 s, the Undo window (D149); *Undo* drains the rest on `snap`. With reduced motion the fill and the drain step in quarters on the same clock; the caption carries the timing.
 - **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
 - **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no fill in and no sheen.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
@@ -483,7 +483,7 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 | Save, onboarding done | `successNotification()` | CONFIRM |
 | Invalid amount (more than 9 digits) | `errorNotification()` | REJECT |
 | Swipe-to-delete threshold | `lightImpact()` | VIRTUAL_KEY |
-| Hold-to-delete: finger down / fill full (D139) | `Haptics.tick()` / `Haptics.threshold()` | CLOCK_TICK / VIRTUAL_KEY |
+| Hold-to-delete: finger down / fill full (D139) / Undo (D149) | `Haptics.tick()` / `Haptics.threshold()` / `Haptics.tick()` | CLOCK_TICK / VIRTUAL_KEY / CLOCK_TICK |
 | Restore or delete failed and rolled back | `Haptics.reject()` | REJECT |
 
 One effect per event, never buzzy.

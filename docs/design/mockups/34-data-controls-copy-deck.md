@@ -192,7 +192,7 @@ A full page, not a dialog (BR-16 keeps the only dialog). Order, top to bottom: t
 | `deleteAllItemSavings` | Savings | List item | 1 | Same as the Settings row. |
 | `deleteAllItemCategories` | Categories you added or changed | List item; the 8 built-in categories come back as new | 1 | It doesn't say "categories" alone, because the built-in tiles come back and saying they go would be untrue. |
 | `deleteAllItemSettings` | Look and your other settings | List item: Look, month start and other choices go back to the start | 1 | It names Look (the brief's list) and covers the rest without a long list. |
-| `deleteAllNoUndo` | There's no Undo for this. | Line after the list | 1 | It points at a button people know. Inform, not alarm: no exclamation mark, no "permanently". |
+| `deleteAllNoUndo` | Once it's deleted, there's no getting it back. | Line after the list | 1 | Inform, not alarm: no exclamation mark, no "permanently". "Once it's deleted" keeps it true beside the key's 5 s *Undo* (D149), which comes before the delete. |
 | `deleteAllStays` | Backup files you made stay where you put them. | Line saying backup files are not touched | 2 | The brief's sentence, in plainer words (Cashew: "Drive backups will be kept"). |
 | `deleteAllPhoneSafe` | Only hisaab is cleared. Your phone and other apps stay as they are. | Line that answers the fear of wiping the phone | 2 | From Gupta et al.'s fear of "damaging their devices". This is why "Delete" was chosen over "Erase". |
 | `deleteAllLastBackup` | reuses `backUpLast` / `backUpToday` | The last-backup line, above *Back up first* | 1 | |
@@ -205,7 +205,7 @@ A full page, not a dialog (BR-16 keeps the only dialog). Order, top to bottom: t
 | Key | Text | Context / description | Lines | Notes |
 |---|---|---|---|---|
 | `deleteAllHold` | Hold to delete everything | Label on the destructive key; it fills while pressed and deletes when full | 1 (25 ch) | The instruction and the outcome in one. Never marigold. |
-| `deleteAllHoldCaption` | `{seconds, plural, =1{Keep your finger on it for 1 second} other{Keep your finger on it for {seconds} seconds}}` | Caption under the hold key, always visible (also covers reduced motion, where there is no fill) | 1–2 | The research says hold keys fail when the duration isn't shown. "Finger" is plainer than "press". |
+| `deleteAllHoldCaption` | Press and hold to delete. | Caption under the hold key, always visible (also covers reduced motion, where there is no fill) | 1–2 | The owner wanted it generic, with no time in it (D149). The research says hold keys fail when the duration isn't shown; the sweeping fill now carries the time, and a short release gets "Keep holding till it fills up." |
 | `deleteAllHoldShort` | Keep holding till it fills up. | Shown when the key is let go early; nothing was deleted | 1 | No blame. It doesn't say "bar", which is a glossary word for Today's bar. |
 | `deleteAllHoldSpoken` | Delete everything in hisaab | TalkBack label for the hold key | | Makes sense heard alone, with the scope. |
 | `deleteAllHoldSpokenHint` | delete everything | `onLongPressHint`: TalkBack says "Double-tap and hold to delete everything" | | Lowercase, because TalkBack puts its own words in front. |
@@ -257,7 +257,7 @@ A backup the user saves to Drive does leave the phone, but the user does it, and
 - **Voice:** no exclamation marks. Every failure says what happened, says "Nothing changed" where data was at stake, and gives a next step. There is no blame: "Couldn't back up there", never "You picked a bad folder".
 - **Buttons:** every key names its outcome (*Replace*, *Keep what's here*, *Bring it back*, *Back up first*, *Hold to delete everything*). No "OK", "Yes" or "Cancel".
 - **Money:** no amounts in this feature. Counts are entries, as ICU `plural`.
-- **ICU:** `restoreConfirmFrom`, `restoreConfirmReplaces` and `deleteAllHoldCaption` use `plural` with `=0`/`=1` where English needs it. Dates are pre-formatted `String` placeholders. No string concatenation: the two dialog lines are separate keys, not glued.
+- **ICU:** `restoreConfirmFrom`, `restoreConfirmReplaces` and `deleteAllUndoCaption` use `plural` with `=0`/`=1` where English needs it. Dates are pre-formatted `String` placeholders. No string concatenation: the two dialog lines are separate keys, not glued.
 - **Reading level:** the longest sentence is 15 words (`backUpNoLock`, second clause). The hardest words are "backup", "restore" and "password", all loanwords Hindi-first users meet in WhatsApp and UPI. Run the Flesch check on the final ARB values.
 - **TalkBack:** the hold key, the onboarding link and the post-delete moment have spoken labels that make sense alone. Every icon in these rows needs a label from design-ui's icon choice (not covered here).
 

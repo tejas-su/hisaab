@@ -51,7 +51,7 @@ EntriesFilterChanged / DeleteRequested / UndoRequested (same Undo flow as Home)
 | State | UI |
 |---|---|
 | `SpendsLoading` | Title only |
-| `SpendsReady` with an empty overview | "Nothing spent in October yet." and *See every entry* |
+| `SpendsReady` with an empty overview | One card: "Nothing spent in October yet.", plus *See every entry* inside it when `hasEntries` (D148); `SpendsEmptyIllustration` fills the space below through `TopBarScrollView.fill` (D150) |
 | `SpendsReady` | Full screen with the Ask AI card on top; `limitsFailed` adds "Couldn't save. Try again." under the offer |
 | `SpendsFailed` | "Couldn't load your money." and Try again |
 | `EntriesReady` with nothing in the filter | "Nothing here yet." under the chips |

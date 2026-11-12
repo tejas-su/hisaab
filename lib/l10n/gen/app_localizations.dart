@@ -2194,7 +2194,7 @@ abstract class AppLocalizations {
   /// Line after the list of what is deleted
   ///
   /// In en, this message translates to:
-  /// **'There\'s no Undo for this.'**
+  /// **'Once it\'s deleted, there\'s no getting it back.'**
   String get deleteAllNoUndo;
 
   /// Line saying backup files are not touched
@@ -2221,7 +2221,7 @@ abstract class AppLocalizations {
   /// **'Back up first'**
   String get deleteAllBackUpFirst;
 
-  /// Label on the hold key; it fills while pressed and deletes when let go full
+  /// Label on the hold key; it fills while pressed, and when let go full it counts down 5 s with Undo, then deletes
   ///
   /// In en, this message translates to:
   /// **'Hold to delete everything'**
@@ -2233,11 +2233,11 @@ abstract class AppLocalizations {
   /// **'Let go to delete'**
   String get deleteAllHoldFull;
 
-  /// Caption under the hold key, always shown
+  /// Caption under the hold key at rest; names no duration, the fill shows it (D149)
   ///
   /// In en, this message translates to:
-  /// **'{seconds, plural, =1{Keep your finger on it for 1 second} other{Keep your finger on it for {seconds} seconds}}'**
-  String deleteAllHoldCaption(num seconds);
+  /// **'Press and hold to delete.'**
+  String get deleteAllHoldCaption;
 
   /// Caption after the hold key is let go early; nothing was deleted
   ///
@@ -2262,6 +2262,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Double-tap twice to delete'**
   String get deleteAllHoldHint;
+
+  /// Label on the hold key while its fill drains back for 5 s after a full hold; a tap stops the delete
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get deleteAllUndo;
+
+  /// Caption under the hold key while it counts down to the delete; it counts down each second
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1{Deleting in 1 second. Tap Undo to stop.} other{Deleting in {seconds} seconds. Tap Undo to stop.}}'**
+  String deleteAllUndoCaption(int seconds);
+
+  /// TalkBack label for the hold key while it counts down to the delete
+  ///
+  /// In en, this message translates to:
+  /// **'Undo. Keep everything'**
+  String get deleteAllUndoSpoken;
+
+  /// TalkBack announcement when the countdown to the delete starts
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting everything in {seconds} seconds. Double-tap to undo.'**
+  String deleteAllUndoAnnounced(int seconds);
+
+  /// Caption under the hold key after Undo stopped the delete
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped. Nothing was deleted.'**
+  String get deleteAllUndone;
 
   /// Hold key label while everything is deleted
   ///

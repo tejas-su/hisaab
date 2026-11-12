@@ -80,11 +80,11 @@ void main() {
       expect(find.text('This goes:'), findsOneWidget);
       expect(find.text('Every entry you added'), findsOneWidget);
       expect(find.text('Look and your other settings'), findsOneWidget);
-      expect(find.text("There's no Undo for this."), findsOneWidget);
+      expect(find.text("Once it's deleted, there's no getting it back."), findsOneWidget);
       expect(find.text('Backup files you made stay where you put them.'), findsOneWidget);
       expect(find.text('Not backed up yet. Back up first to keep a copy.'), findsOneWidget);
       expect(find.text('Hold to delete everything'), findsWidgets);
-      expect(find.text('Keep your finger on it for 1.5 seconds'), findsOneWidget);
+      expect(find.text('Press and hold to delete.'), findsOneWidget);
     });
 
     testWidgets('shows the last backup day when there is one', (WidgetTester tester) async {
@@ -201,6 +201,116 @@ void main() {
       await tester.settle();
 
       expect(backups.wipes, 1);
+    });
+
+    group('the 5 s Undo after a full hold (AC-6a)', () {
+      Future<void> holdAndLetGo(WidgetTester tester) async {
+        final TestGesture finger = await press(tester);
+        await tester.pump(const Duration(milliseconds: 1600));
+        await finger.up();
+        await tester.pump();
+      }
+
+      testWidgets('drains back over 5 s reading Undo, then deletes', (WidgetTester tester) async {
+        await pumpPage(tester);
+
+        await holdAndLetGo(tester);
+        expect(find.text('Undo'), findsWidgets);
+        expect(find.text('Deleting in 5 seconds. Tap Undo to stop.'), findsOneWidget);
+        await tester.pump(const Duration(seconds: 2));
+        expect(find.text('Deleting in 3 seconds. Tap Undo to stop.'), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 2900));
+        expect(find.text('Deleting in 1 second. Tap Undo to stop.'), findsOneWidget);
+        expect(backups.wipes, 0);
+
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.settle();
+        expect(backups.wipes, 1);
+        expect(deleted, 1);
+      });
+
+      testWidgets('tapping Undo stops it and deletes nothing', (WidgetTester tester) async {
+        await pumpPage(tester);
+
+        await holdAndLetGo(tester);
+        await tester.pump(const Duration(seconds: 3));
+        await tester.tap(find.byKey(_hold));
+        await tester.settle();
+        await tester.pump(const Duration(seconds: 5));
+
+        expect(backups.wipes, 0);
+        expect(find.text('Stopped. Nothing was deleted.'), findsOneWidget);
+        expect(find.text('Hold to delete everything'), findsWidgets);
+        expect(haptics.events, <String>['tick', 'threshold', 'tick']);
+      });
+
+      testWidgets('a hold after Undo needs the full 1.5 s again', (WidgetTester tester) async {
+        await pumpPage(tester);
+
+        await holdAndLetGo(tester);
+        await tester.tap(find.byKey(_hold));
+        await tester.settle();
+        await holdFor(tester, const Duration(seconds: 1));
+
+        expect(backups.wipes, 0);
+        expect(find.text('Keep holding till it fills up.'), findsOneWidget);
+      });
+
+      testWidgets('a press that slides off during the countdown neither stops it nor restarts the fill', (WidgetTester tester) async {
+        await pumpPage(tester);
+
+        await holdAndLetGo(tester);
+        final TestGesture finger = await press(tester);
+        await finger.moveBy(const Offset(0, -200));
+        await finger.up();
+        await tester.pump();
+        expect(find.text('Undo'), findsWidgets);
+        await tester.settle();
+
+        expect(backups.wipes, 1);
+      });
+
+      testWidgets('with reduced motion it still waits the full 5 s', (WidgetTester tester) async {
+        await pumpPage(tester, reduceMotion: true);
+
+        await holdAndLetGo(tester);
+        await tester.pump(const Duration(seconds: 4));
+        expect(backups.wipes, 0);
+
+        await tester.pump(const Duration(seconds: 1));
+        await tester.settle();
+        expect(backups.wipes, 1);
+      });
+
+      testWidgets('with TalkBack the confirm starts it and a third tap undoes', (WidgetTester tester) async {
+        tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(accessibleNavigation: true);
+        addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+        await pumpPage(tester);
+
+        await tester.tap(find.byKey(_hold));
+        await tester.pump();
+        await tester.tap(find.byKey(_hold));
+        await tester.pump();
+        expect(find.text('Undo'), findsWidgets);
+        expect(tester.takeAnnouncements().map((CapturedAccessibilityAnnouncement a) => a.message),
+            contains('Deleting everything in 5 seconds. Double-tap to undo.'));
+
+        await tester.tap(find.byKey(_hold));
+        await tester.settle();
+        await tester.pump(const Duration(seconds: 5));
+        expect(backups.wipes, 0);
+        expect(find.text('Hold to delete everything'), findsWidgets);
+      });
+
+      testWidgets('the screen reader hears Undo while it counts down', (WidgetTester tester) async {
+        final SemanticsHandle semantics = tester.ensureSemantics();
+        await pumpPage(tester);
+
+        await holdAndLetGo(tester);
+
+        expect(find.semantics.byLabel('Undo. Keep everything'), findsOne);
+        semantics.dispose();
+      });
     });
 
     testWidgets('Back up first backs up and stays on the page (AC-5)', (WidgetTester tester) async {

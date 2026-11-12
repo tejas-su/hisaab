@@ -8,7 +8,7 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../l10n/gen/app_localizations.dart';
 
 /// The *Delete everything* page's "This goes:" card: each kind of data with its glyph, ending in
-/// "There's no Undo for this." (SPEC FR-SE-4 AC-4).
+/// "Once it's deleted, there's no getting it back." (SPEC FR-SE-4 AC-4).
 class DeleteEverythingList extends StatelessWidget {
   const DeleteEverythingList({super.key});
 
