@@ -168,6 +168,7 @@ Rules:
 - `minSdk 24`, edge-to-edge (enforced on Android 15), predictive back enabled.
 - Every orientation and window size. Adaptive layout for foldables, tablets and multi-window (UI_DESIGN §13, DECISIONS D22).
 - Other platform folders (ios/macos/linux/windows/web) left untouched but not built or tested.
+- Privacy policy for the Play listing: `site/privacy/`, published by GitHub Pages to https://tejas-su.github.io/hisaab/privacy/ (DECISIONS D152). Update it when a permission or data flow changes.
 
 ## 11. Dependencies
 Added: `intl`, `flutter_localizations`, `hugeicons`, `bloc_concurrency` (D58). `flutter_local_notifications` + `timezone` for the due-day bill reminders (owner-approved in the savings-and-bills spec §6, D126); `core library desugaring` is on in `android/app/build.gradle.kts` for it. `file_picker` for the system *Save to* and *Open* screens of Back up and Restore (owner-approved, D139); it adds no network permission. `material_ui` (Flutter's Material library, now a separate package; owner-requested, D146): every `package:flutter/material.dart` import became `package:material_ui/material_ui.dart`, and the app's localization delegates come from `material_ui`.

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Privacy policy</title>
+<meta name="description" content="hisaab keeps your money on your phone. It collects nothing and sends nothing.">
+<!--
+  The privacy policy linked from the Play Console (App content → Privacy policy). Published by
+  .github/workflows/pages.yml to https://tejas-su.github.io/hisaab/privacy/ (D152).
+  Keep it true to the app: no INTERNET permission in release (NFR-2), Auto Backup off (BR-16),
+  backups and Ask AI only on the user's tap (D15, D139), notifications for bill reminders (D126).
+  Fonts load from site/fonts/ on Pages (the workflow copies them from assets/fonts/) and from
+  assets/fonts/ when this file is opened from the repo. Nothing loads from another site.
+-->
+<style>
+  @font-face { font-family: 'Anek Latin'; font-weight: 100 900; font-stretch: 75% 125%; font-display: swap;
+    src: url(../fonts/AnekLatin-Variable.ttf), url(../../assets/fonts/AnekLatin-Variable.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 400; font-display: swap;
+    src: url(../fonts/Mukta-Regular.ttf), url(../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; font-display: swap;
+    src: url(../fonts/Mukta-SemiBold.ttf), url(../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    color-scheme: dark;
+    --field: #161615; --card: #211F1C; --ink: #F2F1EC; --ink2: #A7A199; --hairline: #3A3632; --signal: #FFB020;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--field); color: var(--ink); font: 400 17px/1.6 'Mukta', system-ui, sans-serif;
+    padding: 48px 20px 64px; -webkit-text-size-adjust: 100%; }
+  main { max-width: 680px; margin: 0 auto; }
+  .mark { display: inline-flex; align-items: flex-end; font: 600 28px/32px 'Anek Latin', system-ui, sans-serif;
+    letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+  .mark i { width: 10px; height: 10px; border-radius: 50%; background: var(--signal); margin: 0 0 7px 3px; }
+  h1 { font: 600 44px/1.1 'Anek Latin', system-ui, sans-serif; font-stretch: 85%; letter-spacing: -0.01em; margin: 40px 0 8px; }
+  .date { color: var(--ink2); margin: 0; }
+  .short { background: var(--card); border-radius: 20px; box-shadow: inset 0 0 0 1px var(--hairline);
+    padding: 20px 24px; margin: 32px 0 8px; }
+  .short p { margin: 0; font-size: 19px; line-height: 1.5; }
+  .short p + p { margin-top: 8px; color: var(--ink2); font-size: 17px; }
+  h2 { font: 600 24px/1.25 'Anek Latin', system-ui, sans-serif; letter-spacing: -0.005em; margin: 40px 0 8px; }
+  p, ul { margin: 8px 0 0; }
+  ul { padding-inline-start: 22px; }
+  li + li { margin-top: 6px; }
+  b { font-weight: 600; }
+  a { color: var(--ink); text-decoration-color: var(--signal); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .muted { color: var(--ink2); }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--hairline); color: var(--ink2); font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="mark" href="../">hisaab<i aria-hidden="true"></i></a>
+
+  <h1>Privacy policy</h1>
+  <p class="date">Effective 13 November 2026</p>
+
+  <section class="short" aria-label="In short">
+    <p><b>hisaab keeps your money on your phone.</b> It collects nothing and sends nothing.</p>
+    <p>No account, no ads, no analytics, and no internet access. Something leaves the phone only when you tap to send it.</p>
+  </section>
+
+  <h2>Who we are</h2>
+  <p>hisaab is an expense tracker for Android made by S U Tejas, an independent developer.
+    In this policy, “we” means the developer and “the app” means hisaab.</p>
+
+  <h2>What the app stores</h2>
+  <p>To work out what you can spend today, the app stores what you type in:</p>
+  <ul>
+    <li>your income, payday and the bills you add</li>
+    <li>your spends: amount, category, date and any note you write</li>
+    <li>your settings, such as the theme</li>
+  </ul>
+  <p>All of it is kept in a private database inside the app on your phone. Other apps cannot read it.</p>
+
+  <h2>What we collect</h2>
+  <p><b>Nothing.</b> The app does not ask for internet access, so it cannot send anything to us or to anyone else.
+    We have no servers, no accounts, no advertising, no analytics and no crash reporting. We never see your data.</p>
+  <p>Android's automatic backup to Google Drive and phone-to-phone transfer are turned off for the app,
+    so your data is not copied off the phone in the background either.</p>
+
+  <h2>When something leaves your phone</h2>
+  <p>Only when you choose to send it, in one of these ways:</p>
+  <ul>
+    <li><b>Back up.</b> The app saves one file to the place you pick, such as your phone’s storage or a cloud drive.
+      Where it goes after that is up to you and the service you picked.</li>
+    <li><b>Ask AI.</b> The app writes a summary of your spending for an AI chat app, such as ChatGPT.
+      You see the full text first. Nothing is sent until you tap copy, share or open. The AI app’s own
+      privacy policy then covers what you send it.</li>
+  </ul>
+  <p>We do not sell, rent or share your data, because we never have it.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><b>Notifications</b>: to remind you on the day a bill is due. The app asks first, and you can say no.</li>
+    <li><b>Run at startup</b>: to set those reminders again after your phone restarts.</li>
+  </ul>
+  <p>The app does not ask for your contacts, location, camera, microphone, SMS or internet.</p>
+
+  <h2>Deleting your data</h2>
+  <p>You are always in control:</p>
+  <ul>
+    <li>In the app, go to <b>Settings → Your hisaab → Delete everything</b>.</li>
+    <li>Or uninstall the app. Android removes everything it stored.</li>
+  </ul>
+  <p>Backup files you saved are yours. Delete them where you saved them.</p>
+
+  <h2>Children</h2>
+  <p>The app is not made for children under 13. It collects no personal information from anyone, children included.</p>
+
+  <h2>Security</h2>
+  <p>Your data stays inside the app’s private storage on your phone. Keep your phone locked to keep it safe,
+    and keep backup files somewhere only you can open.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, we will update it on this page and change the date at the top.
+    If the app ever starts collecting data, we will say so here and in the app before it happens.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy? Email S U Tejas at
+    <a href="mailto:tejas_s.u@yahoo.com">tejas_s.u@yahoo.com</a>.</p>
+
+  <footer>hisaab• · Made in India · <span class="muted">This page sets no cookies and loads nothing from other sites.</span></footer>
+</main>
+</body>
+</html>

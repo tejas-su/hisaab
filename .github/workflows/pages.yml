@@ -1,0 +1,40 @@
+# Publishes site/ (the privacy policy for the Play listing) to GitHub Pages (D152).
+# One-time setup on GitHub: Settings → Pages → Build and deployment → Source: GitHub Actions.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', 'assets/fonts/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      # why: the pages use the app's own fonts; copy them in rather than keep a second copy in git.
+      - name: Copy fonts
+        run: |
+          mkdir -p site/fonts
+          cp assets/fonts/AnekLatin-Variable.ttf assets/fonts/Mukta-Regular.ttf assets/fonts/Mukta-SemiBold.ttf \
+             assets/fonts/OFL-AnekLatin.txt assets/fonts/OFL-Mukta.txt site/fonts/
+          touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
