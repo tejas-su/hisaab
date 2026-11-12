@@ -245,23 +245,6 @@ void main() {
       expect((await overview(2)).isEmpty, isTrue);
     });
 
-    test('a cycle with no entries at all has nothing to list', () async {
-      expect((await overview(2)).hasEntries, isFalse);
-    });
-
-    test('a nothing-spent cycle with income still has entries to list', () async {
-      ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.spent);
-      final SpendsOverview result = await overview();
-      expect(result.isEmpty, isTrue);
-      expect(result.hasEntries, isTrue);
-    });
-
-    test('an entry dated later in the cycle is listed too, as the entries list shows the whole cycle', () async {
-      ledger.entries.clear();
-      addEntry(500, SeedCategoryIds.food, WorkedExample.today.addDays(1));
-      expect((await overview()).hasEntries, isTrue);
-    });
-
     test('with a full September tracked, Food up on last month shows first, then the limit offer', () async {
       addEntry(45000, SeedCategoryIds.salary, _september.start, kind: EntryKind.got);
       addEntry(2000, SeedCategoryIds.food, const CalendarDate(2026, 9, 10));

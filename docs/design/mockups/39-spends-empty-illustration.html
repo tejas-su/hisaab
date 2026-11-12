@@ -55,8 +55,6 @@
   .sw svg.off { stroke: var(--hairline); }
   .card { background: var(--surface); border-radius: 24px; padding: 18px; }
   .card .s { font: 400 17px/24px 'Mukta', sans-serif; color: var(--ink2); margin: 0; max-width: none; }
-  .card .lnk { display: flex; justify-content: flex-end; margin-top: 4px; }
-  .card .lnk span { min-height: 48px; display: flex; align-items: center; padding: 0 4px 0 12px; font: 600 16px/20px 'Mukta', sans-serif; color: var(--ink); }
   .card .in { display: grid; place-items: center; margin: -4px 0 6px; }
   .card .in svg, .art svg { width: 100%; height: auto; overflow: visible; }
   .card .in svg { max-width: 250px; }
@@ -85,7 +83,7 @@
 </head>
 <body>
 <h1>Spends empty state: illustration concepts</h1>
-<p class="lede">The owner finds the empty Spends card bland and wants a picture "as done for the onboarding screens". Each concept below uses the <b>D144 Charco Plus grammar</b> exactly: three scribbled rocks in charcoal, taupe and <b>one marigold rock</b>, one ink object with spray stipple, sparkles, no faces. It is static and decorative (<code>ExcludeSemantics</code>). The tone is calm: nothing is wrong and nothing is celebrated. Every frame is the real 360dp Spends screen. The left column is the current cycle (<i>"Nothing spent in November yet."</i> with <i>See every entry</i>, D148). The right column is a past cycle (<i>"Nothing was spent in September."</i>), shown without the link because that cycle has no entries.</p>
+<p class="lede">The owner finds the empty Spends card bland and wants a picture "as done for the onboarding screens". Each concept below uses the <b>D144 Charco Plus grammar</b> exactly: three scribbled rocks in charcoal, taupe and <b>one marigold rock</b>, one ink object with spray stipple, sparkles, no faces. It is static and decorative (<code>ExcludeSemantics</code>). The tone is calm: nothing is wrong and nothing is celebrated. Every frame is the real 360dp Spends screen. The left column is the current cycle (<i>"Nothing spent in November yet."</i>, no link, D151). The right column is a past cycle (<i>"Nothing was spent in September."</i>), shown without the link because that cycle has no entries.</p>
 
 <div class="toggles" role="group" aria-label="View">
   <button id="tDark" aria-pressed="false">Dark</button>
@@ -103,7 +101,7 @@
   <li><b>It says "nothing spent" without words.</b> A drawstring pouch pulled shut is a purse nobody has opened. A gullak reads as saving, which collides with the savings entries Spends can list. A blank bill reads as a receipt you forgot.</li>
   <li><b>It is the onboarding family.</b> The same fist that holds up the calendar and receipt in D144 holds the potli, so Spends feels like the same hand, still helping. Concepts 2 and 3 have no hand and would look like a different set.</li>
   <li><b>Indian, plain, not a mascot.</b> A potli is everyday and familiar. The ₹ on its face is the only text, as on the onboarding receipt.</li>
-  <li><b>The gap is the problem.</b> About 70% of the page is blank. Inside the card the art would grow the card but leave the same void under it. In the gap it fills the void, as onboarding fills the gap above its controls, and the card stays a quiet sentence with its link. The card keeps its height, so nothing jumps when the first spend arrives and the picture goes.</li>
+  <li><b>The gap is the problem.</b> About 70% of the page is blank. Inside the card the art would grow the card but leave the same void under it. In the gap it fills the void, as onboarding fills the gap above its controls, and the card stays a quiet sentence. The card keeps its height, so nothing jumps when the first spend arrives and the picture goes.</li>
 </ul>
 <p><b>Runner-up: Concept 3, Clean bill on the spike.</b> It is the closest to a ledger and the most Indian (a kirana bill spike), but with no hand it breaks from the onboarding set.</p>
 
@@ -297,10 +295,9 @@
   // placement: 'gap' (centred in the space under the card), 'card' (inside the card, above the sentence), 'hug' (just under the card)
   function phone(mode, past, place, art) {
     const sentence = past ? 'Nothing was spent in September.' : 'Nothing spent in November yet.';
-    const link = past ? '' : '<div class="lnk"><span>See every entry</span></div>';
     return `<div class="phone ${mode}">
       <div class="head"><div class="t">Spends</div><div class="sw">${chev(-1, false)}${past ? 'September' : 'November'}${chev(1, !past)}</div></div>
-      <div class="card">${place === 'card' ? `<div class="in">${art}</div>` : ''}<p class="s">${sentence}</p>${link}</div>
+      <div class="card">${place === 'card' ? `<div class="in">${art}</div>` : ''}<p class="s">${sentence}</p></div>
       ${place === 'card' ? '<div class="art"></div>' : `<div class="art${place === 'hug' ? ' top' : ''}">${art}</div>`}
       ${DOCK}
     </div>`;
@@ -320,8 +317,8 @@
     sec.innerHTML = `<h2>Concept ${c.n}: ${c.name}${c.tag ? `<span class="tag">${c.tag}</span>` : ''}</h2><p class="lede">${c.why}</p><div class="pair"></div>`;
     const row = sec.querySelector('.pair');
     const rec = c.k === 'potli';
-    row.appendChild(fig(false, 'gap', c.k, '<b>Current cycle.</b> "Nothing spent in November yet." with <i>See every entry</i>. The picture sits in the gap under the card.', rec ? 'spends-empty-recommended' : null));
-    row.appendChild(fig(true, 'gap', c.k, '<b>Past cycle.</b> "Nothing was spent in September." No <i>yet</i>, no link.'));
+    row.appendChild(fig(false, 'gap', c.k, '<b>Current cycle.</b> "Nothing spent in November yet." No link (D151). The picture sits in the gap under the card.', rec ? 'spends-empty-recommended' : null));
+    row.appendChild(fig(true, 'gap', c.k, '<b>Past cycle.</b> "Nothing was spent in September." No <i>yet</i>.'));
     if (rec) {
       const d = document.createElement('div');
       d.className = 'dl';

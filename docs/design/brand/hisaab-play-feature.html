@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hisaab• Play feature graphic (source)</title>
+<!--
+  Source for hisaab-play-feature-1024x500.png. Render at exactly 1024×500:
+    msedge --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1
+           --window-size=1024,500 --screenshot=hisaab-play-feature-1024x500.png hisaab-play-feature.html
+  The hero mirrors Home in dark (UI_DESIGN §5.2, §3.2): the etched, raised card (D106, D107), today's bar with
+  bites and the days rail (D114), and the SPEC worked example (₹1,850 share, ₹420 spent, 9 days to payday 4 Nov).
+-->
+<style>
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --ink-field: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --hairline: #3A3632; --displayEtch: #2F2B27; --signal: #FFB020;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1024px; height: 500px; overflow: hidden; }
+  body { background: var(--ink-field); color: var(--displayInk); font-family: 'Mukta', sans-serif; display: flex; align-items: center; justify-content: space-between; padding: 0 64px; }
+
+  .copy { width: 400px; }
+  .mark { display: flex; align-items: flex-end; font: 600 32px/36px 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .mark i { width: 11px; height: 11px; border-radius: 50%; background: var(--signal); margin: 0 0 8px 3px; }
+  h1 { font: 600 52px/56px 'Anek Latin', sans-serif; font-stretch: 85%; letter-spacing: -0.01em; margin: 36px 0 0; }
+  p { font-size: 19px; line-height: 28px; color: var(--displayInk2); margin: 16px 0 0; max-width: 340px; }
+
+  .hero { position: relative; width: 432px; background: var(--display); border-radius: 28px; padding: 24px 20px; box-shadow: inset 0 0 0 1px var(--hairline); overflow: hidden; }
+  .etch { position: absolute; inset: 0; pointer-events: none; }
+  .hero > *:not(.etch) { position: relative; }
+  .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .amt { margin-top: 8px; font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .amt .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+
+  .bar { margin-top: 24px; position: relative; height: 48px; }
+  .bar b { position: absolute; top: 0; bottom: 0; border-radius: 8px; }
+  .bar .left { background: var(--signal); }
+  .bar .bite { background: var(--blockIdle); }
+  .names { position: relative; height: 14px; margin: 4px 0; }
+  .names span { position: absolute; font: 600 11px/14px 'Mukta', sans-serif; color: var(--displayInk2); transform: translateX(-50%); white-space: nowrap; }
+  .cap { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); }
+  .cap b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+
+  .rail { margin-top: 14px; }
+  .railRow { display: flex; align-items: center; gap: 10px; height: 18px; }
+  .dots { flex: 1; position: relative; height: 10px; }
+  .dots i { position: absolute; top: 2px; width: 6px; height: 6px; border-radius: 3px; background: var(--blockIdle); }
+  .dots i.t { top: 0; width: 10px; height: 10px; border-radius: 5px; background: var(--signal); }
+  .flag { display: flex; align-items: center; gap: 4px; font: 600 13px/18px 'Mukta', sans-serif; }
+  svg.g { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .railCap { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 4px; padding-inline-end: 64px; }
+
+  hr { border: 0; height: 1px; background: var(--displayEtch); margin: 20px 0 16px; }
+  .range { display: flex; gap: 8px; align-items: center; font-size: 15px; line-height: 22px; }
+  .range svg.g { width: 20px; height: 20px; }
+  .range span { color: var(--displayInk2); }
+  .range b { font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="copy">
+    <div class="mark">hisaab<i></i></div>
+    <h1>Know what you can spend today.</h1>
+    <p>Your money, shared out one day at a time till payday.</p>
+  </div>
+
+  <div class="hero" id="hero">
+    <svg class="etch" id="etch"></svg>
+    <div class="ttl">Safe to spend today</div>
+    <div class="amt"><span class="rs">₹</span>1,430</div>
+    <div class="bar" id="bar"></div>
+    <div class="names" id="names"></div>
+    <div class="cap"><span><b>₹420</b> spent</span><span>of ₹1,850 for today</span></div>
+    <div class="rail">
+      <div class="railRow"><div class="dots" id="dots"></div>
+        <span class="flag"><svg class="g" viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>4 Nov</span></div>
+      <div class="railCap"><span>Today</span><span>9 days to payday</span></div>
+    </div>
+    <hr>
+    <div class="range">
+      <svg class="g" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+      <div>Lasts till payday <span>· about</span> <b>₹9,300 spare</b></div>
+    </div>
+  </div>
+
+<script>
+// Today's bar (BR-6, D114): share A, yellow = what's left; bites 3dp apart, the first spend at the end edge.
+const A = 1850, GAP = 3;
+const spends = [['Food', 60], ['Travel', 120], ['Shopping', 240]];
+const bar = document.getElementById('bar'), W = bar.clientWidth, px = v => v / A * W;
+let x = W, bites = '', names = '';
+for (const [name, v] of spends) {
+  const w = px(v) - GAP; x -= w;
+  bites += `<b class="bite" style="left:${x}px;width:${w}px;border-radius:${Math.min(8, w / 2)}px"></b>`;
+  if (w > 44) names += `<span style="left:${x + w / 2}px">${name}</span>`;
+  x -= GAP;
+}
+bar.innerHTML = `<b class="left" style="left:0;width:${x}px"></b>` + bites;
+document.getElementById('names').innerHTML = names;
+
+// Days rail: today plus 8 more, spread across the row before the flag.
+const dots = document.getElementById('dots'), RW = dots.clientWidth, n = 9, step = (RW - 10) / (n - 1);
+let d = '<i class="t" style="left:0"></i>';
+for (let i = 1; i < n; i++) d += `<i style="left:${10 + (i - 1) * step + (step - 6) / 2}px"></i>`;
+dots.innerHTML = d;
+
+// The etch (DisplayEtchPainter): rosette 80 in from the end, 60 down; grain; solid keyline 6 in, dashed 10 in.
+const hero = document.getElementById('hero'), etch = document.getElementById('etch');
+const HW = hero.offsetWidth, HH = hero.offsetHeight;
+etch.setAttribute('viewBox', `0 0 ${HW} ${HH}`);
+let rings = '';
+for (let r = 0; r < 14; r++) {
+  const base = 40 + r * 7.5, pts = [];
+  for (let i = 0; i < 720; i++) {
+    const t = i / 720 * 2 * Math.PI, rad = base + 6 * Math.sin(18 * t + r * 0.35) + 3 * Math.sin(5 * t);
+    pts.push(`${(HW - 80 + rad * Math.cos(t)).toFixed(2)},${(60 + rad * Math.sin(t)).toFixed(2)}`);
+  }
+  rings += `M${pts.join('L')}Z`;
+}
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+let grain = '';
+for (let i = 0, c = Math.floor(HW * HH / 60); i < c; i++) grain += `M${(rnd() * HW).toFixed(1)} ${(rnd() * HH).toFixed(1)}h.01`;
+etch.innerHTML =
+  `<path d="${rings}" fill="none" stroke="var(--displayEtch)" stroke-width="0.6"/>` +
+  `<path d="${grain}" stroke="var(--displayEtch)" stroke-width="1" stroke-linecap="round"/>` +
+  `<rect x="6" y="6" width="${HW - 12}" height="${HH - 12}" rx="22" fill="none" stroke="var(--displayEtch)" stroke-width="0.6"/>` +
+  `<rect x="10" y="10" width="${HW - 20}" height="${HH - 20}" rx="18" fill="none" stroke="var(--hairline)" stroke-width="0.6" stroke-dasharray="4 3"/>`;
+</script>
+</body>
+</html>

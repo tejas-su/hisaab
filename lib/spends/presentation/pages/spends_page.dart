@@ -21,7 +21,6 @@ import '../widgets/ask_ai_card.dart';
 import '../widgets/cycle_switcher.dart';
 import '../widgets/insights_card.dart';
 import '../widgets/pace_card.dart';
-import '../widgets/see_every_entry_button.dart';
 import '../widgets/spends_card.dart';
 import '../widgets/spends_empty_illustration.dart';
 import '../widgets/spent_saved_line.dart';
@@ -114,29 +113,13 @@ class SpendsPage extends StatelessWidget {
           ],
       };
 
-  /// The empty state: one sentence, and *See every entry* inside the card when the cycle has
-  /// income or savings to list; with no entries at all it would open an empty list (D148).
+  /// The empty state: one sentence in one card, with no link (D151).
   Widget _nothingSpent(BuildContext context, SpendsOverview overview) {
     final AppLocalizations strings = AppLocalizations.of(context);
-    final String cycleLabel = _label(context, overview.cycle);
     return SpendsCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Text(
-            strings.nothingSpentIn(cycleLabel, overview.isCurrent ? 'current' : 'past'),
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
-          ),
-          if (overview.hasEntries)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: SeeEveryEntryButton(
-                label: strings.seeEveryEntry,
-                cycleLabel: cycleLabel,
-                onPressed: () => onSeeEntries(overview.cycle, const Option<int>.none()),
-              ),
-            ),
-        ],
+      child: Text(
+        strings.nothingSpentIn(_label(context, overview.cycle), overview.isCurrent ? 'current' : 'past'),
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: context.colors.ink2),
       ),
     );
   }

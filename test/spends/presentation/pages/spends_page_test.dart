@@ -215,31 +215,21 @@ void main() {
       await pump(tester);
       expect(find.text('Nothing spent in October yet.'), findsOneWidget);
       expect(find.byType(WhereItWentCard), findsNothing);
-      expect(find.byKey(const ValueKey<String>('see-every-entry')), findsOneWidget);
     });
 
-    testWidgets('nothing spent: See every entry sits inside the card and opens the cycle', (WidgetTester tester) async {
+    testWidgets('nothing spent: the card holds the sentence only, no See every entry (D151)', (WidgetTester tester) async {
       services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.spent);
       await pump(tester);
-      final Finder link = find.byKey(const ValueKey<String>('see-every-entry'));
-      expect(find.descendant(of: find.byType(SpendsCard), matching: link), findsOneWidget);
-      await tester.tap(link);
-      expect(opened, <(PayCycle, Option<int>)>[(_october, const Option<int>.none())]);
+      expect(find.descendant(of: find.byType(SpendsCard), matching: find.text('Nothing spent in October yet.')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('see-every-entry')), findsNothing);
+      expect(find.text('See every entry'), findsNothing);
     });
 
-    testWidgets('no entries at all: the sentence only, no link to an empty list', (WidgetTester tester) async {
+    testWidgets('no entries at all: the sentence only, no link', (WidgetTester tester) async {
       services.ledger.entries.clear();
       await pump(tester);
       expect(find.text('Nothing spent in October yet.'), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('see-every-entry')), findsNothing);
-    });
-
-    testWidgets('nothing spent: TalkBack reads the link with the cycle', (WidgetTester tester) async {
-      final SemanticsHandle handle = tester.ensureSemantics();
-      services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.spent);
-      await pump(tester);
-      expect(find.bySemanticsLabel('Every entry in October'), findsOneWidget);
-      handle.dispose();
     });
 
     testWidgets('nothing spent: the blank-bill picture sits in the gap under the card', (WidgetTester tester) async {
@@ -302,13 +292,6 @@ void main() {
         final double edge = tester.getTopLeft(find.byType(PaceCard)).dx;
         expect(tester.getTopLeft(find.text('Spends')).dx, edge);
         expect(tester.getTopLeft(find.byType(WhereItWentCard)).dx, edge);
-      });
-
-      testWidgets('nothing spent: See every entry ends on the card\'s content edge, as See all does', (WidgetTester tester) async {
-        services.ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.spent);
-        await pump(tester);
-        final double contentEdge = tester.getTopRight(find.byType(SpendsCard)).dx - 20;
-        expect(tester.getTopRight(find.text('See every entry')).dx, contentEdge);
       });
 
       testWidgets('Where it went\'s title row is one 48dp See all target tall, as on Home', (WidgetTester tester) async {

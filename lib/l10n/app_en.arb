@@ -200,7 +200,6 @@
   "insightLimitOffer": "Set limits from {cycle}'s spending? Each one is rounded up to the next {step}.",
   "seeEntries": "See {category} entries",
   "useTheseLimits": "Use these limits",
-  "seeEveryEntry": "See every entry",
   "seeAll": "See all",
   "everyEntry": "Every entry",
   "everyEntryIn": "Every entry in {cycle}",

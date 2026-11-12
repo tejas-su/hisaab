@@ -319,12 +319,6 @@ abstract class AppLocalizations {
   /// **'Use these limits'**
   String get useTheseLimits;
 
-  /// No description provided for @seeEveryEntry.
-  ///
-  /// In en, this message translates to:
-  /// **'See every entry'**
-  String get seeEveryEntry;
-
   /// No description provided for @seeAll.
   ///
   /// In en, this message translates to:

@@ -161,9 +161,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useTheseLimits => 'Use these limits';
 
   @override
-  String get seeEveryEntry => 'See every entry';
-
-  @override
   String get seeAll => 'See all';
 
   @override
