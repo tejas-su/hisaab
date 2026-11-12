@@ -20,23 +20,25 @@ void main() {
   test('no widget names a raw colour; colours come from HisaabColors (CLAUDE.md, principle 29)', () {
     final List<String> found = <String>[];
     final Set<(String, String)> used = <(String, String)>{};
-    final Iterable<File> sources = Directory('lib')
+    // why: Windows lists `lib\core\...`; one separator keeps the skips and exception keys working.
+    final Iterable<(File, String)> sources = Directory('lib')
         .listSync(recursive: true)
         .whereType<File>()
-        .where((File f) => f.path.endsWith('.dart'))
-        .where((File f) => !f.path.startsWith('lib/core/design/') && !f.path.startsWith('lib/l10n/gen/'));
-    for (final File file in sources) {
+        .map((File f) => (f, f.path.replaceAll(r'\', '/')))
+        .where(((File, String) s) => s.$2.endsWith('.dart'))
+        .where(((File, String) s) => !s.$2.startsWith('lib/core/design/') && !s.$2.startsWith('lib/l10n/gen/'));
+    for (final (File file, String path) in sources) {
       final List<String> lines = file.readAsLinesSync();
       for (int i = 0; i < lines.length; i++) {
         final String line = lines[i].trim();
         if (line.startsWith('//') || !_rawColour.hasMatch(line)) {
           continue;
         }
-        final (String, String) key = (file.path, line);
+        final (String, String) key = (path, line);
         if (_exceptions.containsKey(key)) {
           used.add(key);
         } else {
-          found.add('${file.path}:${i + 1}: $line');
+          found.add('$path:${i + 1}: $line');
         }
       }
     }
