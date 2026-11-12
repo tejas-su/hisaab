@@ -4,6 +4,7 @@ import 'package:hisaab/core/design/haptics.dart';
 import 'package:hisaab/core/notifications/bill_reminders.dart';
 import 'package:hisaab/core/time/clock.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/habits/habits.dart';
 import 'package:hisaab/home/home.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/spends/spends.dart';
@@ -22,6 +23,7 @@ import 'fakes/fake_clock.dart';
 import 'fakes/fake_haptics.dart';
 import 'fakes/fake_ledger_repository.dart';
 import 'fakes/fake_recurring_repository.dart';
+import 'fakes/fake_suggestion_state_repository.dart';
 import 'fixtures/ask_ai/prompt_input.dart';
 import 'fixtures/ledger/worked_example.dart';
 
@@ -42,6 +44,9 @@ final class FakeServices {
   final FakeBillReminders reminders = FakeBillReminders();
   final FakeClock clock = FakeClock(WorkedExample.now);
   final FakeBackupRepository backups = FakeBackupRepository();
+
+  /// The *your usual* quiet states; only the habits code reads it.
+  final FakeSuggestionStateRepository states = FakeSuggestionStateRepository();
 
   GetCycleSummary get getCycleSummary => GetCycleSummary(
         ledger: ledger,
@@ -177,6 +182,11 @@ final class FakeServices {
     )
     ..registerSingleton<AiHandoff>(handoff)
     ..registerSingleton<BackupRepository>(backups)
+    ..registerSingleton<SuggestionStateRepository>(states)
+    ..registerSingleton<GetHabitIndex>(GetHabitIndex(ledger: ledger, categories: categories, states: states, clock: clock))
+    ..registerSingleton<UndoUsualAdd>(UndoUsualAdd(states: states, ledger: ledger, clock: clock))
+    ..registerSingleton<ForgetUsual>(ForgetUsual(states: states, clock: clock))
+    ..registerSingleton<RestoreUsual>(RestoreUsual(states: states))
     ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: reminders))
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(

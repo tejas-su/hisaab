@@ -1,60 +1,59 @@
 # Habits: architecture overview
 
-> **Status: planned, not built.** Nothing here exists in `lib/` yet. This folder records the design agreed so far; open items are marked **Proposed**. SPEC, UI_DESIGN and DECISIONS are updated only once the design is approved (see `02-ideation-log.md`).
+> **Status: phase 1 built.** *Your usual* (D153, D154, D155; SPEC BR-17, BR-10, FR-AD-10, FR-SE-2 AC-6) is in `lib/habits/`; what was built is in `07-your-usual-build.md`. The missed-log question and the bill finder are still **Proposed** and not built. Tracked items are dropped (D138). Where this file or `02`–`06` differ from `07`, SPEC or the code, those win: the sections below marked *planned* record the design as first agreed.
 
 ## Purpose
 
-Learn the user's own spending routine on the device and use it to make entry faster and more complete, without AI, network, settings or nagging. Three helpers, plus user-named tracked items:
+Learn the user's own spending routine on the device and use it to make entry faster and more complete, without AI, network, settings or nagging. Three helpers:
 
-| Helper | Screen | What it does |
-|---|---|---|
-| Your usual | Add step 1 | A one-tap pill, "Food ₹55 · your usual", in the line under the amount |
-| Missed-log question | Home | "Spent on Food today? Usually around 1 pm." in Home's single note line |
-| Bill finder | Spends | "Gym ₹1,500 every month, around day 5" insight that opens the bill editor prefilled |
-| Tracked items | Add step 2, Spends | Up to 4 named items (e.g. Cigarettes) inside a category, as a third row of identical tiles set slightly apart; see `05-tracked-items.md` |
+| Helper | Screen | What it does | Status |
+|---|---|---|---|
+| Your usual | Add step 1 | A one-tap pill, "Chai ₹20 · your usual", in the slot under the amount | Built (phase 1) |
+| Missed-log question | Home | "Spent on Food today? Usually around 1 pm." in Home's single note line | Proposed |
+| Bill finder | Spends | "Gym ₹1,500 every month, around day 5" insight that opens the bill editor prefilled | Proposed |
+
+Tracked items (`05-tracked-items.md`) were a fourth idea; they are dropped (D138) and nothing of them is built.
 
 North-star metric: **days logged per pay cycle** (a day counts with at least one entry). Supporting measures: taps per entry, spare at payday. They are design and test targets only; nothing is collected (NFR-3).
 
-## Planned layout
+## Layout
+
+The built tree, with every file's job, is in `07-your-usual-build.md`. In short:
 
 ```
 lib/habits/
 ├── habits.dart                      barrel; other features import only this
 ├── domain/
-│   ├── habit_index.dart             immutable aggregate built from entries
-│   ├── habit_index_builder.dart     rows + Clock → HabitIndex (decay, smoothing)
-│   ├── habit_lifecycle.dart         FSM 1, derived, never stored
-│   ├── detectors/                   one pure class per helper
-│   │   ├── usual_spend_detector.dart
-│   │   ├── missed_log_detector.dart
-│   │   ├── bill_candidate_detector.dart
-│   │   └── tracked_item_candidate_detector.dart
-│   ├── suggestion.dart              sealed: UsualSpend, MissedLog, BillCandidate, TrackedItemCandidate
-│   └── suggestion_gate.dart         FSM 2: shown / not today / resting
-├── data/
-│   ├── habit_rows_data_source.dart  the grouped SQL read
-│   └── suggestion_state_*           sqflite table for FSM 2
+│   ├── habit_rules.dart             every threshold as a named constant
+│   ├── time_profile.dart, usual_amount.dart, habit_index_builder.dart
+│   ├── suggestion_gate.dart         quiet today / resting
+│   ├── detectors/usual_spend_detector.dart
+│   ├── entities/  repository/  usecase/
+├── data/                            suggestion_state: data source, model, mapper, repository
+├── presentation/                    HabitsBloc, UsualRowBloc, UsualAddedNotice, YourUsualRow, UsualWords
 └── di/habits_module.dart
 ```
 
+Not built, and different from the first plan: there is no `habit_rows_data_source` (entries are read through `LedgerRepository.entriesBetween`), no `habit_lifecycle.dart` (a habit is Regular or it is not in the index), no sealed `Suggestion`, and no detectors for the missed log, the bill finder or tracked items.
+
 ## Data flow
 
-1. Any ledger write (BR-10 "ledger notifies listeners") or app resume (BR-8) triggers a background rebuild.
-2. `habit_rows_data_source` runs one grouped query over the last 56 days (see `03-detection-maths.md`).
-3. `HabitIndexBuilder` turns rows into a `HabitIndex` using the injected `Clock`.
-4. Each detector maps `(HabitIndex, now)` to `Option<Suggestion>`. Detectors never import each other or Flutter.
-5. `SuggestionGate` drops anything that is resting or already dismissed today, and freezes the day's suggestion.
-6. The result is cached. `AddEntryBloc` and `HomeBloc` read it **synchronously**, so a suggestion is in the first frame or not shown that session (NFR-1: tray opens ≤ 150 ms).
+1. `HabitsBloc` loads when the main screen opens, on every ledger write (`LedgerRepository.changes`), on resume, at midnight and on the way back from Settings.
+2. `GetHabitIndex` reads the last 56 days of entries, the categories and the `suggestion_state` rows, and `HabitIndexBuilder` turns them into a `HabitIndex` for today.
+3. `AppRoutes.openAddTray` reads the bloc's state **synchronously** and runs `UsualSpendDetector.suggest(index, now, categories)`. `SuggestionGate` is applied inside the detector.
+4. The result is handed to `AddEntryBloc`'s constructor, so the pill is in the tray's first frame or not shown at all (FR-AD-10 AC-1, NFR-1).
+
+The full flows, with the Undo and *Forget*, are in `07-your-usual-build.md`.
 
 ## Dependencies
 
 - Reads entries only through `lib/ledger/ledger.dart`.
-- No new packages. Pure Dart for the maths; sqflite for one read query and one small state table.
+- No new packages. Pure Dart for the maths; sqflite for one small state table (`suggestion_state`, schema v4).
 - `fpdart` `Option` for "maybe a suggestion".
 
-## Prerequisite fix
+## Prerequisite fix (done)
 
-`lib/ledger/data/repository/ledger_repository_impl.dart` re-stamps `createdAt: _clock.now()` in `replace` and `restore`. Editing or undo-restoring an entry therefore moves its time of day, which would teach wrong habits. Fix first: keep the original `created_at` on edit and restore.
+`lib/ledger/data/repository/ledger_repository_impl.dart` keeps the original `created_at` in `replace` and `restore`, so editing or undo-restoring an entry no longer moves its time of day.
 
 ## Files in this folder
 
@@ -63,7 +62,8 @@ lib/habits/
 | `02-ideation-log.md` | How the idea evolved, approaches weighed, deviations, open questions |
 | `03-detection-maths.md` | Query, weights, thresholds, both FSMs |
 | `04-ux-and-copy.md` | Surfaces, slot priority, every string, voice rules |
-| `05-tracked-items.md` | User-named tracked items and two-tap entry |
+| `05-tracked-items.md` | User-named tracked items and two-tap entry (dropped, D138; kept for the record) |
 | `06-research-and-guardrails.md` | Research summary, dark-pattern line, sources |
+| `07-your-usual-build.md` | What phase 1 built: files, data flow, states, failures |
 
-Plain-language overview with mockups (local draft): `/tmp/claude-1001/-home-tejassu-Desktop-expense-tracker/22244bc3-465e-4f06-8eac-377b966297e6/scratchpad/smart-habits-plan.html`.
+The interactive mockup is `docs/design/mockups/40-your-usual.html`; the research behind it is `docs/design-research/case-studies/32-your-usual.md`.

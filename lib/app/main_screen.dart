@@ -30,6 +30,7 @@ class MainScreen extends StatefulWidget {
     required this.onSeeEntries,
     required this.onAskAi,
     this.assemble = false,
+    this.wrapPrimary,
   });
 
   final Clock clock;
@@ -47,6 +48,11 @@ class MainScreen extends StatefulWidget {
   /// Opens Ask AI for the cycle Spends shows (SPEC FR-SP-2).
   final ValueChanged<PayCycle> onAskAi;
   final bool assemble;
+
+  /// Wraps the one page a notice shows over: Home, or Spends when it is the screen in view and
+  /// not a pane beside Home. The app uses it for the *your usual* Undo (SPEC BR-10); with none,
+  /// the pages are built as they are.
+  final Widget Function(Widget page)? wrapPrimary;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -66,9 +72,12 @@ class _MainScreenState extends State<MainScreen> {
     context.read<SpendsBloc>().add(const SpendsLoadRequested());
   }
 
+  Widget _primary(Widget page) => widget.wrapPrimary?.call(page) ?? page;
+
   @override
   Widget build(BuildContext context) {
     final bool spendsBeside = context.layout.panes is SideBySidePanes;
+    final Widget spends = SpendsPage(today: widget.clock.today(), onSeeEntries: widget.onSeeEntries, onAskAi: widget.onAskAi);
     return Scaffold(
       body: MidnightListener(
         clock: widget.clock,
@@ -77,18 +86,21 @@ class _MainScreenState extends State<MainScreen> {
           onResume: _reload,
           child: AppShell(
             destination: _destination,
-            home: HomePage(
-              onAdd: widget.onAdd,
-              onEdit: widget.onEdit,
-              onOpenSettings: widget.onOpenSettings,
-              onOpenBill: widget.onOpenBill,
-              onEnterBill: widget.onEnterBill,
-              onSeeAll: (PayCycle cycle) => widget.onSeeEntries(cycle, const Option<int>.none()),
-              // why: beside Home in two panes, Spends is already on screen, so the step is hidden.
-              onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,
-              assemble: widget.assemble,
+            home: _primary(
+              HomePage(
+                onAdd: widget.onAdd,
+                onEdit: widget.onEdit,
+                onOpenSettings: widget.onOpenSettings,
+                onOpenBill: widget.onOpenBill,
+                onEnterBill: widget.onEnterBill,
+                onSeeAll: (PayCycle cycle) => widget.onSeeEntries(cycle, const Option<int>.none()),
+                // why: beside Home in two panes, Spends is already on screen, so the step is hidden.
+                onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,
+                assemble: widget.assemble,
+              ),
             ),
-            spends: SpendsPage(today: widget.clock.today(), onSeeEntries: widget.onSeeEntries, onAskAi: widget.onAskAi),
+            // why: beside Home both pages are on screen, and one notice is enough; it shows over Home.
+            spends: spendsBeside ? spends : _primary(spends),
             onAdd: () => widget.onAdd(EntryKind.spent),
           ),
         ),

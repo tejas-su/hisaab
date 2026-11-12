@@ -138,6 +138,59 @@ void main() {
       });
     });
 
+    group('suggestion_state (BR-16, BR-17)', () {
+      const Map<String, Object?> quiet = <String, Object?>{
+        SuggestionStateColumns.categoryId: 1,
+        SuggestionStateColumns.quietOn: '2026-11-05',
+        SuggestionStateColumns.restUntil: '2026-12-05',
+        SuggestionStateColumns.forgottenAt: '2026-11-05T09:30:00.000',
+      };
+
+      test('dump carries suggestion_state', () async {
+        await database.db.insert(Tables.suggestionState, quiet);
+
+        expect((await source.dump())[Tables.suggestionState], <Map<String, Object?>>[quiet]);
+      });
+
+      test('a v3 backup upgrades to an empty suggestion_state', () async {
+        final Database v3 = await databaseFactoryFfi.openDatabase(
+          inMemoryDatabasePath,
+          options: OpenDatabaseOptions(singleInstance: false, version: 3, onCreate: (Database db, int _) => runMigrations(db, from: 0, to: 3)),
+        );
+        addTearDown(v3.close);
+        await seedMoney(v3);
+        final TableRows old = await source.dumpOf(v3);
+        expect(old.keys, isNot(contains(Tables.suggestionState)));
+
+        final TableRows upgraded = await source.upgrade(3, old);
+
+        expect(upgraded[Tables.suggestionState], isEmpty);
+        expect(upgraded[Tables.transactions]!.single[TransactionColumns.note], 'chai ☕ with Ravi');
+      });
+
+      test('fresh has no suggestion_state rows', () async {
+        expect((await source.fresh())[Tables.suggestionState], isEmpty);
+      });
+
+      for (final bool stateFirst in <bool>[true, false]) {
+        test('replace puts suggestion_state rows back when its table comes ${stateFirst ? 'first' : 'last'} in the file', () async {
+          await database.db.insert(Tables.suggestionState, quiet);
+          final TableRows before = await source.dump();
+          final TableRows others = <String, List<Map<String, Object?>>>{...before}..remove(Tables.suggestionState);
+          final TableRows state = <String, List<Map<String, Object?>>>{Tables.suggestionState: before[Tables.suggestionState]!};
+          await database.db.delete(Tables.suggestionState);
+
+          await source.replace(
+            stateFirst ? <String, List<Map<String, Object?>>>{...state, ...others} : <String, List<Map<String, Object?>>>{...others, ...state},
+            const <String, String>{},
+          );
+
+          expect((await source.dump())[Tables.suggestionState], <Map<String, Object?>>[quiet]);
+          expect(await source.dump(), before);
+        });
+      }
+    });
+
     group('settings and counts', () {
       test('reads, writes and removes settings', () async {
         expect(await source.readSetting(SettingKeys.lastBackup), const Option<String>.none());

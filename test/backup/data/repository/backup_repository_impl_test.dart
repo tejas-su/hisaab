@@ -261,6 +261,35 @@ void main() {
       });
     });
 
+    group('your usual quiet states (BR-16, BR-17)', () {
+      const Map<String, Object?> quiet = <String, Object?>{
+        SuggestionStateColumns.categoryId: 1,
+        SuggestionStateColumns.quietOn: '2026-11-05',
+        SuggestionStateColumns.restUntil: null,
+        SuggestionStateColumns.forgottenAt: null,
+      };
+
+      test('Delete everything empties suggestion_state', () async {
+        await database.db.insert(Tables.suggestionState, quiet);
+
+        await repository.wipe().run();
+
+        expect(await database.db.query(Tables.suggestionState), isEmpty);
+      });
+
+      test('a backup made with a quiet state restores it', () async {
+        await database.db.insert(Tables.suggestionState, quiet);
+        await repository.backUp(_today).run();
+        await database.db.update(Tables.suggestionState, <String, Object?>{SuggestionStateColumns.quietOn: '2026-11-06'});
+        files.picked = Option<Uint8List>.of(files.saved.single.$2);
+
+        final Either<Failure, Unit> restored = await repository.restore(await pickOk(), at: _restoreAt, keepUndo: true).run();
+
+        expect(restored.isRight(), isTrue);
+        expect(await database.db.query(Tables.suggestionState), <Map<String, Object?>>[quiet]);
+      });
+    });
+
     test('entryCount counts the entries here', () async {
       expect((await repository.entryCount().run()).getRight().toNullable(), 1);
     });

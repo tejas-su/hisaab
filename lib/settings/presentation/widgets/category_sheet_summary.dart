@@ -18,13 +18,25 @@ import '../bloc/categories_event.dart';
 /// then *Hide* for the user's own or a note for a built-in one.
 ///
 /// [flashed] is the row (`name` or `icon`) whose answer was just saved; it flashes `sunk` once.
+/// [usual] is the *Your usual* row (AC-6), placed under the Name and Icon card.
 class CategorySheetSummary extends StatelessWidget {
-  const CategorySheetSummary({super.key, required this.category, required this.onRename, required this.onChangeIcon, this.flashed});
+  const CategorySheetSummary({
+    super.key,
+    required this.category,
+    required this.onRename,
+    required this.onChangeIcon,
+    this.flashed,
+    this.usual,
+  });
 
   final Category category;
   final VoidCallback onRename;
   final VoidCallback onChangeIcon;
   final String? flashed;
+
+  /// The category's *Your usual* row; it brings its own gap above, and takes no room when
+  /// the category has no habit.
+  final Widget? usual;
 
   static const double _wellSize = 56;
   static const double _rowHeight = 56;
@@ -74,6 +86,7 @@ class CategorySheetSummary extends StatelessWidget {
             ],
           ),
         ),
+        ?usual,
         const SizedBox(height: HisaabSpacing.l),
         if (category.isOwn) ...<Widget>[
           HisaabChip(

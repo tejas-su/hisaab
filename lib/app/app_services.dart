@@ -5,6 +5,7 @@ import '../backup/backup.dart';
 import '../core/db/app_database.dart';
 import '../core/di/service_locator.dart';
 import '../core/notifications/bill_reminders.dart';
+import '../habits/habits.dart';
 import '../ledger/ledger.dart';
 import '../onboarding/onboarding.dart';
 import '../settings/settings.dart';
@@ -15,6 +16,7 @@ void registerAppServices(GetIt getIt, {required AppDatabase database, required B
   registerCoreServices(getIt, database: database, reminders: reminders);
   registerSettingsServices(getIt);
   registerLedgerServices(getIt);
+  registerHabitsServices(getIt);
   registerOnboardingServices(getIt);
   registerSpendsServices(getIt);
   registerAskAiServices(getIt);

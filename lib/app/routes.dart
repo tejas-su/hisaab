@@ -13,6 +13,7 @@ import '../core/time/clock.dart';
 import '../core/time/pay_cycle.dart';
 import '../core/usecases/use_case.dart';
 import '../core/widgets/hisaab_snackbar_host.dart';
+import '../habits/habits.dart';
 import '../home/home.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../ledger/ledger.dart';
@@ -23,6 +24,7 @@ import 'bloc/reminders_bloc.dart';
 import 'bloc/reminders_event.dart';
 import 'bloc/reminders_state.dart';
 import 'main_screen.dart';
+import 'widgets/midnight_listener.dart';
 import 'widgets/resume_listener.dart';
 
 /// Builds every screen with its Bloc and dependencies: the app's composition root for UI.
@@ -92,26 +94,48 @@ abstract final class AppRoutes {
               haptics: getIt<Haptics>(),
             )..add(const SpendsLoadRequested()),
           ),
+          BlocProvider<HabitsBloc>(
+            // why: the first load must start with the screen. A lazy provider builds its bloc on the
+            // first read; were that the first Add tap, that tray's first frame would have no pill
+            // (FR-AD-10 AC-1).
+            lazy: false,
+            create: (BuildContext _) => HabitsBloc(
+              getIndex: getIt<GetHabitIndex>(),
+              undoAdd: getIt<UndoUsualAdd>(),
+              ledger: getIt<LedgerRepository>(),
+            )..add(const HabitsLoadRequested()),
+          ),
         ],
         child: Builder(
           // why: a tapped reminder opens Home, then its bill; a resume re-arms them (spec §6).
           builder: (BuildContext context) => BlocListener<RemindersBloc, RemindersState>(
             listener: (BuildContext context, RemindersState state) => _openReminded(context, getIt, state),
             child: ResumeListener(
-              onResume: () => context.read<RemindersBloc>().add(const RemindersArmRequested()),
-              child: MainScreen(
+              onResume: () {
+                context.read<RemindersBloc>().add(const RemindersArmRequested());
+                context.read<HabitsBloc>().add(const HabitsLoadRequested());
+              },
+              // why: a habit index is for one day (BR-17); the app may stay open past midnight.
+              child: MidnightListener(
+                clock: getIt<Clock>(),
+                onNewDay: () => context.read<HabitsBloc>().add(const HabitsLoadRequested()),
+                child: MainScreen(
                 clock: getIt<Clock>(),
                 assemble: assemble,
+                wrapPrimary: (Widget page) => UsualAddedNotice(child: page),
                 onAdd: (EntryKind kind) => openAddTray(context, getIt, kind: kind),
                 onEdit: (Entry entry) => openAddTray(context, getIt, editing: Option<Entry>.of(entry)),
                 onOpenSettings: () async {
                   final HomeBloc home = context.read<HomeBloc>();
+                  final HabitsBloc habits = context.read<HabitsBloc>();
                   await Navigator.of(context).push(
                     MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt, onDataReplaced: onDataReplaced)),
                   );
                   // why: category edits (D138) don't pass through the ledger or rules streams Home
                   // listens to, so Home re-reads on the way back; the Add tray takes its tiles from it.
                   home.add(const HomeLoadRequested());
+                  // why: neither do a category hidden or a usual forgotten there (FR-SE-2 AC-6).
+                  habits.add(const HabitsLoadRequested());
                 },
                 onOpenBill: (RecurringRule rule) async {
                   final HomeBloc home = context.read<HomeBloc>();
@@ -134,6 +158,7 @@ abstract final class AppRoutes {
                       onEdit: (Entry entry) => openAddTray(context, getIt, editing: Option<Entry>.of(entry)),
                     ),
                   ),
+                ),
                 ),
               ),
             ),
@@ -264,7 +289,8 @@ abstract final class AppRoutes {
         ),
       );
 
-  /// Settings › Categories (FR-SE-2, D138).
+  /// Settings › Categories (FR-SE-2, D138); a *Spent* category's sheet gets its *Your usual* row
+  /// with a bloc of its own (AC-6, D153).
   static Widget categories(GetIt getIt) => BlocProvider<CategoriesBloc>(
         create: (BuildContext _) => CategoriesBloc(
           categories: getIt<CategoryRepository>(),
@@ -273,7 +299,21 @@ abstract final class AppRoutes {
           changeCategoryIcon: getIt<ChangeCategoryIcon>(),
           setCategoryHidden: getIt<SetCategoryHidden>(),
         )..add(const CategoriesLoadRequested()),
-        child: const CategoriesPage(),
+        child: CategoriesPage(
+          usualRow: (Category category) => BlocProvider<UsualRowBloc>(
+            key: ValueKey<int>(category.id),
+            create: (BuildContext _) => UsualRowBloc(
+              categoryId: category.id,
+              getIndex: getIt<GetHabitIndex>(),
+              forget: getIt<ForgetUsual>(),
+              restore: getIt<RestoreUsual>(),
+              clock: getIt<Clock>(),
+            )..add(const UsualRowLoadRequested()),
+            child: Builder(
+              builder: (BuildContext context) => YourUsualRow(name: category.labelIn(AppLocalizations.of(context))),
+            ),
+          ),
+        ),
       );
 
   /// Settings' *Your hisaab* group with its bloc (FR-SE-4, D139).
@@ -392,6 +432,10 @@ abstract final class AppRoutes {
 
   /// Opens the Add tray from Home's [context], reusing Home's summary and categories. Home holds
   /// its numbers until the tray has fully closed, so the drain plays in view (FR-AD-5).
+  ///
+  /// A new *Spent* tray gets *your usual* from the habits already loaded, so the pill is in its
+  /// first frame or not there at all (FR-AD-10 AC-1); a one-tap add is handed back to the
+  /// [HabitsBloc] above [context] for its Undo (BR-10).
   static Future<void> openAddTray(
     BuildContext context,
     GetIt getIt, {
@@ -405,6 +449,11 @@ abstract final class AppRoutes {
     if (!context.mounted) {
       return;
     }
+    final HabitsBloc habitsBloc = context.read<HabitsBloc>();
+    final HabitsState habits = habitsBloc.state;
+    final Option<UsualSpend> usual = habits is HabitsReady && editing.isNone() && kind == EntryKind.spent
+        ? UsualSpendDetector.suggest(habits.index, now: getIt<Clock>().now(), categories: categories)
+        : const Option<UsualSpend>.none();
     final AddEntryBloc bloc = AddEntryBloc(
       saveEntry: getIt<SaveEntry>(),
       deleteEntry: getIt<DeleteEntry>(),
@@ -415,9 +464,13 @@ abstract final class AppRoutes {
       summary: home is HomeReady ? Option<CycleSummary>.of(home.summary) : const Option<CycleSummary>.none(),
       editing: editing,
       kind: kind,
+      usual: usual,
     );
     final HomeBloc homeBloc = context.read<HomeBloc>()..add(const HomeTrayOpened());
     await AddEntryTray.show(context, bloc);
     homeBloc.add(const HomeTrayClosed());
+    if (bloc.state case AddEntryFinished(added: Some<Entry>(value: final Entry entry))) {
+      usual.map((UsualSpend spend) => habitsBloc.add(HabitsUsualAdded(UsualAdd(entry: entry, category: spend.category))));
+    }
   }
 }

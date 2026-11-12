@@ -5,6 +5,7 @@ import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/time/pay_cycle.dart';
 import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/habits/habits.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/onboarding/onboarding.dart';
 import 'package:hisaab/settings/settings.dart';
@@ -71,6 +72,21 @@ void main() {
       final Either<Failure, PromptInput> input = await getIt<GetPromptInput>()(october).run();
       expect(input.getOrElse((Failure f) => fail(f.message)).cycles.first, october);
       expect(getIt<AiHandoff>(), isA<AiHandoff>());
+    });
+
+    test('wires habits over the ledger (D153)', () async {
+      final AppDatabase database = await openTestDatabase();
+      final GetIt getIt = GetIt.asNewInstance();
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      addTearDown(getIt.reset);
+
+      final Either<Failure, HabitIndex> index = await getIt<GetHabitIndex>()(const NoParams()).run();
+      expect(index.getOrElse((Failure f) => fail(f.message)).habits, isEmpty);
+      expect(await getIt<SuggestionStateRepository>().all().run(), isA<Right<Failure, Map<int, SuggestionState>>>());
+      final Either<Failure, ForgottenUsual> forgotten = await getIt<ForgetUsual>()(1).run();
+      expect(await getIt<RestoreUsual>()(forgotten.getOrElse((Failure f) => fail(f.message))).run(), isA<Right<Failure, Unit>>());
+      expect((await getIt<SuggestionStateRepository>().all().run()).getOrElse((Failure f) => fail(f.message)), isEmpty);
+      expect(getIt<UndoUsualAdd>(), isNotNull);
     });
   });
 }

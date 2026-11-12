@@ -1849,6 +1849,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String builtInAs(String name) {
     return 'Built in as $name';
   }
+
+  @override
+  String get usualTag => 'your usual';
+
+  @override
+  String usualSuggestionSpoken(String category, String amount) {
+    return 'Add $category, $amount, your usual';
+  }
+
+  @override
+  String usualAdded(String amount, String category) {
+    return 'Added $amount to $category';
+  }
+
+  @override
+  String get usualRowTitle => 'Your usual';
+
+  @override
+  String usualRowDetail(String amount, String days, String time) {
+    String _temp0 = intl.Intl.selectLogic(days, {
+      'weekdays': 'weekdays around',
+      'weekends': 'weekends around',
+      'other': 'around',
+    });
+    return '$amount, $_temp0 $time';
+  }
+
+  @override
+  String get usualForget => 'Forget';
+
+  @override
+  String usualForgetSpoken(String category) {
+    return 'Forget your usual $category';
+  }
+
+  @override
+  String get usualForgotten => 'Forgotten';
+
+  @override
+  String get usualHow => 'Worked out on this phone from what you add.';
 }
 
 /// The translations for English, as used in India (`en_IN`).

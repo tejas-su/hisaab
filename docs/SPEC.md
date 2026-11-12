@@ -236,6 +236,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
 - The date defaults to today. The user may pick yesterday, or a date in the current or previous cycle. Future dates are not allowed.
 - A note is optional, at most 80 characters, with whitespace trimmed.
 - **Delete** happens at once with an Undo snackbar (4 s; with TalkBack it stays until dismissed, D105). **Edit** reopens the tray prefilled. A *Saved* entry can be deleted (that skips the month, and a rule's saving says "RD skipped this month", never "missed") but never edited in the tray, which knows only *Spent* and *Got* (D120). A card bill paid is the same: never edited in the tray, and deleting it makes the bill wait again (D123). Editing the amount of a changing bill's latest entry in the tray makes it next month's estimate, as entering it did (D127).
+- **A save from the Add tray** has no Undo, except a one-tap add from the *your usual* pill (FR-AD-10, D153): "Added ₹20 to Chai" with *Undo* (4 s; with TalkBack it stays until dismissed), over whichever of Home or Spends is in view. Undo deletes that entry and quiets that category until midnight (BR-17).
 - After any write, the ledger notifies listeners, and Home and Spends recompute.
 
 ### BR-11 Categories
@@ -333,9 +334,30 @@ Mockup [34](design/mockups/34-data-controls.html), copy deck [34](design/mockups
   - The replace runs in one transaction. Before it, the current data is copied to an app-private snapshot.
   - Afterwards the user stays on Settings, where they tapped, with "Backup from {date} restored" and *Undo*; Home behind it is rebuilt on the restored data. For 7 days Settings also shows an *Undo restore* row. Undo puts the snapshot back. The snapshot is dropped after 7 days, on the next restore, on Undo, or on *Delete everything*.
   - Reminders are re-armed from the restored bills. The recurring engine then runs once as on any start (BR-9), so no catch-up is posted twice.
+- The backup and restore carry every table, including the *your usual* quiet states (BR-17; category ids and dates only).
 - **Delete everything** (FR-SE-4) wipes the database in one transaction, then the stored preferences (onboarding done, its draft, Look, last-backup date), the restore snapshot and every scheduled reminder. It keeps no hidden copy. Backup files the user saved are not touched.
 - **CSV export:** entries only, in the same columns as BR-15 (M6; not part of the backup work).
 - **Android Auto Backup is off** (`allowBackup="false"` plus `dataExtractionRules` excluding everything), so the only copy of the data that leaves the phone is a backup the user makes (FR-SE-5).
+
+### BR-17 Your usual (D153, D154)
+Maths and the quiet states in detail: `docs/superpowers/plans/2026-11-13-your-usual.md` (resolved maths) and `docs/features/habits/03-detection-maths.md`. Times come from the injected `Clock`.
+- **Learned entries:** *Spent* entries dated in the 56 days ending today (today − 55 … today) that were logged on the day they were spent (`created_at`'s local date equals `date`) and were not posted by a recurring rule. Entries dated after today are ignored. Editing and Undo keep `created_at` (BR-10), so they never move an entry's time.
+- **A habit** is a category plus a day type: weekdays (Mon–Fri) or weekends (Sat–Sun). Hidden categories and the system-hidden rows have none.
+- **Time profile:** each learned entry's local `created_at` falls into one of 48 half-hour slots that wrap at midnight. It weighs `0.5^(age_days / 14)` and is smoothed ¼ · ½ · ¼ over its slot and the two beside it. The **window** is the run of slots around the highest slot (the earlier one on a tie) whose weight is strictly above half of it, widened by 15 minutes each side. An entry is **inside** the window when its logged minute is.
+- **Regular** when every one holds:
+  1. ≥ 14 days since the first learned entry in any category, and ≥ 10 days with a learned entry in any category.
+  2. ≥ 5 learned entries of this habit inside the window.
+  3. Among the days of this day type in the 28 days before today that have a learned entry in any category, the window was hit on ≥ 60%.
+  4. One exact amount is ≥ 70% of the weighted entries inside the window.
+  - If a day type fails only rule 2 or 3 **and has at least 2 entries of its own inside the pooled window** in the 28 days before today, the pooled profile (all days) is used for it when it passes all four.
+  - A Regular habit whose window was missed on its 3 most recent days of that day type that have any learned entry stops suggesting until it is hit again. Days with no entry are not misses.
+- **Suggestion:** that exact amount, never rounded, averaged or raised. It is offered while now is inside the window and the category has no entry dated today (typed or posted). When two qualify, the higher share of days wins, then the more recent hit.
+- **Quiet** (kept per category in a `suggestion_state` table, new migration):
+  - An Undo after a pill add quiets that category until midnight. A second within 14 days (counting day 14) rests it until the end of the 30th day after it (the day of the Undo is day 0).
+  - *Forget* (FR-SE-2 AC-6) ignores that category's entries logged before that moment when working out its own habit, and rests it until the end of the 30th day after. They still count as days with a learned entry for every other habit, as a hidden category's entries do. Undo after Forget puts the earlier state back.
+  - The state is backed up, restored and wiped with everything else (BR-16). It holds category ids and dates only.
+- **"Around {time}"** is the hour nearest the window's middle, rounding a half hour up, formatted with `DateFormat.j` for `en_IN` with a plain space ("10 am").
+- Everything is worked out on the device. Nothing is logged with amounts or names (NFR-3), and nothing is sent or notified. Ask AI never reads it.
 
 ---
 
@@ -396,12 +418,13 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - *Spent* / *Got* segmented control, with *Spent* selected by default.
   - Phone-layout keypad with `00`, `0` and ⌫. Long-pressing ⌫ clears the amount.
   - Quick chips +₹10 / +₹20 / +₹50 / +₹100 / +₹500 **add** to the amount.
+  - Under the amount, a slot at least 48dp tall holds the *your usual* pill (FR-AD-10) or the preview (FR-AD-3), never both. Showing or hiding the pill never changes its height (D153, D154).
 - **FR-AD-2** Input rules:
   - Leading zeros are ignored.
   - A 10th digit is rejected with a head-shake and the reject haptic.
   - There is no decimal key.
   - The amount shows live Indian grouping.
-- **FR-AD-3** A helper line previews the effect, for example "₹1,020 over today's share · tomorrow's share ₹1,722", using BR-4 with the typed amount.
+- **FR-AD-3** A helper line in the slot (FR-AD-1) previews the effect, for example "₹1,020 over today's share · tomorrow's share ₹1,722", using BR-4 with the typed amount.
 - **FR-AD-4** **Next** is enabled when the amount is greater than 0 and opens step 2. The tray shortens, and the amount flies up into the title.
 - **FR-AD-5** Step 2 shows a 2×4 grid of the built-in categories for *Spent*, then the user's own in row 3 and a *New* tile (FR-AD-9), or the *Got* categories, plus *Today ▾* and *Add a note* chips. **Tapping a category tile saves**, then:
   1. The tile flashes (120 ms).
@@ -419,6 +442,13 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **AC-5** Back closes the keyboard first, then returns to the grid with the amount intact; back from the icon step returns to the name step. What was typed is kept until the tray closes.
   - **AC-6** Double-taps while saving are ignored. A failed save keeps the name step open with "Couldn't save. Try again." and nothing is lost.
   - **AC-7** TalkBack reads "New category, button", "Name for the new category, edit box", "Icon, Fuel, from the name. Double tap to change" and "Save 250 rupees in Petrol"; the "Your own" rule is not read.
+
+- **FR-AD-10** *Your usual* (D153, BR-17, mockup [40](design/mockups/40-your-usual.html)):
+  - **AC-1** Shown only for a new *Spent* entry at ₹0 before any input, dated today, when BR-17 has a suggestion. Never in edit mode (FR-AD-8) or on *Got*. It is read in the tray's first frame and never appears late. Whether the app shortcut and Quick Settings tile show it on a cold start is decided with FR-WG-6/7 (D154).
+  - **AC-2** A fully round pill centred in the slot, 40dp tall and growing with text up to the slot's 48dp, with a 48dp touch target: a 1dp `ink2` edge on `surface`, no fill, never marigold; the category icon (20dp), "{category} {amount} · your usual". If one line can't hold it, "· your usual" drops; if it still can't, nothing is shown.
+  - **AC-3** Any input (a digit, a chip, ⌫, a long-press clear, switching to *Got*) crossfades it to the preview in 150 ms with no height change. It doesn't come back until the tray opens again.
+  - **AC-4** A tap saves that amount in that category, today, with no note. The pill fills `ink` for 120 ms, FR-AD-5's close sequence runs, and BR-10's snackbar offers Undo. Double taps are ignored. A failed save keeps the tray open and the pill reads "Couldn't save. Try again."; a tap tries again.
+  - **AC-5** TalkBack reads one button: "Add {category}, {spokenAmount}, your usual".
 
 ### 4.4 Spends (FR-SP)
 - **FR-SP-1** A cycle switcher `‹ October ›` shows the current and earlier cycles. Next is disabled on the current cycle.
@@ -489,6 +519,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **AC-3** The user's own also has *Hide {name}*. Hiding closes the sheet and shows "{name} hidden" with *Undo*; the note under the key reads "Its entries stay in Spends. It leaves the Add tray."
   - **AC-4** A renamed built-in category says "Built in as Fun. The new name shows on its past entries too.", and its row in the list has "Built in as Fun" as a second line. It has no *Hide*.
   - **AC-5** *Add a category* opens the name step without an amount; its key reads *Add {name}*, or *Bring back {name}* for a hidden one, and is disabled for a name already shown.
+  - **AC-6** When the category has a Regular habit (BR-17), the sheet shows one *Your usual* row: "₹20, weekdays around 10 am" ("weekends", or no day word for the pooled profile; with both, today's day type). It has a *Forget* text button (TalkBack: "Forget your usual {name}") and "Worked out on this phone from what you add." under it. *Forget* removes the row; the sheet stays open and shows "Forgotten" with *Undo* inside it, and Undo puts the earlier state back (D153, D154).
 - **FR-SE-3** Look: Match phone (default) / Light / Dark (D130, mockup [30](design/mockups/30-look-setting.html), case study [19](design-research/case-studies/19-theme-choice.md)).
   - **AC-1** A *Look* group sits under *Money*: one row reading *Light or dark* with the current look's name under it, and three icon buttons at its end (phone, sun, moon), the current one filled. Nothing is stored until the user taps.
   - **AC-2** One tap on an icon applies the look to the whole app in the same frame (no sheet, no fade, no Save, no message), remembers it in `theme_mode`, and the name under *Light or dark* changes.
@@ -604,6 +635,20 @@ Everything here only opens hisaab sooner. The entry path is unchanged: Add → d
 | E55 | Midnight, payday, a clock or time-zone change while the app is closed | The widget picks the matching row (FR-WG-5); a bill posted that day is already in the row (D119) |
 | E56 | Tile tapped on the lock screen | Android asks to unlock; nothing about money shows before it |
 | E57 | Launcher can't pin widgets, or Android below 13 | The matching *Shortcuts* row is hidden (FR-SE-6) |
+| E58 | A habit's window crosses midnight (23:15–00:45) | The pill shows on both sides of midnight; "no entry today" uses the `Clock`'s date (BR-17) |
+| E59 | The category is hidden after its habit formed | No pill and no *Your usual* row; bringing it back brings the habit back |
+| E60 | An entry is edited to another category, amount or earlier date | It counts with its stored values: in the new category, or not at all once back-dated |
+| E61 | Two habits' windows overlap (chai and a cigarette at 10 am) | One pill: the higher share of days, then the more recent hit |
+| E62 | The clock or time zone changes | Entries keep their stored local `created_at`; nothing is re-bucketed |
+| E63 | The pill is tapped, then Undo, twice within 14 days | The entry is gone; no pill for that category until midnight; after the second, none for 30 days |
+| E64 | Weekdays are Regular; weekends have 3 hits, 2 of them in the pooled window | Weekends use the pooled profile if it passes. With fewer than 2 own hits there, nothing shows on weekends |
+| E65 | The category already has an entry dated today, typed or posted, any amount | No pill |
+| E66 | The phone's clock is set back, so some entries are dated after today | Those entries are ignored until their date comes |
+| E67 | Empty ledger, or under 14 days of use | No pill, no *Your usual* row |
+| E68 | *Forget*, then *Undo* | The row and the habit come back as before |
+| E69 | A hidden category with a quiet or rest state is brought back | Its state is kept |
+| E70 | 29 Feb or 1 Jan falls inside the 56 days | Ages and day types are counted on `CalendarDate`; nothing skips or doubles |
+| E71 | A habit's profile is flat or has two peaks | The window is the run around the highest slot (earlier on a tie); a flat profile's run would take in the whole day, so it has no window |
 
 ---
 
@@ -634,3 +679,6 @@ Everything here only opens hisaab sooner. The entry path is unchanged: Add → d
 | Q4 | Should the cycle-summary share card be in v1 (UI_DESIGN §6) or v1.1? | v1.1 |
 | Q5 | Should long-pressing a day block show that day's share, or long-pressing Next offer "make this repeat"? | Neither in v1. Hidden gestures fail the 5-year-old test; recurring bills are added in Settings (FR-SE-1) |
 | Q6 | Installing mid-cycle: the whole salary counts but spending before install is unknown, so the first days' share is too high. Ask "How much is left right now?" in onboarding? | No extra question; the share corrects itself at the next payday |
+| Q7 | *Your usual* on short phones (the plan's OQ-8, FR-AD-10 AC-1, FR-AD-1). On a window shorter than about 686dp at 1× text, or about 716dp at 1.5×, the pill starts below the Add tray header's scroll viewport when the tray opens. At 360×640 and 1× only 2 of its 48dp show; it is reached by scrolling, and by TalkBack. The quick chips are already cut off at those sizes today. Should the short tray be laid out again so the pill is in view? | As built. A short-tray layout pass follows |
+| Q8 | *Your usual*: a failed save (FR-AD-10 AC-4). "Couldn't save. Try again." follows the pill's one-line fit rule (AC-2), so at large text on a narrow phone it doesn't fit and no words show; only the reject haptic says the save failed. The tray stays open. Should the message be allowed to wrap or move? | As built: no words when the line doesn't fit |
+| Q9 | *Your usual* under reduced motion (FR-AD-10 AC-3 "the same under reduced motion"). Flutter scales every animation controller's duration towards zero when the system turns animations off, so the 150 ms crossfade from the pill to the preview is near-instant there. Should the app force the 150 ms? | As built: the system setting wins |

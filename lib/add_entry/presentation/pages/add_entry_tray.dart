@@ -81,7 +81,9 @@ class AddEntryTray extends StatelessWidget {
       );
 
   Widget _step(BuildContext context, AddEntryState state) {
-    if (state is AddEntryEditing && state.form.step == AddEntryStep.amount) {
+    // why: a pill tap saves from step 1, so the step stays while the save runs and the tray
+    // closes (FR-AD-10 AC-4); every other save leaves from a later step.
+    if (state.form.step == AddEntryStep.amount) {
       final PaneArrangement panes = context.layout.panes;
       final double height = panes is TabletopPanes
           ? panes.bottom.height - MediaQuery.paddingOf(context).bottom

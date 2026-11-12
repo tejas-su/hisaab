@@ -1,8 +1,10 @@
 # Habits: detection maths
 
-> **Status: planned.** Thresholds are starting values to be tuned against tests and real use.
+> **Status: *your usual* is built (phase 1); the rest is planned.** SPEC BR-17 is the rule and `lib/habits/domain/habit_rules.dart` holds every threshold. The built maths, as the tests pin it, is the table M1–M19 in `docs/superpowers/plans/2026-11-13-your-usual.md`. Where this file differs, the notes marked **Built** say how.
 
 ## Inputs
+
+**Built:** there is no grouped SQL read. `GetHabitIndex` reads `LedgerRepository.entriesBetween(today − 55, today)` and `HabitIndexBuilder` filters in Dart: *Spent*, no `recurringId`, `createdAt` on the entry's own date. A half-hour bucket would lose the minute, and the window is widened by 15 minutes, so hits are judged by minute. The query below is the first plan, kept for the record; it also names `tracked_item_id`, which does not exist (D138).
 
 One grouped read over `transactions` (illustrative; real code uses `Tables` / `TransactionColumns`):
 
@@ -25,7 +27,7 @@ GROUP BY category_id, tracked_item_id, date, bucket, amount_minor;
 
 ## Habit key
 
-`(category_id, tracked_item_id?, dayType)` where `dayType` is weekday or weekend. Weekday and weekend profiles are learned separately.
+`(category_id, dayType)` where `dayType` is weekday or weekend. Weekday and weekend profiles are learned separately. If a day type fails only on hits or daily share, the pooled profile (all days) is used when it passes every bar (D153). Tracked items are dropped (D138), so there is no `tracked_item_id`.
 
 ## Maths
 
@@ -50,6 +52,8 @@ GROUP BY category_id, tracked_item_id, date, bucket, amount_minor;
 
 ## FSM 1: habit lifecycle (derived each rebuild, never stored)
 
+**Built:** not a class. A habit is in the `HabitIndex` only when it is Regular (BR-17 rules 1–4), and "missed 3 in a row" is `UsualHabit.fading`. *Maybe* and *Fading → None after 14 days* are not in SPEC and are not built.
+
 ```
 None ─(2 hits / 21 d)─► Maybe ─(p ≥ 0.6, ≥ 5 hits)─► Regular
                                                        │ 3 expected windows missed
@@ -61,7 +65,7 @@ Only `Regular` drives any UI.
 
 ## FSM 2: suggestion lifecycle (persisted)
 
-Table `suggestion_state(key TEXT PRIMARY KEY, state TEXT, until TEXT, hides TEXT)`, added by a new migration. `key` is e.g. `usual:<category>:<tracked?>:<dayType>:<bucket>`.
+**Built:** the state is kept **per category**. Table `suggestion_state(category_id INTEGER PRIMARY KEY REFERENCES categories(id) ON DELETE CASCADE, quiet_on TEXT, rest_until TEXT, forgotten_at TEXT)`, added by migration 004 (schema v4). A key holding the day type or the bucket would lose a rest whenever the window drifted by one slot, and *Forget* is per category in BR-17. `SuggestionGate` (`lib/habits/domain/suggestion_gate.dart`) reads it: quiet when `quiet_on` is today, resting through `rest_until`. The states are worked out, not stored; the diagram below still describes them, for *your usual* only.
 
 ```
 Waiting ─(window opens)─► Showing ─┬─(used)──────────────► Waiting

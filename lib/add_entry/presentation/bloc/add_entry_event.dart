@@ -91,6 +91,12 @@ final class AddEntryCategoryPicked extends AddEntryEvent {
   List<Object?> get props => <Object?>[categoryId];
 }
 
+/// The user tapped the *your usual* pill; the tap is the save (FR-AD-10 AC-4).
+final class AddEntryUsualPicked extends AddEntryEvent {
+  /// Reports the pill tap.
+  const AddEntryUsualPicked();
+}
+
 /// The user tapped Delete on the entry being edited.
 final class AddEntryDeleteRequested extends AddEntryEvent {
   const AddEntryDeleteRequested();

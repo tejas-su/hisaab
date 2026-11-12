@@ -22,6 +22,8 @@ The user: "I go to breakfast every day between 9 and 10:30, so at that time the 
 | 10 | User: "the design looks good"; wants tracked items as tiles like Food or Travel, expressed differently | Chip row replaced by a tile row under the grid | Proposed |
 | 11 | User: tracked tiles must not stand out, only hint subtly | Same `CategoryTile` in a third grid row (4 slots); hint is a 12dp parent-category mark (A) or "in {category}" caption (B) | Superseded by 12 |
 | 12 | Critique of A and B; user picks C ("even I thought like this") | No mark on the tile; a 16dp gap groups the third row; "in Fun" shown in Spends, Settings and TalkBack; habit-pull prompt for untagged look-alikes | Agreed |
+| 13 | Research pass and mockups (2026-11-13; case study 32, mockup 40) | Kept the thresholds; added a pooled weekday/weekend fallback, *Your usual* with *Forget* in the category sheet, the pill from the app shortcut and QS tile; tracked items overtaken by D138; ship the pill first | Proposed |
+| 14 | Owner: layout B for the slot, the pill on the Add screen, and change the CLAUDE.md rule | D153; SPEC BR-17, FR-AD-10, FR-SE-2 AC-6, E58–E65; UI_DESIGN §5.3; CLAUDE.md entry-speed exception | Agreed |
 
 ## 3. Approaches weighed
 

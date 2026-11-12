@@ -2,4 +2,5 @@
 library;
 
 export 'presentation/bloc/add_entry_bloc.dart';
+export 'presentation/bloc/add_entry_state.dart';
 export 'presentation/pages/add_entry_tray.dart';

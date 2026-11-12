@@ -23,7 +23,11 @@ import '../widgets/settings_row.dart';
 ///
 /// Reads [CategoriesBloc] from above; hiding offers *Undo* in a snackbar.
 class CategoriesPage extends StatelessWidget {
-  const CategoriesPage({super.key});
+  const CategoriesPage({super.key, this.usualRow});
+
+  /// Builds the *Your usual* row of a *Spent* category's sheet (AC-6); with none, the sheets
+  /// have no such row.
+  final Widget Function(Category category)? usualRow;
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +107,13 @@ class CategoriesPage extends StatelessWidget {
         icon: AppIcons.forKey(category.iconKey),
         label: category.labelIn(strings),
         detail: !category.isOwn && category.customName != null ? strings.builtInAs(strings.categoryName(category.key)) : null,
-        onTap: () => CategorySheet.show(context, context.read<CategoriesBloc>(), id: category.id),
+        onTap: () => CategorySheet.show(
+          context,
+          context.read<CategoriesBloc>(),
+          id: category.id,
+          // why: only spending has habits (BR-17).
+          usualRow: category.kind == EntryKind.spent ? usualRow : null,
+        ),
       );
 
   Widget _heading(BuildContext context, String title, {String? detail, bool first = false}) => Padding(

@@ -7,6 +7,9 @@ abstract final class Tables {
 
   /// Months a changing bill didn't go out (schema v3, D120; used from Phase 2).
   static const String recurringSkips = 'recurring_skips';
+
+  /// The quiet, rest and forget state of each category's *your usual* (schema v4, D153).
+  static const String suggestionState = 'suggestion_state';
 }
 
 /// Columns of [Tables.categories].
@@ -59,6 +62,21 @@ abstract final class RecurringColumns {
 abstract final class RecurringSkipColumns {
   static const String recurringId = 'recurring_id';
   static const String date = 'date';
+}
+
+/// Columns of [Tables.suggestionState] (SPEC BR-17).
+abstract final class SuggestionStateColumns {
+  /// The category the row belongs to; also the primary key.
+  static const String categoryId = 'category_id';
+
+  /// The day of the last Undo after a pill add, `YYYY-MM-DD`; null when none.
+  static const String quietOn = 'quiet_on';
+
+  /// The last day of a rest, `YYYY-MM-DD`; null when it never rested.
+  static const String restUntil = 'rest_until';
+
+  /// When *Forget* was tapped, a local ISO instant comparable with entries' `created_at`.
+  static const String forgottenAt = 'forgotten_at';
 }
 
 /// Stored values of [RecurringColumns.amountMode].

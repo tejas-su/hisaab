@@ -1,6 +1,6 @@
 # Habits: UX and copy
 
-> **Status: proposed** (content-writer and UX-critic review merged). Awaiting the user's review.
+> **Status: *your usual* is built (phase 1)**; its strings are in `lib/l10n/app_en.arb` and its final rules in SPEC FR-AD-10, BR-10 and FR-SE-2 AC-6, which win over this file. The Home question and the bill finder are still proposed.
 
 ## Principles for every helper
 
@@ -24,7 +24,7 @@
 
 Chosen on load or resume only; an item leaves only through the user acting (tap, ×, save, Undo). This is a SPEC change: today due-soon and the over card may stack.
 
-**Add step 1: the preview line** (`SpendPreviewLine`, `lib/add_entry/presentation/widgets/spend_preview_line.dart`) becomes a fixed 48dp slot for everyone. At ₹0 it can hold the pill; once there is an amount it shows the FR-AD-3 preview as today. Keep ≥ 12dp clear above the quick chips.
+**Add step 1: the preview line** (`SpendPreviewLine`, `lib/add_entry/presentation/widgets/spend_preview_line.dart`) becomes a fixed 48dp slot for everyone (D153, layout B: 20dp above the amount, 4dp to the slot, 8dp to the chips; the keypad does not move, D154). At ₹0 it can hold the 40dp pill; once there is an amount it shows the FR-AD-3 preview as today. The pill keeps 12dp clear above the quick chips.
 
 **Add step 2:** the 8 tiles untouched. A tracked-item tile row sits under the grid (`05-tracked-items.md`).
 
@@ -35,7 +35,7 @@ Chosen on load or resume only; an item leaves only through the user acting (tap,
 - **Shows only** on Spent, new entry (not FR-AD-8 edit mode), amount ₹0, before any input, when the date is today. Never in a tray opened from `NoIncomeCard`.
 - **First frame or never:** read from the cached result; never appears late.
 - **Disappears** on the first digit, chip, ⌫ or kind switch; does not return until the tray reopens.
-- **Look:** fully rounded pill, hairline `ink2` outline on `surface`, no fill; category Hugeicon 18dp, amount in Anek with tabular figures, "· your usual" in `ink2`. At large text drop "· your usual"; if it still doesn't fit one line, show nothing.
+- **Look:** fully rounded pill, hairline `ink2` outline on `surface`, no fill; category Hugeicon 20dp, amount in Anek with tabular figures, "· your usual" in `ink2`. At large text drop "· your usual"; if it still doesn't fit one line, show nothing.
 - **Tap:** adds at once. Pill flashes ink 120ms, tray drops, block drains, number rolls, `successNotification`. Snackbar "Added ₹55 to Food" with Undo for 4 s (kept until dismissed under TalkBack). Undo also quiets the habit for the day.
 - **Motion:** 150ms crossfade to the preview text, no height change; same under reduced motion.
 - **Home hand-off:** tapping the missed-log question opens the tray carrying that habit, and the pill shows it regardless of the time window.

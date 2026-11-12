@@ -121,11 +121,14 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 | `transactions` | id, amount_minor, currency, kind (in/out/save/card), category_id, date, note NULL, recurring_id NULL, created_at |
 | `recurring` | id, label, amount_minor, currency, kind (in/out/save), category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active, icon NULL, amount_mode (fixed/varies/card) |
 | `recurring_skips` | recurring_id, date (primary key together): a month a changing bill didn't go out |
+| `suggestion_state` | category_id (primary key, references `categories`, deleted with its category), quiet_on NULL, rest_until NULL, forgotten_at NULL. What the user told one category's *your usual* (BR-17, D153): quiet for the day of an Undo, resting until a date, and when *Forget* was tapped. Dates are `YYYY-MM-DD`; `forgotten_at` is a local ISO timestamp like `created_at`. It goes into a backup and is wiped by *Delete everything* with the rest |
 | `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `pay_switches` (JSON list of earlier pay rules, D140) (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). Backup-owned keys, local to the phone and never written into a backup: `last_backup`, `restore_snapshot` (the replaced data's backup JSON, kept 7 days for *Undo restore*), `restored_at` (D139). The pay rule lives on the income `recurring` row (DECISIONS D20) |
 
 Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transactions(recurring_id, date)`.
 
 Schema v3 (migration 003, D120) also holds the columns changing bills use since D123 (`amount_mode`, `recurring_skips`, the `card` kind), and moves a non-zero `keep_aside_minor` to a *Keep aside* saving rule, then deletes the key.
+
+Schema v4 (migration 004, D153) adds `suggestion_state` and changes nothing else. Habits themselves are not stored: they are worked out from the last 56 days of `transactions` on every load.
 
 ---
 
@@ -154,11 +157,15 @@ lib/
   onboarding/ home/ add_entry/ spends/ ask_ai/ settings/
     presentation/              pages, widgets, bloc (+ domain/ when the feature owns logic,
                                e.g. ask_ai/domain/PromptBuilder)
+  habits/                      your usual (BR-17, D153); see docs/features/habits/07-your-usual-build.md
+    domain/                    HabitIndexBuilder, UsualSpendDetector, SuggestionGate, use cases
+    data/                      suggestion_state data source, model, mapper, repository
+    presentation/              HabitsBloc, UsualRowBloc, UsualAddedNotice, YourUsualRow
   l10n/                        app_en.arb, gen/
 ```
 
 Rules:
-- UI features depend on `ledger` only through `ledger.dart`.
+- UI features depend on `ledger` only through `ledger.dart`, and on `habits` only through `habits.dart`.
 - Widgets never touch the DB.
 - Domain code is pure Dart with an injected `Clock`.
 - Errors use `fpdart` `TaskEither<Failure, T>` (added in M0).

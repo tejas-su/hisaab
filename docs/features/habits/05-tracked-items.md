@@ -1,6 +1,6 @@
 # Habits: tracked items
 
-> **Status: proposed.** Answers the user's request for custom categories (cigarettes, alcohol, partying) without adding taps.
+> **Status: superseded by D138 (your own categories); dropped by D153.** Kept as a record. Answered the user's request for custom categories (cigarettes, alcohol, partying) without adding taps.
 
 ## Problem
 

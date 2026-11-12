@@ -8,6 +8,7 @@ import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/habits/habits.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -19,6 +20,7 @@ import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
+import '../../../helpers/fixtures/habits/chai_habit.dart' as habit;
 import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 
@@ -52,6 +54,7 @@ void main() {
     EntryKind kind = EntryKind.spent,
     bool withSummary = true,
     List<Category> categories = seedCategories,
+    Option<UsualSpend> usual = const Option<UsualSpend>.none(),
   }) {
     final AddEntryBloc bloc = AddEntryBloc(
       saveEntry: SaveEntry(ledger: ledger, recurring: FakeRecurringRepository(WorkedExample.rules), clock: clock),
@@ -63,6 +66,7 @@ void main() {
       summary: withSummary ? Option<CycleSummary>.of(summary) : const Option<CycleSummary>.none(),
       editing: editing,
       kind: kind,
+      usual: usual,
     );
     addTearDown(bloc.close);
     return bloc;
@@ -468,6 +472,216 @@ void main() {
       expect(state, isA<AddEntryEditing>().having((AddEntryEditing s) => s.failed, 'failed', isTrue));
       expect((state.form.step, state.form.draftName), (AddEntryStep.newName, 'Petrol'));
       expect(ledger.saved, isEmpty);
+    });
+  });
+
+  group('AddEntryBloc your usual (FR-AD-10, D153)', () {
+    final List<Category> withChai = <Category>[...seedCategories, habit.chai];
+    final UsualSpend chaiTwenty = UsualSpend(category: habit.chai, amount: Money.fromMajor(20));
+    final Option<UsualSpend> some = Option<UsualSpend>.of(chaiTwenty);
+    const Option<UsualSpend> none = Option<UsualSpend>.none();
+
+    AddEntryBloc withUsual({Option<UsualSpend>? usual}) => build(categories: withChai, usual: usual ?? some);
+
+    test('a new Spent tray opens with the usual it was given (AC-1)', () {
+      final EntryForm form = withUsual().state.form;
+      expect((form.usual, form.rupees, form.date), (some, 0, WorkedExample.today));
+    });
+
+    test('edit mode drops it (AC-1)', () {
+      final AddEntryBloc bloc = build(categories: withChai, usual: some, editing: Option<Entry>.of(WorkedExample.entries[3]));
+      expect(bloc.state.form.usual, none);
+    });
+
+    test('a tray opened on Got drops it (AC-1)', () {
+      expect(build(categories: withChai, usual: some, kind: EntryKind.got).state.form.usual, none);
+    });
+
+    test('no event adds a usual (AC-1 "never appears late")', () async {
+      final AddEntryBloc bloc = build(categories: withChai);
+      final List<AddEntryEvent> events = <AddEntryEvent>[
+        const AddEntryKeyPressed('5'),
+        const AddEntryQuickAdded(10),
+        const AddEntryBackspacePressed(),
+        const AddEntryCleared(),
+        const AddEntryKindChanged(EntryKind.got),
+        const AddEntryKindChanged(EntryKind.spent),
+        const AddEntryKeyPressed('7'),
+        const AddEntryNextPressed(),
+        const AddEntryBackPressed(),
+        AddEntryDateChanged(WorkedExample.today.addDays(-1)),
+        const AddEntryNoteChanged('x'),
+        const AddEntryUsualPicked(),
+      ];
+      final List<Option<UsualSpend>> seen = <Option<UsualSpend>>[];
+      final StreamSubscription<AddEntryState> states = bloc.stream.listen((AddEntryState s) => seen.add(s.form.usual));
+      addTearDown(states.cancel);
+      events.forEach(bloc.add);
+      await pumpEventQueue();
+      expect(seen, isNotEmpty);
+      expect(seen, everyElement(none));
+      expect(ledger.saved, isEmpty);
+    });
+
+    final List<(String, AddEntryEvent)> inputs = <(String, AddEntryEvent)>[
+      ('a digit', const AddEntryKeyPressed('5')),
+      ('a quick chip', const AddEntryQuickAdded(10)),
+      ('⌫', const AddEntryBackspacePressed()),
+      ('a long-press clear', const AddEntryCleared()),
+      ('switching to Got', const AddEntryKindChanged(EntryKind.got)),
+    ];
+    for (final (String name, AddEntryEvent event) in inputs) {
+      test('$name hides it (AC-3)', () async {
+        final AddEntryBloc bloc = withUsual();
+        await bloc.dispatch(event);
+        expect(bloc.state.form.usual, none);
+      });
+    }
+
+    test('a leading zero hides it though the amount stays ₹0 (AC-3)', () async {
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryKeyPressed('0'));
+      expect((bloc.state.form.usual, bloc.state.form.rupees), (none, 0));
+    });
+
+    test('a refused chip hides it too (AC-3 "any input")', () async {
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryQuickAdded(1000000000));
+      expect((bloc.state as AddEntryEditing).rejections, 1);
+      expect(bloc.state.form.usual, none);
+    });
+
+    test('switching back to Spent does not bring it back (AC-3)', () async {
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryKindChanged(EntryKind.got));
+      await bloc.dispatch(const AddEntryKindChanged(EntryKind.spent));
+      expect(bloc.state.form.usual, none);
+    });
+
+    test('clearing the amount to ₹0 does not bring it back (AC-3)', () async {
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryKeyPressed('5'));
+      await bloc.dispatch(const AddEntryCleared());
+      expect((bloc.state.form.usual, bloc.state.form.rupees), (none, 0));
+    });
+
+    test('a pill tap saves that amount in that category, today, with no note (AC-4, BR-17)', () async {
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryUsualPicked());
+      expect(
+        ledger.saved.single,
+        EntryDraft(amount: Money.fromMajor(20), kind: EntryKind.spent, categoryId: habit.chai.id, date: WorkedExample.today),
+      );
+    });
+
+    test('it emits Saving with the category, then Finished carrying the saved entry, with the success haptic (AC-4)', () async {
+      final AddEntryBloc bloc = withUsual();
+      final Future<void> expectation = expectLater(
+        bloc.stream,
+        emitsInOrder(<Matcher>[
+          isA<AddEntrySaving>()
+              .having((AddEntrySaving s) => s.categoryId, 'categoryId', habit.chai.id)
+              .having((AddEntrySaving s) => s.form.usual, 'usual', some),
+          isA<AddEntryFinished>().having((AddEntryFinished s) => s.categoryId, 'categoryId', habit.chai.id),
+        ]),
+      );
+      await bloc.dispatch(const AddEntryUsualPicked());
+      await expectation;
+      expect((bloc.state as AddEntryFinished).added, Option<Entry>.of(ledger.entries.last));
+      expect(ledger.entries.last.categoryId, habit.chai.id);
+      expect(haptics.events, <String>['success']);
+    });
+
+    test("the saved amount is the suggestion's, to the paise, at the 9-digit cap too (BR-17, BR-10)", () async {
+      const Money odd = Money(2050);
+      final AddEntryBloc bloc = withUsual(usual: Option<UsualSpend>.of(UsualSpend(category: habit.chai, amount: odd)));
+      await bloc.dispatch(const AddEntryUsualPicked());
+      expect(ledger.saved.single.amount, odd);
+
+      final Money cap = Money.fromMajor(999999999);
+      final AddEntryBloc atCap = withUsual(usual: Option<UsualSpend>.of(UsualSpend(category: habit.chai, amount: cap)));
+      await atCap.dispatch(const AddEntryUsualPicked());
+      expect(ledger.saved.last.amount, cap);
+    });
+
+    test('a second tap while the first save is gated writes once (AC-4)', () async {
+      final Completer<void> slowSave = Completer<void>();
+      ledger.nextAddGate = slowSave;
+      final AddEntryBloc bloc = withUsual()..add(const AddEntryUsualPicked());
+      await pumpEventQueue();
+      bloc.add(const AddEntryUsualPicked());
+      await pumpEventQueue();
+      expect(bloc.state, isA<AddEntrySaving>());
+      slowSave.complete();
+      await pumpEventQueue();
+      expect(bloc.state, isA<AddEntryFinished>());
+      expect(ledger.saved, hasLength(1));
+      expect(haptics.events, <String>['success']);
+    });
+
+    test('a failed save keeps the tray open, says so and keeps the pill (AC-4)', () async {
+      ledger.failure = DatabaseFailure('disk full');
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryUsualPicked());
+      expect(bloc.state, isA<AddEntryEditing>().having((AddEntryEditing s) => s.failed, 'failed', isTrue));
+      expect((bloc.state.form.usual, bloc.state.form.step), (some, AddEntryStep.amount));
+      expect(haptics.events.last, 'reject');
+    });
+
+    test('a tap after a failed save tries again (AC-4)', () async {
+      ledger.failure = DatabaseFailure('disk full');
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryUsualPicked());
+      ledger.failure = null;
+      await bloc.dispatch(const AddEntryUsualPicked());
+      expect(bloc.state, isA<AddEntryFinished>());
+      expect(ledger.saved.single.amount, Money.fromMajor(20));
+    });
+
+    test('a digit after a failed save clears the message and the pill', () async {
+      ledger.failure = DatabaseFailure('disk full');
+      final AddEntryBloc bloc = withUsual();
+      await bloc.dispatch(const AddEntryUsualPicked());
+      await bloc.dispatch(const AddEntryKeyPressed('5'));
+      expect(bloc.state, isA<AddEntryEditing>().having((AddEntryEditing s) => s.failed, 'failed', isFalse));
+      expect(bloc.state.form.usual, none);
+    });
+
+    test('a pill tap with no usual does nothing', () async {
+      final AddEntryBloc bloc = build(categories: withChai);
+      final AddEntryState before = bloc.state;
+      await bloc.dispatch(const AddEntryUsualPicked());
+      expect(bloc.state, before);
+      expect(ledger.saved, isEmpty);
+      expect(haptics.events, isEmpty);
+    });
+
+    test('a pill tap while saving does nothing', () async {
+      final Completer<void> slowSave = Completer<void>();
+      ledger.nextAddGate = slowSave;
+      final AddEntryBloc bloc = withUsual();
+      await type(bloc, '6');
+      await bloc.dispatch(const AddEntryNextPressed());
+      bloc.add(const AddEntryCategoryPicked(SeedCategoryIds.food));
+      await pumpEventQueue();
+      await bloc.dispatch(const AddEntryUsualPicked());
+      expect(bloc.state, isA<AddEntrySaving>());
+      slowSave.complete();
+      await pumpEventQueue();
+      expect(ledger.saved.single.categoryId, SeedCategoryIds.food);
+    });
+
+    test('a normal tile save finishes with no added entry (BR-10 "Save has no Undo")', () async {
+      final AddEntryBloc bloc = withUsual();
+      await type(bloc, '6');
+      await bloc.dispatch(const AddEntryNextPressed());
+      await bloc.dispatch(const AddEntryCategoryPicked(SeedCategoryIds.food));
+      expect(bloc.state, isA<AddEntryFinished>().having((AddEntryFinished s) => s.added, 'added', const Option<Entry>.none()));
+    });
+
+    test('closing mid-save does not throw', () async {
+      final AddEntryBloc bloc = withUsual()..add(const AddEntryUsualPicked());
+      await expectLater(bloc.close(), completes);
     });
   });
 }

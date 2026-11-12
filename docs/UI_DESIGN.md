@@ -343,6 +343,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 **Step 1 · Amount**
 - [Spent | Got] segmented control, defaulting to Spent. In light theme the selected segment is a near-white `surface` pill with bold `ink` text, raised out of the `sunk` track; in dark it is an `ink` pill. It is never marigold: it is a mode, not an action, and Next is the tray's only marigold (D47).
 - Amount in Anek 60 with live lakh grouping.
+- **The slot (D153, D154):** under the amount, a slot at least 48dp tall for everyone. At ₹0 it can hold the *your usual* pill (FR-AD-10); after any input it holds the preview (FR-AD-3). Spacing: 20dp from Spent/Got to the amount (was 30), 4dp to the slot, 8dp to the chips (was 16). The keypad stays pinned to the bottom of the tray and does not move; the amount sits about 10dp higher and the chips 8dp lower. The pill keeps 12dp clear of the chips. It is the one outlined control in the fill-only system (D88, D100): an offer, not a choice. The short tray keeps its 12dp gap above the amount. The pill is 40dp, fully round, with a 1dp `ink2` edge on `surface`, no fill and never marigold, so *Next* stays the tray's only marigold.
 - Quick chips **+₹10 +₹20 +₹50 +₹100 +₹500** that *add* to the amount, like counting notes.
 - Phone-layout keypad (1-2-3 on top, as on the UPI PIN pad):
   - Keys 64dp tall, in `sunk`.

@@ -2550,6 +2550,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Built in as {name}'**
   String builtInAs(String name);
+
+  /// Ends the Add tray's pill after the separator, e.g. "Chai ₹20 · your usual" (FR-AD-10)
+  ///
+  /// In en, this message translates to:
+  /// **'your usual'**
+  String get usualTag;
+
+  /// Screen-reader label of the your usual pill; amount is the spoken form, e.g. 20 rupees
+  ///
+  /// In en, this message translates to:
+  /// **'Add {category}, {amount}, your usual'**
+  String usualSuggestionSpoken(String category, String amount);
+
+  /// Snackbar after a one-tap add from the your usual pill, with Undo, e.g. "Added ₹20 to Chai"
+  ///
+  /// In en, this message translates to:
+  /// **'Added {amount} to {category}'**
+  String usualAdded(String amount, String category);
+
+  /// Title of the row in a category's sheet that says what habit was worked out (FR-SE-2 AC-6)
+  ///
+  /// In en, this message translates to:
+  /// **'Your usual'**
+  String get usualRowTitle;
+
+  /// Second line of the Your usual row, e.g. "₹20, weekdays around 10 am"; days is weekdays, weekends or all, time is the hour as the locale writes it
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}, {days, select, weekdays{weekdays around} weekends{weekends around} other{around}} {time}'**
+  String usualRowDetail(String amount, String days, String time);
+
+  /// Text button on the Your usual row; clears the habit and rests it for 30 days (FR-SE-2 AC-6)
+  ///
+  /// In en, this message translates to:
+  /// **'Forget'**
+  String get usualForget;
+
+  /// Screen-reader label of the Forget button
+  ///
+  /// In en, this message translates to:
+  /// **'Forget your usual {category}'**
+  String usualForgetSpoken(String category);
+
+  /// Snackbar inside the category sheet after Forget, with Undo
+  ///
+  /// In en, this message translates to:
+  /// **'Forgotten'**
+  String get usualForgotten;
+
+  /// Note under the Your usual row: the habit never leaves the device
+  ///
+  /// In en, this message translates to:
+  /// **'Worked out on this phone from what you add.'**
+  String get usualHow;
 }
 
 class _AppLocalizationsDelegate

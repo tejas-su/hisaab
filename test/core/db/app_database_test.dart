@@ -4,6 +4,7 @@ import 'package:hisaab/core/db/app_database.dart';
 import 'package:hisaab/core/db/db_schema.dart';
 import 'package:hisaab/core/db/migrations/migration_001_initial.dart';
 import 'package:hisaab/core/db/migrations/migration_002_bill_icon.dart';
+import 'package:hisaab/core/db/migrations/migrations.dart';
 import 'package:hisaab/ledger/domain/entities/category.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,7 +62,7 @@ void main() {
     test('is at the latest schema version', () async {
       final List<Map<String, Object?>> rows = await db().rawQuery('PRAGMA user_version');
       expect(rows.single.values.single, AppDatabase.schemaVersion);
-      expect(AppDatabase.schemaVersion, 3);
+      expect(AppDatabase.schemaVersion, 4);
     });
 
     test('seeds the fixed category list in order (SPEC BR-11)', () async {
@@ -212,7 +213,7 @@ void main() {
       final AppDatabase upgraded = await _openOrFail(path);
       addTearDown(upgraded.close);
       final Database db = upgraded.db;
-      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 3);
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 4);
       final List<Map<String, Object?>> entries = await db.query(Tables.transactions, orderBy: TransactionColumns.id);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.id]), <int>[1, 2, 3]);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.recurringId]), <int?>[1, 2, null]);
@@ -324,6 +325,121 @@ void main() {
       expect((await raw.query(Tables.transactions)).single[TransactionColumns.recurringId], 2);
       expect(await raw.query(Tables.recurring), hasLength(1));
       expect(await raw.query(Tables.settings, where: "${SettingsColumns.key} = '${SettingKeys.keepAsideMinor}'"), hasLength(1));
+    });
+  });
+
+  group('Schema v4 (D153)', () {
+    Future<String> v3File(Future<void> Function(Database db) fill) async {
+      final Directory dir = await Directory.systemTemp.createTemp('hisaab_db_v3');
+      addTearDown(() => dir.delete(recursive: true));
+      final String path = p.join(dir.path, AppDatabase.fileName);
+      final Database old = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 3,
+          onConfigure: (Database db) => db.execute('PRAGMA foreign_keys = ON'),
+          onCreate: (Database db, int _) => runMigrations(db, from: 0, to: 3),
+        ),
+      );
+      await fill(old);
+      await old.close();
+      return path;
+    }
+
+    Future<void> ruleAndTwoEntries(Database db) async {
+      await db.insert(Tables.recurring, <String, Object?>{
+        RecurringColumns.id: 2,
+        RecurringColumns.label: 'Rent',
+        RecurringColumns.amountMinor: 820000,
+        RecurringColumns.kind: EntryKindValues.spent,
+        RecurringColumns.categoryId: 7,
+        RecurringColumns.frequency: FrequencyValues.monthly,
+        RecurringColumns.anchorDate: '2026-10-05',
+        RecurringColumns.nextDue: '2026-11-05',
+      });
+      await db.insert(Tables.transactions, <String, Object?>{
+        TransactionColumns.id: 2,
+        TransactionColumns.amountMinor: 820000,
+        TransactionColumns.kind: EntryKindValues.spent,
+        TransactionColumns.categoryId: 7,
+        TransactionColumns.date: '2026-10-05',
+        TransactionColumns.recurringId: 2,
+        TransactionColumns.createdAt: '2026-10-05T00:01:00.000',
+      });
+      await db.insert(Tables.transactions, <String, Object?>{
+        TransactionColumns.id: 3,
+        TransactionColumns.amountMinor: 2000,
+        TransactionColumns.kind: EntryKindValues.spent,
+        TransactionColumns.categoryId: 1,
+        TransactionColumns.date: '2026-10-26',
+        TransactionColumns.createdAt: '2026-10-26T10:05:00.000',
+      });
+    }
+
+    test('a new database has an empty suggestion_state', () async {
+      expect(await db().query(Tables.suggestionState), isEmpty);
+    });
+
+    test('upgrading a v3 database keeps every row and adds suggestion_state', () async {
+      final String path = await v3File(ruleAndTwoEntries);
+      final AppDatabase upgraded = await _openOrFail(path);
+      addTearDown(upgraded.close);
+      final Database db = upgraded.db;
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 4);
+      final List<Map<String, Object?>> entries = await db.query(Tables.transactions, orderBy: TransactionColumns.id);
+      expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.id]), <int>[2, 3]);
+      expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.recurringId]), <int?>[2, null]);
+      expect(
+        entries.map((Map<String, Object?> e) => e[TransactionColumns.createdAt]),
+        <String>['2026-10-05T00:01:00.000', '2026-10-26T10:05:00.000'],
+      );
+      expect((await db.query(Tables.recurring)).single[RecurringColumns.label], 'Rent');
+      expect(await db.query(Tables.categories), hasLength(12));
+      expect(await db.query(Tables.suggestionState), isEmpty);
+      expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+    });
+
+    test('suggestion_state holds one row per category and goes with its category', () async {
+      final int categoryId = await db().insert(Tables.categories, <String, Object?>{
+        CategoryColumns.key: 'own_13',
+        CategoryColumns.customName: 'Chai',
+        CategoryColumns.iconKey: 'chai',
+        CategoryColumns.kind: EntryKindValues.spent,
+        CategoryColumns.sort: 8,
+      });
+      Future<int> quiet() => db().insert(Tables.suggestionState, <String, Object?>{
+            SuggestionStateColumns.categoryId: categoryId,
+            SuggestionStateColumns.quietOn: '2026-10-26',
+          });
+      expect(await quiet(), greaterThan(0));
+      await expectLater(quiet(), throwsA(isA<DatabaseException>()));
+
+      await db().delete(Tables.categories, where: '${CategoryColumns.id} = ?', whereArgs: <Object?>[categoryId]);
+
+      expect(await db().query(Tables.suggestionState), isEmpty);
+    });
+
+    test('suggestion_state refuses a category that does not exist', () async {
+      await expectLater(
+        db().insert(Tables.suggestionState, <String, Object?>{SuggestionStateColumns.categoryId: 999}),
+        throwsA(isA<DatabaseException>()),
+      );
+    });
+
+    test('a failed upgrade leaves the v3 database as it was', () async {
+      final String path = await v3File((Database db) async {
+        await ruleAndTwoEntries(db);
+        await db.execute('CREATE TABLE suggestion_state (x INTEGER)');
+      });
+      final Either<Failure, AppDatabase> opened =
+          await AppDatabase.open(factory: databaseFactoryFfi, path: path, singleInstance: false).run();
+      expect(opened.getLeft().toNullable(), isA<DatabaseFailure>());
+      final Database raw = await databaseFactoryFfi.openDatabase(path, options: OpenDatabaseOptions(version: 3));
+      addTearDown(raw.close);
+      expect((await raw.rawQuery('PRAGMA user_version')).single.values.single, 3);
+      expect(await raw.query(Tables.transactions), hasLength(2));
+      expect(await raw.query(Tables.recurring), hasLength(1));
+      expect((await raw.rawQuery('PRAGMA table_info(suggestion_state)')).single['name'], 'x');
     });
   });
 

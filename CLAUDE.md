@@ -69,6 +69,7 @@ The architecture is feature-first clean architecture (full tree in PLAN §9):
 - `lib/core/`: `db`, `design`, `di`, `errors`, `logging`, `money`, `time`, `usecases`, `widgets`.
 - `lib/ledger/`: shared money data (transactions, categories, recurring). Other features import it only through `ledger.dart`.
 - `lib/{onboarding,home,add_entry,spends,ask_ai,settings}/`: screens, as `presentation/` plus `domain/` where the feature owns logic.
+- `lib/habits/`: *your usual* (BR-17, D153): the habit maths, the `suggestion_state` table, `HabitsBloc` and the Settings row. Other features import it only through `habits.dart`.
 - `lib/app/`: app shell and `routes.dart`. `lib/l10n/`: ARB files and generated code.
 
 ## Non-negotiables
@@ -89,7 +90,7 @@ These are app-specific, and the rules files carry the details.
 - **No red, no green, no category colours.** State is shown by fill, outline, hatch and words. The one exception is the `danger` token on the *Delete everything* hold key (D142).
 - **Icons:** Hugeicons only, through `AppIcon`, always with a label. A glyph the free set lacks is drawn in Hugeicons' format in `HisaabGlyphs` (`lib/core/design/hisaab_glyphs.dart`), reusing an original's corner curves (D48).
 - **Adaptive layout:** never lock orientation or assume a portrait phone. Read `context.layout` (`lib/core/layout/`), never raw `MediaQuery` widths. Nothing straddles a fold. New screens are tested at the `TestWindows` sizes (UI_DESIGN §13).
-- **Entry speed:** the Add flow is Add → digits → Next → tile. Never add a tap or a field to it, and never reorder categories, the keypad or the dock. The one control off that path is the *New* tile after the categories (D138); it moves nothing.
+- **Entry speed:** the Add flow is Add → digits → Next → tile. Never add a tap or a field to it, and never reorder categories, the keypad or the dock. Two controls sit off that path, and neither moves anything: the *New* tile after the categories (D138) and the *your usual* pill under the amount (D153).
 - **Privacy:** no network access, no analytics. Never log notes or amounts with personal text. The only data that leaves the device is the Ask AI export the user triggers and previews.
 
 ## Where the detailed guidance lives

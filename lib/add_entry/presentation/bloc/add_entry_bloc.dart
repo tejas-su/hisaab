@@ -11,6 +11,7 @@ import '../../../core/money/amount_input.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
+import '../../../habits/habits.dart';
 import '../../../ledger/ledger.dart';
 import 'add_entry_event.dart';
 import 'add_entry_state.dart';
@@ -30,9 +31,10 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     Option<CycleSummary> summary = const Option<CycleSummary>.none(),
     Option<Entry> editing = const Option<Entry>.none(),
     EntryKind kind = EntryKind.spent,
+    Option<UsualSpend> usual = const Option<UsualSpend>.none(),
   })  : _categories = categories,
         _summary = summary,
-        super(AddEntryEditing(_initialForm(clock.today(), categories, summary, editing, kind))) {
+        super(AddEntryEditing(_withUsual(_initialForm(clock.today(), categories, summary, editing, kind), usual))) {
     on<AddEntryKindChanged>(_onKindChanged);
     on<AddEntryKeyPressed>(
       (AddEntryKeyPressed event, Emitter<AddEntryState> emit) =>
@@ -58,6 +60,7 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     // why: a second tap on a tile or Delete while the first write is in flight must not save or
     // delete twice; Delete has no in-between state to guard on.
     on<AddEntryCategoryPicked>(_onCategoryPicked, transformer: droppable());
+    on<AddEntryUsualPicked>(_onUsualPicked, transformer: droppable());
     on<AddEntryDeleteRequested>(_onDeleteRequested, transformer: droppable());
     on<AddEntryNewCategoryOpened>(
       (AddEntryNewCategoryOpened event, Emitter<AddEntryState> emit) =>
@@ -89,10 +92,13 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
   List<Category> get categories => _categories;
   final Option<CycleSummary> _summary;
 
-  /// Switches between *Spent* and *Got*; the amount is kept.
+  /// Switches between *Spent* and *Got*; the amount is kept and the pill goes (FR-AD-10 AC-3).
   void _onKindChanged(AddEntryKindChanged event, Emitter<AddEntryState> emit) {
     unawaited(_haptics.tick());
-    _update(emit, (EntryForm form) => form.copyWith(kind: event.kind, tiles: _tilesFor(_categories, event.kind)));
+    _update(
+      emit,
+      (EntryForm form) => form.copyWith(kind: event.kind, tiles: _tilesFor(_categories, event.kind), usual: _noUsual),
+    );
   }
 
   /// Opens step 2 when there is an amount (FR-AD-4).
@@ -163,6 +169,23 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     _finishOrFail(emit, saved, form, categoryId: categoryId);
   }
 
+  /// Saves the pill's amount in its category, today, with no note (FR-AD-10 AC-4); a failure
+  /// keeps the pill, so a tap tries again.
+  Future<void> _onUsualPicked(AddEntryUsualPicked event, Emitter<AddEntryState> emit) async {
+    final AddEntryState current = state;
+    final UsualSpend? usual = current.form.usual.toNullable();
+    if (current is! AddEntryEditing || usual == null) {
+      return;
+    }
+    final EntryForm form = current.form;
+    final int categoryId = usual.category.id;
+    emit(AddEntrySaving(form, categoryId: categoryId));
+    final Either<Failure, Entry> saved = await _saveEntry(
+      SaveEntryParams(EntryDraft(amount: usual.amount, kind: EntryKind.spent, categoryId: categoryId, date: form.today)),
+    ).run();
+    _finishOrFail(emit, saved, form, categoryId: categoryId, added: saved.toOption());
+  }
+
   /// Deletes the entry being edited and closes the tray; does nothing when adding.
   Future<void> _onDeleteRequested(AddEntryDeleteRequested event, Emitter<AddEntryState> emit) async {
     final AddEntryState current = state;
@@ -174,7 +197,13 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     _finishOrFail(emit, deleted, current.form);
   }
 
-  void _finishOrFail(Emitter<AddEntryState> emit, Either<Failure, Entry> result, EntryForm form, {int? categoryId}) =>
+  void _finishOrFail(
+    Emitter<AddEntryState> emit,
+    Either<Failure, Entry> result,
+    EntryForm form, {
+    int? categoryId,
+    Option<Entry> added = const Option<Entry>.none(),
+  }) =>
       result.match(
         (Failure failure) {
           AppLogger.log(tag: 'add_entry.save_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
@@ -183,7 +212,7 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
         },
         (Entry _) {
           unawaited(_haptics.success());
-          emit(AddEntryFinished(form, categoryId: categoryId));
+          emit(AddEntryFinished(form, categoryId: categoryId, added: added));
         },
       );
 
@@ -195,11 +224,11 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     edit(current.form.rupees).match(
       () {
         unawaited(_haptics.reject());
-        emit(AddEntryEditing(current.form, rejections: current.rejections + 1));
+        emit(AddEntryEditing(current.form.copyWith(usual: _noUsual), rejections: current.rejections + 1));
       },
       (int rupees) {
         unawaited(_haptics.tick());
-        _update(emit, (EntryForm form) => form.copyWith(rupees: rupees));
+        _update(emit, (EntryForm form) => form.copyWith(rupees: rupees, usual: _noUsual));
       },
     );
   }
@@ -212,6 +241,15 @@ class AddEntryBloc extends Bloc<AddEntryEvent, AddEntryState> {
     final EntryForm changed = change(current.form);
     emit(AddEntryEditing(changed.copyWith(preview: _previewFor(changed, _summary)), rejections: current.rejections));
   }
+
+  // why: any input hides the pill for good, a refused key and a leading zero too; it only
+  // comes back when the tray opens again (FR-AD-10 AC-3).
+  static const Option<UsualSpend> _noUsual = Option<UsualSpend>.none();
+
+  // why: the pill is for a new Spent entry only, never an edit or a tray opened on Got
+  // (FR-AD-10 AC-1). A new form is already at ₹0 and dated today.
+  static EntryForm _withUsual(EntryForm form, Option<UsualSpend> usual) =>
+      form.editing.isNone() && form.kind == EntryKind.spent ? form.copyWith(usual: usual) : form;
 
   static EntryForm _initialForm(
     CalendarDate today,

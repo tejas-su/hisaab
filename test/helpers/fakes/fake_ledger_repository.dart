@@ -37,8 +37,12 @@ final class FakeLedgerRepository implements LedgerRepository {
   /// only once this completes, so a test can finish a later read first.
   Completer<void>? nextReadGate;
 
+  /// The range of every [entriesBetween] read, in order, as (from, to).
+  final List<(CalendarDate, CalendarDate)> reads = <(CalendarDate, CalendarDate)>[];
+
   @override
   TaskEither<Failure, List<Entry>> entriesBetween(CalendarDate from, CalendarDate to) {
+    reads.add((from, to));
     final Completer<void>? gate = nextReadGate;
     nextReadGate = null;
     final TaskEither<Failure, List<Entry>> read = _run(
@@ -61,8 +65,20 @@ final class FakeLedgerRepository implements LedgerRepository {
         return entry;
       });
 
+  /// When set, the next [add] waits for it before it saves anything, like a slow write.
+  Completer<void>? nextAddGate;
+
   @override
-  TaskEither<Failure, Entry> add(EntryDraft draft) => _run(() {
+  TaskEither<Failure, Entry> add(EntryDraft draft) {
+    final Completer<void>? gate = nextAddGate;
+    nextAddGate = null;
+    return gate == null ? _add(draft) : TaskEither<Failure, Unit>(() async {
+      await gate.future;
+      return Either<Failure, Unit>.right(unit);
+    }).flatMap((Unit _) => _add(draft));
+  }
+
+  TaskEither<Failure, Entry> _add(EntryDraft draft) => _run(() {
         saved.add(draft);
         final Entry entry = _entryFrom(_nextId++, draft);
         entries.add(entry);

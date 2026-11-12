@@ -1,17 +1,23 @@
+import 'dart:async';
+
 import 'package:hisaab/add_entry/add_entry.dart';
 import 'package:hisaab/app/app_shell.dart';
 import 'package:hisaab/app/hisaab_app.dart';
+import 'package:hisaab/app/widgets/hisaab_dock.dart';
 import 'package:hisaab/app/widgets/startup_failure_view.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/notifications/bill_reminder.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/widgets/days_rail/days_rail.dart';
+import 'package:hisaab/core/widgets/hisaab_snackbar_bar.dart';
+import 'package:hisaab/habits/habits.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/home/home.dart';
 import 'package:hisaab/home/presentation/widgets/due_soon_row.dart';
 import 'package:hisaab/onboarding/onboarding.dart';
 import 'package:hisaab/settings/settings.dart';
+import 'package:hisaab/spends/spends.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart' show Option;
@@ -19,6 +25,7 @@ import 'package:get_it/get_it.dart';
 
 import '../helpers/tooltip_finder.dart';
 import '../helpers/fake_services.dart';
+import '../helpers/fixtures/habits/chai_habit.dart';
 import '../helpers/fixtures/ledger/worked_example.dart';
 import '../helpers/pump_app.dart';
 
@@ -360,6 +367,245 @@ void main() {
       Navigator.of(tester.element(find.byType(BillSheet))).pop();
       await settle(tester);
       expect(find.byType(RemindAskSheet), findsNothing);
+    });
+  });
+
+  group('AppRoot your usual (FR-AD-10, BR-10, BR-17, D153)', () {
+    const ValueKey<String> addKey = ValueKey<String>('add-key');
+    const ValueKey<String> pillKey = ValueKey<String>('usual-pill');
+    final DateTime mondayTen = DateTime(2026, 10, 26, 10, 5);
+
+    /// Mockup 40's chai habit, with Chai as a category of the user's own.
+    FakeServices withChaiHabit({DateTime? now, List<Entry> more = const <Entry>[]}) =>
+        FakeServices(entries: <Entry>[...chaiWeekdays(today: WorkedExample.today), ...more])
+          ..categories.categories.add(chai)
+          ..clock.current = now ?? mondayTen;
+
+    Future<void> openAdd(WidgetTester tester) async {
+      await tester.tap(find.byKey(addKey));
+      await settle(tester);
+    }
+
+    Future<void> tapPill(WidgetTester tester) async {
+      await tester.tap(find.byKey(pillKey));
+      await settle(tester);
+    }
+
+    testWidgets('Add shows Chai ₹20 · your usual in the first frame (AC-1, NFR-1)', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await boot(tester, withChaiHabit());
+
+      await tester.tap(find.byKey(addKey));
+      await tester.pump();
+
+      expect(find.byKey(pillKey), findsOneWidget);
+      expect(find.bySemanticsLabel('Add Chai, 20 rupees, your usual'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('at 3:30 pm the slot is empty', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit(now: DateTime(2026, 10, 26, 15, 30)));
+      await openAdd(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('on Saturday the slot is empty', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit(now: DateTime(2026, 10, 24, 10, 5)));
+      await openAdd(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets("with the worked example's entries there is no habit and no pill", (WidgetTester tester) async {
+      await boot(tester, FakeServices()..clock.current = mondayTen);
+      await openAdd(tester);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('one tap saves, closes the tray and offers Undo on Home (AC-4, BR-10)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await openAdd(tester);
+
+      await tapPill(tester);
+
+      expect(find.byType(AddEntryTray), findsNothing);
+      expect(
+        services.ledger.saved.single,
+        EntryDraft(amount: Money.fromMajor(20), kind: EntryKind.spent, categoryId: chai.id, date: WorkedExample.today),
+      );
+      expect(find.text('Added ₹20 to Chai'), findsOneWidget);
+      expect(find.descendant(of: find.byType(UsualAddedNotice), matching: find.byType(HomePage)), findsOneWidget);
+      expect(find.text('Undo'), findsOneWidget);
+    });
+
+    testWidgets('a normal tile save offers no Undo (BR-10)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await openAdd(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-3')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey<String>('add-next')));
+      await settle(tester);
+      await tester.tap(find.bySemanticsLabel('Food. Save'));
+      await settle(tester);
+
+      expect(find.byType(AddEntryTray), findsNothing);
+      expect(find.byType(HisaabSnackbarBar), findsNothing);
+    });
+
+    testWidgets('closing the tray without saving offers no Undo', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await openAdd(tester);
+      await tester.binding.handlePopRoute();
+      await settle(tester);
+
+      expect(find.byType(AddEntryTray), findsNothing);
+      expect(find.byType(HisaabSnackbarBar), findsNothing);
+      expect(services.ledger.saved, isEmpty);
+    });
+
+    testWidgets('Undo removes the entry; reopening Add the same day shows no pill (E63)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await openAdd(tester);
+      await tapPill(tester);
+      final int withAdd = services.ledger.entries.length;
+
+      await tester.tap(find.text('Undo'));
+      await settle(tester);
+
+      expect(services.ledger.entries, hasLength(withAdd - 1));
+      expect(services.states.states[chai.id]?.quietOn, const Option<CalendarDate>.of(WorkedExample.today));
+      await openAdd(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('after the tap, reopening Add shows no pill: Chai is logged today (E65)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await openAdd(tester);
+      await tapPill(tester);
+
+      await openAdd(tester);
+
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('from the Spends tab the Undo shows over Spends (BR-10)', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await boot(tester, withChaiHabit());
+      await tester.tap(find.descendant(of: find.byType(HisaabDock), matching: find.bySemanticsLabel('Spends')));
+      await settle(tester);
+      expect(find.byType(HomePage), findsNothing);
+
+      await openAdd(tester);
+      await tapPill(tester);
+
+      expect(find.text('Added ₹20 to Chai'), findsOneWidget);
+      expect(find.descendant(of: find.byType(UsualAddedNotice), matching: find.byType(SpendsPage)), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('opening Add before the habits have loaded shows no pill, then or later (AC-1)', (WidgetTester tester) async {
+      final Completer<void> slow = Completer<void>();
+      await boot(tester, withChaiHabit()..states.nextReadGate = slow);
+
+      await openAdd(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+
+      slow.complete();
+      await settle(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('editing an entry shows no pill (AC-1)', (WidgetTester tester) async {
+      final Entry lunch = Entry(
+        id: 900,
+        amount: Money.fromMajor(120),
+        kind: EntryKind.spent,
+        categoryId: food.id,
+        date: WorkedExample.today,
+        createdAt: DateTime(2026, 10, 26, 9),
+        note: 'Lunch box',
+      );
+      await boot(tester, withChaiHabit(more: <Entry>[lunch]));
+      await tester.ensureVisible(find.text('Lunch box'));
+      await settle(tester);
+
+      await tester.tap(find.text('Lunch box'));
+      await settle(tester);
+
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('the habits reload at midnight: a tray on the new day has the pill (BR-8, E66)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit(now: DateTime(2026, 10, 25, 23, 59, 30)));
+      services.clock.advance(const Duration(seconds: 31));
+      await tester.pump(const Duration(seconds: 31));
+      await settle(tester);
+      services.clock.current = mondayTen;
+
+      await openAdd(tester);
+
+      expect(find.byKey(pillKey), findsOneWidget);
+    });
+
+    testWidgets('the habits reload on resume: a tray after a night away has the pill (BR-8)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit(now: DateTime(2026, 10, 25, 16)));
+      services.clock.current = mondayTen;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester);
+
+      await openAdd(tester);
+
+      expect(find.byKey(pillKey), findsOneWidget);
+    });
+
+    testWidgets('an app left open past midnight with no reload yet offers nothing stale (M18)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await openAdd(tester);
+      expect(find.byKey(pillKey), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await settle(tester);
+      // why: the clock jumps with no midnight tick and no resume, so the index is still Monday's.
+      services.clock.current = DateTime(2026, 10, 27, 10, 5);
+
+      await openAdd(tester);
+
+      expect(find.byKey(pillKey), findsNothing);
+    });
+
+    testWidgets('Settings › Categories › Chai shows the row; Forget, back, Add: no pill (AC-6, BR-17)', (WidgetTester tester) async {
+      await boot(tester, withChaiHabit());
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      await tester.ensureVisible(find.byKey(const ValueKey<String>('open-categories')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey<String>('open-categories')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('category-own_13')));
+      await settle(tester);
+      expect(find.text('Your usual'), findsOneWidget);
+      expect(find.text('₹20, weekdays around 10 am'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey<String>('usual-forget')));
+      await settle(tester);
+      expect(find.text('Your usual'), findsNothing);
+      expect(find.text('Forgotten'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await settle(tester);
+      await tester.tap(findTooltip('Back'));
+      await settle(tester);
+      await tester.tap(findTooltip('Back'));
+      await settle(tester);
+
+      await openAdd(tester);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(pillKey), findsNothing);
     });
   });
 }
