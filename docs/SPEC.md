@@ -444,7 +444,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **AC-7** TalkBack reads "New category, button", "Name for the new category, edit box", "Icon, Fuel, from the name. Double tap to change" and "Save 250 rupees in Petrol"; the "Your own" rule is not read.
 
 - **FR-AD-10** *Your usual* (D153, BR-17, mockup [40](design/mockups/40-your-usual.html)):
-  - **AC-1** Shown only for a new *Spent* entry at ₹0 before any input, dated today, when BR-17 has a suggestion. Never in edit mode (FR-AD-8) or on *Got*. It is read in the tray's first frame and never appears late. Whether the app shortcut and Quick Settings tile show it on a cold start is decided with FR-WG-6/7 (D154).
+  - **AC-1** Shown only for a new *Spent* entry at ₹0 before any input, dated today, when BR-17 has a suggestion. Never in edit mode (FR-AD-8) or on *Got*. It is read in the tray's first frame and never appears late. A tray opened by the app shortcut or the Quick Settings tile on a cold start waits for the habits to load, so it shows the pill too; after 1 s it opens without it (D156).
   - **AC-2** A fully round pill centred in the slot, 40dp tall and growing with text up to the slot's 48dp, with a 48dp touch target: a 1dp `ink2` edge on `surface`, no fill, never marigold; the category icon (20dp), "{category} {amount} · your usual". If one line can't hold it, "· your usual" drops; if it still can't, nothing is shown.
   - **AC-3** Any input (a digit, a chip, ⌫, a long-press clear, switching to *Got*) crossfades it to the preview in 150 ms with no height change. It doesn't come back until the tray opens again.
   - **AC-4** A tap saves that amount in that category, today, with no note. The pill fills `ink` for 120 ms, FR-AD-5's close sequence runs, and BR-10's snackbar offers Undo. Double taps are ignored. A failed save keeps the tray open and the pill reads "Couldn't save. Try again."; a tap tries again.
@@ -552,7 +552,7 @@ Everything here only opens hisaab sooner. The entry path is unchanged: Add → d
   | 4×1 | "Safe to spend today", the amount, today's bar, Add |
   | 4×2 | "Safe to spend today", the amount, Add, today's bar, the days rail with the payday flag, the divider, the range line (BR-7) and "{D} days" |
 - **FR-WG-2** **Look:** the hero's paper (`display`), with `DisplayEtchPainter`'s rosette, grain and solid and dashed keylines (D106, D107) at every size. It has no shadow and no sheen. Content stays 10dp clear of the dashed keyline. Today's bar keeps BR-6's drawing, without the captions and category names. The widget follows the app's *Look* setting (FR-SE-3), not only the phone's.
-- **FR-WG-3** **States:** BR-5's hero and bar rules apply. Over today and over for the cycle show `₹0` in `displayInk2` with "₹X over today" or "Over by ₹X this cycle". *No income* shows the wordmark, "Set up hisaab to see what's safe to spend today." and a *Set up* key. **The amount is always shown** (D147).
+- **FR-WG-3** **States:** BR-5's hero and bar rules apply. Over today and over for the cycle show `₹0` in `displayInk2` with the hero's "₹X over today" or "₹X over"; the 2×1, which has no range line, says "Over by ₹X" over the cycle (D156). *No income* shows the wordmark, "Set up hisaab to see what's safe to spend today." and a *Set up* key. **The amount is always shown** (D147).
 - **FR-WG-4** **Taps:**
   - **AC-1** The marigold Add key opens Home with the Add tray at the keypad.
   - **AC-2** A tap anywhere else opens Home. *Set up* opens onboarding.
@@ -568,7 +568,7 @@ Everything here only opens hisaab sooner. The entry path is unchanged: Add → d
   - **AC-3** A long-press opens Home.
 - **FR-WG-7** **App shortcut:** long-pressing the launcher icon offers "Add a spend", which opens the Add tray at the keypad.
 - **FR-WG-8** **TalkBack:**
-  - The widget reads one summary, with amounts spoken: "Safe to spend today, 1,430 rupees. 420 rupees spent of 1,850. 9 days to payday, on 4 November. Lasts till payday, about 9,300 rupees spare."
+  - The widget reads the hero's own sentence (FR-HO-7), with amounts spoken: "Safe to spend today: 1,430 rupees. 9 days to payday. Lasts till payday, about 9,300 rupees spare." (D156)
   - The Add key reads "Add a spend".
   - The tile reads "Add a spend, hisaab".
 

@@ -28,6 +28,9 @@ class AddEntryTray extends StatelessWidget {
 
   /// Opens the tray over [context] with [bloc], which the tray closes when it goes away.
   ///
+  /// The tray route's name, so a widget or tile tap can tell that a tray is already open (FR-WG-4).
+  static const String routeName = 'add-entry-tray';
+
   /// Completes once the tray's exit animation has ended, not when it starts to close, so Home
   /// can hold its drain until it's in view (FR-AD-5).
   ///
@@ -52,6 +55,7 @@ class AddEntryTray extends StatelessWidget {
       constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop,
       builder: (BuildContext _) => BlocProvider<AddEntryBloc>(create: (BuildContext _) => bloc, child: const AddEntryTray()),
+      settings: const RouteSettings(name: routeName),
     );
     navigator.push(route);
     return route.completed;

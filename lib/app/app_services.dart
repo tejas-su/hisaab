@@ -9,10 +9,16 @@ import '../habits/habits.dart';
 import '../ledger/ledger.dart';
 import '../onboarding/onboarding.dart';
 import '../settings/settings.dart';
+import '../shortcuts/shortcuts.dart';
 import '../spends/spends.dart';
 
 /// Registers every service the app needs, core first and then each feature in dependency order.
-void registerAppServices(GetIt getIt, {required AppDatabase database, required BillReminders reminders}) {
+void registerAppServices(
+  GetIt getIt, {
+  required AppDatabase database,
+  required BillReminders reminders,
+  required ShortcutsPlatform shortcuts,
+}) {
   registerCoreServices(getIt, database: database, reminders: reminders);
   registerSettingsServices(getIt);
   registerLedgerServices(getIt);
@@ -21,4 +27,5 @@ void registerAppServices(GetIt getIt, {required AppDatabase database, required B
   registerSpendsServices(getIt);
   registerAskAiServices(getIt);
   registerBackupServices(getIt);
+  registerShortcutsServices(getIt, platform: shortcuts);
 }

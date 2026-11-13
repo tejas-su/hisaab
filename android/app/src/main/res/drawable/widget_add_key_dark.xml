@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget's Add key in dark: no edge, as displayEdge is clear. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widget_dark_signal" />
+    <corners android:radius="16dp" />
+</shape>

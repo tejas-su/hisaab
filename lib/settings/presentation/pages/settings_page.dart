@@ -27,6 +27,7 @@ class SettingsPage extends StatelessWidget {
     required this.onOpenSavings,
     required this.themeBloc,
     this.onOpenCategories,
+    this.shortcuts,
     this.yourHisaab,
   });
 
@@ -46,6 +47,10 @@ class SettingsPage extends StatelessWidget {
 
   /// Opens Settings › Categories (FR-SE-2, D138); none leaves the *Categories* group out.
   final VoidCallback? onOpenCategories;
+
+  /// The *Shortcuts* group, heading included, between Look and *Your hisaab* (FR-SE-6, widget spec
+  /// §15 #2), built by the route with its bloc; none leaves it out.
+  final Widget? shortcuts;
 
   /// The *Your hisaab* group under Look (FR-SE-4, D139), built by the route with its bloc; none
   /// leaves the group out.
@@ -122,6 +127,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ],
+            ?shortcuts,
             if (data != null) ...<Widget>[
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, top: HisaabSpacing.xl, bottom: HisaabSpacing.s),

@@ -1889,6 +1889,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get usualHow => 'Worked out on this phone from what you add.';
+
+  @override
+  String get widgetLeftToday => 'left today';
+
+  @override
+  String get widgetAddSpoken => 'Add a spend';
+
+  @override
+  String get widgetSetUp => 'Set up';
+
+  @override
+  String get widgetSetUpBody =>
+      'Set up hisaab to see what\'s safe to spend today.';
+
+  @override
+  String get widgetStale => 'Open hisaab to update';
+
+  @override
+  String widgetDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String widgetDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetName => 'hisaab';
+
+  @override
+  String get widgetDescription => 'What\'s safe to spend today, and an Add key';
+
+  @override
+  String get tileAddSpend => 'Add a spend';
+
+  @override
+  String get shortcutAddSpend => 'Add a spend';
+
+  @override
+  String get settingsShortcuts => 'Shortcuts';
+
+  @override
+  String get settingsAddWidget => 'Add a widget';
+
+  @override
+  String get settingsAddWidgetHint =>
+      'See what\'s safe to spend from your home screen';
+
+  @override
+  String get settingsAddTile => 'Add to quick settings';
+
+  @override
+  String get settingsAddTileHint => 'Add a spend from the pull-down';
 }
 
 /// The translations for English, as used in India (`en_IN`).

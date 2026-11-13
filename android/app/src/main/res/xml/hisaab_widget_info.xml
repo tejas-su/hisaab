@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One resizable widget, 2x1 to 4x2, placed at 4x2 (SPEC FR-WG-1, D147). updatePeriodMillis is
+     Android's 30-minute floor, under the midnight alarm and job (widget spec section 7).
+     The preview is an image of the real 4x2 drawing SPEC's worked example, light and night: every
+     layout is filled in from code, so as a previewLayout it would show an empty box (D157). -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/widget_message"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:previewImage="@drawable/widget_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

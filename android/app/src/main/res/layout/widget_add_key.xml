@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The marigold Add key at the widget's top end corner: 48dp, 16dp corners (UI_DESIGN §10). Its
+     background (with or without the ink edge) is set for the look; it opens the keypad (FR-WG-4). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_add"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_marginStart="10dp"
+    android:background="@drawable/widget_add_key_light"
+    android:focusable="true">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_widget_add" />
+</FrameLayout>

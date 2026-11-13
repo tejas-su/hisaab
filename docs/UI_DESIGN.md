@@ -530,7 +530,7 @@ One effect per event, never buzzy.
   - **Tile:** "Add a spend", subtitle "hisaab", a monochrome Hugeicons glyph, inactive state, never money. It opens with `startActivityAndCollapse(PendingIntent)` on Android 14+ (the Intent form below that), and `unlockAndRun` when the phone is locked.
   - **App shortcut:** "Add a spend".
   - **Settings › Shortcuts:** *Add a widget* and *Add to quick settings*, each opening the system's own pin dialog (FR-SE-6).
-  - **Build note:** draw the paper as a bitmap from `DisplayEtchPainter` at each size, so it can never drift from Home. Check on a device whether RemoteViews keeps the bundled Anek Latin with tabular figures; if not, draw the amount as a bitmap too.
+  - **Build note (D156):** the paper, today's bar and the days rail are bitmaps drawn by Kotlin ports of `DisplayEtchPainter`, `TodayBarPainter` and `DaysRailPainter` (`android/.../widget/`), each naming its Dart original. The amount and the wordmark are bitmaps in the Anek Latin from the APK's Flutter assets (`wdth` 85, tabular figures, every API level); words are TextViews in Mukta from `res/font`, except the 4×1's "Safe to spend today", a Mukta bitmap that sizes its column (D158). The moto g45's launcher draws widget TextViews in its own font, not Mukta. Colours come from `res/values/widget_colors.xml`, which a test keeps equal to `HisaabColors`.
 
 ## 11. Flutter implementation notes
 - `core/design/hisaab_colors.dart`: `ThemeExtension<HisaabColors>` with light and dark instances, including the `display*` aliases, `clear`, `focus` and `focusGap`. `contrast_pairs_test.dart` fails the build if any pair in its list drops below its floor in any theme, and `hard_coded_colours_test.dart` fails on a raw colour outside `core/design/` (§3.2).

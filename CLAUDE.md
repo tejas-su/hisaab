@@ -70,6 +70,7 @@ The architecture is feature-first clean architecture (full tree in PLAN §9):
 - `lib/ledger/`: shared money data (transactions, categories, recurring). Other features import it only through `ledger.dart`.
 - `lib/{onboarding,home,add_entry,spends,ask_ai,settings}/`: screens, as `presentation/` plus `domain/` where the feature owns logic.
 - `lib/habits/`: *your usual* (BR-17, D153): the habit maths, the `suggestion_state` table, `HabitsBloc` and the Settings row. Other features import it only through `habits.dart`.
+- `lib/shortcuts/`: the home-screen widget's day-by-day snapshot and the widget, tile and app-shortcut launches (FR-WG, D156). The native side is in `android/app/src/main/kotlin/.../widget/` and `.../tile/`.
 - `lib/app/`: app shell and `routes.dart`. `lib/l10n/`: ARB files and generated code.
 
 ## Non-negotiables

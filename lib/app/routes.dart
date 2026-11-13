@@ -19,11 +19,13 @@ import '../l10n/gen/app_localizations.dart';
 import '../ledger/ledger.dart';
 import '../onboarding/onboarding.dart';
 import '../settings/settings.dart';
+import '../shortcuts/shortcuts.dart';
 import '../spends/spends.dart';
 import 'bloc/reminders_bloc.dart';
 import 'bloc/reminders_event.dart';
 import 'bloc/reminders_state.dart';
 import 'main_screen.dart';
+import 'widgets/shortcut_launch_listener.dart';
 import 'widgets/midnight_listener.dart';
 import 'widgets/resume_listener.dart';
 
@@ -50,8 +52,12 @@ abstract final class AppRoutes {
             ),
           ),
         ],
-        child: HisaabSnackbarHost(
-          child: OnboardingPage(onFinished: onFinished, restore: RestoreBackupChip(onRestored: onRestored)),
+        // why: onboarding is where every widget, tile or shortcut tap lands until it is done (E51).
+        child: ShortcutLaunchListener(
+          onLaunch: (LaunchAction _) {},
+          child: HisaabSnackbarHost(
+            child: OnboardingPage(onFinished: onFinished, restore: RestoreBackupChip(onRestored: onRestored)),
+          ),
         ),
       );
 
@@ -110,7 +116,9 @@ abstract final class AppRoutes {
           // why: a tapped reminder opens Home, then its bill; a resume re-arms them (spec §6).
           builder: (BuildContext context) => BlocListener<RemindersBloc, RemindersState>(
             listener: (BuildContext context, RemindersState state) => _openReminded(context, getIt, state),
-            child: ResumeListener(
+            child: ShortcutLaunchListener(
+              onLaunch: (LaunchAction action) => followLaunch(context, getIt, action),
+              child: ResumeListener(
               onResume: () {
                 context.read<RemindersBloc>().add(const RemindersArmRequested());
                 context.read<HabitsBloc>().add(const HabitsLoadRequested());
@@ -162,9 +170,46 @@ abstract final class AppRoutes {
                 ),
               ),
             ),
+            ),
           ),
         ),
       );
+
+  /// Follows a widget, tile or shortcut tap on Home (widget spec §8): Home for [LaunchAction.home]
+  /// and [LaunchAction.setUp]; for [LaunchAction.add], the Add tray at the keypad, unless one is
+  /// already open (an edit tray stays as it is, W6).
+  ///
+  /// When the app was only just started, the tray waits for the habits and Home's figures, so
+  /// *your usual* and the spend preview are in its first frame (FR-AD-10 AC-1, D154).
+  static Future<void> followLaunch(BuildContext context, GetIt getIt, LaunchAction action) async {
+    bool trayOpen = false;
+    Navigator.of(context).popUntil((Route<void> route) {
+      trayOpen = route.settings.name == AddEntryTray.routeName;
+      return trayOpen || route.isFirst;
+    });
+    if (action != LaunchAction.add || trayOpen) {
+      return;
+    }
+    await _settled(context.read<HabitsBloc>(), (HabitsState state) => state is! HabitsLoading);
+    if (!context.mounted) {
+      return;
+    }
+    await _settled(context.read<HomeBloc>(), (HomeState state) => state is! HomeLoading);
+    if (context.mounted) {
+      await openAddTray(context, getIt);
+    }
+  }
+
+  // why: a load that fails leaves the bloc loading; the tray then opens after a second without
+  // the pill or preview rather than not at all.
+  static Future<void> _settled<S>(BlocBase<S> bloc, bool Function(S) ready) async {
+    if (ready(bloc.state)) {
+      return;
+    }
+    await bloc.stream.firstWhere(ready).timeout(_settleLimit, onTimeout: () => bloc.state);
+  }
+
+  static const Duration _settleLimit = Duration(seconds: 1);
 
 
   /// Opens the amount sheet of a bill waiting on Home over [context] (D123). The write reloads
@@ -280,6 +325,10 @@ abstract final class AppRoutes {
             themeBloc: context.read<ThemeBloc>(),
             onOpenCategories: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (BuildContext _) => categories(getIt)),
+            ),
+            shortcuts: BlocProvider<ShortcutRowsBloc>(
+              create: (BuildContext _) => ShortcutRowsBloc(platform: getIt<ShortcutsPlatform>())..add(const ShortcutRowsLoadRequested()),
+              child: const ShortcutsGroup(),
             ),
             yourHisaab: _yourHisaab(getIt, onDataReplaced: () {
               onDataReplaced();

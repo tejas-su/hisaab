@@ -2,7 +2,6 @@ import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/time/pay_cycle.dart';
 import 'package:hisaab/ledger/domain/entities/cycle_inputs.dart';
-import 'package:hisaab/ledger/domain/entities/recurring_posting.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 

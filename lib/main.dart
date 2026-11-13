@@ -17,6 +17,7 @@ import 'core/logging/app_bloc_observer.dart';
 import 'core/logging/app_logger.dart';
 import 'core/notifications/android_bill_reminders.dart';
 import 'core/notifications/bill_reminders.dart';
+import 'shortcuts/data/platform/android_shortcuts_platform.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +37,7 @@ Future<void> main() async {
       runApp(const HisaabApp.startupFailed());
     },
     (AppDatabase database) {
-      registerAppServices(GetIt.I, database: database, reminders: reminders);
+      registerAppServices(GetIt.I, database: database, reminders: reminders, shortcuts: AndroidShortcutsPlatform());
       runApp(HisaabApp(getIt: GetIt.I));
     },
   );

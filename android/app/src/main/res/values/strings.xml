@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Words Android needs before the app has ever run. Each mirrors the lib/l10n/app_en.arb key in
+     its comment; test/shortcuts/android_resources_test.dart keeps them equal. -->
+<resources>
+    <!-- widgetName -->
+    <string name="widget_name">hisaab</string>
+    <!-- widgetDescription -->
+    <string name="widget_description">What\'s safe to spend today, and an Add key</string>
+    <!-- widgetStale -->
+    <string name="widget_stale">Open hisaab to update</string>
+    <!-- tileAddSpend -->
+    <string name="tile_add_spend">Add a spend</string>
+    <!-- shortcutAddSpend -->
+    <string name="shortcut_add_spend">Add a spend</string>
+</resources>

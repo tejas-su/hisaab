@@ -1,10 +1,10 @@
 # Widget, Quick Settings tile and app shortcut: design
 
-**Status:** design approved in chat on 2026-11-12 (D147). The owner kept the amount shown and took the research's recommendations for the rest. Waiting: review of this written spec, then the open choices in §15.
+**Status:** built on 2026-11-13 (D147, D156). §15's choices are answered below. Where this spec and the code differ, D156 and `docs/features/shortcuts/` say what was built; the device checklist (§13) is still to run.
 **Research:** [case study 31](../../design-research/case-studies/31-play-store-competitive-landscape.md), items 1 and 2.
 **Mockup:** [38-widget-and-tile.html](../../design/mockups/38-widget-and-tile.html).
 **Product docs already updated:** SPEC FR-WG-1 to FR-WG-8, FR-SE-6, E51–E57 and NFR-10; UI_DESIGN §10; PLAN M7.
-**Next decision number:** D148.
+**Next decision number:** D157.
 
 ## 1. Problem
 hisaab's answer, *how much can I safely spend today?*, is the most glanceable number in any expense tracker. Today you have to find and open the app to see it. Logging a spend also starts with opening the app. Rivals (Money Manager, Monefy, Cashew) all have quick-add widgets.
@@ -141,7 +141,7 @@ Written by Dart as one JSON string under one SharedPreferences key (`hisaab.widg
 - **Sizes and layouts:** from UI_DESIGN §10 and mockup 38 (`widget()` in its script is the reference geometry).
   - Android 12+ uses `RemoteViews(Map<SizeF, RemoteViews>)`.
   - API 24–30 picks a layout in `onAppWidgetOptionsChanged` from `OPTION_APPWIDGET_MIN_WIDTH/HEIGHT`.
-  - `hisaab_widget_info.xml`: `targetCellWidth 4`, `targetCellHeight 2`, `minResizeWidth/Height` for 2×1, `resizeMode horizontal|vertical`, `widgetCategory home_screen`, a `previewLayout` (Android 12+) and a `previewImage` (older).
+  - `hisaab_widget_info.xml`: `targetCellWidth 4`, `targetCellHeight 2`, `minResizeWidth/Height` for 2×1, `resizeMode horizontal|vertical`, `widgetCategory home_screen`, and a `previewImage` on every version: an image of the real 4×2 showing SPEC's worked example, light and night (D157). There is no `previewLayout`, because the layouts are empty until code fills them.
 - **Paper:** `EtchPaper.draw(widthPx, heightPx, density, palette, rtl)`, a port of `DisplayEtchPainter`:
   - 14 rings, 720 steps; the radius is `40 + ring × 7.5 + 6 sin(18t + 0.35 ring) + 3 sin(5t)`
   - centred 80dp in from the top end corner, 60dp down
@@ -272,11 +272,19 @@ Reused: `safeToSpendToday`, the hero's over lines, the range lines (BR-7), the T
 
 Each phase ends green: `flutter analyze`, `flutter test`, changed-lines coverage (Dart), and the phase's device check. Phases 1 and 2 are useful on their own even if the widget slips.
 
-## 15. Open choices for the morning
-1. **Channel or `home_widget`?** Recommended: own `MethodChannel` (§3). Changes PLAN §11.
-2. **Where *Shortcuts* sits in Settings:** proposed between *Look* and *Your hisaab*. Ask `design-ia` if unsure.
-3. **Midnight:** inexact alarm plus the 30-minute floor (recommended), or also a `WorkManager` job. That's a new dependency; not recommended.
-4. **The 2×1 over-the-cycle line:** "Over by ₹3,200" (drops "this cycle" to fit) is OK? (mockup 38 §7)
+## 15. Open choices (answered 2026-11-13, D156)
+1. **Channel or `home_widget`?** Own `MethodChannel`. PLAN §11 updated.
+2. **Where *Shortcuts* sits in Settings:** between *Look* and *Your hisaab*, after *Categories*.
+3. **Midnight:** the inexact alarm **and** a `WorkManager` job (`androidx.work`, native only), over the 30-minute floor.
+4. **The 2×1 over-the-cycle line:** "Over by ₹3,200".
+5. **Your usual on a cold start (D154):** the tray waits for the habits, up to 1 s.
+
+**Built differently from the sections above (D156):**
+- §4: no top-level `setUp`; a *No income* day is a row with `state: "setUp"`. Missing, unreadable or unknown-version snapshots draw the stale state. Strings are `title`, `add`, `addSpoken`, `setUp`, `setUpBody`; each row has `glance` (the 2×1 line) and `spoken`.
+- §5: the projector is "run the real use cases on an in-memory copy" (`ProjectWidgetDays` over `ProjectedBook`), so the oracle test checks it against the real database day by day.
+- §6: the amount and the wordmark are bitmaps in Anek Latin from the Flutter assets, so Phase 0's font check was not needed for them; words use Mukta from `res/font`. On the moto g45 the launcher ignores that font and draws the TextViews in its own wider one, so the 4×1's title is a Mukta bitmap too and its column grows from the 112dp design width to fit it (D158). One RemoteViews per widget at its reported portrait size, on every API level, so the bitmaps are cut at the real size.
+- §8 / W7: a tap during *Delete everything*'s countdown leaves the page, which deletes nothing (FR-SE-4 AC-6a).
+- FR-WG-8: TalkBack reads the hero's own sentence.
 
 ## 16. Not in this
 - A private, words-only widget (dropped in D147).

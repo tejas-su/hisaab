@@ -13,6 +13,7 @@ import 'package:hisaab/spends/spends.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/fakes/fake_bill_reminders.dart';
+import '../helpers/fakes/fake_shortcuts_platform.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
 
@@ -23,7 +24,7 @@ void main() {
     test('wires every feature over one real database', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders(), shortcuts: FakeShortcutsPlatform());
       addTearDown(getIt.reset);
 
       expect(await getIt<AppPreferencesRepository>().onboardingDone().run(), Either<Failure, bool>.right(false));
@@ -42,7 +43,7 @@ void main() {
     test('wires the bill reminders ask over the ledger registered after it (D126)', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders(), shortcuts: FakeShortcutsPlatform());
       addTearDown(getIt.reset);
 
       expect(await getIt<ShouldAskBillReminders>()(const NoParams()).run(), Either<Failure, bool>.right(false));
@@ -53,7 +54,7 @@ void main() {
     test('wires Spends over the ledger', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders(), shortcuts: FakeShortcutsPlatform());
       addTearDown(getIt.reset);
 
       expect(getIt<GetSuggestedLimits>(), isNotNull);
@@ -65,7 +66,7 @@ void main() {
     test('wires Ask AI over the ledger', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders(), shortcuts: FakeShortcutsPlatform());
       addTearDown(getIt.reset);
 
       const PayCycle october = PayCycle(start: CalendarDate(2026, 10, 1), end: CalendarDate(2026, 10, 31));
@@ -77,7 +78,7 @@ void main() {
     test('wires habits over the ledger (D153)', () async {
       final AppDatabase database = await openTestDatabase();
       final GetIt getIt = GetIt.asNewInstance();
-      registerAppServices(getIt, database: database, reminders: FakeBillReminders());
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders(), shortcuts: FakeShortcutsPlatform());
       addTearDown(getIt.reset);
 
       final Either<Failure, HabitIndex> index = await getIt<GetHabitIndex>()(const NoParams()).run();

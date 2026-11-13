@@ -52,4 +52,9 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // The widget's midnight job, beside the inexact alarm (widget spec §15 #3).
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
+    // SnapshotReader's JVM tests; org.json stands in for Android's own, which unit tests stub out.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }

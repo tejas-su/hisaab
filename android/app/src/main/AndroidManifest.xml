@@ -34,7 +34,41 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- A long-press on the Quick Settings tile opens Home (FR-WG-6 AC-3). -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"/>
+            </intent-filter>
+            <!-- The launcher-icon shortcut "Add a spend" (FR-WG-7). -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
         </activity>
+        <!-- The home-screen widget (FR-WG-1 to FR-WG-5). It redraws from the app's snapshot on a
+             date, time or time-zone change, after a restart and after an update (widget spec §7). -->
+        <receiver
+            android:name=".widget.HisaabWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <action android:name="android.intent.action.DATE_CHANGED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/hisaab_widget_info"/>
+        </receiver>
+        <!-- The Quick Settings tile "Add a spend" (FR-WG-6): an action tile that reads no data. -->
+        <service
+            android:name=".tile.AddSpendTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_add_spend"
+            android:label="@string/tile_add_spend"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="false"/>
+        </service>
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>

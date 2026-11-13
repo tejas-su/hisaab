@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app shortcut's icon: WalletAdd01 on hisaab's surface, inset as launcher shortcut icons are. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/widget_light_display" />
+        </shape>
+    </item>
+    <item android:bottom="12dp" android:drawable="@drawable/ic_shortcut_add_spend_glyph" android:left="12dp" android:right="12dp" android:top="12dp" />
+</layer-list>

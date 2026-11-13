@@ -37,6 +37,12 @@ abstract final class AppIcons {
 
   /// A saving such as an RD (D120).
   static const AppIconData saving = HugeIcons.strokeRoundedPiggyBank;
+
+  /// Settings › Shortcuts: *Add a widget* (FR-SE-6).
+  static const AppIconData addWidget = HugeIcons.strokeRoundedDashboardSquareAdd;
+
+  /// Settings › Shortcuts: *Add to quick settings*; the same glyph as the tile (FR-SE-6, FR-WG-6).
+  static const AppIconData addSpendTile = HugeIcons.strokeRoundedWalletAdd01;
   static const AppIconData dropdown = HugeIcons.strokeRoundedArrowDown01;
   static const AppIconData check = HugeIcons.strokeRoundedTick02;
   static const AppIconData askReview = HugeIcons.strokeRoundedAnalytics01;

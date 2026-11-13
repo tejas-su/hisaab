@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home-screen widget's colours: the hero's display tokens for both looks, so the widget can
+     follow the app's Look rather than the phone's (FR-WG-2). They must equal HisaabColors.light
+     and HisaabColors.dark; test/shortcuts/android_resources_test.dart checks every one. -->
+<resources>
+    <color name="widget_light_display">#FFFEFC</color>
+    <color name="widget_light_display_ink">#161615</color>
+    <color name="widget_light_display_ink2">#5B5650</color>
+    <color name="widget_light_block_idle">#D7CFC5</color>
+    <color name="widget_light_display_etch">#F1EDE8</color>
+    <color name="widget_light_hairline">#D7CFC5</color>
+    <color name="widget_light_signal">#FFB020</color>
+    <color name="widget_light_display_edge">#161615</color>
+
+    <color name="widget_dark_display">#211F1C</color>
+    <color name="widget_dark_display_ink">#F2F1EC</color>
+    <color name="widget_dark_display_ink2">#A7A199</color>
+    <color name="widget_dark_block_idle">#413D38</color>
+    <color name="widget_dark_display_etch">#2F2B27</color>
+    <color name="widget_dark_hairline">#3A3632</color>
+    <color name="widget_dark_signal">#FFB020</color>
+    <color name="widget_dark_display_edge">#00000000</color>
+
+    <!-- onSignal: text and glyphs on marigold, the same in both looks. -->
+    <color name="widget_on_signal">#161615</color>
+</resources>

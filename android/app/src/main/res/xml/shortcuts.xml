@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher-icon shortcut "Add a spend": the Add tray at the keypad (SPEC FR-WG-7). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_add_spend"
+        android:shortcutId="add_spend"
+        android:shortcutShortLabel="@string/shortcut_add_spend">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="hisaab://add"
+            android:targetClass="com.widgetsandco.hisaab.MainActivity"
+            android:targetPackage="com.widgetsandco.hisaab" />
+    </shortcut>
+</shortcuts>

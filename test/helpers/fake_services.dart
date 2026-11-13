@@ -1,6 +1,7 @@
 import 'package:hisaab/ask_ai/ask_ai.dart';
 import 'package:hisaab/backup/backup.dart';
 import 'package:hisaab/core/design/haptics.dart';
+import 'package:hisaab/core/money/money_formatter.dart';
 import 'package:hisaab/core/notifications/bill_reminders.dart';
 import 'package:hisaab/core/time/clock.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
@@ -11,6 +12,7 @@ import 'package:hisaab/spends/spends.dart';
 import 'package:hisaab/onboarding/onboarding.dart';
 import 'package:hisaab/onboarding/data/repository/onboarding_draft_repository_impl.dart';
 import 'package:hisaab/settings/settings.dart';
+import 'package:hisaab/shortcuts/shortcuts.dart';
 import 'package:get_it/get_it.dart';
 
 import 'fakes/fake_backup_repository.dart';
@@ -23,6 +25,7 @@ import 'fakes/fake_clock.dart';
 import 'fakes/fake_haptics.dart';
 import 'fakes/fake_ledger_repository.dart';
 import 'fakes/fake_recurring_repository.dart';
+import 'fakes/fake_shortcuts_platform.dart';
 import 'fakes/fake_suggestion_state_repository.dart';
 import 'fixtures/ask_ai/prompt_input.dart';
 import 'fixtures/ledger/worked_example.dart';
@@ -44,6 +47,18 @@ final class FakeServices {
   final FakeBillReminders reminders = FakeBillReminders();
   final FakeClock clock = FakeClock(WorkedExample.now);
   final FakeBackupRepository backups = FakeBackupRepository();
+
+  /// The widget, tile and shortcut's platform.
+  final FakeShortcutsPlatform shortcuts = FakeShortcutsPlatform();
+
+  /// The widget's projection over these fakes.
+  ProjectWidgetDays get projectWidgetDays => ProjectWidgetDays(
+        ledger: ledger,
+        recurring: recurring,
+        settings: settings,
+        periods: const PeriodCalculator(),
+        clock: clock,
+      );
 
   /// The *your usual* quiet states; only the habits code reads it.
   final FakeSuggestionStateRepository states = FakeSuggestionStateRepository();
@@ -129,6 +144,7 @@ final class FakeServices {
     ..registerSingleton<Clock>(clock)
     ..registerSingleton<Haptics>(haptics)
     ..registerSingleton<PeriodCalculator>(const PeriodCalculator())
+    ..registerSingleton<MoneyFormatter>(MoneyFormatter())
     ..registerSingleton<AppPreferencesRepository>(preferences)
     ..registerSingleton<BillReminders>(reminders)
     ..registerSingleton<LedgerRepository>(ledger)
@@ -182,6 +198,8 @@ final class FakeServices {
     )
     ..registerSingleton<AiHandoff>(handoff)
     ..registerSingleton<BackupRepository>(backups)
+    ..registerSingleton<ShortcutsPlatform>(shortcuts)
+    ..registerSingleton<ProjectWidgetDays>(projectWidgetDays)
     ..registerSingleton<SuggestionStateRepository>(states)
     ..registerSingleton<GetHabitIndex>(GetHabitIndex(ledger: ledger, categories: categories, states: states, clock: clock))
     ..registerSingleton<UndoUsualAdd>(UndoUsualAdd(states: states, ledger: ledger, clock: clock))
@@ -204,5 +222,6 @@ final class FakeServices {
     await ledger.dispose();
     await recurring.dispose();
     await reminders.dispose();
+    await shortcuts.dispose();
   }
 }

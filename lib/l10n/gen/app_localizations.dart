@@ -2604,6 +2604,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Worked out on this phone from what you add.'**
   String get usualHow;
+
+  /// Home-screen widget, 2×1: under the amount, where the title doesn't fit (FR-WG-1)
+  ///
+  /// In en, this message translates to:
+  /// **'left today'**
+  String get widgetLeftToday;
+
+  /// Screen-reader label of the widget's marigold Add key (FR-WG-8)
+  ///
+  /// In en, this message translates to:
+  /// **'Add a spend'**
+  String get widgetAddSpoken;
+
+  /// Key on the widget when hisaab has no income yet; opens hisaab (FR-WG-3)
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get widgetSetUp;
+
+  /// Widget text when hisaab has no income yet (FR-WG-3)
+  ///
+  /// In en, this message translates to:
+  /// **'Set up hisaab to see what\'s safe to spend today.'**
+  String get widgetSetUpBody;
+
+  /// Widget text when the app hasn't been opened for longer than the widget's days reach (E53). Mirrored in android res/values/strings.xml as widget_stale
+  ///
+  /// In en, this message translates to:
+  /// **'Open hisaab to update'**
+  String get widgetStale;
+
+  /// Widget, 2×2: days left in the cycle, today included (FR-WG-1)
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day left} other{{days} days left}}'**
+  String widgetDaysLeft(int days);
+
+  /// Widget, 4×2: days left, next to the range line (FR-WG-1)
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}}'**
+  String widgetDays(int days);
+
+  /// The widget's name in the launcher's widget list. Mirrored in android strings.xml as widget_name
+  ///
+  /// In en, this message translates to:
+  /// **'hisaab'**
+  String get widgetName;
+
+  /// The widget's description in the launcher's widget list. Mirrored in android strings.xml as widget_description
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s safe to spend today, and an Add key'**
+  String get widgetDescription;
+
+  /// Quick Settings tile label; it opens the Add tray at the keypad (FR-WG-6). Mirrored in android strings.xml as tile_add_spend
+  ///
+  /// In en, this message translates to:
+  /// **'Add a spend'**
+  String get tileAddSpend;
+
+  /// Launcher-icon shortcut; it opens the Add tray at the keypad (FR-WG-7). Mirrored in android strings.xml as shortcut_add_spend
+  ///
+  /// In en, this message translates to:
+  /// **'Add a spend'**
+  String get shortcutAddSpend;
+
+  /// Settings group heading for the widget and the tile (FR-SE-6)
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts'**
+  String get settingsShortcuts;
+
+  /// Settings row; opens the launcher's own add-widget dialog (FR-SE-6 AC-1)
+  ///
+  /// In en, this message translates to:
+  /// **'Add a widget'**
+  String get settingsAddWidget;
+
+  /// Second line of the Add a widget row
+  ///
+  /// In en, this message translates to:
+  /// **'See what\'s safe to spend from your home screen'**
+  String get settingsAddWidgetHint;
+
+  /// Settings row; opens Android's own add-tile dialog (FR-SE-6 AC-2)
+  ///
+  /// In en, this message translates to:
+  /// **'Add to quick settings'**
+  String get settingsAddTile;
+
+  /// Second line of the Add to quick settings row
+  ///
+  /// In en, this message translates to:
+  /// **'Add a spend from the pull-down'**
+  String get settingsAddTileHint;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget with the wordmark and one line: "Set up hisaab…" with a Set up key when there is no
+     income (FR-WG-3), or "Open hisaab to update" past the snapshot's last day (E53). The key shows
+     only when the widget is two cells tall. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_paper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+    <LinearLayout
+        android:id="@+id/widget_message_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <ImageView
+            android:id="@+id/widget_wordmark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/widget_message"
+            style="@style/WidgetText"
+            android:layout_width="match_parent"
+            android:layout_marginTop="4dp"
+            android:maxLines="3"
+            android:singleLine="false"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/widget_set_up"
+            style="@style/WidgetText.Emphasized"
+            android:layout_height="40dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/widget_set_up_key_light"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </LinearLayout>
+</FrameLayout>
