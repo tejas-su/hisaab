@@ -16,6 +16,7 @@ Rules and skills are adapted from the team's `melento-nocode-flutter` setup. Whe
 | [docs/design-research/](docs/design-research/README.md) | UX/UI case studies, principles learned from other apps, and research sources. Add to it when researching a design |
 | [docs/PLAN.md](docs/PLAN.md) | Product scope, the zero-config defaults (§2), data model, architecture, milestones M0–M6 |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log; append a row when a decision changes |
+| [docs/RELEASE.md](docs/RELEASE.md) | Play release: signing, build, store forms, pre-launch checks |
 
 Before building or changing anything, read its BR/FR entries in `SPEC.md` and its section in `UI_DESIGN.md`. When docs disagree, SPEC › UI_DESIGN › mockups › PLAN. If a change departs from them, say so and update the doc in the same change.
 
@@ -92,6 +93,7 @@ These are app-specific, and the rules files carry the details.
 - **Icons:** Hugeicons only, through `AppIcon`, always with a label. A glyph the free set lacks is drawn in Hugeicons' format in `HisaabGlyphs` (`lib/core/design/hisaab_glyphs.dart`), reusing an original's corner curves (D48).
 - **Adaptive layout:** never lock orientation or assume a portrait phone. Read `context.layout` (`lib/core/layout/`), never raw `MediaQuery` widths. Nothing straddles a fold. New screens are tested at the `TestWindows` sizes (UI_DESIGN §13).
 - **Entry speed:** the Add flow is Add → digits → Next → tile. Never add a tap or a field to it, and never reorder categories, the keypad or the dock. Two controls sit off that path, and neither moves anything: the *New* tile after the categories (D138) and the *your usual* pill under the amount (D153).
+- **Signing secrets:** never read, copy or print `key.properties`, keystores or their passwords. `.claude/settings.json` and `.claude/hooks/guard-secrets.sh` block it; if they block a command, ask the owner to run it (D159).
 - **Privacy:** no network access, no analytics. Never log notes or amounts with personal text. The only data that leaves the device is the Ask AI export the user triggers and previews.
 
 ## Where the detailed guidance lives

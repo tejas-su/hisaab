@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/key.properties)",
+      "Edit(**/key.properties)",
+      "Read(**/*.jks)",
+      "Edit(**/*.jks)",
+      "Read(**/*.keystore)",
+      "Edit(**/*.keystore)",
+      "Read(**/*.p12)",
+      "Read(**/*.pk8)",
+      "Read(**/*.pepk)",
+      "Read(//**/*.jks)",
+      "Edit(//**/*.jks)",
+      "Read(//**/*.keystore)",
+      "Edit(//**/*.keystore)",
+      "Read(//**/key.properties)",
+      "Edit(//**/key.properties)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(~/.android-keys/**)",
+      "Edit(~/.android-keys/**)",
+      "Bash(keytool *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-secrets.sh\"",
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
+  }
+}

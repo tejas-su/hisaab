@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Yearly costs and Used (proposal)</title>
+<style>
+  /* Yearly costs as a saving, with a "Used" action (proposed 2026-11-13; docs/features/yearly-costs/01-ux-flow.md,
+     fix-my-number/03 and 04 section 9, copy deck 41 sections 4 to 6). Nothing here is in SPEC or built.
+     Worked example: Insurance, Rs 1,000 a month on the 5th, started Nov 2025, so Rs 12,000 is set aside on Mon 26 Oct 2026.
+     Hero Rs 1,318 before AND after Used (A = 1,738, Rs 420 spent). Used Rs 4,000 leaves Rs 8,000 set aside.
+     Copy is the deck's, verbatim, except where a "Problem" note says the docs disagree.
+     Tokens: light from mockup 40 (after D145), dark from mockup 33. Sizes follow mockups 27, 28 and 40.
+     Icons are hand-drawn stand-ins for Hugeicons stroke-rounded. 320dp frames carry --ts: 1.5 (text at 1.5x). */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EDE8; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #5B5650; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #312E29; --onInverse: #F2F1EC;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b, .why b, td b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--canvasInk2); box-shadow: inset 0 0 0 1px var(--canvasInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 2px; white-space: nowrap; }
+  .tblWrap { overflow-x: auto; max-width: 100%; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 1000px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; }
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; max-width: 360px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 780px; margin: 10px 0 0; }
+  .prob { max-width: 780px; margin: 10px 0 0; padding: 10px 14px; border-radius: 14px; background: #FFFEFC; font-size: 14px; line-height: 20px; box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .prob b { font-weight: 600; }
+
+  /* Phone. --ts is the text scale: 1 on 360dp frames, 1.5 on the 320dp frame */
+  .phone { --ts: 1; position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  .phone.s320 { width: 320px; height: 568px; }
+  .phone.ts15 { --ts: 1.5; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .status { height: 28px; padding: 6px 24px 0; font: 600 13px/16px 'Mukta', sans-serif; display: flex; justify-content: space-between; }
+  .page { position: absolute; inset: 28px 0 0; padding: 4px 20px 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+  .page.dense { gap: 12px; }
+  .topbar { display: flex; align-items: center; height: 48px; gap: 12px; flex: none; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .wm { flex: 1; font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .secHd { font: 600 19px/24px 'Anek Latin', sans-serif; padding-inline-start: 4px; margin-bottom: -8px; flex: none; }
+  .hint { font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--ink2); margin: 0; flex: none; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 16px 4px 12px; border-radius: 12px; background: var(--control); font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Mukta', sans-serif; flex: none; }
+  .chip.self { align-self: flex-start; }
+  .chip.on { background: var(--ink); color: var(--bg); }
+
+  /* Card of rows: 42dp sunk wells, 20dp inset, hairline indented to the text start (74dp) */
+  .card { background: var(--surface); border-radius: 28px; padding: 6px 0; flex: none; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 7px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: calc(16px * var(--ts)); line-height: calc(22px * var(--ts)); }
+  .row .t span { display: block; font-size: calc(13px * var(--ts)); line-height: calc(18px * var(--ts)); color: var(--ink2); }
+  .row .t span.k { color: var(--ink); font-weight: 600; }
+  .row b { font: 600 calc(16px * var(--ts))/calc(22px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row > svg:last-child { color: var(--ink2); }
+  .row.tall { align-items: flex-start; padding-top: 11px; padding-bottom: 11px; }
+  .foot { display: flex; flex-direction: column; gap: 2px; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--ink2); padding-inline-start: 4px; flex: none; }
+  .foot b { color: var(--ink); font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+
+  /* Home (hero as mockup 40) */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); flex: none; }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .tbar { display: flex; gap: 3px; height: 40px; margin-top: 16px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 6px; }
+  .capRow b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd { display: flex; align-items: baseline; gap: 8px; padding-inline-start: 4px; margin-bottom: -4px; flex: none; }
+  .listHd .h { flex: 1; font: 600 17px/24px 'Anek Latin', sans-serif; }
+  .listHd b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd span { font: 600 14px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  /* Spends */
+  .pace { height: 120px; padding: 0; flex: none; }
+  .pace svg { width: 100%; height: 100%; display: block; }
+  .tally { font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--ink2); padding-inline-start: 4px; flex: none; }
+  .tally b { color: var(--ink); font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .tally .part { display: inline-block; white-space: nowrap; }
+  .tally .part.wrapok { white-space: normal; }
+  .cardHd { font: 600 17px/24px 'Anek Latin', sans-serif; padding: 12px 20px 4px; }
+  .cat { display: flex; align-items: center; gap: 12px; padding: 8px 20px; }
+  .cat .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .cat .n { flex: 1; font-size: 16px; line-height: 22px; }
+  .cat b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+
+  /* Sheet: handle, a scrolling body, and a fixed foot (keypad) */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: calc(100% - 28px); display: flex; flex-direction: column; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 20px 20px; z-index: 9; }
+  .dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .sheet .body { flex: 1 1 auto; min-height: 0; overflow: hidden; position: relative; }
+  /* cut: the body is scrolled to its end, so the title leaves at the top and the slip stays beside the keypad */
+  .sheet .body.cut { display: flex; flex-direction: column; justify-content: flex-end; }
+  .sheet .body.cut > * { flex: none; }
+  .sheet .body.cut::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 24px; background: linear-gradient(var(--bg), transparent); }
+  .sheet .foot2 { flex: none; }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; flex: none; }
+  .stepHd { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-bottom: 8px; }
+  .stepHd .q { font: 600 calc(19px * var(--ts))/calc(24px * var(--ts)) 'Anek Latin', sans-serif; }
+  .slip { position: relative; background: var(--display); color: var(--displayInk); border-radius: 20px 20px 0 0; padding: 18px 20px 14px; margin-bottom: 8px; }
+  .slip::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px; background: conic-gradient(from -45deg at 50% 100%, var(--display) 0 90deg, transparent 90deg) 0 0 / 14px 100% repeat-x; }
+  .slip.compact { padding: 14px 20px 12px; }
+  .eyebrow { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .12em; color: var(--displayInk2); }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .who .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .who .nm { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .amtRow { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; }
+  .big { font: 600 calc(48px * (1 + (var(--ts) - 1) * .5))/calc(52px * (1 + (var(--ts) - 1) * .5)) 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .big.zero { color: var(--displayInk2); }
+  .big.reject { box-shadow: 0 0 0 2px var(--displayInk); border-radius: 10px; padding: 0 8px; margin: 0 -8px; }
+  .big.slipAmt { font-size: 56px; line-height: 60px; }
+  .caret { display: inline-block; width: 3px; height: .8em; margin-left: 3px; vertical-align: -.08em; background: var(--signal); border-radius: 2px; box-shadow: 0 0 0 1px var(--displayEdge); }
+  .every { font-size: 15px; line-height: 22px; color: var(--displayInk2); }
+  .stamp { font: 600 12px/14px 'Anek Latin', sans-serif; letter-spacing: .1em; color: var(--displayInk2); white-space: nowrap; padding: 6px 10px; border: 2px solid var(--displayInk2); border-radius: 6px; }
+  .perf { position: relative; height: 20px; margin: 8px -20px; }
+  .perf::before { content: ''; position: absolute; left: 22px; right: 22px; top: 9px; border-top: 2px dashed var(--hairline); }
+  .perf i { position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .perf i.l { left: -8px; } .perf i.r { right: -8px; }
+  .line { display: flex; align-items: center; margin: 0 -8px; min-height: 48px; padding: 8px; font-size: 16px; line-height: 22px; }
+  .line .lead { flex: 1; min-width: 12px; border-bottom: 2px dotted var(--hairline); margin: 0 8px; align-self: flex-end; transform: translateY(-13px); }
+  .line .v { font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .line > svg { width: 18px; height: 18px; margin-inline-start: 6px; color: var(--displayInk2); }
+  .slipFoot { font-size: 14px; line-height: 20px; color: var(--displayInk2); padding-top: 2px; }
+  .slipFoot b { color: var(--displayInk); font-weight: 600; }
+  .bal { margin-top: 10px; font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .bal span { font: 400 14px/20px 'Mukta', sans-serif; color: var(--displayInk); }
+  .balHint { font-size: 14px; line-height: 20px; color: var(--displayInk2); margin: 2px 0 10px; }
+  .used { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; border-radius: 18px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--displayInk); font: 600 17px/1 'Mukta', sans-serif; color: var(--displayInk); }
+  .wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; margin-top: 16px; border-radius: 18px; font: 600 calc(17px * var(--ts))/1 'Mukta', sans-serif; flex: none; }
+  .wide.del { background: var(--sunk); color: var(--ink); }
+  .wide.sig { background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); margin-top: 12px; }
+  .wide.off { background: var(--sunk); color: var(--ink2); box-shadow: none; background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--hairline) 6px 7px); }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .key { height: 56px; border-radius: 16px; background: var(--sunk); font: 600 24px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+
+  /* The fixed-height slot: L1 then L2 (the IndexedStack is as tall as its tallest state) */
+  .slot { margin-top: 8px; min-height: calc(58px * var(--ts)); }
+  .slot .l1 { font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--displayInk); }
+  .slot .l1.strong { font-weight: 600; }
+  .slot .l1 b { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .slot .l2 { font-size: calc(14px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--displayInk2); }
+  /* All of it: 48dp chip. Rest hairline, selected ink2 (D89) */
+  .all { min-height: 48px; padding: 0 16px; border-radius: 12px; display: inline-flex; align-items: center; background: var(--hairline); color: var(--displayInk); font: 600 calc(15px * var(--ts))/1 'Mukta', sans-serif; flex: none; }
+  .all.sel { background: var(--ink2); color: var(--surface); }
+  .all.sel::before { content: ''; width: 6px; height: 6px; border-radius: 3px; background: var(--surface); margin-inline-end: 8px; }
+
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 16px; min-height: 52px; border-radius: 16px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 8px 4px 16px; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); z-index: 12; }
+  .snack b { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .snack i { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Mukta', sans-serif; font-style: normal; padding: 12px; min-height: 48px; display: grid; place-items: center; }
+  .field { display: flex; align-items: center; width: 100%; min-height: 56px; margin-top: 16px; border-radius: 16px; background: var(--sunk); box-shadow: inset 0 0 0 1.5px var(--ink2); padding: 0 16px; font: 400 calc(18px * var(--ts))/1 'Mukta', sans-serif; color: var(--ink2); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips .chip { padding: 4px 16px; }
+  .anno { position: relative; }
+  .tok { display: inline-block; font: 600 12px/16px 'Anek Latin', sans-serif; padding: 2px 6px; border-radius: 6px; background: var(--canvasInk); color: var(--canvas); }
+</style>
+</head>
+<body>
+
+<h1>Yearly costs, and Used <span class="tag">proposal</span></h1>
+<p class="lede">A yearly or term cost (insurance, school fees, Diwali) is set up as a <b>monthly saving</b>: three new name chips and one caption on the existing <i>Add a saving</i> flow, no new question, field or setting. When the cost falls due the user opens the saving and taps <b>Used some of it</b>, so the pot does not read falsely high. A <i>Used</i> entry is in <b>no BR-3 symbol</b>: it never reaches the hero, the bar, the Today total or the Spends bars. Worked example: Insurance <b>₹1,000</b> a month on the 5th, <b>₹12,000</b> set aside, today Mon 26 Oct with ₹420 spent, hero <b>₹1,318 before and after</b>. Every frame is drawn in light and dark at 360dp; frames at 320dp carry text at 1.5×.</p>
+<p class="lede">Colour use: marigold appears only on the <b>Next</b> and <b>Save</b> keys (the act) and today's bar. <i>Used some of it</i> is an outlined key on purpose: it is the second-most important thing on the slip, and a second marigold would shout. No red, no green; a refused digit is a word, a haptic and an outline flash.</p>
+
+<div id="frames"></div>
+
+<h2>Token table</h2>
+<div class="tblWrap"><table>
+  <tr><th>Kind</th><th>Tokens used</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>control</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEdge</code>, <code>blockIdle</code>, <code>scrim</code>, <code>inverse</code> / <code>onInverse</code> (snackbar), <code>signal</code> on <code>onSignal</code> (Next, Save, today's bar, Add). Nothing new.</td></tr>
+  <tr><td>Type</td><td><code>titleLarge</code> (page and step titles, slip name), <code>bodyLarge</code> (row titles), <code>bodyMedium</code> (hint, caption, slot line 1, footer, Spends line, snackbar), <code>bodySmall</code> (row second lines, slot line 2), <code>labelLarge</code> (chips, keys' labels, <i>Used some of it</i>); Anek Latin with tabular figures for every amount (slip amount 56, compact slip amount 48, balance line 17, keys 24).</td></tr>
+  <tr><td>Spacing</td><td><code>gutter</code> 20 (page edge, sheet inset, row inset), <code>l</code> 16 (between blocks, to the foot), <code>m</code> 12 (well to text, keypad to Save), <code>s</code> 8 (chips, keys, slot to amount), <code>xs</code> 4 (section text inset)</td></tr>
+  <tr><td>Radius</td><td><code>card</code> 28, <code>chip</code> 12 (chips, <i>All of it</i>, 40dp wells), 14 (42dp wells), <code>key</code> 16, 18 (<i>Used some of it</i>, Save, Next, Delete), 20 (slip top corners), 16 (snackbar), 6 / 14 (today's bar)</td></tr>
+  <tr><td>Targets</td><td>Chips 48dp, <i>All of it</i> 48dp, <i>Used some of it</i> 56dp, keys 56dp, Save 56dp, Undo 48dp. The Spends line and rows are not targets.</td></tr>
+  <tr><td>Glyphs</td><td>PiggyBank (every saving and every <i>Used</i> row: same glyph as <i>Saved</i>, the words tell them apart), ArrowLeft01, ArrowRight01, Add01, Settings01, Backspace, Delete02, Restaurant (Food rows)</td></tr>
+</table></div>
+
+<h2>Decisions</h2>
+<div class="tblWrap"><table>
+  <tr><th>Decision</th><th>Why</th></tr>
+  <tr><td>Used some of it is outlined, mid-slip</td><td>It is the one deliberate act on the sheet, so it gets a 1.5dp <code>displayInk</code> ring and 56dp. Filled marigold is kept for Save, the act of the next screen. <i>Delete saving</i> is <code>sunk</code> at the foot, a full sheet-height of rows away, so no thumb moves from one to the other.</td></tr>
+  <tr><td>Balance line is the slip's loudest number after the amount</td><td>"₹12,000 set aside" is Anek Semibold 17 in <code>displayInk</code>, with the words in Mukta regular, so the figure is read first and the key under it is read as "this is about that".</td></tr>
+  <tr><td>Used rows reuse the Saved row's two-line shape</td><td>Title is the saving's name, second line the words <i>Used from savings</i>, amount plain at the end: the same grammar as <i>RD / Saved</i> (mockup 28), no sign, no colour, no bite. The deck's one-string title "Insurance · Used from savings" wraps to two lines at 360dp anyway (see Problems 3).</td></tr>
+  <tr><td>The slot is the same fixed-height block as the Fix my number sheet</td><td>Line 1 changes with state, line 2 never does, so the keypad never moves. The refusal replaces line 1 only.</td></tr>
+  <tr><td>Refused digit: outline flash, no colour change</td><td>The static frame shows the 2dp <code>displayInk</code> ring the reduced-motion flash uses; in motion it is the amount shake plus the reject haptic.</td></tr>
+  <tr><td>The hero is shown twice at ₹1,318</td><td>It is the reassurance the keypad promises ("Your daily number doesn't change."), so Home after is drawn rather than described.</td></tr>
+</table></div>
+
+<h2>Problems found in the docs</h2>
+<ol style="list-style:none;padding:0">
+  <li class="why"><b>1. The 320 × 568 sheet does not fit with a 64dp keypad and a wide Save.</b> 04 section 9 and the deck say 64dp keys; mockups 27, 28 and 40 and the built keypad use 56dp. At 56dp the Used sheet needs about 16 (handle) + 56 (title row) + 118 (compact slip with a three-line slot) + 8 + 4 × 56 + 3 × 8 (keys) + 68 (Save) + 20 = <b>about 534dp</b> of 568 minus the 28dp status bar, so it fits at 1× with nothing to spare. With 64dp keys it needs 566dp and does not. At 1.5× the body scrolls above the fixed keypad as the deck says (section 9 shows it), but then the title (3 lines) has to scroll off for the amount and slot to show at all (section 9, first frame). That frame is the empty state; the refusal state is a three-line reason plus the two-line fixed line, which the keypad cuts. <i>All of it</i> fits beside ₹0 but wraps below a six-digit amount. <b>Fix:</b> at large text, drop the <i>Back</i> well's title to the system title row (one line, "Used from Insurance") and keep the amount, chip and slot in the fixed part; or give the slot priority over the title. <b>Fix:</b> keep 56dp keys here; or move the action key into the keypad's bottom-right cell as 04's wireframe has it, which saves the 68dp Save row. That wireframe has <b>no 00 key</b>, and 04 also says "shared <code>Keypad</code>", so the two cannot both be true. Pick one; I drew the existing shared keypad with 00 and a wide Save.</li>
+  <li class="why"><b>2. The Savings list row has three things to say and room for two.</b> The deck gives the row's second line to "{amount} set aside", but the existing row's second line is "Every month on the 5th", and the UX doc's S6 shows both. Drawn: the schedule stays as line 2 and "₹12,000 set aside" is a <b>third line</b> (only above ₹0), so the row grows from 64 to 84dp, and at 320dp with 1.5× text the trailing ₹1,000 leaves a text column of about 110dp, so the three lines become six (section 9). That is an existing weakness of any row with a trailing amount, but this feature adds the third line. Alternative: join them with a middle dot, which wraps unpredictably at 360dp. Recommendation: the third line.</li>
+  <li class="why"><b>3. "Insurance · Used from savings" on one line does not fit a Today row.</b> The title column at 360dp is about 176dp, and the string is about 220dp. The deck's own note says the row wraps to two lines. Drawn as name over <i>Used from savings</i>, matching the Saved row, which needs the deck's <code>entryUsed</code> to carry the kind word alone and the saving's name to come from the row. Needs a decision from design-content (the spoken form "Insurance, used from savings, 4,000 rupees" is unaffected).</li>
+  <li class="why"><b>4. The slot's refusal copy is not the UX doc's.</b> UX doc: "That's all that's set aside. Add anything more as a spend." Deck: "That's all you have set aside. Add the rest as a spend." Used the deck's (verbatim, as asked). The deck's caption ("divided by 12") also replaces the UX doc's "about a twelfth", and "₹12,000 set aside" replaces "set aside so far". The brief asked for "so far"; the deck has no such string, so I drew the deck. Four strings in the UX doc and 03 need the same update.</li>
+  <li class="why"><b>5. "Used some of it" and the hint repeat each other.</b> On the slip the hint ("Paid the cost from this? Tap Used some of it.") sits directly above a key that says <i>Used some of it</i>. Drawn as written. If the blind read (B8) shows the key is understood alone, drop the hint and gain 40dp on short windows. On an RD "the cost" reads oddly (open question 4 in the deck); the chips-only option is cheap, since the hint is already conditional on a balance.</li>
+  <li class="why"><b>6. The caption plus hint is five lines at 1.5× on the amount step.</b> The step has a fixed keypad, so the body scrolls and, scrolled to the end, <b>the amount being typed is off screen</b> (section 9, third frame). The hint is the discovery cue for <i>Used</i>, so it is the sentence a short window would drop first; the deck allows that. Better: at large text show the caption above the slip and keep the amount in the fixed part, or drop the hint there (the sheet's own hint carries discovery too).</li>
+  <li class="why"><b>7. Snackbar wording on All of it.</b> "Insurance: ₹12,000 used" does not say that the daily number is unchanged, and Undo restores the pot. Acceptable (the keypad already promised it), but it is the one place the doc's "peak-end moment" has no reassurance. Not changed.</li>
+</ol>
+
+<script>
+const P = {
+  piggy: '<path d="M19 9.5c.9.8 1.5 1.7 1.8 2.7H22v3.3h-1.4c-.5 1-1.3 1.9-2.3 2.5V20h-2.6v-1.3h-4.4V20H8.7v-2.2C6.4 16.6 5 14.6 5 12.3c0-3.6 3.4-6.5 7.6-6.5 1.2 0 2.4.2 3.4.7L18.8 5z"/><path d="M5 11.3c-1.4 0-2.3-.8-2.3-2"/><path d="M10.5 8.6h3.6"/><path d="M16.6 11h.01"/>',
+  food: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>', back: '<path d="M15 6l-6 6 6 6"/>', prev: '<path d="M14 7l-5 5 5 5"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
+  bs: '<path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  car: '<path d="M3 17v-4l2.2-5.5h13.6L21 13v4z"/><path d="M3 13h18"/><path d="M6 17v2.5M18 17v2.5"/>',
+  bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+};
+const ic = (k, label, cls) => `<svg class="i" viewBox="0 0 24 24" role="img" aria-label="${label || k}"${cls ? ` style="width:${cls}px;height:${cls}px"` : ''}>${P[k]}</svg>`;
+const R = (n) => `<span class="rs">₹</span>${n}`;
+const status = '<div class="status"><span>2:10 pm</span><span>Mon 26</span></div>';
+const dockH = (on) => `<div class="dock"><span class="${on === 'home' ? 'on' : ''}">Home</span><span class="${on === 'spends' ? 'on' : ''}">Spends</span><span class="add">${ic('plus', 'Add')}</span><span>Ask AI</span><span>Settings</span></div>`;
+
+/* ---- Settings > Savings list (behind the sheets, and the footer frames) ---- */
+function list(o = {}) {
+  const set = o.set ?? 0;
+  const rows = o.empty ? '' : `<div class="card"><div class="row tall"><span class="w">${ic('piggy', 'Saving')}</span>
+      <span class="t">Insurance<span>Every month on the 5th</span>${set > 0 ? `<span class="k">₹${set.toLocaleString('en-IN')} set aside</span>` : ''}</span><b>₹1,000</b></div></div>`;
+  const foot = o.empty ? '' : `<div class="foot"><span><b>₹12,000</b> put in since Nov</span>${o.footLeft === undefined ? '' : o.footLeft === 0 ? '<span>Nothing is set aside now.</span>' : `<span><b>₹${o.footLeft.toLocaleString('en-IN')}</b> still set aside</span>`}</div>`;
+  return `<div class="page">
+    <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Savings</span></div>
+    <p class="hint">Money you put away on the same day every month, like an RD. Today's share already leaves room for it.</p>
+    <span class="chip self">${ic('plus', 'Add')} Add a saving</span>
+    ${rows}${foot}
+    ${o.empty ? '' : `<span class="chip self">${ic('piggy', 'Saving')} Put in extra</span>`}
+  </div>${o.snack ? `<div class="snack" role="status"><span>${o.snack}</span><i>Undo</i></div>` : ''}`;
+}
+
+/* ---- Add a saving: name, amount ---- */
+const stepHd = (q, noBack) => `<div class="handle"></div><div class="stepHd"><span class="well40" style="background:var(--sunk)">${ic('back', 'Back')}</span><div class="q">${q}</div></div>`;
+const keypad = (action, off) => `<div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map((k) => `<div class="key">${k}</div>`).join('')}<div class="key">${ic('bs', 'Delete last digit', 24)}</div></div>
+  <div class="wide sig${off ? ' off' : ''}">${action}</div>`;
+
+function nameStep(o = {}) {
+  const chips = ['RD', 'SIP', 'Gold scheme', 'Chit', 'Insurance', 'School fees', 'Festival'];
+  return `${list({ empty: true })}<div class="scrim"></div><div class="sheet"><div class="body">
+    ${stepHd('What is it for?')}
+    <div class="chips">${chips.map((c) => `<span class="chip${c === o.pick ? ' on' : ''}">${c}</span>`).join('')}</div>
+    <div class="field">Or type a name</div></div>
+    <div class="foot2"><div class="wide sig${o.pick ? '' : ' off'}">Next</div></div></div>`;
+}
+function amountStep(o = {}) {
+  return `${list({ empty: true })}<div class="scrim"></div><div class="sheet"><div class="body${o.cut ? ' cut' : ''}">
+    ${stepHd('How much do you put in Insurance each month?')}
+    <div class="slip compact"><div class="amtRow" style="margin-top:0"><div class="big">${R('1,000')}<span class="caret"></span></div></div>
+      <div class="slot"><div class="l1">Paid once a year? Each month, put in the cost divided by 12.</div><div class="l2">When you pay it, tap Used some of it.</div></div></div></div>
+    <div class="foot2">${keypad('Next')}</div></div>`;
+}
+
+/* ---- The saving's sheet (slip with balance, hint, Used key, Delete at the foot) ---- */
+const perf = '<div class="perf"><i class="l"></i><i class="r"></i></div>';
+const sline = (l, v) => `<div class="line"><span>${l}</span><i class="lead"></i><span class="v">${v}</span>${ic('chev', 'Change')}</div>`;
+function savingSheet(o = {}) {
+  const set = o.set ?? 12000;
+  return `${list({ set })}<div class="scrim"></div><div class="sheet"><div class="body">
+    <div class="handle"></div>
+    <div class="slip">
+      <div class="eyebrow">Saving</div>
+      <div class="who"><span class="w">${ic('piggy', 'Saving')}</span><span class="nm">Insurance</span></div>
+      <div class="amtRow"><div class="big slipAmt">${R('1,000')}</div><div class="stamp">Put in 5 Oct</div></div>
+      <div class="every">Every month on the 5th</div>
+      ${set > 0 ? `<div class="bal">₹${set.toLocaleString('en-IN')} <span>set aside</span></div>
+      <div class="balHint">Paid the cost from this? Tap Used some of it.</div>
+      <div class="used">Used some of it</div>` : ''}
+      ${perf}${sline('Amount', '₹1,000')}${sline('Day of the month', '5th')}${sline('Name', 'Insurance')}${perf}
+      <div class="slipFoot">Next goes in on <b>5 Nov</b></div>
+    </div></div>
+    <div class="foot2"><div class="wide del" style="margin-top:8px">${ic('trash', 'Delete')} Delete saving</div></div></div>`;
+}
+
+/* ---- The Used question (inside the sheet) ---- */
+function usedSheet(o = {}) {
+  const bal = 12000, amt = o.amt || 0, fmt = (n) => n.toLocaleString('en-IN');
+  let l1;
+  if (o.mode === 'refuse') l1 = `<div class="l1 strong">That's all you have set aside. Add the rest as a spend.</div>`;
+  else if (o.mode === 'fail') l1 = `<div class="l1 strong">Couldn't save. Try again.</div>`;
+  else if (amt === 0) l1 = `<div class="l1"><b>₹${fmt(bal)}</b> is set aside.</div>`;
+  else if (bal - amt === 0) l1 = `<div class="l1">Nothing will be set aside.</div>`;
+  else l1 = `<div class="l1"><b>₹${fmt(bal - amt)}</b> will still be set aside.</div>`;
+  return `${list({ set: bal })}<div class="scrim"></div><div class="sheet"><div class="body${o.cut ? ' cut' : ''}">
+    ${stepHd('How much did you use from Insurance?')}
+    <div class="slip compact">
+      <div class="amtRow" style="margin-top:0"><div class="big ${amt ? '' : 'zero'}${o.mode === 'refuse' ? ' reject' : ''}">${R(amt ? fmt(amt) : '0')}<span class="caret"></span></div>
+        <span class="all${amt === bal ? ' sel' : ''}">All of it</span></div>
+      <div class="slot">${l1}<div class="l2">Your daily number doesn't change.</div></div>
+    </div></div>
+    <div class="foot2">${keypad('Save', amt === 0)}</div></div>${o.snack ? `<div class="snack"><span>${o.snack}</span><i>Undo</i></div>` : ''}`;
+}
+
+/* ---- Home, Every entry, Spends ---- */
+function home() {
+  return `<div class="page dense">
+    <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+    <div class="hero"><div class="ttl">Safe to spend today</div><div class="amt">${R('1,318')}</div>
+      <div class="tbar"><span class="f" style="flex:1318"></span><span class="bite" style="flex:380"></span><span class="bite end" style="flex:40;min-width:4px"></span></div>
+      <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹1,738</b> for today</span></div></div>
+    <div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>
+    <div class="card">
+      <div class="row"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">Insurance<span>Used from savings</span></span><b>₹4,000</b></div>
+      <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Lunch<span>Food</span></span><b>₹380</b></div>
+      <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Chai<span>Food</span></span><b>₹40</b></div>
+    </div></div>${dockH('home')}`;
+}
+function every() {
+  return `<div class="page">
+    <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Every entry</span></div>
+    <div class="secHd">Today</div>
+    <div class="card">
+      <div class="row tall"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">Insurance<span>Used from savings</span><span>Paid from what you set aside.</span></span><b>₹4,000</b></div>
+      <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Lunch<span>Food</span></span><b>₹380</b></div>
+      <div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Chai<span>Food</span></span><b>₹40</b></div>
+    </div>
+    <div class="secHd">Mon 5 Oct</div>
+    <div class="card">
+      <div class="row"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">Insurance<span>Saved</span></span><b>₹1,000</b></div>
+    </div></div>`;
+}
+function spends(o = {}) {
+  const cats = [['home', 'Bills', '₹16,200'], ['food', 'Food', '₹6,140'], ['car', 'Travel', '₹2,830'], ['bag', 'Shopping', '₹2,400']];
+  return `<div class="page">
+    <div class="topbar"><span class="well40">${ic('prev', 'September')}</span><span class="ttl" style="text-align:center">October</span><span class="well40" style="opacity:.4">${ic('chev', 'November')}</span></div>
+    <div class="card pace"><svg viewBox="0 0 320 120" aria-label="Pace chart"><path d="M20 104 L300 20" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/><path d="M20 104 L60 90 L100 82 L130 66 L170 58 L210 48 L236 38" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="236" cy="38" r="4" fill="var(--ink)"/></svg></div>
+    <div class="tally"><span class="part">Spent <b>₹27,570</b></span> · <span class="part">Saved <b>₹1,000</b></span> · <span class="part ${o.wrapok ? 'wrapok' : ''}">Used from savings <b>₹4,000</b></span></div>
+    ${o.short ? '' : `<div class="card"><div class="cardHd">Where it went</div>${cats.map(([k, n, v]) => `<div class="cat"><span class="w">${ic(k, n)}</span><span class="n">${n}</span><b>${v}</b></div>`).join('')}</div>`}
+  </div>${dockH('spends')}`;
+}
+
+/* ---- Layout of the figures ---- */
+const fig = (inner, theme, cap, cls = '') => `<figure><div class="phone ${theme} ${cls}" inert>${status}${inner}</div><figcaption>${cap}</figcaption></figure>`;
+const both = (fn, a, cap, cls) => fig(fn(a), 'light', cap + ' Light.', cls) + fig(fn(a), 'dark', cap + ' Dark.', cls);
+
+const SECTIONS = [
+  ['1. Settings › Savings › Add a saving: the name question', `<div class="pair">${both(nameStep, { pick: 'Insurance' }, 'Seven chips on one wrapping set; the four old ones keep their place. <i>Insurance</i> is the picked chip (<code>ink</code> fill, <code>bg</code> label, as mockup 29).')}</div>`,
+    'RD, SIP, Gold scheme and Chit never move; the three new chips follow in the same 48dp chip, 8dp apart, wrapping to a second line at 360dp. No divider and no caption between the old and new: a chip is a chip. <i>Next</i> stays off (<code>sunk</code>, hatch, label) until a chip is picked or a name typed.'],
+  ['2. The amount question, with the caption', `<div class="pair">${both(amountStep, {}, '<i>Insurance</i> picked, ₹1,000 typed. The caption sits in the slot, under the amount.')}</div>`,
+    'The caption is two sentences in the slip\'s slot: line 1 (<code>bodyMedium</code>, <code>displayInk</code>) the rule, line 2 (<code>bodySmall</code>, <code>displayInk2</code>) the discovery cue for <i>Used</i>. It shows for the three new chips only; for RD the slot is empty and holds its height. Next is the one marigold key. Day question unchanged (not redrawn).'],
+  ['3. The saving\'s sheet', `<div class="pair">${both(savingSheet, { set: 12000 }, 'Slip with ₹12,000 set aside.')}${fig(savingSheet({ set: 0 }), 'light', 'Before the first put-in the slip is exactly today\'s: no balance, no hint, no key. Light.')}</div>`,
+    'Order on the slip: stamp, balance, hint, <b>Used some of it</b> (outlined, 56dp), then the three rows, then <i>Next goes in on 5 Nov</i>. <i>Delete saving</i> is outside the slip, <code>sunk</code>, pinned at the foot. The balance and the key appear only above ₹0. 16dp from the hint to the key, 8dp perforation margin, 20dp slip inset. On windows shorter than this the body scrolls and Delete stays pinned.'],
+  ['4. Used: the question, empty', `<div class="pair">${both(usedSheet, { amt: 0 }, 'Empty. ₹0 is muted, Save is off.')}</div>`,
+    'Back well and title (two lines), the compact slip: amount with the 48dp <i>All of it</i> chip on its right, then the fixed three-line slot. ₹0 is <code>displayInk2</code> (it means "typed nothing") and <i>Save</i> is the off key: <code>sunk</code> with a 1dp hatch and the label, never colour alone. TalkBack reads "Type an amount first" on it.'],
+  ['5. Used: All of it, typing, refused, failed', `<div class="pair">${fig(usedSheet({ amt: 12000 }), 'light', '<i>All of it</i> picked: the chip fills <code>ink2</code> with a dot (D89), the amount is the whole pot, the slot says "Nothing will be set aside." Light.')}${fig(usedSheet({ amt: 4000 }), 'dark', 'Typing ₹4,000: "₹8,000 will still be set aside." The chip is back at rest. Dark.')}${fig(usedSheet({ amt: 9000, mode: 'refuse' }), 'light', 'A 9 after ₹9,000 was refused: the reason replaces line 1 (600 weight), the amount keeps a 2dp ring (the reduced-motion flash; in motion it shakes, with the reject haptic). Light.')}${fig(usedSheet({ amt: 4000, mode: 'fail' }), 'dark', 'Save failed: "Couldn\'t save. Try again." replaces line 1, Save is live again, the keypad stays. Dark.')}</div>`,
+    'Line 2 never changes in any state, so the keys never move by a pixel. The refusal and failure lines are words in <code>displayInk</code> at weight 600 (de-emphasised lines are <code>displayInk2</code>, which passes 4.5:1 on <code>display</code> in both themes), not a colour.'],
+  ['6. After Save: the list, the snackbar, the footer', `<div class="pair">${fig(list({ set: 8000, footLeft: 8000, snack: 'Insurance: <b>₹4,000</b> used' }), 'light', 'Used ₹4,000: the row says "₹8,000 set aside", the footer "₹8,000 still set aside". Light.')}${fig(list({ set: 8000, footLeft: 8000, snack: 'Insurance: <b>₹4,000</b> used' }), 'dark', 'Dark.')}${fig(list({ set: 0, footLeft: 0, snack: 'Insurance: <b>₹12,000</b> used' }), 'light', 'All of it: the third line goes (only above ₹0) and the footer reads "Nothing is set aside now." Light.')}</div>`,
+    'The sheet has closed; Undo is 48dp, held 4 s (until dismissed under TalkBack). The footer keeps its first line ("₹12,000 put in since Nov", gross) and gains a second only when a pot or a use exists. The row\'s third line is <code>bodySmall</code> in <code>ink</code> with the amount in Anek: the one line on the row that is read as a number.'],
+  ['7. Home after: nothing moved', `<div class="pair">${both(home, {}, 'Hero ₹1,318 as before the use. The Used row sits on top of the Today list.')}</div>`,
+    'The hero, bar and the "Today ₹420" header are the same pixels as before: <i>Used</i> is no bite and not in the list total. The row is a Saved-row sibling: PiggyBank in the 42dp <code>sunk</code> well, name over <i>Used from savings</i>, amount in Anek Semibold, no sign, no colour, no tap (swipe deletes with Undo).'],
+  ['8. Every entry, and Spends', `<div class="pair">${fig(every(), 'light', 'Every entry. Light.')}${fig(every(), 'dark', 'Dark.')}${fig(spends(), 'light', 'Spends: "Spent ₹27,570 · Saved ₹1,000 · Used from savings ₹4,000". Light.')}${fig(spends(), 'dark', 'Dark.')}</div>`,
+    'Every entry adds the third line <i>Paid from what you set aside.</i> (<code>bodySmall</code>, <code>ink2</code>) so "Insurance · Used" can\'t be read as a claim; the 5 Oct <i>Saved</i> row is drawn beside it for contrast. The Spends line is parts that never break inside: the widget wraps <b>between</b> parts and joins with "·". The third part is shown only in a cycle with a use; it is in no bar, percentage, pace line or insight.'],
+  ['9. 320dp, text at 1.5×', `<div class="pair">${fig(usedSheet({ amt: 0, cut: true }), 'light', 'Used, empty, body scrolled to its end: the title has left the top, <i>All of it</i> still fits beside ₹0 (it wraps once the amount has six digits) and the empty slot just fits. Light.', 's320 ts15')}${fig(usedSheet({ amt: 0, cut: true }), 'dark', 'Dark.', 's320 ts15')}${fig(amountStep({ cut: true }), 'light', 'Amount question, scrolled to its end: the caption and hint (five lines) push the amount you are typing off the top. Light.', 's320 ts15')}${fig(savingSheet({ set: 12000 }), 'dark', 'The saving\'s sheet scrolls under a pinned Delete saving. Dark.', 's320 ts15')}${fig(spends({ wrapok: true, short: true }), 'light', 'Spends: the line wraps between parts, one per line here, with the "·" left at each line end. Light.', 's320 ts15')}${fig(list({ set: 12000, footLeft: 12000 }), 'light', 'Savings list at 1.5×: the row text column is about 110dp, so its three lines become six. Light.', 's320 ts15')}</div>`,
+    'Text scale 1.5× is applied to the text in the sheet, the lists and the slot. The display amount is drawn at 1.25× (assumption: the amount style caps its own scale; check <code>hisaab_type.dart</code>). Hero and dock are not text-scaled here. Nothing is cut with an ellipsis: titles and slot lines wrap, and the sheet body scrolls above its fixed keypad.'],
+];
+document.getElementById('frames').innerHTML = SECTIONS.map(([t, body, why]) => `<h2>${t}</h2>${body}<p class="why">${why}</p>`).join('');
+</script>
+</body>
+</html>

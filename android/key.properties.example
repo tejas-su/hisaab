@@ -1,0 +1,11 @@
+# Maintainer only: contributors don't need this (docs/RELEASE.md).
+# Copy this file to android/key.properties and fill in your own values.
+# android/key.properties and *.jks are git-ignored, and Claude Code is blocked from reading them.
+# Never commit the real file, and never paste its contents into a chat.
+#
+# storeFile is resolved from the android/ folder, so a keystore kept beside this file is just
+# its name. An absolute path (forward slashes on Windows) also works.
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+storeFile=upload-keystore.jks

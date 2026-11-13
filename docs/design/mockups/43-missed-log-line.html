@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• The missed-log line (proposal)</title>
+<style>
+  /* The missed-log line (proposed 2026-11-13; docs/features/habits/08-missed-log-line.md, fix-my-number/03 section 1,
+     copy deck 41 section 7). Not in SPEC and not built. Worked example as mockup 40: Mon 26 Oct 2026, hero Rs 1,430,
+     Rs 420 spent (Travel 300, Chai 120), habit Food Rs 120 weekdays 1 to 2 pm, nothing in Food today, now 4:10 pm
+     (the window ended 2:00, plus the 90 minutes is 3:30). Copy is the deck's, verbatim.
+     Tokens: light from mockup 40 (after D145), dark from mockup 33. Row shape: DueSoonRow / mockup 29's nudge.
+     Icons are hand-drawn stand-ins for Hugeicons stroke-rounded. 320dp frames carry --ts: 1.5. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EDE8; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #5B5650; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #312E29; --onInverse: #F2F1EC;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, p b, td b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .tblWrap { overflow-x: auto; max-width: 100%; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 1000px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; }
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; max-width: 360px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 780px; margin: 10px 0 0; }
+  .why b { color: var(--canvasInk); font-weight: 600; }
+
+  .phone { --ts: 1; position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  .phone.s320 { width: 320px; height: 568px; }
+  .phone.ts15 { --ts: 1.5; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .status { height: 28px; padding: 6px 24px 0; font: 600 13px/16px 'Mukta', sans-serif; display: flex; justify-content: space-between; }
+  .page { position: absolute; inset: 28px 0 0; padding: 4px 20px 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+  .topbar { display: flex; align-items: center; height: 48px; gap: 12px; flex: none; }
+  .wm { flex: 1; font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .well40 svg { width: 20px; height: 20px; }
+
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); flex: none; }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .tbar { display: flex; gap: 3px; height: 40px; margin-top: 16px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+
+  /* The nudge slot. DueSoonRow's shape (mockup 29): 18dp radius, min 56dp, 12dp start inset, so the 24dp glyph in its
+     40dp well starts at 20 + 12 + 8 = 40dp, the hero's text edge. */
+  .nudge { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; border-radius: 18px; background: var(--sunk); flex: none; }
+  .nudge .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .nudge .w svg { width: 24px; height: 24px; }
+  .nudge .t { flex: 1; min-width: 0; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); }
+  .nudge .t span { display: block; font-size: calc(13px * var(--ts)); line-height: calc(18px * var(--ts)); color: var(--ink2); }
+  .nudge .t b { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .nudge > svg:last-child { width: 18px; height: 18px; color: var(--ink2); }
+  .nudge.pressed { background: var(--hairline); }
+  .nudge.hover { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .nudge.focus { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
+  .listHd { display: flex; align-items: baseline; gap: 8px; padding-inline-start: 4px; margin-bottom: -4px; flex: none; }
+  .listHd .h { flex: 1; font: 600 17px/24px 'Anek Latin', sans-serif; }
+  .listHd b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd span { font: 600 14px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .card { background: var(--surface); border-radius: 28px; padding: 6px 0; flex: none; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 7px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .w svg { width: 22px; height: 22px; }
+  .row .t { flex: 1; min-width: 0; font-size: calc(16px * var(--ts)); line-height: calc(22px * var(--ts)); }
+  .row .t span { display: block; font-size: calc(13px * var(--ts)); line-height: calc(18px * var(--ts)); color: var(--ink2); }
+  .row b { font: 600 calc(16px * var(--ts))/calc(22px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .row.fresh { box-shadow: none; }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 92px; min-height: 52px; border-radius: 16px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 4px 16px; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); z-index: 12; }
+  .snack i { font: 600 15px/20px 'Mukta', sans-serif; font-style: normal; padding: 12px; min-height: 48px; display: grid; place-items: center; }
+
+  /* Add tray, step 1 (mockup 40, layout B) */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .tray { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 36px 36px 0 0; padding: 16px 20px 24px; z-index: 9; }
+  .dark .tray { box-shadow: inset 0 1px 0 var(--hairline); }
+  .kind { display: flex; width: 220px; margin: 0 auto; height: 44px; border-radius: 14px; background: var(--sunk); padding: 3px; }
+  .kind span { flex: 1; display: grid; place-items: center; border-radius: 11px; font: 600 15px/1 'Mukta', sans-serif; color: var(--ink2); }
+  .kind span.on { background: var(--ink); color: var(--surface); }
+  .bigAmt { text-align: center; margin-top: 20px; font: 600 60px/64px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; color: var(--ink2); }
+  .bigAmt .rs { font-size: .5em; top: .35em; }
+  .slot { height: 48px; margin-top: 4px; display: grid; place-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 12px; border-radius: 20px; box-shadow: inset 0 0 0 1px var(--ink2); background: var(--surface); font: 600 16px/20px 'Mukta', sans-serif; white-space: nowrap; }
+  .pill svg { width: 20px; height: 20px; }
+  .pill .a { font: 600 17px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .pill .u { color: var(--ink2); font-weight: 400; }
+  .qchips { display: flex; gap: 6px; margin-top: 8px; }
+  .qchips span { flex: 1; height: 40px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; font: 600 14px/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .keys span { height: 56px; border-radius: 16px; background: var(--sunk); display: grid; place-items: center; font: 600 24px/1 'Anek Latin', sans-serif; }
+  .keys svg { width: 24px; height: 24px; }
+  .signal { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 56px; margin-top: 14px; border-radius: 18px; font: 600 17px/1 'Mukta', sans-serif; background: var(--sunk); color: var(--ink2); background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--hairline) 6px 7px); }
+
+  /* Canvas figures that are not phones */
+  .board { --ts: 1; width: 360px; padding: 20px; border-radius: 28px; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; gap: 12px; flex: none; }
+  .board .lab { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .08em; color: var(--ink2); text-transform: uppercase; }
+  .rank { display: flex; align-items: center; gap: 8px; }
+  .rank .n { width: 28px; height: 28px; border-radius: 14px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font: 600 14px/1 'Anek Latin', sans-serif; flex: none; }
+  .rank .nudge { flex: 1; }
+  .rank .after { font: 600 12px/16px 'Anek Latin', sans-serif; color: var(--ink2); padding-inline-start: 36px; margin-top: -6px; }
+  .gt { font-size: 14px; line-height: 20px; color: var(--ink2); padding-inline-start: 36px; margin: -4px 0; }
+  .measure { display: flex; height: 22px; margin-top: 4px; font: 600 11px/22px 'Anek Latin', sans-serif; color: var(--ink2); text-align: center; }
+  .measure span { border-left: 1px solid var(--ink2); border-right: 1px solid var(--ink2); margin-right: -1px; white-space: nowrap; overflow: hidden; }
+  .measure span.g { background: repeating-linear-gradient(135deg, transparent 0 4px, var(--hairline) 4px 5px); }
+  .stateLab { font: 600 13px/18px 'Mukta', sans-serif; color: var(--ink2); }
+</style>
+</head>
+<body>
+
+<h1>The missed-log line <span class="tag">proposal</span></h1>
+<p class="lede">When you spent on something you usually spend on and the day has gone by without logging it, Home asks once, in its quiet nudge slot: <b>Spent on Food today?</b> <b>Usually around 1 pm.</b> One tap opens the Add tray at step 1 with the <i>your usual</i> pill carried, so the usual answer is two taps. Ignoring it is free: it asks at most once a day, has no ×, no count, no badge and no marigold. Worked example: Mon 26 Oct, <b>4:10 pm</b> (the Food window ended at 2:00, plus 90 minutes is 3:30), hero ₹1,430, ₹420 spent (Travel ₹300, Chai ₹120), nothing in Food. Light and dark at 360dp, and one frame at 320dp with text at 1.5×.</p>
+<p class="lede">Colour: the line is <code>sunk</code> with a <code>surface</code> icon well and <code>ink</code> / <code>ink2</code> text, the same as the due-soon row. It is a question, not an act, so marigold stays on today's bar and the Add key.</p>
+
+<div id="frames"></div>
+
+<h2>Token table</h2>
+<div class="tblWrap"><table>
+  <tr><th>Part</th><th>Token</th></tr>
+  <tr><td>Row fill</td><td>rest <code>sunk</code>; pressed <code>hairline</code>; hovered <code>sunk</code> plus a 1dp <code>hairline</code> outline; focused the <code>Pressable</code> ring (<code>focusRadius</code> 18; drawn 2dp <code>ink</code>, 2dp off)</td></tr>
+  <tr><td>Icon well</td><td>40dp, radius <code>chip</code> 12, <code>surface</code>; the category's Hugeicon 24dp in <code>ink</code></td></tr>
+  <tr><td>Type</td><td>line 1 <code>bodyMedium</code> (Mukta 15/20, <code>ink</code>); line 2 <code>bodySmall</code> (Mukta 13/18, <code>ink2</code>); chevron 18dp <code>ink2</code></td></tr>
+  <tr><td>Spacing</td><td>row 56dp min; 12dp start and end inset, 8dp top and bottom; 12dp well to text; 16dp (<code>l</code>) above (to the hero) and below (to the Today header). The 24dp glyph starts at 20 + 12 + 8 = 40dp, the hero's text edge and the left edge of the Today rows' wells</td></tr>
+  <tr><td>Radius</td><td><code>18</code> (nudge row, as <code>DueSoonRow</code>), 12 (well), <code>card</code> 28, 36 (tray top), 20 (pill), 16 (snackbar)</td></tr>
+  <tr><td>Pill (tray)</td><td>outline 1dp <code>ink2</code> on <code>surface</code>, 40dp tall, radius 20, 48dp slot; unchanged from mockup 40</td></tr>
+  <tr><td>Targets</td><td>row 56dp or more, whole row is the target; Undo 48dp; no ×</td></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>display</code>, <code>signal</code> (bar and Add only), <code>scrim</code>, <code>inverse</code>/<code>onInverse</code>. Nothing new</td></tr>
+</table></div>
+
+<h2>Problems found in the docs</h2>
+<ol style="list-style:none;padding:0">
+  <li class="why"><b>1. The line looks like the due-soon row, and that is a risk.</b> 08 says the line is a sibling of <code>DueSoonRow</code>, but then a due bill ("goes in on Thu") and a question about a habit are two different asks in an identical shape. The words differ, and a question mark is the only cue. Kept identical on purpose (one slot, one voice), but the icon well carries the category glyph, and for <i>Spent on Food today?</i> that is the same Food glyph as the Today rows beneath it, so the line can read as one of the entries. A sibling of <code>WaitingBillRow</code> has the same issue. Suggested: nothing now; hallway-test it (blind-read B12 asks about feeling, not recognition).</li>
+  <li class="why"><b>2. The line's glyph aligns with the hero, but its well does not align with the Today wells.</b> 08 says the 12dp (<code>HisaabSpacing.m</code>) inset lines the well's glyph up with the hero and Today list. With a 20dp page gutter the 24dp glyph does start at 40dp, the hero's text edge and the Today wells' left edge, but the <code>surface</code> well around it starts at 32dp, 8dp left of those wells. Visible in section 1: the line's well sticks out 8dp to the left of the list's wells. It is the existing due-soon geometry (mockup 29), so I kept it; moving all nudge rows to a 20dp inset would align the shapes but shrink the text column by 8dp. One decision for the shared constant (design-system).</li>
+  <li class="why"><b>3. The tap target is the whole row; the chevron says "opens", but at 1.5× the row is five lines.</b> At 320dp and 1.5× the line is "Spent on Food" / "today?" plus "Usually around" / "1 pm.", about 120dp tall, a quarter of the first screen above the dock. 08 says the category name is never cut and that is kept, but there is no limit on height. It still beats a two-line cap that would ellipsise the category.</li>
+  <li class="why"><b>4. "Home after (line gone)" has two meanings.</b> After a save the Today list gains a row and the hero drains; after Back without saving the slot just collapses and the list moves up. Both are drawn (section 5). The collapse moves the Today list up by 72dp (56 + 16), the one reflow in the flow. The doc says it "joins the Home reflow and finishes no later than the drain" but not what Back does: 150ms crossfade or standard motion. For design-motion.</li>
+  <li class="why"><b>5. The priority strip shows the deliberate gap in the slot rules.</b> When a higher line clears mid-day the slot collapses empty and the next line does <b>not</b> slide in (03 section 1.2). Visually that means Home can be quieter after a bill is paid than a minute before; that is intended (no second ask) and drawn.</li>
+</ol>
+
+<script>
+const P = {
+  food: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/>',
+  chai: '<path d="M14.6 8.5H9.4C8.1 8.5 7.45 8.5 7.08 8.9C6.72 9.3 6.77 9.95 6.87 11.2L7.47 18.4C7.58 19.9 7.64 20.68 8.13 21.08C8.62 21.5 9.4 21.5 10.95 21.5H13.05C14.6 21.5 15.38 21.5 15.87 21.08C16.36 20.68 16.42 19.9 16.53 18.4L17.13 11.2C17.23 9.95 17.28 9.3 16.92 8.9C16.55 8.5 15.9 8.5 14.6 8.5Z"/><path d="M7.2 12H16.8"/><path d="M13.3 2.5C12.76 2.84 12 4 12 5.5M9.5 4C9.5 4 9 4.5 9 5.5M16 4C15.7 4.17 15.5 5 15.5 5.5"/>',
+  travel: '<rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18l-1.5 3M16 18l1.5 3"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/>',
+  piggy: '<path d="M19 9.5c.9.8 1.5 1.7 1.8 2.7H22v3.3h-1.4c-.5 1-1.3 1.9-2.3 2.5V20h-2.6v-1.3h-4.4V20H8.7v-2.2C6.4 16.6 5 14.6 5 12.3c0-3.6 3.4-6.5 7.6-6.5 1.2 0 2.4.2 3.4.7L18.8 5z"/><path d="M5 11.3c-1.4 0-2.3-.8-2.3-2"/><path d="M10.5 8.6h3.6"/><path d="M16.6 11h.01"/>',
+  power: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  pen: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>', back: '<path d="M15 6l-6 6 6 6"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  bs: '<path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>',
+  next: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+};
+const ic = (k, label) => `<svg class="i" viewBox="0 0 24 24" role="img" aria-label="${label || k}">${P[k]}</svg>`;
+const R = (n) => `<span class="rs">₹</span>${n}`;
+const status = '<div class="status"><span>4:10 pm</span><span>Mon 26</span></div>';
+const dockH = '<div class="dock"><span class="on">Home</span><span>Spends</span><span class="add">' + ic('plus', 'Add') + '</span><span>Ask AI</span><span>Settings</span></div>';
+
+const line = (cls = '') => `<div class="nudge ${cls}" role="button" aria-label="Spent on Food today? Usually around 1 pm. Opens the keypad.">
+  <span class="w">${ic('food', 'Food')}</span><span class="t">Spent on Food today?<span>Usually around 1 pm.</span></span>${ic('chev', 'Opens')}</div>`;
+
+/* Home: o.slot = html in the nudge slot, o.rows extra rows, spent/total */
+function home(o = {}) {
+  const spent = 420 + (o.food ? 120 : 0), safe = 1850 - spent;
+  const bites = `<span class="bite" style="flex:${300}"></span><span class="bite${o.food ? '' : ' end'}" style="flex:120"></span>${o.food ? '<span class="bite end" style="flex:120"></span>' : ''}`;
+  return `<div class="page">
+    <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+    <div class="hero"><div class="ttl">Safe to spend today</div><div class="amt">${R(safe.toLocaleString('en-IN'))}</div>
+      <div class="tbar"><span class="f" style="flex:${safe}"></span>${bites}</div></div>
+    ${o.slot || ''}
+    <div class="listHd"><span class="h">Today</span><b>₹${spent}</b><span>See all</span></div>
+    <div class="card">
+      ${o.food ? `<div class="row"><span class="w">${ic('food', 'Food')}</span><span class="t">Food<span>4:11 pm</span></span><b>₹120</b></div>` : ''}
+      <div class="row"><span class="w">${ic('chai', 'Chai')}</span><span class="t">Chai<span>10:15 am</span></span><b>₹120</b></div>
+      <div class="row"><span class="w">${ic('travel', 'Travel')}</span><span class="t">Travel<span>Auto to office · 8:40 am</span></span><b>₹300</b></div>
+    </div>
+  </div>${dockH}${o.snack ? `<div class="snack" role="status"><span>${o.snack}</span><i>Undo</i></div>` : ''}`;
+}
+
+const tray = () => `${home({ slot: line() })}<div class="scrim"></div><div class="tray">
+  <div class="kind"><span class="on">Spent</span><span>Got</span></div>
+  <div class="bigAmt">${R('0')}</div>
+  <div class="slot"><span class="pill">${ic('food', 'Food')}<span>Food</span><span class="a">₹120</span><span class="u">· your usual</span></span></div>
+  <div class="qchips">${[10, 20, 50, 100, 500].map((n) => `<span>+₹${n}</span>`).join('')}</div>
+  <div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map((k) => `<span>${k}</span>`).join('')}<span>${ic('bs', 'Delete last digit')}</span></div>
+  <div class="signal">Next ${ic('next', '')}</div></div>`;
+
+const fig = (inner, theme, cap, cls = '') => `<figure><div class="phone ${theme} ${cls}" inert>${status}${inner}</div><figcaption>${cap}</figcaption></figure>`;
+const both = (inner, cap, cls) => fig(inner, 'light', cap + ' Light.', cls) + fig(inner, 'dark', cap + ' Dark.', cls);
+
+/* State crops */
+const states = (theme) => `<figure><div class="board ${theme}">
+  ${[['Rest', ''], ['Pressed (tick on press-up)', 'pressed'], ['Hovered (mouse)', 'hover'], ['Focused (keyboard, large screens)', 'focus']].map(([l, c]) => `<div class="stateLab">${l}</div>${line(c)}`).join('')}
+  <div class="stateLab">Measured (row min 56dp)</div>${line()}
+  <div class="measure"><span style="width:12px"></span><span style="width:40px">40</span><span class="g" style="width:12px"></span><span style="flex:1">text, wraps</span><span class="g" style="width:12px"></span><span style="width:18px">18</span><span style="width:12px"></span></div>
+  <div class="stateLab" style="font-size:12px">12 inset · 40 well · 12 gap · text · 12 gap · 18 chevron · 12 inset. Radius 18.</div>
+</div><figcaption>The four states, then the measured row. ${theme === 'light' ? 'Light.' : 'Dark.'}</figcaption></figure>`;
+
+/* Priority strip */
+const strip = (theme) => `<figure><div class="board ${theme}">
+  <div class="lab">The slot holds one line. Highest that qualifies wins.</div>
+  <div class="rank"><span class="n">1</span><div class="nudge"><span class="w">${ic('power', 'Power')}</span><span class="t">Electricity went out today. How much?</span>${ic('chev', 'Opens')}</div></div>
+  <div class="gt">before</div>
+  <div class="rank"><span class="n">2</span><div class="nudge"><span class="w">${ic('piggy', 'Saving')}</span><span class="t">Insurance <b>₹1,000</b> goes in on Thu<span>Thu, 29 Oct</span></span>${ic('chev', 'Opens')}</div></div>
+  <div class="gt">before</div>
+  <div class="rank"><span class="n">3</span><div class="nudge"><span class="w">${ic('pen', 'Fix')}</span><span class="t">Already spent some this month?<span>Fix my number</span></span>${ic('chev', 'Opens')}</div></div>
+  <div class="gt">before</div>
+  <div class="rank"><span class="n">4</span>${line().replace('class="nudge "', 'class="nudge" style="flex:1"')}</div>
+</div><figcaption>Waiting bill, due soon, install line (once, mid-cycle install only), then this line. Over states and <i>No income</i> show none of 3 or 4. ${theme === 'light' ? 'Light.' : 'Dark.'}</figcaption></figure>`;
+
+const SECTIONS = [
+  ['1. Home with the line, at rest', `<div class="pair">${both(home({ slot: line() }), 'The line sits where the due-soon row sits: under the hero, above Today. Nothing else on Home changes.')}</div>`,
+    'Squint test: the hero number first, today\'s bar second, then the line (the only filled <code>sunk</code> shape on the page), then Today. It is lower in the hierarchy than the hero by contrast (grey, 15sp) and in the slot order by rule. 16dp between the hero, the line and the Today header: the same gaps as the page\'s other blocks, so Home does not look as if it has an extra component.'],
+  ['2. States and measurements', `<div class="pair">${states('light')}${states('dark')}</div>`,
+    'Words carry the meaning (a question with a "?"), so nothing relies on colour. Pressed is <code>hairline</code>; hovered is a 1dp <code>hairline</code> outline with no fill change, distinct from pressed; focused is the <code>Pressable</code> ring. Disabled, selected, loading, error: n/a, the line is hidden rather than disabled. Text contrast: <code>ink</code> on <code>sunk</code> and <code>ink2</code> on <code>sunk</code> both clear 4.5:1 in light and dark; on the pressed <code>hairline</code>, <code>ink2</code> still clears 4.5:1 (light about 4.7:1: the tightest pair here, worth a measured check by design-system).'],
+  ['3. Slot priority', `<div class="pair">${strip('light')}${strip('dark')}</div>`,
+    'A small strip, drawn as the same row four times so the only variable is the words. Two rules are visual: a lower line <b>never appears mid-view</b> (closing a bill sheet leaves the slot empty until the next evaluation point), and the slot takes no height when it is empty. Rank numerals are for this mockup only; the app shows none.'],
+  ['4. The tap: Add tray at step 1, with your usual', `<div class="pair">${both(tray(), 'Tray at step 1, ₹0, <i>Spent</i>, dated today. The tray covers the line (it reaches up past the hero's bar), so the line is only on screen again when the tray closes.')}</div>`,
+    'The tap is the same Add-key open: tray, step 1, nothing added or reordered. The 48dp slot under the amount holds the <b>your usual</b> pill ("Food ₹120 · your usual") even though 4:10 pm is outside the window, because the tray was given the habit. The pill is outlined <code>ink2</code>, not filled, and not marigold: it is an offer. <i>Next</i> stays off (hatch and label) until a digit. Typing crossfades the pill to the usual preview line.'],
+  ['5. Home after', `<div class="pair">${both(home({ food: true, snack: 'Added ₹120 to Food' }), 'After the pill: the bar drained ₹120 (hero ₹1,310), a Food row is on top of Today, the line is gone, and the snackbar offers Undo.')}${fig(home({}), 'light', 'After Back without saving: the line has left and the slot took no height, so Today moved up 72dp. Light.')}</div>`,
+    'Why gone and not dimmed: the tap answered the day\'s question, and a line that came back would be a repeat. Nothing marks that it was there. The line leaves after the tray has fully closed, so it never collapses behind the scrim.'],
+  ['6. 320dp, text at 1.5×', `<div class="pair">${fig(home({ slot: line() }), 'light', 'The line wraps: "Spent on Food today?" over two lines and "Usually around 1 pm." over two. The category is never cut; the row is about 120dp. Light.', 's320 ts15')}${fig(home({ slot: line() }), 'dark', 'Dark.', 's320 ts15')}</div>`,
+    'The Today list scrolls under the line; the dock does not move. The hero is not text-scaled in this mockup (assumption: its amount style caps its own scale). Nothing is ellipsised.'],
+];
+document.getElementById('frames').innerHTML = SECTIONS.map(([t, body, why]) => `<h2>${t}</h2>${body}<p class="why">${why}</p>`).join('');
+</script>
+</body>
+</html>

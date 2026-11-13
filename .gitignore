@@ -49,3 +49,19 @@ app.*.map.json
 
 # Local agent profile (live-app-inspection skill)
 .agent-local/
+
+# Release signing: never commit keys or passwords (docs/RELEASE.md)
+key.properties
+!key.properties.example
+*.jks
+*.keystore
+*.p12
+*.pk8
+*.pepk
+/.android-keys/
+.env
+.env.*
+
+# Release outputs
+*.aab
+*.apk

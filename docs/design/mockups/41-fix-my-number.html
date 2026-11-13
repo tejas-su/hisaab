@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Fix my number (proposed)</title>
+<style>
+  /* "Fix my number": say how much of this month's money is left; hisaab adds one Not logged entry for the gap.
+     PROPOSED, not approved, not built. Design: docs/features/fix-my-number/01 to 04. Strings are copy deck 41, verbatim.
+     Worked example (SPEC): payday 4 Nov, today Mon 26 Oct, D = 9, hisaab expects E = ₹17,430, A = ₹1,850, hero ₹1,430, ₹420 spent today.
+     Tokens: the same set as mockup 40 (light after D145, dark from mockup 33). No new colour is introduced.
+     Sizes follow mockup 27 (bill-sheet slip, keypad, signal key) and 40 (note line, rows, snackbar).
+     Text is sized in em so a frame can show 1.5x text (--f); the amount is capped at 1.25x (assumption, FittedBox). Icons are stand-ins. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EDE8; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #5B5650; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #312E29; --onInverse: #F2F1EC;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; text-align: inherit; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 24px 0 0; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b, .why b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--canvasInk2); box-shadow: inset 0 0 0 1px var(--canvasInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 2px; white-space: nowrap; }
+  .flag { font: 600 11px/14px 'Mukta', sans-serif; background: var(--canvasInk); color: var(--canvas); border-radius: 6px; padding: 1px 6px; margin-inline-end: 6px; vertical-align: 1px; }
+  .tblWrap { overflow-x: auto; max-width: 100%; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 1040px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; }
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; max-width: 360px; }
+  .pair figcaption b { color: var(--canvasInk); }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 820px; margin: 10px 0 0; }
+  .toggles { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .toggles button { min-height: 40px; padding: 0 14px; border-radius: 12px; background: #FFFEFC; font: 600 14px/20px 'Mukta', sans-serif; }
+  .toggles button[aria-pressed="true"] { background: #161615; color: #F1EBE4; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-inline-end: 6px; box-shadow: inset 0 0 0 1px #00000033; }
+
+  /* ---------- Phone ---------- */
+  .phone { --f: 1; --fa: 1; --kh: 64px; --act: 56px; position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; font-size: calc(16px * var(--f)); line-height: 1.375; }
+  .phone.narrow { width: 320px; height: 568px; --kh: 48px; --act: 48px; }
+  .phone.t15 { --f: 1.5; --fa: 1.25; }
+  .phone.short { height: 640px; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .status { height: 28px; padding: 6px 24px 0; font: 600 13px/16px 'Mukta', sans-serif; display: flex; justify-content: space-between; color: var(--ink); }
+  .page { position: absolute; inset: 28px 0 0; padding: 4px 20px 120px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+  .topbar { display: flex; align-items: center; height: 48px; gap: 12px; flex: none; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .wm { flex: 1; font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .well40 svg { width: 20px; height: 20px; }
+  .secHd { font: 600 19px/24px 'Anek Latin', sans-serif; padding-inline-start: 4px; margin-bottom: -8px; flex: none; }
+  .secHd.big { font-size: 22px; line-height: 28px; margin: 8px 0 -8px; }
+
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); flex: none; }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .tbar { display: flex; gap: 3px; height: 40px; margin-top: 16px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite:last-child { border-radius: 6px 14px 14px 6px; }
+
+  /* nudge slot (DueSoonNote's container, as mockup 40) */
+  .note { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 4px 6px 16px; border-radius: 20px; background: var(--surface); flex: none; }
+  .note .w { width: 36px; height: 36px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .note .w svg { width: 20px; height: 20px; }
+  .note .t { flex: 1; font-size: 15px; line-height: 20px; }
+  .note .t span { display: block; font-weight: 600; }
+  .note .x { width: 48px; height: 48px; display: grid; place-items: center; color: var(--ink2); }
+  .note .x svg { width: 18px; height: 18px; }
+
+  .card { background: var(--surface); border-radius: 28px; padding: 6px 0; flex: none; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 7px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .w svg { width: 22px; height: 22px; }
+  .row .t { flex: 1; min-width: 0; font-size: 1em; line-height: 1.375; }
+  .row .t span { display: block; font-size: .8125em; line-height: 1.38; color: var(--ink2); }
+  .row b { font: 600 1em/1.375 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .row > svg.i { width: 18px; height: 18px; color: var(--ink2); }
+  .row.fresh .t { font-weight: 400; }
+
+  /* RECOMMENDED foot row: a text row on the page layer. No fill, no well, no icon, no second line.
+     Label starts where the section titles start (4dp in), chevron ends where the row amounts end (20dp in). */
+  .foot { display: flex; align-items: center; min-height: 48px; padding: 0 20px 0 4px; font: 600 15px/20px 'Mukta', sans-serif; color: var(--ink2); flex: none; }
+  .foot span { flex: 1; }
+  .foot svg { width: 18px; height: 18px; }
+  /* ALTERNATIVE (01's W1): sunk 56dp row with an icon well */
+  .footSunk { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 20px 0 16px; border-radius: 20px; background: var(--sunk); font: 600 15px/20px 'Mukta', sans-serif; flex: none; }
+  .footSunk svg.i { width: 22px; height: 22px; }
+  .footSunk span { flex: 1; }
+
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 92px; min-height: 52px; border-radius: 16px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 0 16px; font-size: .9375em; line-height: 1.33; z-index: 12; }
+  .snack span { padding: 8px 0; }
+  .snack u { font: 600 1em/1.33 'Mukta', sans-serif; text-decoration: none; padding: 0 12px; min-height: 48px; display: grid; place-items: center; flex: none; }
+
+  /* ---------- Fix my number sheet ---------- */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 96%; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 20px 20px; z-index: 9; display: flex; flex-direction: column; }
+  .dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .sheet.fill { top: 40px; max-height: none; }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; flex: none; }
+  .body { min-height: 0; overflow: hidden; flex: 0 1 auto; }
+  .body.scrolled { flex: 1 1 auto; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22px); mask-image: linear-gradient(to bottom, transparent 0, #000 22px); }
+  .fixed { flex: none; }
+  .stepHd { display: flex; align-items: center; gap: 8px; min-height: 56px; margin-bottom: 8px; }
+  .stepHd .back { width: 48px; height: 48px; display: grid; place-items: center start; flex: none; }
+  .stepHd .back .well40 { background: var(--sunk); }
+  .stepHd .q { flex: 1; font: 600 1.1875em/1.26 'Anek Latin', sans-serif; }
+  .slip { background: var(--display); color: var(--displayInk); border-radius: 20px; padding: 16px 20px 14px; }
+  .amt { font: 600 calc(48px * var(--fa))/1.08 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .amt.zero { color: var(--displayInk2); }
+  .amt .hl { background: var(--sunk); border-radius: 10px; padding: 0 8px; margin: 0 -8px; }
+  .amt.ro { color: var(--displayInk2); }
+  /* The slot: two lines, fixed height by construction (the tallest state). 3 lines at 1x, 5 at 1.5x in a 320 window */
+  .slot { margin-top: 8px; min-height: calc(3 * 1.333em); font-size: .9375em; line-height: 1.333; }
+  .phone.t15 .slot { min-height: calc(5 * 1.333em); }
+  .slot .l1 { color: var(--displayInk2); }
+  .slot .l2 { color: var(--displayInk); font-weight: 600; }
+  .slot .l1.notice { color: var(--displayInk); font-weight: 600; }
+  .slot .helper { color: var(--displayInk2); }
+  .slot .retry { display: inline-flex; align-items: center; min-height: 48px; margin-bottom: -8px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; color: var(--displayInk); }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .key { height: var(--kh); border-radius: 16px; background: var(--sunk); display: grid; place-items: center; font: 600 24px/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .key svg { width: 24px; height: 24px; }
+  .act { display: flex; align-items: center; justify-content: center; width: 100%; height: var(--act); margin-top: 16px; border-radius: 18px; font: 600 1.0625em/1 'Mukta', sans-serif; background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .act.off { background: var(--sunk); color: var(--ink2); box-shadow: inset 0 0 0 1.5px var(--hairline); }
+  .act.press { background: var(--ink); color: var(--surface); box-shadow: none; }
+  /* Guard: the keys area (keypad + action) is replaced by a panel of the same height, answers at the bottom */
+  .guard { display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .gkey { height: 56px; border-radius: 16px; background: var(--sunk); display: grid; place-items: center; padding: 0 12px; font: 600 1.0625em/1 'Mukta', sans-serif; text-align: center; }
+  .gkey.f { background: var(--display); box-shadow: inset 0 0 0 1.5px var(--ink2); }
+  .ghost { border: 1.5px dashed var(--hairline); border-radius: 16px; display: grid; place-items: center; font: 600 12px/16px 'Mukta', sans-serif; color: var(--ink2); }
+
+  /* Redline overlay */
+  .rl { position: absolute; z-index: 30; font: 600 11px/12px 'Anek Latin', sans-serif; color: #fff; background: #0A5FB4; border-radius: 3px; padding: 1px 4px; pointer-events: none; transform: translate(-50%, -50%); }
+  .rlb { position: absolute; z-index: 29; background: #0A5FB466; pointer-events: none; }
+  .rlo { position: absolute; z-index: 28; border: 1px dashed #0A5FB4; pointer-events: none; }
+
+  /* schematic */
+  .sch { position: relative; background: #FFFEFC; border-radius: 16px; overflow: hidden; flex: none; color: #161615; font: 600 12px/16px 'Mukta', sans-serif; }
+  .sch div { position: absolute; display: grid; place-items: center; text-align: center; border-radius: 10px; padding: 4px; }
+  .sch .a { background: #E7E0D8; } .sch .b { background: #D7CFC5; } .sch .hinge { background: repeating-linear-gradient(90deg, #5B5650 0 4px, transparent 4px 8px); border-radius: 0; padding: 0; }
+  .sch .hingeH { background: repeating-linear-gradient(0deg, #5B5650 0 4px, transparent 4px 8px); border-radius: 0; padding: 0; }
+  .sch .dim { background: #16161533; }
+
+  .strip { width: 320px; --f: 1.5; background: var(--bg); border-radius: 20px; padding: 16px; margin: 0; position: relative; min-height: 120px; font-size: calc(16px * var(--f)); }
+  .strip .snack { position: static; }
+</style>
+</head>
+<body>
+
+<h1>Fix my number <span class="draft">proposed, not approved, not built</span></h1>
+<p class="lede">The Home figure looks wrong. The user opens <b>Fix my number</b>, types how much of <b>this month's money</b> is left, sees what hisaab thought and what changes, and presses <b>Fix it</b>. One <i>Not logged</i> entry is added for the gap (<code>docs/features/fix-my-number/01</code> to <code>04</code>, copy deck <code>41-fix-my-number-copy-deck.md</code>, all strings verbatim). Worked example (SPEC): today <b>Mon 26 Oct 2026</b>, payday 4 Nov so 9 days to go, hisaab expects <b>₹17,430</b>, <code>A</code> is <b>₹1,850</b> and the hero shows <b>₹1,430</b> with ₹420 spent.</p>
+<p class="lede"><b>What this mockup decides</b> (for <code>design-ui</code>; the docs left these open):</p>
+<ul class="lede" style="max-width:82ch">
+  <li><b>Foot row = a text row on the page layer</b> (section 1). The sunk 56dp row is the alternative, shown small, and is <b>rejected on the layer rule</b>: <code>sunk</code> is for wells and the segmented track only.</li>
+  <li><b>The sheet is the bill sheet's anatomy</b> (mockup 27): grey <code>bg</code> sheet, one <code>display</code> card holding the amount and the two-line slot (no torn edge: it is not a bill), then the shared keypad and the one marigold key.</li>
+  <li><b>Marigold appears only on <i>Fix it</i></b>, as in every mockup: fill <code>signal</code> with a 1.5px <code>displayEdge</code> line (the house <code>SignalKey</code>), not the "marigold on ink" the interaction doc writes.</li>
+  <li><b>Direction is words only</b>: <i>less</i>, <i>more</i>, <i>Spent</i>, <i>Got</i>. No sign, no red, no green.</li>
+</ul>
+<div class="toggles">
+  <button data-theme="light" aria-pressed="true">Single frames: Light</button>
+  <button data-theme="dark" aria-pressed="false">Single frames: Dark</button>
+  <span style="font-size:13px;color:var(--canvasInk2)">Key states are always drawn in both.</span>
+</div>
+
+<h2>1. Home: the foot row and the install line</h2>
+<div class="pair" id="s1"></div>
+<p class="why"><b>Recommendation: a text row.</b> After the last Today row: label <i>Fix my number</i> in <code>ink2</code> Mukta 600 15/20, a 18dp chevron, 48dp tall, no fill, no icon well, no second line, no count. The label starts at the section titles' 4dp inset and the chevron ends on the same edge as the row amounts (20dp in), so it shares two edges with the list above it and moves nothing else. It is quiet because it has no container, and it cannot be mistaken for the nudge slot, which is a <code>surface</code> card with a <code>sunk</code> well. At 6.2:1 (light) and 7.3:1 (dark) on <code>bg</code> the label passes 4.5:1 with room.</p>
+<p class="why"><b>Why not the sunk row (small frame):</b> (1) UI_DESIGN §3 keeps two layers, <code>bg</code> then <code>surface</code>, with <code>sunk</code> only inside wells and the segmented track; a sunk card on the page would be a third layer. (2) It is the same height as the nudge slot (56dp) and has an icon well, so it reads as a second, permanent nudge, which is exactly what the IA doc's guard-rail 1 warns about. (3) It is the loudest thing under the list, louder than the list's own rows, for a door that most users never need. <span class="flag">DOC ERROR</span>IA §2.1 says the nudge slot is "a <code>sunk</code> 56dp row". In mockup 40 and <code>DueSoonNote</code> it is a <code>surface</code> card (min 56dp) with a 36dp <code>sunk</code> well. The conclusion (do not match it) still holds, for a different reason.</p>
+<p class="why"><b>The install line</b> uses the slot's own shape. Line 1 is the question <i>Already spent some this month?</i>, line 2 is the label <i>Fix my number</i> in Mukta 600, a chevron instead of the × (it is a one-time pointer, shown once and never dismissed, so no × is needed; the 48dp chevron keeps the whole row one tap). While it shows, the foot row below also says <i>Fix my number</i>: two doors with one label on one screen. Accepted (the install line goes away after it is seen), but the foot row is the permanent one. Slot order and over-state rules are the IA doc's (§1).</p>
+<p class="why"><b>Drawn trimmed:</b> the Today list shows 3 rows so the foot row fits the 760dp frame. On a phone the row sits at the end of the scroll, under the 5-row list and <i>See all</i>; the install line's mid-cycle hero would differ from ₹1,430, drawn here with the worked example for comparison.</p>
+
+<h2>2. Settings › Money</h2>
+<div class="pair" id="s2"></div>
+<p class="why">The last row of the <i>Money</i> card (IA §2.3, pending the tree test): same row as its neighbours, 42dp <code>sunk</code> well, title, one 14dp <code>ink2</code> detail <i>When the number on Home looks wrong.</i>, chevron. Hairline starts at the text column (74dp), as above. The detail wraps to two lines at 360dp, so this row is 12dp taller than <i>Bills</i> and <i>Savings</i>; accepted, it is the only row with a sentence. The chevron matches the others: it opens a sheet, as <i>Bills</i> opens a list. <span class="flag">STAND-IN</span>The sliders glyph is a placeholder; the real glyph is a <code>HisaabGlyphs</code> / Hugeicons choice (design-brand / design-system).</p>
+
+<h2>3. The sheet, state by state</h2>
+<p class="lede">Anatomy at 360×760: 8dp to the handle, 12dp, a 56dp title row (the 40-character title is always two lines beside the 48dp Back), 8dp, the <code>display</code> card (20dp sides, 16dp top, 14dp bottom, amount Anek 600 48/52, 8dp, the slot), 16dp, the keypad (64dp keys, 8dp gaps), 16dp, the 56dp action key, 20dp bottom. The slot is the tallest of all states (three lines at 360dp), so nothing moves between states. The redline below measures the live layout.</p>
+
+<h3>S0 Empty, and S1 Lower (₹13,230)</h3>
+<div class="pair" id="s3a"></div>
+<p class="why">Empty: amount <code>ink2</code> ₹0 (nothing prefilled, so the user reads their bank, not hisaab), helper in <code>ink2</code>, <i>Fix it</i> off (sunk fill, <code>ink2</code> label, 1.5px <code>hairline</code> line: the app's disabled <code>SignalKey</code>). First digit: the helper crossfades to the preview. <b>Line 1</b> <i>hisaab thought ₹17,430.</i> is <code>ink2</code> 400, the anchor. <b>Line 2</b> is <code>ink</code> 600, the answer: weight carries emphasis, there is no colour. The gap sentence and the per-day effect stay one run of text, so they wrap together.</p>
+
+<h3>S2 Higher, small (₹18,430), S4 Matches, S5 Close enough</h3>
+<div class="pair" id="s3b"></div>
+<p class="why"><i>More</i> reads exactly like <i>less</i>: same two lines, same weights. In S4 and S5 line 1 stays (the user typed, the anchor shows), line 2 says there is nothing to do, and <i>Fix it</i> is the disabled key. TalkBack hears the reason through the hint. Disabled is never colour alone: fill, outline and the words in the slot.</p>
+
+<h3>S3 Higher, large: "One question first."</h3>
+<div class="pair" id="s3c"></div>
+<p class="why"><i>Fix it</i> stays on (marigold): the key is the same, only the slot warns, and the keypad changes on a deliberate press, not under a typing thumb (04 §3.1). <i>One question first.</i> is the same size and weight as every other line 2. It is short enough to be one run after <i>That's ₹30,000 more.</i></p>
+
+<h3>The guard step, and the notice after <i>No</i></h3>
+<div class="pair" id="s3d"></div>
+<p class="why"><b>Guard (as the docs specify):</b> the keypad and action key are replaced by a panel of the <i>same height</i>, with two stacked 56dp keys, <i>No, some is older</i> first. Neither is marigold: both are <code>sunk</code> keys, 16dp radius, Mukta 600 17, 8dp apart. The amount turns <code>ink2</code> (read-only). Line 2 holds the question and is the first focus. <b>After <i>No</i></b> the keypad is back, digits kept and shown on a <code>sunk</code> highlight (like selected text) so the user sees the next key replaces them; line 1 becomes the notice <i>Count only this month's money.</i> in <code>ink</code> 600 (a notice is the same line with the weight lifted, no colour, no new component). <span class="flag">PROBLEM</span>The highlight is my addition: 04 says "digits kept and shown, the next key replaces them" but draws nothing; without a cue the replace rule is invisible.</p>
+<p class="why"><span class="flag">PROBLEM</span><b>The guard leaves a 232dp hole.</b> Keypad 4×64+3×8 = 280, plus 16, plus the 56dp action key = 352dp are replaced by two keys and a gap = 120dp. Bottom-aligning the keys (in thumb reach) leaves 232dp of bare <code>bg</code> between the card and the keys, so the sheet looks broken. Options: <b>A</b> as drawn (no resize, a hole), <b>B</b> the sheet shortens to fit (the small frame: a mode change already, so a shorter sheet reads as "a new question"; one spring, no content moves relative to the top), <b>C</b> a larger question inside the panel (no: the slot already carries it). <b>Recommend B.</b> D13 (the keypad never moves) is not at stake, because the keypad is not on screen. Needs design-interaction and design-motion to accept the height change.</p>
+
+<h3>Save failed, load failed, and "Things changed"</h3>
+<div class="pair" id="s3e"></div>
+<p class="why">All three are line 1 replaced by a notice (<code>ink</code> 600): <i>Couldn't save. Try again.</i> (digits kept, <i>Fix it</i> on again), <i>Couldn't check your number.</i> with a 48dp underlined text key <i>Try again</i> in the line-2 position (<i>Fix it</i> off; the 48dp target is taller than a 20dp line, so it overlaps the card's 14dp bottom padding by 8dp rather than growing the slot), and <i>Things changed. Check the new amount.</i> (then the live preview in line 2). No red, no icon; the words say what failed and what to do.</p>
+
+<h2>4. After the save</h2>
+<div class="pair" id="s4"></div>
+<p class="why">The sheet has closed and Home reflows once (hero ₹1,430 to ₹963, the bar drains: <code>A</code> is now ₹1,383, ₹300 and ₹120 are bites, the marigold fill is 963/1,383). The snackbar is the standard host: <code>inverse</code> fill, 15dp text, a 48dp <i>Undo</i> target, 16dp from the edges, above the dock. <b>The new Today row</b> sits on top: <i>Not logged · Spent</i> and <b>₹4,200</b> in the usual Anek amount column. It has no bite, no tap and is not in the header total. <span class="flag">PROBLEM</span>The snackbar sits over the foot row for 4s; harmless, but the foot row is hidden exactly when the user might want to fix again. <span class="flag">PROBLEM</span>01 W10 says a glyph, IA §4.2 says "no category tile". I kept the 42dp well with a neutral stand-in glyph, because a row with no well starts its text at 20dp and the list would then have two text starts (20 and 74) and a hairline that cannot be indented to both. Decision for design-system: a neutral "adjusted" glyph.</p>
+
+<h2>5. Every entry, both directions</h2>
+<div class="pair" id="s5"></div>
+<p class="why">Title <i>Not logged · Spent</i> or <i>Not logged · Got</i>, all <code>ink</code> (the direction word is the whole point, so it is not de-emphasised), the amount in the amount column, and the second line <i>Added when you fixed your number.</i> in <code>ink2</code> 13/18. <span class="flag">PROBLEM</span>With no sign and no colour, the two rows differ by one word; the amounts look alike at a glance. That is what the IA doc asks and it is honest, but a fast scan of the column cannot tell money out from money in. If the hallway test shows confusion, the cheapest fix is a leading word in the amount column, not colour. <b>No chip</b> for <i>Not logged</i>: the chips stay the pickable categories (IA §4.4). The 33-character second line wraps to two lines at 360dp, so these rows are 72dp, not 56.</p>
+
+<h2>6. Spends: "Spent · Saved · Used from savings · Not logged"</h2>
+<div class="pair" id="s6"></div>
+<p class="why">Four parts, each an unbreakable phrase, wrapping <b>between</b> parts, <code>ink2</code> 15/20, 4dp between lines. <b>A (the doc's rule, recommended to build):</b> every part but the last ends with a ·, so a wrapped line ends with a dangling dot. <b>B (alternative):</b> no dots, 16dp between parts, the amounts in <code>ink</code> 600 Anek and the labels in <code>ink2</code>, so proximity and weight make the groups and nothing dangles. B is the cleaner picture but changes today's line even when it fits on one row, so it needs a decision (FR-SP-4a). <span class="flag">PROBLEM</span><i>Used from savings ₹12,000</i> is 27 characters; at 1.5× on 320dp in the 240dp card column it fills the whole line and, in A, its trailing · pokes about 2dp past the card's padding (visible in the frame); the copy deck allows an inner wrap as a last resort, and the frame shows the amount staying with its label until it cannot. Spends' real card is drawn approximately here (title, cycle, line); only the line is the subject.</p>
+
+<h2>7. A narrow window with big text: 320 × 568 at 1.5× text</h2>
+<div class="pair" id="s7"></div>
+<p class="why"><b>Budget.</b> Status 28, handle area 20, keypad 4×48+3×8 = 216, action key 48+16, bottom 20: about 350dp is fixed, leaving about 170dp for the title, amount and slot, which need roughly 100 + 8 + 16 + 72 + 8 + 150 + 14 = 370dp. So <b>the body scrolls above the fixed keypad</b> (04 §7). The frames are scrolled to the end. Keys shrink from 64 to 48dp (the tray's rule), the action key to 48dp, and the labels never truncate: <i>Fix it</i> is a full-width key (see problem 1 below), <i>Yes, add ₹30,000</i> fits one line. The amount is capped at 1.25× (assumption). <span class="flag">PROBLEM</span><b>Scrolled to the slot, the typed amount is off screen.</b> The slot alone is 150dp beside a 168dp window, so the amount (about 70dp) and the title scroll away; the user presses digits and cannot see them, which breaks the keypad's one job. Scrolled to the top, the slot is hidden instead. Recommend <b>pinning the amount above the keypad, outside the scroll</b>, and scrolling only the title and the slot under it (about 100dp left for the slot: it scrolls, the amount does not), and auto-scrolling the slot into view on the first digit (150ms, instant under reduced motion). Otherwise 320×568 at 1.5× needs the slot cut to three lines; the copy deck's longest lines cannot do that.</p>
+<div class="pair"><figure><div class="strip"><div class="snack" role="status"><span>Fixed. Safe to spend today: ₹963.</span><u>Undo</u></div></div><figcaption>Snackbar at 320dp, 1.5×: 2 lines of text beside a 48dp Undo, as the copy deck estimates.</figcaption></figure></div>
+
+<h2>8. Two-pane and tabletop</h2>
+<div class="pair" id="s8"></div>
+<p class="why"><b>Placement of the sheet.</b> I have not been able to verify how the bill-sheet route lays out on medium and expanded windows today, so this is the arrangement <i>Fix my number needs</i> from it. <b>Medium or expanded, flat:</b> the sheet is a centred sheet, 560dp wide at most, bottom-anchored, with the scrim over the app; inside, the same stack as the phone. <b>Expanded and wide (two-pane, as the Add tray):</b> the title, amount and slot form one pane and the keypad with the action key the other, so the preview never sits under the thumb's keypad. The guard replaces the keypad pane (and is a 56dp-key pair at the top of its pane, centred vertically in the pane: here the "hole" does not appear because the pane is the key area). <b>Tabletop (fold horizontal):</b> title, amount and slot sit in the upper half (the screen the user reads), the keypad and action key in the lower half (the flat half the thumbs use); the fold line falls between the slot and the keypad, nothing straddles it. All three keep the 20dp inset, the 16dp gaps and the same tokens. design-platform to confirm and test at every <code>TestWindows</code> size.</p>
+
+<h2>9. Redline (measured live from the layout)</h2>
+<div class="pair" id="s9"></div>
+<p class="why">Blue numbers are dp measured in the browser from the rendered elements (gaps and insets). Every gap is on the 4/8 scale (<code>HisaabSpacing</code>): 4, 8, 12, 16, 20 (<code>gutter</code>). No one-off number is used.</p>
+
+<h2>Token table</h2>
+<div class="tblWrap"><table>
+  <tr><th>Part</th><th>Token</th><th>Light / dark</th><th>Contrast (hand-calculated, WCAG)</th></tr>
+  <tr><td>Page, sheet</td><td><code>bg</code></td><td><span class="sw" style="background:#F1EDE8"></span>#F1EDE8 / <span class="sw" style="background:#131210"></span>#131210</td><td>n/a</td></tr>
+  <tr><td>Display card, rows, note, dock, snackbar-on</td><td><code>surface</code> (= <code>display</code>)</td><td>#FFFEFC / #211F1C</td><td>n/a</td></tr>
+  <tr><td>Keys, icon wells, disabled key, highlight</td><td><code>sunk</code></td><td>#E7E0D8 / #2F2B27</td><td>Key digit <code>ink</code> on <code>sunk</code> above 12:1</td></tr>
+  <tr><td>Hairlines, disabled outline, handle</td><td><code>hairline</code></td><td>#D7CFC5 / #3A3632</td><td>UI part, decorative</td></tr>
+  <tr><td>Title, amounts, line 2, digits</td><td><code>ink</code></td><td>#161615 / #F2F1EC</td><td>above 15:1 on <code>surface</code></td></tr>
+  <tr><td>Line 1, helper, foot row, row detail, zero amount, read-only amount</td><td><code>ink2</code></td><td>#5B5650 / #A7A199</td><td>6.2:1 on <code>bg</code>, 7.2:1 on <code>surface</code> (light); 7.3:1 on <code>bg</code>, 6.4:1 on <code>surface</code> (dark). All pass 4.5:1</td></tr>
+  <tr><td><i>Fix it</i> (enabled)</td><td><code>signal</code> fill, <code>onSignal</code> label, <code>displayEdge</code> 1.5px</td><td>#FFB020 / #161615 / #161615 (light), no line (dark)</td><td>Label on marigold above 9:1. Marigold is never bare on <code>bg</code>: it sits on its own key with an ink edge</td></tr>
+  <tr><td><i>Fix it</i> (disabled)</td><td><code>sunk</code> fill, <code>ink2</code> label, <code>hairline</code> 1.5px</td><td>as above</td><td>Label 5.4:1 on <code>sunk</code> (light) or better; disabled controls are exempt but still pass</td></tr>
+  <tr><td>Snackbar</td><td><code>inverse</code> / <code>onInverse</code></td><td>#312E29 / #F2F1EC; dark #F2F1EC / #161615</td><td>above 10:1</td></tr>
+  <tr><td>Scrim</td><td><code>scrim</code></td><td>ink 32% / black 55%</td><td>n/a</td></tr>
+</table></div>
+<div class="tblWrap"><table>
+  <tr><th>Text</th><th>Style</th><th>Used for</th></tr>
+  <tr><td>Hero amount</td><td>Anek Latin 600 76/76, stretch 85%, tabular</td><td>Home hero (unchanged)</td></tr>
+  <tr><td>Sheet amount</td><td>Anek Latin 600 48/52, stretch 85%, tabular; ₹ at 0.42em raised</td><td>The typed figure</td></tr>
+  <tr><td>Sheet question</td><td>Anek Latin 600 19/24</td><td><i>How much of this month's money is left?</i></td></tr>
+  <tr><td>Slot line 1 / line 2</td><td>Mukta 400 15/20 <code>ink2</code> / Mukta 600 15/20 <code>ink</code></td><td>Anchor / answer. Notice: line 1 at 600 in <code>ink</code></td></tr>
+  <tr><td>Keys</td><td>Anek Latin 600 24, tabular</td><td>Digits; <i>Fix it</i> and guard keys are Mukta 600 17</td></tr>
+  <tr><td>Rows</td><td>Mukta 400 16/22 title, 13/18 <code>ink2</code> second line, Anek 600 16 amount</td><td>Today, Every entry, Settings (detail 14)</td></tr>
+  <tr><td>Foot row, install line 2</td><td>Mukta 600 15/20</td><td>Door labels</td></tr>
+  <tr><td>Snackbar</td><td>Mukta 400 15, action Mukta 600 15</td><td><i>Fixed. Safe to spend today: ₹963.</i> and <i>Undo</i></td></tr>
+</table></div>
+<div class="tblWrap"><table>
+  <tr><th>Spacing</th><th>Where</th></tr>
+  <tr><td>20 (<code>gutter</code>)</td><td>Page and sheet side inset, display-card side padding, row side padding, bottom of the sheet</td></tr>
+  <tr><td>16 (<code>l</code>)</td><td>Between page blocks, above the keypad, above the action key, display-card top, chip-to-edge</td></tr>
+  <tr><td>12 (<code>m</code>)</td><td>Handle to title row, icon well to text, keys' inner gaps in the guard</td></tr>
+  <tr><td>8 (<code>s</code>)</td><td>Key gaps, title row to card, amount to slot, snackbar and guard-key gaps, Back to title</td></tr>
+  <tr><td>4 (<code>xs</code>)</td><td>Section title and foot-row label inset, line gap in the Spends line, handle thickness</td></tr>
+  <tr><td>Radius</td><td>Sheet top 28 (<code>card</code>), display card 20, keys 16 (<code>key</code>), action key 18, icon well 12/14, note 20, snackbar 16, hero and cards 28</td></tr>
+  <tr><td>Sizes</td><td>Keys 64 (<code>keypadKeyHeight</code>, 48 in the 320 frame), action 56 (48), guard keys 56, foot row 48 (<code>minTouchTarget</code>), Back 48, Undo 48, row 56 min</td></tr>
+</table></div>
+
+<h2>Problems found in the docs and the copy deck</h2>
+<div class="tblWrap"><table>
+  <tr><th>#</th><th>Where</th><th>Problem</th><th>Suggested fix</th></tr>
+  <tr><td>1</td><td>04 §2, §3.1; copy deck §0 and <code>fixAction</code></td><td>The action key is called the keypad's "bottom-right key where <i>Next</i> sits", about 88dp wide, 7 characters at 1.5×. The real keypad (<code>keypad.dart</code>) is 4 rows of 3 and <i>Next</i> is a <b>separate full-width key</b> under it (mockups 27 and 40). So <i>Fix it</i> is about 320dp wide: no width problem, the 88dp budget is wrong, and R12 (not showing <i>Saving…</i> because it will not fit) no longer applies; "Saving…" fits.</td><td>Correct the docs and consider restoring <i>Saving…</i> after 1s, or keep it off for calm. Owner's call.</td></tr>
+  <tr><td>2</td><td>04 §4</td><td>"Replaced by a panel of the same height" leaves a 232dp hole under two 56dp keys (section 3).</td><td>Let the sheet shorten for the guard (option B), or accept the hole.</td></tr>
+  <tr><td>3</td><td>04 §7, §4</td><td>"Marigold on <code>ink</code>" for <i>Fix it</i>: the house <code>SignalKey</code> is marigold fill, <code>onSignal</code> label, 1.5px <code>onSignal</code> edge (disabled: sunk fill, hairline edge).</td><td>Use the house key; no change to the doc's intent.</td></tr>
+  <tr><td>4</td><td>IA §2.1</td><td>The nudge slot is described as a "<code>sunk</code> 56dp row". It is a <code>surface</code> card with a <code>sunk</code> well.</td><td>Correct the sentence; the rejection of the sunk foot row stands on the layer rule.</td></tr>
+  <tr><td>5</td><td>IA §4.2, 01 W10</td><td>"No category tile" vs "glyph". A tile-less row breaks the text column and the 74dp hairline.</td><td>Keep a neutral well glyph (section 4).</td></tr>
+  <tr><td>6</td><td>04 §3, §4</td><td>Guard keys: <i>No</i> top, <i>Yes</i> bottom puts the risky answer (it inflates the hero) in the easiest thumb spot. Visual and focus order must match (WCAG 2.4.3), so <i>No</i> cannot simply go down.</td><td>Keep <i>No</i> first. <i>Yes, add ₹30,000</i> names the money it adds, which is the guard. Revisit if the blind read B6 shows mistakes.</td></tr>
+  <tr><td>7</td><td>Copy deck <code>fixTitle</code></td><td>40 characters beside a 48dp Back at 360dp is always two lines (three at 1.5×); the Back button on the sheet's only step duplicates the scrim, swipe and system back. Without it the title is one line shorter at 1.5×.</td><td>Optional: drop the Back button from this sheet (it is a one-step sheet). Drawn with it, as 04 §7 lists it.</td></tr>
+  <tr><td>8</td><td>Copy deck §3 budgets</td><td><code>fixPreviewBase</code> plus <code>fixPreviewLess</code> are three lines at 360dp and five at 320dp 1.5×. The slot at 1.5× is 150dp, nearly the whole visible body, so at 320×568 the typed amount scrolls off screen (section 7).</td><td>Pin the amount outside the scroll and auto-scroll the slot into view on the first digit (section 7).</td></tr>
+  <tr><td>9</td><td>Copy deck F7 / open Q5</td><td>With <code>E</code> at or below zero, line 1 is omitted and line 2 begins <i>That's ₹X more.</i> with no anchor. The slot then has one line in a three-line box, a visibly empty slot.</td><td>Keep the box height; the empty line 1 space is acceptable and stable.</td></tr>
+  <tr><td>10</td><td>Copy deck <code>fixNoticeCountOnly</code> vs <code>fixPreviewBig</code></td><td>After <i>No</i>, line 1 is the notice and line 2 is <i>That's ₹30,000 more. One question first.</i> again: the user is told "one question first" they have just answered.</td><td>For the first state after <i>No</i>, line 2 could show nothing until the next key. Needs design-content; drawn per the docs.</td></tr>
+  <tr><td>11</td><td>Snackbar and foot row</td><td>The 4s snackbar covers the foot row (and, at 1.5×, more of the Today list).</td><td>None needed; noted.</td></tr>
+  <tr><td>12</td><td>Spends line</td><td>A dangling · at wrapped line ends (section 6).</td><td>Option B, or accept A.</td></tr>
+  <tr><td>13</td><td>Amount format</td><td>Full grouping always (<code>₹1,25,000</code>, not <code>₹1.25L</code>) is right for the typed figure and the gap, but the install and hero stay compact elsewhere, so two formats meet in one flow: the hero reads <i>₹1.25L</i> and the sheet <i>₹1,25,000</i>. Fine, and open question 3 in the deck says confirm.</td><td>Confirm in review.</td></tr>
+</table></div>
+
+<h2>Not drawn</h2>
+<p class="why">The Used keypad and the yearly-costs screens (a separate mockup), the Hindi strings, the open-sheet and close springs (design-motion), and a live interactive sheet. The numbers shown are fixed to the worked example.</p>
+
+<script>
+const P = {
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>', back: '<path d="M15 6l-6 6 6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+  bksp: '<path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>',
+  fix: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  money: '<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.6"/>',
+  bill: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+  piggy: '<path d="M5 12a7 6 0 0 1 12-4l3 0v4l-2 1v3h-3v-2H9v2H6v-3a6 6 0 0 1-1-1z"/><path d="M15 11h.01"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  travel: '<rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18l-1.5 3M16 18l1.5 3"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/>',
+  food: '<path d="M3 12h18a9 8 0 0 1-18 0z"/><path d="M8 8.5c0-1.5 1-2 1-3.5M12 8.5c0-1.5 1-2 1-3.5M16 8.5c0-1.5 1-2 1-3.5"/>',
+  adj: '<path d="M5 9h14M5 15h14"/><path d="M9 5l-4 4 4 4M15 11l4 4-4 4" opacity="0"/>',
+  look: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>',
+};
+const svg = (k) => `<svg class="i" viewBox="0 0 24 24">${P[k]}</svg>`;
+const inr = (n) => '₹' + n.toLocaleString('en-IN');
+const amtHtml = (n) => `<span class="rs">₹</span>${n.toLocaleString('en-IN')}`;
+const status = (t = '10:05 am') => `<div class="status"><span>${t}</span><span>Mon 26</span></div>`;
+
+/* ---------- Home ---------- */
+const row = (cat, ic, note, amt) => `<div class="row"><span class="w">${svg(ic)}</span><span class="t">${cat}<span>${note}</span></span><b>${inr(amt)}</b></div>`;
+const baseRows = row('Travel', 'travel', 'Auto to office · 8:40 am', 300) + row('Food', 'food', 'Breakfast · 8:10 am', 120);
+const nlRow = `<div class="row"><span class="w">${svg('adj')}</span><span class="t">Not logged · Spent</span><b>${inr(4200)}</b></div>`;
+function home(o = {}) {
+  const fixed = !!o.fixed;
+  const A = fixed ? 1383 : 1850, safe = fixed ? 963 : 1430;
+  const note = o.install ? `<div class="note"><span class="w">${svg('fix')}</span><span class="t">Already spent some this month?<span>Fix my number</span></span><span class="x">${svg('chev')}</span></div>` : '';
+  const foot = o.foot === 'sunk' ? `<div class="footSunk">${svg('fix')}<span>Fix my number</span>${svg('chev')}</div>` : `<div class="foot"><span>Fix my number</span>${svg('chev')}</div>`;
+  return `${status()}<div class="page">
+    <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${svg('gear')}</span></div>
+    <div class="hero"><div class="ttl">Safe to spend today</div><div class="amt">${amtHtml(safe)}</div>
+      <div class="tbar"><div class="f" style="flex:${safe}"></div><div class="bite" style="flex:120"></div><div class="bite" style="flex:300"></div></div></div>
+    ${note}
+    <div class="secHd">Today</div>
+    <div class="card">${fixed ? nlRow : ''}${baseRows}</div>
+    ${o.noFoot ? '' : foot}
+  </div>
+  ${o.snack ? `<div class="snack" role="status"><span>Fixed. Safe to spend today: ₹963.</span><u>Undo</u></div>` : ''}
+  <div class="dock"><span class="on">Home</span><span>Spends</span><span class="add">${svg('plus')}</span><span>Ask AI</span><span>Settings</span></div>`;
+}
+
+/* ---------- Settings ---------- */
+const srow = (ic, t, d) => `<div class="row"><span class="w">${svg(ic)}</span><span class="t">${t}${d ? `<span>${d}</span>` : ''}</span>${svg('chev')}</div>`;
+function settings(o = {}) {
+  return `${status()}<div class="page"><div class="topbar"><span class="ttl">Settings</span></div>
+    <div class="secHd big">Money</div>
+    <div class="card">${srow('money', 'Money coming in', '₹45,000 · on the 4th')}${srow('bill', 'Bills')}${srow('piggy', 'Savings')}${srow('cal', 'My month starts on', 'The 4th')}${o.old ? '' : srow('fix', 'Fix my number', 'When the number on Home looks wrong.')}</div>
+    <div class="secHd big">Look</div>
+    <div class="card">${srow('look', 'Light or dark', 'Match phone')}</div>
+  </div>`;
+}
+
+/* ---------- The sheet ---------- */
+const TITLE = "How much of this month's money is left?";
+const E = 'hisaab thought ₹17,430.';
+const ST = {
+  empty:  { amt: 0, l1: 'Bank and cash together. Leave out money from before this month.', helper: true, off: true },
+  low:    { amt: 13230, l1: E, l2: "That's ₹4,200 less. Each day gets about ₹467 less." },
+  more:   { amt: 18430, l1: E, l2: "That's ₹1,000 more. Each day gets about ₹111 more." },
+  equal:  { amt: 17430, l1: E, l2: 'That matches. Nothing to fix.', off: true },
+  close:  { amt: 17400, l1: E, l2: "That's close enough. Nothing to fix.", off: true },
+  big:    { amt: 47430, l1: E, l2: "That's ₹30,000 more. One question first." },
+  guard:  { amt: 47430, l1: E, l2: "That's ₹30,000 more. Is all of it from this month?", guard: true },
+  no:     { amt: 47430, hl: true, l1: "Count only this month's money.", notice: true, l2: "That's ₹30,000 more. One question first." },
+  fail:   { amt: 13230, l1: "Couldn't save. Try again.", notice: true, l2: "That's ₹4,200 less. Each day gets about ₹467 less." },
+  load:   { amt: 13230, l1: "Couldn't check your number.", notice: true, retry: true, off: true },
+  changed:{ amt: 13230, l1: 'Things changed. Check the new amount.', notice: true, l2: "That's ₹4,200 less. Each day gets about ₹467 less." },
+};
+function sheet(k, o = {}) {
+  const s = ST[k];
+  const slot = `<div class="slot">${s.helper ? `<div class="helper">${s.l1}</div>` : `<div class="l1${s.notice ? ' notice' : ''}">${s.l1}</div>${s.retry ? '<div class="retry">Try again</div>' : `<div class="l2">${s.l2}</div>`}`}</div>`;
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', 'bk'].map((x) => `<div class="key">${x === 'bk' ? svg('bksp') : x}</div>`).join('');
+  const amount = `<div class="amt${s.amt === 0 ? ' zero' : ''}${s.guard ? ' ro' : ''}">${s.hl ? `<span class="hl">${amtHtml(s.amt)}</span>` : amtHtml(s.amt)}</div>`;
+  const hd = `<div class="stepHd"><span class="back"><span class="well40">${svg('back')}</span></span><span class="q">${TITLE}</span></div>`;
+  const bottom = s.guard
+    ? (o.shorter
+      ? `<div class="guard" style="margin-top:16px"><div class="gkey">No, some is older</div><div class="gkey">Yes, add ₹30,000</div></div>`
+      : `<div class="guard" style="height:${o.narrow ? 48 * 4 + 24 + 16 + 48 : 352}px"><div class="gkey">No, some is older</div><div class="gkey">Yes, add ₹30,000</div></div>`)
+    : `<div class="keys">${keys}</div><div class="act${s.off ? ' off' : ''}">Fix it</div>`;
+  const body = `${hd}<div class="slip">${amount}${slot}</div>`;
+  return `<div class="scrim"></div>
+    <div class="sheet${o.fill ? ' fill' : ''}"><div class="handle"></div>
+      ${o.scroll ? `<div class="body scrolled">${body}</div>` : `<div class="body">${body}</div>`}<div class="fixed">${bottom}</div>
+    </div>`;
+}
+/* the sheet over a dimmed Home */
+function sheetOverHome(k, o = {}) { return home({}) + sheet(k, o); }
+
+/* ---------- Spends / Every entry ---------- */
+const part = (t, a) => ({ t, a });
+const PARTS = [part('Spent', '₹27,570'), part('Saved', '₹1,000'), part('Used from savings', '₹12,000'), part('Not logged', '₹4,200')];
+function spendsLine(mode) {
+  if (mode === 'A') return `<div style="display:flex;flex-wrap:wrap;gap:4px 0;font-size:.9375em;line-height:1.333;color:var(--ink2)">${PARTS.map((p, i) => `<span style="white-space:nowrap;margin-inline-end:6px">${p.t} ${p.a}${i < PARTS.length - 1 ? ' ·' : ''}</span>`).join('')}</div>`;
+  return `<div style="display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.9375em;line-height:1.333;color:var(--ink2)">${PARTS.map((p) => `<span style="white-space:nowrap">${p.t} <b style="font:600 1em/1.333 'Anek Latin',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums">${p.a}</b></span>`).join('')}</div>`;
+}
+function spends(mode) {
+  return `${status()}<div class="page"><div class="topbar"><span class="ttl">Spends</span></div>
+    <div class="card" style="padding:16px 20px 18px"><div style="font-size:.875em;line-height:1.4;color:var(--ink2)">4 Oct to 3 Nov</div>
+      <div style="font:600 36px/40px 'Anek Latin',sans-serif;font-stretch:85%;margin:4px 0 10px;font-variant-numeric:tabular-nums">${amtHtml(27570)}</div>
+      ${spendsLine(mode)}</div>
+    <div class="secHd">Where it went</div><div class="card" style="padding:14px 20px;color:var(--ink2);font-size:.9375em">Food, Travel, Shopping ...</div></div>
+    <div class="dock"><span>Home</span><span class="on">Spends</span><span class="add">${svg('plus')}</span><span>Ask AI</span><span>Settings</span></div>`;
+}
+function every() {
+  const nl = (dir, amt) => `<div class="row"><span class="w">${svg('adj')}</span><span class="t">Not logged · ${dir}<span>Added when you fixed your number.</span></span><b>${inr(amt)}</b></div>`;
+  const chip = (t, on) => `<span style="height:40px;padding:0 16px;border-radius:12px;display:grid;place-items:center;font:600 14px/1 'Mukta',sans-serif;background:${on ? 'var(--ink)' : 'var(--sunk)'};color:${on ? 'var(--surface)' : 'var(--ink)'}">${t}</span>`;
+  return `${status()}<div class="page"><div class="topbar"><span class="well40" style="background:var(--sunk)">${svg('back')}</span><span class="ttl">Every entry</span></div>
+    <div style="display:flex;gap:8px;flex:none">${chip('All', true)}${chip('Food')}${chip('Travel')}${chip('Bills')}</div>
+    <div class="secHd">Mon 26 Oct</div>
+    <div class="card">${nl('Spent', 4200)}${nl('Got', 1000)}${row('Travel', 'travel', 'Auto to office · 8:40 am', 300)}</div>
+    <p style="margin:0 4px;font-size:.8125em;line-height:1.38;color:var(--ink2)">No chip for Not logged. The rows show under All, in date order.</p>
+  </div>`;
+}
+
+/* ---------- drawing ---------- */
+let single = 'light';
+const phoneH = (html, cls = '') => `<div class="phone ${cls}" inert>${html}</div>`;
+const fig = (inner, cap) => `<figure>${inner}<figcaption>${cap}</figcaption></figure>`;
+const both = (fn, cap, cls = '') => fig(phoneH(fn(), 'light ' + cls), '<b>Light.</b> ' + cap) + fig(phoneH(fn(), 'dark ' + cls), '<b>Dark.</b> Same state.');
+const one = (fn, cap, cls = '') => fig(phoneH(fn(), single + ' ' + cls), cap);
+const sh = (k, o = {}) => () => sheetOverHome(k, o);
+
+function draw() {
+  const set = (id, html) => (document.getElementById(id).innerHTML = html);
+  set('s1',
+    both(() => home({}), 'Home with the quiet foot row (recommended): text, no fill, 48dp.') +
+    fig(phoneH(home({ install: true }), 'light'), '<b>Light.</b> The one-time install line in the nudge slot (mid-cycle install), shown once, with the foot row below.') +
+    fig(phoneH(home({ install: true }), 'dark'), '<b>Dark.</b> Install line.') +
+    fig(`<div style="width:216px;height:456px;position:relative"><div class="phone light" style="zoom:.6;position:absolute;inset:0 auto auto 0;" inert>${home({ foot: 'sunk' })}</div></div>`, '<b>Alternative, small (not recommended).</b> The 01 sketch: sunk 56dp row with an icon well. Compare it to the card above it: a third layer.'));
+  set('s2', both(() => settings(), 'Settings › Money with the new last row <i>Fix my number</i>.'));
+  set('s3a', both(sh('empty'), 'S0: empty. Amount ₹0 in <code>ink2</code>, helper, key off.') + both(sh('low'), 'S1: lower. ₹13,230 typed. Key on (marigold).'));
+  set('s3b', one(sh('more'), 'S2: higher, small (₹18,430).') + one(sh('equal'), 'S4: matches (₹17,430). Key off.') + one(sh('close'), 'S5: close enough (₹17,400). Key off.'));
+  set('s3c', both(sh('big'), 'S3: higher, large (₹47,430). Key still on.'));
+  set('s3d', both(sh('guard'), 'The guard step. The keypad area is replaced, same height; the keys are in thumb reach and the area above them is empty.') +
+    fig(`<div style="width:216px;height:456px;position:relative"><div class="phone light" style="zoom:.6;position:absolute;inset:0 auto auto 0;" inert>${sheetOverHome('guard', { shorter: true })}</div></div>`, '<b>Option B, recommended.</b> The sheet shortens to the question. 232dp less height, nothing else moves.') +
+    one(sh('no'), 'After <i>No</i>: keypad back, digits kept on a <code>sunk</code> highlight, notice in line 1.'));
+  set('s3e', one(sh('fail'), 'S8: save failed. Digits kept, key on again.') + one(sh('load'), 'S0c: <i>E</i> failed to load. 48dp text key; key off.') + one(sh('changed'), 'S6: the ledger moved; save refused; the preview follows the live ledger.'));
+  set('s4', both(() => home({ fixed: true, snack: true }), 'Home after saving: hero ₹963, bar drained, the Not logged row on top, snackbar with Undo.'));
+  set('s5', both(() => every(), 'Every entry: both directions (Spent, then Got), with the second line.'));
+  set('s6',
+    fig(phoneH(spends('A'), 'light narrow'), '<b>320dp, 1×. A (the doc).</b> Wrap between parts, a · after each part but the last; the dangling · at line end.') +
+    fig(phoneH(spends('B'), 'light narrow'), '<b>320dp, 1×. B (alternative).</b> No dots, 16dp apart, amounts in <code>ink</code> 600.') +
+    fig(phoneH(spends('A'), 'light narrow t15'), '<b>320dp, 1.5×, A.</b> Every part on its own line, or two.') +
+    fig(phoneH(spends('B'), 'dark narrow t15'), '<b>Dark, 1.5×, B.</b>'));
+  set('s7',
+    fig(phoneH(sheetOverHome('low', { fill: true, scroll: true, narrow: true }), 'light narrow t15'), '<b>S1 at 320×568, 1.5×.</b> Scrolled to the end; the keypad and key are fixed (48dp keys).') +
+    fig(phoneH(sheetOverHome('guard', { fill: true, scroll: true, narrow: true }), 'light narrow t15'), '<b>Guard at 320×568, 1.5×.</b> The panel replaces the fixed area; the question is 5 lines.') +
+    fig(phoneH(sheetOverHome('low', { fill: true, scroll: true, narrow: true }), 'dark narrow t15'), '<b>Dark.</b>'));
+  set('s9', fig(phoneH(sheetOverHome('low'), 'light'), '<b>Redline, S1 at 360×760.</b> Measured from the DOM.'));
+  /* scroll the narrow bodies to their end */
+  document.querySelectorAll('.body.scrolled').forEach((b) => { b.scrollTop = b.scrollHeight; });
+  redline();
+}
+
+/* Schematics */
+document.getElementById('s8').innerHTML = `
+  <figure><div class="sch" style="width:640px;height:360px">
+    <div class="dim" style="inset:0;border-radius:0"></div>
+    <div style="left:40px;top:24px;width:560px;height:312px;background:#F1EDE8;border-radius:28px;display:block;padding:0">
+      <div class="a" style="left:20px;top:20px;width:260px;height:56px">Title</div>
+      <div class="b" style="left:20px;top:84px;width:260px;height:200px">Display card: amount, then the two-line slot</div>
+      <div class="a" style="left:300px;top:20px;width:240px;height:200px">Keypad 4 × 3</div>
+      <div style="left:300px;top:228px;width:240px;height:56px;background:#FFB020;box-shadow:inset 0 0 0 1.5px #161615;border-radius:18px">Fix it</div>
+    </div></div><figcaption><b>Expanded, flat (two-pane).</b> The sheet is centred and 560dp wide; amount and slot are one pane, keypad and <i>Fix it</i> the other. The guard replaces the right pane.</figcaption></figure>
+  <figure><div class="sch" style="width:360px;height:520px">
+    <div class="a" style="left:20px;top:16px;width:320px;height:56px">Title</div>
+    <div class="b" style="left:20px;top:80px;width:320px;height:150px">Amount + slot (upper half)</div>
+    <div class="hingeH" style="left:0;top:252px;width:360px;height:16px"></div>
+    <div style="left:0;top:270px;width:360px;height:20px;background:none;font-size:11px;color:#5B5650;padding:0">fold</div>
+    <div class="a" style="left:20px;top:300px;width:320px;height:136px">Keypad (lower half)</div>
+    <div style="left:20px;top:444px;width:320px;height:56px;background:#FFB020;box-shadow:inset 0 0 0 1.5px #161615;border-radius:18px">Fix it</div>
+  </div><figcaption><b>Tabletop.</b> The fold falls between the slot and the keypad. Nothing straddles it.</figcaption></figure>`;
+
+/* Redline: measure and draw gaps */
+function redline() {
+  const ph = document.querySelector('#s9 .phone'); if (!ph) return;
+  const pr = ph.getBoundingClientRect();
+  const z = pr.width / 360;
+  const R = (el) => { const r = el.getBoundingClientRect(); return { l: (r.left - pr.left) / z, t: (r.top - pr.top) / z, r: (r.right - pr.left) / z, b: (r.bottom - pr.top) / z }; };
+  const q = (s) => ph.querySelector(s);
+  const mk = (cls, css, txt) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); if (txt != null) d.textContent = txt; ph.appendChild(d); };
+  const vgap = (a, b, x) => { const A = R(a), B = R(b), h = B.t - A.b; if (h < 1) return; mk('rlb', { left: x - 1 + 'px', top: A.b + 'px', width: '2px', height: h + 'px' }); mk('rl', { left: x + 'px', top: A.b + h / 2 + 'px' }, Math.round(h)); };
+  const hgap = (x1, x2, y) => { const w = x2 - x1; mk('rlb', { left: x1 + 'px', top: y - 1 + 'px', width: w + 'px', height: '2px' }); mk('rl', { left: x1 + w / 2 + 'px', top: y + 'px' }, Math.round(w)); };
+  const sheetEl = q('.sheet'), handle = q('.handle'), hd = q('.stepHd'), slip = q('.slip'), amt = q('.slip .amt'), slot = q('.slot'), keys = q('.keys'), act = q('.act');
+  const S = R(sheetEl);
+  hgap(0, 20, S.t + 60); hgap(340, 360, S.t + 60);
+  vgap(handle, hd, 40); vgap(hd, slip, 40); vgap(slip, keys, 40); vgap(keys, act, 40);
+  const sl = R(slip); mk('rlo', { left: sl.l + 'px', top: sl.t + 'px', width: sl.r - sl.l + 'px', height: sl.b - sl.t + 'px' });
+  hgap(sl.l, sl.l + 20, sl.t + 40);
+  const a = R(amt); mk('rl', { left: '60px', top: (R(slip).t + 8) + 'px' }, Math.round(a.t - R(slip).t));
+  const k = R(keys), ka = R(act); mk('rl', { left: '60px', top: (k.t + 56) + 'px' }, 'key 64');
+  mk('rl', { left: '320px', top: (ka.t + 28) + 'px' }, 'act 56');
+  mk('rl', { left: '180px', top: (ka.b + 10) + 'px' }, Math.round(S.b - ka.b) + ' bottom');
+}
+
+document.querySelectorAll('[data-theme]').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-theme]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  single = b.dataset.theme; draw();
+}));
+draw();
+</script>
+</body>
+</html>
