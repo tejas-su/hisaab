@@ -39,3 +39,24 @@ final class BillsUndoRequested extends BillsEvent {
 final class BillsSwipeThresholdReached extends BillsEvent {
   const BillsSwipeThresholdReached();
 }
+
+/// A *Used some of it* save finished on a saving's sheet opened from this list; the page offers Undo
+/// for it (AC-Y9).
+final class BillsUsedDone extends BillsEvent {
+  const BillsUsedDone(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
+/// The user tapped Undo after a *Used* save: delete the entry, which sets the amount aside again.
+final class BillsUsedUndoRequested extends BillsEvent {
+  const BillsUsedUndoRequested(this.entry);
+
+  final Entry entry;
+
+  @override
+  List<Object?> get props => <Object?>[entry];
+}

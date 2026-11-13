@@ -13,7 +13,14 @@ import 'pressable.dart';
 /// The only tinted control: Add, Next and the onboarding finish. When [onPressed] is null it
 /// turns grey, because marigold means "act" and a disabled key can't act.
 class SignalKey extends StatelessWidget {
-  const SignalKey({super.key, required this.label, required this.onPressed, this.icon, this.height = minHeight});
+  const SignalKey({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.height = minHeight,
+    this.semanticHint,
+  });
 
   /// The tallest default; keys grow with text but never shrink below this.
   static const double minHeight = 58;
@@ -25,6 +32,9 @@ class SignalKey extends StatelessWidget {
   final VoidCallback? onPressed;
   final double height;
 
+  /// Read after the label by a screen reader, such as why the key is off; never drawn.
+  final String? semanticHint;
+
   @override
   Widget build(BuildContext context) {
     final bool enabled = onPressed != null;
@@ -32,6 +42,7 @@ class SignalKey extends StatelessWidget {
     final AppIconData? glyph = icon;
     return Pressable(
       semanticLabel: label,
+      semanticHint: semanticHint,
       onPressed: onPressed,
       focusRadius: _radius,
       builder: (BuildContext context, bool pressed) {

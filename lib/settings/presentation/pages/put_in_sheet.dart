@@ -6,6 +6,7 @@ import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/money/money.dart';
 import '../../../core/widgets/amount_display.dart';
 import '../../../core/widgets/keypad.dart';
+import '../../../core/widgets/pinned_keypad_body.dart';
 import '../../../core/widgets/signal_key.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
@@ -20,8 +21,6 @@ import 'bill_sheet.dart';
 class PutInSheet extends StatelessWidget {
   const PutInSheet({super.key});
 
-  static const double _keyHeight = 56;
-
   /// Opens the sheet for [bloc] over [context]; the sheet closes [bloc] when it goes, and the
   /// future completes after its exit animation.
   static Future<void> show(BuildContext context, PutInExtraBloc bloc) async {
@@ -35,48 +34,57 @@ class PutInSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocConsumer<PutInExtraBloc, PutInExtraState>(
-        listenWhen: (PutInExtraState _, PutInExtraState current) => current is PutInExtraDone,
-        listener: (BuildContext context, PutInExtraState _) => Navigator.of(context).pop(),
-        buildWhen: (PutInExtraState _, PutInExtraState current) => current is! PutInExtraDone,
-        builder: (BuildContext context, PutInExtraState state) => SingleChildScrollView(
-          padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, 0, HisaabSpacing.gutter, HisaabSpacing.gutter),
-          child: switch (state) {
-            PutInExtraReady() => _keypad(context, state),
-            PutInExtraFailed() => Text(AppLocalizations.of(context).loadFailed, style: Theme.of(context).textTheme.bodyLarge),
-            PutInExtraLoading() || PutInExtraDone() => const SizedBox.shrink(),
-          },
-        ),
-      );
+    listenWhen: (PutInExtraState _, PutInExtraState current) => current is PutInExtraDone,
+    listener: (BuildContext context, PutInExtraState _) => Navigator.of(context).pop(),
+    buildWhen: (PutInExtraState _, PutInExtraState current) => current is! PutInExtraDone,
+    builder: (BuildContext context, PutInExtraState state) => switch (state) {
+      PutInExtraReady() => _keypad(context, state),
+      PutInExtraFailed() => Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, 0, HisaabSpacing.gutter, HisaabSpacing.gutter),
+        child: Text(AppLocalizations.of(context).loadFailed, style: Theme.of(context).textTheme.bodyLarge),
+      ),
+      PutInExtraLoading() || PutInExtraDone() => const SizedBox.shrink(),
+    },
+  );
 
   Widget _keypad(BuildContext context, PutInExtraReady state) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final PutInExtraBloc bloc = context.read<PutInExtraBloc>();
     final TextStyle? line = Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2);
     final bool canSave = state.rupees > 0 && !state.saving && !state.nothingLeft;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Text(strings.putInQuestion, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: HisaabSpacing.m),
-        AmountDisplay(amount: Money.fromMajor(state.rupees), rejections: state.rejections),
-        const SizedBox(height: HisaabSpacing.s),
-        Semantics(liveRegion: true, child: Text(_line(context, state), key: const ValueKey<String>('put-in-line'), style: line)),
-        if (state.saveFailed) Text(strings.couldntSave, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: HisaabSpacing.l),
-        Keypad(
-          keyHeight: _keyHeight,
-          onKey: (String key) => bloc.add(PutInExtraKeyPressed(key)),
-          onBackspace: () => bloc.add(const PutInExtraBackspacePressed()),
-          onClear: () => bloc.add(const PutInExtraCleared()),
-        ),
-        const SizedBox(height: HisaabSpacing.m),
-        SignalKey(
-          key: const ValueKey<String>('put-in-save'),
-          label: strings.save,
-          onPressed: canSave ? () => bloc.add(const PutInExtraSavePressed()) : null,
-        ),
-      ],
+    return PinnedKeypadBody(
+      figure: AmountDisplay(amount: Money.fromMajor(state.rupees), rejections: state.rejections),
+      lead: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(strings.putInQuestion, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: HisaabSpacing.s),
+          Semantics(
+            liveRegion: true,
+            child: Text(_line(context, state), key: const ValueKey<String>('put-in-line'), style: line),
+          ),
+          if (state.saveFailed) Text(strings.couldntSave, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: HisaabSpacing.s),
+        ],
+      ),
+      controls: (BuildContext context, double keyHeight) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Keypad(
+            keyHeight: keyHeight,
+            onKey: (String key) => bloc.add(PutInExtraKeyPressed(key)),
+            onBackspace: () => bloc.add(const PutInExtraBackspacePressed()),
+            onClear: () => bloc.add(const PutInExtraCleared()),
+          ),
+          const SizedBox(height: HisaabSpacing.m),
+          SignalKey(
+            key: const ValueKey<String>('put-in-save'),
+            label: strings.save,
+            onPressed: canSave ? () => bloc.add(const PutInExtraSavePressed()) : null,
+          ),
+        ],
+      ),
     );
   }
 
@@ -94,4 +102,3 @@ class PutInSheet extends StatelessWidget {
     };
   }
 }
-

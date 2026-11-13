@@ -292,4 +292,106 @@ void main() {
       });
     }
   });
+  group('BillsPage savings footer (AC-Y4, BR-19)', () {
+    late BillsBloc savings;
+
+    Future<void> pumpSavings(
+      WidgetTester tester,
+      List<Entry> entries, {
+      Size size = TestWindows.phone,
+      double textScale = 1,
+    }) async {
+      ledger = FakeLedgerRepository(entries);
+      recurring.rules = <RecurringRule>[WorkedExample.insurance];
+      savings = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: ledger),
+        getSetAside: GetSetAside(recurring: recurring, ledger: ledger),
+        ledger: ledger,
+        kind: EntryKind.saved,
+      );
+      addTearDown(savings.close);
+      await tester.runAsync(() => savings.dispatch(const BillsLoadRequested()));
+      await pumpApp(
+        tester,
+        BlocProvider<BillsBloc>.value(
+          value: savings,
+          child: BillsPage(kind: EntryKind.saved, onAdd: () {}, onEdit: (RecurringRule _) {}),
+        ),
+        size: size,
+        textScale: textScale,
+      );
+    }
+
+    Entry used(int rupees) => Entry(
+          id: 900,
+          amount: Money.fromMajor(rupees),
+          kind: EntryKind.used,
+          categoryId: SeedCategoryIds.saved,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          note: 'Insurance',
+          savingId: 5,
+        );
+
+    final Finder lineOne = find.byKey(const ValueKey<String>('saved-since'));
+    final Finder lineTwo = find.byKey(const ValueKey<String>('still-set-aside'));
+
+    testWidgets('line 1 stays "₹12,000 put in since Nov"; line 2 reads "Nothing is set aside now." after a full use', (WidgetTester tester) async {
+      await pumpSavings(tester, <Entry>[...WorkedExample.insurancePutIns, used(12000)]);
+
+      expect(tester.widget<Text>(lineOne).data, '₹12,000 put in since Nov');
+      expect(tester.widget<Text>(lineTwo).data, 'Nothing is set aside now.');
+    });
+
+    testWidgets('line 2 is absent when nothing is set aside and no use exists', (WidgetTester tester) async {
+      await pumpSavings(tester, const <Entry>[]);
+
+      expect(lineTwo, findsNothing);
+    });
+
+    testWidgets('line 2 reads "₹4,000 still set aside" with ₹4,000 left', (WidgetTester tester) async {
+      await pumpSavings(tester, <Entry>[...WorkedExample.insurancePutIns, used(8000)]);
+
+      expect(tester.widget<Text>(lineTwo).data, '₹4,000 still set aside');
+      expect(find.text('₹4,000 set aside'), findsOneWidget);
+    });
+
+    testWidgets('TalkBack reads the footer line in rupees', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+
+      await pumpSavings(tester, <Entry>[...WorkedExample.insurancePutIns, used(8000)]);
+
+      expect(find.bySemanticsLabel('4,000 rupees still set aside'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('a fixed bills list has neither line', (WidgetTester tester) async {
+      await pump(tester);
+
+      expect(lineTwo, findsNothing);
+      expect(find.textContaining('set aside'), findsNothing);
+    });
+
+    testWidgets('at 320 by 568 with 2.0x text the footer wraps and the pinned key stays on screen', (WidgetTester tester) async {
+      await pumpSavings(
+        tester,
+        <Entry>[...WorkedExample.insurancePutIns, used(8000)],
+        size: TestWindows.smallPhone,
+        textScale: 2,
+      );
+
+      expect(tester.takeException(), isNull);
+      final Rect key = tester.getRect(find.byKey(const ValueKey<String>('add-bill')));
+      expect(key.bottom, lessThanOrEqualTo(TestWindows.smallPhone.height));
+      expect(key.top, greaterThanOrEqualTo(0));
+      await tester.scrollUntilVisible(lineTwo, 100);
+      expect(lineTwo, findsOneWidget);
+    });
+  });
+
 }

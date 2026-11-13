@@ -172,6 +172,8 @@ final class FakeServices {
     ..registerSingleton<ShouldAskBillReminders>(ShouldAskBillReminders(preferences: preferences, recurring: recurring))
     ..registerSingleton<AnswerBillReminders>(AnswerBillReminders(preferences: preferences, reminders: reminders, arm: armBillReminders))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
+    ..registerSingleton<GetSetAside>(GetSetAside(recurring: recurring, ledger: ledger))
+    ..registerSingleton<UseFromSavings>(UseFromSavings(ledger: ledger, categories: categories, clock: clock))
     ..registerSingleton<GetIncome>(GetIncome(recurring: recurring, ledger: ledger, clock: clock))
     ..registerSingleton<ChangeIncomeAmount>(ChangeIncomeAmount(recurring: recurring))
     ..registerSingleton<CorrectLatestPay>(CorrectLatestPay(ledger: ledger))

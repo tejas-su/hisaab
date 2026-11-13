@@ -6,6 +6,7 @@ import '../../../../core/design/app_icon.dart';
 import '../../../../core/design/app_icons.dart';
 import '../../../../core/design/hisaab_dimensions.dart';
 import '../../../../core/extensions/build_context_extensions.dart';
+import '../../../../core/money/money.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../../ledger/ledger.dart';
@@ -19,6 +20,7 @@ import 'bill_head.dart';
 import 'bill_perforation.dart';
 import 'bill_sheet_copy.dart';
 import 'bill_slip.dart';
+import 'bill_used_section.dart';
 import 'bill_stamp_badge.dart';
 import 'bill_wide_key.dart';
 
@@ -35,9 +37,12 @@ class BillSummary extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final RecurringRule rule = state.rule;
     final String? stamp = state.status.map((BillStatus status) => context.stampText(status, kind: rule.kind, mode: rule.amountMode)).toNullable();
-    final String spoken = _isSaving
+    final Money? aside = _shownSetAside;
+    final String slip = _isSaving
         ? strings.savingSlipSpoken(rule.label, context.spokenMoney(rule), _day(rule))
         : strings.billSlipSpoken(rule.label, context.iconName(rule.shownIcon), context.spokenMoney(rule), _day(rule));
+    final String spoken =
+        aside == null ? slip : strings.spokenPair(slip, strings.savingSetAside(strings.spokenAmount(context.money.digits(aside))));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,6 +64,12 @@ class BillSummary extends StatelessWidget {
                     BillHead(name: rule.label, glyph: rule.glyph),
                     const SizedBox(height: 10),
                     _amountLine(context, stamp),
+                    if (aside != null)
+                      Text(
+                        strings.savingSetAside(context.money.format(aside)),
+                        key: const ValueKey<String>('bill-set-aside'),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.displayInk2),
+                      ),
                     Text(
                       strings.billEveryMonth(_day(rule)),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.displayInk2),
@@ -68,6 +79,7 @@ class BillSummary extends StatelessWidget {
               ),
               const BillPerforation(),
               ..._rows(context),
+              BillUsedSection(state: state),
               const BillPerforation(),
               _foot(context),
             ],
@@ -87,6 +99,12 @@ class BillSummary extends StatelessWidget {
   static int _day(RecurringRule rule) => rule.schedule.anchor.day;
 
   bool get _isSaving => state.rule.kind == EntryKind.saved;
+
+  // why: "set aside" shows only above ₹0, so a saving that never had a put-in reads as before (AC-Y5).
+  Money? get _shownSetAside {
+    final Money? aside = state.setAside.toNullable();
+    return aside != null && aside > Money.zero ? aside : null;
+  }
 
   Widget _amountLine(BuildContext context, String? stamp) => Wrap(
         alignment: WrapAlignment.spaceBetween,

@@ -1,3 +1,4 @@
+import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/settings/presentation/widgets/bill_row.dart';
 import 'package:hisaab/core/design/app_icon.dart';
 import 'package:hisaab/core/design/hisaab_colors.dart';
@@ -84,4 +85,71 @@ void main() {
       });
     }
   });
+  group('BillRow set aside (AC-Y3)', () {
+    Future<void> pumpSaving(WidgetTester tester, {Money? setAside, double textScale = 1}) => pumpApp(
+          tester,
+          Scaffold(
+            body: Align(
+              alignment: Alignment.topCenter,
+              child: BillRow(
+                bill: WorkedExample.insurance,
+                setAside: setAside,
+                onEdit: () {},
+                onDelete: () {},
+                onThresholdReached: () {},
+              ),
+            ),
+          ),
+          textScale: textScale,
+        );
+
+    final Finder thirdLine = find.byKey(const ValueKey<String>('set-aside'));
+    // why: the Dismissible stretches the row to its parent's height, so the row's natural height is
+    // the text block (or the 42dp icon, if taller) plus the 9dp padding above and below.
+    double rowHeight(WidgetTester tester, {required bool hasThirdLine}) {
+      final Finder lastLine = hasThirdLine ? thirdLine : find.text('Every month on day 5');
+      final double block = tester.getBottomLeft(lastLine).dy - tester.getTopLeft(find.text('Insurance')).dy;
+      return (block > 42 ? block : 42) + 18;
+    }
+
+    testWidgets('the third line shows above ₹0 only; the schedule line stays the second', (WidgetTester tester) async {
+      await pumpSaving(tester, setAside: Money.fromMajor(4000));
+
+      expect(find.text('₹4,000 set aside'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('Every month on day 5')).dy, lessThan(tester.getTopLeft(thirdLine).dy));
+    });
+
+    testWidgets('no third line for ₹0 or for no figure', (WidgetTester tester) async {
+      await pumpSaving(tester, setAside: Money.zero);
+      expect(thirdLine, findsNothing);
+
+      await pumpSaving(tester);
+      expect(thirdLine, findsNothing);
+    });
+
+    for (final double scale in <double>[1, 1.5]) {
+      testWidgets('the row is about 84dp with the third line and 64dp without, at $scale x text', (WidgetTester tester) async {
+        await pumpSaving(tester, setAside: Money.fromMajor(4000), textScale: scale);
+        final double withLine = rowHeight(tester, hasThirdLine: true);
+        await pumpSaving(tester, textScale: scale);
+        final double without = rowHeight(tester, hasThirdLine: false);
+
+        expect(withLine, greaterThan(without));
+        if (scale == 1) {
+          expect(withLine, inInclusiveRange(76, 90));
+          expect(without, inInclusiveRange(58, 70));
+        }
+      });
+    }
+
+    testWidgets('TalkBack reads the set-aside after the schedule', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+
+      await pumpSaving(tester, setAside: Money.fromMajor(4000));
+
+      expect(find.bySemanticsLabel(RegExp(r'Insurance, 1,000 rupees, .*, 4,000 rupees set aside')), findsOneWidget);
+      handle.dispose();
+    });
+  });
+
 }

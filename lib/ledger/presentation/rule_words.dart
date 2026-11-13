@@ -68,8 +68,19 @@ extension RuleWords on AppLocalizations {
   /// The stamp when this month's posted today.
   String ruleStampCountedToday(EntryKind kind) => _isSaving(kind) ? savingStampCountedToday : billStampCountedToday;
 
-  /// The snackbar after [rule] is deleted.
-  String ruleDeleted(RecurringRule rule) => _isSaving(rule.kind) ? savingDeleted(rule.label) : billDeleted(rule.label);
+  /// Whether [label] is the name of one of the three yearly-cost savings (Insurance, School fees,
+  /// Festival), which get the *Used some of it* hint (AC-Y5).
+  bool isYearlyCostName(String label) => <String>{savingName('insurance'), savingName('schoolFees'), savingName('festival')}
+      .any((String name) => name.toLowerCase() == label.trim().toLowerCase());
+
+  /// The snackbar after [rule] is deleted. A saving that [keepsHistory] (it has had a put-in) says
+  /// what stays (AC-Y10).
+  String ruleDeleted(RecurringRule rule, {bool keepsHistory = false}) {
+    if (!_isSaving(rule.kind)) {
+      return billDeleted(rule.label);
+    }
+    return keepsHistory ? savingDeletedKeeps(rule.label) : savingDeleted(rule.label);
+  }
 
   /// The snackbar after [entry], of [amount], is deleted: a saving its rule put in reads as a
   /// skipped month, named by its note (the rule's name, D120), never a loss (case study 17);

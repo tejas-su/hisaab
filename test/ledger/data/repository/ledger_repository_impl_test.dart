@@ -1,3 +1,4 @@
+import 'package:hisaab/ledger/domain/entities/saving_totals.dart';
 import 'package:hisaab/core/db/app_database.dart';
 import 'package:hisaab/core/db/db_schema.dart';
 import 'package:hisaab/core/errors/failure.dart';
@@ -245,4 +246,127 @@ void main() {
       expect((await timed.firstLoggedOn().run()).getLeft().toNullable(), isA<InvalidDataFailure>());
     });
   });
+  group('LedgerRepositoryImpl used entries (BR-19, D175)', () {
+    Future<int> saving({String label = 'Insurance'}) => database.db.insert(Tables.recurring, <String, Object?>{
+          RecurringColumns.label: label,
+          RecurringColumns.amountMinor: 100000,
+          RecurringColumns.kind: 'save',
+          RecurringColumns.categoryId: 11,
+          RecurringColumns.frequency: 'monthly',
+          RecurringColumns.anchorDate: '2026-10-05',
+          RecurringColumns.nextDue: '2026-11-05',
+        });
+
+    EntryDraft used(int rupees) =>
+        EntryDraft(amount: Money.fromMajor(rupees), kind: EntryKind.used, categoryId: 11, date: _today, note: 'Insurance');
+
+    Future<Entry> putIn(int ruleId, int rupees, CalendarDate date) async => _right(
+          await repository
+              .addForRule(
+                EntryDraft(amount: Money.fromMajor(rupees), kind: EntryKind.saved, categoryId: 11, date: date),
+                recurringId: ruleId,
+              )
+              .run(),
+        );
+
+    test('addForSaving saves a used entry with its saving_id and notifies', () async {
+      final int id = await saving();
+
+      final Entry entry = _right(await repository.addForSaving(used(4000), savingId: id).run());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(entry.kind, EntryKind.used);
+      expect(entry.savingId, id);
+      expect(entry.recurringId, isNull);
+      expect(changes, hasLength(1));
+    });
+
+    test('addForSaving for a rule that does not exist is DatabaseFailure', () async {
+      expect((await repository.addForSaving(used(4000), savingId: 999).run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
+    test('restore puts a used entry back with its saving_id (Undo, E96)', () async {
+      final int id = await saving();
+      final Entry entry = _right(await repository.addForSaving(used(4000), savingId: id).run());
+      _right(await repository.delete(entry.id).run());
+
+      final Entry restored = _right(await repository.restore(entry).run());
+
+      expect(restored, entry);
+      expect(restored.savingId, id);
+    });
+
+    test('replace keeps a used entry saving_id', () async {
+      final int id = await saving();
+      final Entry entry = _right(await repository.addForSaving(used(4000), savingId: id).run());
+
+      final Entry replaced = _right(await repository.replace(entry.id, used(3000)).run());
+
+      expect(replaced.savingId, id);
+      expect(replaced.amount, Money.fromMajor(3000));
+    });
+
+    test('savingTotals sums saved rows by rule and used rows by saving', () async {
+      final int id = await saving();
+      await putIn(id, 6000, const CalendarDate(2026, 9, 5));
+      await putIn(id, 6000, const CalendarDate(2026, 10, 5));
+      _right(await repository.addForSaving(used(4000), savingId: id).run());
+
+      final SavingTotals totals = _right(await repository.savingTotals().run());
+
+      expect(totals.bySaving[id], (putIn: Money.fromMajor(12000), used: Money.fromMajor(4000)));
+      expect(totals.anyUse, isTrue);
+    });
+
+    test('a saving with a put-in and no use has a zero used total and anyUse is false', () async {
+      final int id = await saving();
+      await putIn(id, 1000, const CalendarDate(2026, 10, 5));
+
+      final SavingTotals totals = _right(await repository.savingTotals().run());
+
+      expect(totals.bySaving[id], (putIn: Money.fromMajor(1000), used: Money.zero));
+      expect(totals.anyUse, isFalse);
+    });
+
+    test('a saved entry with no rule (Put in extra) is in no saving (E100)', () async {
+      _right(
+        await repository
+            .add(EntryDraft(amount: Money.fromMajor(2000), kind: EntryKind.saved, categoryId: 11, date: _today))
+            .run(),
+      );
+
+      final SavingTotals totals = _right(await repository.savingTotals().run());
+
+      expect(totals.bySaving, isEmpty);
+    });
+
+    test('an empty ledger has no totals and no use', () async {
+      expect(_right(await repository.savingTotals().run()), const SavingTotals());
+    });
+
+    test('anyUse is true for a used entry whose saving is gone (E98)', () async {
+      final int id = await saving();
+      _right(await repository.addForSaving(used(4000), savingId: id).run());
+      await database.db.delete(Tables.recurring, where: '${RecurringColumns.id} = ?', whereArgs: <Object?>[id]);
+
+      final SavingTotals totals = _right(await repository.savingTotals().run());
+
+      expect(totals.anyUse, isTrue);
+      expect(totals.bySaving, isEmpty);
+    });
+
+    test('a used entry on a put-in date is accepted', () async {
+      final int id = await saving();
+      await putIn(id, 1000, _today);
+
+      expect(_right(await repository.addForSaving(used(500), savingId: id).run()).date, _today);
+    });
+
+    test('savingTotals reports a closed database as DatabaseFailure', () async {
+      await database.close();
+
+      expect((await repository.savingTotals().run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
 }

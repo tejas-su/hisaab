@@ -73,6 +73,12 @@ abstract final class CategoryKeys {
   /// The hidden category every card bill uses; never shown (D123).
   static const String cardPaid = 'card_paid';
 
+  /// The hidden *Spent* category of a *Not logged* row; never shown (BR-11, D166).
+  static const String notLogged = 'not_logged';
+
+  /// The hidden *Got* category of a *Not logged* row; never shown (BR-11, D166).
+  static const String notLoggedIn = 'not_logged_in';
+
   /// The start of every key of a category the user made (`own_12`); no built-in key has it (D138).
   static const String ownPrefix = 'own_';
 }

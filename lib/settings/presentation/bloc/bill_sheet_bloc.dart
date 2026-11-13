@@ -9,6 +9,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/money/amount_input.dart';
 import '../../../core/money/money.dart';
+import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
 import 'bill_sheet_event.dart';
 import 'bill_sheet_state.dart';
@@ -24,6 +25,7 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     required this._editBill,
     required this._getStatus,
     required this._haptics,
+    this._getSetAside,
   }) : super(BillSheetReady(rule: rule)) {
     on<BillSheetStatusRequested>(_onStatusRequested, transformer: restartable());
     on<BillSheetAnswerOpened>(_onAnswerOpened);
@@ -55,6 +57,9 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   final GetBillStatus _getStatus;
   final Haptics _haptics;
 
+  /// Reads what a saving has set aside; null for a bill sheet that never offers *Used some of it*.
+  final GetSetAside? _getSetAside;
+
   Future<void> _onStatusRequested(BillSheetStatusRequested event, Emitter<BillSheetState> emit) => _loadStatus(emit);
 
   Future<void> _loadStatus(Emitter<BillSheetState> emit) async {
@@ -63,10 +68,21 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
       return;
     }
     final Either<Failure, BillStatus> status = await _getStatus(current.rule).run();
+    final Option<Money> setAside = await _readSetAside(current.rule);
     final BillSheetState latest = state;
     if (latest is BillSheetReady) {
-      emit(latest.copyWith(status: status.toOption(), saving: latest.saving));
+      emit(latest.copyWith(status: status.toOption(), saving: latest.saving, setAside: setAside));
     }
+  }
+
+  // why: a failed read just leaves the key off; the sheet stays usable without it.
+  Future<Option<Money>> _readSetAside(RecurringRule rule) async {
+    final GetSetAside? read = _getSetAside;
+    if (read == null || rule.kind != EntryKind.saved) {
+      return const Option<Money>.none();
+    }
+    final Either<Failure, SetAsideSummary> summary = await read(const NoParams()).run();
+    return summary.toOption().flatMap((SetAsideSummary s) => Option<Money>.fromNullable(s.perSaving[rule.id]));
   }
 
   void _onAnswerOpened(BillSheetAnswerOpened event, Emitter<BillSheetState> emit) => _whenOnBill((BillSheetReady bill) => emit(

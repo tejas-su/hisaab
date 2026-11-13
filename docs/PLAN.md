@@ -33,7 +33,9 @@ Every setting the user must think about is friction. The app decides; power user
 | Edit recurring rule | Applies to future entries; past entries untouched. No dialog. | — |
 | Over budget | Shown as "₹1,200 over" in words, never "-₹1,200" and never red | — |
 | Paise | Whole rupees only: no decimal key, never displayed (stored as minor units) | — |
-| Savings | *Savings* in Settings: monthly savings (RD, SIP…) set aside before their day and recorded on it; *Put in extra* for one-offs (D120) | List in Settings |
+| Savings | *Savings* in Settings: monthly savings (RD, SIP…) set aside before their day and recorded on it; *Put in extra* for one-offs (D120). A yearly cost (insurance, school fees, a festival) is a saving too, a twelfth a month, and *Used some of it* records paying it from what is set aside (D174, D175) | List in Settings |
+| The Home number looks wrong | *Fix my number*: the user says how much of this month's money is left and hisaab adds one *Not logged* entry for the difference. No setting, no limit, no reminder; a large higher figure asks one more question, at 10% of income (D165 to D169) | A row at the end of Home and of Settings › Money |
+| Missed log | A once-a-day question after a habit's window, when the category has no entry today. No ×, no repeat, no setting (D171) | *Forget* on the category (D153) |
 | Bills that change, and card bills | A bill is *Same every month* unless its chip says otherwise: *Electricity* changes (set aside at its last amount, and Home asks how much on its day); a *Credit card* bill is recorded when paid but never counted, because card buys count when made (D123). Onboarding offers only fixed bills (D125) | *Kind of bill* on the bill sheet |
 
 ---
@@ -41,11 +43,12 @@ Every setting the user must think about is friction. The app decides; power user
 ## 3. Screens
 
 1. **Onboarding (3 steps, progress dots):** income amount, when it comes, optional fixed bills (SPEC FR-ON).
-2. **Home:** the hero card (safe to spend today, Day Blocks, range line), due-soon nudge, Today list, dock (FR-HO).
+2. **Home:** the hero card (safe to spend today, Day Blocks, range line), the nudge slot (waiting bill, due-soon, install line, missed-log line; D170), Today list, the *Fix my number* foot row, dock (FR-HO).
 3. **Add tray:** amount keypad, then category tiles; tapping a tile saves (FR-AD).
 4. **Spends:** Ask AI card, pace chart, where-it-went bars (no donut), up to 3 insights, and *See every entry* for the full day-grouped history (FR-SP).
 5. **Ask AI:** goal, period, preview, copy/share/open ChatGPT (FR-AI).
-6. **Settings:** money, categories, look, Your hisaab (FR-SE, D139).
+6. **Settings:** money (with *Fix my number* at its end), categories, look, Your hisaab (FR-SE, D139).
+7. **Keypad sheets:** the Fix my number sheet, the *Used* question and the other bill-sheet-route keypads, with pinned controls (FR-KS, FR-FX; mockups 41, 42).
 
 Navigation: floating dock with **Home · (+ Add) · Spends**. Ask AI is the top card on Spends. The full history opens from Home ("See all") or Spends. Settings is at the top right of Home. See UI_DESIGN.md §4.
 
@@ -117,11 +120,11 @@ Task: Review my spending. Give: 1) 3 biggest problems 2) 3 concrete savings with
 
 | Table | Columns |
 |---|---|
-| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived. Hidden `saved` and `card_paid` rows (`archived = 1`) hold saved and card-bill entries and are never shown. A category the user made has key `own_<n>` and sort after the 8; hiding it sets `archived = 1`, which takes it out of the Add tray and Settings but keeps it in Spends, filters and exports (D138) |
-| `transactions` | id, amount_minor, currency, kind (in/out/save/card), category_id, date, note NULL, recurring_id NULL, created_at |
+| `categories` | id, name, icon_key, kind (in/out), budget_minor NULL, sort, archived. Hidden `saved` and `card_paid` rows (`archived = 1`) hold saved and card-bill entries and are never shown. Two more hidden rows, `not_logged` (out) and `not_logged_in` (in), both `archived = 1`, name `not logged` (a reserved name, BR-11), hold the entries a *Fix my number* adds (D166); a *Used* entry is filed in `saved`. A category the user made has key `own_<n>` and sort after the 8; hiding it sets `archived = 1`, which takes it out of the Add tray and Settings but keeps it in Spends, filters and exports (D138) |
+| `transactions` | id, amount_minor, currency, kind (in/out/save/card/used), category_id, date, note NULL, recurring_id NULL, saving_id NULL, created_at. `used` (D175) is a payment from a saving's set-aside money; `saving_id` (NULL except on `used`) is the saving's `recurring.id`, kept apart from `recurring_id` because `(recurring_id, date)` is unique and a use on a put-in's date would be refused. A fix is an ordinary `out` or `in` row in a hidden `not logged` category |
 | `recurring` | id, label, amount_minor, currency, kind (in/out/save), category_id, freq (weekly/biweekly/monthly/yearly), interval, anchor_date, next_due, active, icon NULL, amount_mode (fixed/varies/card) |
 | `recurring_skips` | recurring_id, date (primary key together): a month a changing bill didn't go out |
-| `suggestion_state` | category_id (primary key, references `categories`, deleted with its category), quiet_on NULL, rest_until NULL, forgotten_at NULL. What the user told one category's *your usual* (BR-17, D153): quiet for the day of an Undo, resting until a date, and when *Forget* was tapped. Dates are `YYYY-MM-DD`; `forgotten_at` is a local ISO timestamp like `created_at`. It goes into a backup and is wiped by *Delete everything* with the rest |
+| `suggestion_state` | category_id (primary key, references `categories`, deleted with its category), quiet_on NULL, rest_until NULL, forgotten_at NULL, asked_on NULL (schema v5, D172). What the user told one category's *your usual* (BR-17, D153): quiet for the day of an Undo, resting until a date, and when *Forget* was tapped; and `asked_on`, the day the missed-log line was last asked for it (never `quiet_on`, which feeds the Undo count). Dates are `YYYY-MM-DD`; `forgotten_at` is a local ISO timestamp like `created_at`. It goes into a backup and is wiped by *Delete everything* with the rest |
 | `settings` | key, value. Ledger-owned keys: `currency`, `month_start`, `pay_switches` (JSON list of earlier pay rules, D140) (`keep_aside_minor` until schema v3). Settings-owned keys: `theme_mode`, `onboarding_done`, `onboarding_draft` (JSON). Backup-owned keys, local to the phone and never written into a backup: `last_backup`, `restore_snapshot` (the replaced data's backup JSON, kept 7 days for *Undo restore*), `restored_at` (D139). The pay rule lives on the income `recurring` row (DECISIONS D20) |
 
 Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transactions(recurring_id, date)`.
@@ -129,6 +132,13 @@ Indexes: `transactions(date)`, `transactions(category_id, date)`, unique `transa
 Schema v3 (migration 003, D120) also holds the columns changing bills use since D123 (`amount_mode`, `recurring_skips`, the `card` kind), and moves a non-zero `keep_aside_minor` to a *Keep aside* saving rule, then deletes the key.
 
 Schema v4 (migration 004, D153) adds `suggestion_state` and changes nothing else. Habits themselves are not stored: they are worked out from the last 56 days of `transactions` on every load.
+
+Schema v5 (migration 005, D172, D175, D188) is for Fix my number, *Used* and the missed-log line. **Migration 005 is landed** (D191, with the yearly-costs build): all three parts, in one step:
+1. Add the two hidden `categories` rows, `not_logged` (out) and `not_logged_in` (in), `archived = 1`. A fresh install seeds them too, and a backup older than v5 gains them on its in-memory migration.
+2. Allow `transactions.kind = used` (a value only, unless a constraint on `kind` has to be widened) and add `transactions.saving_id` (NULL, an integer pointing at `recurring.id`), with an index on it.
+3. Add `suggestion_state.asked_on` (TEXT NULL, `YYYY-MM-DD`).
+4. The install line's *seen* flag is a `settings` key, and the install day is the local date of the earliest entry's `MIN(created_at)` (as D39; no new column). It travels in the backup and is wiped by *Delete everything*.
+5. The backup's `schemaVersion` becomes 5. A pre-v5 file restores as before; migration 005 is tested from v4 and from a v4 backup (NFR-5). BR-16's restore and wipe must cover the new rows, the new column and the flag (tested).
 
 ---
 
@@ -196,6 +206,7 @@ Fonts: Anek Latin (variable) and Mukta `.ttf` files bundled under `assets/fonts/
 | M5 | Ask AI export | Prompt copies/shares and pastes cleanly into ChatGPT |
 | M6 | JSON backup & restore, Delete everything (D139), CSV export, accessibility pass (TalkBack, 1.5× text), polish | Data survives reinstall through a backup file; TalkBack reads every control |
 | M7 | Home-screen widget (4 sizes, the hero's paper, the day-by-day snapshot), Quick Settings tile, app shortcut, Settings › Shortcuts (SPEC FR-WG, FR-SE-6, D147, D156, mockup 38). Built; see `docs/features/shortcuts/` | The widget is right after midnight and payday with the app closed; Add on the widget, tile or shortcut opens the keypad |
+| M8 | *Fix my number*, yearly costs with *Used*, and the missed-log line (SPEC BR-18, BR-19, FR-KS, FR-FX, FR-HO-3, FR-HO-9, FR-SE-1 AC-Y1 to AC-Y11, FR-SP-4a; D163 to D189; mockups 41 to 43). No new package. Built in this order (08 §8.4): **(1) shared fixes** that hurt users today and everything after needs: the hold on every Home-door sheet as a count (FR-AD-5, P1), the pinned keypad body in the bill-sheet route with the bottom inset and the posture-agnostic anchor (FR-KS-1, P2, P3), the cap's held ring and spoken line in every keypad (FR-KS-2, P5, P6) and the 1.5× key-label clamp (FR-KS-3, P15); **(2) schema v5** (§8; **landed with step 3 as migration 005**, D191); **(3) yearly costs with *Used*** (BR-19, FR-SE-1, the Today, Every entry and Spends rows; **built 2026-11-13**); **(4) the missed-log line** (`MissedLogDetector`, FR-HO-3, `asked_on`); **(5) Fix my number** (BR-18, FR-FX, the foot row, the install line, the Settings row and its door's own Undo, P4). Also: the two Ask AI clauses and CSV `used`/`not logged` (BR-15), `TestWindows` additions (UI_DESIGN §13), the ARB keys with a `@description` each, and a neutral glyph for the *Not logged* row and Settings row (`design-system`) | Everything in the SPEC's M8 IDs is covered by tests that cite it, with the worked examples of BR-18 and BR-19 as golden cases (₹963, ₹1,541, ₹4,763, ₹866, ₹930, ₹852, hero ₹1,318 before and after a *Used*); a bill, a fix and a *Used* entry made from Home never drain under the scrim; every keypad sheet keeps its amount and action key on screen at 320×568, 412×400, landscape, book and tabletop; migration 005 passes from v4 and a v4 backup restores; `flutter analyze` is clean and changed-line coverage is at least 90%. **Before the Play release, not before the build (D164):** the pre-release user test (08 §4) and the device checks of 08 §5 (D1 guard focus, D6 the 400 ms drain, D13 largest font) are run, and their outcomes may change ARB strings and the guard's threshold only |
 
 Tests: unit tests for all of `domain/` and `core/money`, `core/time`; widget tests for M1 flows.
 

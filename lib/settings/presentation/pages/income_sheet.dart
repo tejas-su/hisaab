@@ -77,24 +77,33 @@ class _IncomeSheetState extends State<IncomeSheet> {
                 context.read<IncomeSheetBloc>().add(const IncomeSheetBackPressed());
               }
             },
-            child: SingleChildScrollView(
-              padding: EdgeInsetsDirectional.fromSTEB(
-                HisaabSpacing.gutter,
-                0,
-                HisaabSpacing.gutter,
-                HisaabSpacing.gutter + MediaQuery.viewInsetsOf(context).bottom,
-              ),
-              child: AnimatedSwitcher(
-                duration: HisaabMotion.reduceMotion(context) ? HisaabMotion.reducedCrossfade : HisaabMotion.numberRoll,
-                child: KeyedSubtree(
-                  key: ValueKey<(bool, IncomeWhenStep?)>((state.amountOpen, state.step.toNullable())),
-                  child: _view(state),
-                ),
+            child: AnimatedSwitcher(
+              duration: HisaabMotion.reduceMotion(context) ? HisaabMotion.reducedCrossfade : HisaabMotion.numberRoll,
+              child: KeyedSubtree(
+                key: ValueKey<(bool, IncomeWhenStep?)>((state.amountOpen, state.step.toNullable())),
+                child: _body(context, state),
               ),
             ),
           );
         },
       );
+
+  // why: the amount question pins its keypad and scrolls only its lead (P2), so it brings its own
+  // padding and scroll; every other question scrolls whole, clear of the keyboard and the system bar.
+  static Widget _body(BuildContext context, IncomeSheetReady state) {
+    if (state.amountOpen) {
+      return _view(state);
+    }
+    return SingleChildScrollView(
+      padding: EdgeInsetsDirectional.fromSTEB(
+        HisaabSpacing.gutter,
+        0,
+        HisaabSpacing.gutter,
+        HisaabSpacing.gutter + MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: _view(state),
+    );
+  }
 
   static Widget _view(IncomeSheetReady state) {
     if (state.amountOpen) {

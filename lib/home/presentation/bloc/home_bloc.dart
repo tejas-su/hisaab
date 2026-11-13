@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../core/design/haptics.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/logging/app_logger.dart';
+import '../../../core/money/money.dart';
 import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
 import 'home_event.dart';
@@ -36,7 +38,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     // why: every write reloads Home; a newer load cancels an older one still reading, so stale
     // numbers never land last.
     on<HomeLoadRequested>(_onLoadRequested, transformer: restartable());
-    on<HomeTrayOpened>((HomeTrayOpened event, Emitter<HomeState> emit) => _trayOpen = true);
+    on<HomeTrayOpened>((HomeTrayOpened event, Emitter<HomeState> emit) => _holds++);
     on<HomeTrayClosed>(_onTrayClosed);
     on<HomeWeekToggled>(_onWeekToggled);
     on<HomeDeleteRequested>(_onDeleteRequested);
@@ -46,6 +48,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeBillUndoRequested>(_onBillUndoRequested);
     on<HomeBillAmountDone>(_onBillAmountDone);
     on<HomeBillAmountUndoRequested>(_onBillAmountUndoRequested);
+    on<HomeUsedDone>(_onUsedDone);
+    on<HomeUsedUndoRequested>(_onUsedUndoRequested);
     on<HomeSwipeThresholdReached>((HomeSwipeThresholdReached event, Emitter<HomeState> emit) => unawaited(_haptics.threshold()));
     _changes = _ledger.changes.listen((void _) => add(const HomeLoadRequested()));
     _ruleChanges = _recurring.changes.listen((void _) => add(const HomeLoadRequested()));
@@ -71,16 +75,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   late final StreamSubscription<void> _ruleChanges;
 
   // why: a drain behind the closing tray's scrim teaches nothing, so while the tray covers Home
-  // a reload waits for the tray to go (FR-AD-5, D91).
-  bool _trayOpen = false;
+  // a reload waits for the tray to go (FR-AD-5, D91). A count, not a flag: a sheet opened as
+  // another closes (a reminder or launch pops, then opens) must not release Home early.
+  int _holds = 0;
   bool _reloadWhenTrayCloses = false;
 
   // why: an amount entered while Home couldn't show (still loading, or a failed reload) would
   // lose its Undo; it waits here for the next load that succeeds.
   Option<BillAmountOutcome> _pendingAmountUndo = const Option<BillAmountOutcome>.none();
 
+  // why: the same for a *Used* save, whose Undo would otherwise be lost while Home can't show.
+  Option<UsedOutcome> _pendingUsedUndo = const Option<UsedOutcome>.none();
+
   Future<void> _onLoadRequested(HomeLoadRequested event, Emitter<HomeState> emit) async {
-    if (_trayOpen) {
+    if (_holds > 0) {
       _reloadWhenTrayCloses = true;
       return;
     }
@@ -90,8 +98,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   // why: the reload joins the restartable load queue rather than running here, so it can't
   // race a load already in flight.
   void _onTrayClosed(HomeTrayClosed event, Emitter<HomeState> emit) {
-    _trayOpen = false;
-    if (_reloadWhenTrayCloses) {
+    _holds = math.max(0, _holds - 1);
+    if (_holds == 0 && _reloadWhenTrayCloses) {
       _reloadWhenTrayCloses = false;
       add(const HomeLoadRequested());
     }
@@ -135,8 +143,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   HomeReady _shown(HomeReady ready) {
     final Option<BillAmountOutcome> pending = _pendingAmountUndo;
+    final Option<UsedOutcome> pendingUsed = _pendingUsedUndo;
     _pendingAmountUndo = const Option<BillAmountOutcome>.none();
-    return ready.copyWith(showWeek: _showingWeek, amountUndo: pending);
+    _pendingUsedUndo = const Option<UsedOutcome>.none();
+    return ready.copyWith(showWeek: _showingWeek, amountUndo: pending, usedUndo: pendingUsed);
   }
 
   /// Flips the hero between *Today* and *This week*; the choice lasts for the session (FR-HO-2).
@@ -189,13 +199,24 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (state is! HomeReady) {
       return;
     }
+    final bool keepsHistory = await _hadPutIn(event.rule);
     final Either<Failure, Unit> deleted = await _deleteBill(event.rule.id).run();
     final HomeState latest = state;
     deleted.match(_logFailure('home.bill_delete_failed'), (Unit _) {
       if (latest is HomeReady) {
-        emit(latest.copyWith(billUndo: Option<RecurringRule>.of(event.rule)));
+        emit(latest.copyWith(billUndo: Option<RecurringRule>.of(event.rule), billUndoKeepsHistory: keepsHistory));
       }
     });
+  }
+
+  // why: AC-Y10 says what stays only for a saving that has had a put-in; read before the delete,
+  // since the reload that follows it no longer lists the rule.
+  Future<bool> _hadPutIn(RecurringRule rule) async {
+    if (rule.kind != EntryKind.saved) {
+      return false;
+    }
+    final Either<Failure, SavingTotals> totals = await _ledger.savingTotals().run();
+    return totals.match((Failure _) => false, (SavingTotals t) => (t.bySaving[rule.id]?.putIn ?? Money.zero) > Money.zero);
   }
 
   /// Brings a deleted bill back; the rules' change stream reloads Home.
@@ -211,6 +232,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       return;
     }
     emit(current.copyWith(amountUndo: Option<BillAmountOutcome>.of(event.outcome)));
+  }
+
+  void _onUsedDone(HomeUsedDone event, Emitter<HomeState> emit) {
+    final HomeState current = state;
+    if (current is! HomeReady) {
+      _pendingUsedUndo = Option<UsedOutcome>.of(event.outcome);
+      return;
+    }
+    emit(current.copyWith(usedUndo: Option<UsedOutcome>.of(event.outcome)));
+  }
+
+  /// Deletes the *Used* entry, so the money is set aside again; the ledger's change stream reloads Home.
+  Future<void> _onUsedUndoRequested(HomeUsedUndoRequested event, Emitter<HomeState> emit) async {
+    final Either<Failure, Entry> deleted = await _deleteEntry(event.entry.id).run();
+    deleted.mapLeft(_logFailure('home.used_undo_failed'));
   }
 
   /// Puts an entered or skipped bill back to waiting; the change streams reload Home (E-e).

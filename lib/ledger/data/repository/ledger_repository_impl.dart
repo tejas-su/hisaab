@@ -10,6 +10,7 @@ import '../../../core/time/clock.dart';
 import '../../domain/entities/entry.dart';
 import '../../domain/entities/entry_draft.dart';
 import '../../domain/entities/saved_total.dart';
+import '../../domain/entities/saving_totals.dart';
 import '../../domain/failures/ledger_failures.dart';
 import '../../domain/repository/ledger_repository.dart';
 import '../datasource/entries_local_data_source.dart';
@@ -43,12 +44,23 @@ final class LedgerRepositoryImpl implements LedgerRepository {
       ).flatMap(_found).map(_notify);
 
   @override
+  TaskEither<Failure, Entry> addForSaving(EntryDraft draft, {required int savingId}) => dbTask(
+        () => _entries.insert(EntryMapper.toModel(draft, createdAt: _clock.now(), savingId: savingId)),
+      ).flatMap(_found).map(_notify);
+
+  @override
   TaskEither<Failure, Entry> replace(int id, EntryDraft draft) => _found(id)
       .flatMap(
         (Entry current) => dbTask(
           () => _entries.update(
             id,
-            EntryMapper.toModel(draft, createdAt: current.createdAt, id: id, recurringId: current.recurringId),
+            EntryMapper.toModel(
+              draft,
+              createdAt: current.createdAt,
+              id: id,
+              recurringId: current.recurringId,
+              savingId: current.savingId,
+            ),
           ),
         ),
       )
@@ -63,7 +75,13 @@ final class LedgerRepositoryImpl implements LedgerRepository {
   @override
   TaskEither<Failure, Entry> restore(Entry entry) => dbTask(
         () => _entries.insert(
-          EntryMapper.toModel(entry.draft, createdAt: entry.createdAt, id: entry.id, recurringId: entry.recurringId),
+          EntryMapper.toModel(
+            entry.draft,
+            createdAt: entry.createdAt,
+            id: entry.id,
+            recurringId: entry.recurringId,
+            savingId: entry.savingId,
+          ),
         ),
       ).flatMap(_found).map(_notify);
 
@@ -81,6 +99,17 @@ final class LedgerRepositoryImpl implements LedgerRepository {
           () => Either<Failure, Option<SavedTotal>>.right(const Option<SavedTotal>.none()),
           (String first) => CalendarDate.parse(first)
               .map((CalendarDate since) => Option<SavedTotal>.of(SavedTotal(total: Money(row.totalMinor), since: since))),
+        ),
+      );
+
+  @override
+  TaskEither<Failure, SavingTotals> savingTotals() => dbTask(_entries.savingTotals).map(
+        (({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse}) rows) => SavingTotals(
+          bySaving: <int, ({Money putIn, Money used})>{
+            for (final int id in <int>{...rows.putInMinor.keys, ...rows.usedMinor.keys})
+              id: (putIn: Money(rows.putInMinor[id] ?? 0), used: Money(rows.usedMinor[id] ?? 0)),
+          },
+          anyUse: rows.anyUse,
         ),
       );
 

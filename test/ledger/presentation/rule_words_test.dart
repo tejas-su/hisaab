@@ -132,4 +132,38 @@ void main() {
       expect(WorkedExample.rent.glyph, WorkedExample.rent.shownIcon.glyph);
     });
   });
+  group('RuleWords yearly costs (AC-Y5, AC-Y10)', () {
+    test('a saving that keeps its history says what stays', () {
+      expect(
+        _strings.ruleDeleted(WorkedExample.insurance, keepsHistory: true),
+        'Insurance deleted. What you put in stays in your history.',
+      );
+      expect(_strings.ruleDeleted(WorkedExample.insurance), 'Insurance deleted');
+    });
+
+    test('a bill never says what stays', () {
+      expect(_strings.ruleDeleted(WorkedExample.rent, keepsHistory: true), 'Rent deleted');
+    });
+
+    for (final String name in <String>['Insurance', 'School fees', 'Festival', ' insurance ', 'FESTIVAL']) {
+      test('"$name" is a yearly cost name', () {
+        expect(_strings.isYearlyCostName(name), isTrue);
+      });
+    }
+
+    for (final String name in <String>['RD', 'SIP', 'Gold scheme', 'Chit', 'Car insurance', '']) {
+      test('"$name" is not', () {
+        expect(_strings.isYearlyCostName(name), isFalse);
+      });
+    }
+
+    test('the saving name select has the three yearly names', () {
+      expect(<String>[for (final String key in <String>['insurance', 'schoolFees', 'festival']) _strings.savingName(key)], <String>[
+        'Insurance',
+        'School fees',
+        'Festival',
+      ]);
+    });
+  });
+
 }

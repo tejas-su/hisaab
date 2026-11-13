@@ -77,6 +77,9 @@ abstract final class SuggestionStateColumns {
 
   /// When *Forget* was tapped, a local ISO instant comparable with entries' `created_at`.
   static const String forgottenAt = 'forgotten_at';
+
+  /// The day *your usual* was last asked about, `YYYY-MM-DD`; null when never (schema v5, BR-17).
+  static const String askedOn = 'asked_on';
 }
 
 /// Stored values of [RecurringColumns.amountMode].
@@ -97,6 +100,10 @@ abstract final class TransactionColumns {
   static const String note = 'note';
   static const String recurringId = 'recurring_id';
   static const String createdAt = 'created_at';
+
+  /// The saving (a `recurring` row) a *Used* entry was paid from; null on every other kind (schema v5, D175).
+  /// Kept apart from [recurringId] because `(recurring_id, date)` is unique (BR-9).
+  static const String savingId = 'saving_id';
 }
 
 /// Columns of [Tables.settings].
@@ -132,6 +139,9 @@ abstract final class SettingKeys {
 
   /// When that restore ran, an ISO instant comparable with entries' `created_at`.
   static const String restoredAt = 'restored_at';
+
+  /// Whether the one-time install line was shown: '1' once seen. Carried by a backup (schema v5).
+  static const String installLineSeen = 'install_line_seen';
 }
 
 /// Stored values of the `kind` column.
@@ -144,6 +154,9 @@ abstract final class EntryKindValues {
 
   /// A credit card bill paid; recorded, never counted (schema v3, used from Phase 2).
   static const String cardPaid = 'card';
+
+  /// Money used from a saving; moves no number (schema v5, BR-19).
+  static const String used = 'used';
 }
 
 /// Stored values of [RecurringColumns.frequency].

@@ -13,7 +13,7 @@ import '../../../../ledger/presentation/rule_words.dart';
 import '../../bloc/bill_sheet_bloc.dart';
 import '../../bloc/bill_sheet_event.dart';
 import '../../bloc/bill_sheet_state.dart';
-import 'bill_question_frame.dart';
+import 'pinned_bill_question.dart';
 
 /// The amount question: the keypad, prefilled with the bill's amount, and *Save*
 /// (SPEC FR-SE-1 AC-3, AC-4).
@@ -22,28 +22,24 @@ class BillAmountQuestion extends StatelessWidget {
 
   final BillSheetReady state;
 
-  static const double _keyHeight = 56;
-
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final BillSheetBloc bloc = context.read<BillSheetBloc>();
     final Money typed = Money.fromMajor(state.rupees);
     final bool changed = typed != state.rule.amount;
-    return BillQuestionFrame(
+    return PinnedBillQuestion(
       question: strings.ruleAmountQuestion(state.rule.kind, state.rule.label, state.rule.amountMode),
       name: state.rule.label,
       glyph: state.rule.glyph,
       figure: AmountDisplay(amount: typed, rejections: state.rejections),
-      caption: changed
-          ? strings.billWas(context.money.format(state.rule.amount))
-          : strings.billEveryMonth(state.rule.schedule.anchor.day),
+      caption: changed ? strings.billWas(context.money.format(state.rule.amount)) : strings.billEveryMonth(state.rule.schedule.anchor.day),
       saveFailed: state.saveFailed,
-      body: Column(
+      controls: (BuildContext context, double keyHeight) => Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Keypad(
-            keyHeight: _keyHeight,
+            keyHeight: keyHeight,
             onKey: (String key) => bloc.add(BillSheetKeyPressed(key)),
             onBackspace: () => bloc.add(const BillSheetBackspacePressed()),
             onClear: () => bloc.add(const BillSheetCleared()),

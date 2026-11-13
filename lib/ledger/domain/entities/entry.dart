@@ -16,6 +16,7 @@ final class Entry extends Equatable {
     required this.createdAt,
     this.note,
     this.recurringId,
+    this.savingId,
   });
 
   final int id;
@@ -31,9 +32,13 @@ final class Entry extends Equatable {
   /// The rule that posted this entry; null for entries the user typed.
   final int? recurringId;
 
+  /// The saving (a rule's id) a *Used* entry was paid from; null on every other kind. Apart from
+  /// [recurringId] because `(recurring_id, date)` is unique (BR-9, D175).
+  final int? savingId;
+
   /// The editable part of this entry, used to prefill the Add tray (SPEC FR-AD-8).
   EntryDraft get draft => EntryDraft(amount: amount, kind: kind, categoryId: categoryId, date: date, note: note);
 
   @override
-  List<Object?> get props => <Object?>[id, amount, kind, categoryId, date, createdAt, note, recurringId];
+  List<Object?> get props => <Object?>[id, amount, kind, categoryId, date, createdAt, note, recurringId, savingId];
 }

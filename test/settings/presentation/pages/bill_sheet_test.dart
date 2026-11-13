@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/widgets/keypad.dart';
+import 'package:hisaab/core/widgets/amount_display.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/settings/presentation/bloc/bill_sheet_bloc.dart';
@@ -24,6 +25,7 @@ import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/pinned_keypad_expectations.dart';
 
 void main() {
   late FakeRecurringRepository recurring;
@@ -43,6 +45,7 @@ void main() {
     Size size = TestWindows.phone,
     bool reduceMotion = false,
     double textScale = 1,
+    List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
   }) async {
     final FakeClock clock = FakeClock(WorkedExample.now);
     final BillSheetBloc bloc = await tester.buildBloc(
@@ -63,7 +66,7 @@ void main() {
         haptics: FakeHaptics(),
       ),
     );
-    await pumpApp(tester, const Scaffold(), size: size, reduceMotion: reduceMotion, textScale: textScale);
+    await pumpApp(tester, const Scaffold(), size: size, reduceMotion: reduceMotion, textScale: textScale, displayFeatures: displayFeatures);
     final Future<BillSheetOutcome> outcome = BillSheet.show(tester.element(find.byType(Scaffold)), bloc);
     await tester.settle();
     return outcome;
@@ -342,6 +345,28 @@ void main() {
       await tapRow(tester, 'name');
       expect(find.text('Every month on day 10'), findsWidgets);
       expect(find.textContaining('icon'), findsNothing);
+    });
+  });
+
+  group('BillSheet amount question keeps its keypad on screen (P2, P3)', () {
+    for (final PinnedCase window in pinnedCases) {
+      testWidgets('the amount, keypad and Save are inside the ${window.name} window', (WidgetTester tester) async {
+        setBottomInset(tester, window.bottomInset);
+        await open(tester, size: window.size, textScale: window.textScale, displayFeatures: window.features);
+        await tapRow(tester, 'amount');
+        expectPinnedOnScreen(
+          tester,
+          window: window,
+          amount: find.byType(AmountDisplay),
+          action: find.byKey(const ValueKey<String>('bill-sheet-save')),
+        );
+      });
+    }
+
+    testWidgets('the bill clears a 3-button bar at its foot (P3)', (WidgetTester tester) async {
+      setBottomInset(tester, 48);
+      await open(tester);
+      expect(tester.getRect(find.byKey(const ValueKey<String>('bill-delete'))).bottom, lessThanOrEqualTo(TestWindows.phone.height - 48));
     });
   });
 }

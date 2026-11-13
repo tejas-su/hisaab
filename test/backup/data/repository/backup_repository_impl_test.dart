@@ -267,6 +267,7 @@ void main() {
         SuggestionStateColumns.quietOn: '2026-11-05',
         SuggestionStateColumns.restUntil: null,
         SuggestionStateColumns.forgottenAt: null,
+        SuggestionStateColumns.askedOn: null,
       };
 
       test('Delete everything empties suggestion_state', () async {
@@ -306,4 +307,95 @@ void main() {
       expect(await source.readSetting(SettingKeys.onboardingDone), const Option<String>.none());
     });
   });
+  group('BackupRepositoryImpl with a Used entry (BR-16, BR-19, E101, NFR-5)', () {
+    Future<void> insertSavingAndUse(AppDatabase target) async {
+      await target.db.insert(Tables.recurring, <String, Object?>{
+        RecurringColumns.id: 5,
+        RecurringColumns.label: 'Insurance',
+        RecurringColumns.amountMinor: 100000,
+        RecurringColumns.kind: 'save',
+        RecurringColumns.categoryId: 11,
+        RecurringColumns.frequency: 'monthly',
+        RecurringColumns.anchorDate: '2026-10-05',
+        RecurringColumns.nextDue: '2026-11-05',
+      });
+      await target.db.insert(Tables.transactions, <String, Object?>{
+        TransactionColumns.id: 20,
+        TransactionColumns.amountMinor: 400000,
+        TransactionColumns.kind: 'used',
+        TransactionColumns.categoryId: 11,
+        TransactionColumns.date: '2026-11-05',
+        TransactionColumns.note: 'Insurance',
+        TransactionColumns.savingId: 5,
+        TransactionColumns.createdAt: '2026-11-05T12:15:00.000',
+      });
+    }
+
+    test('a backup with a used entry and a saving restores: kind, saving_id, note and created_at intact', () async {
+      final AppDatabase other = await openTestDatabase();
+      await seedMoney(other.db);
+      await insertSavingAndUse(other);
+      final TableRows rows = await SqfliteBackupLocalDataSource(database: other, scratch: databaseFactoryFfi).dump();
+      files.picked = Option<Uint8List>.of(
+        BackupJsonMapper.encode(
+          BackupFile(schemaVersion: AppDatabase.schemaVersion, madeOn: _today, tables: rows, entryCount: 2),
+        ),
+      );
+
+      await repository.restore(await pickOk(), at: _restoreAt, keepUndo: true).run();
+
+      final Map<String, Object?> used =
+          (await database.db.query(Tables.transactions, where: '${TransactionColumns.id} = 20')).single;
+      expect(used[TransactionColumns.kind], 'used');
+      expect(used[TransactionColumns.savingId], 5);
+      expect(used[TransactionColumns.note], 'Insurance');
+      expect(used[TransactionColumns.createdAt], '2026-11-05T12:15:00.000');
+    });
+
+    test('a v4 backup file restores with no message and gains the hidden rows (E101)', () async {
+      final Database v4 = await databaseFactoryFfi.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(singleInstance: false, version: 4, onCreate: (Database db, int _) => runMigrations(db, from: 0, to: 4)),
+      );
+      addTearDown(v4.close);
+      await seedMoney(v4);
+      final List<Map<String, Object?>> names =
+          await v4.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'");
+      final TableRows old = <String, List<Map<String, Object?>>>{
+        for (final Map<String, Object?> row in names) row['name']! as String: await v4.query(row['name']! as String, orderBy: 'rowid'),
+      };
+      files.picked = Option<Uint8List>.of(
+        BackupJsonMapper.encode(BackupFile(schemaVersion: 4, madeOn: _today, tables: old, entryCount: 1)),
+      );
+
+      final Either<Failure, Unit> restored = await repository.restore(await pickOk(), at: _restoreAt, keepUndo: false).run();
+
+      expect(restored.isRight(), isTrue);
+      expect(await database.db.query(Tables.categories, where: "${CategoryColumns.key} = 'not_logged'"), hasLength(1));
+      expect(await source.entryCount(), 1);
+    });
+
+    test('Undo restore puts the snapshot back with its used entries', () async {
+      await insertSavingAndUse(database);
+      final TableRows before = await source.dump();
+      files.picked = Option<Uint8List>.of(await otherPhoneBackup());
+      await repository.restore(await pickOk(), at: _restoreAt, keepUndo: true).run();
+      expect(await database.db.query(Tables.transactions, where: "${TransactionColumns.kind} = 'used'"), isEmpty);
+
+      await repository.undoRestore().run();
+
+      expect(await source.dump(), before);
+      expect(await database.db.query(Tables.transactions, where: "${TransactionColumns.kind} = 'used'"), hasLength(1));
+    });
+
+    test('Delete everything removes used entries', () async {
+      await insertSavingAndUse(database);
+
+      await repository.wipe().run();
+
+      expect(await database.db.query(Tables.transactions), isEmpty);
+      expect(await database.db.query(Tables.recurring), isEmpty);
+    });
+  });
+
 }

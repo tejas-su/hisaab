@@ -71,6 +71,7 @@ class EntriesDay extends StatelessWidget {
                   onEdit: () => onEdit(entry),
                   onDelete: () => onDelete(entry),
                   onThresholdReached: onThresholdReached,
+                  showUsedDetail: true,
                 ),
               ],
             ],

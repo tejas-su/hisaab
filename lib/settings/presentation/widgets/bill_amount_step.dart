@@ -41,6 +41,21 @@ class BillAmountStep extends StatelessWidget {
           ],
           const SizedBox(height: 22),
           AmountDisplay(amount: Money.fromMajor(form.rupees), rejections: form.rejections),
+          // why: only the Insurance, School fees and Festival pills explain the twelfth; a name typed by hand never does (AC-Y2).
+          if (form.yearlyPill) ...<Widget>[
+            const SizedBox(height: HisaabSpacing.m),
+            Text(
+              strings.savingYearlyCaption,
+              key: const ValueKey<String>('saving-yearly-caption'),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
+            ),
+            const SizedBox(height: HisaabSpacing.xs),
+            Text(
+              strings.savingYearlyUsedHint,
+              key: const ValueKey<String>('saving-yearly-used-hint'),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
+            ),
+          ],
         ],
       ),
       controls: Column(

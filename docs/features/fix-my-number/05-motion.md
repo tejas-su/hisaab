@@ -1,6 +1,6 @@
 # Motion for Fix my number, yearly costs (Used) and the missed-log line
 
-> **Status: proposed (2026-11-13).** Not in SPEC, UI_DESIGN or DECISIONS, and no code. Covers three proposals in one place because they share one reflow: `01`, `02`, `03`, `04` of this folder, `docs/features/yearly-costs/01-ux-flow.md` and `docs/features/habits/08-missed-log-line.md`. **No new token is proposed** (section 8 lists the two naming notes). Longer than ~150 lines on purpose; split by feature when approved.
+> **Status: signed off 2026-11-13 (`08-design-qa-and-signoff.md` §8; X8, X10, X14 to X16, X20 and P1 applied below; flags F1 to F7 are settled in section 7).** Not in SPEC, UI_DESIGN or DECISIONS yet, and no code; SPEC wins once written. Covers three features in one place because they share one reflow: `01`, `02`, `03`, `04` of this folder, `docs/features/yearly-costs/01-ux-flow.md` and `docs/features/habits/08-missed-log-line.md`. **No new token is proposed** (section 8 lists the two naming notes). Longer than ~150 lines on purpose; split by feature when approved.
 
 ## 0. Read this first
 
@@ -26,8 +26,8 @@
 | 0b | Write returns (normally under 100 ms; the key waits on it because a failure keeps the sheet open) | The sheet | Exit: slides down, scrim fades | the bill-sheet route's own exit | Route exit as today | none yet (see 5) |
 | 1 | t = 0 | Hero number (and every figure in the hero card that changes: "tomorrow", spare) | Rolls old to new, ₹1,430 to ₹963 | `numberRoll`, `easeOut` | 150 ms crossfade, values still update | `Haptics.success()` in the **same frame** |
 | 1 | t = 0, same frame, one motion | Today's bar | The share changes (A 1,850 to 1,383), so every boundary is re-spanned: the yellow's end moves 77% to 70% of the bar, the ₹420 bite widens 23% to 30%. One progress value, all segments together | `standard` | Jumps to the new picture (as `TodayBar` does now) | |
-| 1 | t = 0 | Snackbar "Fixed. Today you can spend ₹963." | Rises 16dp, fades in | `standard` (the host's own) | 150 ms fade | |
-| 2 | t = `numberRoll` (300 ms), so the hero is read first | New *Not logged* row, top of the Today list | Height 0 to row, opacity 0 to 1; at the 5-row cap the oldest row collapses at the same time on `snap`, so the list height and everything below it stay put | `resize` + `easeOut` (an `AnimatedSize`-style size change), fade 150 ms | No delay: height set at once, 150 ms fade | |
+| 1 | t = 0 | Snackbar "Fixed. Safe to spend today: ₹963." | Rises 16dp, fades in | `standard` (the host's own) | 150 ms fade | |
+| 2 | t = `numberRoll` (300 ms), so the hero is read first (X20: kept; a figure must be read before the list shifts; decide once for Add too, so the two saves do not differ) | New *Not logged* row, top of the Today list | Height 0 to row, opacity 0 to 1; at the 5-row cap the oldest row collapses at the same time on `snap`, so the list height and everything below it stay put | `resize` + `easeOut` (an `AnimatedSize`-style size change), fade 150 ms | No delay: height set at once, 150 ms fade | |
 
 Lower and higher use the **same** rows, tokens and haptic. A rise is the mirror: yellow end 78.6%, bite 21.4% (hero ₹1,541 of 1,961).
 
@@ -35,7 +35,7 @@ Lower and higher use the **same** rows, tokens and haptic. A rise is the mirror:
 - Fixed duration. A ₹4,200 drop and a ₹40 drop take the same 300 ms; the digits roll, nothing else.
 - No hatch (unless the new share really leaves today over, in which case the existing D114 over state applies, no shake), no marigold flash, no emphasis on the *Not logged* row, no extra haptic variant. `success` fires for both because the user's own act succeeded.
 - No `sheen`, and no fill-in from empty: both belong to "Home appeared" (D106, D91) and would read as a reward on a rise. The bar moves from where it is.
-- The *Not logged* row has no bite and no colour; its words do the explaining ("Added to match your money").
+- The *Not logged* row has no bite and no colour; its words do the explaining ("Added when you fixed your number.").
 - Over/normal state change (hero reaches ₹0 and the over card shows, or leaves it): use whatever path the Add overspend uses (FR-HO-5, D114 step 3). I did not read it; if there is none, a 150 ms crossfade of the card contents.
 
 **Doors.**
@@ -43,7 +43,7 @@ Lower and higher use the **same** rows, tokens and haptic. A rise is the mirror:
 | Door | What plays |
 |---|---|
 | Home foot row, install line (Home is under the sheet) | The table above. The foot row sits at the end of Home's scroll, so the hero is probably **off screen**: the roll and bar still run (cheap, `RepaintBoundary`), the visible focal point is the snackbar then the row. Nothing scrolls Home for the user ("nothing moves unless you move it") |
-| Settings row (hero not under it) | Sheet exit, then snackbar only. `success` fires as the exit **starts**, since there is no drain to pair with |
+| Settings row (hero not under it) | Sheet exit, then snackbar only. `success` fires as the exit **starts**, since there is no drain to pair with (X15). The Settings door needs its own snackbar and Undo home (P4), and **sends no hold** (P1) |
 
 **Undo** (snackbar action). Reverses the values along the same path, **without** mirroring the order: the finger acted, so the answer starts at once (no added latency).
 
@@ -63,12 +63,12 @@ If Home cannot show it yet (D127), Undo waits for the next good load and plays t
 | A digit changes, same class | Amount, slot figures | Instant swap, no roll, no fade (per-digit fades flicker) | none | 0 | same | `tick` per key |
 | *Fix it* enabled, disabled, pressed | Key fill and outline | Fill change, no movement | `snap` | ~250 ms | same | none |
 | After 1 s of saving | *Fix it* label | Crossfade to "Saving..." | fade | 150 ms | same | none |
-| *Fix it* in S3: the guard | Keypad area to answer panel (same height) and the slot line to the question, **one event** | Opacity crossfade, no slide, no resize | fade | 150 ms, both together | same | none (04 §4) |
-| *No, some is older* or Back in the guard | Panel to keypad, the slot to S7 | The same crossfade reversed; focus to the backspace key | fade | 150 ms | same | none |
-| Cap reached (9 digits) | Amount well | Shake: sideways, 8dp, 3 swings, decaying | `Shake` (`numberRoll`) | 300 ms | **Today `Shake` does nothing under reduced motion.** Build: a 150 ms outline flash on the well (04 §2). The haptic stays | `reject` |
+| *Fix it* in S3: the guard | Keypad area to answer panel and the slot line to the question, **one event**; **the sheet shortens** to fit the panel (X8: the earlier "same height, no resize" is replaced; mockup 41 option B) | Opacity crossfade, no slide; the height change is `resize` + `easeOut` | fade; `resize` + `easeOut` | 150 ms crossfade, height over `resize` | Crossfade 150 ms; **the height change is instant** | none (04 §4) |
+| *No, some is older* or Back or scrim in the guard | Panel to keypad, the slot to S7 over cleared digits | The same crossfade reversed, the sheet grows back; focus to the notice | fade; `resize` + `easeOut` | 150 ms | same, height instant | none |
+| Cap reached (9 digits) | Amount well | Shake: sideways, 8dp, 3 swings, decaying; **plus a 2dp ring held on the well until the next accepted key** (X14) | `Shake` (`numberRoll`); the ring is a state, not an animation | 300 ms shake; ring held | **`Shake` is skipped under reduced motion; the held ring and the spoken line "That's the most you can type." carry it** (no 150 ms flash: it is gone before the eye arrives). Haptic stays | `reject` |
 | Save failed (S8) or refused as stale (S6) | The slot line | Crossfade to the notice | fade | 150 ms | same | `reject`. **No shake**: the digits were valid |
 
-Notes. The guard is a crossfade, not a slide, because the sheet does not change size and the spatial change is "same place, other content". Predictive back cannot preview it (the guard is not a route; `PopScope` holds): Back commits, then the 150 ms crossfade plays. Verify on a device (F6).
+Notes. The guard content is a crossfade, not a slide: the spatial change is "same place, other content"; only the sheet's height changes (X8). **Predictive back cannot preview it** (X10: the guard is not a route, `PopScope` holds, and `ModalBottomSheetRoute` has no back-gesture hook): Back commits, then the 150 ms crossfade plays. No "preview" promise anywhere. F6 is settled; D10 checks a started-then-abandoned back gesture and whether UI_DESIGN §10's sentence is about pages only.
 
 ## 3. Used (yearly costs)
 
@@ -76,8 +76,8 @@ Notes. The guard is a crossfade, not a slide, because the sheet does not change 
 |---|---|---|---|---|---|
 | *Used some of it* | Slip body to the keypad question, **inside the saving's sheet** | Content swap, the sheet height follows | The bill sheet's existing `AnimatedSwitcher` + height change: `numberRoll`, `easeOut` | 150 ms crossfade, height at once | none |
 | Back | Keypad question to slip | The same, reversed. The stamp must **not** replay: it lands once, at the sheet's first frame only (`bill_stamp_badge.dart` starts it in `initState`; keep the slip alive or hoist the stamp state) | same | same | none |
-| *All of it* | Chip fill hairline to `ink2`; the amount fills | Chip fill on `snap`; digits swap instantly | `snap` | same (a fill) | `tick` |
-| Digit past the balance | Amount well, then the refusal line | Shake plus the line crossfade; flash under reduced motion | as section 2 | flash | `reject` |
+| *All of it* (a second tap clears the amount, X19) | Chip fill hairline to `ink2`; the amount fills | Chip fill on `snap`; digits swap instantly | `snap` | same (a fill) | `tick` |
+| Digit past the balance | Amount well, then the refusal line | Shake plus a held ring and the line crossfade | as section 2 | held ring (no flash) | `reject` |
 | Slot "will be left" | L1 figure | Instant per digit; 150 ms fade on a state change | as section 2 | same | none |
 | *Save*, success | The sheet | Exit as any save. `success` fires as the exit starts **if nothing visible follows** (below), else at t = 0 | route exit | same | `success` |
 
@@ -87,7 +87,7 @@ Notes. The guard is a crossfade, not a slide, because the sheet does not change 
 |---|---|---|---|
 | "₹4,000 set aside" figure on the saving's list row, and the footer "₹5,000 still set aside" | Savings list (Settings door) | Both digits roll to the new value in the same frame, **one** motion | 150 ms crossfade |
 | *Used* row in the Today list | Home (due-soon door) | Grows in as the *Not logged* row does. With no hero change to read first it starts at t = 0, not t + 300 ms | height at once, 150 ms fade |
-| Snackbar "₹4,000 used from Insurance" | Host | `standard` rise (as above) | 150 ms fade |
+| Snackbar "Insurance: ₹4,000 used" (X26, name first) | Host | `standard` rise (as above) | 150 ms fade |
 
 `success` is paired with the first of these (the roll or the row). From the Settings door the figures roll under the closing sheet only after it has gone, so the haptic follows the exit end.
 
@@ -133,7 +133,8 @@ Reduced motion cannot lengthen anything: every fallback is 150 ms or instant.
 | Line collapse | `resize`, fade | 150 ms fade, then height at once |
 | Snackbar | 16dp rise + fade | 150 ms fade |
 | Slot and guard crossfade | 150 ms | the same (opacity is not "motion" under WCAG 2.3.3) |
-| Cap shake | 300 ms shake | 150 ms outline flash (new build item) |
+| Guard sheet height change | `resize` + `easeOut` | Instant |
+| Cap shake | 300 ms shake, then the held ring | Held 2dp ring until the next accepted key plus the spoken line (no flash; X14) |
 | Used swap | `numberRoll` | 150 ms crossfade |
 | Haptics | unchanged | unchanged (the setting is about motion) |
 
@@ -143,13 +144,13 @@ Information is never lost: every change that animates also updates the text, and
 
 | # | Flag |
 |---|---|
-| F1 | **D91's hold is wired to `HomeTrayOpened`/`HomeTrayClosed` (the Add tray).** The Fix sheet, the *Used* sheet and the install line's door open in the bill-sheet route, which sends neither. Without it the drain plays under the scrim (the exact bug D91 fixed). Build: the same two events from the route. Not a new rule, a wider one |
-| F2 | **Haptic timing:** `04` §5 step 3 puts `success` "as the sheet starts closing"; FR-AD-5 puts it after the drain starts. Recommend FR-AD-5's rule when Home is under the sheet (pair it with the visible change), and the sheet's close only from the Settings door. Edit `04` §5 |
-| F3 | **Case study 24 pattern F** (a new Today row starts when the pull-back starts) differs from this spec (+300 ms after the roll). Reason: a fix changes a figure the user must read first, and a row insert moves the list. Not built yet, so decide once for Add too; otherwise the two saves behave differently |
-| F4 | **`04` §3.2** says "do not force 150 ms; the system setting scales controllers". E13 says reduced motion is 150 ms crossfades. Crossfades play at 150 ms in **both** modes (as `usual_slot.dart` does). Edit the `04` line |
+| F1 | **Settled (P1, confirmed in `07` §5).** D91's hold is wired to `HomeTrayOpened`/`HomeTrayClosed` (the Add tray) only. The Fix sheet, the *Used* sheet (from the due-soon row), the install line's door and the waiting-bill sheet open in the bill-sheet route, which sends neither, so the drain plays under the scrim. Build: send `Opened` before and `Closed` after `route.completed`, in a `finally`, from those Home doors; **not** from the Settings door; `HomeBloc._trayOpen` becomes a counter. This already breaks FR-HO-8 today. A wider rule, not a new one |
+| F2 | **Settled (X15):** `success` fires at t = 0 with the roll when Home is under the sheet (SPEC FR-AD-5), and at the exit start from the Settings door. `04` §5 carries this |
+| F3 | **Settled (X20):** keep +300 ms after the roll for these rows (a fix changes a figure the user must read first, and a row insert moves the list). Decide **once** for Add too, so the two saves do not differ; not an owner question |
+| F4 | **Settled (X16):** crossfades play at 150 ms in **both** modes (as `usual_slot.dart` does); opacity is allowed under reduced motion, anything that moves jumps. `04` §3.2 now says so |
 | F5 | **`TodayBarPainter` was built for a bite** (same total, new bite). A change of total (A) must interpolate segment boundaries from old to new fractions. Verify, and add a widget test at 1,850 to 1,383 and 1,850 to 1,961. BR-6's 0.9 cap on the yellow still applies to the target |
-| F6 | **Predictive back** in the guard (04 §4: "previews the keypad step") is not possible without a route per step; the back commits then crossfades. Verify on a device |
-| F7 | **`08` §1 "door-opened tray closing" is an evaluation point that could add the line**, which is a mid-view arrival. Recommend: evaluate once at the door's resume (the line is drawn under the scrim, in Home's first frame, no motion) and let the tray close only **remove** it; mark *asked* when visible at the close. If it must add, accept one list shift with a 150 ms opacity fade (open question 3 of `08`) |
+| F6 | **Settled (X10):** no predictive-back preview is possible in a sheet route; Back commits, then the 150 ms crossfade plays. Every "preview" promise is dropped |
+| F7 | **Settled (X36, O16):** the missed-log line is evaluated at cold start and resume (a door-opened tray resumes the app, so the line is drawn under the scrim in Home's first frame, no motion); the tray close can only **remove** it; *asked* is written only when the line was visible. `habits/08-missed-log-line.md` §1 carries this |
 | F8 | The Add drain and the 50% trail (D91) are untouched. Fix my number does not use `trailHold`: nothing was spent today, so there is nothing for a trail to follow |
 | F9 | `reducedCrossfade` is named for the fallback but is the normal crossfade too. No rename proposed; `design-system` may add a `crossfade` alias with the same 150 ms if the name misleads |
 
@@ -173,8 +174,8 @@ None. Reused: `standard`, `snap`, `numberRoll`, `press`, `resize`, `easeOut`, `r
 | UI_DESIGN §7 | `success` on a fix and on *Used* with the first visible change; `reject` at the cap, on a refused or failed save |
 | SPEC FR-AD-5 / FR-HO | The hold covers the bill-sheet route (F1) |
 | SPEC E13 | Add the cap flash |
-| `04-interaction.md` | §3.2 line (F4), §5 step 3 (F2), §4 predictive back (F6) |
-| `habits/08-missed-log-line.md` | §1 evaluation points (F7); §2 collapse `resize` + `easeOut` (08 §9 says `standard`: the spring cannot drive an `AnimatedSize`) |
+| `04-interaction.md` | §3.2 line (F4), §5 step 3 (F2), §4 predictive back (F6): done |
+| `habits/08-missed-log-line.md` | §1 evaluation points (F7); collapse `resize` + `easeOut` (`standard` is a spring and cannot drive an `AnimatedSize`; X36 and this file's §2 and §4): done |
 | DECISIONS | One row if approved: fixes and *Used* reuse the drain's tokens, receipt row after the roll, no sheen or fill-in on a correction |
 
 ## Source scope

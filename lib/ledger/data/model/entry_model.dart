@@ -17,6 +17,7 @@ final class EntryModel extends Equatable {
     required this.createdAt,
     this.note,
     this.recurringId,
+    this.savingId,
   });
 
   /// Reads a `transactions` row.
@@ -35,6 +36,7 @@ final class EntryModel extends Equatable {
           note: row.stringOrNullAt(TransactionColumns.note),
           recurringId: row.intOrNullAt(TransactionColumns.recurringId),
           createdAt: row.stringAt(TransactionColumns.createdAt),
+          savingId: row.intOrNullAt(TransactionColumns.savingId),
         ),
       );
 
@@ -54,10 +56,14 @@ final class EntryModel extends Equatable {
   final String? note;
   final int? recurringId;
 
+  /// `saving_id`: the saving a *Used* entry was paid from.
+  final int? savingId;
+
   /// ISO timestamp of the insert.
   final String createdAt;
 
-  /// The row to insert or update; omits `id` when it is null so SQLite assigns one.
+  /// The row to insert or update; omits `id` when it is null so SQLite assigns one, and omits
+  /// `saving_id` when it is null, as only a *Used* entry has one.
   Map<String, Object?> toRow() => <String, Object?>{
         if (id != null) TransactionColumns.id: id,
         TransactionColumns.amountMinor: amountMinor,
@@ -68,8 +74,9 @@ final class EntryModel extends Equatable {
         TransactionColumns.note: note,
         TransactionColumns.recurringId: recurringId,
         TransactionColumns.createdAt: createdAt,
+        if (savingId != null) TransactionColumns.savingId: savingId,
       };
 
   @override
-  List<Object?> get props => <Object?>[id, amountMinor, currency, kind, categoryId, date, note, recurringId, createdAt];
+  List<Object?> get props => <Object?>[id, amountMinor, currency, kind, categoryId, date, note, recurringId, createdAt, savingId];
 }

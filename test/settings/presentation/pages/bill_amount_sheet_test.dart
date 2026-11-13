@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:hisaab/core/design/hisaab_dimensions.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/widgets/amount_display.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/settings/presentation/bloc/bill_amount_bloc.dart';
@@ -19,6 +21,7 @@ import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/pinned_keypad_expectations.dart';
 
 const CalendarDate _oct20 = CalendarDate(2026, 10, 20);
 
@@ -45,7 +48,12 @@ void main() {
   tearDown(() => ledger.dispose());
 
   /// Opens the sheet and returns what it reports when it closes.
-  Future<Future<Option<BillAmountOutcome>>> open(WidgetTester tester, {AmountMode mode = AmountMode.varies, Size size = TestWindows.phone}) async {
+  Future<Future<Option<BillAmountOutcome>>> open(WidgetTester tester, {
+    AmountMode mode = AmountMode.varies,
+    Size size = TestWindows.phone,
+    double textScale = 1,
+    List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
+  }) async {
     final FakeClock clock = FakeClock(WorkedExample.now);
     final BillAmountBloc bloc = await tester.buildBloc(
       () => BillAmountBloc(
@@ -56,7 +64,7 @@ void main() {
         haptics: FakeHaptics(),
       )..add(const BillAmountLoadRequested()),
     );
-    await pumpApp(tester, const Scaffold(), size: size);
+    await pumpApp(tester, const Scaffold(), size: size, textScale: textScale, displayFeatures: displayFeatures);
     final Future<Option<BillAmountOutcome>> outcome = BillAmountSheet.show(tester.element(find.byType(Scaffold)), bloc);
     await tester.settle();
     return outcome;
@@ -182,5 +190,28 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  group('BillAmountSheet keeps its keypad on screen (P2, P3)', () {
+    for (final PinnedCase window in pinnedCases) {
+      testWidgets('the amount, keypad and Save are inside the ${window.name} window', (WidgetTester tester) async {
+        setBottomInset(tester, window.bottomInset);
+        await open(tester, size: window.size, textScale: window.textScale, displayFeatures: window.features);
+        expectPinnedOnScreen(
+          tester,
+          window: window,
+          amount: find.byType(AmountDisplay),
+          action: find.byKey(const ValueKey<String>('bill-amount-save')),
+        );
+      });
+    }
+
+    testWidgets('the title and caption scroll while the amount stays put', (WidgetTester tester) async {
+      await open(tester, size: TestWindows.smallPhone, textScale: 1.5);
+      final Rect before = tester.getRect(find.byType(AmountDisplay));
+      await tester.drag(find.text('Electricity · 20 Oct'), const Offset(0, -80));
+      await tester.pump();
+      expect(tester.getRect(find.byType(AmountDisplay)), before);
+    });
   });
 }

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hisaab• Play store screenshots (source)</title>
+<!--
+  Source for the Play listing screenshots in docs/design/store/out/. Each frame is a hash: #p1..#p8 (phone,
+  1080×1920), #s1..#s5 (7-inch tablet, 1920×1080), #t1..#t6 (10-inch tablet, 2560×1440). Render all with
+  scripts in docs/design/store/README.md (Edge headless, then flattened to 24-bit PNG with no alpha).
+  Screens in shots/ are real captures of the app (tool/store/demo_main.dart) showing the SPEC worked example:
+  ₹45,000 on the 4th, today Mon 26 Oct 2026, ₹1,850 share, ₹420 spent, hero ₹1,430, 9 days to payday.
+-->
+<style>
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 500; src: url(../../../assets/fonts/Mukta-Medium.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 700; src: url(../../../assets/fonts/Mukta-Bold.ttf); }
+  :root { --signal: #FFB020; --ink0: #161615; }
+  .dark  { --field: #161615; --ink: #F2F1EC; --ink2: #A7A199; --etch: #2A2724; --line: #3A3632; --surface: #211F1C; --halo: #161615; --idle: #413D38; }
+  .light { --field: #F1EDE8; --ink: #161615; --ink2: #5B5650; --etch: #E2DAD0; --line: #D7CFC5; --surface: #FFFEFC; --halo: #FFFEFC; --idle: #D7CFC5; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; overflow: hidden; background: #161615; }
+  #f { position: relative; overflow: hidden; background: var(--field); color: var(--ink); font-family: 'Mukta', sans-serif; transform-origin: 0 0; }
+  svg.bg { position: absolute; inset: 0; }
+
+  .mark { position: absolute; display: flex; align-items: flex-end; font: 600 44px/48px 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .mark i { width: 15px; height: 15px; border-radius: 50%; background: var(--signal); margin: 0 0 11px 4px; }
+  .light .mark i { box-shadow: 0 0 0 2.5px var(--ink0); }
+  .rail { position: absolute; display: flex; align-items: center; gap: 14px; }
+  .rail i { width: 10px; height: 10px; border-radius: 50%; background: var(--idle); }
+  .rail i.t { width: 18px; height: 18px; background: var(--signal); }
+  .light .rail i.t { box-shadow: 0 0 0 2.5px var(--ink0); }
+
+  h1 { position: absolute; margin: 0; font: 700 92px/96px 'Anek Latin', sans-serif; font-stretch: 85%; letter-spacing: -0.015em; }
+  h1 em { font-style: normal; position: relative; white-space: nowrap; }
+  h1 em::after { content: ''; position: absolute; left: 0; right: 0; bottom: 6px; height: 14px; background: var(--signal); z-index: -1; border-radius: 3px; }
+  .light h1 em::after { box-shadow: 0 0 0 2.5px var(--ink0); }
+  .head { position: absolute; isolation: isolate; }
+  .head h1 { position: static; }
+  .sub { margin: 26px 0 0; font: 400 38px/52px 'Mukta', sans-serif; color: var(--ink2); }
+
+  .card { position: absolute; overflow: hidden; border-radius: 48px; background: var(--surface); }
+  .card img { position: absolute; display: block; }
+  .dark .card { box-shadow: 0 0 0 3px #3A3632, 0 50px 90px -30px #000; }
+  .light .card { box-shadow: 0 0 0 3px #161615, 0 50px 90px -30px rgba(22,22,21,.35); }
+  .card.onDark { box-shadow: 0 0 0 3px #3A3632, 0 50px 90px -30px rgba(22,22,21,.55); }
+
+  .loupe { position: absolute; overflow: hidden; border-radius: 36px; background: #FFFEFC; z-index: 5; }
+  .dark .loupe { box-shadow: 0 0 0 6px #F2F1EC, 0 0 0 12px #161615, 0 40px 70px -20px #000; }
+  .light .loupe { box-shadow: 0 0 0 6px #161615, 0 0 0 12px #FFFEFC, 0 40px 70px -20px rgba(22,22,21,.4); }
+  .loupe img { position: absolute; display: block; }
+
+  svg.lead { position: absolute; inset: 0; z-index: 6; overflow: visible; pointer-events: none; }
+  .note { position: absolute; z-index: 7; }
+  .note b { display: block; font: 700 40px/44px 'Anek Latin', sans-serif; font-stretch: 88%; }
+  .note span { display: block; margin-top: 6px; font: 400 29px/38px 'Mukta', sans-serif; color: var(--ink2); }
+  .note.r { text-align: left; } .note.l { text-align: right; }
+
+  .pin { position: absolute; z-index: 8; display: flex; align-items: center; gap: 14px; padding: 0 30px 0 12px; height: 76px; border-radius: 38px; font: 600 33px/1 'Mukta', sans-serif; white-space: nowrap; }
+  .dark .pin { background: #211F1C; color: #F2F1EC; box-shadow: 0 0 0 3px #4A453F, 0 24px 40px -16px #000; }
+  .light .pin { background: #FFFEFC; color: #161615; box-shadow: 0 0 0 3px #161615, 0 24px 40px -16px rgba(22,22,21,.35); }
+  .num { flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--signal); color: #161615; display: grid; place-items: center; font: 700 30px/1 'Anek Latin', sans-serif; box-shadow: 0 0 0 3px #161615; }
+  .pin.plain { padding-left: 30px; }
+
+  /* The worked-out share, styled as the app's paper bill slip (mockup 27). */
+  .slip { position: absolute; background: #FFFEFC; color: #161615; border-radius: 36px 36px 0 0; padding: 44px 52px 40px; box-shadow: 0 0 0 3px #161615, 0 50px 90px -30px rgba(22,22,21,.35); }
+  .dark .slip { box-shadow: 0 0 0 3px #3A3632, 0 50px 90px -30px #000; }
+  .slip .k { font: 600 26px/30px 'Mukta', sans-serif; color: #5B5650; letter-spacing: .02em; }
+  .slip .row { display: flex; align-items: baseline; gap: 14px; font: 400 34px/46px 'Mukta', sans-serif; margin-top: 16px; }
+  .slip .row .dots { flex: 1; border-bottom: 3px dotted #C9C0B5; transform: translateY(-10px); }
+  .slip .row .v { font: 600 38px/46px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .slip .row .op { display: inline-block; width: 34px; color: #5B5650; font-weight: 600; }
+  .slip .row.sum { font-weight: 600; }
+  .slip .perf { position: relative; height: 0; border-top: 3px dashed #D7CFC5; margin: 30px -52px 6px; }
+  .slip .perf::before, .slip .perf::after { content: ''; position: absolute; top: -18px; width: 34px; height: 34px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 3px #161615; }
+  .dark .slip .perf::before, .dark .slip .perf::after { box-shadow: inset 0 0 0 3px #3A3632; }
+  .slip .perf::before { left: -18px; } .slip .perf::after { right: -18px; }
+  .slip .total { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 26px; }
+  .slip .total .t { font: 600 34px/40px 'Mukta', sans-serif; }
+  .slip .total .t small { display: block; font: 400 28px/36px 'Mukta', sans-serif; color: #5B5650; }
+  .slip .total .a { font: 700 132px/112px 'Anek Latin', sans-serif; font-stretch: 85%; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .slip .total .a span { font-size: .42em; vertical-align: top; position: relative; top: .3em; margin-right: .04em; }
+  .slip.roomy .row { margin-top: 26px; font-size: 36px; line-height: 50px; }
+  .slip.roomy .days i { height: 84px; }
+  .slip.roomy .perf { margin-top: 40px; margin-bottom: 14px; }
+  .slip .tear { position: absolute; left: 0; right: 0; bottom: -30px; height: 32px; }
+  .days { display: flex; gap: 12px; margin-top: 34px; }
+  .days div { flex: 1; text-align: center; font: 600 22px/28px 'Mukta', sans-serif; color: #5B5650; }
+  .days i { display: block; height: 64px; border-radius: 12px; background: #E7E0D8; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .days div:first-child i { background: #E7E0D8; box-shadow: inset 0 0 0 3px #161615; }
+  .days div:first-child i::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 77%; background: var(--signal); border-right: 3px solid #161615; }
+  .days div:first-child { color: #161615; }
+
+  .tiles { position: absolute; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .tile { background: var(--surface); border-radius: 40px; padding: 40px 40px 44px; box-shadow: 0 0 0 3px var(--ink); }
+  .dark .tile { box-shadow: 0 0 0 3px #3A3632; }
+  .tile .big { font: 700 64px/64px 'Anek Latin', sans-serif; font-stretch: 85%; letter-spacing: -0.01em; }
+  .tile .big .z { display: inline-block; min-width: 0; }
+  .tile p { margin: 16px 0 0; font: 400 30px/40px 'Mukta', sans-serif; color: var(--ink2); }
+  .tile .ic { width: 72px; height: 72px; border-radius: 22px; background: var(--signal); box-shadow: 0 0 0 3px #161615; display: grid; place-items: center; margin-bottom: 30px; }
+  .tile .ic svg { width: 40px; height: 40px; fill: none; stroke: #161615; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div id="f"></div>
+<script>
+// ── Shots: real captures, status bar cropped. Phone 1080 wide; 10-inch 2560 × 1548; 7-inch 1920 × 1148.
+const SH = n => `shots/${n}.png`;
+
+// ── Frame table. Coordinates are frame px; `at` points are px in the shot image.
+const P = { w: 1080, h: 1920, rail: 8 };
+const S7 = { w: 1920, h: 1080, rail: 5, scale: 1 };
+const T10 = { w: 1920, h: 1080, rail: 6, scale: 4 / 3 };
+
+const phoneHead = (h1, sub) => ({ head: { x: 72, y: 196, w: 936, h1, sub } });
+const tabHead = (h1, sub) => ({ head: { x: 110, y: 270, w: 500, h1, sub, size: 76 } });
+
+const FRAMES = {
+  // 1 · Home: the one number.
+  p1: { ...P, i: 0, theme: 'dark', ...phoneHead('Know what you can <em>spend today.</em>', 'Your money, shared out one day at a time till payday.'),
+    rose: [960, 760],
+    cards: [{ shot: 'p-home', x: 72, y: 640, w: 640 }],
+    loupes: [{ card: 0, src: [84, 284, 560, 272], x: 36, y: 772, zoom: 0.92 }],
+    notes: [
+      { side: 'r', x: 752, y: 1000, at: [0, 905, 684], b: 'Each spend<br>takes a bite', s: 'Today’s bar drains as you add.' },
+      { side: 'r', x: 752, y: 1250, at: [0, 850, 942], b: '9 days<br>to payday', s: 'Each one gets a fair share.' },
+      { side: 'r', x: 752, y: 1520, at: [0, 980, 1466], b: 'Bills, set aside', s: 'Counted before they’re due.' },
+    ] },
+
+  // 2 · How the number is worked out (infographic).
+  p2: { ...P, i: 1, theme: 'light', ...phoneHead('One <em>honest</em> number.', 'What’s left, shared fairly across the days to payday.'),
+    rose: [120, 1700],
+    slip: { x: 72, y: 500, w: 936, roomy: true } },
+
+  // 3 · Add in three taps.
+  p3: { ...P, i: 2, theme: 'dark', ...phoneHead('Add a spend in <em>3 taps.</em>', 'Type it, see what it leaves, tap what it was for.'),
+    rose: [980, 1500],
+    cards: [
+      { shot: 'p-add-amount', x: 56, y: 640, w: 540, src: [0, 0, 1080, 2304] },
+      { shot: 'p-add-cat', x: 488, y: 900, w: 540, src: [0, 760, 1080, 1544], dark: true },
+    ],
+    pins: [
+      { n: 1, t: 'Type ₹350', at: [0, 730, 470], dx: -40, dy: -150 },
+      { n: 2, t: 'Leaves ₹1,080 today', at: [0, 800, 646], dx: -120, dy: 110 },
+      { n: 3, t: 'Tap Food. Saved.', at: [1, 164, 1314], dx: 40, dy: 330 },
+    ] },
+
+  // 4 · Spends.
+  p4: { ...P, i: 3, theme: 'light', ...phoneHead('See where <em>it went.</em>', 'Your pace against a steady one, and every category.'),
+    rose: [100, 900],
+    cards: [{ shot: 'p-spends', x: 368, y: 640, w: 640 }],
+    notes: [
+      { side: 'l', x: 40, w: 300, y: 920, at: [0, 738, 832], b: 'Ahead or<br>behind?', s: 'Today, on the line.' },
+      { side: 'l', x: 40, w: 300, y: 1230, at: [0, 120, 1320], b: '₹7,042 under', s: 'a steady pace so far.' },
+      { side: 'l', x: 40, w: 300, y: 1560, at: [0, 120, 1650], b: 'Every rupee,<br>by category', s: 'Biggest first.' },
+    ] },
+
+  // 5 · Ask AI.
+  p5: { ...P, i: 4, theme: 'dark', ...phoneHead('Ask any AI about <em>your money.</em>', 'hisaab writes the question. You read every word first.'),
+    rose: [980, 820],
+    cards: [{ shot: 'p-askai', x: 72, y: 640, w: 640 }],
+    notes: [
+      { side: 'r', x: 752, y: 840, at: [0, 980, 422], b: 'Pick a<br>question', s: 'Or ask your own.' },
+      { side: 'r', x: 752, y: 1300, at: [0, 980, 1560], b: 'See exactly<br>what it gets', s: 'Leave out notes if you like.' },
+      { side: 'r', x: 752, y: 1640, at: [0, 980, 2034], b: 'ChatGPT or<br>any app', s: 'Nothing goes till you share.' },
+    ] },
+
+  // 6 · Light and dark.
+  p6: { ...P, i: 5, theme: 'light', ...phoneHead('Light by day. <em>Dark by night.</em>', 'The same calm number, easy on your eyes.'),
+    rose: [960, 700],
+    cards: [
+      { shot: 'p-home', x: 56, y: 660, w: 560 },
+      { shot: 'p-home-dark', x: 464, y: 820, w: 560, dark: true },
+    ] },
+
+  // 7 · Bills.
+  p7: { ...P, i: 6, theme: 'dark', ...phoneHead('Set your bills <em>once.</em>', 'Rent, power, recharge: each one is set aside before your daily share.'),
+    rose: [120, 1500],
+    cards: [{ shot: 'p-billsheet', x: 150, y: 700, w: 780, src: [0, 590, 1080, 1714], dark: true }],
+    pins: [
+      { n: 1, t: 'Knows when it’s due', at: [0, 1000, 1002], dx: -360, dy: -190 },
+      { n: 2, t: 'Change any line', at: [0, 80, 1552], dx: -40, dy: 300 },
+    ] },
+
+  // 8 · Privacy.
+  p8: { ...P, i: 7, theme: 'light', ...phoneHead('Your money stays on <em>your phone.</em>', 'No account to make. Nothing to sync. Nothing sold.'),
+    rose: [960, 1720],
+    tiles: { x: 72, y: 660, w: 936, items: [
+      ['user', 'No sign-up', 'Open it and start. No email, no OTP.'],
+      ['ads', 'No ads', 'No trackers and no analytics. Ever.'],
+      ['wifi', 'Works offline', 'It doesn’t even ask for internet.'],
+      ['file', 'Your backup', 'One file, saved where you choose.'],
+    ] },
+    cards: [{ shot: 'p-settings2', x: 72, y: 1556, w: 936, src: [0, 1430, 1080, 874] }] },
+
+  // ── 7-inch tablet (1920 × 1080).
+  s1: { ...S7, i: 0, theme: 'dark', ...tabHead('Know what you can <em>spend today.</em>', 'Your money, shared out one day at a time till payday.'),
+    rose: [130, 960], cards: [{ shot: 't7-home', x: 660, y: 210, w: 1200 }],
+    pins: [
+      { n: 1, t: 'Safe to spend today', at: [0, 470, 218], dx: -280, dy: 470 },
+      { n: 2, t: 'Spending slower', at: [0, 1576, 628], dx: -330, dy: 220 },
+    ] },
+  s2: { ...S7, i: 1, theme: 'light', ...tabHead('One <em>honest</em> number.', 'What’s left, shared fairly across the days to payday.'),
+    rose: [1800, 120], slip: { x: 880, y: 110, w: 900 } },
+  s3: { ...S7, i: 2, theme: 'dark', ...tabHead('Ask any AI about <em>your money.</em>', 'hisaab writes the question. You read every word first.'),
+    rose: [130, 960], cards: [{ shot: 't7-askai', x: 660, y: 210, w: 1200 }],
+    pins: [
+      { n: 1, t: 'See exactly what it gets', at: [0, 1400, 300], dx: -240, dy: 200 },
+      { n: 2, t: 'Nothing goes till you share', at: [0, 1760, 942], dx: -420, dy: 150 },
+    ] },
+  s4: { ...S7, i: 3, theme: 'light', ...tabHead('Light by day. <em>Dark by night.</em>', 'The same calm number, easy on your eyes.'),
+    rose: [130, 960], cards: [{ shot: 't7-home-dark', x: 660, y: 210, w: 1200, dark: true }] },
+  s5: { ...S7, i: 4, theme: 'dark', ...tabHead('Your money stays on <em>your phone.</em>', 'No account to make. Nothing to sync. Nothing sold.'),
+    rose: [130, 960], tiles: { x: 860, y: 170, w: 960, items: [
+      ['user', 'No sign-up', 'Open it and start.'], ['ads', 'No ads', 'No trackers. Ever.'],
+      ['wifi', 'Works offline', 'No internet asked for.'], ['file', 'Your backup', 'A file you keep.'],
+    ] } },
+
+  // ── 10-inch tablet (drawn at 1920 × 1080, scaled to 2560 × 1440).
+  t1: { ...T10, i: 0, theme: 'dark', ...tabHead('Know what you can <em>spend today.</em>', 'Your money, shared out one day at a time till payday.'),
+    rose: [130, 960], cards: [{ shot: 't10-home', x: 660, y: 210, w: 1200 }],
+    pins: [
+      { n: 1, t: 'Safe to spend today', at: [0, 500, 218], dx: -280, dy: 470 },
+      { n: 2, t: 'Spending slower', at: [0, 2098, 628], dx: -330, dy: 200 },
+    ] },
+  t2: { ...T10, i: 1, theme: 'light', ...tabHead('One <em>honest</em> number.', 'What’s left, shared fairly across the days to payday.'),
+    rose: [1800, 120], slip: { x: 880, y: 110, w: 900 } },
+  t3: { ...T10, i: 2, theme: 'dark', ...tabHead('Add a spend in <em>3 taps.</em>', 'Type it, see what it leaves, tap what it was for.'),
+    rose: [130, 960], cards: [{ shot: 't10-add-amount', x: 660, y: 210, w: 1200 }],
+    pins: [
+      { n: 1, t: 'Type ₹350', at: [0, 1500, 400], dx: 120, dy: -110 },
+      { n: 2, t: 'Leaves ₹1,080 today', at: [0, 1530, 512], dx: 140, dy: 120 },
+    ] },
+  t4: { ...T10, i: 3, theme: 'light', ...tabHead('Light by day. <em>Dark by night.</em>', 'The same calm number, easy on your eyes.'),
+    rose: [130, 960], cards: [{ shot: 't10-home-dark', x: 660, y: 210, w: 1200, dark: true }] },
+  t5: { ...T10, i: 4, theme: 'dark', ...tabHead('Ask any AI about <em>your money.</em>', 'hisaab writes the question. You read every word first.'),
+    rose: [130, 960], cards: [{ shot: 't10-askai', x: 660, y: 210, w: 1200 }],
+    pins: [
+      { n: 1, t: 'See exactly what it gets', at: [0, 1900, 330], dx: -200, dy: 260 },
+      { n: 2, t: 'Nothing goes till you share', at: [0, 2380, 1340], dx: -420, dy: 140 },
+    ] },
+  t6: { ...T10, i: 5, theme: 'light', ...tabHead('Your money stays on <em>your phone.</em>', 'No account to make. Nothing to sync. Nothing sold.'),
+    rose: [1800, 960], tiles: { x: 860, y: 170, w: 960, items: [
+      ['user', 'No sign-up', 'Open it and start.'], ['ads', 'No ads', 'No trackers. Ever.'],
+      ['wifi', 'Works offline', 'No internet asked for.'], ['file', 'Your backup', 'A file you keep.'],
+    ] } },
+};
+
+// Line glyphs in Hugeicons' stroke-rounded manner (24 grid, 1.5 stroke scaled).
+const GLYPH = {
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  ads: '<rect x="3" y="5" width="18" height="14" rx="4"/><path d="M7 15l2.2-6 2.3 6M7.8 13h2.8M14 9v6h1.5a3 3 0 000-6H14z"/><path d="M3 21L21 3"/>',
+  wifi: '<path d="M2 8.5a15 15 0 0120 0M5.5 12a10 10 0 0113 0M9 15.5a5 5 0 016 0"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/>',
+  file: '<path d="M14 3H7a3 3 0 00-3 3v12a3 3 0 003 3h10a3 3 0 003-3V9l-6-6z"/><path d="M14 3v6h6M12 12v6m-3-3l3 3 3-3"/>',
+};
+
+const F = FRAMES[location.hash.slice(1)] || FRAMES.p1;
+const root = document.getElementById('f');
+root.className = F.theme;
+root.style.width = F.w + 'px'; root.style.height = F.h + 'px';
+if (F.scale && F.scale !== 1) { root.style.transform = `scale(${F.scale})`; }
+document.body.style.width = F.w * (F.scale || 1) + 'px';
+document.body.style.height = F.h * (F.scale || 1) + 'px';
+
+let html = '<svg class="bg" id="bg"></svg>';
+const isTab = F.w > F.h;
+html += `<div class="mark" style="left:${isTab ? 110 : 72}px;top:${isTab ? 110 : 84}px">hisaab<i></i></div>`;
+html += `<div class="rail" style="right:${isTab ? 110 : 72}px;top:${isTab ? 128 : 102}px">${Array.from({ length: F.rail }, (_, k) => `<i class="${k === F.i ? 't' : ''}"></i>`).join('')}</div>`;
+if (F.head) {
+  const s = F.head.size || 92;
+  html += `<div class="head" style="left:${F.head.x}px;top:${F.head.y}px;width:${F.head.w}px"><h1 style="font-size:${s}px;line-height:${s * 1.05}px">${F.head.h1}</h1><p class="sub">${F.head.sub}</p></div>`;
+}
+
+// Cards: a shot cropped to `src` [x, y, w, h] (default: whole image, bleeding off the frame's foot).
+const shotSize = n => n.startsWith('t10') ? [2560, 1548] : n.startsWith('t7') ? [1920, 1148] : [1080, 2304];
+const cardGeo = [];
+(F.cards || []).forEach((c, k) => {
+  const [iw, ih] = shotSize(c.shot);
+  const src = c.src || [0, 0, iw, ih];
+  const sc = c.w / src[2];
+  const h = Math.min(src[3] * sc, F.h - c.y + 80);
+  cardGeo[k] = { x: c.x, y: c.y, sc, sx: src[0], sy: src[1] };
+  const r = isTab ? 32 : 48;
+  html += `<div class="card${c.dark && F.theme === 'light' ? ' onDark' : ''}" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${h}px;border-radius:${r}px;z-index:${2 + k}">
+    <img src="${SH(c.shot)}" style="left:${-src[0] * sc}px;top:${-src[1] * sc}px;width:${iw * sc}px"></div>`;
+});
+const toFrame = ([k, ax, ay]) => [cardGeo[k].x + (ax - cardGeo[k].sx) * cardGeo[k].sc, cardGeo[k].y + (ay - cardGeo[k].sy) * cardGeo[k].sc];
+
+(F.loupes || []).forEach(l => {
+  const c = F.cards[l.card], [iw] = shotSize(c.shot);
+  const [sx, sy, sw, sh] = l.src, z = l.zoom;
+  html += `<div class="loupe" style="left:${l.x}px;top:${l.y}px;width:${sw * z}px;height:${sh * z}px">
+    <img src="${SH(c.shot)}" style="left:${-sx * z}px;top:${-sy * z}px;width:${iw * z}px"></div>`;
+});
+
+(F.notes || []).forEach((n, k) => {
+  const w = n.w || 290;
+  html += `<div class="note ${n.side}" id="note${k}" style="left:${n.x}px;top:${n.y}px;width:${w}px"><b>${n.b}</b><span>${n.s}</span></div>`;
+});
+(F.pins || []).forEach((p, k) => {
+  const [ax, ay] = toFrame(p.at);
+  html += `<div class="pin" id="pin${k}" style="left:${ax + p.dx}px;top:${ay + p.dy - 38}px"><span class="num">${p.n}</span>${p.t}</div>`;
+});
+
+if (F.slip) html += slip(F.slip);
+if (F.tiles) {
+  const t = F.tiles;
+  html += `<div class="tiles" style="left:${t.x}px;top:${t.y}px;width:${t.w}px">${t.items.map(([g, b, p]) =>
+    `<div class="tile"><div class="ic"><svg viewBox="0 0 24 24">${GLYPH[g]}</svg></div><div class="big">${b}</div><p>${p}</p></div>`).join('')}</div>`;
+}
+html += '<svg class="lead" id="lead"></svg>';
+root.innerHTML = html;
+
+function slip(s) {
+  const row = (op, k, v, cls = '') => `<div class="row ${cls}"><span><span class="op">${op}</span>${k}</span><span class="dots"></span><span class="v">${v}</span></div>`;
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue'];
+  return `<div class="slip${s.roomy ? ' roomy' : ''}" id="slip" style="left:${s.x}px;top:${s.y}px;width:${s.w}px">
+    <div class="k">HOW TODAY’S NUMBER IS WORKED OUT</div>
+    ${row('', 'Money in on 4 Oct', '₹45,000')}
+    ${row('−', 'Spent so far', '₹27,150')}
+    ${row('−', 'Electricity, due 29 Oct', '₹1,200')}
+    <div class="perf"></div>
+    ${row('', 'Left till payday', '₹16,650', 'sum')}
+    ${row('÷', 'Days to payday', '9')}
+    ${row('=', 'Each day’s share', '₹1,850', 'sum')}
+    ${row('−', 'Spent today', '₹420')}
+    <div class="days">${days.map((d, k) => `<div><i></i>${k === 0 ? 'Today' : d}</div>`).join('')}</div>
+    <div class="perf"></div>
+    <div class="total"><div class="t">Safe to spend today<small>A ₹1,850 share, less today’s ₹420</small></div><div class="a"><span>₹</span>1,430</div></div>
+    <svg class="tear" id="tear" preserveAspectRatio="none"></svg>
+  </div>`;
+}
+
+// ── Background etch: the hero's guilloché rosette, grain and keylines, at store scale (DisplayEtchPainter).
+(function etch() {
+  const bg = document.getElementById('bg'), W = F.w, H = F.h;
+  bg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const [cx, cy] = F.rose; let rings = '';
+  for (let r = 0; r < 18; r++) {
+    const base = 150 + r * 34, pts = [];
+    for (let i = 0; i < 900; i++) {
+      const t = i / 900 * 2 * Math.PI, rad = base + 22 * Math.sin(18 * t + r * 0.35) + 11 * Math.sin(5 * t);
+      pts.push(`${(cx + rad * Math.cos(t)).toFixed(1)},${(cy + rad * Math.sin(t)).toFixed(1)}`);
+    }
+    rings += `M${pts.join('L')}Z`;
+  }
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  let grain = '';
+  for (let i = 0, c = Math.floor(W * H / 500); i < c; i++) grain += `M${(rnd() * W).toFixed(1)} ${(rnd() * H).toFixed(1)}h.01`;
+  bg.innerHTML = `<path d="${rings}" fill="none" stroke="var(--etch)" stroke-width="1.6"/>` +
+    `<path d="${grain}" stroke="var(--etch)" stroke-width="2.4" stroke-linecap="round"/>` +
+    `<rect x="24" y="24" width="${W - 48}" height="${H - 48}" rx="40" fill="none" stroke="var(--etch)" stroke-width="2"/>` +
+    `<rect x="36" y="36" width="${W - 72}" height="${H - 72}" rx="30" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="10 8"/>`;
+})();
+
+// ── Torn foot of the slip, and leader lines from notes and pins to their spot on the screen.
+addEventListener('load', () => {
+  const tear = document.getElementById('tear');
+  if (tear) {
+    const w = tear.parentElement.offsetWidth, n = Math.round(w / 34), st = w / n;
+    let d = `M0 0 L${w} 0 `;
+    for (let i = n; i >= 0; i--) d += `L${(i * st).toFixed(1)} ${i % 2 ? 30 : 4} `;
+    const stroke = F.theme === 'dark' ? '#3A3632' : '#161615';
+    tear.setAttribute('viewBox', `0 0 ${w} 32`);
+    tear.innerHTML = `<path d="${d}Z" fill="#FFFEFC"/><path d="${d.replace(/^M0 0 L[\d.]+ 0 /, `M${w} 0 `)}" fill="none" stroke="${stroke}" stroke-width="3"/>`;
+  }
+  const lead = document.getElementById('lead');
+  lead.setAttribute('viewBox', `0 0 ${F.w} ${F.h}`);
+  const fg = F.theme === 'dark' ? '#F2F1EC' : '#161615', halo = F.theme === 'dark' ? '#161615' : '#FFFEFC';
+  let out = '';
+  const line = (x1, y1, x2, y2) => {
+    out += `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${halo}" stroke-width="10" stroke-linecap="round"/>` +
+      `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${fg}" stroke-width="3.5" stroke-linecap="round"/>` +
+      `<circle cx="${x2}" cy="${y2}" r="11" fill="#FFB020" stroke="#161615" stroke-width="3.5"/>` +
+      `<circle cx="${x2}" cy="${y2}" r="17" fill="none" stroke="${halo}" stroke-width="5"/>`;
+  };
+  (F.notes || []).forEach((n, k) => {
+    const el = document.getElementById('note' + k), [ax, ay] = toFrame(n.at);
+    const x = n.side === 'r' ? el.offsetLeft - 18 : el.offsetLeft + el.offsetWidth + 18;
+    line(x, el.offsetTop + 24, ax, ay);
+  });
+  (F.pins || []).forEach((p, k) => {
+    const el = document.getElementById('pin' + k), [ax, ay] = toFrame(p.at);
+    const cx = Math.max(el.offsetLeft + 20, Math.min(ax, el.offsetLeft + el.offsetWidth - 20));
+    const y = ay < el.offsetTop ? el.offsetTop : el.offsetTop + el.offsetHeight;
+    line(cx, y, ax, ay);
+  });
+  lead.innerHTML = out;
+  document.title = 'ready';
+});
+</script>
+</body>
+</html>

@@ -30,6 +30,7 @@ abstract final class EntryMapper {
                       createdAt: createdAt,
                       note: model.note,
                       recurringId: model.recurringId,
+                      savingId: model.savingId,
                     ),
                   ),
             ),
@@ -40,8 +41,15 @@ abstract final class EntryMapper {
   static Either<Failure, DateTime> _createdAt(String text) => Option<DateTime>.fromNullable(DateTime.tryParse(text))
       .toEither<Failure>(() => InvalidDataFailure('Bad created_at "$text"'));
 
-  /// The row for [draft], with an optional [id] and [recurringId], stamped [createdAt].
-  static EntryModel toModel(EntryDraft draft, {required DateTime createdAt, int? id, int? recurringId}) => EntryModel(
+  /// The row for [draft], with an optional [id], [recurringId] and [savingId], stamped [createdAt].
+  static EntryModel toModel(
+    EntryDraft draft, {
+    required DateTime createdAt,
+    int? id,
+    int? recurringId,
+    int? savingId,
+  }) =>
+      EntryModel(
         id: id,
         amountMinor: draft.amount.amountMinor,
         currency: draft.amount.currency.code,
@@ -50,6 +58,7 @@ abstract final class EntryMapper {
         date: draft.date.toIso(),
         note: draft.note,
         recurringId: recurringId,
+        savingId: savingId,
         createdAt: createdAt.toIso8601String(),
       );
 }

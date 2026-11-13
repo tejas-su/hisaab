@@ -265,6 +265,10 @@ The owner accepted the review's top three (P1, P2′, P4′) and asked for the r
 | P2′-1 | Paying a yearly cost from a saving leaves the total high | **Add a "used" action** (not "template first") |
 | P4′-1 | Where the missed-log tap lands | **Add at the keypad** (step 1), not step 2 |
 
-Still open: P1-4 (a limit on fixes per day; review recommends none), P2′-2 (reminder on a yearly saving; review recommends none). Designers take the recommendations as the default.
+| A11y-S3 | Keypad key labels at 2.0× text (`docs/features/fix-my-number/06-accessibility-review.md` S3) | **Key labels stop growing at 1.5×.** Applies to the shared keypad, so the Add tray too; needs a DECISIONS row at sign-off |
+
+**Signed off (2026-11-13):** the owner delegated every remaining product decision to Claude as product manager. The decisions, and the call that the user test runs before the Play release rather than before the build, are in `docs/features/fix-my-number/08-design-qa-and-signoff.md` §8.
+
+Still open before sign-off (now resolved in §8): P1-4 (a limit on fixes per day; review recommends none), P2′-2 (reminder on a yearly saving; review recommends none). Designers take the recommendations as the default.
 
 Design work lives in `docs/features/fix-my-number/`, `docs/features/yearly-costs/` and `docs/features/habits/` (from `08-`), with mockups 41 (Fix my number), 42 (yearly costs) and 43 (missed-log line). Nothing is approved for SPEC, PLAN, UI_DESIGN or DECISIONS until the owner signs off the finished designs.

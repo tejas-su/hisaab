@@ -360,4 +360,94 @@ void main() {
     expect(const BillSheetUnchanged().props, isEmpty);
     expect(const BillSheetModeChosen(AmountMode.card).props, <Object?>[AmountMode.card]);
   });
+  group('BillSheetBloc set aside and the Used question (AC-Y5, AC-Y6, BR-19)', () {
+    BillSheetBloc savingSheet({bool withSetAside = true}) {
+      final FakeClock clock = FakeClock(WorkedExample.now);
+      return BillSheetBloc(
+        rule: WorkedExample.insurance,
+        editBill: EditBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
+        getStatus: GetBillStatus(
+          ledger: ledger,
+          clock: clock,
+          summary: GetCycleSummary(
+            ledger: ledger,
+            recurring: recurring,
+            settings: FakeBudgetSettingsRepository(),
+            periods: const PeriodCalculator(),
+            clock: clock,
+          ),
+        ),
+        haptics: haptics,
+        getSetAside: withSetAside ? GetSetAside(recurring: recurring, ledger: ledger) : null,
+      );
+    }
+
+    setUp(() {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.insurance];
+      ledger.entries.addAll(WorkedExample.insurancePutIns);
+    });
+
+    test("a saving's sheet reads what is set aside", () async {
+      final BillSheetBloc sheet = savingSheet();
+      addTearDown(sheet.close);
+      await pumpEventQueue();
+
+      expect((sheet.state as BillSheetReady).setAside, Option<Money>.of(Money.fromMajor(12000)));
+    });
+
+    test('a sheet built without GetSetAside has none', () async {
+      final BillSheetBloc sheet = savingSheet(withSetAside: false);
+      addTearDown(sheet.close);
+      await pumpEventQueue();
+
+      expect((sheet.state as BillSheetReady).setAside, const Option<Money>.none());
+    });
+
+    test('a bill never reads it, even with GetSetAside', () async {
+      final FakeClock clock = FakeClock(WorkedExample.now);
+      final BillSheetBloc billSheet = BillSheetBloc(
+        rule: WorkedExample.electricity,
+        editBill: EditBill(recurring: recurring, categories: FakeCategoryRepository(), clock: clock),
+        getStatus: GetBillStatus(
+          ledger: ledger,
+          clock: clock,
+          summary: GetCycleSummary(
+            ledger: ledger,
+            recurring: recurring,
+            settings: FakeBudgetSettingsRepository(),
+            periods: const PeriodCalculator(),
+            clock: clock,
+          ),
+        ),
+        haptics: haptics,
+        getSetAside: GetSetAside(recurring: recurring, ledger: ledger),
+      );
+      addTearDown(billSheet.close);
+      await pumpEventQueue();
+
+      expect((billSheet.state as BillSheetReady).setAside, const Option<Money>.none());
+    });
+
+    test('a failed read leaves the key off and the sheet usable', () async {
+      ledger.failure = DatabaseFailure('ledger');
+      final BillSheetBloc sheet = savingSheet();
+      addTearDown(sheet.close);
+      await pumpEventQueue();
+
+      expect((sheet.state as BillSheetReady).setAside, const Option<Money>.none());
+    });
+
+    test('opening the Used question is an answer like the others and Back returns to the bill', () async {
+      final BillSheetBloc sheet = savingSheet();
+      addTearDown(sheet.close);
+      await pumpEventQueue();
+
+      await sheet.dispatch(const BillSheetAnswerOpened(BillAnswer.used));
+      expect((sheet.state as BillSheetReady).open, const Option<BillAnswer>.of(BillAnswer.used));
+
+      await sheet.dispatch(const BillSheetBackPressed());
+      expect((sheet.state as BillSheetReady).open, const Option<BillAnswer>.none());
+    });
+  });
+
 }

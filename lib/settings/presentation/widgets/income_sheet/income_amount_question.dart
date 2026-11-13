@@ -14,7 +14,7 @@ import '../../../../ledger/ledger.dart';
 import '../../bloc/income_sheet_bloc.dart';
 import '../../bloc/income_sheet_event.dart';
 import '../../bloc/income_sheet_state.dart';
-import '../bill_sheet/bill_question_frame.dart';
+import '../bill_sheet/pinned_bill_question.dart';
 import 'income_copy.dart';
 import 'income_effect.dart';
 
@@ -27,28 +27,25 @@ class IncomeAmountQuestion extends StatelessWidget {
 
   final IncomeSheetReady state;
 
-  static const double _keyHeight = 56;
-
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final IncomeSheetBloc bloc = context.read<IncomeSheetBloc>();
     final Money typed = Money.fromMajor(state.rupees);
-    return BillQuestionFrame(
+    return PinnedBillQuestion(
       question: strings.incomeQuestion,
       name: strings.moneyComingIn,
       glyph: AppIcons.forKey(CategoryKeys.salary),
       figure: AmountDisplay(amount: typed, rejections: state.rejections),
       caption: _caption(context, typed),
       saveFailed: state.saveFailed,
-      body: Column(
+      slot: _effect(context),
+      controls: (BuildContext context, double keyHeight) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          _effect(context),
-          const SizedBox(height: HisaabSpacing.m),
           Keypad(
-            keyHeight: _keyHeight,
+            keyHeight: keyHeight,
             onKey: (String key) => bloc.add(IncomeSheetKeyPressed(key)),
             onBackspace: () => bloc.add(const IncomeSheetBackspacePressed()),
             onClear: () => bloc.add(const IncomeSheetCleared()),
@@ -65,22 +62,19 @@ class IncomeAmountQuestion extends StatelessWidget {
   }
 
   String _caption(BuildContext context, Money typed) => state.pendingRule.match(
-        () => state.income.rule.match(
-          () => '',
-          (RecurringRule rule) {
-            final Money monthly = IncomeAmount.monthlyOf(rule);
-            return typed != monthly ? AppLocalizations.of(context).billWas(context.money.format(monthly)) : context.incomeComes(rule);
-          },
-        ),
-        (PayRule rule) => context.payRuleComes(rule),
-      );
+    () => state.income.rule.match(() => '', (RecurringRule rule) {
+      final Money monthly = IncomeAmount.monthlyOf(rule);
+      return typed != monthly ? AppLocalizations.of(context).billWas(context.money.format(monthly)) : context.incomeComes(rule);
+    }),
+    (PayRule rule) => context.payRuleComes(rule),
+  );
 
   // why: the one thing to know before saving is when the change counts (D137), or for a new
   // payday how long the money already here now lasts (D140).
   Widget _effect(BuildContext context) => state.pendingRule.match(
-        () => state.income.rule.match(() => const SizedBox.shrink(), (RecurringRule rule) => _fromPayday(context, rule)),
-        (PayRule _) => state.preview.match(() => const SizedBox.shrink(), (CycleSummary preview) => IncomeEffect(preview: preview)),
-      );
+    () => state.income.rule.match(() => const SizedBox.shrink(), (RecurringRule rule) => _fromPayday(context, rule)),
+    (PayRule _) => state.preview.match(() => const SizedBox.shrink(), (CycleSummary preview) => IncomeEffect(preview: preview)),
+  );
 
   Widget _fromPayday(BuildContext context, RecurringRule rule) {
     final AppLocalizations strings = AppLocalizations.of(context);

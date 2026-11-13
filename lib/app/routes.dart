@@ -149,8 +149,12 @@ abstract final class AppRoutes {
                   final HomeBloc home = context.read<HomeBloc>();
                   // why: a change reloads Home through RecurringRepository.changes; a delete goes
                   // through Home so its Undo shows there.
-                  if (await openBillSheet(context, getIt, rule) case BillSheetDeleted(:final RecurringRule rule)) {
-                    home.add(HomeBillDeleteRequested(rule));
+                  switch (await holdingHome(home, () => openBillSheet(context, getIt, rule))) {
+                    case BillSheetDeleted(:final RecurringRule rule):
+                      home.add(HomeBillDeleteRequested(rule));
+                    case BillSheetUsed(:final UsedOutcome outcome):
+                      home.add(HomeUsedDone(outcome));
+                    case BillSheetUnchanged() || BillSheetChanged():
                   }
                 },
                 onEnterBill: (Occurrence occurrence) => enterBill(context, getIt, occurrence),
@@ -212,11 +216,24 @@ abstract final class AppRoutes {
   static const Duration _settleLimit = Duration(seconds: 1);
 
 
+  /// Runs [open], a sheet over Home, with [home] holding its numbers until the sheet's exit has
+  /// ended, so a write drains in view and not under the scrim (D91). Closes in a `finally`, so a
+  /// thrown error can't leave Home frozen. Only for sheets opened from Home: Settings has no
+  /// [HomeBloc] in scope.
+  static Future<T> holdingHome<T>(HomeBloc home, Future<T> Function() open) async {
+    home.add(const HomeTrayOpened());
+    try {
+      return await open();
+    } finally {
+      home.add(const HomeTrayClosed());
+    }
+  }
+
   /// Opens the amount sheet of a bill waiting on Home over [context] (D123). The write reloads
   /// Home through the change streams; the outcome goes through Home so its Undo shows there.
   static Future<void> enterBill(BuildContext context, GetIt getIt, Occurrence occurrence) async {
     final HomeBloc home = context.read<HomeBloc>();
-    final Option<BillAmountOutcome> outcome = await BillAmountSheet.show(
+    final Option<BillAmountOutcome> outcome = await holdingHome(home, () => BillAmountSheet.show(
       context,
       BillAmountBloc(
         occurrence: occurrence,
@@ -225,7 +242,7 @@ abstract final class AppRoutes {
         skip: getIt<SkipBillOccurrence>(),
         haptics: getIt<Haptics>(),
       )..add(const BillAmountLoadRequested()),
-    );
+    ));
     outcome.map((BillAmountOutcome done) => home.add(HomeBillAmountDone(done)));
   }
 
@@ -425,6 +442,8 @@ abstract final class AppRoutes {
           haptics: getIt<Haptics>(),
           getSavedTotal: getIt<GetSavedTotal>(),
           ledger: getIt<LedgerRepository>(),
+          getSetAside: getIt<GetSetAside>(),
+          deleteEntry: getIt<DeleteEntry>(),
           kind: kind,
         )..add(const BillsLoadRequested()),
         child: Builder(
@@ -450,8 +469,12 @@ abstract final class AppRoutes {
               final BillsBloc bills = context.read<BillsBloc>();
               // why: a change reloads the list through RecurringRepository.changes; only a
               // delete needs the list, which owns its Undo.
-              if (await openBillSheet(context, getIt, bill) case BillSheetDeleted(:final RecurringRule rule)) {
-                bills.add(BillsDeleteRequested(rule));
+              switch (await openBillSheet(context, getIt, bill)) {
+                case BillSheetDeleted(:final RecurringRule rule):
+                  bills.add(BillsDeleteRequested(rule));
+                case BillSheetUsed(:final UsedOutcome outcome):
+                  bills.add(BillsUsedDone(outcome));
+                case BillSheetUnchanged() || BillSheetChanged():
               }
             },
           ),
@@ -470,7 +493,16 @@ abstract final class AppRoutes {
   static Future<BillSheetOutcome> openBillSheet(BuildContext context, GetIt getIt, RecurringRule rule) async {
     final BillSheetOutcome outcome = await BillSheet.show(
       context,
-      BillSheetBloc(rule: rule, editBill: getIt<EditBill>(), getStatus: getIt<GetBillStatus>(), haptics: getIt<Haptics>()),
+      BillSheetBloc(
+        rule: rule,
+        editBill: getIt<EditBill>(),
+        getStatus: getIt<GetBillStatus>(),
+        haptics: getIt<Haptics>(),
+        getSetAside: getIt<GetSetAside>(),
+      ),
+      used: rule.kind == EntryKind.saved
+          ? UsedBloc(getSetAside: getIt<GetSetAside>(), useFromSavings: getIt<UseFromSavings>(), haptics: getIt<Haptics>())
+          : null,
     );
     // why: a bill switched to *Changes every month* or *Credit card* is the first one that waits.
     if (outcome case BillSheetChanged(:final RecurringRule rule) when rule.amountMode != AmountMode.fixed && context.mounted) {
@@ -515,9 +547,7 @@ abstract final class AppRoutes {
       kind: kind,
       usual: usual,
     );
-    final HomeBloc homeBloc = context.read<HomeBloc>()..add(const HomeTrayOpened());
-    await AddEntryTray.show(context, bloc);
-    homeBloc.add(const HomeTrayClosed());
+    await holdingHome(context.read<HomeBloc>(), () => AddEntryTray.show(context, bloc));
     if (bloc.state case AddEntryFinished(added: Some<Entry>(value: final Entry entry))) {
       usual.map((UsualSpend spend) => habitsBloc.add(HabitsUsualAdded(UsualAdd(entry: entry, category: spend.category))));
     }

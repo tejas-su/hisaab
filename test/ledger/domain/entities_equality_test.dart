@@ -65,4 +65,21 @@ void main() {
       expect(EditBillParams(rule: WorkedExample.rent, input: input).props, <Object?>[WorkedExample.rent, input]);
     });
   });
+  test('an Entry compares its savingId (D175)', () {
+    final Entry base = WorkedExample.insurancePutIns.first;
+    final Entry linked = Entry(
+      id: base.id,
+      amount: base.amount,
+      kind: base.kind,
+      categoryId: base.categoryId,
+      date: base.date,
+      createdAt: base.createdAt,
+      recurringId: base.recurringId,
+      savingId: 5,
+    );
+
+    expect(linked, isNot(base));
+    expect(linked.savingId, 5);
+  });
+
 }

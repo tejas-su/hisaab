@@ -421,4 +421,138 @@ void main() {
       }
     });
   });
+  group('PromptBuilder a Used entry (BR-15, BR-19, D188)', () {
+    const String usedClause =
+        'Entries of kind "used" are costs the user paid from money they had already set aside in a saving, '
+        'such as a yearly insurance bill. That money was counted when it was put in, so it is not spending '
+        'in this period and does not change the daily number. Do not add it to spending.';
+
+    Entry usedEntry({int id = 7, int rupees = 4000, CalendarDate date = const CalendarDate(2026, 10, 20), String? note = 'Insurance'}) => Entry(
+          id: id,
+          amount: Money.fromMajor(rupees),
+          kind: EntryKind.used,
+          categoryId: 11,
+          date: date,
+          createdAt: WorkedExample.now,
+          note: note,
+          savingId: 5,
+        );
+
+    const String goldenWithUsed =
+        'You are a friendly money coach for someone in India. Reply in simple English, under 200 words.\n'
+        'Use only the numbers below. Write amounts in ₹ with Indian grouping (₹1,25,000).\n'
+        "If there is too little data to judge, say so. Don't name specific stocks, funds, loans or apps.\n"
+        'Context: income ₹45,000/month (payday 4th), currency INR, period 2026-10-04..2026-11-03, today 2026-10-26.\n'
+        'Entries of kind "used" are costs the user paid from money they had already set aside in a saving, '
+        'such as a yearly insurance bill. That money was counted when it was put in, so it is not spending '
+        'in this period and does not change the daily number. Do not add it to spending.\n'
+        'Spent ₹27,570, got ₹45,000. By category: Food 19,010; Home 8,200; Shopping 240; Travel 120.\n'
+        'Recurring bills: Electricity 1,200 monthly on day 29; Rent 8,200 monthly on day 5.\n'
+        '\n'
+        'Entries (CSV):\n'
+        'date,amount,kind,category,note\n'
+        '2026-10-04,45000,got,Money in,\n'
+        '2026-10-05,8200,spent,Home,\n'
+        '2026-10-20,18950,spent,Food,\n'
+        '2026-10-20,4000,used,savings,Insurance\n'
+        '2026-10-26,60,spent,Food,Chai & samosa\n'
+        '2026-10-26,120,spent,Travel,Auto to office\n'
+        '2026-10-26,240,spent,Shopping,Groceries\n'
+        '\n'
+        'Task: Tell me how this period went. Give: 1) 3 things that stand out, good or bad, with ₹ amounts 2) the one change that would save the most, and how much a month 3) one habit worth keeping.';
+
+    test('an export with no used entry is byte-identical to the existing golden', () {
+      expect(_build().text, _golden);
+      expect(_build().text, isNot(contains('"used"')));
+    });
+
+    test('golden: an export with a used entry', () {
+      final PromptText prompt = _build(entries: <Entry>[...WorkedExample.entries, usedEntry()]);
+
+      expect(prompt.text, goldenWithUsed);
+      expect(prompt.entryCount, 7);
+    });
+
+    test("a used entry's CSV row is date,amount,used,savings,<saving name>", () {
+      final PromptText prompt = _build(entries: <Entry>[...WorkedExample.entries, usedEntry()]);
+
+      expect(_lines(prompt), contains('2026-10-20,4000,used,savings,Insurance'));
+    });
+
+    test('with notes hidden the used row has no note column', () {
+      final PromptText prompt = _build(
+        choice: const PromptChoice(hideNotes: true),
+        entries: <Entry>[...WorkedExample.entries, usedEntry()],
+      );
+
+      expect(_lines(prompt), contains('2026-10-20,4000,used,savings'));
+      expect(prompt.text, isNot(contains('Insurance')));
+    });
+
+    test('the used clause comes right after the facts line, before the summary', () {
+      final PromptText prompt = PromptBuilder.build(
+        workedPromptInput(
+          entries: <Entry>[...WorkedExample.entries, usedEntry()],
+          summary: Option<CycleSummary>.of(workedSummary()),
+        ),
+        const PromptChoice(),
+        nameOf: englishName,
+      );
+      final List<String> lines = _lines(prompt);
+
+      expect(lines[4], startsWith('From my app, and correct:'));
+      expect(lines[5], usedClause);
+      expect(lines[6], startsWith('Spent '));
+    });
+
+    test('the clause is stated once however many used entries there are', () {
+      final PromptText prompt = _build(
+        entries: <Entry>[...WorkedExample.entries, usedEntry(), usedEntry(id: 8, rupees: 500)],
+      );
+
+      expect(_lines(prompt).where((String line) => line == usedClause), hasLength(1));
+    });
+
+    test('used is in no category total and no weekly total (spent/got)', () {
+      final PromptText prompt = _build(entries: <Entry>[...WorkedExample.entries, usedEntry()]);
+
+      expect(_lines(prompt), contains('Spent ₹27,570, got ₹45,000. By category: Food 19,010; Home 8,200; Shopping 240; Travel 120.'));
+      expect(prompt.text, isNot(contains('Savings 4000')));
+    });
+
+    test('a used entry in a grouped older week is not counted as spending (D64)', () {
+      final List<Entry> entries = <Entry>[
+        Entry(
+          id: 1,
+          amount: Money.fromMajor(45000),
+          kind: EntryKind.got,
+          categoryId: SeedCategoryIds.salary,
+          date: const CalendarDate(2026, 10, 4),
+          createdAt: WorkedExample.now,
+          note: 'x' * 12000,
+        ),
+        usedEntry(id: 2, rupees: 5000, date: const CalendarDate(2026, 10, 6)),
+        ...WorkedExample.entries.skip(1),
+      ];
+
+      final PromptText prompt = _build(entries: entries);
+
+      expect(prompt.groupedWeeks, greaterThan(0));
+      expect(_lines(prompt), contains('Earlier weeks (spent/got): 2026-10-04..2026-10-10 8,200/45,000'));
+      expect(_lines(prompt), contains(usedClause));
+    });
+
+    test('a saving name with a comma is quoted', () {
+      final PromptText prompt = _build(entries: <Entry>[...WorkedExample.entries, usedEntry(note: 'Car, home insurance')]);
+
+      expect(_lines(prompt), contains('2026-10-20,4000,used,savings,"Car, home insurance"'));
+    });
+
+    test('a used entry with no note leaves the note empty', () {
+      final PromptText prompt = _build(entries: <Entry>[...WorkedExample.entries, usedEntry(note: null)]);
+
+      expect(_lines(prompt), contains('2026-10-20,4000,used,savings,'));
+    });
+  });
+
 }

@@ -207,4 +207,74 @@ void main() {
     });
   });
 
+  group('EntriesPage a Used entry (FR-SP-6, D187, NFR-11)', () {
+    Entry usedEntry() => Entry(
+          id: 90,
+          amount: Money.fromMajor(4000),
+          kind: EntryKind.used,
+          categoryId: 11,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          note: 'Insurance',
+          savingId: 5,
+        );
+
+    testWidgets('is listed with its word and the extra line, and left out of the day total', (WidgetTester tester) async {
+      services.ledger.entries.add(usedEntry());
+
+      await pump(tester);
+
+      expect(find.text('Used from savings'), findsOneWidget);
+      expect(find.text('Paid from what you set aside.'), findsOneWidget);
+      expect(find.text('₹420'), findsWidgets);
+      expect(find.text('₹4,420'), findsNothing);
+    });
+
+    testWidgets('has no chip for savings or used; it shows under All', (WidgetTester tester) async {
+      services.ledger.entries.add(usedEntry());
+
+      await pump(tester);
+
+      expect(find.byKey(const ValueKey<String>('filter-saved')), findsNothing);
+      expect(find.byKey(const ValueKey<String>('filter-used')), findsNothing);
+      expect(find.text('Insurance'), findsOneWidget);
+    });
+
+    testWidgets('a category chip leaves it out', (WidgetTester tester) async {
+      services.ledger.entries.add(usedEntry());
+      await pump(tester);
+
+      await tester.tap(find.byKey(const ValueKey<String>('filter-travel')));
+      await tester.settle();
+
+      expect(find.text('Insurance'), findsNothing);
+    });
+
+    testWidgets('tapping it does not edit', (WidgetTester tester) async {
+      services.ledger.entries.add(usedEntry());
+      await pump(tester);
+
+      await tester.tap(find.text('Insurance'));
+
+      expect(edited, isEmpty);
+    });
+
+    testWidgets('swiping deletes with Undo, and Undo restores it with its saving_id (E97)', (WidgetTester tester) async {
+      services.ledger.entries.add(usedEntry());
+      await pump(tester);
+
+      await tester.drag(find.text('Insurance'), const Offset(-500, 0));
+      await tester.settle();
+      expect(find.text('Insurance'), findsNothing);
+      expect(services.ledger.entries.where((Entry e) => e.id == 90), isEmpty);
+
+      await tester.tap(find.text('Undo'));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Insurance'), findsOneWidget);
+      expect(services.ledger.entries.firstWhere((Entry e) => e.id == 90).savingId, 5);
+    });
+  });
+
 }

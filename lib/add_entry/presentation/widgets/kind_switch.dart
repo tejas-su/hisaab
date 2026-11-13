@@ -15,28 +15,39 @@ class KindSwitch extends StatelessWidget {
   final EntryKind kind;
   final ValueChanged<EntryKind> onChanged;
 
+  static const double _segmentMinWidth = 112;
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
     return Semantics(
       label: strings.moneyOutOrIn,
       container: true,
-      child: Container(
-        padding: const EdgeInsetsDirectional.all(HisaabSpacing.xs),
-        decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(HisaabRadii.key)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _segment(context, EntryKind.spent, strings.spent),
-            const SizedBox(width: HisaabSpacing.xs),
-            _segment(context, EntryKind.got, strings.got),
-          ],
-        ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints box) {
+          // why: in a narrow half (split screen) the two 112dp segments would overflow, so they
+          // share the width instead.
+          final bool narrow = box.maxWidth < 2 * _segmentMinWidth + 3 * HisaabSpacing.xs;
+          return Container(
+            padding: const EdgeInsetsDirectional.all(HisaabSpacing.xs),
+            decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(HisaabRadii.key)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                _fit(narrow, _segment(context, EntryKind.spent, strings.spent, narrow)),
+                const SizedBox(width: HisaabSpacing.xs),
+                _fit(narrow, _segment(context, EntryKind.got, strings.got, narrow)),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _segment(BuildContext context, EntryKind value, String label) {
+  Widget _fit(bool narrow, Widget segment) => narrow ? Expanded(child: segment) : segment;
+
+  Widget _segment(BuildContext context, EntryKind value, String label, bool narrow) {
     final bool selected = value == kind;
     // why: light layers alternate (D47), so the pick rises out of the sunk track as a light
     // pill; in dark, where surface is darker than sunk, it stays an ink pill.
@@ -49,7 +60,7 @@ class KindSwitch extends StatelessWidget {
       selected: selected,
       onPressed: () => onChanged(value),
       builder: (BuildContext context, bool pressed) => Container(
-        constraints: const BoxConstraints(minWidth: 112, minHeight: HisaabSizes.minTouchTarget),
+        constraints: BoxConstraints(minWidth: narrow ? 0 : _segmentMinWidth, minHeight: HisaabSizes.minTouchTarget),
         alignment: Alignment.center,
         decoration: ShapeDecoration(
           color: selected ? selectedFill : null,

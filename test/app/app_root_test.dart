@@ -15,6 +15,7 @@ import 'package:hisaab/habits/habits.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/home/home.dart';
 import 'package:hisaab/home/presentation/widgets/due_soon_row.dart';
+import 'package:hisaab/home/presentation/widgets/waiting_bill_row.dart';
 import 'package:hisaab/onboarding/onboarding.dart';
 import 'package:hisaab/settings/settings.dart';
 import 'package:hisaab/spends/spends.dart';
@@ -22,6 +23,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart' show Option;
 import 'package:get_it/get_it.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../helpers/tooltip_finder.dart';
 import '../helpers/fake_services.dart';
@@ -311,6 +313,25 @@ void main() {
       await settle(tester);
       expect(find.byType(SettingsPage), findsNothing);
       expect(find.byType(BillAmountSheet), findsOneWidget);
+    });
+
+    testWidgets('a bill entered from Home\'s waiting line reloads Home only after the sheet has gone (D91)', (WidgetTester tester) async {
+      await boot(tester, withWaitingBill());
+      HomeBloc home() => tester.element(find.byType(HomePage)).read<HomeBloc>();
+      final CycleSummary before = (home().state as HomeReady).summary;
+      await tester.tap(find.byType(WaitingBillRow));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-5')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey<String>('bill-amount-save')));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.byType(BillAmountSheet), findsOneWidget);
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      expect((home().state as HomeReady).summary, before);
+
+      await settle(tester);
+      expect((home().state as HomeReady).summary, isNot(before));
     });
 
     testWidgets('a tap for a bill already answered shows only Home', (WidgetTester tester) async {

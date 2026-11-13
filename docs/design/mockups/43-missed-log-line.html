@@ -140,7 +140,9 @@
 </head>
 <body>
 
-<h1>The missed-log line <span class="tag">proposal</span></h1>
+<p style="border:2px solid #000;padding:10px 14px;margin:0 0 16px;font:14px/1.4 sans-serif"><b>Superseded in part (signed off 2026-11-13, <code>docs/features/fix-my-number/08-design-qa-and-signoff.md</code> §1 and §8; design pass in <code>docs/features/habits/08-missed-log-line.md</code>). SPEC wins.</b> Not redrawn. Where this page differs, use: X35 the line is <b>fourth</b> in the slot, not "third"; X36 and O16 evaluated at cold start and resume only, a tray close can only remove it; X18 focus goes to the "Today" heading when the line leaves; hover outline is <code>ink2</code> 1dp, not <code>hairline</code> (06 C2); the well holds a neutral question glyph, not the category glyph (problem 1 resolved in 08 §3); the collapse is <code>resize</code> + <code>easeOut</code>, not <code>standard</code> (05 §10); X43 dock is Home, Add, Spends.</p>
+
+<h1>The missed-log line <span class="tag">signed off 2026-11-13 (08 §8)</span></h1>
 <p class="lede">When you spent on something you usually spend on and the day has gone by without logging it, Home asks once, in its quiet nudge slot: <b>Spent on Food today?</b> <b>Usually around 1 pm.</b> One tap opens the Add tray at step 1 with the <i>your usual</i> pill carried, so the usual answer is two taps. Ignoring it is free: it asks at most once a day, has no ×, no count, no badge and no marigold. Worked example: Mon 26 Oct, <b>4:10 pm</b> (the Food window ended at 2:00, plus 90 minutes is 3:30), hero ₹1,430, ₹420 spent (Travel ₹300, Chai ₹120), nothing in Food. Light and dark at 360dp, and one frame at 320dp with text at 1.5×.</p>
 <p class="lede">Colour: the line is <code>sunk</code> with a <code>surface</code> icon well and <code>ink</code> / <code>ink2</code> text, the same as the due-soon row. It is a question, not an act, so marigold stays on today's bar and the Add key.</p>
 

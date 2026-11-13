@@ -1,6 +1,18 @@
 # Accessibility review: Fix my number, yearly costs (*Used*) and the missed-log line
 
-> **Status: proposed (2026-11-13).** A review of three unapproved designs against WCAG 2.2 AA and the house conventions. Nothing here is in SPEC, PLAN, UI_DESIGN, DECISIONS or the ARB, and no code was changed. Every "Fix" below is a proposal for the owning agent (`design-ui`, `design-interaction`, `design-content`, `design-motion`) to accept or reject. Longer than ~150 lines on purpose: the owner asked for all three features in one review; split by feature when approved.
+> **Status: signed off 2026-11-13 (`08-design-qa-and-signoff.md` §8).** A review of three designs against WCAG 2.2 AA and the house conventions. Nothing here is in SPEC, PLAN, UI_DESIGN, DECISIONS or the ARB yet, and no code was changed; SPEC wins once written. The "Fix" entries below are now the design: they were accepted in `08` §1 as follows (the findings text is kept as written, with the exceptions called out in the dispositions):
+>
+> | Findings | Disposition |
+> |---|---|
+> | T1 | Accepted (X17): `Focus` + `Semantics` question; device check D1 is mandatory |
+> | S1, S2 | Accepted with X3, X4, X5: stacked, pinned amount and controls; the handle stays at 48dp, so every tight budget in section 3 is recounted below |
+> | T2, T4, M1 | Accepted (X13, X14, X16): 1.2 s debounce under TalkBack with short live text; held ring plus one-shot line "That's the most you can type."; the guard resize is instant under reduced motion |
+> | T3, C1 | Accepted (X11): the digits are **cleared** after *No*; focus goes to the notice. The "kept digits on a highlight" alternative is dropped |
+> | T5 | Accepted (X28): spoken forms "Not logged. Spent 4,200 rupees." and the Spends part "Not logged, spent 4,200 rupees." |
+> | T6 | Accepted (X18): focus goes to the node now in the line's place, the "Today" heading |
+> | **X7 (new, added to this review)** | **The guard tap-through:** a quick second tap on *Fix it* can land on *Yes, add ₹30,000*, which posts a large *Got*. Both guard keys ignore input for about 300 ms after the swap; no visible mode, so nothing for TalkBack to announce. Check on a device (D1). See section 2.1 |
+> | K1, K2, S3 to S6, G1, G2, T7 to T9, C2 to C5, K3, K5 | Accepted; S3 uses the owner's clamp (O20, X44); G2 is O5 (three Spends parts); T9 is X19 (a second tap clears) |
+> | K4 | Decided: no hardware-keyboard mapping in these features (X45, O9) |
 >
 > **Reviewed:** `01` to `05` of this folder, `docs/features/yearly-costs/01-ux-flow.md`, `docs/features/habits/08-missed-log-line.md`, copy deck `docs/design/mockups/41-fix-my-number-copy-deck.md`, mockups 41, 42, 43 (including their "problems found"), SPEC NFR-4, E12, E13, FR-HO-7, FR-WG-8, UI_DESIGN §9 and §13, D99, D105, `lib/core/design/hisaab_colors.dart`, `test/core/design/contrast_pairs_test.dart`, and (for facts the docs assume) `lib/core/widgets/shake.dart`, `keypad.dart`, `keypad_key.dart`, `lib/ledger/presentation/widgets/entry_row.dart`. Contrast was **computed by script** (WCAG 2.x relative luminance, same formula as the existing test), not estimated.
 
@@ -108,6 +120,8 @@ Order proposed (matches visual order, 1.3.2 and 2.4.3): sheet name, Back, headin
 - **Slot.** One node per state in the `IndexedStack`, only the visible one in semantics (agreed). Merge the two lines with `MergeSemantics` so a swipe reads one sentence: "hisaab thought 17,430 rupees. 4,200 rupees less. Each day gets about 467 rupees less." The visible text must be `ExcludeSemantics` and a separate `Semantics(liveRegion: true, label: spoken)` carry the delayed text, or the debounce (T2) cannot differ from the visible update.
 - **Keys.** Digits are real buttons labelled with the digit (shipped). ⌫ keeps "Delete last digit. Long-press to clear" and the `longPress` action (shipped in `keypad.dart`).
 
+**X7 (added by `08`, tap-through on the guard).** The guard stacks *No* then *Yes, add ₹30,000*, and the stack ends where *Fix it* was. A second quick tap on *Fix it*, or a late finger lift, lands on *Yes* and posts a large *Got*; `droppable()` does not help because it is a different event. **Fix (accepted):** both guard keys ignore input for about 300 ms after the swap (the 150 ms crossfade runs inside it). The lock has no visible or spoken mode (a TalkBack user cannot double-tap that fast, and focus lands on the question first). Verify in D1; revisit if the pre-release test B6 shows mistakes.
+
 **T1 (blocker, 2.4.3, 4.1.3): the guard.** Pressing *Fix it* in S3 removes the keypad and the key under TalkBack focus. 04 §4 says "focus moves to the question (read once), then *No*, *Yes*", but the question is plain text and `FocusNode.requestFocus` needs a focusable node; on Android Flutter's input focus does not always carry TalkBack's accessibility focus. If this is not solved, the user loses their place, hears the sheet from the top, and the only thing that changed is silent. **Fix (proposed):**
 1. Wrap the guard question in `Focus` (`skipTraversal: false`) plus `Semantics(label:, focusable: true)` so `requestFocus` can land on it; on the same frame the answer panel is built, request it.
 2. If a device test shows TalkBack does not follow, make the question a `liveRegion` instead and request focus on *No*. Then the order is: question announced, then "No, some is older, button". Accept that a flush may cut the announcement and re-test.
@@ -174,18 +188,18 @@ Trigger: not a text-scale check alone; use the measured available height (`conte
 
 - **Pinned header (S1 fix).** Back and the typed amount in one row, outside the scroll. The user always sees what they type. This is the mockup's own recommendation ("pin the amount"); it is correct.
 - **End-anchored slot.** The scroll region starts scrolled to its end after the first digit (so the gap line, the part that decides, is visible); a 150 ms animated jump normally, instant under reduced motion (M1). The slot stays one semantics node; TalkBack reads the whole of it regardless of scroll, and the region exposes a scroll action.
-- **Sheet fills the height** when tight (drop the handle row and the top gap, the mockup's `sheet.fill`).
-- **Arithmetic at 320x568 at 1.5x:** 28 (status) + 72 (pinned row) + 8 + [region] + 12 + 216 + 12 + 48 + 16 = 412 + region, so **the region has about 156dp**, which holds the whole 150dp slot; the heading scrolls out of view above it. At 2.0x the slot is about 280dp and scrolls inside the same 156dp window (about 4 lines in view, end-anchored). Nothing is removed; content is reachable by scroll and by TalkBack (1.4.4 "no loss of content").
+- **The drag handle row stays (X3).** It is route-level (`showDragHandle`, read once) and measured at **48dp** (`07` §1); keep it unless a measured test shows a drop is needed. If it is dropped, say so in one place. The earlier "drop the handle row" idea and every tight budget below were 28 to 32dp too generous and are recounted.
+- **Arithmetic at 320x568 at 1.5x, recounted:** 28 (status) + 48 (handle) + 72 (pinned row) + 8 + [region] + 12 + 216 (keypad, 48dp tight keys) + 12 + 48 (action key) + 16 = 460 + region, so **the region has about 108dp**, not 156. The 150dp slot therefore scrolls (end-anchored, about 3.5 lines in view); the heading scrolls out of view above it. At 2.0x the slot is about 280dp and scrolls inside the same window (about 3 lines in view). Nothing is removed; content is reachable by scroll and by TalkBack (1.4.4 "no loss of content"). The measured layout test (section 7 item 3) decides whether the handle row must go; that is not decided on paper.
 - **Reading order unchanged**: Back, amount, heading, slot, keys. The heading is read by the sheet name on open (T10), so having the amount before it in the tree does not hide the question. If the team prefers the heading first, give it a lower sort key.
 - **Do not** cut the slot copy to three lines (mockup problem 8): the copy deck's longest lines cannot.
 - The S0 helper (3 lines at 1.5x) stays visible (G1); with the pinned header it sits in the same scrolling region.
 
 ### 3.2 *Used* sheet (S2, proposed)
 
-The mockup (42, problem 1) shows about 534dp needed at 1x, so the sheet already has no spare room at 320x568 and does not fit at 1.5x.
+The mockup (42, problem 1) shows about 534dp needed at 1x, and that used a 16dp handle; with the real 48dp handle it is about 566dp (534 + 32), so the sheet has no spare room at 320x568 and does not fit at 1.5x.
 
 - Same pattern as 3.1: pinned header = Back, amount, and (large text) the *All of it* chip **below** the amount as a full 48dp row (about 140dp wide at 1.5x, so it cannot sit beside a 6-digit amount). Header about 128dp.
-- Scrolling region = heading and slot. Region height at 320x568 at 1.5x: 568 - 28 - 128 - 8 - 12 - 216 - 12 - 48 - 16 = **about 100dp**. The slot is 4 or 5 lines (L1 `savingUsedLeft` 2 lines, L2 `savingUsedSame` 2 lines, 120dp; the refusal is 3 lines + 2 = 150dp). So the region cannot show both.
+- Scrolling region = heading and slot. Region height at 320x568 at 1.5x: 568 - 28 - 128 - 8 - 12 - 216 - 12 - 48 - 16 = about 100dp **before the 48dp handle is counted (X3), so about 52dp with it**; the layout test must decide whether the handle row can stay at this size (`08` X3: keep unless measured otherwise; if dropped, say so in one place). The slot is 4 or 5 lines (L1 `savingUsedLeft` 2 lines, L2 `savingUsedSame` 2 lines, 120dp; the refusal is 3 lines + 2 = 150dp). So the region cannot show both.
 - **Refusal at compact and large text:** the refusal line replaces L1 **and** L2 in the visible slot (3 lines = 90dp, fits the 100dp), and L2 returns on the next valid key. TalkBack reads the refusal once either way. This is a deviation from "L2 always" (04 §9), needed only when there is no room; record it.
 - Keep the shared keypad with 00 and a **wide** *Save* (what mockup 42 drew). 04's wireframe has *Save* in the keypad's bottom-right cell with no `00` key; that conflicts with "shared `Keypad`" and with D13. For accessibility both are fine (a wide key is easier at large text); choose the shared keypad.
 - **Slip step (the saving's sheet):** the body scrolls; **S5 (minor):** at compact heights *Delete saving* scrolls at the end of the body instead of pinning, so a pinned destructive key is never adjacent to the thumb and the scroll window is not 56dp smaller.
@@ -193,21 +207,21 @@ The mockup (42, problem 1) shows about 534dp needed at 1x, so the sheet already 
 
 ### 3.3 Keys and buttons that grow
 
-- **S3 (major).** `KeypadKey` uses `minHeight: keyHeight` (`keypad_key.dart:32`) with digits at 27sp (`keypad.dart:70`). At 2.0x a digit is 54sp, so a key is about 65dp and the 4-row keypad about 284dp (not the 216 the tight layout assumes). **Decision for the owner:** clamp the key label scale at 1.5x (a digit key is already "large text" at 27sp, 40sp at 1.5x, so the loss is small and the key size stays predictable), and say so in UI_DESIGN §9 as a deliberate exception to 1.4.4. If the owner prefers full scaling, the tight layout in 3.1 needs the keypad to scroll or move to a side pane (in landscape and `foldableUnfolded` it already does). Either way test at 2.0x.
+- **S3 (major).** `KeypadKey` uses `minHeight: keyHeight` (`keypad_key.dart:32`) with digits at 27sp (`keypad.dart:70`). At 2.0x a digit is 54sp, so a key would be about 65dp and the 4-row keypad about 284dp. **Decided (owner, O20; X44):** key labels stop growing at 1.5x on the shared keypad (the Add tray too), recorded in UI_DESIGN §9 and NFR-4 as a deliberate WCAG 1.4.4 exception with a DECISIONS row. At 2.0x the keypad is then **4×56 + 24 = 248dp** (not 284); in the tight layout 4×48 + 24 = 216dp. **Check that a 48dp tight key does not grow at 1.5x** (27sp × 1.5 × about 1.2 line height is about 49dp, D13). Test at 2.0x on the tight layout.
 - **S4 (major).** Guard keys: `minHeight` 56dp, `height` never; at 2.0x "Yes, add ₹99,99,99,999" (22 characters at about 34sp) wraps to two lines.
 - **S6 (minor).** Spends parts: at 1.5x on 320dp the trailing "·" pokes about 2dp past the padding. Use mockup 42's option B (no dots, 16dp between parts, amount in `ink` 600, label in `ink2`).
 - Display size (Android "Display size" at Largest) also shrinks the dp width; add a manual check at about 280dp wide (not in `TestWindows`).
 
 ### 3.4 Guard step height (mockup 41 problem 2, M1)
 
-Mockup 41's "hole" (232dp of bare `bg`) is a defect for low-vision users (a large empty gap above two keys reads as a broken screen). **Recommend option B, the sheet shortens:** at 1.5x the guard fits (28 + 72 pinned row + 8 + question 90 + 16 + two keys 120 + 16 = 350dp of 568). The change of height is a resize: under reduced motion it is instant (M1). 05 §2 says "no resize" and must change if B is chosen. Do not scroll the guard keys; two keys fit at every size tested.
+Mockup 41's "hole" (232dp of bare `bg`) is a defect for low-vision users (a large empty gap above two keys reads as a broken screen). **Accepted option B, the sheet shortens (X8):** at 1.5x the guard fits (28 + 48 handle + 72 pinned row + 8 + question 90 + 16 + two keys 120 + 16 = 398dp of 568 with the 48dp handle counted; the earlier 350 omitted it). The change of height is a resize: under reduced motion it is instant (M1). 05 §2 says "no resize" and must change if B is chosen. Do not scroll the guard keys; two keys fit at every size tested.
 
 ## 4. Targets, focus, keyboard, switch access
 
 | Control | Target | Verdict |
 |---|---|---|
-| Digit keys, ⌫ | 64dp, 48dp when tight (the tray rule); grows with text | Pass (S3 for 2.0x) |
-| *Fix it*, *Save* | 56dp wide key (48 tight) | Pass; full width, so 88dp is not a constraint (mockup problem 1) |
+| Digit keys, ⌫ | 56dp, 48dp when tight; grows with text up to the 1.5x clamp (X2, O20) | Pass |
+| *Fix it*, *Save* | 56dp, full-width key under the keypad (48 tight) (X1, X2) | Pass; full width, so 88dp is not a constraint (mockup problem 1) |
 | Guard keys | 56dp min, full width, 8dp apart | Pass; `minHeight` (S4) |
 | *All of it* chip | 48dp | Pass |
 | *Used some of it* | 56dp | Pass |
@@ -222,7 +236,7 @@ Mockup 41's "hole" (232dp of bare `bg`) is a defect for low-vision users (a larg
 - **D99 focus ring.** Ring 2dp plus 2dp gap needs 4dp clear around each control: keys have 8dp gaps; guard keys 8dp; *All of it* sits inside the card's 20dp padding; the missed-log line has 20dp side gutters and 16dp above and below; the foot row has the page gutter. Pass on paper; assert with a widget test (section 7). Snackbar Undo works through the gap band (C4).
 - **K2 (major, 2.5.1).** *Not logged* and *Used* rows are "no tap, swipe deletes with Undo". `entry_row.dart:72` already exposes a custom "delete" semantics action, so TalkBack and Switch Access have a non-gesture path. The new rows must be built through that widget (or copy it) and a test must assert the action exists on both new row types. Without it a TalkBack user cannot undo a wrong *Got* fix after the 4 s snackbar.
 - **K3 (minor).** Long-press ⌫ to clear has `longPress` semantics (TalkBack actions menu, Switch Access menu: shipped). For D-pad there is no Enter-hold; repeated Backspace is the alternative (at most nine). Accept.
-- **K4 (minor).** Hardware keyboard: decide, do not leave open (04 open question 6). Digits type, Backspace is ⌫, Enter is the action key when enabled, Esc is Back; in the guard, Esc is *No* (one step back, as Back is). Arrow keys move in the keypad grid. Tablets and foldables are in scope.
+- **K4 (minor).** Hardware keyboard: **decided, out of these features (X45, O9).** The Add tray maps none and a digit does nothing today (`07` §8); if wanted, one wrapper in `Keypad` serves every keypad page in a later change. Escape and system back already go through `maybePop` (in the guard, Esc is *No*, one step back, as Back is). Arrow keys move in the keypad grid (framework default).
 - **K5 (minor, 2.2.1).** The 4 s Undo extends under TalkBack and restarts on touch or focus (D105, D128). Switch Access users do not enable touch exploration and scanning can take longer than 4 s to reach *Undo*. The documented fallback is deleting the row in Every entry via the action (K2). State this fallback in SPEC next to D105; an owner decision on a longer Undo for the two corrective saves (*Fix it*, *Used*) is open.
 - **Switch Access cost.** 12 keys plus the action is inherent to a keypad; the Settings row is the shorter door when the foot row is far down a long Today list at 2.0x. No change.
 

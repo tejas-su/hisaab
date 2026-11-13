@@ -478,6 +478,10 @@
     }
   },
   "deleteLastDigit": "Delete last digit. Touch and hold to clear all",
+  "amountCap": "That's the most you can type.",
+  "@amountCap": {
+    "description": "Spoken once, politely, when a key past the 9-digit cap is refused; the amount also keeps a ring until the next key is accepted (FR-AD-2)"
+  },
   "categoryName": "{key, select, food{Food} travel{Travel} shopping{Shopping} bills{Bills} fun{Fun} health{Health} home{Home} salary{Money in} other_income{Other income} other{Other}}",
   "@categoryName": {
     "description": "Default name of a seeded category, by its stored key",
@@ -844,7 +848,7 @@
   "@noSavings": {
     "description": "Empty Savings list"
   },
-  "savingName": "{kind, select, rd{RD} sip{SIP} goldScheme{Gold scheme} chit{Chit} other{Saving}}",
+  "savingName": "{kind, select, rd{RD} sip{SIP} goldScheme{Gold scheme} chit{Chit} insurance{Insurance} schoolFees{School fees} festival{Festival} other{Saving}}",
   "@savingName": {
     "description": "Name pill for a common saving",
     "placeholders": {
@@ -2254,5 +2258,52 @@
   "settingsAddTile": "Add to quick settings",
   "@settingsAddTile": {"description": "Settings row; opens Android's own add-tile dialog (FR-SE-6 AC-2)"},
   "settingsAddTileHint": "Add a spend from the pull-down",
-  "@settingsAddTileHint": {"description": "Second line of the Add to quick settings row"}
+  "@settingsAddTileHint": {"description": "Second line of the Add to quick settings row"},
+  "savingSetAside": "{amount} set aside",
+  "@savingSetAside": {
+    "description": "Third line of a saving's row in the Savings list, and under the amount on its sheet: money put in and not yet used (BR-19). Only above zero. Never 'balance' or 'worth'.",
+    "placeholders": {"amount": {"type": "String"}}
+  },
+  "savingsStillSetAside": "{left, plural, =0{Nothing is set aside now.} other{{amount} still set aside}}",
+  "@savingsStillSetAside": {
+    "description": "Second line of the Savings list footer: what is set aside across the active savings, or the zero form after a full use (AC-Y4). left is whole rupees, amount its text.",
+    "placeholders": {"left": {"type": "int"}, "amount": {"type": "String"}}
+  },
+  "savingUsedAction": "Used some of it",
+  "@savingUsedAction": {"description": "Outlined key on a saving's sheet; opens the keypad that says how much of the set-aside money was used (AC-Y5)"},
+  "savingUsedHint": "Paid the cost from this? Tap Used some of it.",
+  "@savingUsedHint": {"description": "Line above the Used some of it key, on the three yearly-cost savings only (AC-Y5)"},
+  "savingUsedQuestion": "How much did you use from {saving}?",
+  "@savingUsedQuestion": {"description": "Title of the Used keypad (AC-Y6)", "placeholders": {"saving": {"type": "String"}}},
+  "savingUsedAll": "All of it",
+  "@savingUsedAll": {"description": "Chip beside the amount on the Used keypad: fills everything that is set aside; a second tap clears it (AC-Y6)"},
+  "savingUsedSetAside": "{amount} is set aside.",
+  "@savingUsedSetAside": {"description": "Line 1 of the Used keypad's slot before a digit is typed (AC-Y7)", "placeholders": {"amount": {"type": "String"}}},
+  "savingUsedLeft": "{left, plural, =0{Nothing will be set aside.} other{{amount} will still be set aside.}}",
+  "@savingUsedLeft": {
+    "description": "Line 1 of the Used keypad's slot while digits are typed: what stays set aside (AC-Y7). left is whole rupees, amount its text.",
+    "placeholders": {"left": {"type": "int"}, "amount": {"type": "String"}}
+  },
+  "savingUsedSame": "Your daily number doesn't change.",
+  "@savingUsedSame": {"description": "Line 2 of the Used keypad's slot, always: using money you set aside moves no number (AC-Y7)"},
+  "savingUsedCap": "That's all you have set aside. Add the rest as a spend.",
+  "@savingUsedCap": {"description": "Replaces line 1 of the Used slot when a digit past what is set aside is refused (AC-Y8)"},
+  "savingUsedNothing": "Nothing is set aside to use.",
+  "@savingUsedNothing": {"description": "The Used slot when what was set aside fell to zero behind the sheet; Save is off (AC-Y8)"},
+  "typeAmountFirst": "Type an amount first.",
+  "@typeAmountFirst": {"description": "Screen-reader hint on a disabled Save key of the Used keypad; spoken only, never shown"},
+  "savingYearlyCaption": "Paid once a year? Each month, put in the cost divided by 12.",
+  "@savingYearlyCaption": {"description": "Under the amount question for the Insurance, School fees and Festival savings only (AC-Y2)"},
+  "savingYearlyUsedHint": "When you pay it, tap Used some of it.",
+  "@savingYearlyUsedHint": {"description": "Second sentence under the yearly-cost caption (AC-Y2)"},
+  "savingUsedDone": "{saving}: {amount} used",
+  "@savingUsedDone": {"description": "Snackbar after Used some of it is saved, with Undo; the saving's name first (AC-Y9)", "placeholders": {"saving": {"type": "String"}, "amount": {"type": "String"}}},
+  "savingDeletedKeeps": "{saving} deleted. What you put in stays in your history.",
+  "@savingDeletedKeeps": {"description": "Snackbar after deleting a saving that has had a put-in (AC-Y10)", "placeholders": {"saving": {"type": "String"}}},
+  "entryUsed": "Used from savings",
+  "@entryUsed": {"description": "Second line of a Used row: a cost paid from a saving (BR-19, D187)"},
+  "entryUsedSpoken": "{saving}. Used from savings {amount}.",
+  "@entryUsedSpoken": {"description": "Screen-reader label of a Used row; amount is spoken, e.g. 4,000 rupees", "placeholders": {"saving": {"type": "String"}, "amount": {"type": "String"}}},
+  "entryUsedDetail": "Paid from what you set aside.",
+  "@entryUsedDetail": {"description": "Extra line under a Used row in Every entry (FR-SP-6)"}
 }

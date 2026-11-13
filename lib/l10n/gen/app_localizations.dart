@@ -583,6 +583,12 @@ abstract class AppLocalizations {
   /// **'Delete last digit. Touch and hold to clear all'**
   String get deleteLastDigit;
 
+  /// Spoken once, politely, when a key past the 9-digit cap is refused; the amount also keeps a ring until the next key is accepted (FR-AD-2)
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s the most you can type.'**
+  String get amountCap;
+
   /// Default name of a seeded category, by its stored key
   ///
   /// In en, this message translates to:
@@ -1108,7 +1114,7 @@ abstract class AppLocalizations {
   /// Name pill for a common saving
   ///
   /// In en, this message translates to:
-  /// **'{kind, select, rd{RD} sip{SIP} goldScheme{Gold scheme} chit{Chit} other{Saving}}'**
+  /// **'{kind, select, rd{RD} sip{SIP} goldScheme{Gold scheme} chit{Chit} insurance{Insurance} schoolFees{School fees} festival{Festival} other{Saving}}'**
   String savingName(String kind);
 
   /// First question when adding a saving
@@ -2700,6 +2706,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a spend from the pull-down'**
   String get settingsAddTileHint;
+
+  /// Third line of a saving's row in the Savings list, and under the amount on its sheet: money put in and not yet used (BR-19). Only above zero. Never 'balance' or 'worth'.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside'**
+  String savingSetAside(String amount);
+
+  /// Second line of the Savings list footer: what is set aside across the active savings, or the zero form after a full use (AC-Y4). left is whole rupees, amount its text.
+  ///
+  /// In en, this message translates to:
+  /// **'{left, plural, =0{Nothing is set aside now.} other{{amount} still set aside}}'**
+  String savingsStillSetAside(int left, String amount);
+
+  /// Outlined key on a saving's sheet; opens the keypad that says how much of the set-aside money was used (AC-Y5)
+  ///
+  /// In en, this message translates to:
+  /// **'Used some of it'**
+  String get savingUsedAction;
+
+  /// Line above the Used some of it key, on the three yearly-cost savings only (AC-Y5)
+  ///
+  /// In en, this message translates to:
+  /// **'Paid the cost from this? Tap Used some of it.'**
+  String get savingUsedHint;
+
+  /// Title of the Used keypad (AC-Y6)
+  ///
+  /// In en, this message translates to:
+  /// **'How much did you use from {saving}?'**
+  String savingUsedQuestion(String saving);
+
+  /// Chip beside the amount on the Used keypad: fills everything that is set aside; a second tap clears it (AC-Y6)
+  ///
+  /// In en, this message translates to:
+  /// **'All of it'**
+  String get savingUsedAll;
+
+  /// Line 1 of the Used keypad's slot before a digit is typed (AC-Y7)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} is set aside.'**
+  String savingUsedSetAside(String amount);
+
+  /// Line 1 of the Used keypad's slot while digits are typed: what stays set aside (AC-Y7). left is whole rupees, amount its text.
+  ///
+  /// In en, this message translates to:
+  /// **'{left, plural, =0{Nothing will be set aside.} other{{amount} will still be set aside.}}'**
+  String savingUsedLeft(int left, String amount);
+
+  /// Line 2 of the Used keypad's slot, always: using money you set aside moves no number (AC-Y7)
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily number doesn\'t change.'**
+  String get savingUsedSame;
+
+  /// Replaces line 1 of the Used slot when a digit past what is set aside is refused (AC-Y8)
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s all you have set aside. Add the rest as a spend.'**
+  String get savingUsedCap;
+
+  /// The Used slot when what was set aside fell to zero behind the sheet; Save is off (AC-Y8)
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is set aside to use.'**
+  String get savingUsedNothing;
+
+  /// Screen-reader hint on a disabled Save key of the Used keypad; spoken only, never shown
+  ///
+  /// In en, this message translates to:
+  /// **'Type an amount first.'**
+  String get typeAmountFirst;
+
+  /// Under the amount question for the Insurance, School fees and Festival savings only (AC-Y2)
+  ///
+  /// In en, this message translates to:
+  /// **'Paid once a year? Each month, put in the cost divided by 12.'**
+  String get savingYearlyCaption;
+
+  /// Second sentence under the yearly-cost caption (AC-Y2)
+  ///
+  /// In en, this message translates to:
+  /// **'When you pay it, tap Used some of it.'**
+  String get savingYearlyUsedHint;
+
+  /// Snackbar after Used some of it is saved, with Undo; the saving's name first (AC-Y9)
+  ///
+  /// In en, this message translates to:
+  /// **'{saving}: {amount} used'**
+  String savingUsedDone(String saving, String amount);
+
+  /// Snackbar after deleting a saving that has had a put-in (AC-Y10)
+  ///
+  /// In en, this message translates to:
+  /// **'{saving} deleted. What you put in stays in your history.'**
+  String savingDeletedKeeps(String saving);
+
+  /// Second line of a Used row: a cost paid from a saving (BR-19, D187)
+  ///
+  /// In en, this message translates to:
+  /// **'Used from savings'**
+  String get entryUsed;
+
+  /// Screen-reader label of a Used row; amount is spoken, e.g. 4,000 rupees
+  ///
+  /// In en, this message translates to:
+  /// **'{saving}. Used from savings {amount}.'**
+  String entryUsedSpoken(String saving, String amount);
+
+  /// Extra line under a Used row in Every entry (FR-SP-6)
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from what you set aside.'**
+  String get entryUsedDetail;
 }
 
 class _AppLocalizationsDelegate

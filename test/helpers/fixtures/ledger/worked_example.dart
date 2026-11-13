@@ -55,6 +55,24 @@ abstract final class WorkedExample {
     nextDue: const CalendarDate(2026, 11, 10),
   );
 
+  /// A ₹1,000 yearly-cost saving ("Insurance") on the 5th (BR-19). Not in [rules]; tests add it.
+  static final RecurringRule insurance = RecurringRule(
+    id: 5,
+    label: 'Insurance',
+    amount: Money.fromMajor(1000),
+    kind: EntryKind.saved,
+    categoryId: SeedCategoryIds.saved,
+    schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 5)),
+    nextDue: const CalendarDate(2026, 11, 5),
+  );
+
+  /// Twelve ₹1,000 put-ins to [insurance], 5 Nov 2025 to 5 Oct 2026 (₹12,000). Not in [entries].
+  static List<Entry> get insurancePutIns => List<Entry>.generate(12, (int index) {
+        final int monthIndex = 10 + index;
+        final CalendarDate date = CalendarDate(2025 + monthIndex ~/ 12, monthIndex % 12 + 1, 5);
+        return _entry(100 + index, 1000, EntryKind.saved, SeedCategoryIds.saved, date, recurringId: 5);
+      });
+
   static List<RecurringRule> get rules => <RecurringRule>[salary, rent, electricity];
 
   /// I = ₹45,000; S_prev = ₹27,150 (₹8,200 rent + ₹18,950 typed); S_today = ₹420.

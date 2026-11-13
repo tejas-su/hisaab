@@ -22,7 +22,8 @@ final class HomeLoading extends HomeState {
 ///
 /// [undo] holds an entry just deleted, so the page can offer Undo once (SPEC BR-10); [billUndo]
 /// does the same for a bill deleted from its sheet (D118), and [amountUndo] for a waiting bill
-/// just entered or skipped (D123).
+/// just entered or skipped (D123), and [usedUndo] for a *Used* save (AC-Y9). [billUndoKeepsHistory]
+/// says the saving in [billUndo] has had a put-in, so its Undo bar says what stays (AC-Y10).
 /// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
 /// [billNames] names each bill rule by id, so a row a bill posted says which bill it is.
 final class HomeReady extends HomeState {
@@ -35,6 +36,8 @@ final class HomeReady extends HomeState {
     this.undo = const Option<Entry>.none(),
     this.billUndo = const Option<RecurringRule>.none(),
     this.amountUndo = const Option<BillAmountOutcome>.none(),
+    this.usedUndo = const Option<UsedOutcome>.none(),
+    this.billUndoKeepsHistory = false,
     this.showWeek = false,
     this.billNames = const <int, String>{},
   });
@@ -55,16 +58,20 @@ final class HomeReady extends HomeState {
   final Option<Entry> undo;
   final Option<RecurringRule> billUndo;
   final Option<BillAmountOutcome> amountUndo;
+  final Option<UsedOutcome> usedUndo;
+  final bool billUndoKeepsHistory;
   final bool showWeek;
   final Map<int, String> billNames;
 
-  /// Returns a copy with the given fields replaced; [undo], [billUndo] and [amountUndo] reset
-  /// unless passed.
+  /// Returns a copy with the given fields replaced; [undo], [billUndo], [amountUndo], [usedUndo] and
+  /// [billUndoKeepsHistory] reset unless passed.
   HomeReady copyWith({
     List<Entry>? todayEntries,
     Option<Entry> undo = const Option<Entry>.none(),
     Option<RecurringRule> billUndo = const Option<RecurringRule>.none(),
     Option<BillAmountOutcome> amountUndo = const Option<BillAmountOutcome>.none(),
+    Option<UsedOutcome> usedUndo = const Option<UsedOutcome>.none(),
+    bool billUndoKeepsHistory = false,
     bool? showWeek,
   }) =>
       HomeReady(
@@ -76,12 +83,14 @@ final class HomeReady extends HomeState {
         undo: undo,
         billUndo: billUndo,
         amountUndo: amountUndo,
+        usedUndo: usedUndo,
+        billUndoKeepsHistory: billUndoKeepsHistory,
         showWeek: showWeek ?? this.showWeek,
         billNames: billNames,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, showWeek, billNames];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, usedUndo, billUndoKeepsHistory, showWeek, billNames];
 }
 
 /// Loading failed; a quiet message with Try again.

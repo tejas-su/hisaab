@@ -45,4 +45,22 @@ void main() {
       expect(missing.getLeft().toNullable(), isA<InvalidDataFailure>());
     });
   });
+  group('EntryModel saving_id (D175)', () {
+    test('fromRow reads saving_id and toRow writes it back', () {
+      final Map<String, Object?> row = <String, Object?>{..._row, TransactionColumns.kind: 'used', TransactionColumns.savingId: 5};
+
+      final EntryModel model = EntryModel.fromRow(row).getOrElse((Failure f) => fail(f.message));
+
+      expect(model.savingId, 5);
+      expect(model.toRow(), row);
+    });
+
+    test('a string saving_id is InvalidDataFailure', () {
+      final Either<Failure, EntryModel> result =
+          EntryModel.fromRow(<String, Object?>{..._row, TransactionColumns.savingId: '5'});
+
+      expect(result.getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+  });
+
 }

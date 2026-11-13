@@ -215,4 +215,37 @@ void main() {
       expect(recurring.rules.map((RecurringRule r) => r.nextDue), WorkedExample.rules.map((RecurringRule r) => r.nextDue));
     });
   });
+  group('ProjectWidgetDays with a Used entry (FR-WG-5, BR-19, U7)', () {
+    test('the snapshot after a used entry has the same hero for today and every later day', () async {
+      final AppDatabase database = await openTestDatabase();
+      final _RealLedger real = _RealLedger(database, FakeClock(DateTime(2026, 10, 26, 21)));
+      await real.rule('Salary', 45000, EntryKind.got, _monthly(const CalendarDate(2026, 10, 4)), income: true, category: SeedCategoryIds.salary);
+      await real.rule('Rent', 8200, EntryKind.spent, _monthly(const CalendarDate(2026, 10, 5)), category: SeedCategoryIds.home);
+      await real.rule('Insurance', 1000, EntryKind.saved, _monthly(const CalendarDate(2026, 10, 5)), category: SeedCategoryIds.saved);
+      await real.spend(420, const CalendarDate(2026, 10, 26));
+      final List<ProjectedDay> before = _right(await real.projector.call(const NoParams()).run());
+
+      _right(
+        await real.ledger
+            .addForSaving(
+              EntryDraft(
+                amount: Money.fromMajor(12000),
+                kind: EntryKind.used,
+                categoryId: SeedCategoryIds.saved,
+                date: const CalendarDate(2026, 10, 26),
+                note: 'Insurance',
+              ),
+              savingId: 1,
+            )
+            .run(),
+      );
+      final List<ProjectedDay> after = _right(await real.projector.call(const NoParams()).run());
+
+      expect(after, before);
+      expect(after.first.summary.safeToday, before.first.summary.safeToday);
+      // why: checking against the real engine posts the bills of every day, so it runs last.
+      await _expectParity(real);
+    });
+  });
+
 }

@@ -86,4 +86,17 @@ void main() {
       }
     });
   });
+  group('EntryMapper savingId (D175)', () {
+    test('savingId round-trips through toModel and toEntity', () {
+      final EntryModel model = EntryMapper.toModel(_entry.draft, createdAt: DateTime(2026, 10, 26, 10, 30), id: 4, savingId: 5);
+
+      expect(model.savingId, 5);
+      expect(EntryMapper.toEntity(model).getRight().toNullable()?.savingId, 5);
+    });
+
+    test('a null savingId stays null', () {
+      expect(EntryMapper.toEntity(_model).getRight().toNullable()?.savingId, isNull);
+    });
+  });
+
 }

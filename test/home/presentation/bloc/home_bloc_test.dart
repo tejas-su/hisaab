@@ -290,6 +290,33 @@ void main() {
     });
   });
 
+  group('HomeBloc under overlapping holds (D91)', () {
+    test('a reload waits until the last hold closes', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayOpened());
+      await ledger.add(EntryDraft(amount: Money.fromMajor(100), kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      await pumpEventQueue();
+
+      await bloc.dispatch(const HomeTrayClosed());
+      await pumpEventQueue();
+      expect(ready().summary.spentToday, Money.fromMajor(420));
+
+      await bloc.dispatch(const HomeTrayClosed());
+      expect(ready().summary.spentToday, Money.fromMajor(520));
+    });
+
+    test('a close with nothing held does not block the next reload', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      await bloc.dispatch(const HomeTrayClosed());
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayClosed());
+      await ledger.add(EntryDraft(amount: Money.fromMajor(100), kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      await pumpEventQueue();
+      expect(ready().summary.spentToday, Money.fromMajor(520));
+    });
+  });
+
   group('HomeBloc delete and undo (BR-10)', () {
     setUp(() => bloc.dispatch(const HomeLoadRequested()));
 
@@ -573,4 +600,152 @@ void main() {
     expect(HomeBillAmountDone(skipped).props, <Object?>[skipped]);
     expect(HomeBillAmountUndoRequested(skipped).props, <Object?>[skipped]);
   });
+  group('HomeBloc a Used save (AC-Y9, AC-Y10, NFR-12)', () {
+    Entry usedEntry() => Entry(
+          id: 900,
+          amount: Money.fromMajor(4000),
+          kind: EntryKind.used,
+          categoryId: 11,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          note: 'Insurance',
+          savingId: 5,
+        );
+
+    UsedOutcome outcome() => UsedOutcome(entry: usedEntry(), saving: WorkedExample.insurance);
+
+    test('HomeUsedDone before the first load waits and shows on the first good load', () async {
+      await bloc.dispatch(HomeUsedDone(outcome()));
+      expect(bloc.state, isA<HomeLoading>());
+
+      await bloc.dispatch(const HomeLoadRequested());
+
+      expect(ready().usedUndo, Option<UsedOutcome>.of(outcome()));
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().usedUndo, const Option<UsedOutcome>.none());
+    });
+
+    test('HomeUsedDone on a loaded Home offers Undo once', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+
+      await bloc.dispatch(HomeUsedDone(outcome()));
+
+      expect(ready().usedUndo, Option<UsedOutcome>.of(outcome()));
+    });
+
+    test('HomeUsedUndoRequested deletes through DeleteEntry', () async {
+      ledger.entries.add(usedEntry());
+      await bloc.dispatch(const HomeLoadRequested());
+
+      await bloc.dispatch(HomeUsedUndoRequested(usedEntry()));
+
+      expect(ledger.entries.where((Entry e) => e.id == 900), isEmpty);
+    });
+
+    test('a failed Undo is quiet', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+
+      await bloc.dispatch(HomeUsedUndoRequested(usedEntry()));
+
+      expect(bloc.state, isA<HomeReady>());
+    });
+
+    test('two overlapping holds keep Home held until both have closed (E110)', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayOpened());
+      ledger.entries.add(usedEntry());
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().todayEntries.map((Entry e) => e.id), isNot(contains(900)));
+
+      await bloc.dispatch(const HomeTrayClosed());
+      await bloc.dispatch(const HomeLoadRequested());
+      expect(ready().todayEntries.map((Entry e) => e.id), isNot(contains(900)));
+
+      await bloc.dispatch(const HomeTrayClosed());
+      await pumpEventQueue();
+
+      expect(ready().todayEntries.map((Entry e) => e.id), contains(900));
+    });
+
+    test('deleting a saving with a put-in offers Undo that says what stays (AC-Y10)', () async {
+      ledger.entries.addAll(WorkedExample.insurancePutIns);
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.insurance];
+      await bloc.dispatch(const HomeLoadRequested());
+      final Future<void> offered = expectLater(
+        bloc.stream,
+        emitsThrough(
+          isA<HomeReady>()
+              .having((HomeReady s) => s.billUndo, 'billUndo', Option<RecurringRule>.of(WorkedExample.insurance))
+              .having((HomeReady s) => s.billUndoKeepsHistory, 'keeps history', isTrue),
+        ),
+      );
+
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.insurance));
+
+      await offered;
+    });
+
+    test('deleting a saving with no put-in does not', () async {
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.insurance];
+      await bloc.dispatch(const HomeLoadRequested());
+      final Future<void> offered = expectLater(
+        bloc.stream,
+        emitsThrough(
+          isA<HomeReady>()
+              .having((HomeReady s) => s.billUndo.isSome(), 'has Undo', isTrue)
+              .having((HomeReady s) => s.billUndoKeepsHistory, 'keeps history', isFalse),
+        ),
+      );
+
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.insurance));
+
+      await offered;
+    });
+
+    test('deleting a bill never says what stays, and a failed read of the totals does not stop the delete', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      final Future<void> offered = expectLater(
+        bloc.stream,
+        emitsThrough(isA<HomeReady>().having((HomeReady s) => s.billUndo.isSome(), 'has Undo', isTrue).having((HomeReady s) => s.billUndoKeepsHistory, 'keeps history', isFalse)),
+      );
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.rent));
+      await offered;
+
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.insurance];
+      await bloc.dispatch(const HomeLoadRequested());
+      ledger.failure = DatabaseFailure('ledger');
+      await bloc.dispatch(HomeBillDeleteRequested(WorkedExample.insurance));
+      expect(recurring.stopped, contains(WorkedExample.insurance));
+    });
+
+    test('the new events compare by their fields', () {
+      expect(HomeUsedDone(outcome()).props, <Object?>[outcome()]);
+      expect(HomeUsedUndoRequested(usedEntry()).props, <Object?>[usedEntry()]);
+    });
+  });
+
+  group('HomeBloc a Used entry today (BR-19, FR-HO-4)', () {
+    test('is listed but is never a bite, and the hero does not move', () async {
+      await bloc.dispatch(const HomeLoadRequested());
+      final Money before = ready().summary.safeToday;
+      ledger.entries.add(Entry(
+        id: 52,
+        amount: Money.fromMajor(4000),
+        kind: EntryKind.used,
+        categoryId: 11,
+        date: WorkedExample.today,
+        createdAt: WorkedExample.now,
+        note: 'Insurance',
+        savingId: 5,
+      ));
+
+      await bloc.dispatch(const HomeLoadRequested());
+
+      expect(ready().todayEntries.map((Entry e) => e.id), contains(52));
+      expect(ready().todaySpends.map((Entry e) => e.id), isNot(contains(52)));
+      expect(ready().summary.safeToday, before);
+    });
+  });
+
 }

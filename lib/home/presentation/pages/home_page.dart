@@ -71,6 +71,10 @@ class HomePage extends StatelessWidget {
               listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.amountUndo.isSome(),
               listener: _offerAmountUndo,
             ),
+            BlocListener<HomeBloc, HomeState>(
+              listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.usedUndo.isSome(),
+              listener: _offerUsedUndo,
+            ),
           ],
           child: BlocConsumer<HomeBloc, HomeState>(
             listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
@@ -181,8 +185,25 @@ class HomePage extends StatelessWidget {
     final HomeBloc bloc = context.read<HomeBloc>();
     HisaabSnackbarHost.of(context).show(
       HisaabSnackbar(
-        message: strings.ruleDeleted(deleted),
+        message: strings.ruleDeleted(deleted, keepsHistory: state is HomeReady && state.billUndoKeepsHistory),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeBillUndoRequested(deleted))),
+      ),
+    );
+  }
+
+  // why: Undo deletes the entry and does not reopen the sheet (AC-Y9).
+  static void _offerUsedUndo(BuildContext context, HomeState state) {
+    final UsedOutcome? used = state is HomeReady ? state.usedUndo.toNullable() : null;
+    if (used == null) {
+      return;
+    }
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final HomeBloc bloc = context.read<HomeBloc>();
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.savingUsedDone(used.saving.label, context.money.format(used.entry.amount)),
+        semanticsLabel: strings.savingUsedDone(used.saving.label, strings.spokenAmount(context.money.digits(used.entry.amount))),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeUsedUndoRequested(used.entry))),
       ),
     );
   }

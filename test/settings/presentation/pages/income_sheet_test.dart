@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
@@ -5,6 +7,7 @@ import 'package:hisaab/core/time/pay_rule.dart';
 import 'package:hisaab/core/time/pay_switch.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/core/widgets/keypad.dart';
+import 'package:hisaab/core/widgets/amount_display.dart';
 import 'package:hisaab/core/widgets/signal_key.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/settings/presentation/bloc/income_sheet_bloc.dart';
@@ -24,6 +27,7 @@ import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/pinned_keypad_expectations.dart';
 
 void main() {
   late FakeRecurringRepository recurring;
@@ -50,6 +54,7 @@ void main() {
     Size size = TestWindows.phone,
     double textScale = 1,
     ThemeMode themeMode = ThemeMode.light,
+    List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
   }) async {
     final IncomeSheetBloc bloc = await tester.buildBloc(
       () => IncomeSheetBloc(
@@ -68,7 +73,7 @@ void main() {
         haptics: FakeHaptics(),
       ),
     );
-    await pumpApp(tester, const Scaffold(), size: size, textScale: textScale, themeMode: themeMode);
+    await pumpApp(tester, const Scaffold(), size: size, textScale: textScale, themeMode: themeMode, displayFeatures: displayFeatures);
     bool closed = false;
     IncomeSheet.show(tester.element(find.byType(Scaffold)), bloc).then((void _) => closed = true).ignore();
     await tester.settle();
@@ -387,5 +392,21 @@ void main() {
       await expectLater(tester, meetsGuideline(textContrastGuideline));
       handle.dispose();
     });
+  });
+
+  group('IncomeSheet amount question keeps its keypad on screen (P2, P3)', () {
+    for (final PinnedCase window in pinnedCases) {
+      testWidgets('the amount, keypad and Save are inside the ${window.name} window', (WidgetTester tester) async {
+        setBottomInset(tester, window.bottomInset);
+        await open(tester, size: window.size, textScale: window.textScale, displayFeatures: window.features);
+        await tapKey(tester, const ValueKey<String>('income-row-amount'));
+        expectPinnedOnScreen(
+          tester,
+          window: window,
+          amount: find.byType(AmountDisplay),
+          action: find.byKey(const ValueKey<String>('income-sheet-save')),
+        );
+      });
+    }
   });
 }

@@ -50,7 +50,8 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
 
   void _onRenamed(BillEditorRenamed event, Emitter<BillEditorState> emit) => _whenAt(
         BillEditorStage.name,
-        (BillEditorInProgress form) => emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none())),
+        (BillEditorInProgress form) =>
+            emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none(), yearlyPill: false)),
       );
 
   // why: a pick only fills the name, so nothing changes under the person while they're naming the bill;
@@ -67,7 +68,7 @@ class BillEditorBloc extends Bloc<BillEditorEvent, BillEditorState> {
         BillEditorStage.name,
         (BillEditorInProgress form) {
           unawaited(_haptics.tick());
-          emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none()));
+          emit(form.copyWith(label: event.label, kind: const Option<BillKind>.none(), yearlyPill: event.kind.isYearlyCost));
         },
       );
 

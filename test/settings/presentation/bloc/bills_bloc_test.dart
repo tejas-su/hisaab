@@ -207,4 +207,254 @@ void main() {
       expect(ready().saved, const Option<SavedTotal>.none());
     });
   });
+  group('BillsBloc set aside (AC-Y3, AC-Y4, D177)', () {
+    late BillsBloc savings;
+
+    BillsBloc savingsList(FakeLedgerRepository ledger) => BillsBloc(
+          getBills: GetBills(recurring: recurring),
+          deleteBill: DeleteBill(recurring: recurring),
+          restoreBill: RestoreBill(recurring: recurring),
+          recurring: recurring,
+          haptics: haptics,
+          getSavedTotal: GetSavedTotal(ledger: ledger),
+          getSetAside: GetSetAside(recurring: recurring, ledger: ledger),
+          ledger: ledger,
+          kind: EntryKind.saved,
+        );
+
+    setUp(() {
+      ledger = FakeLedgerRepository(<Entry>[...WorkedExample.entries, ...WorkedExample.insurancePutIns]);
+      recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.insurance];
+      savings = savingsList(ledger);
+    });
+
+    tearDown(() => savings.close());
+
+    test("a savings list loads each saving's set-aside beside the put-in total", () async {
+      await savings.dispatch(const BillsLoadRequested());
+
+      final BillsReady loaded = savings.state as BillsReady;
+      expect(loaded.setAside.map((SetAsideSummary s) => s.perSaving).toNullable(), <int, Money>{5: Money.fromMajor(12000)});
+      expect(loaded.saved.map((SavedTotal t) => t.total), Option<Money>.of(Money.fromMajor(12000)));
+    });
+
+    test('a ledger write reloads the set-aside, so a Used from the sheet updates the list', () async {
+      await savings.dispatch(const BillsLoadRequested());
+
+      await ledger
+          .addForSaving(
+            EntryDraft(
+              amount: Money.fromMajor(4000),
+              kind: EntryKind.used,
+              categoryId: SeedCategoryIds.saved,
+              date: WorkedExample.today,
+              note: 'Insurance',
+            ),
+            savingId: 5,
+          )
+          .run();
+      await pumpEventQueue();
+
+      final BillsReady loaded = savings.state as BillsReady;
+      expect(loaded.setAside.map((SetAsideSummary s) => s.stillSetAside), Option<Money>.of(Money.fromMajor(8000)));
+      expect(loaded.saved.map((SavedTotal t) => t.total), Option<Money>.of(Money.fromMajor(12000)));
+    });
+
+    test('a spent list never calls GetSetAside', () async {
+      final BillsBloc spent = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: ledger),
+        getSetAside: GetSetAside(recurring: recurring, ledger: ledger),
+        ledger: ledger,
+      );
+      addTearDown(spent.close);
+      // why: GetSetAside reads the ledger, so a failing ledger would fail the load if it were called.
+      ledger.failure = DatabaseFailure('ledger');
+
+      await spent.dispatch(const BillsLoadRequested());
+
+      expect((spent.state as BillsReady).setAside, const Option<SetAsideSummary>.none());
+    });
+
+    test('a savings list built without GetSetAside has no set-aside', () async {
+      final BillsBloc plain = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: ledger),
+        ledger: ledger,
+        kind: EntryKind.saved,
+      );
+      addTearDown(plain.close);
+
+      await plain.dispatch(const BillsLoadRequested());
+
+      expect((plain.state as BillsReady).setAside, const Option<SetAsideSummary>.none());
+    });
+
+    test('a failed set-aside read shows BillsFailed', () async {
+      ledger.failure = DatabaseFailure('ledger');
+
+      await savings.dispatch(const BillsLoadRequested());
+
+      expect(savings.state, isA<BillsFailed>());
+    });
+
+    test('a delete keeps the set-aside it already loaded', () async {
+      await savings.dispatch(const BillsLoadRequested());
+
+      await savings.dispatch(BillsDeleteRequested(WorkedExample.insurance));
+
+      expect((savings.state as BillsReady).setAside.isSome(), isTrue);
+    });
+  });
+
+  group('BillsBloc a Used save and a saving delete (AC-Y9, AC-Y10)', () {
+    late BillsBloc savings;
+    late FakeLedgerRepository savingLedger;
+
+    Entry usedEntry() => Entry(
+          id: 900,
+          amount: Money.fromMajor(4000),
+          kind: EntryKind.used,
+          categoryId: SeedCategoryIds.saved,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          note: 'Insurance',
+          savingId: 5,
+        );
+
+    UsedOutcome outcome() => UsedOutcome(entry: usedEntry(), saving: WorkedExample.insurance);
+
+    setUp(() {
+      savingLedger = FakeLedgerRepository(<Entry>[...WorkedExample.insurancePutIns]);
+      recurring.rules = <RecurringRule>[WorkedExample.insurance];
+      savings = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: savingLedger),
+        getSetAside: GetSetAside(recurring: recurring, ledger: savingLedger),
+        ledger: savingLedger,
+        deleteEntry: DeleteEntry(ledger: savingLedger),
+        kind: EntryKind.saved,
+      );
+    });
+
+    tearDown(() async {
+      await savings.close();
+      await savingLedger.dispose();
+    });
+
+    test('BillsUsedDone shows the Undo state once', () async {
+      await savings.dispatch(const BillsLoadRequested());
+
+      await savings.dispatch(BillsUsedDone(outcome()));
+
+      expect((savings.state as BillsReady).usedUndo, Option<UsedOutcome>.of(outcome()));
+      expect((savings.state as BillsReady).saved.isSome(), isTrue);
+    });
+
+    test('BillsUsedDone before the list has loaded does nothing', () async {
+      await savings.dispatch(BillsUsedDone(outcome()));
+
+      expect(savings.state, const BillsLoading());
+    });
+
+    test('Undo deletes the entry and the list reloads with the money set aside again', () async {
+      await savings.dispatch(const BillsLoadRequested());
+      await savingLedger.addForSaving(usedEntry().draft, savingId: 5).run();
+      await pumpEventQueue();
+      final Entry written = savingLedger.entries.last;
+
+      await savings.dispatch(BillsUsedUndoRequested(written));
+      await pumpEventQueue();
+
+      expect(savingLedger.entries.where((Entry e) => e.kind == EntryKind.used), isEmpty);
+      expect((savings.state as BillsReady).setAside.map((SetAsideSummary s) => s.stillSetAside), Option<Money>.of(Money.fromMajor(12000)));
+    });
+
+    test('Undo is quiet when the entry is gone', () async {
+      await savings.dispatch(const BillsLoadRequested());
+
+      await savings.dispatch(BillsUsedUndoRequested(usedEntry()));
+
+      expect(savings.state, isA<BillsReady>());
+    });
+
+    test('a list built with no DeleteEntry ignores Undo', () async {
+      final BillsBloc plain = BillsBloc(
+        getBills: GetBills(recurring: recurring),
+        deleteBill: DeleteBill(recurring: recurring),
+        restoreBill: RestoreBill(recurring: recurring),
+        recurring: recurring,
+        haptics: haptics,
+        getSavedTotal: GetSavedTotal(ledger: savingLedger),
+        ledger: savingLedger,
+        kind: EntryKind.saved,
+      );
+      addTearDown(plain.close);
+      savingLedger.entries.add(usedEntry());
+
+      await plain.dispatch(BillsUsedUndoRequested(usedEntry()));
+
+      expect(savingLedger.entries.where((Entry e) => e.id == 900), hasLength(1));
+    });
+
+    test('deleting a saving with a put-in offers Undo that says what stays (AC-Y10)', () async {
+      await savings.dispatch(const BillsLoadRequested());
+      final Future<void> offered = expectLater(
+        savings.stream,
+        emitsThrough(isA<BillsReady>().having((BillsReady s) => s.undoKeepsHistory, 'keeps history', isTrue)),
+      );
+
+      await savings.dispatch(BillsDeleteRequested(WorkedExample.insurance));
+
+      await offered;
+    });
+
+    test('deleting a saving with no put-in does not', () async {
+      savingLedger.entries.clear();
+      await savings.dispatch(const BillsLoadRequested());
+      final Future<void> offered = expectLater(
+        savings.stream,
+        emitsThrough(isA<BillsReady>().having((BillsReady s) => s.undo.isSome(), 'has Undo', isTrue).having((BillsReady s) => s.undoKeepsHistory, 'keeps history', isFalse)),
+      );
+
+      await savings.dispatch(BillsDeleteRequested(WorkedExample.insurance));
+
+      await offered;
+    });
+
+    test('a failed read of the totals does not stop the delete or the Undo', () async {
+      await savings.dispatch(const BillsLoadRequested());
+      savingLedger.failure = DatabaseFailure('ledger');
+
+      await savings.dispatch(BillsDeleteRequested(WorkedExample.insurance));
+
+      expect(recurring.stopped, contains(WorkedExample.insurance));
+    });
+
+    test('deleting a bill never says what stays', () async {
+      recurring.rules = WorkedExample.rules;
+      await bloc.dispatch(const BillsLoadRequested());
+      final Future<void> offered = expectLater(
+        bloc.stream,
+        emitsThrough(isA<BillsReady>().having((BillsReady s) => s.undo.isSome(), 'has Undo', isTrue).having((BillsReady s) => s.undoKeepsHistory, 'keeps history', isFalse)),
+      );
+
+      await bloc.dispatch(BillsDeleteRequested(WorkedExample.rent));
+
+      await offered;
+    });
+  });
+
 }

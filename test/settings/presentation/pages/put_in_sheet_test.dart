@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:hisaab/core/design/hisaab_dimensions.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/widgets/amount_display.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/time/month_start.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
@@ -21,6 +24,7 @@ import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/pinned_keypad_expectations.dart';
 
 void main() {
   late FakeLedgerRepository ledger;
@@ -44,7 +48,12 @@ void main() {
 
   tearDown(() => ledger.dispose());
 
-  Future<void> open(WidgetTester tester, {Size size = TestWindows.phone, MonthStart monthStart = MonthStart.payday}) async {
+  Future<void> open(WidgetTester tester, {
+    Size size = TestWindows.phone,
+    MonthStart monthStart = MonthStart.payday,
+    double textScale = 1,
+    List<DisplayFeature> displayFeatures = const <DisplayFeature>[],
+  }) async {
     final FakeClock clock = FakeClock(WorkedExample.now);
     final GetCycleSummary summary = GetCycleSummary(
       ledger: ledger,
@@ -60,7 +69,7 @@ void main() {
         haptics: FakeHaptics(),
       )..add(const PutInExtraLoadRequested()),
     );
-    await pumpApp(tester, const Scaffold(), size: size);
+    await pumpApp(tester, const Scaffold(), size: size, textScale: textScale, displayFeatures: displayFeatures);
     PutInSheet.show(tester.element(find.byType(Scaffold)), bloc).ignore();
     await tester.settle();
   }
@@ -140,5 +149,20 @@ void main() {
       expect(find.byType(PutInSheet), findsOneWidget);
       expect(find.textContaining('Try again'), findsOneWidget);
     });
+  });
+
+  group('PutInSheet keeps its keypad on screen (P2, P3)', () {
+    for (final PinnedCase window in pinnedCases) {
+      testWidgets('the amount, keypad and Save are inside the ${window.name} window', (WidgetTester tester) async {
+        setBottomInset(tester, window.bottomInset);
+        await open(tester, size: window.size, textScale: window.textScale, displayFeatures: window.features);
+        expectPinnedOnScreen(
+          tester,
+          window: window,
+          amount: find.byType(AmountDisplay),
+          action: find.byKey(const ValueKey<String>('put-in-save')),
+        );
+      });
+    }
   });
 }

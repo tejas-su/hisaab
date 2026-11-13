@@ -108,7 +108,7 @@ keytool -printcert -jarfile build\app\outputs\bundle\release\app-release.aab
 - [ ] Full description (max 4,000). Ask the `design-content` agent to draft it from SPEC.
 - [ ] App icon 512 × 512 PNG
 - [ ] Feature graphic 1024 × 500 (exists, `d9ab086`)
-- [ ] 2–8 phone screenshots. 7-inch and 10-inch tablet screenshots are optional but help, since the app is adaptive.
+- [ ] 2–8 phone screenshots. 7-inch and 10-inch tablet screenshots are optional but help, since the app is adaptive. Ready in `docs/design/store/out/`: 8 phone, 5 seven-inch and 6 ten-inch ([how they're made](design/store/README.md)).
 - [ ] Category: Finance. Contact email (shown publicly): use one you're happy to publish.
 
 ---

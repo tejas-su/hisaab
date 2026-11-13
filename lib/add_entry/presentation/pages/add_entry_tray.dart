@@ -6,6 +6,7 @@ import '../../../core/design/hisaab_motion.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/layout/app_layout.dart';
+import '../../../core/layout/window_class.dart';
 import '../../../core/widgets/adaptive_split.dart';
 import '../bloc/add_entry_bloc.dart';
 import '../bloc/add_entry_event.dart';
@@ -25,6 +26,9 @@ class AddEntryTray extends StatelessWidget {
 
   /// Space left above the tray on step 1, so the hero stays in sight behind the scrim.
   static const double _gapAbove = 72;
+
+  /// Under this window height the drag handle is left out (SPEC E115); swipe, scrim and Back still close.
+  static const double _handleMinHeight = 600;
 
   /// Opens the tray over [context] with [bloc], which the tray closes when it goes away.
   ///
@@ -53,7 +57,7 @@ class AddEntryTray extends StatelessWidget {
       modalBarrierColor: context.colors.scrim,
       shape: HisaabShapes.trayTop(),
       constraints: tabletop ? const BoxConstraints() : const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
-      showDragHandle: !tabletop,
+      showDragHandle: !tabletop && MediaQuery.sizeOf(context).height >= _handleMinHeight,
       builder: (BuildContext _) => BlocProvider<AddEntryBloc>(create: (BuildContext _) => bloc, child: const AddEntryTray()),
       settings: const RouteSettings(name: routeName),
     );
@@ -91,7 +95,7 @@ class AddEntryTray extends StatelessWidget {
       final PaneArrangement panes = context.layout.panes;
       final double height = panes is TabletopPanes
           ? panes.bottom.height - MediaQuery.paddingOf(context).bottom
-          : MediaQuery.sizeOf(context).height - _gapAbove - HisaabSpacing.xxl;
+          : MediaQuery.sizeOf(context).height - (context.layout.heightClass == HeightClass.compact ? 0 : _gapAbove) - HisaabSpacing.xxl;
       return SizedBox(height: height, child: AmountStep(state: state, sideBySide: panes is TabletopPanes));
     }
     return switch (state.form.step) {

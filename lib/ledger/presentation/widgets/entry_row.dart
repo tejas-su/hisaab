@@ -19,7 +19,9 @@ import '../category_extensions.dart';
 /// One entry in a list (Home's Today, Every entry): icon well, category, note and amount (SPEC FR-HO-4, FR-SP-6).
 ///
 /// Tap edits it; swiping left deletes it at once (Undo comes from the page). TalkBack gets a
-/// Delete action, since swiping is gesture-only.
+/// Delete action, since swiping is gesture-only. A *Used* entry (BR-19) reads the saving's name over
+/// "Used from savings", has no tap, and with [showUsedDetail] adds "Paid from what you set aside."
+/// in the same screen-reader node.
 class EntryRow extends StatelessWidget {
   const EntryRow({
     super.key,
@@ -29,6 +31,7 @@ class EntryRow extends StatelessWidget {
     required this.onDelete,
     required this.onThresholdReached,
     this.billName,
+    this.showUsedDetail = false,
   });
 
   final Entry entry;
@@ -36,6 +39,9 @@ class EntryRow extends StatelessWidget {
 
   /// The name of the bill that posted [entry], when known; it says which bill a row is.
   final String? billName;
+
+  /// Whether a *Used* row adds its extra line, as in Every entry (FR-SP-6).
+  final bool showUsedDetail;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -77,7 +83,7 @@ class EntryRow extends StatelessWidget {
           inset: const EdgeInsets.all(FocusRing.outset),
           // why: the Add tray knows only Spent and Got; editing a saving or a card bill there would
           // turn it into spending (D120, D123). Either is swiped away instead.
-          child: InkWell(onTap: _isSaved || _isCardPaid ? null : onEdit, focusColor: context.colors.clear, child: _content(context, strings)),
+          child: InkWell(onTap: _isSaved || _isCardPaid || _isUsed ? null : onEdit, focusColor: context.colors.clear, child: _content(context, strings)),
         ),
       ),
     );
@@ -87,8 +93,10 @@ class EntryRow extends StatelessWidget {
 
   bool get _isCardPaid => entry.kind == EntryKind.cardPaid;
 
+  bool get _isUsed => entry.kind == EntryKind.used;
+
   AppIconData _glyph(Category? kind) => switch (entry.kind) {
-        EntryKind.saved => AppIcons.saving,
+        EntryKind.saved || EntryKind.used => AppIcons.saving,
         EntryKind.cardPaid => BillIcon.card.glyph,
         EntryKind.spent || EntryKind.got => AppIcons.forKey(kind?.iconKey ?? ''),
       };
@@ -98,22 +106,39 @@ class EntryRow extends StatelessWidget {
   String? _billTag(AppLocalizations strings) =>
       entry.recurringId != null && entry.kind == EntryKind.spent ? billName ?? strings.entryFixedBill : null;
 
+  // why: a Used row has no kind sign or colour, so it is read as one sentence naming what it is (D187).
   Widget _content(BuildContext context, AppLocalizations strings) {
+    final Widget row = _row(context, strings);
+    if (!_isUsed) {
+      return row;
+    }
+    final String spoken = strings.entryUsedSpoken(entry.note ?? strings.savingName('other'), strings.spokenAmount(context.money.digits(entry.amount)));
+    return Semantics(
+      label: showUsedDetail ? strings.spokenPair(spoken, strings.entryUsedDetail) : spoken,
+      excludeSemantics: true,
+      child: row,
+    );
+  }
+
+  Widget _row(BuildContext context, AppLocalizations strings) {
     final TextTheme text = Theme.of(context).textTheme;
     // why: a saving is named by its rule (the note), or "Put in extra"; its line says *Saved* (D120).
     // why: a card bill is named by its card (the note); its line says it isn't counted (D123).
     final String title = switch (entry.kind) {
       EntryKind.saved => entry.note ?? strings.entryPutInExtra,
+      EntryKind.used => entry.note ?? strings.savingName('other'),
       EntryKind.cardPaid => entry.note ?? strings.billName('creditCard'),
       EntryKind.spent || EntryKind.got => category?.labelIn(strings) ?? strings.categoryName('other'),
     };
     final String? note = switch (entry.kind) {
       EntryKind.saved => strings.entrySaved,
+      EntryKind.used => strings.entryUsed,
       EntryKind.cardPaid => strings.entryCardPaid,
       EntryKind.spent || EntryKind.got => entry.note ?? _billTag(strings),
     };
     final String amount = context.money.format(entry.amount);
     final Category? kind = category;
+    final bool detailed = _isUsed && showUsedDetail;
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: 9),
       child: Row(
@@ -132,6 +157,7 @@ class EntryRow extends StatelessWidget {
               children: <Widget>[
                 Text(title, style: text.bodyLarge),
                 if (note != null) Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodySmall?.copyWith(fontSize: 14)),
+                if (detailed) Text(strings.entryUsedDetail, style: text.bodySmall?.copyWith(fontSize: 14)),
               ],
             ),
           ),

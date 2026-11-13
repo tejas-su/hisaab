@@ -16,6 +16,35 @@ abstract final class TestWindows {
   static const Size foldableUnfolded = Size(673, 841);
   static const Size foldableLandscape = Size(841, 701);
   static const Size tablet = Size(1280, 800);
+
+  /// A split-screen half: wide, but only 400dp tall (E18).
+  static const Size splitScreen = Size(412, 400);
+
+  /// A split-screen half squeezed to 300dp tall.
+  static const Size splitScreenShort = Size(412, 300);
+
+  /// A book-posture foldable, fully open (same window as [foldableUnfolded]).
+  static const Size book = foldableUnfolded;
+
+  /// The 40dp vertical hinge of a [book] window: content on both sides, nothing under it.
+  static const DisplayFeature bookHinge = DisplayFeature(
+    bounds: Rect.fromLTRB(316.5, 0, 356.5, 841),
+    type: DisplayFeatureType.hinge,
+    state: DisplayFeatureState.postureFlat,
+  );
+
+  /// A landscape tablet-like window 600dp tall (a 1200×1920 phone at density 320 turned sideways).
+  static const Size landscape600 = Size(960, 600);
+
+  /// A half-opened foldable lying flat; pair with [tabletopFold].
+  static const Size tabletop = Size(701, 841);
+
+  /// The horizontal fold of a [tabletop] window: content above it, controls below.
+  static const DisplayFeature tabletopFold = DisplayFeature(
+    bounds: Rect.fromLTRB(0, 420, 701, 420),
+    type: DisplayFeatureType.fold,
+    state: DisplayFeatureState.postureHalfOpened,
+  );
 }
 
 bool _fontsLoaded = false;

@@ -14,11 +14,16 @@ It aims to be simple enough for a 5-year-old to use: no accounts, no bank sync, 
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/home.png" alt="Home screen showing safe to spend today" width="200"><br><b>Home</b></td>
-    <td align="center"><img src="docs/screenshots/add.png" alt="Add screen with amount keypad" width="200"><br><b>Add</b></td>
-    <td align="center"><img src="docs/screenshots/spends.png" alt="Spends screen with pace chart and categories" width="200"><br><b>Spends</b></td>
-    <td align="center"><img src="docs/screenshots/askai.png" alt="Ask AI screen with question choices and prompt preview" width="200"><br><b>Ask AI</b></td>
-    <td align="center"><img src="docs/screenshots/settings.png" alt="Settings screen" width="200"><br><b>Settings</b></td>
+    <td align="center"><img src="docs/design/store/out/phone-1.png" alt="Know what you can spend today: Home showing ₹1,430 safe to spend today" width="200"></td>
+    <td align="center"><img src="docs/design/store/out/phone-2.png" alt="One honest number: how ₹1,430 is worked out from income, spends, bills and days to payday" width="200"></td>
+    <td align="center"><img src="docs/design/store/out/phone-3.png" alt="Add a spend in 3 taps: keypad and category tiles" width="200"></td>
+    <td align="center"><img src="docs/design/store/out/phone-4.png" alt="See where it went: pace chart and categories on Spends" width="200"></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/design/store/out/phone-5.png" alt="Ask any AI about your money: question choices and prompt preview" width="200"></td>
+    <td align="center"><img src="docs/design/store/out/phone-6.png" alt="Light by day, dark by night: Home in both looks" width="200"></td>
+    <td align="center"><img src="docs/design/store/out/phone-7.png" alt="Set your bills once: the electricity bill slip" width="200"></td>
+    <td align="center"><img src="docs/design/store/out/phone-8.png" alt="Your money stays on your phone: no sign-up, no ads, works offline, your backup" width="200"></td>
   </tr>
 </table>
 

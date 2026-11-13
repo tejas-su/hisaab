@@ -7,6 +7,7 @@ import 'package:hisaab/ledger/domain/entities/entry.dart';
 import 'package:hisaab/ledger/domain/entities/entry_draft.dart';
 import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
 import 'package:hisaab/ledger/domain/entities/saved_total.dart';
+import 'package:hisaab/ledger/domain/entities/saving_totals.dart';
 import 'package:hisaab/ledger/domain/failures/ledger_failures.dart';
 import 'package:hisaab/ledger/domain/repository/ledger_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -65,6 +66,26 @@ final class FakeLedgerRepository implements LedgerRepository {
         return entry;
       });
 
+  /// Like [add], linked to the saving [savingId]; records the draft in [saved] too and waits for
+  /// [nextAddGate] like [add] does.
+  @override
+  TaskEither<Failure, Entry> addForSaving(EntryDraft draft, {required int savingId}) {
+    final Completer<void>? gate = nextAddGate;
+    nextAddGate = null;
+    return gate == null ? _addForSaving(draft, savingId) : TaskEither<Failure, Unit>(() async {
+      await gate.future;
+      return Either<Failure, Unit>.right(unit);
+    }).flatMap((Unit _) => _addForSaving(draft, savingId));
+  }
+
+  TaskEither<Failure, Entry> _addForSaving(EntryDraft draft, int savingId) => _run(() {
+        saved.add(draft);
+        final Entry entry = _entryFrom(_nextId++, draft, savingId: savingId);
+        entries.add(entry);
+        _notify();
+        return entry;
+      });
+
   /// When set, the next [add] waits for it before it saves anything, like a slow write.
   Completer<void>? nextAddGate;
 
@@ -94,7 +115,7 @@ final class FakeLedgerRepository implements LedgerRepository {
     }
     return _run(() {
       saved.add(draft);
-      final Entry entry = _entryFrom(id, draft, recurringId: entries[index].recurringId, createdAt: entries[index].createdAt);
+      final Entry entry = _entryFrom(id, draft, recurringId: entries[index].recurringId, savingId: entries[index].savingId, createdAt: entries[index].createdAt);
       entries[index] = entry;
       _notify();
       return entry;
@@ -153,6 +174,25 @@ final class FakeLedgerRepository implements LedgerRepository {
       });
 
   @override
+  TaskEither<Failure, SavingTotals> savingTotals() => _run(() {
+        Money sumOf(Iterable<Entry> rows) => rows.fold(Money.zero, (Money total, Entry e) => total + e.amount);
+        final Set<int> ids = <int>{
+          ...entries.where((Entry e) => e.kind == EntryKind.saved).map((Entry e) => e.recurringId).nonNulls,
+          ...entries.where((Entry e) => e.kind == EntryKind.used).map((Entry e) => e.savingId).nonNulls,
+        };
+        return SavingTotals(
+          bySaving: <int, ({Money putIn, Money used})>{
+            for (final int id in ids)
+              id: (
+                putIn: sumOf(entries.where((Entry e) => e.kind == EntryKind.saved && e.recurringId == id)),
+                used: sumOf(entries.where((Entry e) => e.kind == EntryKind.used && e.savingId == id)),
+              ),
+          },
+          anyUse: entries.any((Entry e) => e.kind == EntryKind.used),
+        );
+      });
+
+  @override
   Stream<void> get changes => _changes.stream;
 
   /// Closes the change stream.
@@ -161,7 +201,7 @@ final class FakeLedgerRepository implements LedgerRepository {
   /// The created time stamped on new entries; the fake has no clock.
   static final DateTime addedAt = DateTime(2026, 10, 26, 10, 30);
 
-  static Entry _entryFrom(int id, EntryDraft draft, {int? recurringId, DateTime? createdAt}) => Entry(
+  static Entry _entryFrom(int id, EntryDraft draft, {int? recurringId, int? savingId, DateTime? createdAt}) => Entry(
         id: id,
         amount: draft.amount,
         kind: draft.kind,
@@ -170,5 +210,6 @@ final class FakeLedgerRepository implements LedgerRepository {
         createdAt: createdAt ?? addedAt,
         note: draft.note,
         recurringId: recurringId,
+        savingId: savingId,
       );
 }

@@ -1,3 +1,4 @@
+import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/app/app_services.dart';
 import 'package:hisaab/ask_ai/ask_ai.dart';
 import 'package:hisaab/core/db/app_database.dart';
@@ -90,4 +91,41 @@ void main() {
       expect(getIt<UndoUsualAdd>(), isNotNull);
     });
   });
+  group('registerAppServices the Used flow (BR-19)', () {
+    test('GetSetAside and UseFromSavings run over the real database', () async {
+      final AppDatabase database = await openTestDatabase();
+      final GetIt getIt = GetIt.asNewInstance();
+      registerAppServices(getIt, database: database, reminders: FakeBillReminders(), shortcuts: FakeShortcutsPlatform());
+      addTearDown(getIt.reset);
+      final int savedCategory = (await getIt<CategoryRepository>().idOf(CategoryKeys.saved).run()).getOrElse((Failure f) => fail(f.message));
+      final RecurringRule saving = (await getIt<RecurringRepository>()
+              .add(
+                RecurringDraft(
+                  label: 'Insurance',
+                  amount: Money.fromMajor(1000),
+                  kind: EntryKind.saved,
+                  categoryId: savedCategory,
+                  schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2099, 1, 5)),
+                  nextDue: const CalendarDate(2099, 1, 5),
+                ),
+              )
+              .run())
+          .getOrElse((Failure f) => fail(f.message));
+      await getIt<LedgerRepository>()
+          .addForRule(
+            EntryDraft(amount: Money.fromMajor(12000), kind: EntryKind.saved, categoryId: savedCategory, date: const CalendarDate(2020, 1, 5)),
+            recurringId: saving.id,
+          )
+          .run();
+
+      final Either<Failure, Entry> used =
+          await getIt<UseFromSavings>()(UseFromSavingsParams(saving: saving, amount: Money.fromMajor(4000))).run();
+      final SetAsideSummary summary = (await getIt<GetSetAside>()(const NoParams()).run()).getOrElse((Failure f) => fail(f.message));
+
+      expect(used.isRight(), isTrue);
+      expect(summary.stillSetAside, Money.fromMajor(8000));
+      expect(summary.anyUse, isTrue);
+    });
+  });
+
 }

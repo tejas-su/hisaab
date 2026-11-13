@@ -144,6 +144,7 @@ void main() {
         SuggestionStateColumns.quietOn: '2026-11-05',
         SuggestionStateColumns.restUntil: '2026-12-05',
         SuggestionStateColumns.forgottenAt: '2026-11-05T09:30:00.000',
+        SuggestionStateColumns.askedOn: null,
       };
 
       test('dump carries suggestion_state', () async {

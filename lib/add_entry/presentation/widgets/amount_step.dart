@@ -6,6 +6,7 @@ import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/layout/window_class.dart';
 import '../../../core/widgets/adaptive_split.dart';
+import '../../../core/widgets/amount_cap_ring.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/keypad.dart';
 import '../../../core/widgets/shake.dart';
@@ -34,8 +35,24 @@ class AmountStep extends StatelessWidget {
   /// Amount beside the keypad, for the short, wide tray below a tabletop fold.
   final bool sideBySide;
 
+  /// The header's height at 1x text (Spent/Got, amount, slot, chips) and the stacked controls'
+  /// (4 keys of 64dp, gaps, Next, padding): the tray goes side by side when both don't fit.
+  static const double _headerExtent = 220;
+  static const double _stackedControlsExtent = 4 * HisaabSizes.keypadKeyHeight + 3 * HisaabSpacing.s + 14 + SignalKey.minHeight + 48;
+
+  /// Below this width the halves are too narrow, so the tray stays stacked and scrolls.
+  static const double _sideBySideMinWidth = 360;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints box) {
+      final double needed = MediaQuery.textScalerOf(context).scale(_headerExtent) + _stackedControlsExtent;
+      final bool crowded = box.hasBoundedHeight && box.maxWidth >= _sideBySideMinWidth && box.maxHeight < needed;
+      return _body(context, sideBySide || crowded);
+    },
+  );
+
+  Widget _body(BuildContext context, bool sideBySide) {
     final AddEntryBloc bloc = context.read<AddEntryBloc>();
     final bool short = sideBySide || context.layout.heightClass == HeightClass.compact;
     final AddEntryState current = state;
@@ -46,11 +63,15 @@ class AmountStep extends StatelessWidget {
         children: <Widget>[
           KindSwitch(kind: state.form.kind, onChanged: (EntryKind kind) => bloc.add(AddEntryKindChanged(kind))),
           SizedBox(height: short ? HisaabSpacing.m : _aboveAmount),
-          Shake(
-            trigger: current is AddEntryEditing ? current.rejections : 0,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: AmountText(state.form.amount, roll: false, style: Theme.of(context).textTheme.displayMedium),
+          AmountCapRing(
+            rejections: current is AddEntryEditing ? current.rejections : 0,
+            amount: state.form.amount,
+            child: Shake(
+              trigger: current is AddEntryEditing ? current.rejections : 0,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: AmountText(state.form.amount, roll: false, style: Theme.of(context).textTheme.displayMedium),
+              ),
             ),
           ),
           const SizedBox(height: HisaabSpacing.xs),

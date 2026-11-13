@@ -281,6 +281,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **+ Add** is a marigold key, 136×58, with an ink label and an ink lip. It is the only tinted control (Liquid Glass: "when everything is tinted, nothing stands out").
 - **Spends** holds where the money went and has the **Ask AI** card at the top.
 - **Settings** is at the top right of Home.
+- **Fix my number** adds no tab and no level: one quiet text row at the end of Home's scroll, and one row at the end of Settings › Money (§5.2, §5.6, D169). Its sheet and *Used*'s keypad are in §5.7.
 
 ---
 
@@ -336,6 +337,11 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
 - **This week (BR-6a, D111, D114, case study 15):** seven bars, Mon–Sun, take today's bar's place at the card's full width, 64dp tall (D114 drops D111's 48dp growth). Past days are `displayInk2` with a 2dp `displayInk` share tick each, cut from the card by a `display` notch, and hatched above it; a past ₹0 day is a 2dp baseline line. Today is marigold with the 1.5dp `displayEdge` in light, plus its tick. Days to come are 6dp `blockIdle` stubs; days outside the cycle draw nothing. The weekday letters (today Semibold) sit under them, the days rail stays, and the range slot reads "Spent ₹4,950 this week · Tue was ₹460 over its share" with the alert glyph (the check when every day is within its share).
 - **Due-soon row (FR-HO-3, D118):** a `sunk` row at least 56dp tall under the hero: the bill's icon in a well, the sentence, the date under it in `ink2`, and a chevron. A tap opens the bill sheet over Home. A changing or card bill's sentence says "about" (D123).
 - **Waiting line (FR-HO-3, D123, mockup [29](design/mockups/29-changing-bills.html)):** the same `sunk` row, in the same slot and edges, takes the place of the due-soon row while a bill waits for its amount: the bill's icon in a well, "Electricity went out today. How much?" (one sentence, no date line) and a chevron. A tap raises the **bill amount sheet** (FR-HO-8) in the bill sheet's route: the title "Electricity · 26 Oct" in `titleLarge`, the amount, an `ink2` caption ("Last time ₹1,200", or "You said about ₹1,200" the first time; a card adds its one line), the text chip *Didn't go out this month* (`hairline` on the sheet, never marigold), the keypad with 56dp keys and a marigold Save. Content sits on the 20dp gutter (D122).
+- **The nudge slot holds one of four lines (FR-HO-3, D170):** the waiting line and the due-soon row above, then the **install line** and the **missed-log line**, in that order. Only the first that applies shows; when a higher item clears the slot collapses to empty and the next lower line waits for the next cold start or resume. Both lower lines use the due-soon row's shape (a `sunk` squircle of radius 18, at least 56dp, edges as the due-soon row), and neither is ever marigold.
+  - **Install line (D169):** a `surface` well with a neutral glyph, "Already spent some this month?" in `bodyMedium` and "Fix my number" under it in `bodySmall`, a chevron; shown once.
+  - **Missed-log line (D171, mockup [43](design/mockups/43-missed-log-line.html)):** a neutral question glyph in a `surface` well (one Hugeicons help mark through `AppIcon`, or a `HisaabGlyphs` drawing chosen by `design-system`; never the category's glyph, so it can't read as a logged Food entry), "Spent on Food today?" in `bodyMedium`, "Usually around 1 pm." in `bodySmall` in the date line's place, a 18dp `AppIcons.next` chevron in `ink2`. No amount and no ×. States: pressed `hairline` fill; hovered a 1dp `ink2` outline (`hairline` on `sunk` is 1.18:1 and invisible; `ink2` is 5.5:1); focused the `FocusRing`. At 1.5× text the lines wrap and the category is never cut. In two panes the line sits in Home's pane.
+  - **The foot row (FR-HO-9, D169, mockup 41):** a quiet text row at the end of the scroll, "Fix my number" and a chevron in `ink2` on `bg`, 48dp or taller, with no fill, no icon well, no second line and no count. It must not look like the slot's `sunk` row, which would read as a nudge that never leaves (§3 layers).
+  - **New Today rows (FR-HO-4, D166, D175):** *Not logged* and *Used* are two-line rows, as *Saved* is: line 1 the name ("Not logged" or the saving's), line 2 the kind word ("Spent" or "Got", or "Used from savings"), the amount at the end, a neutral glyph (the piggy bank for *Used*). No bite, no tint, no tap, not in the header total; direction is a word, never a sign or colour. A fix posted now sits on top. At 176dp wide a one-string title would not fit, which is why they are two lines.
 - **When you underspend:** the next morning the number rolls up, and a one-line note appears: "Yesterday was ₹300 under its share, so every day got ₹35 more." (never "saved", D121)
 - **Empty Today:** "Nothing spent today. Tap Add when you do."
 
@@ -386,7 +392,7 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - A row with a limit says what is left: "Food · ₹200 left", "Bills · ₹0 left", or "Shopping · ₹840 over limit" (D110).
   - When a bar is hatched, one key line closes the card: a hatch swatch and "Striped part is over the limit." in `bodySmall` (D110).
 - **Insights:** at most 3 plain sentences, each with a next step, for example "Food spending is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
-- **Spent and saved (D120, mockup 28):** when the cycle has saves, one `bodyMedium` `ink2` line, "Spent ₹27,570 · Saved ₹5,000", sits above *Where it went*, aligned with the card titles. Saves never appear in the bars, pace or insights.
+- **Spent, saved and not logged (D120, D176, mockup 28, mockup 41 §6):** when the cycle has saves or a fix, one `bodyMedium` `ink2` line, "Spent ₹27,570 · Saved ₹1,000 · Not logged ₹4,200", sits above *Where it went*, aligned with the card titles. Three parts at most, in that order, each only above ₹0; each part is unbreakable and the line wraps between parts with no trailing dots (mockup 42 option B), joined by the `·`. *Spent* excludes *Not logged*, and *Used from savings* is not on the line. Saves and fixes never appear in the bars, pace or insights.
 
 ### 5.5 Ask AI
 Two layers only: the grey page and near-white cards, the same build as the Today list (D45, D67).
@@ -417,7 +423,9 @@ Two layers only: the grey page and near-white cards, the same build as the Today
     - *Kind of bill* (D123): a row between Amount and Day; its value ("Changes every month") may take two lines, end-aligned. Its question, "What kind of bill is it?", stacks the three answers as full-width `hairline` chips 8dp apart, the current one picked (`ink` fill, check); a tap saves, like the day grid. A saving has no such row.
   - **Remind ask (FR-SE-1 AC-10, D126):** after the first changing or card bill is saved, a sheet rises in the bill sheet's route: "Remind you on the day it's due?" in `titleLarge` on the 20dp gutter, a full-width marigold *Remind me* key, and the text chip *Not now* under it (`hairline`, never marigold). Asked once. The reminders themselves are system notifications in a *Bill reminders* channel with the monochrome launcher glyph, and a locked screen hides their text.
   - Savings (D120, mockup [28](design/mockups/28-savings.html)): a second row under Bills with the piggy-bank glyph. The list, wizard and sheet are the bill ones with a saving's words ("put in", "due"); the sheet drops the Icon row. Under the list, a `ink2` footer "₹5,000 put in since Oct", and the pinned marigold *Add a saving* with a full-width *Put in extra* chip 8dp under it (never marigold; only the keypad's Save is). In a window under 480dp tall the two share one row, the chip stretched to the key's height (D136). *Put in extra* rises in the bill sheet's route: the question, the amount, a `ink2` line saying what it does to the days left, the keypad and a marigold Save.
+  - **Yearly costs and *Used* (D174, D175, mockup [42](design/mockups/42-yearly-costs.html)):** the saving's name pills gain *Insurance*, *School fees* and *Festival* after the four; for those three the amount question carries a `bodyMedium` `ink2` caption. A list row gains a **third** `bodySmall` `ink2` line, "₹12,000 set aside", under the schedule line (about 84dp), only above ₹0. The footer gains a second line, "₹5,000 still set aside". The saving's sheet shows the set-aside amount under its amount line and an outlined *Used some of it* key mid-sheet, away from *Delete saving* (a `sunk` key, last); the hint above the key is on the three yearly pills only. The *Used* question is §5.7.
   - My month starts on: *Payday* (default) / *1st*
+  - **Fix my number row (D169):** the last row of the *Money* card, after *My month starts on*: a `SettingsRow` with a neutral glyph (mockup 41 uses a sliders stand-in; `design-system` picks the Hugeicons or `HisaabGlyphs` glyph) and the detail "When the number on Home looks wrong." in `bodySmall` `ink2`. It opens the sheet of §5.7 over Settings. Hidden in *No income*.
 - **Look** (D130, mockup [30](design/mockups/30-look-setting.html), case study [19](design-research/case-studies/19-theme-choice.md)): a `titleLarge` header 24dp under the Money card, then one `surface` card holding one row (20dp gutter, 12dp vertical): *Light or dark* in `bodyLarge` with the current look's name under it in `bodyMedium` `ink2`, and at the end a compact icon toggle: a `sunk` track (radius `key`, 4dp inset and gaps) of three 48dp buttons (radius `chip`) with 24dp smartphone, sun and moon glyphs in `ink`. The pick fills `ink` with its glyph in `bg`; a press steps to `hairline`. The words may wrap beside the toggle but never break mid-word; when a word can't fit (2× text on a 320dp phone), the toggle moves under the words, on their start edge. The buttons carry their names for TalkBack and the row's words are excluded, so nothing is read twice. Never marigold: a look is a mode, not an act. One tap applies; `MaterialApp.themeAnimationDuration` is zero, so nothing fades.
 - **Categories** (FR-SE-2, D138): a group under Look holding one row, *Categories*, which opens a page: *Your own* ("2 of 4") with a dashed-well *Add a category* row, then *Spending* (the 8, with a hint that they keep their places) and *Money in*, each a card of rows with the icon in a `sunk` well. A row opens a sheet in the bill sheet's style: the icon in a 56dp `surface` well beside the name in Anek, with "Your own" or "Built in" above it, a card with *Name* and *Icon* rows, then for the user's own a full-width `surface` key *Hide {name}* with an eye-off glyph and a note on what hiding keeps. Never marigold: hiding is undoable, not an act to push.
 - **Your hisaab** (FR-SE-4, BR-16, D139, mockup [34](design/mockups/34-data-controls.html), case study [23](design-research/case-studies/23-backup-reset-delete.md)): a `titleLarge` header 24dp under the Look card, then two `surface` cards 24dp apart. Export CSV comes later (M6).
@@ -433,6 +441,16 @@ Two layers only: the grey page and near-white cards, the same build as the Today
   - **The hold key:** at rest, a 2dp `danger` edge with the Delete02 glyph and label in `danger`. While held, a `danger` fill sweeps from the start edge and the label turns `bg` where the fill has passed. Let go full, it reads *Undo* with the Undo02 glyph and the fill drains back towards the start edge over 5 s while the caption counts down; a tap stops it and nothing is deleted (D149). The caption under it is always shown. Its weight comes from the 2dp edge and the fill, so in a squint test it reads before *Back up first*. Never marigold. It is the app's only red: the owner wanted the one irreversible act to look destructive (D142, amends D9).
   - **Marigold is never on an act that removes or replaces data** (*Replace*, the hold key). Marigold means *today / act*, and these are acts to slow down for, not to invite.
 - **About.**
+
+### 5.7 Keypad sheets: Fix my number and Used (FR-KS, FR-FX, D178, mockups [41](design/mockups/41-fix-my-number.html) and [42](design/mockups/42-yearly-costs.html))
+Both are questions in the bill sheet's route, built from the Add step 1 anatomy: the amount, one fixed-height two-line slot and the shared keypad.
+- **Layout:** the keypad, its full-width action key and the typed amount are pinned; the title and slot scroll between them. Stacked below about 560dp wide; side by side only at 560dp or more and short, and in a tabletop. Keys are 56dp (48dp in a short window), the action key 56dp. The pinned bottom padding is the gutter plus the system bottom inset. The sheet's drag handle (48dp) is not drawn when the window is under 600dp tall; swipe down, the scrim and Back still close it (D180). The sheet sits in one sub-screen of a fold, never across it.
+- **Action key:** *Fix it* and *Save* are a full-width marigold `SignalKey` with an `onSignal` label and a 1.5dp edge, as *Next* is in the Add tray (marigold means act). Disabled is a hatch or outline with a TalkBack hint, never colour alone.
+- **The slot:** two lines; every state is a child of one `IndexedStack`, so the slot never resizes between states (the guard shortens the whole sheet once). Line 1 anchors ("hisaab thought ₹17,430."); line 2 says the gap and its effect. Digit changes swap text instantly; a change of state class crossfades 150 ms. No red, no green: direction is the words "less" and "more".
+- **The guard (FR-FX-4):** the keypad and action key give way to two equal-weight outlined 56dp full-width keys, stacked, *No, some is older* first, neither marigold. The sheet shortens to fit. The question line is a focusable node.
+- ***All of it*** (the *Used* question): a 48dp chip beside the amount (below it at large text), resting `hairline`, filling `ink2` while the amount equals the set-aside amount (D89), `selected` in semantics. A second tap clears the amount.
+- **The cap (FR-KS-2):** a 10th digit gets the shake and a 2dp ring held on the amount until the next accepted key. No words are drawn.
+- **Amounts** on the Fix sheet use full Indian grouping, never the compact form.
 
 ---
 
@@ -473,6 +491,13 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 
 - **Hold to delete (D139):** the fill is linear over exactly 1.5 s (D143), with no spring, so the time is honest and predictable. Letting go early drains it on `snap`. Let go full, the fill drains back linearly over exactly 5 s, the Undo window (D149); *Undo* drains the rest on `snap`. With reduced motion the fill and the drain step in quarters on the same clock; the caption carries the timing.
 - **Snackbar (D105):** rises 16dp and fades in on `standard`; leaves the same way, or on `snap` after Undo; a swipe down follows the finger. A newer message swaps in place.
+- **Fix, Used and the missed-log line (D183, `docs/features/fix-my-number/05-motion.md`):** no new token. One focal point at a time, no bounce, the same path for a drop and a rise.
+  - **The hold (D179):** Home holds its numbers under every sheet opened from Home, not only the Add tray, and recomputes when the sheet's exit ends.
+  - **Fix:** at t = 0 the hero rolls ₹1,430 → ₹963 on `numberRoll`, today's bar re-spans every boundary in one motion on `standard` (the yellow's end 77% → 70%, the ₹420 bite 23% → 30%; a rise gives 78.6% / 21.4%), and the snackbar rises. The new *Not logged* row grows into the Today list 300 ms later (`numberRoll`'s own length, `resize` and `easeOut`), so a figure is read before the list shifts. No sheen, no fill-in, no hatch (unless the new share really leaves today over), no marigold flash, no emphasis on the row. Undo reverses along the same path and starts at once; a second fix or Undo mid-roll retargets from the displayed value.
+  - **Used:** nothing in the hero moves, because nothing in it changes. The set-aside figure on the list row and the footer roll together in one motion; from Home's due-soon door the *Used* row grows in at t = 0.
+  - **The sheet:** slot crossfades are 150 ms; the guard's swap is a 150 ms crossfade with the sheet's height changing on `resize` and `easeOut`; digit changes are instant. A sheet has no predictive-back preview: Back commits, then the exit or the crossfade plays.
+  - **The missed-log line** arrives with Home's first frame and has no motion of its own. When it leaves, the slot collapses on `resize` and `easeOut` (a spring can't drive an `AnimatedSize`), contents fading over the first 150 ms; after a save the collapse ends no later than the drain.
+  - **Reduced motion:** the hero crossfades 150 ms; the bar jumps; the new row takes its height at once with a 150 ms fade; the guard's height change is instant (the crossfade stays, since opacity is allowed); `Shake` is skipped and the cap is carried by the held ring and a spoken line. `TodayBarPainter` must interpolate segment boundaries when the total changes (1,850 → 1,383, 1,850 → 1,961), with a widget test at both.
 - **Reduced motion:** all of the above become a 150ms crossfade, and charts never animate. There is no fill in and no sheen.
 - **Launch splash (§3.7):** an animated vector drawable cannot use springs, so it uses `pathInterpolator` curves. The settle and the morph use the number-roll curve. Its squash overshoot is a deliberate exception to "no overshoot": a landing block carries momentum (D44).
 
@@ -486,6 +511,10 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 | Swipe-to-delete threshold | `lightImpact()` | VIRTUAL_KEY |
 | Hold-to-delete: finger down / fill full (D139) / Undo (D149) | `Haptics.tick()` / `Haptics.threshold()` / `Haptics.tick()` | CLOCK_TICK / VIRTUAL_KEY / CLOCK_TICK |
 | Restore or delete failed and rolled back | `Haptics.reject()` | REJECT |
+| A fix saved, or *Used* saved (D183) | `Haptics.success()` with the first visible change: the hero's roll, or the *Used* row or list figures; at the exit start when nothing visible follows (the Settings door) | CONFIRM |
+| The 9-digit cap, a digit past a *Used* balance, a refused (stale) or failed Fix or *Used* save | `Haptics.reject()` | REJECT |
+| A key on a keypad sheet; Undo of a fix or *Used*; a tap on the missed-log line | `Haptics.tick()` | CLOCK_TICK |
+| Entering the Fix guard; Back; the missed-log line's Back | none | — |
 
 One effect per event, never buzzy.
 
@@ -496,6 +525,13 @@ One effect per event, never buzzy.
 - **Amounts:**
   - Indian grouping (`₹1,25,000`), and on charts `₹1.25L` / `₹1.25Cr` from `NumberFormat` with `en_IN`.
   - Never show paise, so precision is the same everywhere.
+- **Corrections and previews (copy deck [41](design/mockups/41-fix-my-number-copy-deck.md), D182):**
+  - No idioms ("spot on", "came in under"); they don't travel to a Hindi-first reader (D121).
+  - Direction is a word ("less", "more"), never a sign or colour.
+  - The app, not the user, is the one that "thought" wrong: "hisaab thought ₹17,430." "hisaab" is lower case at a sentence start.
+  - "about" only on a figure that really is approximate (the per-day floor), never on an exact gap.
+  - A zero is stated, not softened: "Safe to spend today: ₹0."
+  - A preview slot is two sentences, the anchor first. "Saved" means only money put into a saving. *Not logged*, *Used from savings*, "set aside" and "Fix my number" are the new terms; one word per idea (D132).
 
 ## 9. Accessibility
 - Touch targets ≥ 48dp; keys and tiles are 64–96dp.
@@ -503,6 +539,12 @@ One effect per event, never buzzy.
 - State is shown by fill, outline, hatch **and** words.
 - TalkBack reads, for example: "Safe to spend today: 1,430 rupees. 9 days to payday. Lasts till payday with about 9,300 rupees spare."
 - Text scales to 1.5× with no clipping. Every colour has an increased-contrast variant (HIG).
+- **Keypad sheets (D184 to D186, SPEC FR-KS):**
+  - **Live region:** a preview slot is a polite live region. Under TalkBack it updates 1.2 s after the last key, or at once when its state class changes, and its live text is short ("4,200 rupees less."); the full sentence is the slot's focusable text. The visible text is excluded from semantics and a separate `Semantics(liveRegion: true)` carries the live text. The amount is not a live region.
+  - **Key-label clamp:** keypad key labels stop growing at 1.5× text, on the shared keypad including the Add tray, so the action key stays on screen at 2×. It is a deliberate exception to WCAG 1.4.4 for key digits only (owner's answer, D185).
+  - **Held ring and spoken line:** at the 9-digit cap the amount keeps a 2dp ring until the next accepted key and a polite "That's the most you can type." is announced once. A 150 ms flash isn't used; it is gone before the eye arrives.
+  - **Guard focus:** the guard's question is a `Focus` and `Semantics` node, focus requested in the frame the panel is built, then *No*, then *Yes*. Checked on a device before the build is done.
+  - **Rows:** every *Not logged* and *Used* row exposes *Delete* as a custom semantics action, so no one needs a swipe or the 4 s Undo to remove it.
 - **Snackbar timing (D105, D128, WCAG 2.2.1).** A bar closes after 4 s; a touch or keyboard focus on it restarts the 4 s. With TalkBack on, a bar with Undo stays until Undo, TalkBack's Dismiss action, a newer message or leaving the page. It is a live region, so it is announced without moving focus, and an amount is spoken in rupees.
 - **Focus (D99, principle 24).** Every control is reachable by keyboard, D-pad and switch access, and Enter, Space and D-pad centre do what a tap does.
   - A focused control gets a 2dp `focus` ring outside a 2dp `focusGap` band. The ring follows the control's own squircle, with its corner radius grown so it stays concentric.
@@ -515,7 +557,7 @@ One effect per event, never buzzy.
 ## 10. Android
 - All orientations and window sizes; never locked (§13).
 - Edge-to-edge (API 36). The dock sits above `MediaQuery.paddingOf(context).bottom`, on plain `bg`; content never goes behind it. The list's bottom 32dp fades into `bg` on a smoothstep ramp (alpha 0 → .16 → .5 → .84 → 1), so cards dissolve above the dock instead of being cut off, and the fade hints there is more below. The fade lets taps through, is invisible when nothing is under it, and high contrast drops it. The last card rests fully above it (D82).
-- Predictive back: `PredictiveBackPageTransitionsBuilder` and `PopScope`. A back swipe scales the tray down.
+- Predictive back: `PredictiveBackPageTransitionsBuilder` and `PopScope`. A back swipe previews a **page's** exit. A sheet (a modal bottom sheet in the bill sheet's route) has no back preview, since `ModalBottomSheetRoute` has no back-gesture hook: Back commits, then the sheet plays its exit, or the 150ms crossfade between its steps (D183). This sentence used to say a back swipe scales the tray down; it is corrected for sheets and kept for pages, and device check D10 confirms it for the Add tray.
 - Launch splash (§3.7):
   - It is native: the Android 12+ `SplashScreen` API, and a static icon below that.
   - It is one colour from tap to Home in each mode.
@@ -602,7 +644,7 @@ Android 16 (API 36, which this app targets) ignores orientation, aspect-ratio an
 | Unfolded foldable in portrait, small tablet (600–839dp) | medium | One pane as a **centred 560dp column**, dock at the bottom |
 | Tablet, unfolded foldable in landscape, phone in landscape (840dp and up) | expanded | **Two panes**: Home (40% of the width, clamped to 360–480dp) beside Spends; no dock, since both are visible, and the marigold Add key sits at the bottom of the Home pane |
 | A vertical fold or hinge across the window (book posture), window at least 600dp | — | Two panes **split exactly at the fold**; with a physical hinge, nothing is drawn inside the hinge gap |
-| A horizontal fold, half-opened (tabletop posture) | — | **Content above the fold, controls below it**: the dock below; onboarding's keypad below; the Add tray keeps to the lower half with the amount beside the keypad, so the hero stays readable above (Flutter sheets never straddle a fold) |
+| A horizontal fold, half-opened (tabletop posture) | — | **Content above the fold, controls below it**: the dock below; onboarding's keypad below; the Add tray and every keypad sheet in the bill sheet's route keep to the lower half with the amount beside the keypad, so the hero stays readable above (Flutter sheets never straddle a fold; the sheet is the whole sheet in the lower half, never the title above and the keys below) |
 | Height under 480dp (phone landscape, small multi-window) | compact height | Denser layouts: keypad beside the amount, 48dp keys |
 
 **One widget places question and keypad:** `AdaptiveSplit` (`lib/core/widgets/`) puts a screen's header and controls in the right place for every row above.
@@ -611,6 +653,12 @@ Android 16 (API 36, which this app targets) ignores orientation, aspect-ratio an
 - **Use the window, never the screen.** Sizes come from `MediaQuery.sizeOf`, which is the app window in split-screen or freeform mode.
 - **Nothing straddles a fold or hinge.** Display-feature bounds come from `MediaQuery.displayFeaturesOf`. Cutouts never split the layout; they are handled by safe areas.
 - **Panes keep clear of system bars only on the window edges they touch,** so the right pane doesn't get left padding for a left-side cutout.
-- **Text scale:** layouts are tested at 2× on a 320dp phone. Controls grow (minimum heights, never fixed), and dock labels scale down instead of overflowing.
+- **Text scale:** layouts are tested at 2× on a 320dp phone. Controls grow (minimum heights, never fixed), and dock labels scale down instead of overflowing. Keypad key labels are the one exception: they stop growing at 1.5× so the action key stays on screen (D185).
 - **Readable width:** body content never exceeds 560dp in a single pane.
-- **Tests** cover phone, phone landscape, unfolded foldable, tablet, book posture with a fold, a hinge with a gap, tabletop, split-screen, 2× text and dark theme (`test/core/layout/`, `test/app/app_shell_test.dart`). New screens add their own size cases through `test/helpers/pump_app.dart` (`TestWindows`).
+- **Sheets and keypads (D178, D180, SPEC FR-KS-1):**
+  - A sheet in the bill sheet's route and the Add tray sit in **one sub-screen** of a fold, never across it: the left sub-screen in book posture, the lower half in tabletop. The route is posture-agnostic (`anchorPoint: Offset(0, windowHeight)` always, 560dp at most), so a fold during use doesn't strand a sheet.
+  - **In a short window the controls are pinned and the header scrolls:** the keypad, action key and typed amount stay on screen; the title and slot scroll between them. Stacked below about 560dp wide; side by side only at 560dp or more and short, and in tabletop. A 320dp window can't hold a 220dp keypad pane beside a readable header. A flat expanded window keeps the 560dp centred stack over both panes.
+  - Keys are 56dp, 48dp in a short window. The 48dp drag handle is not drawn under 600dp of height.
+  - **Sheet bottoms clear the system bottom inset** (`MediaQuery.paddingOf(context).bottom`), so a gesture pill or a 3-button bar never covers the action key.
+  - Each pane in two-pane is its own `FocusTraversalGroup`, Home then Spends.
+- **Tests** cover phone, phone landscape, unfolded foldable, tablet, book posture with a fold, a hinge with a gap, tabletop, split-screen, 2× text and dark theme (`test/core/layout/`, `test/app/app_shell_test.dart`). New screens add their own size cases through `test/helpers/pump_app.dart` (`TestWindows`). `TestWindows` gains `splitScreen` (412×400), `splitThird` (412×300), a book (673×841 with a vertical fold, and a variant with a 40dp hinge) and a tabletop (701×841, the fold now out of the Add tray test). A keypad sheet's tests assert no overflow, the sheet inside its sub-screen and clear of the fold, the typed amount and action key inside the window above the bottom inset (checked at padding 24 and 48), and keys of at least 48dp.

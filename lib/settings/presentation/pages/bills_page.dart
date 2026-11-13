@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/layout/window_class.dart';
+import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/hisaab_chip.dart';
 import '../../../core/widgets/hisaab_back_button.dart';
@@ -97,9 +98,17 @@ class BillsPage extends StatelessWidget {
   // covers it; the key's own top padding is the gap. Undo exists only once the list is ready.
   Widget _undoAboveActions(Widget list) => HisaabSnackbarHost(
     bottom: 0,
-    child: BlocListener<BillsBloc, BillsState>(
-      listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
-      listener: _offerUndo,
+    child: MultiBlocListener(
+      listeners: <BlocListener<BillsBloc, BillsState>>[
+        BlocListener<BillsBloc, BillsState>(
+          listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.undo.isSome(),
+          listener: _offerUndo,
+        ),
+        BlocListener<BillsBloc, BillsState>(
+          listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.usedUndo.isSome(),
+          listener: _offerUsedUndo,
+        ),
+      ],
       child: list,
     ),
   );
@@ -117,7 +126,7 @@ class BillsPage extends StatelessWidget {
           child: HisaabChip(label: strings.tryAgain, onPressed: () => bloc.add(const BillsLoadRequested())),
         ),
       ],
-      BillsReady(:final List<RecurringRule> bills, :final Option<SavedTotal> saved) => <Widget>[
+      BillsReady(:final List<RecurringRule> bills, :final Option<SavedTotal> saved, :final Option<SetAsideSummary> setAside) => <Widget>[
         if (bills.isEmpty)
           Text(strings.ruleNone(kind), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2))
         else
@@ -126,6 +135,7 @@ class BillsPage extends StatelessWidget {
             onEdit: onEdit,
             onDelete: (RecurringRule bill) => bloc.add(BillsDeleteRequested(bill)),
             onThresholdReached: () => bloc.add(const BillsSwipeThresholdReached()),
+            setAside: setAside.map((SetAsideSummary summary) => summary.perSaving).getOrElse(() => const <int, Money>{}),
           ),
         if (saved case Some<SavedTotal>(:final SavedTotal value)) ...<Widget>[
           const SizedBox(height: HisaabSpacing.m),
@@ -135,9 +145,25 @@ class BillsPage extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
           ),
         ],
+        if (setAside case Some<SetAsideSummary>(:final SetAsideSummary value) when _showsStillSetAside(value)) ...<Widget>[
+          const SizedBox(height: HisaabSpacing.xs),
+          Semantics(
+            label: strings.savingsStillSetAside(value.stillSetAside.floorMajor, strings.spokenAmount(context.money.digits(value.stillSetAside))),
+            excludeSemantics: true,
+            child: Text(
+              strings.savingsStillSetAside(value.stillSetAside.floorMajor, context.money.format(value.stillSetAside)),
+              key: const ValueKey<String>('still-set-aside'),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.colors.ink2),
+            ),
+          ),
+        ],
       ],
     };
   }
+
+  // why: line 2 shows only while something is set aside or a use exists, so a list that never
+  // used the feature keeps its single line (AC-Y4, D177).
+  static bool _showsStillSetAside(SetAsideSummary summary) => summary.stillSetAside > Money.zero || summary.anyUse;
 
   // why: the footer names only the month the first saving went in ("since Oct", spec §5).
   static String _month(BuildContext context, CalendarDate since) =>
@@ -150,10 +176,28 @@ class BillsPage extends StatelessWidget {
     }
     final AppLocalizations strings = AppLocalizations.of(context);
     final BillsBloc bloc = context.read<BillsBloc>();
+    final bool keepsHistory = state is BillsReady && state.undoKeepsHistory;
     HisaabSnackbarHost.of(context).show(
       HisaabSnackbar(
-        message: strings.ruleDeleted(deleted),
+        message: strings.ruleDeleted(deleted, keepsHistory: keepsHistory),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(BillsUndoRequested(deleted))),
+      ),
+    );
+  }
+
+  // why: Undo deletes the entry and does not reopen the sheet (AC-Y9).
+  static void _offerUsedUndo(BuildContext context, BillsState state) {
+    final UsedOutcome? used = state is BillsReady ? state.usedUndo.toNullable() : null;
+    if (used == null) {
+      return;
+    }
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final BillsBloc bloc = context.read<BillsBloc>();
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.savingUsedDone(used.saving.label, context.money.format(used.entry.amount)),
+        semanticsLabel: strings.savingUsedDone(used.saving.label, strings.spokenAmount(context.money.digits(used.entry.amount))),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(BillsUsedUndoRequested(used.entry))),
       ),
     );
   }

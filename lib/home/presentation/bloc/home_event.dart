@@ -86,12 +86,33 @@ final class HomeSwipeThresholdReached extends HomeEvent {
   const HomeSwipeThresholdReached();
 }
 
-/// The Add tray opened over Home; Home holds its numbers until [HomeTrayClosed].
+/// A tray or sheet opened over Home; Home holds its numbers until [HomeTrayClosed].
 final class HomeTrayOpened extends HomeEvent {
   const HomeTrayOpened();
 }
 
-/// The Add tray's exit animation ended, so Home is in full view again.
+/// That tray or sheet's exit animation ended; Home is in full view again once every hold has closed.
 final class HomeTrayClosed extends HomeEvent {
   const HomeTrayClosed();
+}
+
+/// A *Used some of it* save finished on a saving's sheet opened from Home's due-soon line; Home
+/// offers Undo for it (AC-Y9). It waits for the next good load when Home can't show yet.
+final class HomeUsedDone extends HomeEvent {
+  const HomeUsedDone(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
+/// The user tapped Undo after a *Used* save: delete the entry, which sets the amount aside again.
+final class HomeUsedUndoRequested extends HomeEvent {
+  const HomeUsedUndoRequested(this.entry);
+
+  final Entry entry;
+
+  @override
+  List<Object?> get props => <Object?>[entry];
 }

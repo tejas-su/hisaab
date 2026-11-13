@@ -28,6 +28,10 @@ abstract interface class EntriesLocalDataSource {
 
   /// The sum of every *Saved* entry and the date of the first, or `firstDate` null with none.
   Future<({int totalMinor, String? firstDate})> savedTotal();
+
+  /// Per saving rule id: the sum of its posted *Saved* rows (`putInMinor`) and of the *Used* rows
+  /// linked to it (`usedMinor`), plus whether any *Used* row exists at all (`anyUse`).
+  Future<({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse})> savingTotals();
 }
 
 /// [EntriesLocalDataSource] backed by the app's sqflite database.
@@ -89,5 +93,26 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
       <Object?>[EntryKindValues.saved],
     );
     return (totalMinor: rows.single.intAt(total), firstDate: rows.single.stringOrNullAt(first));
+  }
+
+  @override
+  Future<({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse})> savingTotals() async {
+    final Map<int, int> putIn = await _sumsBy(TransactionColumns.recurringId, EntryKindValues.saved);
+    final Map<int, int> used = await _sumsBy(TransactionColumns.savingId, EntryKindValues.used);
+    final List<Map<String, Object?>> any = await _db.rawQuery(
+      'SELECT EXISTS(SELECT 1 FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ?) AS any',
+      <Object?>[EntryKindValues.used],
+    );
+    return (putInMinor: putIn, usedMinor: used, anyUse: any.single.intAt('any') == 1);
+  }
+
+  Future<Map<int, int>> _sumsBy(String linkColumn, String kind) async {
+    const String total = 'total';
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT $linkColumn AS link, SUM(${TransactionColumns.amountMinor}) AS $total '
+      'FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ? AND $linkColumn IS NOT NULL GROUP BY $linkColumn',
+      <Object?>[kind],
+    );
+    return <int, int>{for (final Map<String, Object?> row in rows) row.intAt('link'): row.intAt(total)};
   }
 }

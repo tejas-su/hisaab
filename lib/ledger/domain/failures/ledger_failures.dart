@@ -50,3 +50,9 @@ final class CategoryNameTakenFailure extends Failure {
 final class OwnCategoryLimitFailure extends Failure {
   const OwnCategoryLimitFailure() : super('4 of your own is the most');
 }
+
+/// A *Used* amount larger than the whole rupees set aside in its saving, or any amount from a
+/// saving with less than ₹1 set aside (BR-19).
+final class UsedTooMuchFailure extends Failure {
+  const UsedTooMuchFailure() : super('More than is set aside');
+}

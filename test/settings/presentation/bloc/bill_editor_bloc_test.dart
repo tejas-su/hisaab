@@ -246,4 +246,57 @@ void main() {
       expect((saving.state as BillEditorInProgress).label, 'Gold');
     });
   });
+  group('BillEditorBloc: the yearly pills (AC-Y1, AC-Y2, D191)', () {
+    late BillEditorBloc saving;
+
+    setUp(() {
+      saving = build(kind: EntryKind.saved);
+      addTearDown(saving.close);
+    });
+
+    bool yearly() => (saving.state as BillEditorInProgress).yearlyPill;
+
+    for (final SavingKind kind in <SavingKind>[SavingKind.insurance, SavingKind.schoolFees, SavingKind.festival]) {
+      test('picking ${kind.name} sets yearlyPill', () async {
+        await saving.dispatch(BillEditorSavingPicked(kind, kind.name));
+
+        expect(yearly(), isTrue);
+      });
+    }
+
+    for (final SavingKind kind in <SavingKind>[SavingKind.rd, SavingKind.sip, SavingKind.goldScheme, SavingKind.chit]) {
+      test('picking ${kind.name} does not', () async {
+        await saving.dispatch(BillEditorSavingPicked(kind, kind.name));
+
+        expect(yearly(), isFalse);
+      });
+    }
+
+    test('typing a name clears it, so a hand-typed name never shows the caption (A8, D191)', () async {
+      await saving.dispatch(const BillEditorSavingPicked(SavingKind.insurance, 'Insurance'));
+
+      await saving.dispatch(const BillEditorRenamed('Insurance'));
+
+      expect(yearly(), isFalse);
+    });
+
+    test('it survives the amount question and a step back', () async {
+      await saving.dispatch(const BillEditorSavingPicked(SavingKind.festival, 'Festival'));
+      await saving.dispatch(const BillEditorNextPressed());
+      await saving.dispatch(const BillEditorKeyPressed('5'));
+
+      expect(yearly(), isTrue);
+      await saving.dispatch(const BillEditorBackPressed());
+      expect(yearly(), isTrue);
+    });
+
+    test('isYearlyCost is true for the last three kinds only', () {
+      expect(SavingKind.values.where((SavingKind kind) => kind.isYearlyCost), <SavingKind>[
+        SavingKind.insurance,
+        SavingKind.schoolFees,
+        SavingKind.festival,
+      ]);
+    });
+  });
+
 }

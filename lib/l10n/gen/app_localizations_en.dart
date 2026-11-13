@@ -371,6 +371,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delete last digit. Touch and hold to clear all';
 
   @override
+  String get amountCap => 'That\'s the most you can type.';
+
+  @override
   String categoryName(String key) {
     String _temp0 = intl.Intl.selectLogic(key, {
       'food': 'Food',
@@ -745,6 +748,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'sip': 'SIP',
       'goldScheme': 'Gold scheme',
       'chit': 'Chit',
+      'insurance': 'Insurance',
+      'schoolFees': 'School fees',
+      'festival': 'Festival',
       'other': 'Saving',
     });
     return '$_temp0';
@@ -1955,6 +1961,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAddTileHint => 'Add a spend from the pull-down';
+
+  @override
+  String savingSetAside(String amount) {
+    return '$amount set aside';
+  }
+
+  @override
+  String savingsStillSetAside(int left, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      left,
+      locale: localeName,
+      other: '$amount still set aside',
+      zero: 'Nothing is set aside now.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingUsedAction => 'Used some of it';
+
+  @override
+  String get savingUsedHint => 'Paid the cost from this? Tap Used some of it.';
+
+  @override
+  String savingUsedQuestion(String saving) {
+    return 'How much did you use from $saving?';
+  }
+
+  @override
+  String get savingUsedAll => 'All of it';
+
+  @override
+  String savingUsedSetAside(String amount) {
+    return '$amount is set aside.';
+  }
+
+  @override
+  String savingUsedLeft(int left, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      left,
+      locale: localeName,
+      other: '$amount will still be set aside.',
+      zero: 'Nothing will be set aside.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savingUsedSame => 'Your daily number doesn\'t change.';
+
+  @override
+  String get savingUsedCap =>
+      'That\'s all you have set aside. Add the rest as a spend.';
+
+  @override
+  String get savingUsedNothing => 'Nothing is set aside to use.';
+
+  @override
+  String get typeAmountFirst => 'Type an amount first.';
+
+  @override
+  String get savingYearlyCaption =>
+      'Paid once a year? Each month, put in the cost divided by 12.';
+
+  @override
+  String get savingYearlyUsedHint => 'When you pay it, tap Used some of it.';
+
+  @override
+  String savingUsedDone(String saving, String amount) {
+    return '$saving: $amount used';
+  }
+
+  @override
+  String savingDeletedKeeps(String saving) {
+    return '$saving deleted. What you put in stays in your history.';
+  }
+
+  @override
+  String get entryUsed => 'Used from savings';
+
+  @override
+  String entryUsedSpoken(String saving, String amount) {
+    return '$saving. Used from savings $amount.';
+  }
+
+  @override
+  String get entryUsedDetail => 'Paid from what you set aside.';
 }
 
 /// The translations for English, as used in India (`en_IN`).

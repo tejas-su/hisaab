@@ -129,6 +129,9 @@ final class _ProjectedLedger implements LedgerRepository {
   TaskEither<Failure, Entry> addForRule(EntryDraft draft, {required int recurringId}) => throw _readOnly;
 
   @override
+  TaskEither<Failure, Entry> addForSaving(EntryDraft draft, {required int savingId}) => throw _readOnly;
+
+  @override
   TaskEither<Failure, Entry> replace(int id, EntryDraft draft) => throw _readOnly;
 
   @override
@@ -139,6 +142,9 @@ final class _ProjectedLedger implements LedgerRepository {
 
   @override
   TaskEither<Failure, Option<SavedTotal>> savedTotal() => throw _readOnly;
+
+  @override
+  TaskEither<Failure, SavingTotals> savingTotals() => throw _readOnly;
 }
 
 /// [ProjectedBook]'s rules and skips; [post] is the only write.

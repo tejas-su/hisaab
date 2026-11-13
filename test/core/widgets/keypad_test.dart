@@ -48,5 +48,35 @@ void main() {
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       handle.dispose();
     });
+
+    testWidgets('key labels stop growing at 1.5x text (P15)', (WidgetTester tester) async {
+      Future<Size> labelAt(double scale) async {
+        await pumpApp(
+          tester,
+          Scaffold(body: Keypad(onKey: (String _) {}, onBackspace: () {}, onClear: () {})),
+          size: TestWindows.smallPhone,
+          textScale: scale,
+        );
+        return tester.getSize(find.text('5'));
+      }
+
+      final Size normal = await labelAt(1);
+      final Size clamped = await labelAt(1.5);
+      final Size doubled = await labelAt(2);
+      expect(clamped.height, greaterThan(normal.height));
+      expect(doubled, clamped);
+    });
+
+    testWidgets('at 2x text the keys still fit and take taps', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        Scaffold(body: Keypad(onKey: pressed.add, onBackspace: () {}, onClear: () {})),
+        size: TestWindows.smallPhone,
+        textScale: 2,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byKey(const ValueKey<String>('keypad-7')));
+      expect(pressed, <String>['7']);
+    });
   });
 }

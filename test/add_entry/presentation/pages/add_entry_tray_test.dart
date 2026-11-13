@@ -25,12 +25,6 @@ import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 import '../../../helpers/pump_app.dart';
 
-const DisplayFeature _tabletopFold = DisplayFeature(
-  bounds: Rect.fromLTRB(0, 420, 701, 420),
-  type: DisplayFeatureType.fold,
-  state: DisplayFeatureState.postureHalfOpened,
-);
-
 void main() {
   late FakeServices services;
   late CycleSummary summary;
@@ -184,6 +178,23 @@ void main() {
       expect(services.haptics.events.last, 'reject');
     });
 
+    testWidgets('a 10th digit holds a ring and says why, until the next accepted key (FR-AD-2, E13)', (WidgetTester tester) async {
+      final SemanticsHandle handle = tester.ensureSemantics();
+      await open(tester);
+      await type(tester, '999999999');
+      expect(find.byKey(const ValueKey<String>('amount-cap-ring')), findsNothing);
+
+      await type(tester, '9');
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.byKey(const ValueKey<String>('amount-cap-ring')), findsOneWidget);
+      expect(find.bySemanticsLabel("That's the most you can type."), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Delete last digit. Touch and hold to clear all'));
+      await tester.pump();
+      expect(find.byKey(const ValueKey<String>('amount-cap-ring')), findsNothing);
+      handle.dispose();
+    });
+
     testWidgets('date chip: Yesterday, and a note is saved with the entry', (WidgetTester tester) async {
       await open(tester);
       await type(tester, '120');
@@ -250,7 +261,7 @@ void main() {
       ('a 320dp phone at 2× text', TestWindows.smallPhone, 2, const <DisplayFeature>[]),
       ('a phone in landscape', TestWindows.phoneLandscape, 1, const <DisplayFeature>[]),
       ('a tablet', TestWindows.tablet, 1, const <DisplayFeature>[]),
-      ('tabletop posture', const Size(701, 841), 1, const <DisplayFeature>[_tabletopFold]),
+      ('tabletop posture', const Size(701, 841), 1, const <DisplayFeature>[TestWindows.tabletopFold]),
     ];
     for (final (String name, Size size, double scale, List<DisplayFeature> features) in windows) {
       testWidgets('both steps lay out without overflow on $name', (WidgetTester tester) async {
@@ -263,8 +274,39 @@ void main() {
       });
     }
 
+    for (final (String name, Size size) in <(String, Size)>[
+      ('960x600 landscape', TestWindows.landscape600),
+      ('a phone in landscape', TestWindows.phoneLandscape),
+      ('a split-screen half', TestWindows.splitScreen),
+    ]) {
+      testWidgets('step 1 keeps amount, chips, slot, keypad and Next on screen apart on $name (FR-KS-1, E18)', (
+        WidgetTester tester,
+      ) async {
+        await open(tester, size: size);
+        await type(tester, '245');
+        final Rect window = tester.getRect(find.byType(AddEntryTray)).intersect(Offset.zero & size);
+        final Map<String, Rect> rects = <String, Rect>{
+          'amount': tester.getRect(find.text('₹245')),
+          'chips': tester.getRect(find.byKey(const ValueKey<String>('quick-10'))),
+          'slot': tester.getRect(find.byKey(const ValueKey<String>('usual-slot'))),
+          'keypad': tester.getRect(find.byKey(const ValueKey<String>('keypad-1'))),
+          'next': tester.getRect(find.byKey(const ValueKey<String>('add-next'))),
+        };
+        for (final MapEntry<String, Rect> entry in rects.entries) {
+          expect(window.contains(entry.value.topLeft) && window.contains(entry.value.bottomRight), isTrue, reason: '${entry.key} ${entry.value}');
+        }
+        for (final String a in <String>['amount', 'chips', 'slot']) {
+          for (final String b in <String>['keypad', 'next']) {
+            expect(rects[a]!.overlaps(rects[b]!), isFalse, reason: '$a ${rects[a]} overlaps $b ${rects[b]}');
+          }
+        }
+        expect(rects['amount']!.overlaps(rects['slot']!), isFalse);
+        expect(rects['slot']!.overlaps(rects['chips']!), isFalse);
+      });
+    }
+
     testWidgets('tabletop: the whole tray sits below the fold and takes taps', (WidgetTester tester) async {
-      await open(tester, size: const Size(701, 841), displayFeatures: const <DisplayFeature>[_tabletopFold]);
+      await open(tester, size: const Size(701, 841), displayFeatures: const <DisplayFeature>[TestWindows.tabletopFold]);
       expect(tester.getRect(find.byType(AddEntryTray)).top, greaterThanOrEqualTo(420));
       await tester.tap(find.byKey(const ValueKey<String>('keypad-7')));
       await tester.pump();
@@ -632,7 +674,7 @@ void main() {
       ('a tablet', TestWindows.tablet, 1, const <DisplayFeature>[]),
       ('an unfolded foldable', TestWindows.foldableUnfolded, 1, const <DisplayFeature>[]),
       ('a foldable in landscape', TestWindows.foldableLandscape, 1, const <DisplayFeature>[]),
-      ('tabletop posture', const Size(701, 841), 1, const <DisplayFeature>[_tabletopFold]),
+      ('tabletop posture', const Size(701, 841), 1, const <DisplayFeature>[TestWindows.tabletopFold]),
     ];
     for (final (String name, Size size, double scale, List<DisplayFeature> features) in windows) {
       testWidgets('both steps lay out without overflow with a usual on $name (NFR-8)', (WidgetTester tester) async {
@@ -662,7 +704,7 @@ void main() {
     }
 
     testWidgets('tabletop: the pill sits beside the keypad, below the fold (UI_DESIGN §13)', (WidgetTester tester) async {
-      await openUsual(tester, size: const Size(701, 841), displayFeatures: const <DisplayFeature>[_tabletopFold]);
+      await openUsual(tester, size: const Size(701, 841), displayFeatures: const <DisplayFeature>[TestWindows.tabletopFold]);
       expect(tester.getRect(pill).top, greaterThanOrEqualTo(420));
       expect(tester.getRect(pill).right, lessThanOrEqualTo(tester.getRect(find.byType(Keypad)).left));
       expect(tester.getRect(amount).top - tester.getRect(find.byType(KindSwitch)).bottom, 12);

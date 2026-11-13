@@ -29,6 +29,7 @@ class Keypad extends StatelessWidget {
   final double keyHeight;
 
   static const double _gap = HisaabSpacing.s;
+  static const double _maxLabelScale = 1.5;
 
   @override
   Widget build(BuildContext context) {
@@ -42,21 +43,26 @@ class Keypad extends StatelessWidget {
         child: const AppIcon(AppIcons.backspace),
       ),
     ];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        for (int row = 0; row < 4; row++) ...<Widget>[
-          if (row > 0) const SizedBox(height: _gap),
-          Row(
-            children: <Widget>[
-              for (int column = 0; column < 3; column++) ...<Widget>[
-                if (column > 0) const SizedBox(width: _gap),
-                Expanded(child: keys[row * 3 + column]),
+    // why: a key is a fixed-size target, so its label stops growing at 1.5x; the amount above and
+    // the other text keep scaling (P15).
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: _maxLabelScale,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          for (int row = 0; row < 4; row++) ...<Widget>[
+            if (row > 0) const SizedBox(height: _gap),
+            Row(
+              children: <Widget>[
+                for (int column = 0; column < 3; column++) ...<Widget>[
+                  if (column > 0) const SizedBox(width: _gap),
+                  Expanded(child: keys[row * 3 + column]),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 

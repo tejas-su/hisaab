@@ -20,6 +20,13 @@ abstract final class PromptBuilder {
   static const String _cardBillCategory = 'card bill';
   static const String _cardBillKind = 'card_bill_paid';
 
+  // why: the AI would otherwise add a *Used* entry to spending, but the money was counted when it
+  // was put in, so it is not spending and moves no number (BR-15, BR-19, D188).
+  static const String _usedClause =
+      'Entries of kind "used" are costs the user paid from money they had already set aside in a saving, '
+      'such as a yearly insurance bill. That money was counted when it was put in, so it is not spending '
+      'in this period and does not change the daily number. Do not add it to spending.';
+
   /// The longest text before the oldest entries are grouped by week.
   static const int maxLength = 12000;
 
@@ -46,6 +53,7 @@ abstract final class PromptBuilder {
         _role,
         _context(input, period),
         ..._facts(input),
+        if (entries.any((Entry e) => e.kind == EntryKind.used)) _usedClause,
         _summary(entries, names),
         _bills(input.bills),
         '',
@@ -213,9 +221,9 @@ abstract final class PromptBuilder {
         '${e.amount.floorMajor}',
         e.kind == EntryKind.cardPaid ? _cardBillKind : e.kind.name,
         // why: a saving's and a card bill's categories are hidden and not in the list, so they are
-        // named here (D120, D123).
+        // named here; a *Used* entry is filed under its saving's category (D120, D123, D188).
         switch (e.kind) {
-          EntryKind.saved => _savingsCategory,
+          EntryKind.saved || EntryKind.used => _savingsCategory,
           EntryKind.cardPaid => _cardBillCategory,
           EntryKind.spent || EntryKind.got => PromptCsv.field(names.nameOf(e.categoryId)),
         },

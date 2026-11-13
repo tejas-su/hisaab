@@ -40,6 +40,8 @@ import '../domain/usecase/change_pay_rule.dart';
 import '../domain/usecase/correct_latest_pay.dart';
 import '../domain/usecase/get_income.dart';
 import '../domain/usecase/get_saved_total.dart';
+import '../domain/usecase/get_set_aside.dart';
+import '../domain/usecase/use_from_savings.dart';
 import '../domain/usecase/put_in_extra.dart';
 import '../domain/usecase/post_due_recurring.dart';
 import '../domain/usecase/rename_category.dart';
@@ -90,6 +92,8 @@ void registerLedgerServices(GetIt getIt) {
     )
     ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock, summary: getIt<GetCycleSummary>()))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
+    ..registerSingleton<GetSetAside>(GetSetAside(recurring: recurring, ledger: ledger))
+    ..registerSingleton<UseFromSavings>(UseFromSavings(ledger: ledger, categories: getIt<CategoryRepository>(), clock: clock))
     ..registerSingleton<GetIncome>(GetIncome(recurring: recurring, ledger: ledger, clock: clock))
     ..registerSingleton<ChangeIncomeAmount>(ChangeIncomeAmount(recurring: recurring))
     ..registerSingleton<CorrectLatestPay>(CorrectLatestPay(ledger: ledger))

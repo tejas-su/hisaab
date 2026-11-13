@@ -1,3 +1,4 @@
+import 'package:hisaab/core/money/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hisaab/core/errors/failure.dart';
@@ -125,4 +126,39 @@ void main() {
       }
     });
   });
+  test('typedSpendsOn ignores a used entry (FR-WG-3, BR-19)', () {
+    final ProjectedBook withUsed = ProjectedBook(
+      entries: <Entry>[
+        ...WorkedExample.entries,
+        Entry(
+          id: 90,
+          amount: Money.fromMajor(4000),
+          kind: EntryKind.used,
+          categoryId: 11,
+          date: WorkedExample.today,
+          createdAt: WorkedExample.now,
+          note: 'Insurance',
+          savingId: 5,
+        ),
+      ],
+      rules: WorkedExample.rules,
+      skips: const <BillSkip>[],
+      settings: const BudgetSettings(),
+      firstLogged: const Option<CalendarDate>.of(CalendarDate(2026, 10, 4)),
+    );
+
+    expect(withUsed.typedSpendsOn(WorkedExample.today).map((Entry e) => e.id), <int>[4, 5, 6]);
+  });
+
+  test('a projected ledger refuses the Used writes, as it refuses every other', () {
+    expect(
+      () => book.ledger.addForSaving(
+        EntryDraft(amount: Money.fromMajor(1), kind: EntryKind.used, categoryId: 11, date: WorkedExample.today),
+        savingId: 5,
+      ),
+      throwsUnsupportedError,
+    );
+    expect(() => book.ledger.savingTotals(), throwsUnsupportedError);
+  });
+
 }
