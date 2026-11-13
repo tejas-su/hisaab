@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/db/db_row.dart';
 import '../../../core/errors/failure.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../domain/entities/suggestion_state.dart';
 import '../../domain/repository/suggestion_state_repository.dart';
 import '../datasource/suggestion_state_local_data_source.dart';
@@ -35,6 +36,10 @@ final class SuggestionStateRepositoryImpl implements SuggestionStateRepository {
   @override
   TaskEither<Failure, Unit> put(SuggestionState state) =>
       dbTask(() => _source.upsert(SuggestionStateMapper.toModel(state))).map((void _) => unit);
+
+  @override
+  TaskEither<Failure, Unit> markAsked(int categoryId, CalendarDate day) =>
+      dbTask(() => _source.setAskedOn(categoryId, day.toIso())).map((void _) => unit);
 
   @override
   TaskEither<Failure, Unit> remove(int categoryId) => dbTask(() => _source.delete(categoryId)).map((int _) => unit);

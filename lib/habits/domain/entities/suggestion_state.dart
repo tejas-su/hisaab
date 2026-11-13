@@ -12,6 +12,7 @@ final class SuggestionState extends Equatable {
     this.quietOn = const Option<CalendarDate>.none(),
     this.restUntil = const Option<CalendarDate>.none(),
     this.forgottenAt = const Option<DateTime>.none(),
+    this.askedOn = const Option<CalendarDate>.none(),
   });
 
   /// The category this state belongs to.
@@ -28,6 +29,10 @@ final class SuggestionState extends Equatable {
   /// longer feed its habit. [None] when it was never forgotten.
   final Option<DateTime> forgottenAt;
 
+  /// The local day the missed-log line was last asked for this category (D172). It is never
+  /// [quietOn]: that feeds the 14-day Undo count. [None] when it was never asked.
+  final Option<CalendarDate> askedOn;
+
   @override
-  List<Object?> get props => <Object?>[categoryId, quietOn, restUntil, forgottenAt];
+  List<Object?> get props => <Object?>[categoryId, quietOn, restUntil, forgottenAt, askedOn];
 }

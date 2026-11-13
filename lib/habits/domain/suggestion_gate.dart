@@ -55,6 +55,7 @@ abstract final class SuggestionGate {
           ? Option<CalendarDate>.of(today.addDays(HabitRules.restDays))
           : state.flatMap((SuggestionState state) => state.restUntil),
       forgottenAt: state.flatMap((SuggestionState state) => state.forgottenAt),
+      askedOn: state.flatMap((SuggestionState state) => state.askedOn),
     );
   }
 
@@ -72,5 +73,6 @@ abstract final class SuggestionGate {
         quietOn: state.flatMap((SuggestionState state) => state.quietOn),
         restUntil: Option<CalendarDate>.of(CalendarDate.fromDateTime(now).addDays(HabitRules.restDays)),
         forgottenAt: Option<DateTime>.of(now),
+        askedOn: state.flatMap((SuggestionState state) => state.askedOn),
       );
 }

@@ -7,11 +7,11 @@ import '../../../core/errors/failure.dart';
 
 /// A row of the `suggestion_state` table: one category's *your usual* state (SPEC BR-17).
 ///
-/// `quiet_on` and `rest_until` are `YYYY-MM-DD` days; `forgotten_at` is a local ISO instant in
+/// `quiet_on`, `rest_until` and `asked_on` are `YYYY-MM-DD` days; `forgotten_at` is a local ISO instant in
 /// the form of `transactions.created_at`.
 final class SuggestionStateModel extends Equatable {
   /// Creates the row of category [categoryId]; a column not given is null.
-  const SuggestionStateModel({required this.categoryId, this.quietOn, this.restUntil, this.forgottenAt});
+  const SuggestionStateModel({required this.categoryId, this.quietOn, this.restUntil, this.forgottenAt, this.askedOn});
 
   /// Reads a `suggestion_state` row.
   ///
@@ -23,6 +23,7 @@ final class SuggestionStateModel extends Equatable {
           quietOn: row.stringOrNullAt(SuggestionStateColumns.quietOn),
           restUntil: row.stringOrNullAt(SuggestionStateColumns.restUntil),
           forgottenAt: row.stringOrNullAt(SuggestionStateColumns.forgottenAt),
+          askedOn: row.stringOrNullAt(SuggestionStateColumns.askedOn),
         ),
       );
 
@@ -38,14 +39,18 @@ final class SuggestionStateModel extends Equatable {
   /// The `forgotten_at` column.
   final String? forgottenAt;
 
+  /// The `asked_on` column.
+  final String? askedOn;
+
   /// The row to store, with every column.
   Map<String, Object?> toRow() => <String, Object?>{
         SuggestionStateColumns.categoryId: categoryId,
         SuggestionStateColumns.quietOn: quietOn,
         SuggestionStateColumns.restUntil: restUntil,
         SuggestionStateColumns.forgottenAt: forgottenAt,
+        SuggestionStateColumns.askedOn: askedOn,
       };
 
   @override
-  List<Object?> get props => <Object?>[categoryId, quietOn, restUntil, forgottenAt];
+  List<Object?> get props => <Object?>[categoryId, quietOn, restUntil, forgottenAt, askedOn];
 }

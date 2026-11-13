@@ -17,6 +17,10 @@ abstract interface class SuggestionStateLocalDataSource {
   /// Stores [model], replacing the row its category already has.
   Future<void> upsert(SuggestionStateModel model);
 
+  /// Sets only `asked_on` of category [categoryId] to [iso] (`YYYY-MM-DD`), inserting a row that
+  /// holds nothing else when the category has none.
+  Future<void> setAskedOn(int categoryId, String iso);
+
   /// Removes the row of category [categoryId]; returns how many rows went (0 or 1).
   Future<int> delete(int categoryId);
 }
@@ -47,6 +51,23 @@ final class SqfliteSuggestionStateLocalDataSource implements SuggestionStateLoca
   @override
   Future<void> upsert(SuggestionStateModel model) =>
       _database.db.insert(Tables.suggestionState, model.toRow(), conflictAlgorithm: ConflictAlgorithm.replace);
+
+  @override
+  Future<void> setAskedOn(int categoryId, String iso) => _database.db.transaction((Transaction txn) async {
+        final int changed = await txn.update(
+          Tables.suggestionState,
+          <String, Object?>{SuggestionStateColumns.askedOn: iso},
+          where: _ofCategory,
+          whereArgs: <Object?>[categoryId],
+        );
+        // why: never a replace-insert, it would wipe the row's quiet, rest and forgotten columns.
+        if (changed == 0) {
+          await txn.insert(Tables.suggestionState, <String, Object?>{
+            SuggestionStateColumns.categoryId: categoryId,
+            SuggestionStateColumns.askedOn: iso,
+          });
+        }
+      });
 
   @override
   Future<int> delete(int categoryId) =>

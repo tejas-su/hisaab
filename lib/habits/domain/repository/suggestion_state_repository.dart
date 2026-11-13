@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
+import '../../../core/time/calendar_date.dart';
 import '../entities/suggestion_state.dart';
 
 /// Reads and writes each category's *your usual* state: quiet, resting or forgotten (SPEC BR-17).
@@ -22,6 +23,13 @@ abstract interface class SuggestionStateRepository {
   /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`, also when the category
   /// doesn't exist.
   TaskEither<Failure, Unit> put(SuggestionState state);
+
+  /// Records that the missed-log line was asked for category [categoryId] on [day], leaving every
+  /// other column of its state as it is, and creating a state that holds only the day when the
+  /// category has none (D172).
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> markAsked(int categoryId, CalendarDate day);
 
   /// Removes the state of category [categoryId]; a category with none is left as it is.
   ///

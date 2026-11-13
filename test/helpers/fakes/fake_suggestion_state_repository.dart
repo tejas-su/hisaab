@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/habits/domain/entities/suggestion_state.dart';
 import 'package:hisaab/habits/domain/repository/suggestion_state_repository.dart';
 
@@ -53,6 +54,24 @@ final class FakeSuggestionStateRepository implements SuggestionStateRepository {
     calls.add('put:${state.categoryId}');
     return _run(() {
       states[state.categoryId] = state;
+      return unit;
+    }, write: true);
+  }
+
+  @override
+  TaskEither<Failure, Unit> markAsked(int categoryId, CalendarDate day) {
+    calls.add('asked:$categoryId');
+    return _run(() {
+      final SuggestionState? current = states[categoryId];
+      states[categoryId] = current == null
+          ? SuggestionState(categoryId: categoryId, askedOn: Option<CalendarDate>.of(day))
+          : SuggestionState(
+              categoryId: categoryId,
+              quietOn: current.quietOn,
+              restUntil: current.restUntil,
+              forgottenAt: current.forgottenAt,
+              askedOn: Option<CalendarDate>.of(day),
+            );
       return unit;
     }, write: true);
   }

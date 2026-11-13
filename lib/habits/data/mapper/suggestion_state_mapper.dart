@@ -11,12 +11,15 @@ abstract final class SuggestionStateMapper {
   /// forgotten time.
   static Either<Failure, SuggestionState> toEntity(SuggestionStateModel model) => _day(model.quietOn).flatMap(
         (Option<CalendarDate> quietOn) => _day(model.restUntil).flatMap(
-          (Option<CalendarDate> restUntil) => _instant(model.forgottenAt).map(
-            (Option<DateTime> forgottenAt) => SuggestionState(
-              categoryId: model.categoryId,
-              quietOn: quietOn,
-              restUntil: restUntil,
-              forgottenAt: forgottenAt,
+          (Option<CalendarDate> restUntil) => _instant(model.forgottenAt).flatMap(
+            (Option<DateTime> forgottenAt) => _day(model.askedOn).map(
+              (Option<CalendarDate> askedOn) => SuggestionState(
+                categoryId: model.categoryId,
+                quietOn: quietOn,
+                restUntil: restUntil,
+                forgottenAt: forgottenAt,
+                askedOn: askedOn,
+              ),
             ),
           ),
         ),
@@ -29,6 +32,7 @@ abstract final class SuggestionStateMapper {
         quietOn: state.quietOn.map((CalendarDate day) => day.toIso()).toNullable(),
         restUntil: state.restUntil.map((CalendarDate day) => day.toIso()).toNullable(),
         forgottenAt: state.forgottenAt.map((DateTime at) => at.toIso8601String()).toNullable(),
+        askedOn: state.askedOn.map((CalendarDate day) => day.toIso()).toNullable(),
       );
 
   static Either<Failure, Option<CalendarDate>> _day(String? text) => Option<String>.fromNullable(text).match(
