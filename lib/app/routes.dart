@@ -185,6 +185,9 @@ abstract final class AppRoutes {
                 onAskAi: (PayCycle cycle) => Navigator.of(context).push(
                   MaterialPageRoute<void>(builder: (BuildContext _) => askAi(getIt, cycle: cycle)),
                 ),
+                onOpenStory: (int cyclesBack) => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (BuildContext _) => monthStory(getIt, cyclesBack: cyclesBack)),
+                ),
                 onSeeEntries: (PayCycle cycle, Option<int> categoryId) => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (BuildContext _) => entries(
@@ -377,6 +380,20 @@ abstract final class AppRoutes {
           haptics: getIt<Haptics>(),
         )..add(const EntriesLoadRequested()),
         child: EntriesPage(cycle: cycle, today: getIt<Clock>().today(), onEdit: onEdit),
+      );
+
+  /// The month story of the cycle [cyclesBack] cycles before the current one (FR-SP-7).
+  static Widget monthStory(GetIt getIt, {required int cyclesBack}) => BlocProvider<MonthStoryBloc>(
+        create: (BuildContext _) =>
+            MonthStoryBloc(getStory: getIt<GetMonthStory>(), cyclesBack: cyclesBack)..add(const MonthStoryLoadRequested()),
+        child: Builder(
+          builder: (BuildContext context) => MonthStoryPage(
+            today: getIt<Clock>().today(),
+            onAskAi: (PayCycle cycle) => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (BuildContext _) => askAi(getIt, cycle: cycle)),
+            ),
+          ),
+        ),
       );
 
   /// Ask AI for [cycle], the one Spends shows (FR-AI).

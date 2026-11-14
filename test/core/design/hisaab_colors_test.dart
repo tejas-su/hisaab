@@ -134,6 +134,24 @@ void main() {
     });
   });
 
+  group('HisaabColors fillSoft (D197)', () {
+    test('sits between ink and sunk in lightness, in both themes', () {
+      for (final HisaabColors c in <HisaabColors>[HisaabColors.light, HisaabColors.dark]) {
+        final double soft = c.fillSoft.computeLuminance();
+        final double a = c.ink.computeLuminance();
+        final double b = c.sunk.computeLuminance();
+        expect(soft, inExclusiveRange(a < b ? a : b, a < b ? b : a));
+      }
+    });
+
+    test('copyWith replaces fillSoft, and lerp interpolates it', () {
+      expect(HisaabColors.light.copyWith(fillSoft: HisaabColors.dark.fillSoft).fillSoft, HisaabColors.dark.fillSoft);
+      expect(HisaabColors.light.copyWith().fillSoft, HisaabColors.light.fillSoft);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 1).fillSoft, HisaabColors.dark.fillSoft);
+      expect(HisaabColors.light.lerp(HisaabColors.dark, 0).fillSoft, HisaabColors.light.fillSoft);
+    });
+  });
+
   group('HisaabColors theme extension', () {
     test('copyWith replaces only the given token', () {
       final HisaabColors changed = HisaabColors.light.copyWith(signal: const Color(0xFF000000));

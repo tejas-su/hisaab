@@ -10,6 +10,8 @@ import '../../../core/time/pay_cycle.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/pace_series.dart';
 import '../pace_card_copy.dart';
+import '../spends_graph_copy.dart';
+import 'comparison_line.dart';
 import 'pace_chart_painter.dart';
 import 'pace_dates.dart';
 import 'pace_legend.dart';
@@ -20,14 +22,16 @@ import 'spends_card.dart';
 /// Without [pace] (no money came in) only the total shows. TalkBack reads the card as one
 /// sentence. [showToday] marks today on the current cycle, with the gap to the steady line and the
 /// forecast, said in a line under the key (D133, D135). [cycle] names the first and last days
-/// under the chart.
+/// under the chart. [comparison], when set, is the line under the total against the cycle before
+/// (FR-SP-3a), read after the card's sentence.
 class PaceCard extends StatelessWidget {
-  const PaceCard({super.key, required this.spent, required this.pace, required this.cycle, required this.showToday});
+  const PaceCard({super.key, required this.spent, required this.pace, required this.cycle, required this.showToday, this.comparison});
 
   final Money spent;
   final Option<PaceSeries> pace;
   final PayCycle cycle;
   final bool showToday;
+  final ComparisonWords? comparison;
 
   static const double _chartHeightShare = 0.6;
   static const double _chartMinHeight = 168;
@@ -42,12 +46,16 @@ class PaceCard extends StatelessWidget {
     return SpendsCard(
       child: Semantics(
         container: true,
-        label: copy.spoken(spent, series, showToday: showToday),
+        label: <String>[copy.spoken(spent, series, showToday: showToday), ?comparison?.spoken].join(' '),
         excludeSemantics: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             _total(context, strings, series),
+            if (comparison case final ComparisonWords words) ...<Widget>[
+              const SizedBox(height: HisaabSpacing.xs),
+              ComparisonLine(key: const ValueKey<String>('pace-comparison'), words: words),
+            ],
             if (series != null) ...<Widget>[
               const SizedBox(height: HisaabSpacing.m),
               _chart(context, series),

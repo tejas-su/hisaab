@@ -3,9 +3,14 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/money/money.dart';
 import '../../../core/time/pay_cycle.dart';
+import 'category_detail.dart';
 import 'category_spend.dart';
+import 'cycle_bar.dart';
 import 'insight.dart';
+import 'money_split.dart';
+import 'month_story.dart';
 import 'pace_series.dart';
+import 'spends_comparison.dart';
 
 /// Everything Spends shows for one cycle (SPEC FR-SP-1, -3, -4, -5).
 final class SpendsOverview extends Equatable {
@@ -21,6 +26,12 @@ final class SpendsOverview extends Equatable {
     required this.pace,
     required this.rows,
     required this.insights,
+    this.story = const Option<MonthStory>.none(),
+    this.showsStoryRow = false,
+    this.split = MoneySplit.empty,
+    this.comparison = const Option<SpendsComparison>.none(),
+    this.details = const <int, CategoryDetail>{},
+    this.strip = const Option<MonthsStrip>.none(),
   });
 
   final PayCycle cycle;
@@ -56,6 +67,26 @@ final class SpendsOverview extends Equatable {
   /// At most 3, in BR-14 priority order.
   final List<Insight> insights;
 
+  /// A finished cycle's month story, behind the card below Ask AI; [None] on the current cycle
+  /// and on a cycle BR-20 gives none (FR-SP-7 AC-1).
+  final Option<MonthStory> story;
+
+  /// Whether the current cycle shows the slim row to the cycle before's story: days 1 to 7, when
+  /// that cycle has one (FR-SP-7 AC-2).
+  final bool showsStoryRow;
+
+  /// The split card's numbers (FR-SP-4b).
+  final MoneySplit split;
+
+  /// The pace card's comparison line (FR-SP-3a); [None] without a fully tracked cycle before.
+  final Option<SpendsComparison> comparison;
+
+  /// What each row of *Where it went* shows when opened, by category id (FR-SP-4 AC-R2).
+  final Map<int, CategoryDetail> details;
+
+  /// The months strip (FR-SP-8); [None] until BR-21 shows it.
+  final Option<MonthsStrip> strip;
+
   /// The current cycle has no Next.
   bool get isCurrent => cyclesBack == 0;
 
@@ -63,5 +94,5 @@ final class SpendsOverview extends Equatable {
   bool get isEmpty => rows.isEmpty;
 
   @override
-  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, saved, notLogged, pace, rows, insights];
+  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, saved, notLogged, pace, rows, insights, story, showsStoryRow, split, comparison, details, strip];
 }

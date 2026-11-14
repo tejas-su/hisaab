@@ -55,6 +55,7 @@ enum _Swatch {
   displayInk,
   displayInk2,
   blockIdle,
+  fillSoft,
   displayEdge,
   inverse,
   danger,
@@ -102,6 +103,7 @@ enum _Swatch {
       displayInk => c.displayInk,
       displayInk2 => c.displayInk2,
       blockIdle => c.blockIdle,
+      fillSoft => c.fillSoft,
       displayEdge => c.displayEdge,
       inverse => c.inverse,
       danger => c.danger,
@@ -165,6 +167,10 @@ final List<_Pair> _pairs = <_Pair>[
   _pair(_Swatch.control, _Swatch.background, _Rule.pressStep, 'a resting chip, Back well or field on the page (D100)'),
   _pair(_Swatch.hairline, _Swatch.surface, _Rule.pressStep, 'a resting chip or field on a card, the tray or a sheet (D100)'),
   _pair(_Swatch.blockIdle, _Swatch.display, _Rule.idleBlock, 'idle day blocks'),
+  // The income split bar's Everyday part sits beside Bills (ink), on the sunk track and on the card.
+  _pair(_Swatch.fillSoft, _Swatch.ink, _Rule.nonText, 'the split bar’s Everyday part against Bills'),
+  _pair(_Swatch.fillSoft, _Swatch.sunk, _Rule.nonText, 'the split bar’s Everyday part against its track'),
+  _pair(_Swatch.fillSoft, _Swatch.surface, _Rule.nonText, 'the split bar’s Everyday part on the card'),
   // The focus ring sits on the layer around a control; its gap sits against the control (D99).
   for (final _Swatch layer in <_Swatch>[_Swatch.background, _Swatch.surface, _Swatch.sunk, _Swatch.display])
     _pair(_Swatch.focus, layer, _Rule.nonText, 'the focus ring around a control on this layer'),

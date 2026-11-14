@@ -73,6 +73,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `clear` | `#F1EDE8` at 0% | See-through: an unselected fill, a see-through app bar, the far end of a fade. Never a bare transparent, which is black at 0% and fades through grey (D96) |
 | `focus` | `#161615` (alias of `ink`) | The keyboard and D-pad focus ring, 2dp, and nothing else (§9, D99) |
 | `focusGap` | `#F1EDE8` (alias of `bg`) | The 2dp band between a control and its `focus` ring (D99) |
+| `fillSoft` | `#787169` | The Everyday part of the Spends income split bar, a mid-tone between `ink` (Bills) and the `sunk` track. 3.76:1 on `ink`, 3.68:1 on `sunk`, 4.77:1 on `surface`. Never text, never a state (D197) |
 | `inverse` | `#312E29` | The snackbar's fill, with `bg` text (11.60:1). A charcoal, not `ink`, so it is dark without being a slab (D105) |
 | `danger` | `#B42318` | **The *Delete everything* hold key only** (D142): its edge, glyph and label at rest (5.64:1 on `bg`), and its fill with `bg` text (5.64:1). Never a state, an amount or an error |
 
@@ -92,6 +93,7 @@ The range line underneath borrows from electric cars. EV drivers trust a range d
 | `clear` | `#131210` at 0% | `bg` at 0%, as in light |
 | `focus` | `#F2F1EC` | alias of `ink` (D99) |
 | `focusGap` | `#131210` | alias of `bg` (D99) |
+| `fillSoft` | `#858077` | the same job: 3.47:1 on `ink`, 3.58:1 on `sunk`, 4.19:1 on `surface` (D197) |
 | `inverse` | `#F2F1EC` | alias of `ink`: the snackbar is a light pill on the dark page (D105) |
 | `danger` | `#F97066` | lighter, so it keeps 6.72:1 on `bg`, and `bg` text on its fill 6.72:1 (D142) |
 
@@ -393,6 +395,30 @@ Two tabs and one action. No hamburger menu, and settings are at most one level d
   - When a bar is hatched, one key line closes the card: a hatch swatch and "Striped part is over the limit." in `bodySmall` (D110).
 - **Insights:** at most 3 plain sentences, each with a next step, for example "Food spending is ₹1,900 more than in September. [See Food entries]". Comparisons name the previous cycle as the switcher does, never "last month" (D78).
 - **Spent, saved and not logged (D120, D176, mockup 28, mockup 41 §6):** when the cycle has saves or a fix, one `bodyMedium` `ink2` line, "Spent ₹27,570 · Saved ₹1,000 · Not logged ₹4,200", sits above *Where it went*, aligned with the card titles. Three parts at most, in that order, each only above ₹0; each part is unbreakable and the line wraps between parts with no trailing dots (mockup 42 option B), joined by the `·`. *Spent* excludes *Not logged*, and *Used from savings* is not on the line. Saves and fixes never appear in the bars, pace or insights.
+
+- **Graphs (D195, [mockup 46](design/mockups/46-spends-graphs-v2.html)):** the order is Ask AI, the story card or row, the pace card (with the comparison line under its total), the split card, *Where it went*, insights, then the months strip.
+  - **Comparison line:** `bodyMedium` `ink`, with an `ink2` arrow glyph before it that TalkBack never reads.
+  - **Split card:**
+    - The title is `titleMedium`. The answer is in `displaySmall`, with its line under it in `bodyMedium` `ink2`.
+    - The bar is 28dp, the same painter as the story's, with Everyday in `fillSoft`.
+    - The key has two rows (Bills, Everyday) with 14dp swatches, then one `bodySmall` note.
+  - ***Where it went* rows:**
+    - Each row has a caret at its end. An open row shows its change line (`bodySmall` `ink`, with an arrow), then a `labelSmall` caption, then up to 3 entries (note or *No note* in `ink2`, date, amount) indented to the name, and *See {Cat} entries*.
+    - At 1.3× text and above, the icon wells drop.
+  - **Months strip:**
+    - Each slot is 48dp wide, with a 2dp-radius bar top. Each month has its own dotted money-in line, 1.5dp in `ink2`.
+    - The Saved cap is a 2dp `ink` outline. The running cycle is a dashed outline with the marigold dot (ink ring) under it.
+    - The month labels sit under the bars in `labelSmall`. The picked month's label is an `ink` pill with `background` text.
+    - The read-out is `bodyMedium`, with *Open* as an `ink` `labelLarge` text button.
+    - At 1.5× text and above, the strip becomes rows.
+- **Month story (FR-SP-7, D193, D194, [mockup 45](design/mockups/45-month-story.html)):**
+  - **The card** sits directly below the Ask AI card on a finished cycle. It is one card on the `display`-style dark surface. It shows `labelMedium` *Your month* in `ink2`, page 2's headline in `displaySmall`, a 44dp-tall day-bars preview, and *See the story* as an outlined pill. In the first 7 days of a new cycle, a slim `surface` row in the same place reads "**September is done.** See your month ›".
+  - **The pages** always use `HisaabColors.dark`, whatever the phone's theme.
+    - The top shows thin progress bars (`ink` for a page seen, `hairline` otherwise), the Back well, and "September · 2 of 6" in `bodySmall` `ink2`.
+    - Each page has a `labelMedium` eyebrow in `ink2`, then its big line in `displayMedium` with tabular figures (`displaySmall` at 1.5× text and above), then `bodyLarge` lines. Pages scroll.
+    - The split bar is 28dp tall with a 10dp radius. In order: Bills in `ink`, Saved as a 2dp `ink` outline at least 12dp wide, Everyday and Not logged in `ink2`, then the `sunk` track with a 1dp `ink2` edge. The part past income is hatched in 3dp stripes.
+  - **Page 4's day bars:** each bar is the day's slot less 3dp, with a 2dp top radius. A dotted `ink2` share line, 1.5dp, 2 on 4. The axis is a 1dp `hairline`, with `labelSmall` dates under it: the first day, the biggest day in `ink` (dropped when within 56dp of an end) and the last day. A dot under each day of the weekday line. Nothing is painted as text on the plot.
+  - **The last page's** *Ask an AI about September* is the one marigold key, a 52dp pill with `onSignal` text. *Done* is an outlined pill.
 
 ### 5.5 Ask AI
 Two layers only: the grey page and near-white cards, the same build as the Today list (D45, D67).

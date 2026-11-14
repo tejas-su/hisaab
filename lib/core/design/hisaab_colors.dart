@@ -21,6 +21,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     required this.displayInk,
     required this.displayInk2,
     required this.blockIdle,
+    required this.fillSoft,
     required this.displayEdge,
     required this.displayEtch,
     required this.displayShadow,
@@ -62,6 +63,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displayInk: _lightInk,
     displayInk2: _lightInk2,
     blockIdle: _lightHairline,
+    fillSoft: Color(0xFF787169),
     displayEdge: _lightInk,
     displayEtch: _lightBackground,
     displayShadow: Color(0x2E161615),
@@ -91,6 +93,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     displayInk: _darkInk,
     displayInk2: _darkInk2,
     blockIdle: Color(0xFF413D38),
+    fillSoft: Color(0xFF858077),
     displayEdge: Color(0x00000000),
     displayEtch: _darkSunk,
     // why: in dark the card already has a hairline edge; a shadow on a near-black page is invisible.
@@ -155,6 +158,12 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
   /// [hairline] and [ink2], so idle days stay ≥ 1.5:1 on the card (D92, D97).
   final Color blockIdle;
 
+  /// The Everyday part of the income split bar on Spends: a mid-tone between [ink] (Bills) and the
+  /// [sunk] track, so the three read as three fills without a hue.
+  ///
+  /// ≥ 3:1 against [ink], [sunk] and [surface] in both themes. Never text and never a state colour.
+  final Color fillSoft;
+
   /// The edge around today's marigold block, so marigold never sits bare on a light card: an
   /// alias of [ink] in light; transparent where the card is dark.
   final Color displayEdge;
@@ -213,6 +222,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
     Color? displayInk,
     Color? displayInk2,
     Color? blockIdle,
+    Color? fillSoft,
     Color? displayEdge,
     Color? displayEtch,
     Color? displayShadow,
@@ -238,6 +248,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
         displayInk: displayInk ?? this.displayInk,
         displayInk2: displayInk2 ?? this.displayInk2,
         blockIdle: blockIdle ?? this.blockIdle,
+        fillSoft: fillSoft ?? this.fillSoft,
         displayEdge: displayEdge ?? this.displayEdge,
         displayEtch: displayEtch ?? this.displayEtch,
         displayShadow: displayShadow ?? this.displayShadow,
@@ -270,6 +281,7 @@ final class HisaabColors extends ThemeExtension<HisaabColors> {
       displayInk: mix(displayInk, other.displayInk),
       displayInk2: mix(displayInk2, other.displayInk2),
       blockIdle: mix(blockIdle, other.blockIdle),
+      fillSoft: mix(fillSoft, other.fillSoft),
       displayEdge: mix(displayEdge, other.displayEdge),
       displayEtch: mix(displayEtch, other.displayEtch),
       displayShadow: mix(displayShadow, other.displayShadow),

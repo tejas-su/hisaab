@@ -14,6 +14,9 @@ import '../entities/insight.dart';
 import '../entities/pace_series.dart';
 import '../entities/spends_overview.dart';
 import '../insight_rules.dart';
+import '../month_story_rules.dart';
+import '../spends_breakdown.dart';
+import '../entities/month_story.dart';
 
 /// Loads one cycle's Spends: totals, pace, *Where it went* and insights (SPEC FR-SP).
 final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
@@ -46,8 +49,16 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
     final CalendarDate today = _clock.today();
     return _settings.read().flatMap(
           (BudgetSettings settings) => _recurring.activeRules().flatMap((List<RecurringRule> rules) {
-            final List<PayCycle> cycles = _cyclesBack(today, settings, rules, params + 1);
-            final _Viewed viewed = _Viewed(cycle: cycles[params], previous: cycles[params + 1], cyclesBack: params, today: today);
+            final List<PayCycle> cycles = _cyclesBack(today, settings, rules, params + SpendsBreakdown.stripCycles);
+            final _Viewed viewed = _Viewed(
+              cycle: cycles[params],
+              previous: cycles[params + 1],
+              cyclesBack: params,
+              today: today,
+              strip: <StripCycle>[
+                for (int back = params; back < params + SpendsBreakdown.stripCycles; back++) (cycle: cycles[back], cyclesBack: back),
+              ],
+            );
             return _overview(viewed, (savings: _savingsDue(viewed, rules), bills: _billsDue(viewed, rules)));
           }),
         );
@@ -83,7 +94,7 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
       : const <DatedAmount>[];
 
   TaskEither<Failure, SpendsOverview> _overview(_Viewed viewed, _Due due) => _categories.all().flatMap(
-        (List<Category> categories) => _ledger.entriesBetween(viewed.previous.start, viewed.cycle.end).flatMap(
+        (List<Category> categories) => _ledger.entriesBetween(viewed.strip.last.cycle.start, viewed.cycle.end).flatMap(
               (List<Entry> entries) => _ledger.firstLoggedOn().flatMap(
                     (Option<CalendarDate> firstLogged) => _limitOffer(viewed).map(
                       (Option<Insight> offer) => _build(viewed, due, categories, entries, firstLogged, offer),
@@ -112,12 +123,11 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
     final Money budget =
         _sum(entries.where((Entry e) => viewed.cycle.contains(e.date) && e.kind == EntryKind.got)) - saved - due.savings;
     final bool previousTracked = firstLogged.filter((CalendarDate d) => !d.isAfter(viewed.previous.start)).isSome();
-    final List<Insight> rules = InsightRules.evaluate(
-      InsightWindow(cycle: viewed.cycle, asOf: viewed.asOf, entries: current),
-      previous: previousTracked
-          ? Option<InsightWindow>.of(InsightWindow(cycle: viewed.previous, asOf: viewed.previous.end, entries: previous))
-          : const Option<InsightWindow>.none(),
-    );
+    final InsightWindow currentWindow = InsightWindow(cycle: viewed.cycle, asOf: viewed.asOf, entries: current);
+    final Option<InsightWindow> previousWindow = previousTracked
+        ? Option<InsightWindow>.of(InsightWindow(cycle: viewed.previous, asOf: viewed.previous.end, entries: previous))
+        : const Option<InsightWindow>.none();
+    final List<Insight> rules = InsightRules.evaluate(currentWindow, previous: previousWindow);
     return SpendsOverview(
       cycle: viewed.cycle,
       previous: viewed.previous,
@@ -130,8 +140,29 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
       pace: PaceSeries.of(current, cycle: viewed.cycle, asOf: viewed.asOf, budget: budget, billsDue: due.bills, isCurrent: viewed.cyclesBack == 0),
       rows: CategoryShares.of(current, categories),
       insights: <Insight>[...rules, ...offer.match(() => const <Insight>[], (Insight o) => <Insight>[o])].take(_maxInsights).toList(),
+      story: _story(viewed, StoryWindow(
+        cycle: viewed.cycle,
+        previous: viewed.previous,
+        entries: current,
+        previousEntries: previous,
+        previousTracked: previousTracked,
+        categories: categories,
+      )),
+      split: SpendsBreakdown.split(current),
+      comparison: previousWindow.flatMap((InsightWindow before) => SpendsBreakdown.comparison(currentWindow, before)),
+      details: SpendsBreakdown.details(currentWindow, previous: previousWindow),
+      strip: SpendsBreakdown.strip(viewed.strip, entries: entries, today: viewed.today, firstLogged: firstLogged),
+      showsStoryRow: viewed.cyclesBack == 0 &&
+          MonthStoryRules.showsRow(viewed.cycle, today: viewed.today) &&
+          MonthStoryRules.hasStory(viewed.previous, today: viewed.today, entryCount: previous.length),
     );
   }
+
+  // why: only a finished cycle has a story of its own; the current one points back with a row.
+  static Option<MonthStory> _story(_Viewed viewed, StoryWindow window) =>
+      viewed.cyclesBack > 0 && MonthStoryRules.hasStory(viewed.cycle, today: viewed.today, entryCount: window.entries.length)
+          ? Option<MonthStory>.of(MonthStoryRules.of(window))
+          : const Option<MonthStory>.none();
 
   static Money _sum(Iterable<Entry> entries) => entries.fold(Money.zero, (Money total, Entry e) => total + e.amount);
 }
@@ -141,11 +172,15 @@ typedef _Due = ({Money savings, List<DatedAmount> bills});
 
 /// The cycle being looked at, the one before it, and the day it is seen from.
 final class _Viewed {
-  _Viewed({required this.cycle, required this.previous, required this.cyclesBack, required CalendarDate today})
+  _Viewed({required this.cycle, required this.previous, required this.cyclesBack, required this.today, required this.strip})
       : asOf = cyclesBack == 0 ? today : cycle.end;
 
   final PayCycle cycle;
   final PayCycle previous;
   final int cyclesBack;
+  final CalendarDate today;
   final CalendarDate asOf;
+
+  /// The months strip's window, newest first (BR-21).
+  final List<StripCycle> strip;
 }

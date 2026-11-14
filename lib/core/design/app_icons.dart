@@ -75,6 +75,13 @@ abstract final class AppIcons {
   /// A *Not logged* entry's row (BR-18): a balance, for money made to match.
   static const AppIconData notLogged = HugeIcons.strokeRoundedBalanceScale;
 
+  /// Spends' comparison lines: less spent than the cycle before (FR-SP-3a). Words carry the meaning;
+  /// the arrow is never read by TalkBack.
+  static const AppIconData less = HugeIcons.strokeRoundedArrowDown02;
+
+  /// Spends' comparison lines: more spent than the cycle before (FR-SP-3a).
+  static const AppIconData more = HugeIcons.strokeRoundedArrowUp02;
+
   /// Category icons by the `icon_key` stored in the database (SPEC BR-11).
   static const Map<String, AppIconData> byKey = <String, AppIconData>{
     'food': HugeIcons.strokeRoundedRestaurant01,

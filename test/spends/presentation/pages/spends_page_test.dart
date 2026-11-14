@@ -298,7 +298,8 @@ void main() {
         await pump(tester);
         final double top = tester.getTopLeft(find.byType(WhereItWentCard)).dy;
         expect(tester.getTopLeft(find.text('Where it went')).dy - top, closeTo(23, 0.5));
-        expect(tester.getTopLeft(find.text('Food')).dy - top, 76);
+        // why: the headline "The most went on Food." now sits between the title row and the first row (FR-SP-4 AC-R1, D195).
+        expect(tester.getTopLeft(find.text('Food')).dy - top, 108);
       });
 
       testWidgets('card content starts at one inner inset', (WidgetTester tester) async {
@@ -385,7 +386,7 @@ void main() {
   });
 
   group('SpendsPage savings (D120)', () {
-    testWidgets('the Spent · Saved line sits above Where it went', (WidgetTester tester) async {
+    testWidgets('the split card says what was saved, above Where it went (FR-SP-4b replaces the Spent · Saved line, D195)', (WidgetTester tester) async {
       services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
       services.ledger.entries.add(Entry(
           id: 50,
@@ -398,12 +399,12 @@ void main() {
           note: 'RD',
         ));
       await pump(tester);
-      final Finder line = find.text('Spent ₹27,570 · Saved ₹5,000');
+      final Finder line = find.text('And ₹5,000 saved.');
       expect(line, findsOneWidget);
       expect(tester.getTopLeft(line).dy, lessThan(tester.getTopLeft(find.text('Where it went')).dy));
     });
 
-    testWidgets('the Spent · Saved line starts on the cards\' outer edge', (WidgetTester tester) async {
+    testWidgets('the split card starts on the cards\' outer edge (FR-SP-4b, D195)', (WidgetTester tester) async {
       services.recurring.rules = <RecurringRule>[...WorkedExample.rules, WorkedExample.rd];
       services.ledger.entries.add(Entry(
           id: 50,
@@ -416,7 +417,7 @@ void main() {
           note: 'RD',
         ));
       await pump(tester);
-      expect(tester.getTopLeft(find.text('Spent ₹27,570 · Saved ₹5,000')).dx, tester.getTopLeft(find.byType(WhereItWentCard)).dx);
+      expect(tester.getTopLeft(find.byKey(const ValueKey<String>('split-card'))).dx, tester.getTopLeft(find.byType(WhereItWentCard)).dx);
     });
 
     testWidgets('no saves: no line', (WidgetTester tester) async {

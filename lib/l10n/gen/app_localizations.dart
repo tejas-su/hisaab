@@ -3054,6 +3054,486 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not logged, spent {amount}'**
   String spendsPartNotLoggedSpoken(String amount);
+
+  /// Month story card and page 1 eyebrow (FR-SP-7, BR-20)
+  ///
+  /// In en, this message translates to:
+  /// **'Your month'**
+  String get storyCardEyebrow;
+
+  /// Month story headline when money was left after spending and saving (BR-20 page 2)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left over'**
+  String storyLeftOver(String amount);
+
+  /// Month story headline when spending and saving went past the money that came in (BR-20). Never say income or earned.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} more than came in'**
+  String storyMoreThanCameIn(String amount);
+
+  /// Month story card headline when nothing came in that cycle (E118)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String storySpentOnly(String amount);
+
+  /// Month story card action (FR-SP-7 AC-1)
+  ///
+  /// In en, this message translates to:
+  /// **'See the story'**
+  String get storyCardAction;
+
+  /// Screen-reader label of the month story card; headline uses spoken amounts
+  ///
+  /// In en, this message translates to:
+  /// **'Your {cycle} story. {headline}.'**
+  String storyCardSpoken(String cycle, String headline);
+
+  /// Bold first part of the slim row on days 1 to 7 of a new cycle (FR-SP-7 AC-2)
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle} is done.'**
+  String storyRowDone(String cycle);
+
+  /// Second part of the slim row; opens the month story
+  ///
+  /// In en, this message translates to:
+  /// **'See your month'**
+  String get storyRowAction;
+
+  /// Top of each month story page: the cycle and which page this is
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle} · {page} of {total}'**
+  String storyProgress(String cycle, int page, int total);
+
+  /// Month story: the right tap zone, a button for screen readers and switch access (AC-3)
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get storyNextPage;
+
+  /// Month story: the left tap zone, a button for screen readers and switch access (AC-3)
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get storyPreviousPage;
+
+  /// Page 1: the cycle's first and last days and how many days it had
+  ///
+  /// In en, this message translates to:
+  /// **'{first} – {last} · {days} days'**
+  String storyMonthSpan(String first, String last, int days);
+
+  /// Page 1: how many entries the cycle holds
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 entry} other{{count} entries}}'**
+  String storyMonthEntries(int count);
+
+  /// Page 1 hint under the preview; hidden from screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to go on'**
+  String get storyTapHint;
+
+  /// Page 2 eyebrow above the spent amount
+  ///
+  /// In en, this message translates to:
+  /// **'You spent'**
+  String get storyKeptEyebrow;
+
+  /// Page 2 line under the spent amount
+  ///
+  /// In en, this message translates to:
+  /// **'of {amount} that came in'**
+  String storyKeptOf(String amount);
+
+  /// Page 2 and card line under the headline when something was saved
+  ///
+  /// In en, this message translates to:
+  /// **'and {amount} saved'**
+  String storySavedLine(String amount);
+
+  /// Split bar key: spending posted by a bill rule
+  ///
+  /// In en, this message translates to:
+  /// **'Bills'**
+  String get storyKeyBills;
+
+  /// Split bar key: all spending except bills
+  ///
+  /// In en, this message translates to:
+  /// **'Everyday'**
+  String get storyKeyEveryday;
+
+  /// Split bar key: money added by Fix my number
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged'**
+  String get storyKeyNotLogged;
+
+  /// Split bar key and page 6 row: money put into savings
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get storyKeySaved;
+
+  /// Split bar key and page 6 row: money left after the cycle
+  ///
+  /// In en, this message translates to:
+  /// **'Left over'**
+  String get storyKeyLeftOver;
+
+  /// Split bar key and page 6 row when spending went past what came in
+  ///
+  /// In en, this message translates to:
+  /// **'More than came in'**
+  String get storyKeyMoreThanCameIn;
+
+  /// Page 3 eyebrow
+  ///
+  /// In en, this message translates to:
+  /// **'Where it went'**
+  String get storyWhereEyebrow;
+
+  /// Page 3 headline naming the biggest category
+  ///
+  /// In en, this message translates to:
+  /// **'The most went on {category}'**
+  String storyMostWent(String category);
+
+  /// Page 4 eyebrow
+  ///
+  /// In en, this message translates to:
+  /// **'Your days'**
+  String get storyDaysEyebrow;
+
+  /// Page 4 headline; date like Sat 12 Sep
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest day: {date}'**
+  String storyBiggestDay(String date);
+
+  /// Page 4 line under the headline: the day's amount and its biggest entry's note or category
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · {what}'**
+  String storyBiggestDayDetail(String amount, String what);
+
+  /// Page 4: days with no everyday spending
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No day went without spending.} =1{1 day with nothing spent.} other{{count} days with nothing spent.}}'**
+  String storyQuietDays(int count);
+
+  /// Page 4: the weekday that holds at least 35% of everyday spending. A count, never a label.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {count} {weekday, select, monday{Mondays} tuesday{Tuesdays} wednesday{Wednesdays} thursday{Thursdays} friday{Fridays} saturday{Saturdays} other{Sundays}} came to {amount}.'**
+  String storyWeekday(int count, String weekday, String amount);
+
+  /// Page 4 key when there is a daily share
+  ///
+  /// In en, this message translates to:
+  /// **'Bills aren\'t in the days. The dotted line is a day\'s share ({amount}); dark bars went past it.'**
+  String storyDaysKeyShare(String amount);
+
+  /// Page 4 key when nothing came in, so there is no share
+  ///
+  /// In en, this message translates to:
+  /// **'Bills aren\'t in the days.'**
+  String get storyDaysKeyNoShare;
+
+  /// Page 5 eyebrow naming the cycle before, as the switcher names it
+  ///
+  /// In en, this message translates to:
+  /// **'Against {cycle}'**
+  String storyAgainstEyebrow(String cycle);
+
+  /// Page 5 headline when less was spent than the cycle before
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} less than {cycle}'**
+  String storyChangeLess(String amount, String cycle);
+
+  /// Page 5 headline when more was spent than the cycle before
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} more than {cycle}'**
+  String storyChangeMore(String amount, String cycle);
+
+  /// Page 5 headline when spending matched the cycle before
+  ///
+  /// In en, this message translates to:
+  /// **'The same as {cycle}'**
+  String storyChangeSame(String cycle);
+
+  /// Page 5 line under the headline
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle} spent {amount}'**
+  String storyPreviousSpent(String cycle, String amount);
+
+  /// Page 5 row: a category fell
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} less'**
+  String storyMoveLess(String amount);
+
+  /// Page 5 row: a category rose
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} more'**
+  String storyMoveMore(String amount);
+
+  /// Page 6 eyebrow
+  ///
+  /// In en, this message translates to:
+  /// **'That was {cycle}'**
+  String storyEndEyebrow(String cycle);
+
+  /// Page 6 row: what was spent, leaving out Not logged
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get storyKeySpent;
+
+  /// Names the cycle before in a comparison, as the switcher does: 'in September' (FR-SP-3a)
+  ///
+  /// In en, this message translates to:
+  /// **'in {cycle}'**
+  String spendsCompareInCycle(String cycle);
+
+  /// Names the cycle before in a comparison when cycles are weekly (D196)
+  ///
+  /// In en, this message translates to:
+  /// **'the week before'**
+  String get spendsCompareWeekBefore;
+
+  /// Pace card line on the running cycle: spending so far against the same day of the cycle before. previous is spendsCompareInCycle or spendsCompareWeekBefore. Neutral, no good or bad word (FR-SP-3a)
+  ///
+  /// In en, this message translates to:
+  /// **'{dir, select, less{{amount} less than by this day {previous}.} more{{amount} more than by this day {previous}.} other{Same as by this day {previous}.}}'**
+  String spendsCompareNow(String dir, String amount, String previous);
+
+  /// Pace card line on a finished cycle: the whole cycle against the whole cycle before (FR-SP-3a)
+  ///
+  /// In en, this message translates to:
+  /// **'{dir, select, less{{amount} less than {previous}.} more{{amount} more than {previous}.} other{Same as {previous}.}}'**
+  String spendsCompareDone(String dir, String amount, String previous);
+
+  /// Split card title: the money that came in for the cycle shown. Never 'income' (D196)
+  ///
+  /// In en, this message translates to:
+  /// **'Money in {amount}'**
+  String spendsSplitTitle(String amount);
+
+  /// Split card answer while the cycle runs: money in less bills, everyday spending, fixes and saving (FR-SP-4b)
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} not spent yet'**
+  String spendsSplitNotSpentYet(String amount);
+
+  /// Split card answer while the cycle runs when exactly nothing is left
+  ///
+  /// In en, this message translates to:
+  /// **'All of it is spent or saved.'**
+  String get spendsSplitNoneNow;
+
+  /// Split card answer on a finished cycle when exactly nothing was left
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left over.'**
+  String get spendsSplitNoneDone;
+
+  /// Line under the split card's answer when something was saved
+  ///
+  /// In en, this message translates to:
+  /// **'And {amount} saved.'**
+  String spendsSplitSaved(String amount);
+
+  /// Line under the split card's answer past the money in, when something was saved
+  ///
+  /// In en, this message translates to:
+  /// **'That includes {amount} saved.'**
+  String spendsSplitIncludesSaved(String amount);
+
+  /// One line under the split card's key, defining Everyday
+  ///
+  /// In en, this message translates to:
+  /// **'Everyday is all spending except bills.'**
+  String get spendsSplitNote;
+
+  /// The same line when Fix my number added a Not logged amount
+  ///
+  /// In en, this message translates to:
+  /// **'Everyday is all spending except bills, including {amount} not logged.'**
+  String spendsSplitNoteNotLogged(String amount);
+
+  /// Split card title when no money came in this cycle
+  ///
+  /// In en, this message translates to:
+  /// **'{when, select, now{Spending this {unit, select, week{week} other{month}}} other{Spending in {cycle}}}'**
+  String spendsSplitNoIncomeTitle(String when, String unit, String cycle);
+
+  /// Split card body when no money came in this cycle
+  ///
+  /// In en, this message translates to:
+  /// **'Add the money coming in to see how it splits.'**
+  String get spendsSplitNoIncomeBody;
+
+  /// Split card chip that opens Settings at Money coming in
+  ///
+  /// In en, this message translates to:
+  /// **'Add money coming in'**
+  String get spendsSplitNoIncomeAction;
+
+  /// Screen-reader opening of the split card: the answer, then the money in
+  ///
+  /// In en, this message translates to:
+  /// **'{answer} of {amount}.'**
+  String spendsSplitSpokenOf(String answer, String amount);
+
+  /// Screen reader: one labelled amount, such as 'Bills 8,200 rupees.'
+  ///
+  /// In en, this message translates to:
+  /// **'{label} {amount}.'**
+  String spendsSpokenPart(String label, String amount);
+
+  /// Line above Where it went's rows naming the biggest category (FR-SP-4 AC-R1)
+  ///
+  /// In en, this message translates to:
+  /// **'The most went on {category}.'**
+  String spendsWhereHeadline(String category);
+
+  /// The same line when one category holds all the spending
+  ///
+  /// In en, this message translates to:
+  /// **'All of it went on {category}.'**
+  String spendsWhereHeadlineAll(String category);
+
+  /// First line of an opened category row: its change against the cycle before by the same day. previous is a short month ('Sep') or 'the week before'
+  ///
+  /// In en, this message translates to:
+  /// **'{dir, select, less{{amount} less than {previous}} more{{amount} more than {previous}} other{Same as {previous}}}'**
+  String spendsRowChange(String dir, String amount, String previous);
+
+  /// Caption over an opened row's entries
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Only entry} =2{Both entries} other{Biggest 3 of {count}}}'**
+  String spendsTopCaption(int count);
+
+  /// Caption over an opened row that has exactly 3 entries
+  ///
+  /// In en, this message translates to:
+  /// **'All 3 entries'**
+  String get spendsTopCaptionAllThree;
+
+  /// An entry's label when it has no note
+  ///
+  /// In en, this message translates to:
+  /// **'No note'**
+  String get spendsTopNoNote;
+
+  /// Screen reader: one of an opened row's entries
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {date}, {amount}'**
+  String spendsTopEntrySpoken(String label, String date, String amount);
+
+  /// Screen-reader hint on a closed category row
+  ///
+  /// In en, this message translates to:
+  /// **'Show biggest entries'**
+  String get spendsRowOpenHint;
+
+  /// Screen-reader hint on an open category row
+  ///
+  /// In en, this message translates to:
+  /// **'Hide biggest entries'**
+  String get spendsRowCloseHint;
+
+  /// Months strip title (FR-SP-8)
+  ///
+  /// In en, this message translates to:
+  /// **'{unit, select, week{Last {count} weeks} other{Last {count} months}}'**
+  String spendsStripTitle(String unit, int count);
+
+  /// Strip count: some finished cycles had money left over. A count, never a grade
+  ///
+  /// In en, this message translates to:
+  /// **'{unit, select, week{Money was left over in {left} of the last {count} weeks.} other{Money was left over in {left} of the last {count} months.}}'**
+  String spendsStripLeftSome(String unit, int left, int count);
+
+  /// Strip count: no finished cycle had money left over
+  ///
+  /// In en, this message translates to:
+  /// **'{unit, select, week{Nothing was left over in the last {count} weeks.} other{Nothing was left over in the last {count} months.}}'**
+  String spendsStripLeftNone(String unit, int count);
+
+  /// Strip count: every finished cycle had money left over
+  ///
+  /// In en, this message translates to:
+  /// **'{unit, select, week{Money was left over in all {count} weeks.} other{Money was left over in all {count} months.}}'**
+  String spendsStripLeftAll(String unit, int count);
+
+  /// Strip count: both of two finished cycles had money left over
+  ///
+  /// In en, this message translates to:
+  /// **'{unit, select, week{Money was left over in both weeks.} other{Money was left over in both months.}}'**
+  String spendsStripLeftBoth(String unit);
+
+  /// Line under the months strip
+  ///
+  /// In en, this message translates to:
+  /// **'Dark is spent. Outline is saved.'**
+  String get spendsStripKey;
+
+  /// Strip caption naming the dotted line, with the cycle shown's money in
+  ///
+  /// In en, this message translates to:
+  /// **'Money in {amount}'**
+  String spendsStripMoneyIn(String amount);
+
+  /// Names the running cycle in the strip's read-out
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle} so far'**
+  String spendsStripSoFar(String cycle);
+
+  /// Strip read-out for the picked cycle
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle}: spent {spent}, saved {saved}.'**
+  String spendsStripReadSpentSaved(String cycle, String spent, String saved);
+
+  /// Strip read-out for the picked cycle when nothing was saved
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle}: spent {spent}.'**
+  String spendsStripReadSpent(String cycle, String spent);
+
+  /// Strip read-out for a cycle with no entries
+  ///
+  /// In en, this message translates to:
+  /// **'{cycle}: nothing spent or saved.'**
+  String spendsStripReadNone(String cycle);
+
+  /// Strip read-out tail for the running cycle
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Last day.} =1{1 day to go.} other{{count} days to go.}}'**
+  String spendsStripDaysToGo(int count);
+
+  /// Strip action that shows the picked cycle on Spends
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get spendsStripOpen;
 }
 
 class _AppLocalizationsDelegate

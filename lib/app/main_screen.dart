@@ -34,6 +34,7 @@ class MainScreen extends StatefulWidget {
     this.missedLogSlot,
     this.onFixMyNumber,
     this.installLineSlot,
+    this.onOpenStory,
   });
 
   final Clock clock;
@@ -66,6 +67,9 @@ class MainScreen extends StatefulWidget {
   /// Builds the install line in Home's nudge slot (FR-HO-3); none when null.
   final WidgetBuilder? installLineSlot;
 
+  /// Opens the month story of the cycle so many cycles back (SPEC FR-SP-7); none hides its way in.
+  final ValueChanged<int>? onOpenStory;
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -89,7 +93,13 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final bool spendsBeside = context.layout.panes is SideBySidePanes;
-    final Widget spends = SpendsPage(today: widget.clock.today(), onSeeEntries: widget.onSeeEntries, onAskAi: widget.onAskAi);
+    final Widget spends = SpendsPage(
+      today: widget.clock.today(),
+      onSeeEntries: widget.onSeeEntries,
+      onAskAi: widget.onAskAi,
+      onOpenStory: widget.onOpenStory,
+      onAddIncome: widget.onOpenSettings,
+    );
     return Scaffold(
       body: MidnightListener(
         clock: widget.clock,

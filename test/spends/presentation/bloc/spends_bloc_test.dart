@@ -110,6 +110,25 @@ void main() {
       expect(bloc.state, const SpendsLoading());
     });
 
+    test('a picked cycle from the strip is shown, with a tick (FR-SP-8)', () async {
+      await addSeptember();
+      await bloc.dispatch(const SpendsLoadRequested());
+      await bloc.dispatch(const SpendsCyclePicked(1));
+      expect(ready().overview.cyclesBack, 1);
+      expect(haptics.events, <String>['tick']);
+    });
+
+    test('picking the cycle already shown does nothing', () async {
+      await bloc.dispatch(const SpendsLoadRequested());
+      await bloc.dispatch(const SpendsCyclePicked(0));
+      expect(haptics.events, isEmpty);
+    });
+
+    test('picking before loading does nothing', () async {
+      await bloc.dispatch(const SpendsCyclePicked(1));
+      expect(bloc.state, const SpendsLoading());
+    });
+
     test('stays on the shown cycle when the ledger changes', () async {
       await addSeptember();
       await bloc.dispatch(const SpendsLoadRequested());
@@ -179,5 +198,6 @@ void main() {
   test('events compare by their fields', () {
     expect(const SpendsLoadRequested().props, isEmpty);
     expect(SpendsLimitsAccepted(offer).props, <Object?>[offer]);
+    expect(const SpendsCyclePicked(2).props, <Object?>[2]);
   });
 }

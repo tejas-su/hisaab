@@ -72,6 +72,12 @@ void main() {
     testWidgets('Spends\' See every entry opens the entries page', (WidgetTester tester) async {
       await boot(tester);
       await tapAndLoad(tester, dock('Spends'));
+      // why: the split card (FR-SP-4b, D195) puts Where it went below the first screen of the lazy list.
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey<String>('see-every-entry')),
+        200,
+        scrollable: find.descendant(of: find.byType(SpendsPage), matching: find.byType(Scrollable)).first,
+      );
       await tapAndLoad(tester, find.byKey(const ValueKey<String>('see-every-entry')));
       expect(find.byType(EntriesPage), findsOneWidget);
     });

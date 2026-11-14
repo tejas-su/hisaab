@@ -31,6 +31,17 @@ final class SpendsLaterPressed extends SpendsCycleEvent {
   const SpendsLaterPressed();
 }
 
+/// The user picked a cycle in the months strip and tapped *Open* (FR-SP-8).
+final class SpendsCyclePicked extends SpendsCycleEvent {
+  const SpendsCyclePicked(this.cyclesBack);
+
+  /// 0 for the current cycle, 1 for the one before, and so on.
+  final int cyclesBack;
+
+  @override
+  List<Object?> get props => <Object?>[cyclesBack];
+}
+
 /// The user accepted "Use these limits?" for [offer] (BR-12).
 final class SpendsLimitsAccepted extends SpendsEvent {
   const SpendsLimitsAccepted(this.offer);

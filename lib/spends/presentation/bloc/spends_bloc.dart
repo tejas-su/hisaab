@@ -15,7 +15,7 @@ import 'spends_state.dart';
 
 /// Owns the cycle Spends is showing (SPEC FR-SP-1). Driven by [SpendsLoadRequested] (start,
 /// resume, midnight), by every ledger write through [LedgerRepository.changes], and by the
-/// page's [SpendsEarlierPressed], [SpendsLaterPressed] and [SpendsLimitsAccepted].
+/// page's [SpendsEarlierPressed], [SpendsLaterPressed], [SpendsCyclePicked] and [SpendsLimitsAccepted].
 class SpendsBloc extends Bloc<SpendsEvent, SpendsState> {
   SpendsBloc({
     required this._getOverview,
@@ -51,6 +51,11 @@ class SpendsBloc extends Bloc<SpendsEvent, SpendsState> {
         if (current is SpendsReady && !current.overview.isCurrent) {
           unawaited(_haptics.tick());
           await _show(emit, current.overview.cyclesBack - 1);
+        }
+      case SpendsCyclePicked(:final int cyclesBack):
+        if (current is SpendsReady && cyclesBack != current.overview.cyclesBack) {
+          unawaited(_haptics.tick());
+          await _show(emit, cyclesBack);
         }
     }
   }

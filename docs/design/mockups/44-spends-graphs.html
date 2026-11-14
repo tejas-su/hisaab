@@ -1,0 +1,422 @@
+<title>Spends, what I kept</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Latin:wght@400;600;700&family=Mukta:wght@400;600&display=swap">
+<style>
+  /* Mockup 44 · Spends graphs proposal (case studies 35, 36). Not approved, not built.
+     Layout: a 360dp Spends phone strip on the left, the split bar's three states and the notes on the right.
+     Tokens are hisaab's own (UI_DESIGN, mockup 31): warm neutrals, ink and ink2, one marigold dot for today only.
+     Numbers: SPEC worked example. Cycle Sun 4 Oct – Tue 3 Nov 2026, income ₹45,000, today Mon 26 Oct (day 23 of 31),
+     Spent ₹27,570 split as BR-13 (Food 9,840, Bills 8,200, Travel 4,100, Shopping 3,600, Fun 1,830), Saved ₹1,000. */
+  :root {
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; --rule: #C9C0B5;
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --soft: #8E877F; --signal: #FFB020;
+    --amount: 'Anek Latin', 'Arial Narrow', system-ui, sans-serif;
+    --text: 'Mukta', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199; --rule: #34302C;
+      --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+      --ink: #F2F1EC; --ink2: #A7A199; --soft: #77716A;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199; --rule: #34302C;
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --soft: #77716A;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--canvas); color: var(--canvasInk); font-family: var(--text); font-size: 15px; line-height: 22px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+  header { display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
+  h1 { font: 600 32px/36px var(--amount); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h2 { font: 600 22px/28px var(--amount); margin: 0; text-wrap: balance; }
+  h3 { font: 600 16px/22px var(--text); margin: 0; }
+  p { margin: 0; }
+  .lede { color: var(--canvasInk2); }
+  .lede b { color: var(--canvasInk); font-weight: 600; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font: 600 12px/16px var(--text); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--canvasInk2); color: var(--canvasInk2); }
+
+  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 40px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  .side { display: flex; flex-direction: column; gap: 40px; min-width: 0; }
+
+  /* ---------- the phone strip ---------- */
+  .phone { width: 100%; max-width: 360px; background: var(--bg); color: var(--ink); border-radius: 32px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .phonecap { font: 600 13px/18px var(--text); color: var(--canvasInk2); margin-top: 8px; max-width: 360px; }
+  .phonecap span { display: block; font-weight: 400; }
+  .switcher { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 0; }
+  .switcher b { font: 600 20px/26px var(--amount); }
+  .chev { width: 40px; height: 40px; border-radius: 20px; display: grid; place-items: center; color: var(--ink); }
+  .chev.off { color: var(--hairline); }
+  .card { background: var(--surface); border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+  .badge { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 13px; background: var(--canvasInk); color: var(--canvas); font: 700 14px/26px var(--amount); text-align: center; }
+  .cardtitle { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .cardtitle h3 { font-size: 15px; }
+  .link { font: 600 14px/20px var(--text); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hairline); }
+  .amt { font-family: var(--amount); font-variant-numeric: tabular-nums; }
+  .muted { color: var(--ink2); }
+  .small { font-size: 13px; line-height: 18px; }
+
+  /* idea 1: comparison line */
+  .compare { display: flex; gap: 10px; align-items: flex-start; padding: 2px 6px; }
+  .compare svg { flex: none; margin-top: 3px; }
+  .compare p { font-size: 15px; line-height: 21px; }
+  .compare p .amt { font-weight: 600; font-size: 16px; }
+  .pace { min-height: 72px; background: var(--surface); border-radius: 24px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .pace .amt { font-size: 22px; font-weight: 600; }
+
+  /* idea 2: split bar */
+  .hero { display: flex; flex-direction: column; gap: 0; }
+  .hero .big { font: 600 28px/32px var(--amount); font-variant-numeric: tabular-nums; }
+  .hero .sub { color: var(--ink2); font-size: 15px; line-height: 20px; }
+  .bar { position: relative; height: 28px; border-radius: 10px; background: var(--sunk); display: flex; overflow: hidden; }
+  .seg { height: 100%; flex: none; }
+  .seg + .seg { border-left: 2px solid var(--surface); }
+  .seg.bills { background: var(--ink); }
+  .seg.every { background: var(--soft); }
+  .seg.saved { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); border-radius: 0; min-width: 8px; }
+  .seg.free { background: transparent; }
+  .seg.over { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--surface) 2px 6px); }
+  .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+  .barwrap { position: relative; padding-block: 4px; }
+  .keylist { display: grid; grid-template-columns: 16px 1fr auto; gap: 6px 10px; align-items: center; font-size: 14px; line-height: 20px; }
+  .sw { width: 16px; height: 12px; border-radius: 3px; }
+  .sw.bills { background: var(--ink); }
+  .sw.every { background: var(--soft); }
+  .sw.saved { box-shadow: inset 0 0 0 2px var(--ink); background: var(--surface); }
+  .sw.free { background: var(--sunk); }
+  .sw.over { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--surface) 2px 5px); box-shadow: inset 0 0 0 1px var(--ink); }
+  .keylist .amt { font-weight: 600; font-size: 15px; text-align: right; }
+  .keylist .lab { color: var(--ink2); }
+  .keylist .lab b { color: var(--ink); font-weight: 600; }
+
+  /* idea 3: where it went */
+  .headline { font-size: 15px; line-height: 21px; }
+  .rows { display: flex; flex-direction: column; }
+  .row { border-top: 1px solid var(--hairline); }
+  .row:first-child { border-top: 0; }
+  .rowbtn { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 36px 1fr auto 20px; gap: 4px 10px; align-items: center; padding: 10px 0; cursor: pointer; border-radius: 8px; }
+  .rowbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .ico { width: 36px; height: 36px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; grid-row: span 2; color: var(--ink); }
+  .name { font-weight: 600; font-size: 15px; line-height: 20px; }
+  .right { text-align: right; font-size: 15px; line-height: 20px; }
+  .right .amt { font-weight: 600; }
+  .delta { font-size: 13px; line-height: 18px; color: var(--ink2); display: flex; align-items: center; gap: 4px; }
+  .pct { font-size: 13px; line-height: 18px; color: var(--ink2); text-align: right; }
+  .caret { grid-row: span 2; color: var(--ink2); transition: transform 180ms ease; }
+  .rowbtn[aria-expanded="true"] .caret { transform: rotate(180deg); }
+  .track { grid-column: 2 / 4; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden; margin-top: 2px; }
+  .track i { display: block; height: 100%; background: var(--ink); border-radius: 3px; }
+  .top3 { padding: 2px 0 14px 46px; display: flex; flex-direction: column; gap: 8px; }
+  .top3 .cap { font-size: 13px; line-height: 18px; color: var(--ink2); }
+  .entry { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 20px; }
+  .entry .amt { font-weight: 600; }
+  .entry .when { color: var(--ink2); }
+  .entry .nonote { color: var(--ink2); font-style: italic; }
+
+  /* idea 4: six cycles strip */
+  .strip svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .strip .readout { font-size: 14px; line-height: 20px; min-height: 40px; }
+  .barhit { cursor: pointer; }
+  .barhit:focus-visible { outline: none; }
+  .barhit:focus-visible .sel { stroke: var(--ink); stroke-width: 2; }
+
+  /* side panel */
+  .states { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .state { display: flex; flex-direction: column; gap: 8px; }
+  .state .card { background: var(--surface); color: var(--ink); }
+  .state .when { font: 600 13px/18px var(--text); color: var(--canvasInk2); letter-spacing: 0.04em; text-transform: uppercase; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 32px; }
+  .note { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 2px solid var(--canvasInk); }
+  .note h3 { display: flex; gap: 10px; align-items: baseline; font: 600 17px/22px var(--amount); }
+  .note h3 span { font: 700 14px/22px var(--amount); color: var(--canvasInk2); }
+  .note p, .note li { font-size: 14px; line-height: 20px; color: var(--canvasInk2); }
+  .note b { color: var(--canvasInk); font-weight: 600; }
+  .note ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+  .spoken { font-style: italic; }
+  .tablebox { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 16px 8px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .caret { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="status"><span class="chip">Mockup 44</span><span class="chip">Proposal · not approved</span></div>
+    <h1>Spends: what I kept, and where it went</h1>
+    <p class="lede">Ideas 1 to 4 from case studies 35 and 36, drawn on the Spends screen at 360dp. They answer three questions the screen can't answer today: <b>how much did I keep</b>, <b>what do I spend most on</b>, and <b>am I doing better than before</b>. Everything uses fills, outlines and words, with no colour coding. The only marigold is today's dot. Tap a category row to open it, and tap a month in the strip to read it.</p>
+  </header>
+
+  <div class="layout">
+    <!-- ================= phone ================= -->
+    <div>
+      <div class="phone" aria-label="Spends screen, October">
+        <div class="switcher">
+          <span class="chev" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></span>
+          <b>October</b>
+          <span class="chev off" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+
+        <!-- idea 1 -->
+        <div class="card" style="padding:14px 16px">
+          <span class="badge">1</span>
+          <div class="compare" style="padding:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+            <p><span class="amt">₹2,100</span> less than by this day in September.</p>
+          </div>
+        </div>
+
+        <div class="pace">
+          <div>
+            <div class="small muted">Spent so far</div>
+            <div class="amt">₹27,570</div>
+          </div>
+          <div class="small muted" style="text-align:right">Pace chart<br>unchanged (FR-SP-3)</div>
+        </div>
+
+        <!-- idea 2 -->
+        <div class="card">
+          <span class="badge">2</span>
+          <div class="cardtitle"><h3>Your ₹45,000 this month</h3></div>
+          <div id="split-now"></div>
+        </div>
+
+        <!-- idea 3 -->
+        <div class="card">
+          <span class="badge">3</span>
+          <div class="cardtitle"><h3>Where it went</h3><a class="link" href="#where">See all</a></div>
+          <p class="headline">Most went on <b>Food</b>, <span class="amt" style="font-weight:600">₹9,840</span> of ₹27,570.</p>
+          <div class="rows" id="rows"></div>
+        </div>
+
+        <!-- idea 4 -->
+        <div class="card strip">
+          <span class="badge">4</span>
+          <div class="cardtitle"><h3>Last 6 months</h3></div>
+          <p class="small muted">Spent less than you earned in 4 of the last 5 months.</p>
+          <div id="strip"></div>
+          <p class="readout" id="readout" aria-live="polite"></p>
+        </div>
+      </div>
+      <p class="phonecap">Mon 26 Oct, day 23 of 31<span>The pace card is collapsed here to keep the focus on what's new. Insights (BR-14) and Ask AI stay where they are.</span></p>
+    </div>
+
+    <!-- ================= side ================= -->
+    <div class="side">
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <h2>The split bar, in three states</h2>
+        <p class="lede">The bar always measures against income. Bills are solid, everyday spending is a lighter solid, Saved is an outline, and what's left is the empty track. If spending passes income, the part past the income mark is striped. Striping already means "over" on <i>Where it went</i>, so it means the same thing here.</p>
+        <div class="states" id="states"></div>
+      </section>
+
+      <section style="display:flex;flex-direction:column;gap:16px">
+        <h2>What each idea is for</h2>
+        <div class="notes">
+          <div class="note">
+            <h3><span>1</span>One comparison sentence</h3>
+            <p>It compares spending with the same day of last cycle, using BR-14 #1's day-of-cycle rule (<code>min(k, previous length)</code>). It shows only when the last cycle was fully tracked. The arrow and the words "less" or "more" carry the meaning, with no colour and no grade.</p>
+            <p class="spoken">TalkBack: "2,100 rupees less than by this day in September."</p>
+          </div>
+          <div class="note">
+            <h3><span>2</span>Income split bar</h3>
+            <p>It replaces the grey <i>Spent · Saved · Not logged</i> line (FR-SP-4a). Bills are entries with a <code>recurring_id</code>, so this needs no schema change. Mid-cycle the empty part reads <b>Still free</b>. Once the cycle ends it reads <b>Left over</b>. It shows rupees, not a %.</p>
+            <ul>
+              <li><i>Not logged</i> joins Everyday and is named under the bar when above ₹0.</li>
+              <li>Needs a DECISIONS row: D120 says saves are never in the bars.</li>
+            </ul>
+            <p class="spoken">TalkBack: "Of 45,000 rupees: bills 8,200, everyday 19,370, saved 1,000, 16,430 still free."</p>
+          </div>
+          <div class="note">
+            <h3><span>3</span>Rows that explain themselves</h3>
+            <p>One headline names the biggest category. Each row adds its change against last cycle at the same day. A tap opens the 3 biggest entries, with the note, or "No note", and the date, then <i>See Food entries</i>. Order, %, bars and limit hatching are unchanged.</p>
+            <ul>
+              <li>BR-14 #1 would repeat the row's change, so it should step aside when the row shows it.</li>
+              <li>A row with one entry (Bills) shows that entry only.</li>
+            </ul>
+          </div>
+          <div class="note">
+            <h3><span>4</span>Last 6 months</h3>
+            <p>It shows spending plus saving per cycle against an income line. The current cycle is drawn as an outline because it isn't finished. It appears only after 2 finished cycles. Tapping a month reads it in words. The summary line counts and never labels: "4 of the last 5", never "your best month".</p>
+            <ul>
+              <li>Effort L, so it comes last. It needs <code>I</code> and <code>K</code> for past cycles.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <h2>Before it goes in the SPEC</h2>
+        <div class="tablebox">
+          <table>
+            <tr><th>Question</th><th>How to settle it</th></tr>
+            <tr><td>Can people read a four-part bar?</td><td>A blind read with 3 to 5 people. Show the October card and ask "How much did you keep?" and "How much is still free?". Compare it against today's grey line.</td></tr>
+            <tr><td>"Still free" or "Left"?</td><td><code>design-content</code>, checked against Home's hero words so the two never disagree</td></tr>
+            <tr><td>Is Saved too thin to see?</td><td>₹1,000 of ₹45,000 is about 7dp. It keeps an 8dp minimum and is always named in the key with its amount.</td></tr>
+            <tr><td>Do people write notes?</td><td>If most entries have none, the top 3 reads as dates. It's still useful, but check on real data first.</td></tr>
+            <tr><td>Contrast of the lighter fill</td><td><code>design-accessibility</code>: Everyday against the track and the surface needs at least 3:1 in both themes</td></tr>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+
+  // ---------- idea 2: split bar ----------
+  function splitBar(s) {
+    const used = s.bills + s.every + s.saved;
+    const scale = Math.max(used, s.income);
+    const pct = v => (v / scale * 100) + '%';
+    const over = Math.max(0, used - s.income);
+    const free = Math.max(0, s.income - used);
+    let segs = `<span class="seg bills" style="width:${pct(s.bills)}"></span>` +
+               `<span class="seg every" style="width:${pct(s.every)}"></span>` +
+               `<span class="seg saved" style="width:${pct(s.saved)}"></span>`;
+    if (free) segs += `<span class="seg free" style="width:${pct(free)}"></span>`;
+    let overlay = '';
+    if (over) {
+      overlay = `<span class="seg over" style="position:absolute;top:0;bottom:0;left:${pct(s.income)};width:${pct(over)};border:0"></span>` +
+                `<span class="tick" style="left:calc(${pct(s.income)} - 1px)"></span>`;
+    }
+    const freeWord = s.done ? 'Left over' : 'Still free';
+    const big = over ? `${inr(over)} more than you earned`
+                     : `${inr(free)} ${s.done ? 'left over' : 'still free'}`;
+    const sub = over ? `${inr(s.saved)} still went to savings` : `and ${inr(s.saved)} saved`;
+    const key = [
+      ['bills', 'Bills', s.bills],
+      ['every', 'Everyday', s.every],
+      ['saved', 'Saved', s.saved],
+      over ? ['over', 'Past your income', over] : ['free', freeWord, free],
+    ].map(([c, l, v]) => `<span class="sw ${c}"></span><span class="lab"><b>${l}</b></span><span class="amt">${inr(v)}</span>`).join('');
+    const spoken = `Of ${s.income.toLocaleString('en-IN')} rupees: bills ${s.bills.toLocaleString('en-IN')}, everyday ${s.every.toLocaleString('en-IN')}, saved ${s.saved.toLocaleString('en-IN')}, ` +
+      (over ? `${over.toLocaleString('en-IN')} more than you earned.` : `${free.toLocaleString('en-IN')} ${freeWord.toLowerCase()}.`);
+    return `<div class="hero"><span class="big">${big}</span><span class="sub">${sub}</span></div>
+      <div class="barwrap" role="img" aria-label="${spoken}"><div class="bar">${segs}</div>${overlay}</div>
+      <div class="keylist" aria-hidden="true">${key}</div>`;
+  }
+
+  const OCT = { income: 45000, bills: 8200, every: 19370, saved: 1000, done: false };
+  const SEP = { income: 45000, bills: 9400, every: 30200, saved: 1000, done: true };
+  const AUG = { income: 45000, bills: 9400, every: 37700, saved: 1000, done: true };
+  document.getElementById('split-now').innerHTML = splitBar(OCT);
+  document.getElementById('states').innerHTML = [
+    ['October, day 23', 'Mid-cycle: the empty part is still free', OCT],
+    ['September, finished', 'Finished: the empty part is left over', SEP],
+    ['August, finished', 'Over income: the part past the mark is striped', AUG],
+  ].map(([w, t, s]) => `<div class="state"><span class="when">${w}</span><div class="card"><div class="cardtitle"><h3>Your ₹45,000 · ${w.split(',')[0]}</h3></div>${splitBar(s)}</div><span class="small" style="color:var(--canvasInk2)">${t}</span></div>`).join('');
+
+  // ---------- idea 3: rows ----------
+  const ICONS = {
+    food: '<path d="M3 11h18a9 9 0 0 1-18 0Z"/><path d="M8 7.5c0-1 1-1.5 1-2.5M12 7.5c0-1 1-1.5 1-2.5M16 7.5c0-1 1-1.5 1-2.5"/>',
+    bills: '<path d="M6 3h9l3 3v15H6Z"/><path d="M9 10h6M9 14h6M9 18h3"/>',
+    travel: '<rect x="5" y="4" width="14" height="12" rx="2"/><path d="M5 11h14M8 19v-3M16 19v-3"/>',
+    shop: '<path d="M5 8h14l-1 13H6Z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+    fun: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5l-5.3 2.9 1.2-6-4.5-4.1 6-.7Z"/>',
+  };
+  const ROWS = [
+    { k: 'food', name: 'Food', amt: 9840, pct: 36, d: 1200, n: 21, top: [['Dinner out', '20 Oct', 2400], ['Groceries', '12 Oct', 1850], [null, '8 Oct', 960]] },
+    { k: 'bills', name: 'Bills', amt: 8200, pct: 30, d: 0, n: 1, top: [['Rent', '5 Oct', 8200]] },
+    { k: 'travel', name: 'Travel', amt: 4100, pct: 15, d: -900, n: 9, top: [['Train to Pune', '15 Oct', 1450], ['Petrol', '9 Oct', 1200], ['Auto', '22 Oct', 380]] },
+    { k: 'shop', name: 'Shopping', amt: 3600, pct: 13, d: -1700, n: 3, top: [['Shoes', '17 Oct', 2200], ['Kurta', '11 Oct', 900], [null, '24 Oct', 500]] },
+    { k: 'fun', name: 'Fun', amt: 1830, pct: 6, d: -700, n: 3, top: [['Movie', '18 Oct', 900], ['Cricket match', '14 Oct', 600], [null, '25 Oct', 330]] },
+  ];
+  const arrow = up => `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${up ? 'M12 19V5M6 11l6-6 6 6' : 'M12 5v14M6 13l6 6 6-6'}"/></svg>`;
+  const deltaText = d => d === 0 ? 'Same as September' : `${inr(Math.abs(d))} ${d > 0 ? 'more' : 'less'} than Sep`;
+  const max = ROWS[0].amt;
+  document.getElementById('rows').innerHTML = ROWS.map((r, i) => `
+    <div class="row">
+      <button class="rowbtn" id="row-${r.k}" aria-expanded="${i === 0}" aria-controls="top-${r.k}"
+        aria-label="${r.name}, ${r.amt.toLocaleString('en-IN')} rupees, ${r.pct} percent. ${r.d === 0 ? 'Same as September' : Math.abs(r.d).toLocaleString('en-IN') + ' rupees ' + (r.d > 0 ? 'more' : 'less') + ' than September'}.">
+        <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[r.k]}</svg></span>
+        <span class="name">${r.name}</span>
+        <span class="right"><span class="amt">${inr(r.amt)}</span></span>
+        <svg class="caret" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        <span class="delta">${r.d === 0 ? '' : arrow(r.d > 0)}${deltaText(r.d)}</span>
+        <span class="pct">${r.pct}%</span>
+        <span class="track"><i style="width:${r.amt / max * 100}%"></i></span>
+      </button>
+      <div class="top3" id="top-${r.k}" ${i === 0 ? '' : 'hidden'}>
+        <span class="cap">${r.n === 1 ? 'Only entry' : `Biggest 3 of ${r.n}`}</span>
+        ${r.top.map(([note, when, a]) => `<div class="entry"><span>${note ? note : '<span class="nonote">No note</span>'} <span class="when">· ${when}</span></span><span class="amt">${inr(a)}</span></div>`).join('')}
+        <a class="link" href="#${r.k}">See ${r.name} entries</a>
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.rowbtn').forEach(b => b.addEventListener('click', () => {
+    const open = b.getAttribute('aria-expanded') === 'true';
+    b.setAttribute('aria-expanded', String(!open));
+    document.getElementById(b.getAttribute('aria-controls')).hidden = open;
+  }));
+
+  // ---------- idea 4: six cycles ----------
+  const CYC = [
+    ['May', 41200, 1000, true], ['Jun', 38900, 1000, true], ['Jul', 43600, 1000, true],
+    ['Aug', 47100, 1000, true], ['Sep', 39600, 1000, true], ['Oct', 27570, 1000, false],
+  ];
+  const FULL = { May: 'May', Jun: 'June', Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October' };
+  const W = 324, H = 150, TOP = 14, BASE = 120, YMAX = 50000, INCOME = 45000;
+  const y = v => BASE - v / YMAX * (BASE - TOP);
+  const slot = W / CYC.length, bw = 30;
+  let svg = `<svg viewBox="-2 0 ${W + 4} ${H}" role="group" aria-label="Spending and saving for the last 6 months, against income of 45,000 rupees">`;
+  svg += `<line x1="0" x2="${W}" y1="${BASE}" y2="${BASE}" stroke="var(--hairline)" stroke-width="1"/>`;
+  svg += `<line x1="0" x2="${W}" y1="${y(INCOME)}" y2="${y(INCOME)}" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`;
+  svg += `<text x="0" y="${y(INCOME) - 6}" font-size="11" font-family="Mukta, sans-serif" fill="var(--ink2)">Income ₹45K</text>`;
+  CYC.forEach(([m, spent, saved, done], i) => {
+    const cx = slot * i + slot / 2, x = cx - bw / 2;
+    const ySpent = y(spent), ySaved = y(spent + saved);
+    let g = `<g class="barhit" tabindex="0" role="button" data-i="${i}" aria-label="${FULL[m]}">`;
+    g += `<rect class="sel" x="${x - 5}" y="${TOP - 4}" width="${bw + 10}" height="${BASE - TOP + 8}" rx="8" fill="transparent" stroke="none"/>`;
+    if (done) {
+      const capIncome = Math.min(spent, INCOME);
+      g += `<rect x="${x}" y="${y(capIncome)}" width="${bw}" height="${BASE - y(capIncome)}" fill="var(--ink)"/>`;
+      if (spent > INCOME) {
+        g += `<rect x="${x}" y="${ySpent}" width="${bw}" height="${y(INCOME) - ySpent}" fill="url(#hatch)" stroke="var(--ink)" stroke-width="1"/>`;
+      }
+      g += `<rect x="${x + 1}" y="${ySaved + 1}" width="${bw - 2}" height="${ySpent - ySaved - 2}" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>`;
+    } else {
+      g += `<rect x="${x + 1}" y="${ySpent + 1}" width="${bw - 2}" height="${BASE - ySpent - 1}" fill="var(--surface)" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>`;
+      g += `<rect x="${x + 1}" y="${ySaved + 1}" width="${bw - 2}" height="${ySpent - ySaved - 2}" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>`;
+      g += `<circle cx="${cx}" cy="${BASE + 26}" r="4" fill="var(--signal)" stroke="var(--ink)" stroke-width="1.5"/>`;
+    }
+    g += `<text x="${cx}" y="${BASE + 16}" text-anchor="middle" font-size="12" font-family="Mukta, sans-serif" fill="${done ? 'var(--ink2)' : 'var(--ink)'}" font-weight="${done ? 400 : 600}">${m}</text>`;
+    g += `</g>`;
+    svg += g;
+  });
+  svg += `<defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--surface)"/><rect width="2" height="5" fill="var(--ink)"/></pattern></defs></svg>`;
+  document.getElementById('strip').innerHTML = svg;
+
+  const readout = document.getElementById('readout');
+  function pick(i) {
+    const [m, spent, saved, done] = CYC[i];
+    const diff = INCOME - spent - saved;
+    document.querySelectorAll('.barhit .sel').forEach((r, j) => {
+      r.setAttribute('stroke', j === i ? 'var(--ink)' : 'none');
+      r.setAttribute('stroke-width', '1.5');
+    });
+    readout.innerHTML = done
+      ? `<b>${FULL[m]}</b>: spent ${inr(spent)}, saved ${inr(saved)}. ` + (diff >= 0 ? `${inr(diff)} left over.` : `${inr(-diff)} more than you earned.`)
+      : `<b>October so far</b>: spent ${inr(spent)}, saved ${inr(saved)}. 8 days to go.`;
+  }
+  document.querySelectorAll('.barhit').forEach(g => {
+    const i = +g.dataset.i;
+    g.addEventListener('click', () => pick(i));
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(i); } });
+  });
+  pick(4);
+</script>

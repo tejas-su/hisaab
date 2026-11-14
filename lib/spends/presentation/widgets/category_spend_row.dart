@@ -16,12 +16,15 @@ import 'limit_bar_painter.dart';
 /// (SPEC FR-SP-4). With a limit the name carries "₹200 left", and past it "₹840 past limit"
 /// replaces the share (BR-12).
 class CategorySpendRow extends StatelessWidget {
-  const CategorySpendRow({super.key, required this.row, required this.biggest});
+  const CategorySpendRow({super.key, required this.row, required this.biggest, this.showWell = true});
 
   final CategorySpend row;
 
   /// The biggest category's spend; its bar is full width.
   final Money biggest;
+
+  /// False drops the icon well so the name keeps its width at large text (FR-SP-4 AC-R2).
+  final bool showWell;
 
   static const double _wellSize = 36;
   static const double _barArea = 12;
@@ -44,14 +47,16 @@ class CategorySpendRow extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Container(
-                  width: _wellSize,
-                  height: _wellSize,
-                  alignment: Alignment.center,
-                  decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(HisaabRadii.chip)),
-                  child: AppIcon(AppIcons.forKey(row.category.iconKey), size: 20),
-                ),
-                const SizedBox(width: 10),
+                if (showWell) ...<Widget>[
+                  Container(
+                    width: _wellSize,
+                    height: _wellSize,
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(HisaabRadii.chip)),
+                    child: AppIcon(AppIcons.forKey(row.category.iconKey), size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 Expanded(
                   child: Text.rich(
                     TextSpan(

@@ -2255,6 +2255,428 @@ class AppLocalizationsEn extends AppLocalizations {
   String spendsPartNotLoggedSpoken(String amount) {
     return 'Not logged, spent $amount';
   }
+
+  @override
+  String get storyCardEyebrow => 'Your month';
+
+  @override
+  String storyLeftOver(String amount) {
+    return '$amount left over';
+  }
+
+  @override
+  String storyMoreThanCameIn(String amount) {
+    return '$amount more than came in';
+  }
+
+  @override
+  String storySpentOnly(String amount) {
+    return '$amount spent';
+  }
+
+  @override
+  String get storyCardAction => 'See the story';
+
+  @override
+  String storyCardSpoken(String cycle, String headline) {
+    return 'Your $cycle story. $headline.';
+  }
+
+  @override
+  String storyRowDone(String cycle) {
+    return '$cycle is done.';
+  }
+
+  @override
+  String get storyRowAction => 'See your month';
+
+  @override
+  String storyProgress(String cycle, int page, int total) {
+    return '$cycle · $page of $total';
+  }
+
+  @override
+  String get storyNextPage => 'Next page';
+
+  @override
+  String get storyPreviousPage => 'Previous page';
+
+  @override
+  String storyMonthSpan(String first, String last, int days) {
+    return '$first – $last · $days days';
+  }
+
+  @override
+  String storyMonthEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get storyTapHint => 'Tap to go on';
+
+  @override
+  String get storyKeptEyebrow => 'You spent';
+
+  @override
+  String storyKeptOf(String amount) {
+    return 'of $amount that came in';
+  }
+
+  @override
+  String storySavedLine(String amount) {
+    return 'and $amount saved';
+  }
+
+  @override
+  String get storyKeyBills => 'Bills';
+
+  @override
+  String get storyKeyEveryday => 'Everyday';
+
+  @override
+  String get storyKeyNotLogged => 'Not logged';
+
+  @override
+  String get storyKeySaved => 'Saved';
+
+  @override
+  String get storyKeyLeftOver => 'Left over';
+
+  @override
+  String get storyKeyMoreThanCameIn => 'More than came in';
+
+  @override
+  String get storyWhereEyebrow => 'Where it went';
+
+  @override
+  String storyMostWent(String category) {
+    return 'The most went on $category';
+  }
+
+  @override
+  String get storyDaysEyebrow => 'Your days';
+
+  @override
+  String storyBiggestDay(String date) {
+    return 'Biggest day: $date';
+  }
+
+  @override
+  String storyBiggestDayDetail(String amount, String what) {
+    return '$amount · $what';
+  }
+
+  @override
+  String storyQuietDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days with nothing spent.',
+      one: '1 day with nothing spent.',
+      zero: 'No day went without spending.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String storyWeekday(int count, String weekday, String amount) {
+    String _temp0 = intl.Intl.selectLogic(weekday, {
+      'monday': 'Mondays',
+      'tuesday': 'Tuesdays',
+      'wednesday': 'Wednesdays',
+      'thursday': 'Thursdays',
+      'friday': 'Fridays',
+      'saturday': 'Saturdays',
+      'other': 'Sundays',
+    });
+    return 'Your $count $_temp0 came to $amount.';
+  }
+
+  @override
+  String storyDaysKeyShare(String amount) {
+    return 'Bills aren\'t in the days. The dotted line is a day\'s share ($amount); dark bars went past it.';
+  }
+
+  @override
+  String get storyDaysKeyNoShare => 'Bills aren\'t in the days.';
+
+  @override
+  String storyAgainstEyebrow(String cycle) {
+    return 'Against $cycle';
+  }
+
+  @override
+  String storyChangeLess(String amount, String cycle) {
+    return '$amount less than $cycle';
+  }
+
+  @override
+  String storyChangeMore(String amount, String cycle) {
+    return '$amount more than $cycle';
+  }
+
+  @override
+  String storyChangeSame(String cycle) {
+    return 'The same as $cycle';
+  }
+
+  @override
+  String storyPreviousSpent(String cycle, String amount) {
+    return '$cycle spent $amount';
+  }
+
+  @override
+  String storyMoveLess(String amount) {
+    return '$amount less';
+  }
+
+  @override
+  String storyMoveMore(String amount) {
+    return '$amount more';
+  }
+
+  @override
+  String storyEndEyebrow(String cycle) {
+    return 'That was $cycle';
+  }
+
+  @override
+  String get storyKeySpent => 'Spent';
+
+  @override
+  String spendsCompareInCycle(String cycle) {
+    return 'in $cycle';
+  }
+
+  @override
+  String get spendsCompareWeekBefore => 'the week before';
+
+  @override
+  String spendsCompareNow(String dir, String amount, String previous) {
+    String _temp0 = intl.Intl.selectLogic(dir, {
+      'less': '$amount less than by this day $previous.',
+      'more': '$amount more than by this day $previous.',
+      'other': 'Same as by this day $previous.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsCompareDone(String dir, String amount, String previous) {
+    String _temp0 = intl.Intl.selectLogic(dir, {
+      'less': '$amount less than $previous.',
+      'more': '$amount more than $previous.',
+      'other': 'Same as $previous.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsSplitTitle(String amount) {
+    return 'Money in $amount';
+  }
+
+  @override
+  String spendsSplitNotSpentYet(String amount) {
+    return '$amount not spent yet';
+  }
+
+  @override
+  String get spendsSplitNoneNow => 'All of it is spent or saved.';
+
+  @override
+  String get spendsSplitNoneDone => 'Nothing left over.';
+
+  @override
+  String spendsSplitSaved(String amount) {
+    return 'And $amount saved.';
+  }
+
+  @override
+  String spendsSplitIncludesSaved(String amount) {
+    return 'That includes $amount saved.';
+  }
+
+  @override
+  String get spendsSplitNote => 'Everyday is all spending except bills.';
+
+  @override
+  String spendsSplitNoteNotLogged(String amount) {
+    return 'Everyday is all spending except bills, including $amount not logged.';
+  }
+
+  @override
+  String spendsSplitNoIncomeTitle(String when, String unit, String cycle) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'week': 'week',
+      'other': 'month',
+    });
+    String _temp1 = intl.Intl.selectLogic(when, {
+      'now': 'Spending this $_temp0',
+      'other': 'Spending in $cycle',
+    });
+    return '$_temp1';
+  }
+
+  @override
+  String get spendsSplitNoIncomeBody =>
+      'Add the money coming in to see how it splits.';
+
+  @override
+  String get spendsSplitNoIncomeAction => 'Add money coming in';
+
+  @override
+  String spendsSplitSpokenOf(String answer, String amount) {
+    return '$answer of $amount.';
+  }
+
+  @override
+  String spendsSpokenPart(String label, String amount) {
+    return '$label $amount.';
+  }
+
+  @override
+  String spendsWhereHeadline(String category) {
+    return 'The most went on $category.';
+  }
+
+  @override
+  String spendsWhereHeadlineAll(String category) {
+    return 'All of it went on $category.';
+  }
+
+  @override
+  String spendsRowChange(String dir, String amount, String previous) {
+    String _temp0 = intl.Intl.selectLogic(dir, {
+      'less': '$amount less than $previous',
+      'more': '$amount more than $previous',
+      'other': 'Same as $previous',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsTopCaption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Biggest 3 of $count',
+      two: 'Both entries',
+      one: 'Only entry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spendsTopCaptionAllThree => 'All 3 entries';
+
+  @override
+  String get spendsTopNoNote => 'No note';
+
+  @override
+  String spendsTopEntrySpoken(String label, String date, String amount) {
+    return '$label, $date, $amount';
+  }
+
+  @override
+  String get spendsRowOpenHint => 'Show biggest entries';
+
+  @override
+  String get spendsRowCloseHint => 'Hide biggest entries';
+
+  @override
+  String spendsStripTitle(String unit, int count) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'week': 'Last $count weeks',
+      'other': 'Last $count months',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsStripLeftSome(String unit, int left, int count) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'week': 'Money was left over in $left of the last $count weeks.',
+      'other': 'Money was left over in $left of the last $count months.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsStripLeftNone(String unit, int count) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'week': 'Nothing was left over in the last $count weeks.',
+      'other': 'Nothing was left over in the last $count months.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsStripLeftAll(String unit, int count) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'week': 'Money was left over in all $count weeks.',
+      'other': 'Money was left over in all $count months.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String spendsStripLeftBoth(String unit) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'week': 'Money was left over in both weeks.',
+      'other': 'Money was left over in both months.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get spendsStripKey => 'Dark is spent. Outline is saved.';
+
+  @override
+  String spendsStripMoneyIn(String amount) {
+    return 'Money in $amount';
+  }
+
+  @override
+  String spendsStripSoFar(String cycle) {
+    return '$cycle so far';
+  }
+
+  @override
+  String spendsStripReadSpentSaved(String cycle, String spent, String saved) {
+    return '$cycle: spent $spent, saved $saved.';
+  }
+
+  @override
+  String spendsStripReadSpent(String cycle, String spent) {
+    return '$cycle: spent $spent.';
+  }
+
+  @override
+  String spendsStripReadNone(String cycle) {
+    return '$cycle: nothing spent or saved.';
+  }
+
+  @override
+  String spendsStripDaysToGo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days to go.',
+      one: '1 day to go.',
+      zero: 'Last day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get spendsStripOpen => 'Open';
 }
 
 /// The translations for English, as used in India (`en_IN`).

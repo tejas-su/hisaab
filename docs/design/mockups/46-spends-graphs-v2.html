@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Spends graphs, v2 (proposal)</title>
+<style>
+  /* Mockup 46 · Spends graphs v2 (proposal; builds on mockup 44, case studies 35 and 36, the copy deck 46-spends-graphs-copy-deck.md
+     and the accessibility review 46-spends-graphs-a11y.md). Not approved, not built.
+     Tokens are HisaabColors (bg, surface, sunk, hairline, ink, ink2, signal) plus ONE proposed token, fillSoft, the Everyday fill
+     (#787169 light, #858077 dark; measured in the a11y review). The old `soft` values (#8E877F, #77716A) are not used anywhere:
+     they fail 3:1 on the track. The month story door uses mockup 45's evening tokens (sBg, sInk, sInk2, sLine).
+     Geometry follows mockup 31 and the built widgets: 20dp page gutter, 20dp card inset, 28dp card radius, 12dp gap between
+     cards, 36dp icon well, 8dp row bars with a 2dp limit tick, 12dp chip radius, 48dp targets.
+     Numbers: the worked example. Cycle Sun 4 Oct to Tue 3 Nov 2026, money in ₹45,000, today Mon 26 Oct (day 23 of 31),
+     Spent ₹27,570 (rent 8,200 + food 18,950 + 420 today), Saved ₹1,000. Earlier cycles follow mockup 45. Everything on the
+     phones is computed from one data table in the script. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --fillSoft: #787169;
+    --sBg: #1D1B18; --sInk: #F6F2EC; --sInk2: #B2AAA0; --sLine: #403B36;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; --rule: #C9C0B5; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --fillSoft: #858077;
+    --sBg: #262320; --sInk: #F6F2EC; --sInk2: #B2AAA0; --sLine: #4A443E;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; font-size: 15px; line-height: 22px; }
+  .wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; padding-top: 32px; }
+  h1 { font: 600 32px/36px 'Anek Latin', sans-serif; margin: 0; text-wrap: balance; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 0; text-wrap: balance; }
+  p, li { margin: 0; max-width: 78ch; }
+  section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b, td b { color: var(--canvasInk); font-weight: 600; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .chip { font: 600 12px/16px 'Mukta', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--canvasInk2); color: var(--canvasInk2); }
+  ol, ul { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+  ol li, ul li { color: var(--canvasInk2); }
+  .tablebox { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 16px 8px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+  code { font-size: 13px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: flex-start; }
+  .ctl { display: flex; flex-direction: column; gap: 6px; }
+  .ctl > span { font: 600 12px/16px 'Mukta', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; color: var(--canvasInk2); }
+  .seg-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg-btns button { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--canvasInk2); font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk); }
+  .seg-btns button[aria-pressed="true"] { background: var(--canvasInk); color: var(--canvas); box-shadow: none; }
+  .seg-btns button:focus-visible { outline: 2px solid var(--canvasInk); outline-offset: 2px; }
+  .stage { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .cap { font: 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); max-width: 360px; margin-top: 8px; }
+  .cap b { color: var(--canvasInk); }
+  .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, max-content)); gap: 28px 24px; align-items: start; }
+  .gal figure { margin: 0; display: flex; flex-direction: column; }
+  .gal .w2 { grid-column: 1 / -1; }
+  .tag { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk); margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* ---------- the phone: every size scales with --ts (text scale) ---------- */
+  .phone {
+    --ts: 1; --pw: 360px;
+    --f11: calc(11px * var(--ts)); --f12: calc(12px * var(--ts)); --f13: calc(13px * var(--ts)); --f14: calc(14px * var(--ts));
+    --f15: calc(15px * var(--ts)); --f16: calc(16px * var(--ts)); --f18: calc(18px * var(--ts)); --f22: calc(22px * var(--ts)); --f24: calc(24px * var(--ts)); --f34: calc(34px * var(--ts));
+    width: var(--pw); max-width: 100%; background: var(--bg); color: var(--ink); border-radius: 28px; padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 12px; font: var(--f15)/1.4 'Mukta', sans-serif; flex: none;
+  }
+  .phone.flat { padding: 0; background: transparent; }
+  .phone * { min-width: 0; }
+  .amt { font-family: 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; }
+  .topbar h4 { margin: 0; font: 600 var(--f24)/1.2 'Anek Latin', sans-serif; }
+  .sw { display: flex; align-items: center; }
+  .sw b { font: 600 var(--f18)/1.3 'Anek Latin', sans-serif; padding: 0 2px; }
+  .chev { all: unset; box-sizing: border-box; cursor: pointer; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 24px; color: var(--ink); }
+  .chev[aria-disabled="true"] { color: var(--hairline); cursor: default; }
+  .chev:focus-visible, .rowbtn:focus-visible, .slot:focus-visible, .srow:focus-visible, .lnk:focus-visible, .door:focus-visible, .slim:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .card { background: var(--surface); border-radius: 28px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .ask { display: flex; flex-direction: row; align-items: center; gap: 12px; }
+  .well { width: 48px; height: 48px; border-radius: 12px; background: var(--signal); box-shadow: inset 0 0 0 1.5px #161615; display: grid; place-items: center; color: #161615; flex: none; }
+  .ask b { display: block; font-weight: 400; font-size: var(--f16); line-height: 1.3; }
+  .ask small { font-size: var(--f13); color: var(--ink2); line-height: 1.3; }
+  .lnk { all: unset; box-sizing: border-box; cursor: pointer; font-size: var(--f14); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hairline); min-height: 48px; display: inline-flex; align-items: center; color: var(--ink); }
+
+  /* month story door (sister feature, mockup 45): an evening card, same in both themes */
+  .door { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 12px; background: var(--sBg); color: var(--sInk); border-radius: 28px; padding: 20px; width: 100%; }
+  .door .eye { font: 600 var(--f12)/1.3 'Mukta', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sInk2); }
+  .door .big { font: 700 var(--f34)/1.05 'Anek Latin', sans-serif; font-stretch: 82%; font-variant-numeric: tabular-nums; }
+  .door .btn { align-self: flex-start; min-height: 48px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 24px; box-shadow: inset 0 0 0 1.5px var(--sInk2); font-weight: 600; font-size: var(--f15); }
+  .door svg { width: 100%; height: auto; display: block; }
+  .slim { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 12px; min-height: 48px; background: var(--surface); border-radius: 28px; padding: 6px 20px; width: 100%; font-size: var(--f15); line-height: 1.3; }
+  .slim .mini { display: grid; grid-template-columns: repeat(6, 7px); gap: 2px; flex: none; }
+  .slim .mini span { width: 7px; height: 7px; border-radius: 2px; background: var(--ink); }
+  .slim .go { margin-left: auto; color: var(--ink2); }
+
+  /* pace card */
+  .total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .total .lbl { font: 400 var(--f18)/1.3 'Anek Latin', sans-serif; color: var(--ink2); }
+  .total b { font: 600 var(--f24)/1.25 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .total small { font-size: var(--f15); color: var(--ink2); }
+  .cmp { display: flex; gap: 8px; align-items: flex-start; font-size: var(--f15); line-height: 1.4; }
+  .cmp svg { flex: none; margin-top: 0.3em; }
+  .cmp .amt { font-weight: 600; font-size: var(--f16); }
+  .chart { display: block; width: 100%; height: auto; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; font-size: var(--f13); line-height: 1.4; }
+  .legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .v { font-weight: 600; }
+  .legend svg { flex: none; overflow: visible; }
+
+  /* split card: the same component the month story uses on its page 2 */
+  .minl { margin: 0; font: 400 var(--f15)/1.3 'Mukta', sans-serif; color: var(--ink2); }
+  .minl .amt { font-weight: 600; }
+  .hero .num { font: 600 var(--f24)/1.25 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .hero .lbl { font: 400 var(--f18)/1.3 'Anek Latin', sans-serif; color: var(--ink2); margin-left: 8px; }
+  .hero .sub { font-size: var(--f15); line-height: 1.35; color: var(--ink2); }
+  .bar { position: relative; height: 32px; border-radius: 12px; background: var(--sunk); display: flex; gap: 2px; overflow: hidden; }
+  .bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--ink2); pointer-events: none; }
+  .bar > i { display: block; height: 100%; flex: 0 1 auto; }
+  .bar > i.free { flex: 1 1 0; background: transparent; }
+  .f-bills { background: var(--ink); }
+  .f-saved { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .f-every { background: var(--fillSoft); }
+  .f-over { background: repeating-linear-gradient(135deg, var(--ink) 0 3px, var(--surface) 3px 6px); box-shadow: inset 0 0 0 1.5px var(--ink); border-left: 3px solid var(--ink); }
+  .f-free { background: var(--sunk); box-shadow: inset 0 0 0 1px var(--ink2); }
+  .key { display: grid; grid-template-columns: 16px 1fr auto; gap: 4px 10px; align-items: center; font-size: var(--f15); line-height: 1.4; }
+  .key .sq { width: 16px; height: 12px; border-radius: 3px; }
+  .key .amt { font-weight: 600; text-align: right; }
+  .note { font-size: var(--f13); line-height: 1.35; color: var(--ink2); margin: 0; }
+  .prompt { font-size: var(--f15); color: var(--ink2); margin: 0; }
+
+  /* where it went */
+  .ctitle { display: flex; align-items: baseline; gap: 12px; }
+  .ctitle h3 { flex: 1; margin: 0; font: 600 var(--f22)/1.25 'Anek Latin', sans-serif; }
+  .most { margin: 0; font-size: var(--f15); line-height: 1.4; }
+  .rows { display: flex; flex-direction: column; }
+  .rowbtn { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: grid; grid-template-columns: 36px 1fr auto 20px; column-gap: 10px; align-items: center; padding: 6px 0; border-radius: 8px; min-height: 48px; }
+  .ico { width: 36px; height: 36px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; grid-row: 1 / span 2; align-self: start; margin-top: 2px; }
+  .rname { grid-column: 2; font-size: var(--f16); line-height: 1.3; }
+  .rname .d { font-size: var(--f14); color: var(--ink2); }
+  .rsum { grid-column: 3; text-align: right; white-space: nowrap; display: flex; gap: 8px; align-items: baseline; justify-content: flex-end; }
+  .rsum small { font-size: var(--f13); color: var(--ink2); }
+  .rsum .amt { font-size: var(--f16); font-weight: 600; }
+  .caret { grid-column: 4; grid-row: 1 / span 2; color: var(--ink2); transition: transform 180ms ease; justify-self: end; }
+  .rowbtn[aria-expanded="true"] .caret { transform: rotate(180deg); }
+  .bar8 { grid-column: 2 / 4; position: relative; height: 12px; margin-top: 4px; }
+  .bar8 .t { position: absolute; left: 0; right: 0; top: 2px; height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; display: flex; }
+  .bar8 .t i { display: block; height: 100%; }
+  .bar8 .t .s { background: var(--ink); }
+  .bar8 .t .h { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--surface) 2px 5px); }
+  .bar8 .tick { position: absolute; top: 0; width: 2px; height: 12px; margin-left: -1px; background: linear-gradient(var(--ink2) 0 2px, var(--surface) 2px 10px, var(--ink2) 10px 12px); }
+  .phone.big .rowbtn { grid-template-columns: 1fr auto 20px; }
+  .phone.big .ico { display: none; }
+  .phone.big .rname { grid-column: 1; }
+  .phone.big .rsum { grid-column: 2; }
+  .phone.big .caret { grid-column: 3; }
+  .phone.big .bar8 { grid-column: 1 / 3; }
+  .phone.big .top3 { padding-left: 0; }
+  .top3 { padding: 2px 0 10px 46px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid var(--hairline); }
+  .top3 .c { font-size: var(--f13); color: var(--ink2); }
+  .chg { display: flex; align-items: flex-start; gap: 6px; font-size: var(--f14); line-height: 1.35; font-weight: 600; }
+  .chg svg { flex: none; margin-top: 0.3em; }
+  .entry { display: flex; justify-content: space-between; gap: 12px; font-size: var(--f14); line-height: 1.4; }
+  .entry .amt { font-weight: 600; white-space: nowrap; }
+  .entry .w { color: var(--ink2); }
+  .entry .nn { color: var(--ink2); }
+  .hk { display: flex; align-items: center; gap: 8px; font-size: var(--f13); color: var(--ink2); }
+  .hk i { width: 16px; height: 8px; border-radius: 4px; background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--surface) 2px 5px); flex: none; }
+
+  /* strip */
+  .strit { margin: 0; }
+  .strit b { font-family: 'Anek Latin', sans-serif; font-weight: 600; font-size: var(--f22); line-height: 1.25; display: block; }
+  .strit span { font-size: var(--f15); line-height: 1.35; color: var(--ink); }
+  .cols { display: flex; align-items: stretch; }
+  .slot { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 0; min-width: 48px; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; padding: 4px 0; border-radius: 8px; }
+  .slot .plot { position: relative; width: 100%; display: flex; justify-content: center; align-items: flex-end; border-bottom: 1px solid var(--hairline); }
+  .stack { width: 28px; display: flex; flex-direction: column-reverse; }
+  .stack .b { background: var(--ink); border-radius: 2px 2px 0 0; }
+  .stack .b.now { background: transparent; box-shadow: inset 0 0 0 2px var(--ink); }
+  .stack .cp { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); border-radius: 2px 2px 0 0; }
+  .stack .o { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--surface) 2px 5px); box-shadow: inset 0 0 0 1.5px var(--ink); border-radius: 2px 2px 0 0; }
+  .plot .inc { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dotted var(--ink2); }
+  .slot .m, .srow .m { font-size: var(--f12); line-height: 1.2; color: var(--ink2); padding: 3px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .slot[aria-pressed="true"] .m, .srow[aria-pressed="true"] .m { background: var(--ink); color: var(--bg); font-weight: 600; }
+  .slot .so { font-size: var(--f11); line-height: 1.1; color: var(--ink2); white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 1.5px var(--ink); display: inline-block; flex: none; }
+  .srows { display: flex; flex-direction: column; }
+  .srow { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; min-height: 48px; padding: 4px 0; border-radius: 8px; width: 100%; }
+  .srow .m { font-size: var(--f14); }
+  .srow .tr { position: relative; height: 10px; border-radius: 5px; background: var(--sunk); overflow: hidden; display: flex; box-shadow: inset 0 0 0 1px var(--ink2); }
+  .srow .tr i { display: block; height: 100%; }
+  .srow .tr .b { background: var(--ink); }
+  .srow .tr .b.now { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .srow .tr .cp { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .srow .tr .o { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, var(--surface) 2px 5px); }
+  .srow .tk { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dotted var(--ink2); }
+  .srow .amt { font-size: var(--f14); font-weight: 600; }
+  .readout { margin: 0; font-size: var(--f14); line-height: 1.35; min-height: 2.7em; }
+  @media (prefers-reduced-motion: reduce) { .caret { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="status"><span class="chip">Mockup 46</span><span class="chip">Proposal · not approved</span><span class="chip">Takes the place of 44 as the thing to build from</span></div>
+  <h1>Spends graphs, v2</h1>
+  <p class="lede">The owner liked mockup 44, so this keeps its four ideas and fixes what made the screen long and hard to read. The pace card now holds the comparison. The split bar puts <b>Saved</b> between two solid blocks, so it never melts into the track. Each category row opens to what changed and its biggest entries, one at a time. The months strip is the last card and shows five months on a phone. The month story's card sits right under Ask AI. Words come from the copy deck, and every must-fix in the accessibility review is applied. Everything below is live: change the cycle, the text size, the width. The two phones are the same state in light and dark.</p>
+</header>
+
+<section>
+  <h2>What changed from 44, and why</h2>
+  <ol>
+    <li><b>The comparison sentence moved into the pace card</b>, under "Spent so far". It was a 56dp card holding one line. It is the same news as the number above it, so they now read together. Finished cycle: "₹7,500 less than in August." First cycle: no line, and nothing in its place. Weekly cycles say "the week before". Under ₹100 apart reads "Same as".</li>
+    <li><b>The split bar's blocks run Bills, Saved, Everyday, then what is not spent.</b> In 44, Saved sat beside the empty track, where a 2% outline vanishes, and in the over-income state the striped tail covered it completely. Now it is always a bounded outline between two solid blocks, 12dp wide at least, and not drawn at ₹0.</li>
+    <li><b>Everyday uses a new fill token, <code>fillSoft</code></b> (#787169 light, #858077 dark): 3.7:1 and 3.6:1 against the track. 44's soft fill failed 3:1 (2.7 and 2.9) and was never a token. The track has a 1dp <code>ink2</code> edge, and so does the "Not spent yet" swatch.</li>
+    <li><b>The split card has five numbers, not seven.</b> "Money in ₹45,000" is the heading. The answer comes first and biggest ("₹16,430 not spent yet"), then "And ₹1,000 saved." The key shows amounts for Bills and Everyday only, since the sentence above already says the other two. One line defines Everyday. TalkBack reads the answer first.</li>
+    <li><b>Where it went:</b> a short headline ("The most went on Food.") says it in words without repeating numbers. The change against last cycle now shows only on the row you open, as its first line, so closed rows stay as built (plus a caret). One row open at a time, none open to start. A category with 3 entries or fewer shows all of them and drops the link.</li>
+    <li><b>The months strip is the last card, with the accessibility fixes.</b> Every month is a full 48dp-wide, 48dp-tall slot. At phone widths it shows <b>5</b> months, since 6 need 288dp inside the card (a phone gives 280 or 240). Picking a month uses the same look as picked chips (filled pill), and keyboard focus is a separate ring. A picked month reads out in one line below, and that line is hidden from TalkBack because each month's own label already says it. Bar labels and "Money in ₹45,000" are real text under the chart, not painted. The summary now counts "left over" on the same measure as the bars (spent plus saved against money in), so words and picture agree.</li>
+    <li><b>Words from the copy deck.</b> "Not spent yet" while the cycle runs, "Left over" once finished, "More than came in" for over, "Money in", never "income", "earned" or "still free". The chart axis in the pace card is the built chart's ("₹20K"), unchanged.</li>
+    <li><b>The month story card</b> (SPEC FR-SP-7, D193 and D194) sits directly below Ask AI on finished cycles, and as a slim row on days 1 to 7 of a new cycle. The split bar is the same component in both features (see "Month story" below).</li>
+    <li><b>Screen length:</b> about 590dp longer than today's screen on a running cycle, against about 900dp for 44 (hand estimates, table below; the live phones print the mockup's own measure).</li>
+    <li><b>Fixed in passing:</b> Aug's saved sliver hidden under stripes (44); one income line for every month (now per month); the strip's picked bar had the same look as keyboard focus.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Try it</h2>
+  <div class="controls" id="controls"></div>
+  <div class="stage">
+    <div><div id="p-light"></div><p class="cap" id="meter"></p></div>
+    <div><div id="p-dark"></div></div>
+  </div>
+  <p class="lede">Tap a category to open it. Tap a month in the strip to read it, and "Open" to go there; the chevrons move between cycles. The first scenario is the SPEC worked example (Mon 26 Oct). "Early in a cycle" shows the slim story row (day 2). Past cycles show the story card.</p>
+</section>
+
+<section>
+  <h2>Edge and past-cycle states</h2>
+  <div class="controls"><div class="ctl"><span>Gallery theme</span><div class="seg-btns" id="gtheme"></div></div></div>
+  <div class="gal" id="gal"></div>
+</section>
+
+<section>
+  <h2>Screen order and length</h2>
+  <div class="tablebox"><table>
+    <tr><th>Order (top to bottom)</th><th>Built today</th><th>Mockup 44</th><th>v2</th></tr>
+    <tr><td>1 Top bar</td><td>Spends · ‹ October ›</td><td>same</td><td>same</td></tr>
+    <tr><td>2 Ask AI card</td><td>top (FR-SP-2)</td><td>same</td><td>same</td></tr>
+    <tr><td>3 Month story</td><td>no</td><td>n/a</td><td><b>Finished cycle: the story card, directly under Ask AI. Days 1 to 7 of a new cycle: a slim row in the same place. Otherwise nothing.</b> (FR-SP-7)</td></tr>
+    <tr><td>4 Pace card</td><td>yes</td><td>collapsed in the drawing; comparison its own card above</td><td>yes, with the comparison under the total (+28dp)</td></tr>
+    <tr><td>5 Money split</td><td>1 grey line</td><td>card with hero, bar, 4-row key</td><td>card, 5 numbers, answer first (about +240dp)</td></tr>
+    <tr><td>6 Where it went</td><td>rows</td><td>headline, changes on every row, Food open</td><td>short headline, all closed; the change appears on the open row</td></tr>
+    <tr><td>7 Insights</td><td>up to 3</td><td>BR-14 #1 repeats the comparison</td><td>#1 is dropped while the comparison shows</td></tr>
+    <tr><td>8 Months strip</td><td>no</td><td>card, 4 parts, about 310dp</td><td>card, about 300dp, last; hidden until 2 finished cycles</td></tr>
+    <tr><td>Added height, approx.</td><td>baseline (about 900dp to the end of Where it went, Oct, 360dp wide, 1× text)</td><td>about +900dp</td><td>about +590dp (28 + 240 + 20 headline + 300). The story card adds about 190dp on a finished cycle, which is that feature's cost</td></tr>
+  </table></div>
+  <p class="lede">Hand estimates from component heights, not measured on a device. The phones above print the mockup's own measured height.</p>
+</section>
+
+<section>
+  <h2>Month story: where its card goes, and one split bar for both</h2>
+  <div class="tablebox"><table>
+    <tr><th>Thing</th><th>On Spends (this mockup)</th><th>In the story, page 2 (mockup 45)</th></tr>
+    <tr><td>Where</td><td>The card sits directly under Ask AI on finished cycles; the slim row takes the same place for days 1 to 7. The two never show together, and neither pushes the pace card off its place: pace follows.</td><td>Opened from that card or row.</td></tr>
+    <tr><td>Block order</td><td>Bills, Saved, Everyday, then Left over (or striped past the end)</td><td><b>Must change</b>: 45 draws Bills, Everyday, Saved.</td></tr>
+    <tr><td>Words</td><td>Not spent yet, Left over, More than came in, Saved, Bills, Everyday</td><td><b>Must change</b>: 45 says "Past your income" and "more than you earned".</td></tr>
+    <tr><td>Saved</td><td>12dp minimum, not drawn at ₹0, outline <code>ink</code> 2dp</td><td><b>Must change</b>: 45 has an 8dp minimum drawn unconditionally.</td></tr>
+    <tr><td>Track</td><td><code>sunk</code> with a 1dp <code>ink2</code> edge; the same on the key swatch</td><td><b>Must change</b>: no edge today.</td></tr>
+    <tr><td>Everyday fill</td><td><code>fillSoft</code> #787169 light, #858077 dark</td><td>Story surface: the a11y review gives #8F887F for the story's evening surfaces (3.1 to 3.9:1).</td></tr>
+    <tr><td>Hatch</td><td>3dp stripe, 3dp gap, 3dp <code>ink</code> edge at the money-in mark</td><td>Same.</td></tr>
+    <tr><td>Component</td><td colspan="2">One shared <code>IncomeSplitBar</code> (name proposed) paints both, with the surface colours passed in; the story does not draw its own. That is what keeps the two identical.</td></tr>
+  </table></div>
+  <p class="lede">I did not touch mockup 45. Copy fixes and the a11y fixes for the story (real Back and Next in the semantics tree, scrolling at 200% text) belong with <code>design-ui</code> for that feature.</p>
+</section>
+
+<section>
+  <h2>Split bar: fill grammar and measured contrast</h2>
+  <div class="tablebox"><table>
+    <tr><th>Part</th><th>Fill</th><th>Why it can be told apart</th></tr>
+    <tr><td>Bills</td><td>solid <code>ink</code></td><td>The darkest block. Rule-posted entries (BR-9).</td></tr>
+    <tr><td>Saved</td><td><code>surface</code> with a 2dp <code>ink</code> outline, 12dp minimum</td><td>The only hollow block, between two solid blocks, never at the track's edge. Named in the sentence above the bar and in the key. At 0.25% (₹300 of ₹1,20,000) it is still 12dp. At ₹0 it is not drawn.</td></tr>
+    <tr><td>Everyday</td><td>solid <code>fillSoft</code></td><td>Lighter than Bills by 3.8:1 / 3.5:1, and a 2dp gap of card colour separates them.</td></tr>
+    <tr><td>More than came in</td><td>hatch (3dp / 3dp), 3dp <code>ink</code> edge</td><td>Hatch means "over the limit" on the rows (D110). Here the limit is the money in.</td></tr>
+    <tr><td>Not spent yet / Left over</td><td><code>sunk</code> track</td><td>Inside the 1dp <code>ink2</code> edge, which the whole bar and the swatch carry.</td></tr>
+  </table></div>
+  <div class="tablebox"><table>
+    <tr><th>Pair</th><th>Light</th><th>Dark</th><th>Result</th></tr>
+    <tr><td><code>fillSoft</code> vs <code>sunk</code> (the track)</td><td>3.68</td><td>3.58</td><td>Passes 3:1</td></tr>
+    <tr><td><code>fillSoft</code> vs <code>ink</code> (Bills beside Everyday)</td><td>3.76</td><td>3.47</td><td>Passes 3:1</td></tr>
+    <tr><td><code>fillSoft</code> vs <code>surface</code></td><td>4.77</td><td>4.19</td><td>Passes</td></tr>
+    <tr><td><code>ink2</code> vs <code>surface</code> (text, edge, dotted lines)</td><td>7.20</td><td>6.42</td><td>Passes</td></tr>
+    <tr><td><code>sunk</code> vs <code>surface</code> (the track alone)</td><td>1.30</td><td>1.17</td><td>Fails, so the 1dp <code>ink2</code> edge is required</td></tr>
+    <tr><td>44's <code>soft</code> vs <code>sunk</code></td><td>2.71</td><td>2.91</td><td>Fails. Never use #8E877F or #77716A</td></tr>
+  </table></div>
+  <p class="lede">Ratios are from the accessibility review (WCAG relative luminance). <code>fillSoft</code> is a new token, so it goes to <code>design-system</code>, which runs the colour process (role, OKLCH step, <code>better-colors</code>) before it ships; the hexes here are the review's measured proposal.</p>
+</section>
+
+<section>
+  <h2>Months strip: does it earn its place, and what form</h2>
+  <ul>
+    <li><b>Yes, last, and smaller.</b> It is the only thing that answers "am I doing better than before" over more than one month. People ask it after the other questions, so it sits at the end. It shows with 2 finished cycles and with money in (the "left over" test needs it).</li>
+    <li><b>Form:</b> a title and a one-line count ("Money was left over in 3 of the last 4 months."), 5 bars (6 only where the card is 288dp inside), month labels in real text, a dotted money-in line per month, one caption, and one read-out line for the picked month. About 300dp, the same as 44's strip, but with fewer words and no painted text.</li>
+    <li><b>Same measure everywhere:</b> a bar is spent (solid) plus saved (outlined cap), against that month's money in (dotted). "Left over" in the count means the bar stayed under the line. The cap has a 5dp floor so it stays a box; amounts live in the read-out, not above the bars.</li>
+    <li><b>Current cycle:</b> dashed outline, "so far" and a marigold dot with an ink ring below it (the same dot the pace chart uses for today). Past the line: striped.</li>
+    <li><b>Selection and focus:</b> the picked month is a filled ink pill with page-colour text; focus is a 2dp ring round the whole slot. Never the same.</li>
+    <li><b>Large text (150% and up):</b> the columns become rows (month, bar, amount), 48dp each.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Consistency with the pace chart and the day bars</h2>
+  <div class="tablebox"><table>
+    <tr><th>Thing</th><th>Pace chart (built, 31)</th><th>Strip (v2)</th><th>Day bars (45, page 4)</th></tr>
+    <tr><td>Reference line</td><td>dotted <code>ink2</code>, 2dp, round caps</td><td>same (money in)</td><td>same (daily share)</td></tr>
+    <tr><td>"Spent"</td><td>solid <code>ink</code></td><td>solid <code>ink</code></td><td>two tones: past the share is dark, under it lighter</td></tr>
+    <tr><td>Over the line</td><td>forecast ring and date</td><td>hatch above the line</td><td>dark bar, no hatch</td></tr>
+    <tr><td>Today / unfinished</td><td>marigold dot, ink ring</td><td>same dot, dashed bar, "so far"</td><td>(n/a)</td></tr>
+    <tr><td>Labels</td><td>11dp <code>ink2</code>, Today in 600 <code>ink</code></td><td>12dp real text, picked month in a pill</td><td>11dp, the peak in 600</td></tr>
+  </table></div>
+  <p class="lede"><b>One inconsistency, in 45, which I did not touch:</b> there "darker means past the share", while everywhere else "striped means past the limit". If the owner wants one grammar, the day bars should hatch the part of a day above the share. See open question 4.</p>
+</section>
+
+<section>
+  <h2>Rules that keep it honest</h2>
+  <div class="tablebox"><table>
+    <tr><th>Case</th><th>What shows</th></tr>
+    <tr><td>No money coming in</td><td>Pace card: total and the comparison. The split card becomes "Spending this month", "₹27,570 spent", "Add money coming in to see how it splits." and an "Add money coming in" button. No strip.</td></tr>
+    <tr><td>First cycle, or last cycle not fully tracked</td><td>No comparison, no change line on rows, no strip. Nothing in their place.</td></tr>
+    <tr><td>Under ₹100 apart</td><td>"Same as by this day in September." Proposed for SPEC.</td></tr>
+    <tr><td>Past money in</td><td>"₹3,100 more than came in", "That includes ₹1,000 saved." The striped tail is the end of Everyday, so Saved stays visible.</td></tr>
+    <tr><td>Exactly all used</td><td>"All of it is spent or saved." (running) or "Nothing left over." (finished)</td></tr>
+    <tr><td>Saved ₹0 or Bills ₹0</td><td>Block, key row and sentence part are left out.</td></tr>
+    <tr><td>Not logged</td><td>Joins Everyday. The one note under the key reads "Everyday is all spending except bills, including ₹2,000 not logged."</td></tr>
+    <tr><td>Category with 1 entry</td><td>Opens to "1 entry" and that entry. No link.</td></tr>
+    <tr><td>Category with 2 or 3 entries</td><td>"All 3 entries", no link.</td></tr>
+    <tr><td>Past limit</td><td>The name carries "₹100 past limit" and replaces the %; hatch on the bar. The change is on the open row.</td></tr>
+    <tr><td>Weekly cycles</td><td>"the week before" in the comparison and the row change; the strip counts weeks and labels bars with start dates.</td></tr>
+    <tr><td>Insights (BR-14)</td><td>#1 is dropped while the comparison shows; #2 to #5 unchanged.</td></tr>
+    <tr><td>TalkBack</td><td>Pace card: one sentence incl. the comparison. Split card: answer first ("16,430 rupees not spent yet of 45,000 rupees. Bills 8,200. Saved 1,000. Everyday 19,370."). Row: one node with <code>expanded</code>; the change is spoken only when open. Strip: one button per month with its whole sentence and <code>selected</code>; the read-out line is hidden from TalkBack.</td></tr>
+    <tr><td>Reduced motion</td><td>The caret turns without animation; nothing else moves.</td></tr>
+    <tr><td>Large text (over 130%)</td><td>Row icon wells drop and the name takes the width. The strip becomes rows.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Token table</h2>
+  <div class="tablebox"><table>
+    <tr><th>Use</th><th>Token</th></tr>
+    <tr><td>Colours</td><td><code>bg</code> page, <code>surface</code> cards and Saved, <code>sunk</code> track and wells, <code>hairline</code> dividers and strip baseline, <code>ink</code> text, Bills, spent bars, hatch, <code>ink2</code> secondary text, track edge, dotted lines, <code>signal</code> the Ask AI well and one "so far" dot (each with an ink outline or <code>onSignal</code> glyph, never bare), <b><code>fillSoft</code> NEW, proposed</b>. Story door: mockup 45's <code>sBg</code>, <code>sInk</code>, <code>sInk2</code></td></tr>
+    <tr><td>Type</td><td>Anek Latin 600: 24 (pace amount, split hero), 22 (card titles), 16 (amounts in rows); 400 18 <code>ink2</code> (labels beside amounts); Anek Latin 700 34 (story door). Mukta 400 and 600: 16 row names, 15 body, 14 entries and read-out, 13 captions, 12 and 11 strip labels. Tabular figures on every amount. Two weights (400, 600) plus the story's existing 700</td></tr>
+    <tr><td>Spacing</td><td>4, 8, 12 (card gap), 16, 20 (gutter, card inset), 24. One-offs: 36 icon well, 10 well-to-text, 46 entry indent (36 + 10), 48 targets</td></tr>
+    <tr><td>Radius</td><td>28 card, 12 chip, well and split bar, 4 and 5 row bars (half height), 2 strip bar tops, 999 picked pill</td></tr>
+    <tr><td>Strokes</td><td>1 track edge and hairline, 1.5 hatch edge, 2 Saved outline and dotted lines and limit tick, 3 income-mark edge</td></tr>
+    <tr><td>New</td><td><code>fillSoft</code> only. It goes to <code>design-system</code>.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Open questions for the owner</h2>
+  <ol>
+    <li><b>Saved sits next to Bills, so the spoken order is Bills, Saved, Everyday</b>, not the copy deck's Bills, Everyday, Saved. It keeps Saved findable and visible when you are over. Is that fine, or do you want Saved last?</li>
+    <li><b>Five months, not six.</b> A phone's card is 280dp inside and six 48dp targets need 288. The strip says "Last 5 months". Fine?</li>
+    <li><b>Tapping a month reads it; "Open" goes there.</b> That is one extra line in the read-out. Or should a tap open the month and drop the read-out line (about 40dp shorter)?</li>
+    <li><b>Day bars in the month story:</b> keep "darker means past the share", or hatch it like everything else?</li>
+    <li><b>Hierarchy on finished months.</b> Ask AI then the month story are two action cards above the first number you see. On Home the number comes first. Specced as is (FR-SP-7); is it right that finished months open with two cards before any money?</li>
+    <li><b>No money coming in:</b> the copy deck repeats the spend in the split card ("₹27,570 spent") right under the pace card's total. Keep both, or let the split card be just the prompt?</li>
+    <li><b>Where it went headline:</b> "The most went on Food." is a line (21dp) that repeats row 1. Keep it, or drop it to save the line?</li>
+  </ol>
+</section>
+
+</div>
+
+<script>
+  /* ---------- helpers ---------- */
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const spoken = n => Math.round(n).toLocaleString('en-IN') + ' rupees';
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateOff = (start, off) => { const d = new Date(start); d.setDate(d.getDate() + off); return d.getDate() + ' ' + MON[d.getMonth()]; };
+  const sum = o => Object.values(o).reduce((a, b) => a + b, 0);
+
+  /* ---------- data: one table, everything on screen is computed from it ---------- */
+  const CATS = {
+    food:   { name: 'Food',     icon: '<path d="M3 11h18a9 9 0 0 1-18 0Z"/><path d="M8 7.5c0-1 1-1.5 1-2.5M12 7.5c0-1 1-1.5 1-2.5M16 7.5c0-1 1-1.5 1-2.5"/>' },
+    bills:  { name: 'Bills',    icon: '<path d="M6 3h9l3 3v15H6Z"/><path d="M9 10h6M9 14h6M9 18h3"/>' },
+    travel: { name: 'Travel',   icon: '<rect x="5" y="4" width="14" height="12" rx="2"/><path d="M5 11h14M8 19v-3M16 19v-3"/>' },
+    shop:   { name: 'Shopping', icon: '<path d="M5 8h14l-1 13H6Z"/><path d="M9 8a3 3 0 0 1 6 0"/>', limit: 3500 },
+    fun:    { name: 'Fun',      icon: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5l-5.3 2.9 1.2-6-4.5-4.1 6-.7Z"/>' },
+    health: { name: 'Health',   icon: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/>' },
+  };
+  const NOTES = { food: ['Dinner out', 'Groceries', null], bills: ['Rent', 'Electricity'], travel: ['Train to Pune', 'Petrol', 'Auto'], shop: ['Shoes', 'Kurta', null], fun: ['Movie', 'Cricket match', null], health: ['Doctor'] };
+  const mk = (m, full, o) => Object.assign({ kind: 'month', full, short: full.slice(0, 3), bar: full.slice(0, 3), start: new Date(2026, m, 4), len: 30, income: 45000, saved: 1000, done: true, seed: m, n: { food: 21, bills: 2, travel: 9, shop: 3, fun: 3, health: 1 } }, o);
+  const OCT = mk(9, 'October', { len: 31, done: false, day: 23, cats: { food: 9840, bills: 8200, travel: 4100, shop: 3600, fun: 1830 },
+    n: { food: 21, bills: 1, travel: 9, shop: 3, fun: 3 }, lumps: [[16, 18950], [22, 420]],
+    prevSame: { food: 8640, bills: 8200, travel: 5000, shop: 5300, fun: 2530 }, prevSameTotal: 29670,
+    top: { food: [['Dinner out', '20 Oct', 2400], ['Groceries', '12 Oct', 1850], [null, '8 Oct', 960]],
+           bills: [['Rent', '5 Oct', 8200]],
+           travel: [['Train to Pune', '15 Oct', 1450], ['Petrol', '9 Oct', 1200], ['Auto', '22 Oct', 380]],
+           shop: [['Shoes', '17 Oct', 2200], ['Kurta', '11 Oct', 900], [null, '24 Oct', 500]],
+           fun: [['Movie', '18 Oct', 900], ['Cricket match', '14 Oct', 600], [null, '25 Oct', 330]] } });
+  const CY = [
+    mk(4, 'May',       { len: 31, cats: { food: 11800, bills: 9400, travel: 7000, shop: 7600, fun: 3200, health: 2200 } }),
+    mk(5, 'June',      { len: 30, cats: { food: 11200, bills: 9400, travel: 6100, shop: 6300, fun: 3400, health: 2500 } }),
+    mk(6, 'July',      { len: 31, cats: { food: 12900, bills: 9400, travel: 7400, shop: 7600, fun: 4000, health: 2300 } }),
+    mk(7, 'August',    { len: 31, cats: { food: 14300, bills: 9400, travel: 6100, shop: 10100, fun: 4800, health: 2400 } }),
+    mk(8, 'September', { len: 30, cats: { food: 12100, bills: 9400, travel: 7300, shop: 6200, fun: 3100, health: 1500 } }),
+    OCT,
+  ];
+  const OCT_EARLY = Object.assign({}, OCT, { day: 2, cats: { food: 640, bills: 8200 }, n: { food: 2, bills: 1 }, lumps: [[1, 640]], prevSame: { food: 700, bills: 8200 }, prevSameTotal: 8900, top: null });
+  const wk = (s, full, o) => Object.assign({ kind: 'week', full, short: full, bar: full.split(' – ')[0], start: new Date(2026, 9, s), len: 7, income: 10000, saved: 500, done: true, seed: s, n: { food: 6, bills: 1, travel: 3, shop: 2, fun: 2 } }, o);
+  const WK = [
+    wk(5, '5 Oct – 11 Oct',  { cats: { food: 2600, bills: 1800, travel: 900, shop: 700, fun: 300 } }),
+    wk(12, '12 Oct – 18 Oct', { cats: { food: 2300, bills: 1800, travel: 1200, shop: 1000, fun: 600 } }),
+    wk(19, '19 Oct – 25 Oct', { done: false, day: 5, cats: { food: 2300, bills: 1800, travel: 700, fun: 200 }, n: { food: 5, bills: 1, travel: 2, fun: 1 },
+      lumps: [[2, 2100], [4, 1100]], prevSame: { food: 1500, bills: 1800, travel: 1000, shop: 600, fun: 400 }, prevSameTotal: 5300 }),
+  ];
+  [...CY, OCT_EARLY, ...WK].forEach(c => { c.spent = sum(c.cats); c.every = c.spent - c.cats.bills; c.bills = c.cats.bills; });
+
+  const entriesOf = (c, k) => {
+    if (c.top && c.top[k]) return c.top[k];
+    const amt = c.cats[k], n = c.n[k], notes = NOTES[k], wkk = c.kind === 'week';
+    let amts;
+    if (n === 1) amts = [amt];
+    else if (n === 2) { const a = k === 'bills' ? amt - 1200 : Math.round(amt * 0.6 / 10) * 10; amts = [a, amt - a]; }
+    else amts = [0.25, 0.19, 0.12].map(f => Math.round(amt * f / 10) * 10);
+    return amts.map((a, i) => [notes[i] || null, dateOff(c.start, k === 'bills' ? [1, 24][i] : (wkk ? i * 2 + 1 : i * 8 + 5)), a]);
+  };
+
+  /* ---------- the pace card's chart (mockup 31 geometry, trimmed; its own text is the built chart's) ---------- */
+  function paceSvg(c) {
+    const len = c.len, upto = c.done ? len : c.day, W = 280, H = 160, L = 38, R = W - 6, T = 6, B = H - 6;
+    const rent = c.bills - (c.bills > 8200 ? 1200 : 0), bills = [{ d: 1, a: rent }];
+    if (c.bills > rent) bills.push({ d: 25, a: c.bills - rent });
+    const byDay = new Array(len).fill(0);
+    bills.filter(b => b.d < upto).forEach(b => byDay[b.d] += b.a);
+    if (c.lumps) c.lumps.forEach(([d, a]) => { if (d < upto) byDay[d] += a; });
+    else {
+      const w = [...Array(upto)].map((_, d) => 1 + ((d * 7 + c.seed) % 5) / 2 + (d % 7 >= 5 ? 1.5 : 0)), sw = w.reduce((a, b) => a + b, 0);
+      let acc = 0; w.forEach((x, d) => { const v = d === upto - 1 ? c.every - acc : Math.round(c.every * x / sw / 10) * 10; byDay[d] += v; acc += v; });
+    }
+    const cum = []; let s = 0; byDay.slice(0, upto).forEach(v => { s += v; cum.push(s); });
+    const bt = d => bills.filter(b => b.d <= d).reduce((t, b) => t + b.a, 0);
+    const steady = d => bt(d) + Math.floor((c.income - c.bills) * (d + 1) / len);
+    const top = Math.max(c.income, c.spent), x = d => L + (R - L) * d / len, y = v => B - (B - T) * v / top;
+    const step = top > 30000 ? 20000 : top > 12000 ? 10000 : 5000, out = [];
+    for (let v = 0; v <= top; v += step) {
+      out.push(`<line x1="${L}" y1="${y(v)}" x2="${R}" y2="${y(v)}" stroke="var(--hairline)"/>`);
+      out.push(`<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink2)">${v ? '₹' + v / 1000 + 'K' : '₹0'}</text>`);
+    }
+    const st = [[x(0), y(0)]]; for (let d = 0; d < len; d++) st.push([x(d + 1), y(steady(d))]);
+    out.push(`<polyline points="${st.join(' ')}" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`);
+    const sp = [[x(0), y(0)], ...cum.map((v, d) => [x(d + 1), y(v)])], td = sp[sp.length - 1];
+    out.push(`<polyline points="${sp.join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`);
+    if (!c.done) out.push(`<circle cx="${td[0]}" cy="${td[1]}" r="5" fill="var(--signal)" stroke="var(--ink)" stroke-width="1.5"/>`);
+    const by = H + 14, lbl = (tx, a, t, w) => `<text x="${tx}" y="${by}" text-anchor="${a}" font-size="11" font-weight="${w}" fill="${w > 400 ? 'var(--ink)' : 'var(--ink2)'}">${t}</text>`;
+    if (c.done || td[0] - L > 44) out.push(lbl(L, 'start', dateOff(c.start, 0), 400));
+    if (c.done || R - td[0] > 44) out.push(lbl(R, 'end', dateOff(c.start, len - 1), 400));
+    if (!c.done) out.push(lbl(td[0], 'middle', 'Today', 600));
+    return { svg: `<svg class="chart" viewBox="0 0 ${W} ${H + 20}" font-family="Mukta, sans-serif" aria-hidden="true">${out.join('')}</svg>`, slower: c.done ? null : c.spent <= steady(upto - 1) };
+  }
+
+  /* ---------- pieces ---------- */
+  const arrow = (up, s = 16, sw = 2) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${up ? 'M12 19V5M6 11l6-6 6 6' : 'M12 5v14M6 13l6 6 6-6'}"/></svg>`;
+  const equal = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg>`;
+  const chevL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+  const chevR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  const SAME_UNDER = 100;
+
+  function ctx(S) {
+    const c = S.cy[S.sel], prev = S.cy[S.sel - 1], inc = S.noIncome ? 0 : c.income;
+    return { c, prev, inc };
+  }
+  /* "by this day in September" / "the week before" */
+  const sinceWords = (c, prev) => c.kind === 'week' ? (c.done ? 'the week before' : 'by this day the week before') : (c.done ? 'in ' + prev.full : 'by this day in ' + prev.full);
+  const rowWords = (c, prev) => c.kind === 'week' ? 'the week before' : prev.full;
+  function diffOf(c, prev) { return c.spent - (c.done ? prev.spent : c.prevSameTotal); }
+
+  function topBar(S) {
+    const { c } = ctx(S);
+    const can = (on, act, ic, label) => `<button class="chev" data-act="${act}" aria-label="${label}" aria-disabled="${!on}">${ic}</button>`;
+    return `<div class="topbar"><h4>Spends</h4><div class="sw">${can(S.sel > 0, 'prev', chevL, 'Earlier')}<b>${c.full}</b>${can(S.sel < S.cy.length - 1, 'next', chevR, 'Later')}</div></div>`;
+  }
+  function askCard(S) {
+    const { c } = ctx(S);
+    return `<div class="card ask"><span class="well" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="M18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8Z"/></svg></span><div><b>Ask an AI about ${c.full}</b><small>You'll see exactly what it gets.</small></div></div>`;
+  }
+
+  /* the month story's entrance (SPEC FR-SP-7), drawn as a placeholder of mockup 45's door and slim row */
+  function miniDays(c) {
+    const n = c.len, W = 300, h = 44, bw = W / n, vals = [...Array(n)].map((_, i) => ((i * 53 + c.seed * 17) % 11) / 10);
+    const bars = vals.map((v, i) => `<rect x="${i * bw + 1}" y="${h - 4 - v * 34 - 2}" width="${bw - 2}" height="${v * 34 + 2}" rx="1.5" fill="${v > 0.62 ? 'var(--sInk)' : 'var(--sInk2)'}"/>`).join('');
+    return `<svg viewBox="0 0 ${W} ${h}" aria-hidden="true">${bars}<line x1="0" x2="${W}" y1="${h - 4 - 0.62 * 34}" y2="${h - 4 - 0.62 * 34}" stroke="var(--sInk2)" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round"/></svg>`;
+  }
+  function storyPart(S) {
+    const { c, prev, inc } = ctx(S);
+    if (c.done) {
+      const left = inc - c.spent - c.saved, big = !inc ? inr(c.spent) + ' spent' : left > 0 ? inr(left) + ' left over' : left === 0 ? 'Nothing left over' : inr(-left) + ' more than came in';
+      return `<button class="door" data-act="none" aria-label="Your month, ${big}. See the story."><span class="eye">Your month</span><span class="big">${big}</span>${miniDays(c)}<span class="btn">See the story</span></button>`;
+    }
+    if (prev && c.day <= 7) {
+      const mini = [...Array(18)].map((_, i) => `<span style="${(i * 5 + prev.seed) % 4 === 0 ? 'background:var(--sunk)' : ''}"></span>`).join('');
+      return `<button class="slim" data-act="none" aria-label="${prev.full} is done. See your month."><span class="mini" aria-hidden="true">${mini}</span><span><b>${prev.full} is done.</b> See your month</span><span class="go" aria-hidden="true">›</span></button>`;
+    }
+    return '';
+  }
+
+  function compareLine(S) {
+    const { c, prev } = ctx(S);
+    if (!prev) return { html: '', words: '' };
+    const d = diffOf(c, prev), when = sinceWords(c, prev), abs = Math.abs(d);
+    if (abs < SAME_UNDER) return { html: `<p class="cmp">${equal}<span>Same as ${when}.</span></p>`, words: `Same as ${when}.` };
+    const less = d < 0;
+    return { html: `<p class="cmp">${arrow(!less)}<span><span class="amt">${inr(abs)}</span> ${less ? 'less' : 'more'} than ${when}.</span></p>`, words: `${spoken(abs)} ${less ? 'less' : 'more'} than ${when}.` };
+  }
+
+  function paceCard(S) {
+    const { c, inc } = ctx(S), cmp = compareLine(S);
+    const solid = '<svg width="16" height="16"><line x1="0" y1="8" x2="16" y2="8" stroke="var(--ink)" stroke-width="2.5"/></svg>';
+    const dots = '<svg width="16" height="16"><line x1="1" y1="8" x2="16" y2="8" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/></svg>';
+    const total = `<div class="total"><span class="lbl">${c.done ? 'Spent' : 'Spent so far'}</span><span><b>${inr(c.spent)}</b>${inc ? ` <small>of ${inr(inc)}</small>` : ''}</span></div>`;
+    if (!inc) return `<section class="card" aria-label="${spoken(c.spent)} spent. ${cmp.words}">${total}${cmp.html}</section>`;
+    const ch = paceSvg(c);
+    const verdict = ch.slower === null ? '' : `<span class="v">${ch.slower ? 'Spending slower' : 'Spending faster'}</span>`;
+    return `<section class="card" aria-label="${spoken(c.spent)} spent${c.done ? '' : ' so far'} of ${spoken(inc)}. ${cmp.words}">${total}${cmp.html}${ch.svg}<div class="legend"><span>${solid}You</span><span>${dots}Steady pace</span>${verdict}</div></section>`;
+  }
+
+  function splitCard(S) {
+    const { c, inc } = ctx(S);
+    const unit = c.kind === 'week' ? 'week' : 'month';
+    if (!inc) {
+      const title = c.done ? (unit === 'week' ? `Spending for ${c.full}` : `Spending in ${c.full}`) : `Spending this ${unit}`;
+      return `<section class="card" aria-label="${title}. ${spoken(c.spent)} spent. Add the money coming in to see how it splits."><p class="minl">${title}</p><div class="hero"><span class="num">${inr(c.spent)}</span><span class="lbl">spent</span></div><p class="prompt">Add the money coming in to see how it splits.</p><a class="lnk" href="#" onclick="return false" style="align-self:flex-start">Add money coming in</a></section>`;
+    }
+    const used = c.bills + c.every + c.saved, over = Math.max(0, used - inc), free = Math.max(0, inc - used), scale = Math.max(used, inc);
+    const pct = v => (v / scale * 100).toFixed(2) + '%', everyIn = c.every - over;
+    let segs = `<i class="f-bills" style="flex-basis:${pct(c.bills)}"></i>`;
+    if (c.saved > 0) segs += `<i class="f-saved" style="flex:0 0 max(12px, ${pct(c.saved)})"></i>`;
+    segs += `<i class="f-every" style="flex-basis:${pct(everyIn)}"></i>`;
+    if (over) segs += `<i class="f-over" style="flex-basis:${pct(over)}"></i>`;
+    if (free) segs += '<i class="free"></i>';
+    const freeWord = c.done ? 'Left over' : 'Not spent yet';
+    let num, lbl, sub;
+    if (over) { num = inr(over); lbl = 'more than came in'; sub = c.saved ? `That includes ${inr(c.saved)} saved.` : ''; }
+    else if (free) { num = inr(free); lbl = freeWord.toLowerCase(); sub = c.saved ? `And ${inr(c.saved)} saved.` : ''; }
+    else { num = ''; lbl = c.done ? 'Nothing left over.' : 'All of it is spent or saved.'; sub = ''; }
+    const sq = (cls) => `<span class="sq ${cls}"></span>`;
+    const rows = [
+      [sq('f-bills'), 'Bills', inr(c.bills)],
+      c.saved > 0 ? [sq('f-saved'), 'Saved', ''] : null,
+      [sq('f-every'), 'Everyday', inr(c.every)],
+      over ? [sq('f-over'), 'More than came in', ''] : free ? [sq('f-free'), freeWord, ''] : null,
+    ].filter(Boolean).map(([s, l, v]) => `${s}<span>${l}</span><span class="amt">${v}</span>`).join('');
+    const note = 'Everyday is all spending except bills' + (c.notLogged ? `, including ${inr(c.notLogged)} not logged.` : '.');
+    const say = `${over ? spoken(over) + ' more than came in' : free ? spoken(free) + ' ' + freeWord.toLowerCase() : lbl} of ${spoken(inc)}. ${c.saved ? '' : ''}Bills ${spoken(c.bills)}.${c.saved > 0 ? ' Saved ' + spoken(c.saved) + '.' : ''} Everyday ${spoken(c.every)}.${c.notLogged ? ' Includes ' + spoken(c.notLogged) + ' not logged.' : ''}`;
+    return `<section class="card" aria-label="${say}"><h3 class="minl">Money in <span class="amt">${inr(inc)}</span></h3><div class="hero"><div>${num ? `<span class="num">${num}</span>` : ''}<span class="lbl" ${num ? '' : 'style="margin-left:0;color:var(--ink)"'}>${lbl}</span></div>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="bar" aria-hidden="true">${segs}</div><div class="key" aria-hidden="true">${rows}</div><p class="note" aria-hidden="true">${note}</p></section>`;
+  }
+
+  function deltaOf(S, key) {
+    const { c, prev } = ctx(S);
+    if (!prev) return null;
+    const was = c.done ? prev.cats[key] : c.prevSame[key], now = c.cats[key];
+    if (!was) return null;
+    const d = now - was;
+    return Math.abs(d) >= 500 && Math.abs(d) / was >= 0.1 ? d : null;
+  }
+
+  function whereCard(S) {
+    const { c, prev } = ctx(S);
+    const keys = Object.keys(c.cats).filter(k => c.cats[k] > 0).sort((a, b) => c.cats[b] - c.cats[a]);
+    const biggest = c.cats[keys[0]], total = c.spent;
+    let anyOver = false;
+    const most = keys.length === 1 ? `All of it went on ${CATS[keys[0]].name}.` : `The most went on ${CATS[keys[0]].name}.`;
+    const rows = keys.map(k => {
+      const m = CATS[k], amt = c.cats[k], n = c.n[k], pc = Math.round(amt / total * 100), lim = m.limit, past = lim && amt > lim ? amt - lim : 0;
+      anyOver = anyOver || !!past;
+      const d = deltaOf(S, k), open = S.open === k;
+      const limWords = lim ? (past ? `${inr(past)} past limit` : `${inr(lim - amt)} left`) : '';
+      const limSay = lim ? `, limit ${spoken(lim)}, ${past ? spoken(past) + ' past limit' : spoken(lim - amt) + ' left'}` : '';
+      const chgSay = open && d !== null ? ` ${spoken(Math.abs(d))} ${d > 0 ? 'more' : 'less'} than ${rowWords(c, prev)}.` : '';
+      const label = `${m.name}${limSay}, ${spoken(amt)}, ${pc} percent.${chgSay}`;
+      const solid = lim && amt > lim ? lim : amt, hatch = lim && amt > lim ? amt - lim : 0;
+      const tick = lim && lim < biggest ? `<i class="tick" style="left:${lim / biggest * 100}%"></i>` : '';
+      const es = entriesOf(c, k).slice(0, 3);
+      const cap = n === 1 ? 'Only entry' : n === 2 ? 'Both entries' : n === 3 ? 'All 3 entries' : `Biggest 3 of ${n}`;
+      const chg = d === null ? '' : `<div class="chg">${arrow(d > 0, 14, 2.5)}<span>${inr(Math.abs(d))} ${d > 0 ? 'more' : 'less'} than ${rowWords(c, prev)}</span></div>`;
+      const list = `<div class="top3" id="top-${k}">${chg}<span class="c">${cap}</span>${es.map(([note, when, a]) => `<div class="entry"><span>${note || '<span class="nn">No note</span>'} <span class="w">· ${when}</span></span><span class="amt">${inr(a)}</span></div>`).join('')}${n > 3 ? `<a class="lnk" href="#" onclick="return false" style="align-self:flex-start">See ${m.name} entries</a>` : ''}</div>`;
+      return `<div class="row"><button class="rowbtn" data-act="row" data-id="row-${k}" data-key="${k}" aria-expanded="${open}" aria-controls="top-${k}" aria-label="${label}">
+        <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${m.icon}</svg></span>
+        <span class="rname">${m.name}${lim ? `<span class="d"> · ${limWords}</span>` : ''}</span>
+        <span class="rsum">${past ? '' : `<small>${pc}%</small>`}<span class="amt">${inr(amt)}</span></span>
+        <svg class="caret" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        <span class="bar8"><span class="t"><i class="s" style="width:${solid / biggest * 100}%"></i>${hatch ? `<i class="h" style="width:${hatch / biggest * 100}%"></i>` : ''}</span>${tick}</span>
+      </button>${open ? list : ''}</div>`;
+    }).join('');
+    return `<section class="card"><div class="ctitle"><h3>Where it went</h3><a class="lnk" href="#" onclick="return false">See all</a></div><p class="most">${most}</p><div class="rows">${rows}</div>${anyOver ? '<div class="hk"><i></i>Striped part is over the limit.</div>' : ''}</section>`;
+  }
+
+  /* months strip: a bar is spent (solid) plus saved (outlined cap), against that month's money in (dotted) */
+  function stripCard(S) {
+    const { inc } = ctx(S);
+    if (!inc || S.cy.filter(c => c.done).length < 2) return '';
+    const n = S.pw - 80 >= 288 ? 6 : 5, win = S.cy.slice(-n), fin = win.filter(c => c.done);
+    const week = win[0].kind === 'week', unit = week ? 'week' : 'month';
+    const kept = fin.filter(c => c.spent + c.saved <= c.income).length, tot = fin.length;
+    const summary = kept === 0 ? `Nothing was left over in the last ${tot} ${unit}s.` : kept === tot ? (tot === 2 ? `Money was left over in both ${unit}s.` : `Money was left over in all ${tot} ${unit}s.`) : `Money was left over in ${kept} of the last ${tot} ${unit}s.`;
+    const yMax = Math.max(...win.map(c => Math.max(c.income, c.spent + c.saved)));
+    const same = win.every(c => c.income === win[0].income), anyOver = win.some(c => c.spent + c.saved > c.income);
+    const defaultPick = S.cy[S.sel].done ? S.sel : S.cy.map((c, i) => c.done ? i : -1).filter(i => i >= 0).pop();
+    const pick = S.pick == null ? defaultPick : S.pick, off = S.cy.length - win.length;
+    const readLine = c => {
+      if (!c.done) { const left = c.len - c.day; return `${c.full} so far: spent ${inr(c.spent)}${c.saved ? ', saved ' + inr(c.saved) : ''}. ${left} day${left === 1 ? '' : 's'} to go.`; }
+      const rest = c.income - c.spent - c.saved;
+      return `${c.full}: spent ${inr(c.spent)}${c.saved ? ', saved ' + inr(c.saved) : ''}. ${rest > 0 ? inr(rest) + ' left over.' : rest === 0 ? 'Nothing left over.' : inr(-rest) + ' more than came in.'}`;
+    };
+    const say = c => { const rest = c.income - c.spent - c.saved; return `${c.full}${c.done ? '' : ' so far'}: spent ${spoken(c.spent)}${c.saved ? ', saved ' + spoken(c.saved) : ''}. ${c.done ? (rest > 0 ? spoken(rest) + ' left over.' : rest === 0 ? 'Nothing left over.' : spoken(-rest) + ' more than came in.') : (c.len - c.day) + ' days to go.'}`; };
+    const parts = c => {
+      const sp = Math.min(c.spent, c.income), capIn = Math.min(c.saved, Math.max(0, c.income - sp)), hat = c.spent + c.saved - sp - capIn;
+      return { sp, capIn, hat };
+    };
+    let body;
+    if (S.ts >= 1.5) {
+      body = `<div class="srows">${win.map((c, wi) => {
+        const i = wi + off, p = parts(c), w = v => v / yMax * 100;
+        return `<button class="srow" data-act="pick" data-i="${i}" data-id="m-${i}" aria-pressed="${i === pick}" aria-label="${say(c)}"><span class="m">${c.bar}${c.done ? '' : ' <span class="dot"></span>'}</span>
+          <span class="tr"><i class="b${c.done ? '' : ' now'}" style="width:${w(p.sp)}%"></i>${p.capIn ? `<i class="cp" style="width:${w(p.capIn)}%"></i>` : ''}${p.hat ? `<i class="o" style="width:${w(p.hat)}%"></i>` : ''}<i class="tk" style="left:${w(c.income)}%"></i></span>
+          <span class="amt">${inr(c.spent)}</span></button>`;
+      }).join('')}</div>`;
+    } else {
+      const plotH = 72, px = v => Math.round(v / yMax * plotH);
+      body = `<div class="cols">${win.map((c, wi) => {
+        const i = wi + off, p = parts(c);
+        return `<button class="slot" data-act="pick" data-i="${i}" data-id="m-${i}" aria-pressed="${i === pick}" aria-label="${say(c)}">
+          <span class="plot" style="height:${plotH}px"><span class="stack"><i class="b${c.done ? '' : ' now'}" style="height:${px(p.sp)}px"></i>${p.capIn ? `<i class="cp" style="height:${Math.max(5, px(p.capIn))}px"></i>` : ''}${p.hat ? `<i class="o" style="height:${px(p.hat)}px"></i>` : ''}</span><i class="inc" style="bottom:${px(c.income)}px"></i></span>
+          <span class="m">${c.bar}</span>${c.done ? '' : '<span class="so"><span class="dot"></span> so far</span>'}</button>`;
+      }).join('')}</div>`;
+    }
+    const cap = `Dotted line is money in${same ? ` (${inr(win[0].income)})` : ' for that month'}. Dark is spent. Outline is saved.${anyOver ? ' Striped is more than came in.' : ''}`;
+    const pc = S.cy[pick];
+    const open = pick !== S.sel ? `<a class="lnk" href="#" data-act="sel" data-i="${pick}" data-id="open" style="align-self:flex-start">Open ${pc.full}</a>` : '';
+    return `<section class="card"><h3 class="strit"><b>Last ${win.length} ${unit}s</b><span>${summary}</span></h3>${body}<p class="note">${cap}</p><p class="readout" aria-hidden="true">${readLine(pc)}</p>${open}</section>`;
+  }
+
+  const PARTS = { top: topBar, ask: askCard, story: storyPart, pace: paceCard, split: splitCard, where: whereCard, strip: stripCard };
+  function screen(S, theme, parts, flat) {
+    const p = parts || ['top', 'ask', 'story', 'pace', 'split', 'where', 'strip'];
+    return `<div class="phone ${theme}${S.ts > 1.3 ? ' big' : ''}${flat ? ' flat' : ''}" style="--ts:${S.ts};--pw:${S.pw}px">${p.map(k => PARTS[k](S)).filter(Boolean).join('')}</div>`;
+  }
+
+  /* ---------- live state and controls ---------- */
+  const BASE = o => Object.assign({ cy: CY.slice(), sel: 5, noIncome: false, ts: 1, pw: 360, open: null, pick: null }, o);
+  let S = BASE({});
+  const SCEN = {
+    now:    ['Oct, day 23 (worked example)', () => ({ cy: CY.slice(), sel: 5, noIncome: false })],
+    early:  ['Early in a cycle (day 2)',     () => ({ cy: [CY[4], OCT_EARLY], sel: 1, noIncome: false })],
+    past:   ['Sep (finished)',               () => ({ cy: CY.slice(), sel: 4, noIncome: false })],
+    over:   ['Aug (more than came in)',      () => ({ cy: CY.slice(), sel: 3, noIncome: false })],
+    first:  ['First cycle',                  () => ({ cy: [CY[5]], sel: 0, noIncome: false })],
+    third:  ['Third cycle',                  () => ({ cy: [CY[3], CY[4], CY[5]], sel: 2, noIncome: false })],
+    noinc:  ['No money in',                  () => ({ cy: CY.slice(), sel: 5, noIncome: true })],
+    week:   ['Weekly cycles',                () => ({ cy: WK.slice(), sel: 2, noIncome: false })],
+  };
+  const group = (id, label, opts, cur) => `<div class="ctl"><span>${label}</span><div class="seg-btns" role="group" aria-label="${label}">${opts.map(([k, t]) => `<button data-ctl="${id}" data-v="${k}" aria-pressed="${String(cur) === String(k)}">${t}</button>`).join('')}</div></div>`;
+  let scenKey = 'now';
+  function drawControls() {
+    document.getElementById('controls').innerHTML =
+      group('scen', 'Scenario', Object.entries(SCEN).map(([k, [t]]) => [k, t]), scenKey) +
+      group('ts', 'Text size', [[1, '100%'], [1.5, '150%'], [2, '200%']], S.ts) +
+      group('pw', 'Width', [[360, '360dp'], [320, '320dp'], [400, '400dp']], S.pw);
+  }
+  let focusId = null;
+  function draw() {
+    drawControls();
+    document.getElementById('p-light').innerHTML = screen(S, 'light');
+    document.getElementById('p-dark').innerHTML = screen(S, 'dark');
+    const h = document.querySelector('#p-light .phone').offsetHeight;
+    document.getElementById('meter').innerHTML = `<b>${S.cy[S.sel].full}</b>, measured here: ${Math.round(h)}dp tall at ${S.pw}dp wide and ${Math.round(S.ts * 100)}% text (this browser's fonts, not a device).`;
+    if (focusId) { const el = document.querySelector(`#p-light [data-id="${focusId}"]`); if (el) el.focus({ preventScroll: true }); }
+  }
+  document.addEventListener('click', e => {
+    const ctl = e.target.closest('[data-ctl]');
+    if (ctl) {
+      const v = ctl.dataset.v, id = ctl.dataset.ctl;
+      if (id === 'scen') { scenKey = v; S = Object.assign(S, SCEN[v][1](), { open: null, pick: null }); }
+      else if (id === 'ts') S.ts = +v;
+      else S.pw = +v;
+      focusId = null; draw(); return;
+    }
+    const a = e.target.closest('[data-act]');
+    if (!a) return;
+    if (!a.closest('#p-light, #p-dark')) { if (a.closest('#gal')) e.preventDefault(); return; }
+    e.preventDefault();
+    focusId = a.dataset.id || null;
+    const act = a.dataset.act;
+    if (act === 'row') S.open = S.open === a.dataset.key ? null : a.dataset.key;
+    if (act === 'pick') S.pick = +a.dataset.i;
+    if (act === 'sel') { S.sel = +a.dataset.i; S.open = null; S.pick = null; focusId = null; }
+    if (act === 'prev' && S.sel > 0) { S.sel--; S.open = null; S.pick = null; }
+    if (act === 'next' && S.sel < S.cy.length - 1) { S.sel++; S.open = null; S.pick = null; }
+    draw();
+  });
+
+  /* ---------- gallery ---------- */
+  const tinyCycle = { kind: 'month', full: 'October', short: 'Oct', bar: 'Oct', start: new Date(2026, 9, 4), len: 31, income: 120000, saved: 300, done: false, day: 23, seed: 1, bills: 20000, every: 60000, spent: 80000, cats: { bills: 20000, food: 60000 }, n: { bills: 1, food: 9 } };
+  const noSaveCycle = Object.assign({}, CY[4], { saved: 0 });
+  const notLoggedCycle = Object.assign({}, OCT, { notLogged: 2000 });
+  const exactCycle = Object.assign({}, CY[4], { saved: 1000, income: 40600 });
+  const GAL = [
+    ['Split · running cycle', 'Not spent yet. Saved is a bounded outline between Bills and Everyday.', BASE({}), ['split']],
+    ['Split · finished (Sep)', 'The empty part reads "Left over".', BASE({ sel: 4 }), ['split']],
+    ['Split · more than came in (Aug)', 'The striped tail is the end of Everyday. Saved stays visible, which 44 lost.', BASE({ sel: 3 }), ['split']],
+    ['Split · Saved at 0.25%', '₹300 of ₹1,20,000: Saved keeps its 12dp floor.', BASE({ cy: [tinyCycle], sel: 0 }), ['split']],
+    ['Split · Saved ₹0', 'No Saved block, no key row, no "And ₹… saved."', BASE({ cy: [CY[3], noSaveCycle], sel: 1 }), ['split']],
+    ['Split · exactly all used', 'Nothing is left, so no "left over" row; the line says so.', BASE({ cy: [CY[3], exactCycle], sel: 1 }), ['split']],
+    ['Split · with Not logged', 'Not logged joins Everyday and the note says so.', BASE({ cy: [CY[4], notLoggedCycle], sel: 1 }), ['split']],
+    ['Split · no money in', 'The prompt card, from the copy deck.', BASE({ noIncome: true }), ['split']],
+    ['Pace card · running (worked example)', 'The comparison sits under the total.', BASE({}), ['pace']],
+    ['Pace card · finished cycle', 'Against the whole of last cycle. No verdict, no Today.', BASE({ sel: 4 }), ['pace']],
+    ['Pace card · first cycle', 'No comparison, nothing in its place.', BASE({ cy: [CY[5]], sel: 0 }), ['pace']],
+    ['Pace card · under ₹100 apart', 'Day 2: ₹60 apart reads "Same as".', BASE({ cy: [CY[4], OCT_EARLY], sel: 1 }), ['pace']],
+    ['Pace card · weekly', '"the week before", not a date range.', BASE({ cy: WK.slice(), sel: 2 }), ['pace']],
+    ['Pace card · no money in', 'Total and comparison only.', BASE({ noIncome: true }), ['pace']],
+    ['Rows · closed (as built, plus caret)', 'Headline in words. No change line on closed rows.', BASE({}), ['where']],
+    ['Rows · open row with its change', 'The change is the open row\'s first line, then the biggest entries and the link.', BASE({ open: 'food' }), ['where']],
+    ['Rows · category with 1 entry', 'Bills: "Only entry". No link.', BASE({ open: 'bills' }), ['where']],
+    ['Rows · past limit, 3 entries', 'Shopping: "₹100 past limit" replaces the %, hatch on the bar, the change in the open part, "All 3 entries", no link.', BASE({ open: 'shop' }), ['where']],
+    ['Rows · past cycle (Sep)', 'The change compares with the whole of August.', BASE({ sel: 4, open: 'shop' }), ['where']],
+    ['Rows · weekly', '"the week before".', BASE({ cy: WK.slice(), sel: 2, open: 'food' }), ['where']],
+    ['Rows · first cycle', 'No previous cycle: no change line.', BASE({ cy: [CY[5]], sel: 0, open: 'food' }), ['where']],
+    ['Strip · the usual (5 months)', 'Five bars at 360dp. The shown month is picked, October is dashed with "so far".', BASE({}), ['strip']],
+    ['Strip · 400dp wide (6 months)', '288dp inside the card and the sixth month appears.', BASE({ pw: 400 }), ['strip']],
+    ['Strip · picked a past month', 'Picked month in the pill; its read-out below, with "Open".', BASE({ sel: 5, pick: 3 }), ['strip']],
+    ['Strip · viewing September', 'The bars include a month past the line (August, striped).', BASE({ sel: 4 }), ['strip']],
+    ['Strip · third cycle', 'Two finished cycles is the earliest it shows.', BASE({ cy: [CY[3], CY[4], CY[5]], sel: 2 }), ['strip']],
+    ['Strip · weekly', 'Weeks, with start dates.', BASE({ cy: WK.slice(), sel: 2 }), ['strip']],
+    ['Strip · 150% text at 320dp', 'Columns become 48dp rows at 150% and up.', BASE({ ts: 1.5, pw: 320 }), ['strip']],
+    ['Strip · 200% text at 320dp', 'Same rows at 200%.', BASE({ ts: 2, pw: 320 }), ['strip']],
+    ['Story card · finished month', 'Directly under Ask AI. The split bar stays as on Spends.', BASE({ sel: 4 }), ['top', 'ask', 'story']],
+    ['Story card · more than came in', 'The headline is the split\'s own: "₹3,100 more than came in".', BASE({ sel: 3 }), ['top', 'ask', 'story']],
+    ['Story slim row · day 2', 'Days 1 to 7 of a new cycle, in the same place.', BASE({ cy: [CY[4], OCT_EARLY], sel: 1 }), ['top', 'ask', 'story', 'pace']],
+    ['Whole screen · running cycle', 'No story card, five parts.', BASE({}), null],
+    ['Whole screen · finished (Sep)', 'The story card under Ask AI; no today, no verdict.', BASE({ sel: 4 }), null],
+    ['Whole screen · first cycle', 'No comparison, no change lines, no strip.', BASE({ cy: [CY[5]], sel: 0 }), null],
+    ['Whole screen · no money in', 'The shortest screen.', BASE({ noIncome: true }), null],
+    ['Whole screen · 200% text, 320dp', 'Names wrap, icon wells drop, the strip is rows. The pace chart scales as a picture here; the built chart keeps its text size.', BASE({ ts: 2, pw: 320, open: 'food' }), null],
+  ];
+  let gtheme = 'light';
+  function drawGallery() {
+    document.getElementById('gtheme').innerHTML = ['light', 'dark'].map(t => `<button data-g="${t}" aria-pressed="${gtheme === t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('');
+    const items = GAL.map(([t, c, st, parts]) => `<figure><span class="tag">${t}</span>${screen(st, gtheme, parts)}<span class="cap">${c}</span></figure>`);
+    const wide = BASE({ pw: 380, sel: 4 });
+    const pane = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;background:var(--bg);border-radius:28px;padding:16px" class="${gtheme}">${screen(wide, gtheme, ['top', 'ask', 'story', 'pace', 'split'], true)}${screen(wide, gtheme, ['where', 'strip'], true)}</div>`;
+    items.push(`<figure class="w2"><span class="tag">Two panes (a tablet, or a phone on its side, at least 840dp)</span>${pane}<span class="cap" style="max-width:80ch">Left: the number and its story (Ask AI, month story, pace, split). Right: the detail (where it went, the months). Every card sits whole in one pane, so nothing straddles a fold. On one pane the order is the one in "Screen order".</span></figure>`);
+    document.getElementById('gal').innerHTML = items.join('');
+  }
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-g]');
+    if (g) { gtheme = g.dataset.g; drawGallery(); }
+  });
+  draw();
+  drawGallery();
+</script>
+</body>
+</html>

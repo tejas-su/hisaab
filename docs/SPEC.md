@@ -472,6 +472,74 @@ Design: `docs/features/yearly-costs/01-ux-flow.md`, mockup [42](design/mockups/4
 - **Over the balance** (D175, refuse): a premium of ₹15,000 with ₹12,000 set aside cannot be recorded as *Used* beyond ₹12,000: the keypad refuses the digits (FR-SE-1, FR-KS-2). The user records ₹12,000 *Used* and adds the other ₹3,000 in Add, *Bills*: `S_today = 3,420`, `A = 1,738`, so the hero is ₹0 and "₹1,682 over today", `remaining = 15,650 − 3,420 = 12,230`, `tomorrow = floor(12,230 / 8) = 1,528`. The existing over-today state says it; the later days share the cost. The excess-as-*Spent* alternative is rejected: it needs a rule so the excess doesn't read "over today".
 - **Delete and restore:** swiping a *Used* row deletes it with Undo (BR-10); the amount is set aside again. Deleting the saving afterwards keeps every entry, so *put in since* keeps its history, but the deleted saving leaves *still set aside* and *Used* is no longer reachable: use it first, or Undo the delete. Backup and restore carry `used` entries with their `saving_id` (BR-16).
 
+### BR-20 Month story (D193, D194)
+Design: case study 37, mockup [45](design/mockups/45-month-story.html). The screens are in FR-SP-7.
+
+- **Which cycles get one:** the cycle has ended (`today > end`), it lasts at least 28 days (weekly cycles never do), and it holds at least 10 entries of any kind.
+- **Numbers.** Every number is computed when the story opens, never stored. For a cycle `C`:
+  - `I` = Σ *Got* in `C`.
+  - `Sv` = Σ *Saved* in `C`.
+  - `B` (*Bills*) = Σ *Spent* posted by a rule (`recurring_id` set), not *Not logged*.
+  - `E` (*Everyday*) = Σ *Spent* typed by the user (`recurring_id` null), not *Not logged*.
+  - `NL` = Σ *Spent* *Not logged*.
+  - **Spent** = `B + E`. This is Spends' own *Spent* (FR-SP-4a), which leaves out *Not logged*.
+  - **Left** `L = I − B − E − NL − Sv`. *Not logged* is money that went, so it comes off what was left.
+  - *Used* and card bills paid touch nothing (BR-19, D123).
+- **Pages**, in this order. A page whose condition fails is left out, not shown empty.
+  1. **The month:** the cycle's name (as FR-SP-1 names it), its first and last days, the number of days and the number of entries.
+  2. **What you kept:** "You spent ₹{B + E}" and, when `I > 0`, "of ₹{I} that came in".
+     - **The bar** has these parts: *Bills*, *Saved* (at least 12dp wide when above ₹0, so it never vanishes beside the track), *Everyday* with *Not logged* in the same fill, then *Left over* as the empty track with an `ink2` edge. This is the order of the Spends split bar (mockup 46).
+     - **The headline** is "₹{L} left over" when `L ≥ 0`, or "₹{−L} more than came in" when `L < 0`. In the second case, the part past `I` is striped.
+     - **The line under the headline** is "and ₹{Sv} saved", shown when `Sv > 0`.
+     - **With no income** (`I = 0`), the page shows the spend alone, with no bar and no headline.
+  3. **Where it went:** *The most went on {top category}* and every row of FR-SP-4 (BR-13 shares), biggest first.
+  4. **Your days**, shown when at least 7 days have *Everyday* spending.
+     - **The bars:** one bar per day of `E` (bills and *Not logged* are left out).
+     - **The daily share** is `share = floor((I − Sv − B) / days)`. There is no share when it is ₹0 or less.
+     - **Biggest day:** the day with the most `E`, the earliest on a tie. It is named by the note of its biggest entry, or by that entry's category name when the entry has no note.
+     - **Quiet days:** the days with no `E`.
+     - **Weekday line:** the weekday whose `E` adds up to the most, shown only when it holds at least 35% of all `E`. It reads "Your {n} {weekday}s came to ₹X", where `n` is how many of that weekday the cycle has.
+  5. **Against {previous cycle}:** shown when the previous cycle was fully tracked (BR-14 #1's rule) and has *Spent*.
+     - **Change** `Δ = Spent(C) − Spent(previous)`, read as "₹X less than", "₹X more than" or "The same as".
+     - **Moves:** the three biggest per-category changes by size, leaving out zero changes. Ties go to the bigger amount in `C`, then the category order.
+  6. **The end:** Spent, Saved (when above ₹0) and *Left over* or *More than came in* (when `I > 0`), then *Ask an AI about {cycle}* and *Done*.
+- **Counts, never labels** (principle 94, D193): every sentence is an amount, a count or a date. Nothing praises or warns, and nothing names a habit.
+- **Worked example:** September, Fri 4 Sep to Sat 3 Oct 2026, 30 days, 31 entries (pay, the RD, two bills and 27 everyday spends on 21 days; test fixture `september_story.dart`).
+  - **Inputs:** `I = 45,000`, `Sv = 1,000`, `B = 9,400` (rent ₹8,200 and electricity ₹1,200), `E = 30,200`, `NL = 0`.
+  - **Page 2:** Spent ₹39,600. `L = 45,000 − 9,400 − 30,200 − 0 − 1,000 = 4,400`, so "₹4,400 left over" and "and ₹1,000 saved".
+  - **Page 3:** Food ₹12,100 (30%), Bills ₹9,400 (24%), Travel ₹7,300 (18%), Shopping ₹6,200 (16%), Fun ₹3,100 (8%), Health ₹1,500 (4%).
+  - **Page 4:**
+    - `share = floor((45,000 − 1,000 − 9,400) / 30) = 1,153`.
+    - The biggest day is Sat 12 Sep, ₹4,850, *Train tickets*.
+    - 9 days have nothing spent.
+    - The 5 Saturdays (5, 12, 19 and 26 Sep, 3 Oct) add up to ₹15,840. That is 52% of ₹30,200, so the line shows: "Your 5 Saturdays came to ₹15,840."
+  - **Page 5:** August spent ₹47,100, so "₹7,500 less than August". The moves are Shopping ₹3,900 less, Food ₹2,200 less and Fun ₹1,600 less (Travel's ₹1,200 more is fourth, so it is left out).
+  - **Over income:** August itself (`B = 9,400`, `E = 37,700`, `Sv = 1,000`) gives `L = −3,100`, so "₹3,100 more than came in".
+
+
+### BR-21 Spends breakdown (D195, D196)
+Design: mockup [46](design/mockups/46-spends-graphs-v2.html), its copy deck and accessibility review. The screens are in FR-SP-3a, FR-SP-4, FR-SP-4b and FR-SP-8. Every number is computed when Spends loads, never stored.
+
+- **The split** of the cycle shown, over its entries up to the day it is seen from, uses BR-20's symbols:
+  - `I`, `Sv`, `B`, `E` and `NL` are as in BR-20.
+  - `L = I − B − E − NL − Sv`.
+  - Bills and savings still to come are not in it; it measures what was logged.
+- **The comparison** needs the cycle before to have been fully tracked (BR-14 #1's rule).
+  - On the current cycle it is `Δ = Spent(C, up to today) − Spent(P, up to day min(k, length(P)))`, where `k` is today's day of the cycle, as BR-14 #1 counts it.
+  - On a finished cycle it is the whole cycle against the whole cycle before.
+  - *Spent* is Spends' own (BR-20).
+  - The comparison is not shown when both amounts are ₹0.
+  - Under ₹100 apart reads as *the same*.
+- **A row's change** is the same comparison for one category. It shows only when the comparison does.
+- **A row's entries** are its *Spent* entries (not *Not logged*), biggest first. A tie goes to the earlier day, then to the entry saved first. At most 3 show, with the count.
+- **The strip** is a window of up to 6 cycles ending at the cycle shown, each one that ended on or after the first day anything was logged.
+  - Each cycle has its own `Spent`, `Sv`, `I` and `L`.
+  - It shows when the window holds at least 2 finished cycles and the cycle shown has `I > 0`.
+  - **The count** is of finished cycles with `I > 0`. A cycle is *left over* when `L > 0`.
+- **Worked example**, the SPEC's October on Mon 26 Oct, with September from BR-20 and ₹1,000 saved on 5 Oct:
+  - **The split:** `I = 45,000`, `B = 8,200`, `E = 19,370`, `Sv = 1,000`, `NL = 0`, so `L = 16,430`: "₹16,430 not spent yet".
+  - **The comparison:** today is day 23. September's day 23 is Sat 26 Sep, and BR-20's September had spent ₹32,330 by then (rent ₹8,200 and ₹24,130 everyday). So `Δ = 27,570 − 32,330 = −4,760`: "₹4,760 less than by this day in September." (Mockup 46's ₹2,100 was illustrative.)
+
 ---
 
 ## 4. Functional requirements
@@ -608,8 +676,33 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **Dates:** a row under the plot (the plot keeps its height) with the cycle's first and last days and, on the current cycle, *Today* under today's point; a date that would touch *Today* gives way to it.
   - Labels sit every 1, 2 or 5 × 10ⁿ rupees from a third of `I − K` (₹45,000 gives ₹0 / ₹20K / ₹40K), up to the larger of `I − K` and the spending. When spending runs far past `I − K`, the step moves up the same ladder so at most 4 labels sit above ₹0 (₹3,000 with ₹5,00,000 spent gives ₹0 / ₹2L / ₹4L). Without income there is no steady line, so only the total shows (DECISIONS D49, D115).
   - Verdict: *Spending slower* when spending so far is at or under the steady line on the same day. Rent posted on day 2 with nothing else spent is *Spending slower*.
+- **FR-SP-3a** **The comparison line** (BR-21, D195) sits in the pace card, under the total.
+  - **Wording:** "₹2,100 less than by this day in September." On a finished cycle it reads "₹7,500 less than in August.". Under ₹100 apart it reads "Same as …", and against a weekly cycle "the week before".
+  - **The arrow:** an arrow glyph sits beside it, hidden from TalkBack. There is no colour and no good or bad word.
+  - **When it is left out:** when the cycle before was not fully tracked, and when both amounts are ₹0. Nothing takes its place.
+  - **TalkBack:** the pace card reads the line with spoken amounts after its verdict.
 - **FR-SP-4** **Where it went:** categories sorted by amount, showing icon, name, % (BR-13), ₹, and a bar with an optional limit tick (BR-12). When any bar is hatched, one line under the rows reads "Striped part is over the limit." (hidden from TalkBack, since each row says "over limit") (D110).
-- **FR-SP-4a** **Spent, saved and not logged** (D176): one `ink2` line above *Where it went*, "Spent ₹27,570 · Saved ₹1,000 · Not logged ₹4,200", when the cycle shown has saves or a fix. Saves are never in the bars, percentages, week bars, pace or insights (D120).
+  - **AC-R1 Headline (D195):** one line above the rows, "The most went on Food." When one category holds everything, it reads "All of it went on Food.".
+  - **AC-R2 Opening a row:** a row is a button with an expanded state and a caret. Tapping it opens it, and closes any other open row; no row is open to start. The caret turns without animation under reduced motion.
+    - The open row shows, in order:
+      - its change (BR-21), such as "₹1,200 more than Sep", when the comparison shows;
+      - a caption: "Only entry", "Both entries", "All 3 entries" or "Biggest 3 of 21";
+      - up to 3 entries, each its note or *No note*, its date and its amount;
+      - for a category with more than 3 entries, *See Food entries*.
+    - TalkBack reads the row's existing sentence, then the change while open. The hints are "Show biggest entries" and "Hide biggest entries".
+    - At 1.3× text and above, the icon wells drop.
+  - **AC-R3:** insight #1 (BR-14) stays as it is, beside the row change (owner, 2026-11-14).
+- **FR-SP-4b** **The split card** (BR-21, D195, D196) replaces FR-SP-4a's line. It sits between the pace card and *Where it went* whenever the cycle has spends.
+  - **Title:** "Money in ₹45,000".
+  - **The answer, biggest:** "₹16,430 not spent yet" while the cycle runs, or "₹4,400 left over" once it is finished. It reads "₹3,100 more than came in" past what came in, and "All of it is spent or saved." or "Nothing left over." at exactly ₹0.
+  - **The line under it:** "And ₹1,000 saved.". Past what came in, it reads "That includes ₹1,000 saved.". It is left out at ₹0.
+  - **The bar** is the month story's bar (one shared painter), on `surface`.
+    - In order: Bills in `ink`; Saved as an outline at least 12dp wide, left out at ₹0; Everyday and Not logged in `fillSoft` (D197); then the `sunk` track with a 1dp `ink2` edge.
+    - Past what came in, the end of the bar is striped after an `ink` mark.
+  - **The key** has amounts for Bills and Everyday only, since the sentence says the other two. A Bills row at ₹0 is left out. Under it, one `bodySmall` line: "Everyday is all spending except bills." (or "…, including ₹4,200 not logged.").
+  - **No money in** (`I = 0`): the title is "Spending this month" (or "Spending in September"). It shows "Add the money coming in to see how it splits." and an *Add money coming in* chip, which opens Settings, where *Money coming in* is (FR-SE-1). It does not repeat the spend, which the pace card's total already shows (mockup 46 open question 6).
+  - **TalkBack:** one node, answer first: "16,430 rupees not spent yet of 45,000 rupees. Bills 8,200 rupees. Saved 1,000 rupees. Everyday 19,370 rupees."
+- **FR-SP-4a** *(superseded by FR-SP-4b, D195: the line is no longer shown; its words stay for the record)* **Spent, saved and not logged** (D176): one `ink2` line above *Where it went*, "Spent ₹27,570 · Saved ₹1,000 · Not logged ₹4,200", when the cycle shown has saves or a fix. Saves are never in the bars, percentages, week bars, pace or insights (D120).
   - **AC-1** Three parts at most, in this fixed order, so *Spent* and *Saved* never move and the new part only appends: *Spent*, *Saved*, *Not logged*. A part shows only when above ₹0. **Each part is unbreakable and the line wraps between parts** at narrow widths or large text, with no trailing dots (mockup 42 option B). Each is its own ARB key (`spendsPartSpent`, `spendsPartSaved`, `spendsPartNotLogged`), which replace the single `spentAndSaved` once the build has moved over.
   - **AC-2** The *Spent* figure **excludes** *Not logged*, as it excludes *Saved*: the part is its own number and is not inside "Spent". Worked example: `27,150 + 420` is ₹27,570 Spent, and the ₹4,200 fix is the third part (BR-18, case 1).
   - **AC-3** *Not logged* here is the *Spent* side only. A *Got* fix is money in, and this line shows no *Got* total for any entry; it is visible in Every entry and the export (D176).
@@ -620,6 +713,32 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **Rows (D187):** a *Not logged* row reads "Not logged" over "Spent" or "Got" with an extra line "Added when you fixed your number."; a *Used* row reads the saving's name over "Used from savings" with an extra line "Paid from what you set aside.". Neither has a tap or a tint; swipe deletes with Undo, and each exposes *Delete* as a custom semantics action. The extra line is read in the same TalkBack node.
   - **Chips (D187):** the chips stay *All* plus each category with entries a user can pick. The system categories (`saved`, so *Used* rides with it, `card_paid` and `not logged`) get none; their entries show under *All*. If a Savings chip exists today it is left as built for *Saved* and *Used* follows it. There is still no search (D113).
   - The list shows the cycle picked in Spends (Home's *See all* opens the current one), with *All* plus a chip for each category that has entries. An insight's *See {Cat} entries* opens it on that category (DECISIONS D53).
+- **FR-SP-7** **Month story** (BR-20, D193, D194, mockup [45](design/mockups/45-month-story.html)): a look back at a finished cycle in up to six full-screen pages. It is reached from Spends only. There is no notification, nothing on Home and no sharing.
+  - **AC-1 The story card** is on every finished cycle that BR-20 gives a story, **directly below the Ask AI card**. It shows *Your month*, page 2's headline (or "₹X spent" with no income), a small day-bars preview and *See the story*. TalkBack reads it as one button, "Your September story. 4,400 rupees left over.", and the preview is hidden from it.
+  - **AC-2 The slim row:** for days 1 to 7 of the current cycle, when the cycle before has a story, a one-line row reads "**September is done.** See your month ›". It sits directly below the Ask AI card, or below the *Nothing spent* card when the current cycle is still empty. Nothing is stored, so after day 7 it is gone.
+  - **AC-3 Moving:** a tap on the right two-thirds goes on, and a tap on the left third goes back. The two zones are real buttons named *Next page* and *Previous page*, so TalkBack, Switch Access and a keyboard reach them, and a swipe and the arrow keys do the same. The Back well (as on every pushed screen) and system Back return to Spends. **Nothing advances on its own.** Progress is one thin bar per page present, at the top.
+  - **AC-4 Look:** the story always uses the dark theme's tokens, whatever the phone's theme, so it reads as its own evening moment.
+    - The only marigold is *Ask an AI about {cycle}* on the last page.
+    - Page 4 draws **day bars** (D194), one per day. A dotted `ink2` line marks the share. A bar past the share is solid `ink`; the rest are `ink2`. Both are at least 3:1 against the page, and the share line and the words carry the meaning, not the lightness alone (accessibility review 46). A day with nothing spent is a small dot on the axis. Under the axis are the first date, the biggest day's date (dropped when it would touch an end) and the last date, plus a small dot under each day of the weekday line. There are no y-axis labels.
+  - **AC-5 TalkBack:** each page is read as one node, with spoken amounts, in the order of its sentences. Page 4's chart is not read bar by bar; its sentences carry it.
+  - **AC-6 Motion:** a page slides in on `HisaabMotion` springs, and under reduced motion it crossfades.
+  - **AC-7 Layout:** in an expanded window or two panes, the story is a centred column no wider than 480dp on the dark page. Each page scrolls when its content is taller than the window, and its big amount steps down from `displayMedium` to `displaySmall` at 1.5× text, so nothing clips at 2.0×. It is tested at the `TestWindows` sizes.
+  - **AC-8 Ask AI** on page 6 opens FR-AI for that cycle. *Done* closes the story.
+
+- **FR-SP-8** **The months strip** (BR-21, D195) is the last card on Spends, shown as BR-21 says.
+  - **Title and count:** "Last 5 months" (or "weeks"), with the count: "Money was left over in 4 of the last 5 months.", "…in both months.", "…in all 5 months." or "Nothing was left over in the last 5 months.".
+  - **How many:** 5 cycles, or 6 when the card's inner width is at least 288dp, so every slot is a 48dp-wide target.
+  - **Each bar:**
+    - Spent is solid `ink`, and Saved is an outlined cap with a 5dp floor.
+    - A dotted `ink2` line marks that cycle's money in. The part past it is striped.
+    - The running cycle is a dashed outline, with the pace chart's marigold dot (ink ring) under it.
+  - **Labels:** month labels ("May", or a weekly cycle's start date) and "Money in ₹45,000" are real text under the chart, never painted. A key line reads "Dark is spent. Outline is saved.".
+  - **Picking a month:**
+    - The picked month (by default the cycle shown when finished, else the last finished one) gets the picked-chip look. Keyboard focus is a separate ring.
+    - A read-out line under the chart, hidden from TalkBack, says it: "September: spent ₹39,600, saved ₹1,000. ₹4,400 left over." or "October so far: spent ₹27,570, saved ₹1,000. 8 days to go.".
+    - Beside the read-out is *Open*, unless the picked month is the one shown. *Open* shows that cycle.
+  - **TalkBack:** each month is one button with that same sentence (spoken amounts) and its selected state.
+  - **Large text:** at 1.5× text and above, the bars become 48dp rows (month, bar, amount).
 
 ### 4.5 Ask AI (FR-AI)
 - **FR-AI-1** The goals (4, or 3 when *Will my money last till payday?* is hidden, BR-15) are a single column of list rows, each with an icon, followed by an own-question row: a 200-character text field that is always visible, with the placeholder "Ask something else". While it has focus and is empty, the placeholder reads "Like: can I afford a new phone this month?" (DECISIONS D73). Tapping or typing in it picks it. The pick shows an ink check at the row's end and a bold label, never a fill or marigold (DECISIONS D67).
@@ -918,6 +1037,12 @@ Maths in BR-18; strings in the [copy deck](design/mockups/41-fix-my-number-copy-
 | E113 | Text scale 1.5× and 2.0× on the keypad | Key labels stop growing at 1.5×; at 2.0× the keypad is 248dp and the action key stays on screen (FR-KS-3) |
 | E114 | TalkBack while typing in a preview slot | One short polite sentence 1.2 s after the last key, or at once when the state class changes; no per-digit speech (FR-KS-4) |
 | E115 | The drag handle in a window under 600dp tall | Not drawn; swipe down, the scrim and Back still close the sheet (FR-KS-1) |
+| E116 | Month story: a finished cycle of 9 entries, or a weekly cycle | No story card, no slim row, and no story (BR-20) |
+| E117 | Month story: the first cycle ever, or a previous cycle not fully tracked | No page 5; the bars show 5 pages |
+| E118 | Month story: income `I = 0` | Page 2 shows the spend alone, with no bar or headline; page 4 has no share line and every bar is `ink2`; page 6 has no *Left over* |
+| E119 | Month story: spending past income | Page 2 reads "₹3,100 more than came in", with the part past `I` striped; the story card says the same |
+| E120 | Month story: fewer than 7 days with *Everyday* spending | No page 4 |
+| E121 | Month story: a back-dated entry into a finished cycle | The story card and the story show the new numbers the next time they load (BR-20 is never stored) |
 
 ---
 
