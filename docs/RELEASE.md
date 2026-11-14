@@ -115,7 +115,7 @@ keytool -printcert -jarfile build\app\outputs\bundle\release\app-release.aab
 
 ## Before the first upload: technical TODO
 
-- [ ] **Version:** `pubspec.yaml` says `0.1.0+1`. Set `1.0.0+1` for launch (or keep 0.x for testing tracks). Every upload needs a higher `+build` number.
+- [ ] **Version:** `pubspec.yaml` says `0.1.0+2` (`+1` went to closed testing and crashed on launch, D198). Set `1.0.0+1` for launch (or keep 0.x for testing tracks). Every upload needs a higher `+build` number.
 - [ ] `flutter analyze` is clean, `flutter test` passes, and `scripts/changed_lines_coverage.sh` passes.
 - [ ] **Test a release build on a real phone** (`flutter run --release`). Release builds use R8 shrinking, which can break plugins that debug builds hide:
   - [ ] Bill reminders fire at the due time, and still fire after a restart (flutter_local_notifications).

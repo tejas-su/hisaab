@@ -66,6 +66,12 @@ android {
             // The upload key when key.properties exists; otherwise debug keys, so
             // `flutter run --release` still works on a machine without the key.
             signingConfig = signingConfigs.getByName(if (hasReleaseKey) "release" else "debug")
+            // why: R8 strips reflection-only code; without these rules release builds
+            // crash on launch (WorkManager's Room database) and on bill reminders (Gson).
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
