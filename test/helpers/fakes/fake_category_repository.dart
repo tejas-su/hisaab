@@ -17,7 +17,7 @@ final class FakeCategoryRepository implements CategoryRepository {
   Failure? failure;
 
   /// Hidden categories by key, as migration 003 seeds them (D120).
-  Map<String, int> hidden = <String, int>{'saved': 11, 'card_paid': 12};
+  Map<String, int> hidden = <String, int>{'saved': 11, 'card_paid': 12, 'not_logged': 21, 'not_logged_in': 22};
 
   /// Every map passed to [setLimits], in order.
   final List<Map<int, Money>> savedLimits = <Map<int, Money>>[];

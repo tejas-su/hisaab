@@ -191,7 +191,7 @@ final class GetCycleSummary implements UseCase<CycleSummary, NoParams> {
 
   static CalendarDate _mondayOf(CalendarDate day) => day.addDays(DateTime.monday - day.weekday);
 
-  static bool _isTyped(Entry entry) => entry.kind == EntryKind.spent && entry.recurringId == null;
+  static bool _isTyped(Entry entry) => entry.kind == EntryKind.spent && entry.recurringId == null && !entry.isNotLogged;
 
   static Money _sum(Iterable<Money> amounts) => amounts.fold(Money.zero, (Money total, Money amount) => total + amount);
 }
@@ -233,8 +233,10 @@ final class _DayTotals {
       billsDue: due.bills,
       billsPostedToday: GetCycleSummary._sum(spentOnDay.where((Entry e) => e.recurringId != null).map((Entry e) => e.amount)),
       spentBefore: GetCycleSummary._sum(spentBefore.map((Entry e) => e.amount)),
-      spentToday: GetCycleSummary._sum(spentOnDay.where((Entry e) => e.recurringId == null).map((Entry e) => e.amount)),
-      paceSpentBefore: GetCycleSummary._sum(spentBefore.where((Entry e) => e.recurringId == null).map((Entry e) => e.amount)),
+      spentToday: GetCycleSummary._sum(spentOnDay.where(GetCycleSummary._isTyped).map((Entry e) => e.amount)),
+      fixedToday: GetCycleSummary._sum(spentOnDay.where((Entry e) => e.isNotLogged).map((Entry e) => e.amount)),
+      // why: a fix is out of the pace (BR-7), but stays in [spentBefore] as pool (BR-3's S_prev).
+      paceSpentBefore: GetCycleSummary._sum(spentBefore.where(GetCycleSummary._isTyped).map((Entry e) => e.amount)),
       hasIncomeRule: hasIncomeRule,
     );
   }

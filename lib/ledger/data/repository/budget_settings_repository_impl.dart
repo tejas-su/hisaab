@@ -25,6 +25,18 @@ final class BudgetSettingsRepositoryImpl implements BudgetSettingsRepository {
         ),
       );
 
+  @override
+  TaskEither<Failure, bool> installLineSeen() => dbTask(() => _settings.values(<String>[SettingKeys.installLineSeen]))
+      .map((Map<String, String> values) => values[SettingKeys.installLineSeen] == _seen);
+
+  @override
+  TaskEither<Failure, Unit> markInstallLineSeen() => dbTask(() async {
+        await _settings.write(SettingKeys.installLineSeen, _seen);
+        return unit;
+      });
+
+  static const String _seen = '1';
+
   // why: one key holds the whole list, so a change reads it, appends and writes it back.
   @override
   TaskEither<Failure, Unit> addPaySwitch(PaySwitch change) => read().flatMap(

@@ -244,6 +244,18 @@ void main() {
   });
 
   group('HomeBloc while the Add tray covers Home (FR-AD-5, D91)', () {
+    test('isCovered is true while a tray or sheet holds Home, counting overlaps (missed-log AC-4)', () async {
+      expect(bloc.isCovered, isFalse);
+
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayOpened());
+      await bloc.dispatch(const HomeTrayClosed());
+      expect(bloc.isCovered, isTrue);
+
+      await bloc.dispatch(const HomeTrayClosed());
+      expect(bloc.isCovered, isFalse);
+    });
+
     test('holds the numbers through a save, then reloads once the tray has closed', () async {
       await bloc.dispatch(const HomeLoadRequested());
       await bloc.dispatch(const HomeTrayOpened());

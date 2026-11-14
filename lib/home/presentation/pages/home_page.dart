@@ -1,3 +1,4 @@
+import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,6 +17,7 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../widgets/due_soon_row.dart';
+import '../widgets/fix_foot_row.dart';
 import '../widgets/waiting_bill_row.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/hero_skeleton.dart';
@@ -44,6 +46,9 @@ class HomePage extends StatelessWidget {
     this.onSeeAll,
     this.onSeeWhereItWent,
     this.assemble = false,
+    this.missedLogSlot,
+    this.onFixMyNumber,
+    this.installLineSlot,
   });
 
   final ValueChanged<EntryKind> onAdd;
@@ -56,6 +61,17 @@ class HomePage extends StatelessWidget {
 
   /// Plays the blocks-assemble entrance (after onboarding).
   final bool assemble;
+
+  /// Builds the nudge slot's lowest item, the missed-log line (FR-HO-3); none when null. It is
+  /// only built when no bill line holds the slot.
+  final WidgetBuilder? missedLogSlot;
+
+  /// Opens the *Fix my number* sheet from the foot row (FR-HO-9); none leaves the row out.
+  final VoidCallback? onFixMyNumber;
+
+  /// Builds the nudge slot's install item, the one-time "Already spent some this month?" line
+  /// (FR-HO-3); none when null. It sits above the missed-log line.
+  final WidgetBuilder? installLineSlot;
 
   @override
   // why: the dock or the Add key sits right below Home, and its own top padding is the gap.
@@ -74,6 +90,10 @@ class HomePage extends StatelessWidget {
             BlocListener<HomeBloc, HomeState>(
               listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.usedUndo.isSome(),
               listener: _offerUsedUndo,
+            ),
+            BlocListener<HomeBloc, HomeState>(
+              listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.fixUndo.isSome(),
+              listener: _offerFixUndo,
             ),
           ],
           child: BlocConsumer<HomeBloc, HomeState>(
@@ -94,7 +114,7 @@ class HomePage extends StatelessWidget {
         HomeFailed() => <Widget>[_failed(context)],
         HomeReady(:final CycleSummary summary) when summary.state is NoIncome => <Widget>[
             NoIncomeCard(onAddMoney: () => onAdd(EntryKind.got)),
-            ..._nudge(state),
+            ..._nudge(context, state),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
           ],
@@ -112,9 +132,11 @@ class HomePage extends StatelessWidget {
               OverCard(summary: summary, onSeeWhereItWent: onSeeWhereItWent),
             ],
             ..._savedYesterday(summary),
-            ..._nudge(state),
+            ..._nudge(context, state),
             const SizedBox(height: HisaabSpacing.m),
             _todayList(context, state),
+            // why: a door at every ready state, over states included, but never in *No income* (FR-HO-9).
+            if (onFixMyNumber case final VoidCallback fix) FixFootRow(onTap: fix),
           ],
       };
 
@@ -128,7 +150,7 @@ class HomePage extends StatelessWidget {
 
   // why: a bill already gone out and waiting for its amount matters more than one still to come
   // (spec §5 Home, D123), so it takes the one nudge slot first.
-  List<Widget> _nudge(HomeReady state) {
+  List<Widget> _nudge(BuildContext context, HomeReady state) {
     final Occurrence? waiting = state.summary.waitingBills.firstOrNull;
     if (waiting != null) {
       return <Widget>[
@@ -137,7 +159,10 @@ class HomePage extends StatelessWidget {
       ];
     }
     return state.dueSoon.match(
-      () => const <Widget>[],
+      () => <Widget>[
+        if (installLineSlot case final WidgetBuilder install) install(context),
+        if (missedLogSlot case final WidgetBuilder slot) slot(context),
+      ],
       (DueSoonBill bill) => <Widget>[
         const SizedBox(height: HisaabSpacing.m),
         DueSoonRow(bill: bill, onOpenBill: onOpenBill),
@@ -151,6 +176,7 @@ class HomePage extends StatelessWidget {
       entries: state.todayEntries,
       categories: state.categories,
       billNames: state.billNames,
+      justFixed: state.justFixed,
       spentToday: state.summary.spentToday,
       onSeeAll: _seeAll(state.summary.cycle),
       onEdit: onEdit,
@@ -187,6 +213,29 @@ class HomePage extends StatelessWidget {
       HisaabSnackbar(
         message: strings.ruleDeleted(deleted, keepsHistory: state is HomeReady && state.billUndoKeepsHistory),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeBillUndoRequested(deleted))),
+      ),
+    );
+  }
+
+  // why: the hero's own title says what the number is now; the snackbar is the one announcer (FR-FX-5 AC-3).
+  static void _offerFixUndo(BuildContext context, HomeState state) {
+    final FixOutcome? fixed = state is HomeReady ? state.fixUndo.toNullable() : null;
+    if (fixed == null) {
+      return;
+    }
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final HomeBloc bloc = context.read<HomeBloc>();
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.fixDone(context.money.format(fixed.safeToday)),
+        semanticsLabel: strings.fixDone(strings.spokenAmount(context.money.digits(fixed.safeToday))),
+        action: HisaabSnackbarAction(
+          label: strings.undo,
+          onPressed: () {
+            bloc.add(HomeFixUndoRequested(fixed.entry));
+            SemanticsService.sendAnnouncement(View.of(context), strings.undone, Directionality.of(context));
+          },
+        ),
       ),
     );
   }

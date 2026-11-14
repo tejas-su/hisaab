@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' show lerpDouble;
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/rendering.dart';
@@ -44,8 +43,8 @@ final class TodayBarColors extends Equatable {
 /// Paints today's bar: the yellow, the bites with their names under them, and, when overspent,
 /// the share tick with a hatch past it (SPEC BR-6).
 ///
-/// It moves from [from] to [to] as [progress] runs 0→1. Only the yellow's end moves; each bite
-/// starts no nearer than a gap after it, so a yellow that pulls back uncovers the new bite.
+/// It moves from [from] to [to] as [progress] runs 0→1: the yellow and every bite re-span together
+/// when today's share changes, and a bite that is new is uncovered by the yellow pulling back.
 class TodayBarPainter extends CustomPainter {
   const TodayBarPainter({
     required this.from,
@@ -81,12 +80,13 @@ class TodayBarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final TodayBarLayout end = TodayBarLayout.of(to, size.width);
-    final double yellow = lerpDouble(TodayBarLayout.of(from, size.width).yellowEnd, end.yellowEnd, progress) ?? end.yellowEnd;
+    final TodayBarLayout now = TodayBarLayout.lerp(TodayBarLayout.of(from, size.width), end, progress);
+    final double yellow = now.yellowEnd;
     if (end.bites.isEmpty && end.yellowEnd == 0) {
       _piece(canvas, 0, size.width, colors.idle);
     }
     _yellow(canvas, yellow);
-    for (final BitePiece bite in end.bites) {
+    for (final BitePiece bite in now.bites) {
       _piece(canvas, math.max(bite.left, yellow + TodayBarLayout.gap), bite.left + bite.width, colors.idle);
     }
     final double? tick = end.tickX;

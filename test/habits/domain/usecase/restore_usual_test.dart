@@ -81,5 +81,21 @@ void main() {
       expect(result.getLeft().toNullable(), states.writeFailure);
       expect(states.states[chai.id], _forgotten);
     });
+
+    test('a Forget then its Undo gives asked_on back as it was (B1)', () async {
+      final SuggestionState earlier = SuggestionState(
+        categoryId: chai.id,
+        askedOn: const Option<CalendarDate>.of(CalendarDate(2026, 10, 26)),
+      );
+      states.states[chai.id] = earlier;
+      final ForgottenUsual forgotten =
+          (await ForgetUsual(states: states, clock: FakeClock(DateTime(2026, 10, 26, 10, 30)))(chai.id).run())
+              .getOrElse((Failure failure) => fail(failure.message));
+      expect(states.states[chai.id]!.askedOn, earlier.askedOn);
+
+      await restore(forgotten).run();
+
+      expect(states.states[chai.id], earlier);
+    });
   });
 }

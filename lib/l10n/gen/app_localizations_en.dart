@@ -870,11 +870,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get putInNothingLeft => 'Nothing left to put in for now.';
 
   @override
-  String spentAndSaved(String spent, String saved) {
-    return 'Spent $spent · Saved $saved';
-  }
-
-  @override
   String billEveryMonth(int day) {
     return 'Every month on day $day';
   }
@@ -2048,6 +2043,218 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryUsedDetail => 'Paid from what you set aside.';
+
+  @override
+  String missedLogTitle(String category) {
+    return 'Spent on $category today?';
+  }
+
+  @override
+  String missedLogBody(String time) {
+    return 'Usually around $time.';
+  }
+
+  @override
+  String get fixMyNumber => 'Fix my number';
+
+  @override
+  String get fixSettingsDetail => 'When the number on Home looks wrong.';
+
+  @override
+  String fixInstallTitle(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'this week',
+      'other': 'this month',
+    });
+    return 'Already spent some $_temp0?';
+  }
+
+  @override
+  String fixTitle(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'this week\'s',
+      'other': 'this month\'s',
+    });
+    return 'How much of $_temp0 money is left?';
+  }
+
+  @override
+  String fixHelper(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'this week',
+      'other': 'this month',
+    });
+    return 'Bank and cash together. Leave out money from before $_temp0.';
+  }
+
+  @override
+  String fixPreviewBase(String amount) {
+    return 'hisaab thought $amount.';
+  }
+
+  @override
+  String get fixPreviewBaseNothing => 'hisaab thought nothing was left.';
+
+  @override
+  String fixPreviewBaseShort(String amount) {
+    return 'hisaab thought you were $amount short.';
+  }
+
+  @override
+  String fixPreviewLess(String gap, int perDay, String perDayAmount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      perDay,
+      locale: localeName,
+      other: 'Each day gets about $perDayAmount less.',
+      zero: 'Each day stays about the same.',
+    );
+    return 'That\'s $gap less. $_temp0';
+  }
+
+  @override
+  String fixPreviewMore(String gap, int perDay, String perDayAmount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      perDay,
+      locale: localeName,
+      other: 'Each day gets about $perDayAmount more.',
+      zero: 'Each day stays about the same.',
+    );
+    return 'That\'s $gap more. $_temp0';
+  }
+
+  @override
+  String fixPreviewLessShort(String gap, String short) {
+    return 'That\'s $gap less, and $short short of what\'s still due.';
+  }
+
+  @override
+  String fixPreviewLessLastDay(String gap) {
+    return 'That\'s $gap less. Today takes all of it.';
+  }
+
+  @override
+  String fixPreviewMoreLastDay(String gap) {
+    return 'That\'s $gap more. Today gets all of it.';
+  }
+
+  @override
+  String fixPreviewLessOverToday(String gap, String over) {
+    return 'That\'s $gap less. Today is $over over its share.';
+  }
+
+  @override
+  String get fixPreviewEqual => 'That matches. Nothing to fix.';
+
+  @override
+  String get fixPreviewClose => 'That\'s close enough. Nothing to fix.';
+
+  @override
+  String fixPreviewBig(String gap) {
+    return 'That\'s $gap more. One question first.';
+  }
+
+  @override
+  String fixLiveLess(String gap) {
+    return '$gap less.';
+  }
+
+  @override
+  String fixLiveMore(String gap) {
+    return '$gap more.';
+  }
+
+  @override
+  String get fixAction => 'Fix it';
+
+  @override
+  String get fixActionHintNothing => 'Nothing to fix.';
+
+  @override
+  String get fixSavingSpoken => 'Saving';
+
+  @override
+  String get fixLoadFailed => 'Couldn\'t check your number.';
+
+  @override
+  String get fixNoticeChanged => 'Things changed. Check the new amount.';
+
+  @override
+  String fixGuardQuestion(String gap, String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'this week',
+      'other': 'this month',
+    });
+    return 'That\'s $gap more. Is all of it from $_temp0?';
+  }
+
+  @override
+  String get fixGuardNo => 'No, some is older';
+
+  @override
+  String fixGuardYes(String gap) {
+    return 'Yes, add $gap';
+  }
+
+  @override
+  String fixNoticeCountOnly(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'this week\'s',
+      'other': 'this month\'s',
+    });
+    return 'Count only $_temp0 money.';
+  }
+
+  @override
+  String fixDone(String amount) {
+    return 'Fixed. Safe to spend today: $amount.';
+  }
+
+  @override
+  String get undone => 'Undone.';
+
+  @override
+  String get entryNotLogged => 'Not logged';
+
+  @override
+  String notLoggedRow(String direction) {
+    String _temp0 = intl.Intl.selectLogic(direction, {
+      'got': 'Got',
+      'other': 'Spent',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String notLoggedRowSpoken(String direction, String amount) {
+    String _temp0 = intl.Intl.selectLogic(direction, {
+      'got': 'Got',
+      'other': 'Spent',
+    });
+    return 'Not logged. $_temp0 $amount.';
+  }
+
+  @override
+  String get notLoggedDetail => 'Added when you fixed your number.';
+
+  @override
+  String spendsPartSpent(String amount) {
+    return 'Spent $amount';
+  }
+
+  @override
+  String spendsPartSaved(String amount) {
+    return 'Saved $amount';
+  }
+
+  @override
+  String spendsPartNotLogged(String amount) {
+    return 'Not logged $amount';
+  }
+
+  @override
+  String spendsPartNotLoggedSpoken(String amount) {
+    return 'Not logged, spent $amount';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

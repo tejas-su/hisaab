@@ -14,7 +14,7 @@ abstract final class UsualWords {
   ///
   /// A pooled habit names no kind of day.
   static String detail(AppLocalizations strings, UsualHabit habit, {required String amount, required String locale}) =>
-      strings.usualRowDetail(amount, _days(habit), _around(habit, locale));
+      strings.usualRowDetail(amount, _days(habit), hourWord(habit.window.aroundHour, locale));
 
   /// The `usualRowDetail` select value for the days [habit] was learned on.
   static String _days(UsualHabit habit) {
@@ -27,8 +27,9 @@ abstract final class UsualWords {
     };
   }
 
-  static String _around(UsualHabit habit, String locale) => DateFormat.j(locale)
-      .format(DateTime(2000, 1, 1, habit.window.aroundHour))
+  /// The hour as [locale] writes it with a plain space, e.g. "1 pm", for "around {time}".
+  static String hourWord(int hour, String locale) => DateFormat.j(locale)
+      .format(DateTime(2000, 1, 1, hour))
       // why: intl writes en_IN's "10 am" with a narrow no-break space, a glyph the bundled Mukta
       // font is not known to carry; a plain space reads the same and is what SPEC shows.
       .replaceAll(_narrowNoBreakSpace, ' ');

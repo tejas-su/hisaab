@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
@@ -13,6 +15,7 @@ import '../core/time/clock.dart';
 import '../core/time/pay_cycle.dart';
 import '../core/usecases/use_case.dart';
 import '../core/widgets/hisaab_snackbar_host.dart';
+import '../fix/fix.dart';
 import '../habits/habits.dart';
 import '../home/home.dart';
 import '../l10n/gen/app_localizations.dart';
@@ -80,6 +83,7 @@ abstract final class AppRoutes {
               undoBillAmount: getIt<UndoBillAmount>(),
               unskipBill: getIt<UnskipBillOccurrence>(),
               haptics: getIt<Haptics>(),
+              settings: getIt<BudgetSettingsRepository>(),
             )..add(const HomeLoadRequested()),
           ),
           BlocProvider<RemindersBloc>(
@@ -99,6 +103,16 @@ abstract final class AppRoutes {
               ledger: getIt<LedgerRepository>(),
               haptics: getIt<Haptics>(),
             )..add(const SpendsLoadRequested()),
+          ),
+          BlocProvider<HomeLinesBloc>(
+            // why: a cold start is an evaluation point (D170); the bloc latches it until Home is ready.
+            create: (BuildContext _) =>
+                HomeLinesBloc(
+              markAsked: getIt<MarkMissedLogAsked>(),
+              clock: getIt<Clock>(),
+              haptics: getIt<Haptics>(),
+              settings: getIt<BudgetSettingsRepository>(),
+            )..add(const HomeLinesPointReached()),
           ),
           BlocProvider<HabitsBloc>(
             // why: the first load must start with the screen. A lazy provider builds its bloc on the
@@ -120,15 +134,25 @@ abstract final class AppRoutes {
               onLaunch: (LaunchAction action) => followLaunch(context, getIt, action),
               child: ResumeListener(
               onResume: () {
+                // why: a resume is an evaluation point; the habits are read as they are at that instant.
+                context.read<HomeLinesBloc>().add(const HomeLinesPointReached());
                 context.read<RemindersBloc>().add(const RemindersArmRequested());
                 context.read<HabitsBloc>().add(const HabitsLoadRequested());
               },
               // why: a habit index is for one day (BR-17); the app may stay open past midnight.
               child: MidnightListener(
                 clock: getIt<Clock>(),
-                onNewDay: () => context.read<HabitsBloc>().add(const HabitsLoadRequested()),
+                onNewDay: () {
+                  context.read<HabitsBloc>().add(const HabitsLoadRequested());
+                  context.read<HomeLinesBloc>().add(const HomeLinesMidnight());
+                },
+                child: HomeLinesDriver(
+                clock: getIt<Clock>(),
                 child: MainScreen(
                 clock: getIt<Clock>(),
+                missedLogSlot: (BuildContext context) => MissedLogSlot(onTap: (MissedLog line) => _openMissedLog(context, getIt, line)),
+                onFixMyNumber: () => openFixFromHome(context, getIt),
+                installLineSlot: (BuildContext context) => InstallLineSlot(onTap: () => _openInstallLine(context, getIt)),
                 assemble: assemble,
                 wrapPrimary: (Widget page) => UsualAddedNotice(child: page),
                 onAdd: (EntryKind kind) => openAddTray(context, getIt, kind: kind),
@@ -172,12 +196,32 @@ abstract final class AppRoutes {
                   ),
                 ),
                 ),
+                ),
               ),
             ),
             ),
           ),
         ),
       );
+
+  /// Opens the Add tray from the missed-log line, carrying its habit so *your usual* shows
+  /// outside its window (FR-HO-3 AC-2). Whatever the tray did, the line goes once it has closed
+  /// (AC-3).
+  static Future<void> _openMissedLog(BuildContext context, GetIt getIt, MissedLog line) async {
+    final HomeLinesBloc lines = context.read<HomeLinesBloc>();
+    try {
+      await openAddTray(
+        context,
+        getIt,
+        carry: Option<UsualSpend>.of(UsualSpend(category: line.category, amount: line.amount)),
+      );
+    } finally {
+      // why: the app may be torn down with the tray still open; the bloc is closed with it.
+      if (!lines.isClosed) {
+        lines.add(const HomeLinesTrayClosed());
+      }
+    }
+  }
 
   /// Follows a widget, tile or shortcut tap on Home (widget spec §8): Home for [LaunchAction.home]
   /// and [LaunchAction.setUp]; for [LaunchAction.add], the Add tray at the keypad, unless one is
@@ -228,6 +272,50 @@ abstract final class AppRoutes {
       home.add(const HomeTrayClosed());
     }
   }
+
+  /// Opens *Fix my number* from the install line (FR-HO-3). The line goes once the sheet has closed,
+  /// and focus moves to Home's "Today" heading, since the opener is gone (FR-FX-6).
+  static Future<void> _openInstallLine(BuildContext context, GetIt getIt) async {
+    final HomeLinesBloc lines = context.read<HomeLinesBloc>();
+    try {
+      await openFixFromHome(context, getIt);
+    } finally {
+      // why: the app may be torn down with the sheet still open; the bloc is closed with it.
+      if (!lines.isClosed) {
+        lines.add(const HomeLinesTrayClosed());
+      }
+    }
+  }
+
+  /// Opens *Fix my number* over Home from its foot row (FR-FX-1). Home holds its numbers until the
+  /// sheet has gone, so the hero rolls in view; the outcome goes through Home so its Undo shows there
+  /// and `success` fires as the hero rolls (FR-FX-5 AC-2). The tap itself is a `tick`.
+  static Future<void> openFixFromHome(BuildContext context, GetIt getIt) async {
+    final HomeBloc home = context.read<HomeBloc>();
+    unawaited(getIt<Haptics>().tick());
+    final Option<FixOutcome> outcome =
+        await holdingHome(home, () => FixSheet.show(context, _fixBloc(getIt, successOnSave: false)..add(const FixLoadRequested())));
+    outcome.map((FixOutcome done) => home.add(HomeFixDone(done)));
+  }
+
+  /// Opens *Fix my number* over Settings from the last row of *Money*. No hero is under the sheet, so
+  /// `success` fires as it exits and the Undo shows on Settings through its [FixUndoBloc] (FR-FX-5 AC-5).
+  static Future<void> openFixFromSettings(BuildContext context, GetIt getIt) async {
+    final FixUndoBloc undo = context.read<FixUndoBloc>();
+    unawaited(getIt<Haptics>().tick());
+    final Option<FixOutcome> outcome =
+        await FixSheet.show(context, _fixBloc(getIt, successOnSave: true)..add(const FixLoadRequested()));
+    outcome.map((FixOutcome done) => undo.add(FixUndoOffered(done)));
+  }
+
+  static FixBloc _fixBloc(GetIt getIt, {required bool successOnSave}) => FixBloc(
+        getCycleSummary: getIt<GetCycleSummary>(),
+        fix: getIt<FixMyNumberUseCase>(),
+        ledger: getIt<LedgerRepository>(),
+        clock: getIt<Clock>(),
+        haptics: getIt<Haptics>(),
+        successOnSave: successOnSave,
+      );
 
   /// Opens the amount sheet of a bill waiting on Home over [context] (D123). The write reloads
   /// Home through the change streams; the outcome goes through Home so its Undo shows there.
@@ -312,15 +400,26 @@ abstract final class AppRoutes {
 
   /// Settings, one level deep (FR-SE); [onDataReplaced] reloads the app after a restore, an undo or
   /// *Delete everything* (D139).
-  static Widget settings(GetIt getIt, {required VoidCallback onDataReplaced}) => BlocProvider<IncomeBloc>(
-        create: (BuildContext _) => IncomeBloc(
-          getIncome: getIt<GetIncome>(),
-          recurring: getIt<RecurringRepository>(),
-          ledger: getIt<LedgerRepository>(),
-        )..add(const IncomeLoadRequested()),
+  static Widget settings(GetIt getIt, {required VoidCallback onDataReplaced}) => MultiBlocProvider(
+        providers: <BlocProvider<Object?>>[
+          BlocProvider<IncomeBloc>(
+            create: (BuildContext _) => IncomeBloc(
+              getIncome: getIt<GetIncome>(),
+              recurring: getIt<RecurringRepository>(),
+              ledger: getIt<LedgerRepository>(),
+            )..add(const IncomeLoadRequested()),
+          ),
+          // why: Home's snackbar host is under the Settings route, so a fix made here keeps its Undo in the
+          // Settings route (D179, C12).
+          BlocProvider<FixUndoBloc>(
+            create: (BuildContext _) => FixUndoBloc(deleteEntry: getIt<DeleteEntry>(), haptics: getIt<Haptics>()),
+          ),
+        ],
         child: Builder(
           builder: (BuildContext context) => SettingsPage(
             incomeBloc: context.read<IncomeBloc>(),
+            onFixMyNumber: () => openFixFromSettings(context, getIt),
+            wrapContent: (Widget content) => FixUndoListener(child: content),
             onOpenIncome: (Income income) => IncomeSheet.show(
               context,
               IncomeSheetBloc(
@@ -522,6 +621,7 @@ abstract final class AppRoutes {
     GetIt getIt, {
     EntryKind kind = EntryKind.spent,
     Option<Entry> editing = const Option<Entry>.none(),
+    Option<UsualSpend> carry = const Option<UsualSpend>.none(),
   }) async {
     final HomeState home = context.read<HomeBloc>().state;
     final List<Category> categories = home is HomeReady
@@ -532,9 +632,13 @@ abstract final class AppRoutes {
     }
     final HabitsBloc habitsBloc = context.read<HabitsBloc>();
     final HabitsState habits = habitsBloc.state;
-    final Option<UsualSpend> usual = habits is HabitsReady && editing.isNone() && kind == EntryKind.spent
-        ? UsualSpendDetector.suggest(habits.index, now: getIt<Clock>().now(), categories: categories)
-        : const Option<UsualSpend>.none();
+    // why: a carried habit (the missed-log line's) replaces the detector, so the pill shows
+    // outside its window (FR-AD-10 AC-1).
+    final Option<UsualSpend> usual = carry.isSome()
+        ? carry
+        : habits is HabitsReady && editing.isNone() && kind == EntryKind.spent
+            ? UsualSpendDetector.suggest(habits.index, now: getIt<Clock>().now(), categories: categories)
+            : const Option<UsualSpend>.none();
     final AddEntryBloc bloc = AddEntryBloc(
       saveEntry: getIt<SaveEntry>(),
       deleteEntry: getIt<DeleteEntry>(),

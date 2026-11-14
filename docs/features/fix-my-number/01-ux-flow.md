@@ -205,3 +205,23 @@ Two lines in the slot: line 1 "hisaab thought ₹{H}." (after the first digit), 
 | After *No* | "Count only this month's money." over cleared digits; focus goes to that notice |
 | Saved | "Fixed. Safe to spend today: ₹{hero}." |
 Banned and avoided: transaction, debit, credit, budget period, Oops, balance, reconcile, true-up, idioms ("spot on", D121). No red, no green; direction is carried by words ("less", "more"), not colour.
+
+## As built (2026-11-14)
+
+Built from `docs/superpowers/plans/2026-11-13-fix-my-number.md`, test-first. Where the build differs from the design above, SPEC (BR-18, FR-FX) and D191 win, and these are the departures from the plan.
+
+| Area | As built |
+|---|---|
+| Maths | `lib/ledger/domain/fix_my_number.dart` (`FixMyNumber.held`, `preview`, `post`, `signedRupees`) and the sealed `FixPreview` in `entities/fix_preview.dart`. `H` is unclamped; `A_after` uses `SafeToSpend.shareOfPool`, the hero's own floor and clamp. The guard is `−gap > I ÷ 10`, strict. |
+| The write | `FixMyNumberUseCase` recomputes the gap itself. Per D191 (2) it compares the **whole rupees to post** with what the user saw, signed, so a sub-rupee drift never refuses a save; an ordinary midnight does not change `H` (it is the same ledger), so a fix then saves dated the new day, and only a new cycle or an entry added behind the sheet refuses. There is no `GetFixInputs`: `GetCycleSummary` is read directly. |
+| Entry | `Entry.isNotLogged` is set by a `LEFT JOIN` on the category key in both entries reads (a missing category keeps the row, unflagged, rather than failing). `CycleInputs.fixedToday` is `F_t`; `CycleSummary` exposes `income`, `billsDue`, `savingsDue` and `fixedToday`. |
+| Sheet | New feature `lib/fix/` (`FixBloc`, `FixUndoBloc`, `FixSheet`, `FixPreviewSlot`, the guard panel). `FixBloc(successOnSave:)`: the Settings door fires `success` as the sheet exits; the Home door leaves it to `HomeBloc` (`HomeFixDone`), so it lands as the hero rolls. The "class changed, crossfade" flag is derived in the slot from the preview's class, not stored in state. `FixNoticeDismissed` is not an event: the next accepted key clears the notice. The sheet has no drawn Back control; system back, Escape, the scrim, swipe and the handle do the work of FR-FX-4 AC-4. |
+| Doors | Home foot row (`FixFootRow`), Settings row (`FixSettingsRow`, after *Savings*, hidden without an income; `SettingsPage.wrapContent` lets the route put `FixUndoListener` inside Settings' snackbar host), install line (`InstallLineSlot`; its state, `install` and `installMarked`, lives in `HomeLinesBloc` beside the missed-log line and outranks it; `HomeBloc` takes an optional `BudgetSettingsRepository` to read `install_line_seen`). `AppRoutes.openFixFromHome` wraps the sheet in `holdingHome`. |
+| Motion | `TodayBarLayout.lerp` re-spans the yellow **and every bite** in one motion (77% to 70%, bite 23% to 30%). A new fix row grows in after `HisaabMotion.numberRoll` (`TodayRowReveal`). Under reduced motion the bar jumps and the row has its height at once with a 150 ms fade, as SPEC E13 says (the plan's "150 ms crossfade" for the bar was not built). |
+| Rows | `EntryRow` shows *Not logged* over *Spent* or *Got*, no tap, no sign, the neutral `AppIcons.notLogged` glyph, and in Every entry the extra line. Delete is the custom action every row already had. |
+| Spends line | `SpentSavedLine` takes `notLogged`. When every part fits it is one run, `Spent ₹27,570 · Saved ₹1,000 · Not logged ₹4,200` (the existing tests assert that string); when not it is a `Wrap` between whole parts. `spentAndSaved` is removed from the ARB. |
+| Ask AI | The *Not logged* clause, then the *Used* clause, only when the export holds that kind; CSV category `not logged`; fixes are left out of the summary line, the category table and the weekly totals. |
+| Focus | `AppShell` gains one `FocusTraversalGroup` per pane (P17). |
+| Not built | The spoken "Saving" after a write passes one second is built; a drawn Back control and a mixed-in sealed `HomeLine` are not. Device checks still to run: D1 (the guard's focus under TalkBack), D6 (the 400 ms drain), D13 (largest font), the *Delete* action on the Today and Every entry rows under TalkBack, and focus returning to the opener after the sheet closes. |
+
+Source scope: `lib/fix/`, `lib/ledger/domain/{fix_my_number,entities/fix_preview,entities/fix_outcome,usecase/fix_my_number_use_case}.dart`, `lib/home/presentation/{bloc/home_lines_*,widgets/{fix_foot_row,install_line_*,today_row_reveal}.dart}`, `lib/settings/presentation/widgets/fix_settings_row.dart`, `lib/app/{routes,app_shell,main_screen}.dart`, `lib/core/widgets/today_bar/`, `lib/ask_ai/domain/prompt_builder.dart`.

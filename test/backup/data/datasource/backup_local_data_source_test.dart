@@ -169,6 +169,24 @@ void main() {
         expect(upgraded[Tables.transactions]!.single[TransactionColumns.note], 'chai ☕ with Ravi');
       });
 
+      test('asked_on survives a dump and replace, and wipe clears it (BR-16, D172)', () async {
+        const Map<String, Object?> asked = <String, Object?>{
+          SuggestionStateColumns.categoryId: 1,
+          SuggestionStateColumns.quietOn: null,
+          SuggestionStateColumns.restUntil: null,
+          SuggestionStateColumns.forgottenAt: null,
+          SuggestionStateColumns.askedOn: '2026-11-13',
+        };
+        await database.db.insert(Tables.suggestionState, asked);
+        final TableRows before = await source.dump();
+
+        await source.replace(await source.fresh(), const <String, String>{});
+        expect((await source.dump())[Tables.suggestionState], isEmpty);
+        await source.replace(before, const <String, String>{});
+
+        expect((await source.dump())[Tables.suggestionState], <Map<String, Object?>>[asked]);
+      });
+
       test('fresh has no suggestion_state rows', () async {
         expect((await source.fresh())[Tables.suggestionState], isEmpty);
       });

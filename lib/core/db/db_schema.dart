@@ -104,6 +104,9 @@ abstract final class TransactionColumns {
   /// The saving (a `recurring` row) a *Used* entry was paid from; null on every other kind (schema v5, D175).
   /// Kept apart from [recurringId] because `(recurring_id, date)` is unique (BR-9).
   static const String savingId = 'saving_id';
+
+  /// Not a column: the alias of the category's `key`, joined in when entries are read (BR-18).
+  static const String categoryKey = 'category_key';
 }
 
 /// Columns of [Tables.settings].

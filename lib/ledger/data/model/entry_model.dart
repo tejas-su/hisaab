@@ -18,6 +18,7 @@ final class EntryModel extends Equatable {
     this.note,
     this.recurringId,
     this.savingId,
+    this.categoryKey,
   });
 
   /// Reads a `transactions` row.
@@ -37,6 +38,7 @@ final class EntryModel extends Equatable {
           recurringId: row.intOrNullAt(TransactionColumns.recurringId),
           createdAt: row.stringAt(TransactionColumns.createdAt),
           savingId: row.intOrNullAt(TransactionColumns.savingId),
+          categoryKey: row.stringOrNullAt(TransactionColumns.categoryKey),
         ),
       );
 
@@ -59,6 +61,10 @@ final class EntryModel extends Equatable {
   /// `saving_id`: the saving a *Used* entry was paid from.
   final int? savingId;
 
+  /// The `key` of the row's category, joined in on read and null for a model built to be written.
+  /// It is never part of [toRow]; it lets the mapper tell a *Not logged* fix from spending (BR-18).
+  final String? categoryKey;
+
   /// ISO timestamp of the insert.
   final String createdAt;
 
@@ -78,5 +84,5 @@ final class EntryModel extends Equatable {
       };
 
   @override
-  List<Object?> get props => <Object?>[id, amountMinor, currency, kind, categoryId, date, note, recurringId, createdAt, savingId];
+  List<Object?> get props => <Object?>[id, amountMinor, currency, kind, categoryId, date, note, recurringId, createdAt, savingId, categoryKey];
 }

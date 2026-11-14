@@ -31,6 +31,9 @@ class MainScreen extends StatefulWidget {
     required this.onAskAi,
     this.assemble = false,
     this.wrapPrimary,
+    this.missedLogSlot,
+    this.onFixMyNumber,
+    this.installLineSlot,
   });
 
   final Clock clock;
@@ -53,6 +56,15 @@ class MainScreen extends StatefulWidget {
   /// not a pane beside Home. The app uses it for the *your usual* Undo (SPEC BR-10); with none,
   /// the pages are built as they are.
   final Widget Function(Widget page)? wrapPrimary;
+
+  /// Builds the missed-log line in Home's nudge slot (FR-HO-3); none when null.
+  final WidgetBuilder? missedLogSlot;
+
+  /// Opens *Fix my number* from Home's foot row (FR-HO-9); none leaves the row out.
+  final VoidCallback? onFixMyNumber;
+
+  /// Builds the install line in Home's nudge slot (FR-HO-3); none when null.
+  final WidgetBuilder? installLineSlot;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -97,6 +109,9 @@ class _MainScreenState extends State<MainScreen> {
                 // why: beside Home in two panes, Spends is already on screen, so the step is hidden.
                 onSeeWhereItWent: spendsBeside ? null : () => _destination.value = ShellDestination.spends,
                 assemble: widget.assemble,
+                missedLogSlot: widget.missedLogSlot,
+                onFixMyNumber: widget.onFixMyNumber,
+                installLineSlot: widget.installLineSlot,
               ),
             ),
             // why: beside Home both pages are on screen, and one notice is enough; it shows over Home.

@@ -28,6 +28,10 @@ final class CycleSummary extends Equatable {
     this.endsAtMonthEnd = false,
     this.savedExtraToday = Money.zero,
     this.waitingBills = const <Occurrence>[],
+    this.income = Money.zero,
+    this.billsDue = Money.zero,
+    this.savingsDue = Money.zero,
+    this.fixedToday = Money.zero,
   });
 
   final PayCycle cycle;
@@ -70,6 +74,18 @@ final class CycleSummary extends Equatable {
   /// Changing and card bills waiting for the user to say how much, oldest first (D123).
   final List<Occurrence> waitingBills;
 
+  /// `I`: every *Got* entry dated in the cycle, a *Got* fix included (BR-3, BR-18).
+  final Money income;
+
+  /// `B`: bills still to post after today (BR-3).
+  final Money billsDue;
+
+  /// `R`: savings still to post after today (D120).
+  final Money savingsDue;
+
+  /// `F_t`: *Spent* fixes dated today, already out of [pool] and never in [spentToday] (BR-18).
+  final Money fixedToday;
+
   /// What is left for the rest of the cycle after today's spending and today's extras (BR-4).
   Money get remaining => pool - spentToday - savedExtraToday;
 
@@ -89,5 +105,5 @@ final class CycleSummary extends Equatable {
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week, endsAtMonthEnd, savedExtraToday, waitingBills];
+      <Object?>[cycle, today, pool, todayShare, spentToday, tomorrowShare, state, forecast, earliestEntryDate, spentThisWeek, savedYesterday, week, endsAtMonthEnd, savedExtraToday, waitingBills, income, billsDue, savingsDue, fixedToday];
 }

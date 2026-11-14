@@ -17,6 +17,7 @@ final class Entry extends Equatable {
     this.note,
     this.recurringId,
     this.savingId,
+    this.isNotLogged = false,
   });
 
   final int id;
@@ -36,9 +37,14 @@ final class Entry extends Equatable {
   /// [recurringId] because `(recurring_id, date)` is unique (BR-9, D175).
   final int? savingId;
 
+  /// Whether this is a *Not logged* fix (BR-18, D166): money hisaab was told about by *Fix my number*
+  /// rather than spending the user typed. Set from the entry's hidden category, never stored, so
+  /// every reader can tell a fix from spending without a category lookup.
+  final bool isNotLogged;
+
   /// The editable part of this entry, used to prefill the Add tray (SPEC FR-AD-8).
   EntryDraft get draft => EntryDraft(amount: amount, kind: kind, categoryId: categoryId, date: date, note: note);
 
   @override
-  List<Object?> get props => <Object?>[id, amount, kind, categoryId, date, createdAt, note, recurringId, savingId];
+  List<Object?> get props => <Object?>[id, amount, kind, categoryId, date, createdAt, note, recurringId, savingId, isNotLogged];
 }

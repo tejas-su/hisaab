@@ -157,5 +157,36 @@ void main() {
       expect(_statusOn(const CalendarDate(2028, 3, 11), overLeapDay), GateStatus.resting);
       expect(_statusOn(const CalendarDate(2028, 3, 12), overLeapDay), GateStatus.open);
     });
+
+    group('asked_on (D172)', () {
+      const CalendarDate asked = CalendarDate(2026, 10, 27);
+      const Option<SuggestionState> withAsked =
+          Option<SuggestionState>.of(SuggestionState(categoryId: _chai, askedOn: Option<CalendarDate>.of(asked)));
+
+      test('afterUndo keeps askedOn (B1)', () {
+        expect(SuggestionGate.afterUndo(withAsked, categoryId: _chai, today: _day0).askedOn, const Option<CalendarDate>.of(asked));
+      });
+
+      test('afterForget keeps askedOn (B1)', () {
+        expect(
+          SuggestionGate.afterForget(withAsked, categoryId: _chai, now: DateTime(2026, 10, 27, 9)).askedOn,
+          const Option<CalendarDate>.of(asked),
+        );
+      });
+
+      test('asking is not an Undo: a state with asked_on is open and the second-Undo rule is unchanged', () {
+        final SuggestionState state = SuggestionState(
+          categoryId: _chai,
+          quietOn: const Option<CalendarDate>.of(_day0),
+          askedOn: const Option<CalendarDate>.of(asked),
+        );
+
+        expect(_statusOn(asked, state), GateStatus.open);
+        expect(
+          SuggestionGate.afterUndo(Option<SuggestionState>.of(state), categoryId: _chai, today: _day0.addDays(14)).restUntil.isSome(),
+          isTrue,
+        );
+      });
+    });
   });
 }

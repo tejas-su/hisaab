@@ -116,5 +116,39 @@ void main() {
 
       expect(await source.byCategory(1), _food);
     });
+
+    test('setAskedOn on a category with no row inserts a row with only asked_on (B2)', () async {
+      await source.setAskedOn(1, '2026-10-27');
+
+      expect(await source.all(), <SuggestionStateModel>[const SuggestionStateModel(categoryId: 1, askedOn: '2026-10-27')]);
+    });
+
+    test('setAskedOn keeps quiet, rest and forgotten (B2)', () async {
+      await source.upsert(_food);
+
+      await source.setAskedOn(1, '2026-10-27');
+
+      expect(
+        await source.byCategory(1),
+        const SuggestionStateModel(
+          categoryId: 1,
+          quietOn: '2026-10-26',
+          restUntil: '2026-11-25',
+          forgottenAt: '2026-10-26T10:05:00.000',
+          askedOn: '2026-10-27',
+        ),
+      );
+    });
+
+    test('setAskedOn twice keeps one row with the latest day', () async {
+      await source.setAskedOn(1, '2026-10-27');
+      await source.setAskedOn(1, '2026-10-28');
+
+      expect(await source.all(), <SuggestionStateModel>[const SuggestionStateModel(categoryId: 1, askedOn: '2026-10-28')]);
+    });
+
+    test('setAskedOn for a category that does not exist throws', () async {
+      await expectLater(source.setAskedOn(999, '2026-10-27'), throwsA(isA<DatabaseException>()));
+    });
   });
 }

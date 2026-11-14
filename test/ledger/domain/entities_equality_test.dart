@@ -47,7 +47,7 @@ void main() {
         paceSpentBefore: Money.zero,
         hasIncomeRule: false,
       );
-      expect(inputs.props, hasLength(13));
+      expect(inputs.props, hasLength(14));
     });
 
     test('forecasts without data', () {

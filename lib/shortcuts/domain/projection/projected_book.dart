@@ -47,7 +47,7 @@ final class ProjectedBook {
   /// [day]'s *Spent* entries that no rule posted, oldest first, as Home's today's bar takes them.
   List<Entry> typedSpendsOn(CalendarDate day) => _newestFirst(_entries.where((Entry e) => e.date == day))
       .reversed
-      .where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null)
+      .where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null && !e.isNotLogged)
       .toList();
 
   Option<CalendarDate> _earliestSaved() => Option<CalendarDate>.fromNullable(
@@ -198,6 +198,13 @@ final class _ProjectedSettings implements BudgetSettingsRepository {
 
   @override
   TaskEither<Failure, Unit> addPaySwitch(PaySwitch change) => throw _readOnly;
+
+  // why: the install line is a Home line; no projected day reads it, and it can't be written here.
+  @override
+  TaskEither<Failure, bool> installLineSeen() => TaskEither<Failure, bool>.right(true);
+
+  @override
+  TaskEither<Failure, Unit> markInstallLineSeen() => throw _readOnly;
 }
 
 // why: only the engine and the summary run on the copy; any other write is a programming error,

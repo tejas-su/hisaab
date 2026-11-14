@@ -20,6 +20,7 @@ final class CycleInputs extends Equatable {
     required this.spentToday,
     required this.paceSpentBefore,
     required this.hasIncomeRule,
+    this.fixedToday = Money.zero,
   });
 
   final PayCycle cycle;
@@ -61,10 +62,14 @@ final class CycleInputs extends Equatable {
   /// `V_prev`: the part of [spentBefore] that no recurring rule posted (BR-7 pace).
   final Money paceSpentBefore;
 
+  /// `F_t`: *Spent* *Not logged* fixes dated today (BR-18). Pool-side like [billsPostedToday]: they come
+  /// out of the pool and never out of today's share; from tomorrow they are part of [spentBefore].
+  final Money fixedToday;
+
   /// Whether a salary rule exists, even if it hasn't posted yet (BR-5 #1).
   final bool hasIncomeRule;
 
   @override
   List<Object?> get props =>
-      <Object?>[cycle, today, income, savingsDue, savedBefore, savedByRuleToday, savedExtraToday, billsDue, billsPostedToday, spentBefore, spentToday, paceSpentBefore, hasIncomeRule];
+      <Object?>[cycle, today, income, savingsDue, savedBefore, savedByRuleToday, savedExtraToday, billsDue, billsPostedToday, spentBefore, spentToday, paceSpentBefore, hasIncomeRule, fixedToday];
 }

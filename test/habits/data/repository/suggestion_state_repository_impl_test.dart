@@ -7,6 +7,7 @@ import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/habits/data/datasource/suggestion_state_local_data_source.dart';
 import 'package:hisaab/habits/data/repository/suggestion_state_repository_impl.dart';
 import 'package:hisaab/habits/domain/entities/suggestion_state.dart';
+import 'package:hisaab/habits/domain/suggestion_gate.dart';
 
 import '../../../helpers/test_database.dart';
 
@@ -121,6 +122,53 @@ void main() {
       await insertRaw(SuggestionStateColumns.restUntil, "'2026-02-30'");
 
       expect((await repository.all().run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+      expect((await repository.of(1).run()).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+
+    test('markAsked on a category with no state stores a state with only asked_on', () async {
+      expect(await repository.markAsked(1, const CalendarDate(2026, 10, 27)).run(), Either<Failure, Unit>.right(unit));
+
+      expect(
+        await repository.of(1).run(),
+        Either<Failure, Option<SuggestionState>>.right(
+          const Option<SuggestionState>.of(
+            SuggestionState(categoryId: 1, askedOn: Option<CalendarDate>.of(CalendarDate(2026, 10, 27))),
+          ),
+        ),
+      );
+    });
+
+    test('a state with only asked_on is gate-open: no quiet, no rest (BR-17)', () async {
+      await repository.markAsked(1, const CalendarDate(2026, 10, 27)).run();
+      final SuggestionState state = (await repository.of(1).run()).getOrElse((Failure f) => fail(f.message)).toNullable()!;
+
+      expect(
+        SuggestionGate.statusOf(Option<SuggestionState>.of(state), today: const CalendarDate(2026, 10, 27)),
+        GateStatus.open,
+      );
+    });
+
+    test('markAsked keeps the other columns of a state', () async {
+      await repository.put(_food).run();
+
+      await repository.markAsked(1, const CalendarDate(2026, 10, 27)).run();
+
+      final SuggestionState state = (await repository.of(1).run()).getOrElse((Failure f) => fail(f.message)).toNullable()!;
+      expect(state.quietOn, _food.quietOn);
+      expect(state.restUntil, _food.restUntil);
+      expect(state.forgottenAt, _food.forgottenAt);
+      expect(state.askedOn, const Option<CalendarDate>.of(CalendarDate(2026, 10, 27)));
+    });
+
+    test('markAsked for a category that does not exist is DatabaseFailure', () async {
+      final Either<Failure, Unit> result = await repository.markAsked(999, const CalendarDate(2026, 10, 27)).run();
+
+      expect(result.getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+
+    test('a row with a bad asked_on is InvalidDataFailure', () async {
+      await insertRaw(SuggestionStateColumns.askedOn, "'2026-02-30'");
+
       expect((await repository.of(1).run()).getLeft().toNullable(), isA<InvalidDataFailure>());
     });
   });

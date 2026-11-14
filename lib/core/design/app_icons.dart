@@ -51,6 +51,9 @@ abstract final class AppIcons {
   static const AppIconData askOnTrack = HugeIcons.strokeRoundedRoute01;
   static const AppIconData askOwn = HugeIcons.strokeRoundedPencilEdit02;
 
+  /// A neutral question mark for the missed-log line, so it never reads as a logged entry (FR-HO-3).
+  static const AppIconData questionLine = HugeIcons.strokeRoundedHelpCircle;
+
   /// *Back up* and *Back up first* (D139).
   static const AppIconData backUp = HugeIcons.strokeRoundedFileExport;
 
@@ -65,6 +68,12 @@ abstract final class AppIcons {
 
   /// A row or key that is working (D139).
   static const AppIconData busy = HugeIcons.strokeRoundedLoading03;
+
+  /// *Fix my number*'s Settings row (P14): a calculator, so it is not read as the sliders of Settings.
+  static const AppIconData fixMyNumber = HugeIcons.strokeRoundedCalculator01;
+
+  /// A *Not logged* entry's row (BR-18): a balance, for money made to match.
+  static const AppIconData notLogged = HugeIcons.strokeRoundedBalanceScale;
 
   /// Category icons by the `icon_key` stored in the database (SPEC BR-11).
   static const Map<String, AppIconData> byKey = <String, AppIconData>{

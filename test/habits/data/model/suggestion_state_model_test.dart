@@ -9,6 +9,7 @@ const Map<String, Object?> _fullRow = <String, Object?>{
   SuggestionStateColumns.quietOn: '2026-10-26',
   SuggestionStateColumns.restUntil: '2026-11-25',
   SuggestionStateColumns.forgottenAt: '2026-10-26T10:05:00.000',
+  SuggestionStateColumns.askedOn: '2026-10-27',
 };
 
 const SuggestionStateModel _full = SuggestionStateModel(
@@ -16,6 +17,7 @@ const SuggestionStateModel _full = SuggestionStateModel(
   quietOn: '2026-10-26',
   restUntil: '2026-11-25',
   forgottenAt: '2026-10-26T10:05:00.000',
+  askedOn: '2026-10-27',
 );
 
 void main() {
@@ -31,6 +33,7 @@ void main() {
         SuggestionStateColumns.quietOn: null,
         SuggestionStateColumns.restUntil: null,
         SuggestionStateColumns.forgottenAt: null,
+        SuggestionStateColumns.askedOn: null,
       };
 
       expect(
@@ -57,6 +60,18 @@ void main() {
     test('compares by its columns', () {
       expect(_full, SuggestionStateModel.fromRow(_fullRow).getOrElse((Failure f) => fail(f.message)));
       expect(_full, isNot(const SuggestionStateModel(categoryId: 13, quietOn: '2026-10-26')));
+    });
+
+    test('a v4-shaped row with no asked_on reads none (BR-17)', () {
+      final Map<String, Object?> v4 = <String, Object?>{..._fullRow}..remove(SuggestionStateColumns.askedOn);
+
+      expect(SuggestionStateModel.fromRow(v4).getOrElse((Failure f) => fail(f.message)).askedOn, isNull);
+    });
+
+    test('an asked_on that is not text is InvalidDataFailure', () {
+      final Map<String, Object?> bad = <String, Object?>{..._fullRow, SuggestionStateColumns.askedOn: 20261027};
+
+      expect(SuggestionStateModel.fromRow(bad).getLeft().toNullable(), isA<InvalidDataFailure>());
     });
   });
 }

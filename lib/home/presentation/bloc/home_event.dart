@@ -116,3 +116,25 @@ final class HomeUsedUndoRequested extends HomeEvent {
   @override
   List<Object?> get props => <Object?>[entry];
 }
+
+/// *Fix my number* wrote [outcome] from Home's foot row or install line; Home offers Undo for it and
+/// fires `success` as the hero rolls (FR-FX-5 AC-2, AC-3). It waits for the next good load when Home
+/// can't show yet.
+final class HomeFixDone extends HomeEvent {
+  const HomeFixDone(this.outcome);
+
+  final FixOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
+/// The user tapped Undo after a fix: delete its *Not logged* entry, so the number reverts exactly.
+final class HomeFixUndoRequested extends HomeEvent {
+  const HomeFixUndoRequested(this.entry);
+
+  final Entry entry;
+
+  @override
+  List<Object?> get props => <Object?>[entry];
+}

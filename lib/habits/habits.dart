@@ -4,20 +4,25 @@
 library;
 
 export 'di/habits_module.dart';
+export 'domain/detectors/missed_log_detector.dart';
 export 'domain/detectors/usual_spend_detector.dart';
 export 'domain/entities/day_type.dart';
 export 'domain/entities/forgotten_usual.dart';
 export 'domain/entities/habit_index.dart';
+export 'domain/entities/missed_log.dart';
 export 'domain/entities/suggestion_state.dart';
 export 'domain/entities/time_window.dart';
 export 'domain/entities/usual_add.dart';
 export 'domain/entities/usual_habit.dart';
 export 'domain/entities/usual_spend.dart';
 export 'domain/repository/suggestion_state_repository.dart';
+export 'domain/suggestion_gate.dart';
 export 'domain/usecase/forget_usual.dart';
 export 'domain/usecase/get_habit_index.dart';
+export 'domain/usecase/mark_missed_log_asked.dart';
 export 'domain/usecase/restore_usual.dart';
 export 'domain/usecase/undo_usual_add.dart';
+export 'presentation/usual_words.dart';
 export 'presentation/bloc/habits_bloc.dart';
 export 'presentation/bloc/habits_event.dart';
 export 'presentation/bloc/habits_state.dart';

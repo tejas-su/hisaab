@@ -21,6 +21,16 @@ final class FakeLedgerRepository implements LedgerRepository {
   Failure? failure;
   int _nextId = 1000;
 
+  /// The ids of the hidden *Not logged* categories (see [FakeCategoryRepository.hidden]); an entry
+  /// added in one of them reads back as a fix, as the real data source's join makes it (BR-18).
+  static const Set<int> notLoggedCategoryIds = <int>{notLoggedCategoryId, notLoggedInCategoryId};
+
+  /// The hidden *Spent* *Not logged* category's id in the fakes.
+  static const int notLoggedCategoryId = 21;
+
+  /// The hidden *Got* *Not logged* category's id in the fakes.
+  static const int notLoggedInCategoryId = 22;
+
   /// Every draft passed to [add] or [replace], in order.
   final List<EntryDraft> saved = <EntryDraft>[];
 
@@ -211,5 +221,6 @@ final class FakeLedgerRepository implements LedgerRepository {
         note: draft.note,
         recurringId: recurringId,
         savingId: savingId,
+        isNotLogged: notLoggedCategoryIds.contains(draft.categoryId),
       );
 }

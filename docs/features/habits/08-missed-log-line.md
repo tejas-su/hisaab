@@ -1,6 +1,6 @@
 # Habits: the missed-log line (interaction design)
 
-> **Status: signed off 2026-11-13 (`docs/features/fix-my-number/08-design-qa-and-signoff.md` §8; O14 to O16 and X18, X35, X36 applied below).** Nothing here is in SPEC, UI_DESIGN or DECISIONS yet, and no code is written. It fills in `04-ux-and-copy.md` ("Missed-log question") and applies the owner's answer in case study 33 (P4′-1): the tap opens Add **at the keypad, step 1**. Where this file and `04-` disagree, this file wins for the missed-log line. Mockup 43 (`docs/design/mockups/43-missed-log-line.html`) is not redrawn; its banner lists where this file supersedes it. SPEC wins once written.
+> **Status: signed off 2026-11-13 (`docs/features/fix-my-number/08-design-qa-and-signoff.md` §8; O14 to O16 and X18, X35, X36 applied below); built 2026-11-14 (see "As built" at the end).** SPEC BR-17, FR-HO-3 and D170 to D173 now carry the rules. It fills in `04-ux-and-copy.md` ("Missed-log question") and applies the owner's answer in case study 33 (P4′-1): the tap opens Add **at the keypad, step 1**. Where this file and `04-` disagree, this file wins for the missed-log line. Mockup 43 (`docs/design/mockups/43-missed-log-line.html`) is not redrawn; its banner lists where this file supersedes it. SPEC wins once written.
 
 ## Job
 
@@ -141,3 +141,30 @@ The widget (FR-WG-4), the Quick Settings tile and the app shortcut **never show 
 Slot order across all proposals (waiting, due-soon, install line, then this line) and the rule that a lower line never appears mid-view: `docs/features/fix-my-number/03-information-architecture.md` (signed off 2026-11-13).
 
 Motion for the line (how it arrives, collapses and clears; reduced motion; flags F2 and F7): `docs/features/fix-my-number/05-motion.md` section 4 (signed off 2026-11-13).
+
+## As built (2026-11-14)
+
+SPEC (BR-17, FR-HO-3, FR-AD-10 AC-1, E103 to E108) is now the source of truth; this file stays the interaction rationale. Plan: `docs/superpowers/plans/2026-11-13-missed-log-line.md`.
+
+| Piece | File |
+|---|---|
+| `asked_on` on the entity, model, mapper, data source (`setAskedOn`, update-else-insert, never a replace), repository (`markAsked`) and the gate (`afterUndo` and `afterForget` copy it) | `lib/habits/domain/entities/suggestion_state.dart`, `lib/habits/data/...`, `lib/habits/domain/suggestion_gate.dart` |
+| `MarkMissedLogAsked` (writes today from the `Clock`) | `lib/habits/domain/usecase/mark_missed_log_asked.dart` |
+| `MissedLogDetector` and `MissedLog` (category, window, amount; `aroundHour`) | `lib/habits/domain/detectors/missed_log_detector.dart`, `lib/habits/domain/entities/missed_log.dart`; `UsualSpendDetector.rank` is now public |
+| `HomeLinesBloc` (events: point, evaluated, shown, tapped, tray closed, entry logged, gate closed, slot taken, midnight) | `lib/home/presentation/bloc/home_lines_*.dart` |
+| `HomeLinesDriver` (feeds the bloc from Home and the habits, owns the "Today" heading focus node), `MissedLogSlot`, `MissedLogRow`, `MissedLogProbe`, `HomeHeadingFocus` | `lib/home/presentation/widgets/` |
+| Points, tap and the carried habit (`openAddTray(carry:)`) | `lib/app/routes.dart` |
+
+Where the build differs from this file or the plan, and why:
+
+- **A resume evaluates at once when Home is already ready.** A reload that yields an equal `HomeReady` emits nothing, so waiting for "the first `HomeReady` after the point" could leave the point latched and let an unrelated reload bring the line in mid-view. On a cold start Home is loading, so the evaluation waits for its first `HomeReady` as specified.
+- **The bloc remembers `asked_on` itself (`HomeLinesState.askedOn`).** Writing `asked_on` does not reload the habit index, so a resume the same day would otherwise read a stale index and ask again (L3). It takes a `Clock`, as the plan listed.
+- **A bill line that takes the slot removes the line (`HomeLinesSlotTaken`, not in the plan's list).** Without it a lower line would slide back in when the bill clears (E108).
+- **`MissedLog` carries the habit's amount**, which the plan's shape lacked; the tap needs it to hand the Add tray the same `UsualSpend` as the pill. The row still shows none.
+- **`HomeLinesTrayClosed` has no `saved` flag.** Saved or not, the line goes, so the flag would carry nothing.
+- **`MissedLogSlot` is passed to `HomePage` and `MainScreen` as an optional builder (`missedLogSlot`)**, so their existing tests need no `HomeLinesBloc`. A bill line in the slot means the builder is not called.
+- **Reduced motion:** the slot fades the line over 150 ms and drops its height at once (no `AnimatedSize`, which asserts with a zero duration); otherwise `AnimatedSize` runs over the `resize` token with `easeOut`.
+- **The neutral glyph is `AppIcons.questionLine`** (`HugeIcons.strokeRoundedHelpCircle`); `design-system` may swap it.
+- **Focus:** a tapped line that is removed returns focus to the "Today" heading through `HomeHeadingFocus`; when the tray closes and the line stays, Flutter's route focus restoration returns to the opener.
+- **B6 (habit-derived Spends insights wait for the line, single pane)** is not built: BR-14 has no habit-derived insight yet. Add the hook with the first one.
+- **Known narrow race, check on a device (08 §5 D15):** the covered check reads `HomeBloc.isCovered` in the line's first post-frame callback. A door-opened tray whose hold event has not been handled by then would let `asked_on` be written. The tray's own open path adds the hold in the same turn as the evaluation, so it is not expected, but only a device can confirm.

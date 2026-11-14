@@ -34,6 +34,7 @@ import '../domain/usecase/get_last_bill_amount.dart';
 import '../domain/usecase/get_suggested_limits.dart';
 import '../domain/usecase/restore_bill.dart';
 import '../domain/usecase/delete_entry.dart';
+import '../domain/usecase/fix_my_number_use_case.dart';
 import '../domain/usecase/get_cycle_summary.dart';
 import '../domain/usecase/change_income_amount.dart';
 import '../domain/usecase/change_pay_rule.dart';
@@ -84,6 +85,15 @@ void registerLedgerServices(GetIt getIt) {
         recurring: recurring,
         settings: getIt<BudgetSettingsRepository>(),
         periods: getIt<PeriodCalculator>(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<FixMyNumberUseCase>(
+      FixMyNumberUseCase(
+        summary: getIt<GetCycleSummary>(),
+        ledger: ledger,
+        categories: getIt<CategoryRepository>(),
+        settings: getIt<BudgetSettingsRepository>(),
         clock: clock,
       ),
     )

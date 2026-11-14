@@ -42,13 +42,17 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
 
   Database get _db => _database.db;
 
+  // why: the category's key rides along so a *Not logged* fix is known from the row itself (BR-18);
+  // a LEFT JOIN, so a row is never dropped from the money even if its category were missing.
+  static const String _selectWithKey = 'SELECT t.*, c.${CategoryColumns.key} AS ${TransactionColumns.categoryKey} '
+      'FROM ${Tables.transactions} t LEFT JOIN ${Tables.categories} c ON c.${CategoryColumns.id} = t.${TransactionColumns.categoryId}';
+
   @override
   Future<List<EntryModel>> between(String fromIso, String toIso) async {
-    final List<Map<String, Object?>> rows = await _db.query(
-      Tables.transactions,
-      where: '${TransactionColumns.date} BETWEEN ? AND ?',
-      whereArgs: <Object?>[fromIso, toIso],
-      orderBy: '${TransactionColumns.date} DESC, ${TransactionColumns.id} DESC',
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      '$_selectWithKey WHERE t.${TransactionColumns.date} BETWEEN ? AND ? '
+      'ORDER BY t.${TransactionColumns.date} DESC, t.${TransactionColumns.id} DESC',
+      <Object?>[fromIso, toIso],
     );
     return rows.map((Map<String, Object?> row) => requireRow(EntryModel.fromRow(row))).toList();
   }
@@ -56,7 +60,7 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
   @override
   Future<EntryModel?> byId(int id) async {
     final List<Map<String, Object?>> rows =
-        await _db.query(Tables.transactions, where: '${TransactionColumns.id} = ?', whereArgs: <Object?>[id]);
+        await _db.rawQuery('$_selectWithKey WHERE t.${TransactionColumns.id} = ?', <Object?>[id]);
     return rows.isEmpty ? null : requireRow(EntryModel.fromRow(rows.first));
   }
 

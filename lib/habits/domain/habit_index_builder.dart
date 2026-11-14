@@ -42,6 +42,7 @@ abstract final class HabitIndexBuilder {
         final int age = entry.date.daysUntil(today);
         return entry.kind == EntryKind.spent &&
             entry.recurringId == null &&
+            !entry.isNotLogged &&
             CalendarDate.fromDateTime(entry.createdAt) == entry.date &&
             age >= 0 &&
             age < HabitRules.horizonDays;

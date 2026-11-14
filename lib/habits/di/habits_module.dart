@@ -8,6 +8,7 @@ import '../data/repository/suggestion_state_repository_impl.dart';
 import '../domain/repository/suggestion_state_repository.dart';
 import '../domain/usecase/forget_usual.dart';
 import '../domain/usecase/get_habit_index.dart';
+import '../domain/usecase/mark_missed_log_asked.dart';
 import '../domain/usecase/restore_usual.dart';
 import '../domain/usecase/undo_usual_add.dart';
 
@@ -29,5 +30,6 @@ void registerHabitsServices(GetIt getIt) {
     )
     ..registerSingleton<UndoUsualAdd>(UndoUsualAdd(states: states, ledger: getIt<LedgerRepository>(), clock: clock))
     ..registerSingleton<ForgetUsual>(ForgetUsual(states: states, clock: clock))
+    ..registerSingleton<MarkMissedLogAsked>(MarkMissedLogAsked(states: states, clock: clock))
     ..registerSingleton<RestoreUsual>(RestoreUsual(states: states));
 }

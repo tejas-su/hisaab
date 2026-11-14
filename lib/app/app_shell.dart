@@ -88,22 +88,26 @@ class _AppShellState extends State<AppShell> {
         ),
       ];
 
+  // why: one traversal group per pane, so Tab finishes Home and then Spends instead of alternating
+  // between them by row, which is what reading order does across two side-by-side panes (FR-KS-1 AC-7).
   List<Widget> _sideBySide(Rect primary, Rect secondary, Size window, {required bool showDivider}) => <Widget>[
         Pane(
           rect: primary,
           windowSize: window,
           insetTop: false,
-          child: Column(
-            children: <Widget>[
-              Expanded(child: widget.home),
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
-                child: AddKey(onAdd: widget.onAdd),
-              ),
-            ],
+          child: FocusTraversalGroup(
+            child: Column(
+              children: <Widget>[
+                Expanded(child: widget.home),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+                  child: AddKey(onAdd: widget.onAdd),
+                ),
+              ],
+            ),
           ),
         ),
-        Pane(rect: secondary, windowSize: window, insetTop: false, child: widget.spends),
+        Pane(rect: secondary, windowSize: window, insetTop: false, child: FocusTraversalGroup(child: widget.spends)),
         if (showDivider)
           Positioned(
             left: primary.right,

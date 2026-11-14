@@ -4,6 +4,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/money/currency_spec.dart';
 import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/entry.dart';
 import '../../domain/entities/entry_draft.dart';
 import '../../domain/entities/entry_kind.dart';
@@ -31,12 +32,16 @@ abstract final class EntryMapper {
                       note: model.note,
                       recurringId: model.recurringId,
                       savingId: model.savingId,
+                      isNotLogged: _isNotLogged(model.categoryKey),
                     ),
                   ),
             ),
           ),
         ),
       );
+
+  static bool _isNotLogged(String? categoryKey) =>
+      categoryKey == CategoryKeys.notLogged || categoryKey == CategoryKeys.notLoggedIn;
 
   static Either<Failure, DateTime> _createdAt(String text) => Option<DateTime>.fromNullable(DateTime.tryParse(text))
       .toEither<Failure>(() => InvalidDataFailure('Bad created_at "$text"'));

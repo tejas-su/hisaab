@@ -9,6 +9,7 @@ import '../../../core/design/haptics.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/money/money.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
 import 'home_event.dart';
@@ -34,6 +35,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this._undoBillAmount,
     required this._unskipBill,
     required this._haptics,
+    this._settings,
   }) : super(const HomeLoading()) {
     // why: every write reloads Home; a newer load cancels an older one still reading, so stale
     // numbers never land last.
@@ -48,6 +50,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeBillUndoRequested>(_onBillUndoRequested);
     on<HomeBillAmountDone>(_onBillAmountDone);
     on<HomeBillAmountUndoRequested>(_onBillAmountUndoRequested);
+    on<HomeFixDone>(_onFixDone);
+    on<HomeFixUndoRequested>(_onFixUndoRequested);
     on<HomeUsedDone>(_onUsedDone);
     on<HomeUsedUndoRequested>(_onUsedUndoRequested);
     on<HomeSwipeThresholdReached>((HomeSwipeThresholdReached event, Emitter<HomeState> emit) => unawaited(_haptics.threshold()));
@@ -71,6 +75,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final UndoBillAmount _undoBillAmount;
   final UnskipBillOccurrence _unskipBill;
   final Haptics _haptics;
+
+  /// Where the install line's seen flag is read; none (older constructions) means no install line.
+  final BudgetSettingsRepository? _settings;
   late final StreamSubscription<void> _changes;
   late final StreamSubscription<void> _ruleChanges;
 
@@ -80,12 +87,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   int _holds = 0;
   bool _reloadWhenTrayCloses = false;
 
+  /// Whether a tray or sheet is over Home right now (the hold count of [HomeTrayOpened]).
+  bool get isCovered => _holds > 0;
+
   // why: an amount entered while Home couldn't show (still loading, or a failed reload) would
   // lose its Undo; it waits here for the next load that succeeds.
   Option<BillAmountOutcome> _pendingAmountUndo = const Option<BillAmountOutcome>.none();
 
   // why: the same for a *Used* save, whose Undo would otherwise be lost while Home can't show.
   Option<UsedOutcome> _pendingUsedUndo = const Option<UsedOutcome>.none();
+
+  // why: the same for a fix, whose Undo would otherwise be lost while Home can't show (D127).
+  Option<FixOutcome> _pendingFixUndo = const Option<FixOutcome>.none();
+
+  // why: the fix's row is marked for the load that first lists it, so it can grow in after the hero.
+  Option<int> _pendingJustFixed = const Option<int>.none();
 
   Future<void> _onLoadRequested(HomeLoadRequested event, Emitter<HomeState> emit) async {
     if (_holds > 0) {
@@ -125,8 +141,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                               summary: summary,
                               todayEntries: entries.take(todayListLimit).toList(),
                               categories: <int, Category>{for (final Category c in categories) c.id: c},
-                              // why: a bill posted today sits in the pool, not today's bar (D119).
-                              todaySpends: entries.reversed.where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null).toList(),
+                              // why: a bill or a fix posted today sits in the pool, not today's bar (D119, BR-18).
+                              todaySpends: entries.reversed.where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null && !e.isNotLogged).toList(),
                               dueSoon: dueSoon,
                               billNames: <int, String>{for (final RecurringRule rule in rules) rule.id: rule.label},
                             ),
@@ -135,18 +151,48 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               ),
         )
         .run();
+    final bool installDue = await loaded.match((Failure _) async => false, (HomeReady ready) => _installDue(ready.summary));
     emit(loaded.match((Failure failure) {
       _logFailure('home.load_failed')(failure);
       return HomeFailed(failure);
-    }, _shown));
+    }, (HomeReady ready) => _shown(ready.copyWith(installDue: installDue))));
+  }
+
+  // why: the install day is the day the earliest entry was saved (C1: the income rule has no created
+  // time). The line is for an install in the middle of this cycle, so a start-of-cycle or earlier
+  // install never gets it (FR-HO-3, E109). A read that fails just leaves the line out.
+  Future<bool> _installDue(CycleSummary summary) async {
+    final BudgetSettingsRepository? settings = _settings;
+    if (settings == null) {
+      return false;
+    }
+    final Either<Failure, bool> seen = await settings.installLineSeen().run();
+    final Either<Failure, Option<CalendarDate>> installed = await _ledger.firstLoggedOn().run();
+    seen.mapLeft(_logFailure('home.install_seen_failed'));
+    installed.mapLeft(_logFailure('home.install_day_failed'));
+    final bool unseen = seen.match((Failure _) => false, (bool value) => !value);
+    return unseen &&
+        installed.match(
+          (Failure _) => false,
+          (Option<CalendarDate> day) => day.match(
+            () => false,
+            (CalendarDate installDay) => summary.cycle.contains(installDay) && summary.cycle.start.isBefore(installDay),
+          ),
+        );
   }
 
   HomeReady _shown(HomeReady ready) {
     final Option<BillAmountOutcome> pending = _pendingAmountUndo;
     final Option<UsedOutcome> pendingUsed = _pendingUsedUndo;
+    final Option<FixOutcome> pendingFix = _pendingFixUndo;
     _pendingAmountUndo = const Option<BillAmountOutcome>.none();
     _pendingUsedUndo = const Option<UsedOutcome>.none();
-    return ready.copyWith(showWeek: _showingWeek, amountUndo: pending, usedUndo: pendingUsed);
+    _pendingFixUndo = const Option<FixOutcome>.none();
+    final Option<int> justFixed = _pendingJustFixed.filter((int id) => ready.todayEntries.any((Entry e) => e.id == id));
+    if (justFixed.isSome()) {
+      _pendingJustFixed = const Option<int>.none();
+    }
+    return ready.copyWith(showWeek: _showingWeek, amountUndo: pending, usedUndo: pendingUsed, fixUndo: pendingFix, justFixed: justFixed);
   }
 
   /// Flips the hero between *Today* and *This week*; the choice lasts for the session (FR-HO-2).
@@ -241,6 +287,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       return;
     }
     emit(current.copyWith(usedUndo: Option<UsedOutcome>.of(event.outcome)));
+  }
+
+  // why: success fires here, once the sheet has closed and Home is back in view, so it lands as the
+  // hero rolls rather than as the sheet leaves (FR-FX-5 AC-2).
+  void _onFixDone(HomeFixDone event, Emitter<HomeState> emit) {
+    unawaited(_haptics.success());
+    _pendingJustFixed = Option<int>.of(event.outcome.entry.id);
+    final HomeState current = state;
+    if (current is! HomeReady) {
+      _pendingFixUndo = Option<FixOutcome>.of(event.outcome);
+      return;
+    }
+    emit(current.copyWith(fixUndo: Option<FixOutcome>.of(event.outcome)));
+  }
+
+  /// Deletes the fix's entry, so the number reverts exactly (it was computed, never stored); the
+  /// ledger's change stream reloads Home.
+  Future<void> _onFixUndoRequested(HomeFixUndoRequested event, Emitter<HomeState> emit) async {
+    final Either<Failure, Entry> deleted = await _deleteEntry(event.entry.id).run();
+    deleted.match(_logFailure('home.fix_undo_failed'), (Entry _) => unawaited(_haptics.tick()));
   }
 
   /// Deletes the *Used* entry, so the money is set aside again; the ledger's change stream reloads Home.

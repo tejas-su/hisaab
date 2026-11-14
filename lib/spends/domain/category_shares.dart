@@ -24,7 +24,7 @@ abstract final class CategoryShares {
   }
 
   static Map<int, Money> _spentByCategory(Iterable<Entry> entries) => entries
-      .where((Entry e) => e.kind == EntryKind.spent)
+      .where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged)
       .fold(<int, Money>{}, (Map<int, Money> totals, Entry e) => <int, Money>{
             ...totals,
             e.categoryId: (totals[e.categoryId] ?? Money(0, currency: e.amount.currency)) + e.amount,

@@ -92,6 +92,7 @@ final class FakeServices {
         undoBillAmount: UndoBillAmount(ledger: ledger, recurring: recurring),
         unskipBill: UnskipBillOccurrence(recurring: recurring),
         haptics: haptics,
+        settings: settings,
       );
 
   /// The limit offer's use case over these fakes.
@@ -168,6 +169,9 @@ final class FakeServices {
     ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
     ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(getCycleSummary)
+    ..registerSingleton<FixMyNumberUseCase>(
+      FixMyNumberUseCase(summary: getCycleSummary, ledger: ledger, categories: categories, settings: settings, clock: clock),
+    )
     ..registerSingleton<ArmBillReminders>(armBillReminders)
     ..registerSingleton<ShouldAskBillReminders>(ShouldAskBillReminders(preferences: preferences, recurring: recurring))
     ..registerSingleton<AnswerBillReminders>(AnswerBillReminders(preferences: preferences, reminders: reminders, arm: armBillReminders))
@@ -205,6 +209,7 @@ final class FakeServices {
     ..registerSingleton<SuggestionStateRepository>(states)
     ..registerSingleton<GetHabitIndex>(GetHabitIndex(ledger: ledger, categories: categories, states: states, clock: clock))
     ..registerSingleton<UndoUsualAdd>(UndoUsualAdd(states: states, ledger: ledger, clock: clock))
+    ..registerSingleton<MarkMissedLogAsked>(MarkMissedLogAsked(states: states, clock: clock))
     ..registerSingleton<ForgetUsual>(ForgetUsual(states: states, clock: clock))
     ..registerSingleton<RestoreUsual>(RestoreUsual(states: states))
     ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: reminders))

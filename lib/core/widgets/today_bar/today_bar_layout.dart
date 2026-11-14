@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:equatable/equatable.dart';
 
@@ -40,6 +41,25 @@ final class TodayBarLayout extends Equatable {
       },
     );
   }
+
+  /// The layout [t] of the way (0–1) from [from] to [to], so a change of today's share re-spans the
+  /// yellow and every bite in one motion (BR-6, FR-FX-5 AC-2). Pieces pair up from the end edge; a
+  /// piece [to] has and [from] hasn't is drawn where it lands, uncovered by the yellow pulling back.
+  /// The tick is [to]'s.
+  factory TodayBarLayout.lerp(TodayBarLayout from, TodayBarLayout to, double t) => TodayBarLayout._(
+        bites: <BitePiece>[
+          for (final (int index, BitePiece piece) in to.bites.indexed)
+            index < from.bites.length ? _between(from.bites[index], piece, t) : piece,
+        ],
+        yellowEnd: lerpDouble(from.yellowEnd, to.yellowEnd, t) ?? to.yellowEnd,
+        tickX: to.tickX,
+      );
+
+  static BitePiece _between(BitePiece from, BitePiece to, double t) => (
+        left: lerpDouble(from.left, to.left, t) ?? to.left,
+        width: lerpDouble(from.width, to.width, t) ?? to.width,
+        label: to.label,
+      );
 
   /// Space between two pieces, and between the yellow and the nearest bite.
   static const double gap = 3;

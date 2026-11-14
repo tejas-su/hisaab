@@ -12,6 +12,16 @@ abstract interface class BudgetSettingsRepository {
   /// `InvalidDataFailure` for an unreadable stored value.
   TaskEither<Failure, BudgetSettings> read();
 
+  /// Whether the one-time install line was already shown or a fix already made (FR-HO-3, C11).
+  ///
+  /// Returns [Right] with the flag (false when never set), or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, bool> installLineSeen();
+
+  /// Records that the install line is used up; it never comes back.
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> markInstallLineSeen();
+
   /// Appends [change] to the stored pay switches.
   ///
   /// Returns [Right] with [unit], or [Left] with `DatabaseFailure` or `InvalidDataFailure` when

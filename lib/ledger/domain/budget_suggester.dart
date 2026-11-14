@@ -10,7 +10,7 @@ abstract final class BudgetSuggester {
   /// Maps each category with *Spent* entries in [entries] to its total, rounded up to the next
   /// ₹500. Categories with nothing spent get no limit.
   static Map<int, Money> suggest(Iterable<Entry> entries) => entries
-      .where((Entry e) => e.kind == EntryKind.spent)
+      .where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged)
       .fold(<int, Money>{}, (Map<int, Money> totals, Entry e) => <int, Money>{
             ...totals,
             e.categoryId: (totals[e.categoryId] ?? Money(0, currency: e.amount.currency)) + e.amount,

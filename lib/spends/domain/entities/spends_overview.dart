@@ -17,6 +17,7 @@ final class SpendsOverview extends Equatable {
     required this.spent,
     required this.budget,
     required this.saved,
+    this.notLogged = Money.zero,
     required this.pace,
     required this.rows,
     required this.insights,
@@ -42,6 +43,10 @@ final class SpendsOverview extends Equatable {
   /// *Saved* entries in the cycle up to the day it is seen from; never part of [spent] (D120).
   final Money saved;
 
+  /// *Spent* *Not logged* fixes in the cycle up to the day it is seen from: its own part of the
+  /// Spends line, never inside [spent] (BR-18, FR-SP-4a). A *Got* fix is not here.
+  final Money notLogged;
+
   /// The pace chart; [None] when there was no money to spend (no steady line).
   final Option<PaceSeries> pace;
 
@@ -58,5 +63,5 @@ final class SpendsOverview extends Equatable {
   bool get isEmpty => rows.isEmpty;
 
   @override
-  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, saved, pace, rows, insights];
+  List<Object?> get props => <Object?>[cycle, previous, cyclesBack, canGoBack, spent, budget, saved, notLogged, pace, rows, insights];
 }

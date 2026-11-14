@@ -31,7 +31,7 @@ class EntriesDay extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final Money spent = entries
-        .where((Entry e) => e.kind == EntryKind.spent)
+        .where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged)
         .fold(Money.zero, (Money total, Entry e) => total + e.amount);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,6 +72,7 @@ class EntriesDay extends StatelessWidget {
                   onDelete: () => onDelete(entry),
                   onThresholdReached: onThresholdReached,
                   showUsedDetail: true,
+                  showNotLoggedDetail: true,
                 ),
               ],
             ],

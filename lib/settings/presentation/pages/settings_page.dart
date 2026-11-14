@@ -11,6 +11,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../bloc/income_bloc.dart';
 import '../bloc/theme_bloc.dart';
+import '../widgets/fix_settings_row.dart';
 import '../widgets/income_row.dart';
 import '../widgets/look_group.dart';
 import '../widgets/settings_row.dart';
@@ -29,6 +30,8 @@ class SettingsPage extends StatelessWidget {
     this.onOpenCategories,
     this.shortcuts,
     this.yourHisaab,
+    this.onFixMyNumber,
+    this.wrapContent,
   });
 
   /// The income shown on the *Money coming in* row (D137).
@@ -56,6 +59,14 @@ class SettingsPage extends StatelessWidget {
   /// leaves the group out.
   final Widget? yourHisaab;
 
+  /// Opens *Fix my number* over Settings from the last row of *Money* (FR-SE-1); none leaves the row
+  /// out. The row also stays hidden until an income is set up.
+  final VoidCallback? onFixMyNumber;
+
+  /// Wraps the page's content inside its snackbar host, so a listener the route adds can show a
+  /// snackbar here, such as the Undo of a fix made from this page (FR-FX-5 AC-5).
+  final Widget Function(Widget content)? wrapContent;
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
@@ -74,7 +85,7 @@ class SettingsPage extends StatelessWidget {
         top: false,
         // why: the Your hisaab group shows its messages here (FR-SE-4 AC-2, AC-3).
         child: HisaabSnackbarHost(
-          child: ListView(
+          child: _wrapped(ListView(
           padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.xl),
           children: <Widget>[
             Padding(
@@ -102,6 +113,8 @@ class SettingsPage extends StatelessWidget {
                     label: strings.savings,
                     onTap: onOpenSavings,
                   ),
+                  if (onFixMyNumber case final VoidCallback fix)
+                    BlocProvider<IncomeBloc>.value(value: incomeBloc, child: FixSettingsRow(onOpen: fix)),
                 ],
               ),
             ),
@@ -136,9 +149,10 @@ class SettingsPage extends StatelessWidget {
               data,
             ],
           ],
-        ),
-        ),
+        ))),
       ),
     );
   }
+
+  Widget _wrapped(Widget content) => wrapContent?.call(content) ?? content;
 }

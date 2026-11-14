@@ -19,6 +19,28 @@ final class FakeBudgetSettingsRepository implements BudgetSettingsRepository {
         : TaskEither<Failure, BudgetSettings>.left(current);
   }
 
+  /// Whether the install line is used up.
+  bool installSeen = false;
+
+  /// Failure for [markInstallLineSeen] only.
+  Failure? seenFailure;
+
+  @override
+  TaskEither<Failure, bool> installLineSeen() {
+    final Failure? current = failure;
+    return current == null ? TaskEither<Failure, bool>.right(installSeen) : TaskEither<Failure, bool>.left(current);
+  }
+
+  @override
+  TaskEither<Failure, Unit> markInstallLineSeen() {
+    final Failure? current = seenFailure ?? failure;
+    if (current != null) {
+      return TaskEither<Failure, Unit>.left(current);
+    }
+    installSeen = true;
+    return TaskEither<Failure, Unit>.right(unit);
+  }
+
   /// Failure for [addPaySwitch] only.
   Failure? switchFailure;
 

@@ -37,7 +37,7 @@ final class PaceSeries extends Equatable {
     if (budget.isNegative || budget.isZero) {
       return const Option<PaceSeries>.none();
     }
-    final Iterable<Entry> spent = entries.where((Entry e) => e.kind == EntryKind.spent && cycle.contains(e.date) && !e.date.isAfter(asOf));
+    final Iterable<Entry> spent = entries.where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged && cycle.contains(e.date) && !e.date.isAfter(asOf));
     final List<Money> cumulative = _runningTotals(spent.map((Entry e) => (date: e.date, amount: e.amount)), cycle, asOf, budget);
     final List<DatedAmount> bills = <DatedAmount>[
       ...spent.where((Entry e) => e.recurringId != null).map((Entry e) => (date: e.date, amount: e.amount)),

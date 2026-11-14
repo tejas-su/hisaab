@@ -51,6 +51,17 @@ final class OwnCategoryLimitFailure extends Failure {
   const OwnCategoryLimitFailure() : super('4 of your own is the most');
 }
 
+/// *Fix it* found that the gap is no longer the one the user saw (midnight passed, a bill posted, an
+/// entry was added while the sheet was open), so nothing was written (BR-18 *Stale write*, E84).
+final class FixStaleFailure extends Failure {
+  const FixStaleFailure() : super('The gap changed since it was shown');
+}
+
+/// *Fix it* found nothing to fix: the typed figure equals or is close to what hisaab holds (E72, E73).
+final class FixNothingToFixFailure extends Failure {
+  const FixNothingToFixFailure() : super('Nothing to fix');
+}
+
 /// A *Used* amount larger than the whole rupees set aside in its saving, or any amount from a
 /// saving with less than ₹1 set aside (BR-19).
 final class UsedTooMuchFailure extends Failure {

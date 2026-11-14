@@ -1255,12 +1255,6 @@ abstract class AppLocalizations {
   /// **'Nothing left to put in for now.'**
   String get putInNothingLeft;
 
-  /// Spends line above Where it went
-  ///
-  /// In en, this message translates to:
-  /// **'Spent {spent} · Saved {saved}'**
-  String spentAndSaved(String spent, String saved);
-
   /// When a fixed bill goes out
   ///
   /// In en, this message translates to:
@@ -2820,6 +2814,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid from what you set aside.'**
   String get entryUsedDetail;
+
+  /// Line 1 of Home's missed-log line, asked once a day after a habit's usual time (FR-HO-3, D171)
+  ///
+  /// In en, this message translates to:
+  /// **'Spent on {category} today?'**
+  String missedLogTitle(String category);
+
+  /// Line 2 of Home's missed-log line; time is the hour as the locale writes it, e.g. 1 pm
+  ///
+  /// In en, this message translates to:
+  /// **'Usually around {time}.'**
+  String missedLogBody(String time);
+
+  /// A door's label everywhere: Home's foot row, Settings' row title and the install line's second line (FR-FX-1)
+  ///
+  /// In en, this message translates to:
+  /// **'Fix my number'**
+  String get fixMyNumber;
+
+  /// Settings row second line, under Fix my number: says when to use it
+  ///
+  /// In en, this message translates to:
+  /// **'When the number on Home looks wrong.'**
+  String get fixSettingsDetail;
+
+  /// First line of the one-time Home line for a mid-cycle install; the second line is Fix my number (FR-HO-3)
+  ///
+  /// In en, this message translates to:
+  /// **'Already spent some {period, select, week{this week} other{this month}}?'**
+  String fixInstallTitle(String period);
+
+  /// Fix my number sheet title: the one question, scoped to this cycle's money (FR-FX-2)
+  ///
+  /// In en, this message translates to:
+  /// **'How much of {period, select, week{this week\'s} other{this month\'s}} money is left?'**
+  String fixTitle(String period);
+
+  /// The sheet's helper line before the first digit: what to count and what to leave out (FR-FX-2)
+  ///
+  /// In en, this message translates to:
+  /// **'Bank and cash together. Leave out money from before {period, select, week{this week} other{this month}}.'**
+  String fixHelper(String period);
+
+  /// Line 1 of the preview after the first key: what hisaab expected, shown after typing so the user is not anchored
+  ///
+  /// In en, this message translates to:
+  /// **'hisaab thought {amount}.'**
+  String fixPreviewBase(String amount);
+
+  /// Line 1 of the preview when hisaab's figure is exactly zero (D181)
+  ///
+  /// In en, this message translates to:
+  /// **'hisaab thought nothing was left.'**
+  String get fixPreviewBaseNothing;
+
+  /// Line 1 of the preview when hisaab's figure is below zero: the month was already overspent; amount is how much below (D181)
+  ///
+  /// In en, this message translates to:
+  /// **'hisaab thought you were {amount} short.'**
+  String fixPreviewBaseShort(String amount);
+
+  /// Line 2 of the preview when money is missing: the gap and the per-day effect
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} less. {perDay, plural, =0{Each day stays about the same.} other{Each day gets about {perDayAmount} less.}}'**
+  String fixPreviewLess(String gap, int perDay, String perDayAmount);
+
+  /// Line 2 of the preview when hisaab under-counted: the gap and the per-day effect
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} more. {perDay, plural, =0{Each day stays about the same.} other{Each day gets about {perDayAmount} more.}}'**
+  String fixPreviewMore(String gap, int perDay, String perDayAmount);
+
+  /// Line 2 when the answer leaves less than the bills and savings still to come; informs, never blocks
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} less, and {short} short of what\'s still due.'**
+  String fixPreviewLessShort(String gap, String short);
+
+  /// Line 2 on the cycle's last day: the whole gap comes off today
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} less. Today takes all of it.'**
+  String fixPreviewLessLastDay(String gap);
+
+  /// Line 2 on the cycle's last day: the whole gap goes to today
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} more. Today gets all of it.'**
+  String fixPreviewMoreLastDay(String gap);
+
+  /// Line 2 when the lower share falls below what was already spent today (D190); informs, never blocks
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} less. Today is {over} over its share.'**
+  String fixPreviewLessOverToday(String gap, String over);
+
+  /// Line 2 when the typed figure equals hisaab's; Fix it is off
+  ///
+  /// In en, this message translates to:
+  /// **'That matches. Nothing to fix.'**
+  String get fixPreviewEqual;
+
+  /// Line 2 when a rounded answer is within 50 rupees of hisaab's figure; Fix it is off
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s close enough. Nothing to fix.'**
+  String get fixPreviewClose;
+
+  /// Line 2 when a large higher gap will ask a question first; the keypad is still on screen
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} more. One question first.'**
+  String fixPreviewBig(String gap);
+
+  /// Short text a screen reader speaks for a lower, short or over-today preview; the full sentence stays the focusable text
+  ///
+  /// In en, this message translates to:
+  /// **'{gap} less.'**
+  String fixLiveLess(String gap);
+
+  /// Short text a screen reader speaks for a higher preview
+  ///
+  /// In en, this message translates to:
+  /// **'{gap} more.'**
+  String fixLiveMore(String gap);
+
+  /// The full-width key under the keypad that posts one Not logged entry for the gap
+  ///
+  /// In en, this message translates to:
+  /// **'Fix it'**
+  String get fixAction;
+
+  /// Screen-reader hint on a disabled Fix it when the figures match or are close; spoken only, never shown
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to fix.'**
+  String get fixActionHintNothing;
+
+  /// Announced only if the write takes over a second; never shown
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get fixSavingSpoken;
+
+  /// Shown in the preview slot when hisaab's figure could not be read, with Try again
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check your number.'**
+  String get fixLoadFailed;
+
+  /// Replaces line 1 when the save was refused because the ledger moved behind the sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Things changed. Check the new amount.'**
+  String get fixNoticeChanged;
+
+  /// Slot line 2 once the guard panel replaces the keypad: asks before a large Got is posted
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {gap} more. Is all of it from {period, select, week{this week} other{this month}}?'**
+  String fixGuardQuestion(String gap, String period);
+
+  /// First guard key: back to the keypad with the digits cleared
+  ///
+  /// In en, this message translates to:
+  /// **'No, some is older'**
+  String get fixGuardNo;
+
+  /// Second guard key: posts a Got entry for the gap
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, add {gap}'**
+  String fixGuardYes(String gap);
+
+  /// Notice over the cleared amount after the guard's No, until the first key
+  ///
+  /// In en, this message translates to:
+  /// **'Count only {period, select, week{this week\'s} other{this month\'s}} money.'**
+  String fixNoticeCountOnly(String period);
+
+  /// Snackbar after Fix it, with Undo: repeats the hero's own title so the user links it to the number that just changed
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed. Safe to spend today: {amount}.'**
+  String fixDone(String amount);
+
+  /// Announced politely after Undo of a fix; never shown
+  ///
+  /// In en, this message translates to:
+  /// **'Undone.'**
+  String get undone;
+
+  /// Title of a Fix my number entry's row, both directions (BR-18)
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged'**
+  String get entryNotLogged;
+
+  /// Second line of a Not logged row: its direction as a word, never a colour or sign
+  ///
+  /// In en, this message translates to:
+  /// **'{direction, select, got{Got} other{Spent}}'**
+  String notLoggedRow(String direction);
+
+  /// Screen-reader sentence for a Not logged row
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged. {direction, select, got{Got} other{Spent}} {amount}.'**
+  String notLoggedRowSpoken(String direction, String amount);
+
+  /// Extra line on a Not logged row in Every entry; answers who put it there
+  ///
+  /// In en, this message translates to:
+  /// **'Added when you fixed your number.'**
+  String get notLoggedDetail;
+
+  /// First part of the Spends line: what was spent, leaving out Not logged and Saved
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {amount}'**
+  String spendsPartSpent(String amount);
+
+  /// Second part of the Spends line: money put into savings
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {amount}'**
+  String spendsPartSaved(String amount);
+
+  /// Third part of the Spends line: the Spent side of Fix my number entries
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged {amount}'**
+  String spendsPartNotLogged(String amount);
+
+  /// Screen-reader form of the Not logged part of the Spends line
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged, spent {amount}'**
+  String spendsPartNotLoggedSpoken(String amount);
 }
 
 class _AppLocalizationsDelegate

@@ -29,4 +29,10 @@ abstract final class SeedCategoryIds {
 
   /// The hidden `card_paid` category migration 003 seeds (D123).
   static const int cardPaid = 12;
+
+  /// The hidden *Spent* `not_logged` category migration 005 seeds (BR-18); the fakes use 21.
+  static const int notLogged = 21;
+
+  /// The hidden *Got* `not_logged_in` category migration 005 seeds (BR-18); the fakes use 22.
+  static const int notLoggedIn = 22;
 }

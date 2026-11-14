@@ -58,11 +58,19 @@ abstract final class SafeToSpend {
       endsAtMonthEnd: endsAtMonthEnd,
       savedExtraToday: inputs.savedExtraToday,
       waitingBills: waitingBills,
+      income: inputs.income,
+      billsDue: inputs.billsDue,
+      savingsDue: inputs.savingsDue,
+      fixedToday: inputs.fixedToday,
     );
   }
 
   /// `A` for the day [inputs] describe: its pool split over the days left from it (BR-4).
   static Money shareOn(CycleInputs inputs) => _share(_pool(inputs), inputs.cycle.daysLeftFrom(inputs.today));
+
+  /// `A` for a [pool] split over [daysLeft] days, floored to whole rupees and never below zero (BR-4).
+  /// *Fix my number* uses it to say what today's share would be after a fix (BR-18).
+  static Money shareOfPool(Money pool, int daysLeft) => _share(pool, daysLeft);
 
   /// Previews spending [amount] more today against [summary], for the Add keypad (FR-AD-3).
   static SpendPreview previewSpend(CycleSummary summary, Money amount) {
@@ -90,7 +98,7 @@ abstract final class SafeToSpend {
   }
 
   static Money _pool(CycleInputs inputs) =>
-      inputs.income - inputs.keepAside - inputs.billsDue - inputs.spentBefore - inputs.billsPostedToday;
+      inputs.income - inputs.keepAside - inputs.billsDue - inputs.spentBefore - inputs.billsPostedToday - inputs.fixedToday;
 
   static Money _share(Money pool, int daysLeft) => _atLeastZero(_floorShare(pool, daysLeft));
 

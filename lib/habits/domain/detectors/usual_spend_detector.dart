@@ -38,7 +38,7 @@ abstract final class UsualSpendDetector {
         .where((UsualHabit habit) => !index.loggedToday.contains(habit.categoryId))
         .where((UsualHabit habit) => _open(index, habit.categoryId, today))
         .toList()
-      ..sort(_byRank);
+      ..sort(rank);
     return Option<UsualHabit>.fromNullable(offered.firstOrNull).flatMap(
       (UsualHabit habit) => Option<Category>.fromNullable(shown[habit.categoryId]).map(
         (Category category) => UsualSpend(category: category, amount: habit.amount),
@@ -52,7 +52,7 @@ abstract final class UsualSpendDetector {
 
   /// Orders the habit to offer first: the higher share of hit days, then the later hit, then the
   /// lower category id, so the pick is never arbitrary.
-  static int _byRank(UsualHabit a, UsualHabit b) {
+  static int rank(UsualHabit a, UsualHabit b) {
     // why: cross-multiplied, so two shares are compared without dividing.
     final int byShare = (b.hitDays * a.activeDays).compareTo(a.hitDays * b.activeDays);
     if (byShare != 0) {

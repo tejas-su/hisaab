@@ -87,5 +87,22 @@ void main() {
       expect(DateTime.parse('2026-10-26T10:05:30.250').isBefore(forgottenAt), isFalse);
       expect(DateTime.parse('2026-10-26T10:05:30.249').isBefore(forgottenAt), isTrue);
     });
+
+    test('asked_on round-trips and is its own field (D172)', () {
+      const SuggestionState asked = SuggestionState(categoryId: 1, askedOn: Option<CalendarDate>.of(CalendarDate(2026, 10, 27)));
+
+      expect(SuggestionStateMapper.toModel(asked), const SuggestionStateModel(categoryId: 1, askedOn: '2026-10-27'));
+      expect(_entityOf(SuggestionStateMapper.toModel(asked)), asked);
+      expect(_entityOf(SuggestionStateMapper.toModel(asked)).quietOn, const Option<CalendarDate>.none());
+    });
+
+    for (final String text in <String>['27 Oct', '2026-02-30', '']) {
+      test('a bad asked_on "$text" is InvalidDataFailure', () {
+        expect(
+          SuggestionStateMapper.toEntity(SuggestionStateModel(categoryId: 1, askedOn: text)).getLeft().toNullable(),
+          isA<InvalidDataFailure>(),
+        );
+      });
+    }
   });
 }

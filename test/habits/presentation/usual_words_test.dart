@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/habits/habits.dart';
-import 'package:hisaab/habits/presentation/usual_words.dart';
 import 'package:hisaab/l10n/gen/app_localizations.dart';
 import 'package:hisaab/l10n/gen/app_localizations_en.dart';
 import 'package:intl/date_symbol_data_local.dart';

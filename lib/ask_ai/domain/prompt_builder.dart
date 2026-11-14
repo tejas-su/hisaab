@@ -19,6 +19,14 @@ abstract final class PromptBuilder {
   static const String _savingsCategory = 'savings';
   static const String _cardBillCategory = 'card bill';
   static const String _cardBillKind = 'card_bill_paid';
+  static const String _notLoggedCategory = 'not logged';
+
+  // why: the AI would otherwise read a fix as a purchase or a habit, but it is the difference found
+  // when the user checked their real money, so it is a one-off correction (BR-15, BR-18, D188).
+  static const String _notLoggedClause =
+      'Entries with the category "not logged" are corrections. When the user checked their real money it differed '
+      'from this list, so one entry was added for the difference. Treat each as a one-off, not as a purchase or a habit, '
+      'and do not give spending advice about it.';
 
   // why: the AI would otherwise add a *Used* entry to spending, but the money was counted when it
   // was put in, so it is not spending and moves no number (BR-15, BR-19, D188).
@@ -53,6 +61,7 @@ abstract final class PromptBuilder {
         _role,
         _context(input, period),
         ..._facts(input),
+        if (entries.any((Entry e) => e.isNotLogged)) _notLoggedClause,
         if (entries.any((Entry e) => e.kind == EntryKind.used)) _usedClause,
         _summary(entries, names),
         _bills(input.bills),
@@ -164,7 +173,7 @@ abstract final class PromptBuilder {
 
   static String _summary(List<Entry> entries, _Names names) {
     final Map<int, Money> spentBy = entries
-        .where((Entry e) => e.kind == EntryKind.spent)
+        .where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged)
         .fold(
           <int, Money>{},
           (Map<int, Money> totals, Entry e) => <int, Money>{...totals, e.categoryId: (totals[e.categoryId] ?? Money.zero) + e.amount},
@@ -220,13 +229,16 @@ abstract final class PromptBuilder {
         e.date.toIso(),
         '${e.amount.floorMajor}',
         e.kind == EntryKind.cardPaid ? _cardBillKind : e.kind.name,
-        // why: a saving's and a card bill's categories are hidden and not in the list, so they are
-        // named here; a *Used* entry is filed under its saving's category (D120, D123, D188).
-        switch (e.kind) {
-          EntryKind.saved || EntryKind.used => _savingsCategory,
-          EntryKind.cardPaid => _cardBillCategory,
-          EntryKind.spent || EntryKind.got => PromptCsv.field(names.nameOf(e.categoryId)),
-        },
+        // why: a saving's, a card bill's and a fix's categories are hidden and not in the list, so they
+        // are named here; a *Used* entry is filed under its saving's category (D120, D123, D188).
+        if (e.isNotLogged)
+          _notLoggedCategory
+        else
+          switch (e.kind) {
+            EntryKind.saved || EntryKind.used => _savingsCategory,
+            EntryKind.cardPaid => _cardBillCategory,
+            EntryKind.spent || EntryKind.got => PromptCsv.field(names.nameOf(e.categoryId)),
+          },
         if (!hideNotes) PromptCsv.field(e.note ?? ''),
       ].join(','),
     ),
@@ -248,8 +260,9 @@ abstract final class PromptBuilder {
     AskGoal.ownQuestion => 'My question: ${choice.question.trim()}',
   };
 
+  // why: a fix is a correction, neither spending nor income, so the totals leave it out (C10).
   static Money _sum(Iterable<Entry> entries, EntryKind kind) =>
-      entries.where((Entry e) => e.kind == kind).fold(Money.zero, (Money total, Entry e) => total + e.amount);
+      entries.where((Entry e) => e.kind == kind && !e.isNotLogged).fold(Money.zero, (Money total, Entry e) => total + e.amount);
 }
 
 /// Categories by id, with the name each is shown under.

@@ -90,8 +90,13 @@ class SpendsPage extends StatelessWidget {
             const SizedBox(height: HisaabSpacing.m),
             PaceCard(spent: overview.spent, pace: overview.pace, cycle: overview.cycle, showToday: overview.isCurrent),
             const SizedBox(height: HisaabSpacing.m),
-            if (!overview.saved.isZero) ...<Widget>[
-              SpentSavedLine(key: const ValueKey<String>('spent-saved'), spent: overview.spent, saved: overview.saved),
+            if (!overview.saved.isZero || !overview.notLogged.isZero) ...<Widget>[
+              SpentSavedLine(
+                key: const ValueKey<String>('spent-saved'),
+                spent: overview.spent,
+                saved: overview.saved,
+                notLogged: overview.notLogged,
+              ),
               const SizedBox(height: HisaabSpacing.s),
             ],
             WhereItWentCard(

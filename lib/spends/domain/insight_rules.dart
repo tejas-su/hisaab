@@ -101,7 +101,7 @@ abstract final class InsightRules {
   }
 
   static Map<int, int> _spentThrough(List<Entry> entries, CalendarDate last) => entries
-      .where((Entry e) => e.kind == EntryKind.spent && !e.date.isAfter(last))
+      .where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged && !e.date.isAfter(last))
       .fold(<int, int>{}, (Map<int, int> sums, Entry e) => <int, int>{
             ...sums,
             e.categoryId: (sums[e.categoryId] ?? 0) + e.amount.amountMinor,
@@ -109,7 +109,7 @@ abstract final class InsightRules {
 
   // why: bills posted by a rule are expected, so they never count as a standout or a habit.
   static Map<int, List<Entry>> _typedSpending(List<Entry> entries, CalendarDate last) => entries
-      .where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null && !e.date.isAfter(last))
+      .where((Entry e) => e.kind == EntryKind.spent && !e.isNotLogged && e.recurringId == null && !e.date.isAfter(last))
       .fold(<int, List<Entry>>{}, (Map<int, List<Entry>> groups, Entry e) => <int, List<Entry>>{
             ...groups,
             e.categoryId: <Entry>[...?groups[e.categoryId], e],
