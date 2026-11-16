@@ -48,6 +48,7 @@ Before building or changing anything, read its BR/FR entries in `SPEC.md` and it
   | `hugeicons` | Icons |
   | `fpdart` | `Either` / `TaskEither` errors |
   | `file_picker` | The system *Save to* and open screens for backup and restore, used only in `lib/backup/data/platform/` (D139) |
+  | `in_app_update` | Google Play in-app updates, used only behind `AppUpdater` in `lib/core/` (D199) |
   | Bundled fonts | Anek Latin and Mukta in `assets/fonts/`, with OFL licences |
 
 - `path` is also installed. Planned later: `animations`, `fl_chart`, `share_plus`, `url_launcher`. **Ask before adding any dependency not listed in PLAN §11.**

@@ -19,6 +19,7 @@ dependencies:
   fpdart: ^1.2.0
   get_it: ^9.3.0
   hugeicons: ^1.2.0
+  in_app_update: ^5.0.0
   intl: ^0.20.3
   material_ui: ^1.11.0
   path: ^1.9.1
