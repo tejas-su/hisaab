@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Changing an entry, round 2 (clickable)</title>
+<style>
+  /* Round 2 of case study 38 (docs/design-research/case-studies/38-entry-edit-flow.md). Nothing here is built.
+     Four clickable directions for changing a logged entry. Each phone is a working prototype: tap the Food row.
+     Copy is draft. Icons are stand-ins for Hugeicons. Light theme only; this is a local design file. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --scrim: #16161552; --inverse: #161615; --onInverse: #F2F1EC; --canvas: #DDD5CB;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 56px 0 4px; }
+  h3 { font: 600 17px/22px 'Anek Latin', sans-serif; margin: 20px 0 4px; }
+  p, li { max-width: 84ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--ink2); }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--canvas); vertical-align: 3px; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; min-width: 760px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 14px 8px 0; border-bottom: 1px solid var(--hairline); }
+  td { color: var(--ink2); }
+  td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+
+  .demo { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 16px; }
+  .side { max-width: 46ch; }
+  .side ol { padding-inline-start: 20px; margin: 6px 0; }
+  .side li { font-size: 14px; line-height: 21px; }
+  .reset { margin-top: 10px; font: 600 14px 'Mukta', sans-serif; min-height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid var(--ink); background: none; cursor: pointer; }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+  .phone { position: relative; width: 320px; height: 660px; border-radius: 28px; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px var(--hairline), 0 8px 24px #16161522; flex: none; }
+  .phone svg { width: 20px; height: 20px; }
+
+  .home { position: absolute; inset: 0; padding: 18px 14px; }
+  .hero { border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--ink); padding: 14px 16px; }
+  .hero .q { font-size: 13px; font-weight: 600; color: var(--ink2); }
+  .num { font: 600 30px/32px 'Anek Latin', sans-serif; font-stretch: 85%; font-feature-settings: 'tnum'; }
+  .hero .num { font-size: 52px; line-height: 56px; }
+  .bar { display: flex; gap: 4px; margin-top: 8px; }
+  .bar span { flex: 1; height: 22px; border-radius: 6px; background: var(--sunk); }
+  .bar span.t { background: linear-gradient(to top, var(--signal) var(--f), var(--sunk) var(--f)); }
+  .home h4 { margin: 16px 2px 6px; font: 600 16px 'Anek Latin', sans-serif; display: flex; justify-content: space-between; }
+  .home h4 span { font-size: 14px; color: var(--ink2); }
+  .entry { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 0 12px; border-radius: 14px; background: var(--surface); margin-bottom: 6px; font-size: 14px; transition: opacity .2s; }
+  .entry.dim { opacity: .35; }
+  .entry.hot { box-shadow: inset 0 0 0 2px var(--ink); }
+  .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .entry .t { flex: 1; line-height: 17px; }
+  .entry .t small { display: block; color: var(--ink2); font-size: 12.5px; }
+  .entry .a { font: 600 17px 'Anek Latin', sans-serif; font-feature-settings: 'tnum'; }
+  .gone { text-decoration: line-through; opacity: .4; }
+
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 30px 30px 0 0; padding: 8px 16px 18px; display: flex; flex-direction: column; animation: up .22s cubic-bezier(.2,.9,.3,1.1); }
+  @keyframes up { from { transform: translateY(40px); opacity: .4; } }
+  .handle { align-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--hairline); }
+  .stitle { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .back { width: 40px; height: 40px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .ctx { font-size: 13px; color: var(--ink2); font-weight: 600; line-height: 16px; }
+  .qq { font: 600 18px/22px 'Anek Latin', sans-serif; }
+  .hint { font-size: 13px; color: var(--ink2); line-height: 18px; }
+  .sel { background: #FFB02040; border-radius: 6px; padding: 0 4px; box-shadow: inset 0 -3px 0 var(--ink); }
+
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .keys button { height: 46px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; font: 600 22px 'Anek Latin', sans-serif; text-align: center; }
+  .keys button:active, .tile:active, .key:active { transform: scale(.96); }
+  .key { margin-top: 10px; height: 50px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; font-weight: 600; font-size: 16px; width: 100%; text-align: center; }
+  .key.ink { background: var(--ink); color: var(--onInverse); }
+  .key.quiet { background: transparent; box-shadow: inset 0 0 0 1.5px var(--hairline); color: var(--ink); }
+
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .tile { position: relative; height: 72px; border-radius: 18px; background: var(--sunk); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12.5px; font-weight: 600; }
+  .tile.now { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .tile .tk { position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; border-radius: 8px; background: var(--ink); display: grid; place-items: center; }
+  .tile .tk svg { width: 11px; height: 11px; }
+  .days { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .days button { min-height: 50px; border-radius: 14px; background: var(--sunk); padding: 0 14px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .days button.now { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .field { margin-top: 12px; width: 100%; height: 50px; border-radius: 14px; border: 2px solid var(--ink); padding: 0 14px; font: 15px 'Mukta', sans-serif; background: var(--surface); }
+
+  .snack { position: absolute; left: 12px; right: 12px; bottom: 16px; min-height: 52px; border-radius: 14px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; padding: 0 6px 0 16px; font-size: 14px; animation: up .2s; z-index: 5; }
+  .snack span { flex: 1; }
+  .snack button { color: var(--signal); font-weight: 600; padding: 12px; }
+  .flash { font-size: 13px; color: var(--ink2); min-height: 18px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+  .flash b { color: var(--ink); }
+  .flash button { font-weight: 600; text-decoration: underline; color: var(--ink); }
+
+  /* A · expand in place */
+  .xcard { background: var(--surface); border-radius: 22px; box-shadow: 0 0 0 2px var(--ink), 0 10px 30px #16161530; padding: 14px; margin-bottom: 8px; animation: grow .22s cubic-bezier(.2,.9,.3,1.1); }
+  @keyframes grow { from { transform: scaleY(.6); opacity: .3; } }
+  .xtop { display: flex; align-items: center; gap: 12px; }
+  .ic.big { width: 48px; height: 48px; border-radius: 14px; }
+  .tapnum { font: 600 44px/46px 'Anek Latin', sans-serif; font-stretch: 85%; font-feature-settings: 'tnum'; border-bottom: 2px dotted var(--ink2); }
+  .chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .chip { height: 40px; padding: 0 12px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--hairline); display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+  .chip svg { width: 16px; height: 16px; }
+  .noteline { display: flex; gap: 8px; align-items: center; width: 100%; margin-top: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: var(--bg); font-size: 14px; }
+  .noteline.empty { color: var(--ink2); }
+  .noteline:focus-within { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .ninput { flex: 1; min-width: 0; border: 0; background: none; font: 14px 'Mukta', sans-serif; color: var(--ink); outline: none; height: 44px; }
+  .ninput::placeholder { color: var(--ink2); }
+  .caret { color: var(--ink2); font-size: 12px; margin-inline-start: 2px; }
+  .fkb { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 230px; background: #D9D3CB; place-items: center; color: var(--ink2); font-size: 13px; }
+  #A.typing .fkb { display: grid; }
+  #A.typing .hero, #A.typing h4 { display: none; }
+  .xfoot { display: flex; gap: 8px; margin-top: 10px; }
+  .xfoot .key { margin-top: 0; height: 46px; }
+
+  /* B · sentence */
+  .sentence { font: 600 30px/44px 'Anek Latin', sans-serif; margin-top: 18px; }
+  .sentence button { border-bottom: 3px dotted var(--ink2); line-height: 34px; font-feature-settings: 'tnum'; }
+  .sentence .soft { color: var(--ink2); font-weight: 500; }
+  .snote { margin-top: 10px; font-size: 17px; }
+  .snote button { border-bottom: 2px dotted var(--ink2); }
+  .snote .empty { color: var(--ink2); }
+
+  /* C · page */
+  .page { position: absolute; inset: 0; background: var(--bg); padding: 14px; display: flex; flex-direction: column; animation: slide .22s ease-out; }
+  @keyframes slide { from { transform: translateX(40px); opacity: .3; } }
+  .ptop { display: flex; justify-content: space-between; align-items: center; }
+  .pcard { margin-top: 12px; background: var(--surface); border-radius: 24px; padding: 18px 16px; text-align: center; }
+  .pcat { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; height: 40px; padding: 0 14px; border-radius: 20px; box-shadow: inset 0 0 0 1.5px var(--hairline); font-weight: 600; }
+  .pamt { display: block; margin: 6px auto 0; font: 600 60px/64px 'Anek Latin', sans-serif; font-stretch: 85%; font-feature-settings: 'tnum'; }
+  .pday { color: var(--ink2); font-weight: 600; font-size: 14px; }
+  .prow { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; min-height: 56px; padding: 0 14px; border-radius: 16px; background: var(--surface); font-size: 14px; }
+  .prow .k { color: var(--ink2); font-size: 12.5px; display: block; }
+  .pctx { margin-top: 10px; border-radius: 16px; background: var(--sunk); padding: 12px 14px; font-size: 13.5px; color: var(--ink2); line-height: 19px; }
+  .pctx b { color: var(--ink); }
+
+  /* D · strip */
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr) 48px; gap: 6px; margin: -2px 0 8px; animation: grow .18s ease-out; }
+  .strip button { height: 58px; border-radius: 14px; background: var(--ink); color: var(--onInverse); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 600; }
+  .strip button svg { width: 18px; height: 18px; }
+  .strip button.bin { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--hairline); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="food" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/></symbol>
+    <symbol id="travel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/></symbol>
+    <symbol id="shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="bills" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></symbol>
+    <symbol id="fun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l5-13 8 8z"/><path d="M14 4l1 2M19 9l2-1M17 3v2"/></symbol>
+    <symbol id="health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M9.2 9.2l5.6 5.6"/></symbol>
+    <symbol id="home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="other" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></symbol>
+    <symbol id="cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="notes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h4"/></symbol>
+    <symbol id="bin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="tick" viewBox="0 0 24 24" fill="none" stroke="#F2F1EC" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></symbol>
+    <symbol id="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></symbol>
+    <symbol id="rupee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h11M7 9h11M7 4h3a5 5 0 0 1 0 10H7l8 7"/></symbol>
+  </defs>
+</svg>
+
+<h1>Changing an entry, round 2</h1>
+<p class="lede">Round 1 (mockup 47) started every version from the Add tray or a form, so changing an entry still felt like filling it in again. Round 2 started from the entry instead: <b>see it first, then tap the part that's wrong</b>. Every phone below works. Tap the <b>Food ₹250</b> row and try fixing the amount, moving it to Travel, or changing the note. Everything saves the moment you pick, with Undo, so there's no Save and no Next.</p>
+
+<h2>What the research says</h2>
+<ol>
+  <li><b>Tapping shows the thing first.</b> Things 3 opens a task as a card in place, "while the rest of the list fades". Copilot, Monzo, Splitwise and Money Manager open a details view. None of them reopen the add flow.</li>
+  <li><b>The value is the button.</b> Copilot: "tap on the current date or name to edit them". Monzo: "tap the category shown at the top". There's no Edit mode and no form.</li>
+  <li><b>Never make people re-enter what didn't change.</b> A Monefy user: when editing, the accounts "are reset and have to manually specify them… difficult when I can't recall". That's exactly your report.</li>
+  <li><b>Undo beats Save, Discard and confirmations</b> for changes that can be reversed (NN/g; About Face). Things saves as you type.</li>
+  <li><b>Stay where you were.</b> Monzo users complain the app jumps to the home page after an edit. Monzo users also ask for quick actions right under a row, so they don't have to open another screen.</li>
+  <li><b>Adding and changing are different jobs.</b> Splitwise redesigns, form tools and our own bill sheet (D118) all split them.</li>
+</ol>
+
+<!-- ─────────────────────────── A ─────────────────────────── -->
+<h2>A · The row opens up where it is <span class="tag">like Things 3</span></h2>
+<div class="demo">
+  <div class="phone" id="A"></div>
+  <div class="side">
+    <p>Tap the row and it grows into a card right there in the list, with everything else faded. The amount, category, day and note are each a button. Pick something and it's saved straight away, and the card says so. <i>Done</i> folds it back, and one Undo reverses everything you changed.</p>
+    <ol><li>Amount: row → ₹250 → digits → Save → Done</li><li>Category: row → Food ▾ → Travel → Done</li><li>Note: row → tap the note → type → Done (no sheet; typed right in the card)</li></ol>
+    <p class="lede">Round 2b (owner): the note is edited in place, and Food ▾ / Today ▾ carry a caret, so they read as buttons, not labels. Until the first change, the card says "Tap any part to change it".</p>
+    <p class="lede">Feels like: touching the entry itself. You never leave the list. Risk: a card inside a scrolling list is fiddly at large text sizes and in landscape.</p>
+    <button class="reset" data-reset="A">Start again</button>
+  </div>
+</div>
+
+<p class="lede">B (sentence), C (entry page) and D (quick fixes) were dropped by the owner on 2026-11-17; they are described in case study 38. A continues in mockup <a href="49-entry-card-motion.html">49</a>.</p>
+
+<script>
+const CATS = [['food','Food'],['travel','Travel'],['shop','Shopping'],['bills','Bills'],['fun','Fun'],['health','Health'],['home','Home'],['other','Other']];
+const DAYS = ['Today', 'Yesterday', 'Sun 15 Nov', 'Sat 14 Nov'];
+const START = { amt: 250, cat: 'food', day: 'Today', note: 'Chai and samosa' };
+const fmt = n => '₹' + n.toLocaleString('en-IN');
+const ico = k => `<svg aria-hidden="true"><use href="#${k}"/></svg>`;
+const nameOf = k => CATS.find(c => c[0] === k)[1];
+const dayWord = d => d === 'Today' ? 'today' : d === 'Yesterday' ? 'yesterday' : 'on ' + d;
+
+const S = {};
+function fresh(id) { S[id] = { id, scr: 'list', e: { ...START }, snap: null, typed: null, msgs: [], snack: null, deleted: false }; }
+
+const OPEN = { A: 'card', B: 'sent', C: 'page', D: 'strip' };
+
+/* shared pieces */
+function home(st, rows) {
+  const today = (!st.deleted && st.e.day === 'Today' ? st.e.amt : 0) + 60 + 1200;
+  const left = Math.max(0, 1940 - today);
+  const f = Math.round(Math.min(100, left / 1940 * 100));
+  return `<div class="home"><div class="hero"><div class="q">Safe to spend today</div><div class="num">${fmt(left)}</div>
+    <div class="bar"><span class="t" style="--f:${f}%"></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+    <h4>Today <span>${fmt(today)}</span></h4>${rows}</div>`;
+}
+function entryRow(st, cls = '') {
+  const e = st.e;
+  if (st.deleted) return `<div class="entry gone"><span class="ic">${ico(e.cat)}</span><span class="t">${nameOf(e.cat)}<small>${e.note || '&nbsp;'}</small></span><span class="a">${fmt(e.amt)}</span></div>`;
+  const day = e.day === 'Today' ? '' : ` · ${e.day}`;
+  return `<button class="entry ${cls}" data-act="open" aria-label="${nameOf(e.cat)}, ${e.amt} rupees. Double tap to change"><span class="ic">${ico(e.cat)}</span><span class="t">${nameOf(e.cat)}<small>${(e.note || 'No note') + day}</small></span><span class="a">${fmt(e.amt)}</span></button>`;
+}
+const others = (dim) => `<div class="entry ${dim ? 'dim' : ''}"><span class="ic">${ico('travel')}</span><span class="t">Travel<small>Auto</small></span><span class="a">₹60</span></div>
+  <div class="entry ${dim ? 'dim' : ''}"><span class="ic">${ico('shop')}</span><span class="t">Shopping<small>Shoes</small></span><span class="a">₹1,200</span></div>`;
+const snack = st => st.snack ? `<div class="snack" role="status"><span>${st.snack}</span><button data-act="undo">Undo</button></div>` : '';
+const flash = st => st.msgs.length ? `<div class="flash">${ico('ok')}<b>${st.msgs[st.msgs.length - 1]}</b>· saved</div>` : `<div class="flash"></div>`;
+
+function sheetHead(st, q) {
+  return `<span class="handle"></span><div class="stitle"><button class="back" data-act="back" aria-label="Back">${ico('back')}</button>
+    <div><div class="ctx">${fmt(st.e.amt)} · ${nameOf(st.e.cat)}</div><div class="qq">${q}</div></div></div>`;
+}
+function editor(st) {
+  const e = st.e;
+  if (st.scr === 'amt') {
+    const shown = st.typed === null ? `<span class="sel">${fmt(e.amt)}</span>` : fmt(st.typed);
+    return `<div class="scrim" data-act="back"></div><div class="sheet">${sheetHead(st, 'How much was it?')}
+      <div style="text-align:center;margin-top:10px" class="num"><span style="font-size:52px;line-height:58px">${shown}</span></div>
+      <div class="hint" style="text-align:center">${st.typed === null ? 'Type to replace · ⌫ to fix a digit' : '&nbsp;'}</div>
+      <div class="keys">${['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(k => `<button data-act="key" data-arg="${k}">${k}</button>`).join('')}</div>
+      <button class="key" data-act="saveAmt">Save</button></div>`;
+  }
+  if (st.scr === 'cat') {
+    return `<div class="scrim" data-act="back"></div><div class="sheet">${sheetHead(st, 'What was it for?')}
+      <div class="grid">${CATS.map(([k, n]) => `<button class="tile ${k === e.cat ? 'now' : ''}" data-act="pick" data-arg="${k}" aria-label="${n}${k === e.cat ? ', now' : ''}">${k === e.cat ? `<span class="tk">${ico('tick')}</span>` : ''}${ico(k)}${n}</button>`).join('')}</div>
+      <div class="hint" style="text-align:center;margin-top:12px">Tap one to move it there</div></div>`;
+  }
+  if (st.scr === 'day') {
+    return `<div class="scrim" data-act="back"></div><div class="sheet">${sheetHead(st, 'Which day?')}
+      <div class="days">${DAYS.map(d => `<button class="${d === e.day ? 'now' : ''}" data-act="day" data-arg="${d}">${d}${d === e.day ? ico('ok') : ''}</button>`).join('')}</div></div>`;
+  }
+  if (st.scr === 'note') {
+    return `<div class="scrim" data-act="back"></div><div class="sheet">${sheetHead(st, 'Note')}
+      <input class="field" id="note-${st.id}" maxlength="80" value="${e.note.replace(/"/g, '&quot;')}" placeholder="Add a note">
+      <button class="key" data-act="saveNote">Save</button></div>`;
+  }
+  return '';
+}
+
+/* the four directions */
+const VIEW = {
+  A(st, base) {
+    if (base === 'list') return home(st, entryRow(st) + others(false));
+    const e = st.e;
+    const card = `<div class="xcard">
+      <div class="xtop"><span class="ic big">${ico(e.cat)}</span><button class="tapnum" data-act="edit" data-arg="amt" aria-label="Amount, ${e.amt} rupees. Double tap to change">${fmt(e.amt)}</button></div>
+      <div class="chips"><button class="chip" data-act="edit" data-arg="cat" aria-label="For ${nameOf(e.cat)}. Double tap to change">${ico(e.cat)}${nameOf(e.cat)}<span class="caret">▾</span></button><button class="chip" data-act="edit" data-arg="day" aria-label="Day, ${e.day}. Double tap to change">${ico('cal')}${e.day}<span class="caret">▾</span></button></div>
+      <label class="noteline">${ico('notes')}<input class="ninput" id="anote-A" maxlength="80" enterkeyhint="done" value="${e.note.replace(/"/g, '&quot;')}" placeholder="Add a note" aria-label="Note"></label>
+      ${st.msgs.length ? flash(st) : `<div class="flash">Tap any part to change it</div>`}
+      <div class="xfoot"><button class="key quiet" style="flex:0 0 52px" data-act="del" aria-label="Delete">${ico('bin')}</button><button class="key ink" data-act="close">Done</button></div></div>`;
+    return home(st, card + others(true)) + `<div class="fkb" aria-hidden="true">keyboard</div>`;
+  },
+  B(st, base) {
+    if (base === 'list') return home(st, entryRow(st) + others(false));
+    const e = st.e;
+    return home(st, entryRow(st, 'hot') + others(true)) + `<div class="scrim" data-act="close"></div><div class="sheet">
+      <span class="handle"></span>
+      <div class="sentence">Spent <button data-act="edit" data-arg="amt">${fmt(e.amt)}</button> on <button data-act="edit" data-arg="cat">${nameOf(e.cat)}</button>, <button data-act="edit" data-arg="day">${dayWord(e.day)}</button>.</div>
+      <div class="snote">${e.note ? `<button data-act="edit" data-arg="note">“${e.note}”</button>` : `<button class="empty" data-act="edit" data-arg="note">Add a note</button>`}</div>
+      <div class="hint" style="margin-top:10px">Tap any underlined part to change it.</div>
+      ${flash(st)}
+      <div class="xfoot" style="margin-top:14px"><button class="key quiet" style="flex:0 0 110px" data-act="del">Delete</button><button class="key ink" data-act="close">Done</button></div></div>`;
+  },
+  C(st, base) {
+    if (base === 'list') return home(st, entryRow(st) + others(false));
+    const e = st.e;
+    return `<div class="page">
+      <div class="ptop"><button class="back" data-act="close" aria-label="Back">${ico('back')}</button><button class="back" data-act="del" aria-label="Delete">${ico('bin')}</button></div>
+      <div class="pcard">
+        <button class="pcat" data-act="edit" data-arg="cat">${ico(e.cat)}${nameOf(e.cat)} ▾</button>
+        <button class="pamt" data-act="edit" data-arg="amt">${fmt(e.amt)}</button>
+        <div class="pday">Spent ${dayWord(e.day)} at 9:40</div>
+      </div>
+      <button class="prow" data-act="edit" data-arg="day">${ico('cal')}<span style="flex:1"><span class="k">Day</span>${e.day}</span>›</button>
+      <button class="prow" data-act="edit" data-arg="note">${ico('notes')}<span style="flex:1"><span class="k">Note</span>${e.note || 'Add a note'}</span>›</button>
+      <div class="pctx"><b>${nameOf(e.cat)} this cycle:</b> ₹3,240 over 14 times. Your usual ${nameOf(e.cat)} spend is ₹230.</div>
+      ${flash(st)}
+    </div>`;
+  },
+  D(st, base) {
+    if (base === 'list') return home(st, entryRow(st) + others(false));
+    const strip = `<div class="strip">
+      <button data-act="edit" data-arg="amt">${ico('rupee')}Amount</button>
+      <button data-act="edit" data-arg="cat">${ico(st.e.cat)}Category</button>
+      <button data-act="edit" data-arg="note">${ico('notes')}Note</button>
+      <button data-act="edit" data-arg="day">${ico('cal')}Day</button>
+      <button class="bin" data-act="del" aria-label="Delete">${ico('bin')}</button></div>`;
+    return home(st, entryRow(st, 'hot') + strip + others(true));
+  },
+};
+
+function render(id) {
+  const st = S[id];
+  const base = ['amt', 'cat', 'day', 'note'].includes(st.scr) ? OPEN[id] : st.scr;
+  document.getElementById(id).innerHTML = VIEW[id](st, base) + editor(st) + snack(st);
+  const f = document.getElementById('note-' + id);
+  if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+}
+
+function changed(st, msg) {
+  st.msgs.push(msg);
+  if (st.id === 'D') { close(st); } else { st.scr = OPEN[st.id]; }
+}
+// A: the note is typed in the card itself and saved by Done, the keyboard's done key, or tapping another part.
+function commitNote(st) {
+  const f = st.id === 'A' && document.getElementById('anote-A');
+  if (!f) return;
+  const v = f.value.trim();
+  if (v !== st.e.note) { st.e.note = v; st.msgs.push(v ? 'Note changed' : 'Note removed'); }
+}
+function close(st) {
+  commitNote(st);
+  if (st.msgs.length) st.snack = st.msgs.length === 1 ? st.msgs[0] : `${st.msgs.length} changes saved`;
+  st.scr = 'list'; st.msgs = [];
+}
+
+const ACT = {
+  open(st) { if (st.id === 'D' && st.scr === 'strip') { close(st); return; } st.snap = { ...st.e }; st.msgs = []; st.snack = null; st.scr = OPEN[st.id]; },
+  edit(st, a) { commitNote(st); st.scr = a; st.typed = null; },
+  back(st) { st.scr = OPEN[st.id]; st.typed = null; },
+  close,
+  key(st, k) {
+    const cur = st.typed === null ? null : st.typed;
+    if (k === '⌫') { st.typed = Math.floor((cur === null ? st.e.amt : cur) / 10); return; }
+    const d = k === '00' ? 0 : +k;
+    const next = cur === null ? d : (k === '00' ? cur * 100 : cur * 10 + d);
+    if (next <= 999999999) st.typed = next;
+  },
+  saveAmt(st) {
+    if (st.typed === null || st.typed === st.e.amt) { st.typed = null; ACT.back(st); return; }
+    if (st.typed === 0) return;
+    st.e.amt = st.typed; st.typed = null; changed(st, `Changed to ${fmt(st.e.amt)}`);
+  },
+  pick(st, k) { if (k === st.e.cat) { ACT.back(st); return; } st.e.cat = k; changed(st, `Moved to ${nameOf(k)}`); },
+  day(st, d) { if (d === st.e.day) { ACT.back(st); return; } st.e.day = d; changed(st, `Moved to ${d === 'Today' || d === 'Yesterday' ? d.toLowerCase() : d}`); },
+  saveNote(st) {
+    const v = document.getElementById('note-' + st.id).value.trim();
+    if (v === st.e.note) { ACT.back(st); return; }
+    st.e.note = v; changed(st, v ? 'Note changed' : 'Note removed');
+  },
+  del(st) { st.snap = st.snap || { ...st.e }; st.deleted = true; st.scr = 'list'; st.msgs = []; st.snack = 'Deleted'; },
+  undo(st) { if (st.snap) st.e = { ...st.snap }; st.deleted = false; st.snack = null; },
+};
+
+for (const id of ['A']) {
+  fresh(id); render(id);
+  const el = document.getElementById(id);
+  el.addEventListener('click', ev => {
+    const t = ev.target.closest('[data-act]');
+    if (!t || !el.contains(t)) return;
+    ACT[t.dataset.act](S[id], t.dataset.arg);
+    render(id);
+  });
+  el.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && ev.target.id === 'note-' + id) { ACT.saveNote(S[id]); render(id); }
+    if (ev.key === 'Enter' && ev.target.id === 'anote-A') { commitNote(S[id]); el.classList.remove('typing'); render(id); }
+  });
+  // why: a stand-in keyboard; the card moves up (hero hidden) as the real one would push it
+  el.addEventListener('focusin', ev => { if (ev.target.id === 'anote-A') el.classList.add('typing'); });
+  el.addEventListener('focusout', ev => { if (ev.target.id === 'anote-A') setTimeout(() => el.classList.remove('typing'), 150); });
+}
+document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => { fresh(b.dataset.reset); render(b.dataset.reset); }));
+</script>
+</body>
+</html>

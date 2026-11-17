@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart' hide State;
 import 'package:material_ui/material_ui.dart';
 
+import '../../../add_entry/add_entry.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
@@ -96,14 +97,17 @@ class TodayList extends StatelessWidget {
             TodayRowReveal(
               key: ValueKey<String>('today-row-${entry.id}'),
               delayed: justFixed.match(() => false, (int id) => id == entry.id),
-              child: EntryRow(
-                key: ValueKey<int>(entry.id),
-                entry: entry,
-                category: categories[entry.categoryId],
-                billName: billNames[entry.recurringId],
-                onEdit: () => onEdit(entry),
-                onDelete: () => onDelete(entry),
-                onThresholdReached: onThresholdReached,
+              child: EntryCardSlot(
+                entryId: entry.id,
+                row: EntryRow(
+                  key: ValueKey<int>(entry.id),
+                  entry: entry,
+                  category: categories[entry.categoryId],
+                  billName: billNames[entry.recurringId],
+                  onEdit: () => onEdit(entry),
+                  onDelete: () => onDelete(entry),
+                  onThresholdReached: onThresholdReached,
+                ),
               ),
             ),
           ],

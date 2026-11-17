@@ -114,6 +114,7 @@ abstract final class AppRoutes {
               settings: getIt<BudgetSettingsRepository>(),
             )..add(const HomeLinesPointReached()),
           ),
+          BlocProvider<EntryCardBloc>(create: (BuildContext _) => _entryCard(getIt)),
           BlocProvider<HabitsBloc>(
             // why: the first load must start with the screen. A lazy provider builds its bloc on the
             // first read; were that the first Add tap, that tray's first frame would have no pill
@@ -154,6 +155,7 @@ abstract final class AppRoutes {
                 onFixMyNumber: () => openFixFromHome(context, getIt),
                 installLineSlot: (BuildContext context) => InstallLineSlot(onTap: () => _openInstallLine(context, getIt)),
                 assemble: assemble,
+                entryCard: context.read<EntryCardBloc>(),
                 wrapPrimary: (Widget page) => UsualAddedNotice(child: page),
                 onAdd: (EntryKind kind) => openAddTray(context, getIt, kind: kind),
                 onEdit: (Entry entry) => openAddTray(context, getIt, editing: Option<Entry>.of(entry)),
@@ -227,8 +229,8 @@ abstract final class AppRoutes {
   }
 
   /// Follows a widget, tile or shortcut tap on Home (widget spec §8): Home for [LaunchAction.home]
-  /// and [LaunchAction.setUp]; for [LaunchAction.add], the Add tray at the keypad, unless one is
-  /// already open (an edit tray stays as it is, W6).
+  /// and [LaunchAction.setUp]; for [LaunchAction.add], the Add tray at the keypad, unless a tray or
+  /// an entry card on Home is already open (an edit stays as it is, W6).
   ///
   /// When the app was only just started, the tray waits for the habits and Home's figures, so
   /// *your usual* and the spend preview are in its first frame (FR-AD-10 AC-1, D154).
@@ -238,7 +240,9 @@ abstract final class AppRoutes {
       trayOpen = route.settings.name == AddEntryTray.routeName;
       return trayOpen || route.isFirst;
     });
-    if (action != LaunchAction.add || trayOpen) {
+    // why: an Add tap never interrupts an edit in progress, a card on Home included (W6, D200).
+    final bool cardOpen = context.read<EntryCardBloc>().state is! EntryCardClosed;
+    if (action != LaunchAction.add || trayOpen || cardOpen) {
       return;
     }
     await _settled(context.read<HabitsBloc>(), (HabitsState state) => state is! HabitsLoading);
@@ -369,17 +373,37 @@ abstract final class AppRoutes {
     required Option<int> categoryId,
     required ValueChanged<Entry> onEdit,
   }) =>
-      BlocProvider<EntriesBloc>(
-        create: (BuildContext _) => EntriesBloc(
-          cycle: cycle,
-          filter: categoryId,
-          ledger: getIt<LedgerRepository>(),
-          categories: getIt<CategoryRepository>(),
-          deleteEntry: getIt<DeleteEntry>(),
-          restoreEntry: getIt<RestoreEntry>(),
-          haptics: getIt<Haptics>(),
-        )..add(const EntriesLoadRequested()),
-        child: EntriesPage(cycle: cycle, today: getIt<Clock>().today(), onEdit: onEdit),
+      MultiBlocProvider(
+        providers: <BlocProvider<Object?>>[
+          BlocProvider<EntriesBloc>(
+            create: (BuildContext _) => EntriesBloc(
+              cycle: cycle,
+              filter: categoryId,
+              ledger: getIt<LedgerRepository>(),
+              categories: getIt<CategoryRepository>(),
+              deleteEntry: getIt<DeleteEntry>(),
+              restoreEntry: getIt<RestoreEntry>(),
+              haptics: getIt<Haptics>(),
+            )..add(const EntriesLoadRequested()),
+          ),
+          BlocProvider<EntryCardBloc>(create: (BuildContext _) => _entryCard(getIt)),
+        ],
+        child: Builder(
+          builder: (BuildContext context) => EntriesPage(
+            cycle: cycle,
+            today: getIt<Clock>().today(),
+            onEdit: onEdit,
+            entryCard: context.read<EntryCardBloc>(),
+          ),
+        ),
+      );
+
+  /// The entry card's bloc for one list of entries (SPEC FR-AD-8).
+  static EntryCardBloc _entryCard(GetIt getIt) => EntryCardBloc(
+        saveEntry: getIt<SaveEntry>(),
+        addOwnCategory: getIt<AddOwnCategory>(),
+        haptics: getIt<Haptics>(),
+        clock: getIt<Clock>(),
       );
 
   /// The month story of the cycle [cyclesBack] cycles before the current one (FR-SP-7).

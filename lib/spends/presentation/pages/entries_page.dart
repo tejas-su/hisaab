@@ -2,8 +2,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../add_entry/add_entry.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import '../../../core/layout/window_class.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/widgets/hisaab_chip.dart';
@@ -21,14 +23,16 @@ import '../widgets/entries_day.dart';
 
 /// *Every entry* in one cycle, by day, with category chips (SPEC FR-SP-6).
 ///
-/// Needs an [EntriesBloc] above it for [cycle]; [today] names it ("October"). [onEdit] opens
-/// the Add tray on an entry. Swipe deletes with Undo, as on Home.
+/// Needs an [EntriesBloc] above it for [cycle]; [today] names it ("October"). With [entryCard] a
+/// row opens as a card in place (FR-AD-8), with the board beside the list in a wide window
+/// (AC-12); without it, [onEdit] is called. Swipe deletes with Undo, as on Home.
 class EntriesPage extends StatelessWidget {
-  const EntriesPage({super.key, required this.cycle, required this.today, required this.onEdit});
+  const EntriesPage({super.key, required this.cycle, required this.today, required this.onEdit, this.entryCard});
 
   final PayCycle cycle;
   final CalendarDate today;
   final ValueChanged<Entry> onEdit;
+  final EntryCardBloc? entryCard;
 
   @override
   Widget build(BuildContext context) {
@@ -44,20 +48,50 @@ class EntriesPage extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: HisaabSnackbarHost(
-          child: BlocConsumer<EntriesBloc, EntriesState>(
-            listenWhen: (EntriesState previous, EntriesState current) => current is EntriesReady && current.undo.isSome(),
-            listener: _offerUndo,
-            builder: (BuildContext context, EntriesState state) => switch (state) {
-              EntriesLoading() => const SizedBox.shrink(),
-              EntriesFailed() => _failed(context),
-              EntriesReady() => _list(context, state),
-            },
-          ),
-        ),
+        child: HisaabSnackbarHost(child: _withCard(context, _body())),
       ),
     );
   }
+
+  Widget _body() => BlocConsumer<EntriesBloc, EntriesState>(
+        listenWhen: (EntriesState previous, EntriesState current) => current is EntriesReady && current.undo.isSome(),
+        listener: _offerUndo,
+        builder: (BuildContext context, EntriesState state) => switch (state) {
+          EntriesLoading() => const SizedBox.shrink(),
+          EntriesFailed() => _failed(context),
+          EntriesReady() => _list(context, state),
+        },
+      );
+
+  // why: in a wide window the card's parts sit on a board beside the list, not inside the card (AC-12).
+  Widget _withCard(BuildContext context, Widget body) {
+    final EntryCardBloc? bloc = entryCard;
+    if (bloc == null) {
+      return body;
+    }
+    final bool wide = context.layout.widthClass == WidthClass.expanded;
+    return EntryCardScope(
+      bloc: bloc,
+      partsInline: !wide,
+      child: EntryCardOutcomes(
+        bloc: bloc,
+        onDelete: (Entry entry) => context.read<EntriesBloc>().add(EntriesDeleteRequested(entry)),
+        child: wide ? _besideBoard(bloc, body) : body,
+      ),
+    );
+  }
+
+  static Widget _besideBoard(EntryCardBloc bloc, Widget body) => BlocBuilder<EntryCardBloc, EntryCardState>(
+        bloc: bloc,
+        buildWhen: (EntryCardState previous, EntryCardState current) => (previous is EntryCardClosed) != (current is EntryCardClosed),
+        builder: (BuildContext context, EntryCardState state) => Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Expanded(child: body),
+            if (state is! EntryCardClosed) Expanded(child: EntryBoard(bloc: bloc)),
+          ],
+        ),
+      );
 
   Widget _list(BuildContext context, EntriesReady state) {
     final EntriesBloc bloc = context.read<EntriesBloc>();
@@ -75,12 +109,17 @@ class EntriesPage extends StatelessWidget {
           day: day,
           entries: entries,
           categories: state.categories,
-          onEdit: onEdit,
+          onEdit: _opener(context, state),
           onDelete: (Entry entry) => bloc.add(EntriesDeleteRequested(entry)),
           onThresholdReached: () => bloc.add(const EntriesSwipeThresholdReached()),
         );
       },
     );
+  }
+
+  ValueChanged<Entry> _opener(BuildContext context, EntriesReady state) {
+    final EntryCardScopeData? scope = EntryCardScope.maybeOf(context);
+    return scope == null ? onEdit : (Entry entry) => scope.open(entry, categories: state.categories.values);
   }
 
   Widget _top(BuildContext context, EntriesReady state) {

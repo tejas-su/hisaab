@@ -60,13 +60,14 @@ void main() {
       expect(find.text('October'), findsOneWidget);
     });
 
-    testWidgets('Home\'s See all opens every entry of the cycle; a row there opens the Add tray', (WidgetTester tester) async {
+    testWidgets('Home\'s See all opens every entry of the cycle; a row there opens as a card (FR-AD-8)', (WidgetTester tester) async {
       await boot(tester);
       await tapAndLoad(tester, find.byKey(const ValueKey<String>('see-all')));
       expect(find.byType(EntriesPage), findsOneWidget);
       await tapAndLoad(tester, find.text('Tue, 20 Oct'));
       await tapAndLoad(tester, find.byType(EntryRow).first);
-      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byType(AddEntryTray), findsNothing);
+      expect(find.byKey(const ValueKey<String>('entry-card-done')), findsOneWidget);
     });
 
     testWidgets('Spends\' See every entry opens the entries page', (WidgetTester tester) async {

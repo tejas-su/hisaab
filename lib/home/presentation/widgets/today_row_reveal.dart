@@ -50,6 +50,11 @@ class _TodayRowRevealState extends State<TodayRowReveal> {
   Widget build(BuildContext context) {
     final bool reduced = HisaabMotion.reduceMotion(context);
     final bool visible = _shown || reduced;
+    // why: a zero-length AnimatedSize re-dirties its own layout when the row changes height (an
+    // entry card opening in place, FR-AD-8); with reduced motion the row takes its height at once.
+    if (reduced) {
+      return AnimatedOpacity(opacity: 1, duration: HisaabMotion.reducedCrossfade, child: widget.child);
+    }
     return AnimatedSize(
       duration: reduced ? Duration.zero : HisaabMotion.resize,
       curve: HisaabMotion.easeOut,

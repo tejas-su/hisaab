@@ -111,14 +111,15 @@ void main() {
       expect(find.text('₹1,400'), findsOneWidget);
     });
 
-    testWidgets('tapping a row opens the tray prefilled', (WidgetTester tester) async {
+    testWidgets('tapping a row opens it as a card in place (FR-AD-8 AC-1)', (WidgetTester tester) async {
       await boot(tester, FakeServices());
       // why: the due-soon row is 56dp tall (D118), which puts this row under the dock on a phone.
       await tester.ensureVisible(find.text('Chai & samosa'));
       await settle(tester);
       await tester.tap(find.text('Chai & samosa'));
       await settle(tester);
-      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byType(AddEntryTray), findsNothing);
+      expect(find.byKey(const ValueKey<String>('entry-card-4')), findsOneWidget);
       expect(find.text('₹60'), findsWidgets);
     });
 
@@ -558,7 +559,7 @@ void main() {
       await tester.tap(find.text('Lunch box'));
       await settle(tester);
 
-      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('entry-card-900')), findsOneWidget);
       expect(find.byKey(pillKey), findsNothing);
     });
 

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../core/design/hisaab_dimensions.dart';
+import '../core/design/hisaab_motion.dart';
 import '../core/extensions/build_context_extensions.dart';
 import '../core/layout/app_layout.dart';
 import 'shell_destination.dart';
@@ -18,12 +19,25 @@ import '../core/widgets/pane.dart';
 /// - Tabletop posture: the screen above the fold, the dock below it.
 ///
 /// [destination], when given, lets the caller switch screens too (Home's *See where it went*).
+///
+/// While [editing] (an entry card is open on Home, SPEC FR-AD-8 AC-11) the dock and the Add key step
+/// aside, and [board], when given, takes the Spends pane or the space below a tabletop fold (AC-12).
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.home, required this.spends, required this.onAdd, this.destination});
+  const AppShell({
+    super.key,
+    required this.home,
+    required this.spends,
+    required this.onAdd,
+    this.destination,
+    this.editing = false,
+    this.board,
+  });
 
   final Widget home;
   final Widget spends;
   final ValueNotifier<ShellDestination>? destination;
+  final bool editing;
+  final Widget? board;
 
   /// Opens the Add tray.
   final VoidCallback onAdd;
@@ -82,7 +96,7 @@ class _AppShellState extends State<AppShell> {
           child: Column(
             children: <Widget>[
               Expanded(child: KeyedSubtree(key: ValueKey<ShellDestination>(_selected), child: _selectedScreen)),
-              _dock(),
+              _stepAside(_dock()),
             ],
           ),
         ),
@@ -99,15 +113,17 @@ class _AppShellState extends State<AppShell> {
             child: Column(
               children: <Widget>[
                 Expanded(child: widget.home),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
-                  child: AddKey(onAdd: widget.onAdd),
+                _stepAside(
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, HisaabSpacing.l),
+                    child: AddKey(onAdd: widget.onAdd),
+                  ),
                 ),
               ],
             ),
           ),
         ),
-        Pane(rect: secondary, windowSize: window, insetTop: false, child: FocusTraversalGroup(child: widget.spends)),
+        Pane(rect: secondary, windowSize: window, insetTop: false, child: FocusTraversalGroup(child: _besideHome(widget.spends))),
         if (showDivider)
           Positioned(
             left: primary.right,
@@ -119,8 +135,30 @@ class _AppShellState extends State<AppShell> {
 
   List<Widget> _tabletop(Rect top, Rect bottom, Size window) => <Widget>[
         Pane(rect: top, windowSize: window, insetTop: false, child: _selectedScreen),
-        Pane(rect: bottom, windowSize: window, child: Center(child: _dock())),
+        Pane(rect: bottom, windowSize: window, child: _besideHome(Center(child: _stepAside(_dock())))),
       ];
+
+  bool get _boardShown => widget.editing && widget.board != null;
+
+  // why: Spends stays built under the board, so its scroll and cycle are where they were after Done.
+  Widget _besideHome(Widget pane) => Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          Offstage(offstage: _boardShown, child: pane),
+          if (widget.board case final Widget board when _boardShown) board,
+        ],
+      );
+
+  /// Hides [control] (the dock, the Add key) while a card is open; mid-edit neither means anything.
+  Widget _stepAside(Widget control) => Builder(
+        builder: (BuildContext context) {
+          final Widget shown = widget.editing ? const SizedBox(width: double.infinity) : control;
+          // why: reduced motion jumps; a zero-length AnimatedSize re-dirties its own layout.
+          return HisaabMotion.reduceMotion(context)
+              ? shown
+              : AnimatedSize(duration: HisaabMotion.resize, curve: HisaabMotion.easeOut, child: shown);
+        },
+      );
 
   Widget _dock() => Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(

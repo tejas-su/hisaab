@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Entry card, motion versions (clickable)</title>
+<style>
+  /* Round 3 of case study 38. Direction A only (the row opens into a card where it is), in four versions with
+     micro-animations. Nothing here is built. Each phone works: tap the Food row.
+     Motion uses UI_DESIGN §6: springs snap 250ms, standard 350ms, calm 550ms (critically damped, no overshoot,
+     drawn here with the easeOut curve 0.23,1,0.32,1), number roll 300ms, press scale 0.97, reduced motion = 150ms
+     crossfade. Haptic names follow §7. Copy is draft. Icons are stand-ins for Hugeicons. Light theme only. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --scrim: #16161552; --inverse: #161615; --onInverse: #F2F1EC; --canvas: #DDD5CB;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  body { --k: 1; }
+  body.slow { --k: 4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--ink); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 24px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 84ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--ink2); }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--ink); color: var(--canvas); vertical-align: 3px; }
+  .controls { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--ink); }
+  .demo { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 16px; }
+  .side { max-width: 50ch; }
+  .side ul { padding-inline-start: 20px; margin: 6px 0; }
+  .side li { font-size: 14px; line-height: 21px; margin-bottom: 4px; }
+  .reset { margin-top: 10px; font: 600 14px 'Mukta', sans-serif; min-height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid var(--ink); background: none; cursor: pointer; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 14px; line-height: 20px; min-width: 760px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 14px 8px 0; border-bottom: 1px solid var(--hairline); }
+  td { color: var(--ink2); }
+  td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; -webkit-tap-highlight-color: transparent; }
+  .phone { position: relative; width: 330px; height: 700px; border-radius: 30px; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px var(--hairline), 0 8px 24px #16161522; flex: none; }
+  .screen { position: absolute; inset: 0; }
+  .phone svg { width: 20px; height: 20px; flex: none; }
+  .press { transition: transform calc(var(--k) * 120ms) var(--ease); }
+  .press:active { transform: scale(.97); }
+
+  /* haptic badge */
+  .hap { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 20; font: 600 11px/14px 'Mukta', sans-serif; padding: 3px 9px; border-radius: 10px; background: var(--ink); color: var(--onInverse); opacity: 0; pointer-events: none; white-space: nowrap; }
+  .hap.show { animation: hap calc(var(--k) * 900ms) ease-out both; }
+  @keyframes hap { 0% { opacity: 0; transform: translate(-50%, -4px); } 15% { opacity: 1; transform: translate(-50%, 0); } 75% { opacity: 1; } 100% { opacity: 0; } }
+
+  /* Home */
+  .home { position: absolute; inset: 0; padding: 18px 14px; display: flex; flex-direction: column; }
+  .hero { flex: none; height: 118px; border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--ink); padding: 12px 16px; overflow: hidden; }
+  .hero .q { font-size: 13px; font-weight: 600; color: var(--ink2); }
+  .num { font: 600 46px/50px 'Anek Latin', sans-serif; font-stretch: 85%; font-feature-settings: 'tnum'; }
+  .track { margin-top: 8px; height: 18px; border-radius: 6px; background: var(--sunk); overflow: hidden; }
+  .track i { display: block; height: 100%; background: var(--signal); border-radius: 6px; transition: width calc(var(--k) * 350ms) var(--ease); }
+  .hero.compact { height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+  .hero.compact .num { font-size: 22px; line-height: 24px; }
+  .hero.compact .held { margin-inline-start: auto; font-size: 11.5px; color: var(--ink2); }
+  .hero.shrink { animation: shrink calc(var(--k) * 350ms) var(--ease) both; }
+  .hero.unshrink { animation: unshrink calc(var(--k) * 350ms) var(--ease) both; }
+  @keyframes shrink { from { height: 118px; } to { height: 52px; } }
+  @keyframes unshrink { from { height: 52px; } to { height: 118px; } }
+  .home h4 { margin: 14px 2px 6px; font: 600 16px 'Anek Latin', sans-serif; display: flex; justify-content: space-between; flex: none; }
+  .home h4 span { font-size: 14px; color: var(--ink2); font-feature-settings: 'tnum'; }
+
+  .entry { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 0 12px; border-radius: 14px; background: var(--surface); margin-bottom: 6px; font-size: 14px; flex: none; }
+  .entry.dim { opacity: .35; }
+  .entry.dimin { animation: dimin calc(var(--k) * 250ms) var(--ease) both; }
+  .entry.undim { animation: dimin calc(var(--k) * 250ms) var(--ease) reverse both; }
+  @keyframes dimin { from { opacity: 1; } to { opacity: .35; } }
+  .entry.rowflash { animation: rowflash calc(var(--k) * 700ms) ease-out both; }
+  @keyframes rowflash { 0%, 30% { box-shadow: inset 0 0 0 2px var(--ink); } 100% { box-shadow: inset 0 0 0 2px transparent; } }
+  .entry.rowin { animation: rowin calc(var(--k) * 350ms) var(--ease) both; }
+  @keyframes rowin { from { opacity: 0; transform: translateY(-8px); } }
+  .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .entry .t { flex: 1; line-height: 17px; text-align: start; }
+  .entry .t small { display: block; color: var(--ink2); font-size: 12.5px; }
+  .entry .a { font: 600 17px 'Anek Latin', sans-serif; font-feature-settings: 'tnum'; }
+  .zone { display: flex; align-items: center; min-height: 48px; border-radius: 10px; }
+  .zone.t { flex: 1; }
+  .zone.a { padding: 0 4px; }
+
+  /* the card */
+  .xcard { flex: none; background: var(--surface); border-radius: 22px; box-shadow: 0 0 0 2px var(--ink), 0 10px 30px #16161526; padding: 12px 14px 14px; margin-bottom: 8px; overflow: hidden; }
+  .xcard.fadein > * { animation: fade calc(var(--k) * 250ms) var(--ease) calc(var(--k) * 80ms) both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } }
+  .xtop { display: flex; align-items: center; gap: 12px; }
+  .ic.big { width: 46px; height: 46px; border-radius: 14px; overflow: hidden; }
+  .ic.big svg { width: 24px; height: 24px; }
+  .swap svg { animation: swapin calc(var(--k) * 250ms) var(--ease) both; }
+  @keyframes swapin { from { transform: translateY(14px) scale(.7); opacity: 0; } }
+  .amtbox { position: relative; display: inline-flex; }
+  .tapnum { position: relative; font: 600 42px/46px 'Anek Latin', sans-serif; font-stretch: 85%; font-feature-settings: 'tnum'; border-bottom: 2px dotted var(--ink2); }
+  .tapnum.on { border-bottom: 2px solid var(--ink); }
+  .sel { background: #FFB02040; border-radius: 6px; padding: 0 4px; box-shadow: inset 0 -3px 0 var(--ink); }
+  .sel.selin { animation: selin calc(var(--k) * 250ms) var(--ease) both; }
+  @keyframes selin { from { background: transparent; box-shadow: inset 0 0 0 var(--ink); } }
+  .ghost { position: absolute; left: 0; top: 0; color: var(--ink2); animation: ghost calc(var(--k) * 250ms) var(--ease) both; pointer-events: none; }
+  @keyframes ghost { to { opacity: 0; transform: translateY(-18px) scale(.85); } }
+  .din { display: inline-block; animation: din calc(var(--k) * 160ms) var(--ease) both; }
+  @keyframes din { from { transform: translateY(40%); opacity: 0; } }
+  .shake { animation: shake calc(var(--k) * 300ms) both; }
+  @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+
+  .rollbox { display: inline-grid; overflow: hidden; vertical-align: bottom; }
+  .rollbox > span { grid-area: 1 / 1; }
+  .rnew.up { animation: rinUp calc(var(--k) * 300ms) var(--ease) both; }
+  .rold.up { animation: routUp calc(var(--k) * 300ms) var(--ease) both; }
+  .rnew.down { animation: rinDown calc(var(--k) * 300ms) var(--ease) both; }
+  .rold.down { animation: routDown calc(var(--k) * 300ms) var(--ease) both; }
+  @keyframes rinUp { from { transform: translateY(70%); opacity: 0; } }
+  @keyframes routUp { to { transform: translateY(-70%); opacity: 0; } }
+  @keyframes rinDown { from { transform: translateY(-70%); opacity: 0; } }
+  @keyframes routDown { to { transform: translateY(70%); opacity: 0; } }
+
+  .tickdraw { width: 18px !important; height: 18px !important; stroke: var(--ink); stroke-width: 2.6; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; animation: draw calc(var(--k) * 300ms) var(--ease) both, tickout calc(var(--k) * 400ms) ease calc(var(--k) * 1600ms) forwards; }
+  @keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+  @keyframes tickout { to { opacity: 0; } }
+
+  .chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .chip { position: relative; height: 40px; padding: 0 10px 0 12px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--hairline); display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+  .chip svg { width: 16px; height: 16px; }
+  .chip.on { box-shadow: inset 0 0 0 2px var(--ink); }
+  .caret { display: inline-block; color: var(--ink2); font-size: 11px; margin-inline-start: 1px; }
+  .chip.on .caret { transform: rotate(180deg); }
+  .caret.flip { animation: flip calc(var(--k) * 250ms) var(--ease) both; }
+  .caret.unflip { animation: flip calc(var(--k) * 250ms) var(--ease) reverse both; }
+  @keyframes flip { from { transform: rotate(0); } to { transform: rotate(180deg); } }
+
+  .noteline { display: flex; gap: 8px; align-items: center; width: 100%; margin-top: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: var(--bg); font-size: 14px; position: relative; }
+  .noteline:focus-within { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .ninput { flex: 1; min-width: 0; border: 0; background: none; font: 14px 'Mukta', sans-serif; color: var(--ink); outline: none; height: 44px; }
+  .ninput::placeholder { color: var(--ink2); }
+  .count { font-size: 11.5px; color: var(--ink2); display: none; }
+  .noteline:focus-within .count { display: inline; }
+
+  .was { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; min-height: 32px; padding: 0 10px; border-radius: 10px; background: var(--bg); font-size: 12.5px; color: var(--ink2); animation: fade calc(var(--k) * 250ms) var(--ease) both; }
+  .was s { color: var(--ink2); }
+  .was b { color: var(--ink); font-weight: 600; text-decoration: underline; }
+  .trails { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .flash { font-size: 13px; color: var(--ink2); min-height: 20px; margin-top: 8px; }
+  .xfoot { display: flex; gap: 8px; margin-top: 10px; }
+  .key { height: 46px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; font-weight: 600; font-size: 15px; width: 100%; text-align: center; }
+  .key.ink { background: var(--ink); color: var(--onInverse); }
+  .key.quiet { background: transparent; box-shadow: inset 0 0 0 1.5px var(--hairline); color: var(--ink); flex: 0 0 52px; }
+  .key[disabled] { background: var(--sunk); color: var(--ink2); }
+
+  /* sections inside the card */
+  .sec { overflow: hidden; }
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .keys button { height: 42px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; font: 600 20px 'Anek Latin', sans-serif; text-align: center; }
+  .sec .key { margin-top: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .tile { position: relative; height: 58px; border-radius: 14px; background: var(--sunk); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11.5px; font-weight: 600; }
+  .tile.now { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .tile.press-flash { background: var(--ink); color: var(--onInverse); }
+  .tile .tk { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-radius: 7px; background: var(--ink); display: grid; place-items: center; }
+  .tile .tk svg { width: 10px; height: 10px; }
+  .ownrule { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 11.5px; font-weight: 600; color: var(--ink2); }
+  .ownrule::after { content: ''; flex: 1; border-top: 1px solid var(--hairline); }
+  .grid.own { margin-top: 6px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .pills button { height: 40px; padding: 0 12px; border-radius: 20px; background: var(--sunk); font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 4px; }
+  .pills button.now { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+
+  /* teach: the first open draws a dotted line under each tappable part, once */
+  .teach .tapnum { border-bottom-color: transparent; }
+  .teach .tapnum::after, .teach .chip::after, .teach .noteline::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 4px; border-bottom: 2px dotted var(--ink2); transform-origin: left; animation: line calc(var(--k) * 300ms) var(--ease) var(--d, 0ms) both; }
+  .teach .tapnum::after { left: 0; right: 0; bottom: -2px; animation-fill-mode: both; }
+  .teach .chip::after, .teach .noteline::after { animation: line calc(var(--k) * 300ms) var(--ease) var(--d) both, tickout calc(var(--k) * 400ms) ease calc(var(--k) * 1800ms) forwards; }
+  .teach .caret { animation: nudge calc(var(--k) * 400ms) var(--ease) calc(var(--k) * 500ms) both; }
+  @keyframes line { from { transform: scaleX(0); } }
+  @keyframes nudge { 40% { transform: translateY(3px); } }
+
+  /* A1's sheets */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .scrim.fadein { animation: fade calc(var(--k) * 250ms) ease both; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 30px 30px 0 0; padding: 8px 16px 18px; display: flex; flex-direction: column; }
+  .sheet.up { animation: up calc(var(--k) * 350ms) var(--ease) both; }
+  @keyframes up { from { transform: translateY(100%); } }
+  .handle { align-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--hairline); }
+  .qq { font: 600 18px/22px 'Anek Latin', sans-serif; margin-top: 10px; }
+  .sheet .bigamt { text-align: center; margin-top: 8px; }
+
+  .snack { position: absolute; left: 12px; right: 12px; bottom: 16px; min-height: 52px; border-radius: 14px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; padding: 0 6px 0 16px; font-size: 14px; animation: snack calc(var(--k) * 350ms) var(--ease) both; z-index: 5; }
+  @keyframes snack { from { transform: translateY(70px); } }
+  .snack span { flex: 1; }
+  .snack button { color: var(--signal); font-weight: 600; padding: 12px; }
+
+  .fkb { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 240px; background: #D9D3CB; place-items: center; color: var(--ink2); font-size: 13px; z-index: 4; }
+  .phone.typing .fkb { display: grid; }
+
+  /* the floating dock (UI_DESIGN §4): steps aside while the card is open */
+  .dock { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 64px; border-radius: 22px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline); display: flex; align-items: center; justify-content: space-around; font-weight: 600; font-size: 14px; z-index: 3; }
+  .dock .addk { height: 48px; padding: 0 22px; border-radius: 14px; background: var(--signal); display: grid; place-items: center; box-shadow: inset 0 -2px 0 var(--ink); }
+  .dock.away { transform: translateY(calc(100% + 20px)); }
+  .dock.out { animation: dockout calc(var(--k) * 350ms) var(--ease) both; }
+  .dock.in { animation: dockout calc(var(--k) * 350ms) var(--ease) reverse both; }
+  @keyframes dockout { from { transform: none; } to { transform: translateY(calc(100% + 20px)); } }
+  .home { padding-bottom: 92px; }
+  .snack { bottom: 86px; }
+
+  /* phone landscape and other expanded windows: two panes, no dock (UI_DESIGN §13) */
+  .phone.land { width: 780px; height: 360px; }
+  .phone.land .pane1 { right: auto; width: 330px; padding-bottom: 14px; overflow: auto; }
+  .phone.land .pane1 .hero { height: 96px; }
+  .phone.land .pane1 .hero .num { font-size: 36px; line-height: 40px; }
+  .phone.land .pane1 .hero.compact { height: 48px; }
+  .phone.land .snack { left: 12px; right: auto; width: 306px; bottom: 70px; }
+  .pane2 { position: absolute; left: 330px; right: 0; top: 0; bottom: 0; padding: 16px 18px; border-left: 1px solid var(--hairline); overflow: auto; }
+  .ptitle { font: 600 18px/22px 'Anek Latin', sans-serif; }
+  .spends { transition: opacity .2s; }
+  .spends.dimp { opacity: .3; }
+  .sbar { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
+  .sbar i { display: block; height: 14px; border-radius: 5px; background: var(--ink); }
+  .panel .keys button { height: 44px; }
+  .addkey { position: absolute; left: 14px; width: 302px; bottom: 12px; height: 50px; border-radius: 16px; background: var(--signal); display: grid; place-items: center; font-weight: 600; box-shadow: inset 0 -2px 0 var(--ink); z-index: 3; }
+  .addkey.away { transform: translateY(80px); }
+  .addkey.out { animation: addout calc(var(--k) * 350ms) var(--ease) both; }
+  .addkey.in { animation: addout calc(var(--k) * 350ms) var(--ease) reverse both; }
+  @keyframes addout { from { transform: none; } to { transform: translateY(80px); } }
+  .hero.compact .arrow { font: 600 18px 'Anek Latin', sans-serif; font-feature-settings: 'tnum'; animation: fade calc(var(--k) * 250ms) var(--ease) both; }
+  .board { display: flex; flex-direction: column; gap: 8px; }
+  .bhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .preview { font-size: 13px; font-weight: 600; color: var(--ink); font-feature-settings: 'tnum'; }
+  .bdays { margin-top: 0; }
+  .bdays button { height: 36px; }
+  .bcols { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: start; }
+  .blabel { font-size: 11.5px; font-weight: 600; color: var(--ink2); margin-bottom: 4px; }
+  .keys.k3 { grid-template-columns: repeat(3, 1fr); margin-top: 0; gap: 5px; }
+  .keys.k3 button { height: 40px; font-size: 18px; }
+  .bcats .grid { margin-top: 0; gap: 5px; }
+  .bcats .tile { height: 48px; font-size: 10.5px; border-radius: 12px; }
+  .bcats .tile svg { width: 18px; height: 18px; }
+  .bcats .ownrule { margin-top: 4px; }
+  .bcats .grid.own { margin-top: 4px; }
+  .hl { animation: hl calc(var(--k) * 700ms) ease-out both; border-radius: 14px; }
+  @keyframes hl { 0%, 35% { box-shadow: 0 0 0 3px var(--ink); } 100% { box-shadow: 0 0 0 3px transparent; } }
+  .beside { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink2); }
+  .phone.land .fkb { height: 150px; left: 330px; }
+  .phone.land.typing .pane1 .hero { display: none; }
+  .phone.typing .hero, .phone.typing .home h4, .phone.typing .entry.dim { display: none; }
+  .tile.newt { background: transparent; outline: 1.5px dashed var(--ink2); outline-offset: -2px; }
+  .nstep { padding-top: 6px; }
+  .backlink { font-size: 13px; font-weight: 600; color: var(--ink2); min-height: 32px; }
+  .nameinput { margin-top: 6px; width: 100%; height: 48px; border-radius: 14px; border: 2px solid var(--ink); padding: 0 14px; font: 600 16px 'Mukta', sans-serif; background: var(--surface); outline: none; }
+  .nchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .nchips button { height: 36px; padding: 0 12px; border-radius: 18px; box-shadow: inset 0 0 0 1.5px var(--hairline); font-size: 13px; font-weight: 600; animation: fade calc(var(--k) * 200ms) var(--ease) both; }
+  .hint.nl { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--ink2); flex-wrap: wrap; }
+  .ic.sm { width: 26px; height: 26px; border-radius: 8px; }
+  .ic.sm svg { width: 16px; height: 16px; }
+  .link { font-weight: 600; text-decoration: underline; color: var(--ink); min-height: 32px; }
+  .iconrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; animation: fade calc(var(--k) * 200ms) var(--ease) both; }
+  .iconrow button { height: 50px; border-radius: 12px; background: var(--sunk); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+  .iconrow button.now { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }
+  .nstep .key { margin-top: 10px; }
+
+  /* reduced motion: everything becomes a 150ms crossfade */
+  body.rm .screen *, body.rm .screen *::after { animation-name: rmfade !important; animation-duration: calc(var(--k) * 150ms) !important; animation-delay: 0s !important; transition-duration: 0s !important; }
+  body.rm .ghost, body.rm .rold, body.rm .teach .chip::after, body.rm .teach .noteline::after { display: none; }
+  body.rm .press:active { transform: none; }
+  @keyframes rmfade { from { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="food" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/></symbol>
+    <symbol id="travel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/></symbol>
+    <symbol id="shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="bills" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></symbol>
+    <symbol id="fun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l5-13 8 8z"/><path d="M14 4l1 2M19 9l2-1M17 3v2"/></symbol>
+    <symbol id="health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M9.2 9.2l5.6 5.6"/></symbol>
+    <symbol id="home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="fuel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M4 21h12M5 10h10M15 8l3 3v6a1.5 1.5 0 0 0 3 0V9l-3-3"/></symbol>
+    <symbol id="kids" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="other" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></symbol>
+    <symbol id="cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="notes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h4"/></symbol>
+    <symbol id="bin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="tick" viewBox="0 0 24 24" fill="none" stroke="#F2F1EC" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></symbol>
+  </defs>
+</svg>
+
+<h1>The entry card: four versions with motion</h1>
+<p class="lede">Round 3 of case study 38. Only direction A is left: tap a row and it opens into a card where it is. Each phone below works. Tap the <b>Food ₹250</b> row. Use the switches to slow the motion down, see it with reduced motion, and see where a haptic fires.</p>
+
+<div class="controls">
+  <label><input type="checkbox" id="slow"> Slow motion ×4</label>
+  <label><input type="checkbox" id="rm"> Reduced motion</label>
+  <label><input type="checkbox" id="hapt" checked> Show haptics</label>
+</div>
+
+<h2>A1 · Card with sheets, polished <span class="tag">closest to what you picked</span></h2>
+<div class="demo">
+  <div class="phone" id="A1"><div class="screen"></div><div class="hap"></div></div>
+  <div class="side">
+    <p>The card you liked, with the note typed in place. Amount, category and day still open a sheet from the bottom.</p>
+    <ul>
+      <li><b>The row grows into the card</b> (standard spring) while the rest of the list fades back and the hero <b>tucks into one line</b>. That gives the card room and shows Home's number is on hold until you're done (D91).</li>
+      <li><b>The ▾ turns over</b> when its sheet opens.</li>
+      <li><b>Each saved part draws a small tick</b> beside it, which fades after 1.6 s. A changed amount <b>rolls</b> to its new value, and a new category's <b>icon slides in</b>.</li>
+      <li><b>Done folds the card back into the row</b>, which outlines once. Then the hero opens up, its number rolls, and the bar moves, with the <i>success</i> haptic on that same frame.</li>
+    </ul>
+    <button class="reset" data-reset="A1">Start again</button>
+  </div>
+</div>
+
+<h2>A2 · Everything inside the card <span class="tag">no sheets at all</span></h2>
+<div class="demo">
+  <div class="phone" id="A2"><div class="screen"></div><div class="hap"></div></div>
+  <div class="side">
+    <p>Your note idea, applied to everything. Nothing opens over the card: each part unfolds inside it, one at a time.</p>
+    <ul>
+      <li><b>Amount:</b> a compact keypad unfolds under it, and the old amount turns <i>picked</i>. Your first digit makes the old number <b>lift away</b> as the new one comes in. The key says what will happen: "Keep ₹250", then "Change to ₹350".</li>
+      <li><b>Category:</b> a 4×2 grid unfolds with Food outlined. Tap Travel, the grid folds and the chip's icon slides to the new one.</li>
+      <li><b>Day:</b> a row of day pills unfolds.</li>
+      <li><b>Moving on saves:</b> tapping another part, Done or the note keeps what you typed, just like the note. One Undo at the end reverses it all.</li>
+    </ul>
+    <button class="reset" data-reset="A2">Start again</button>
+  </div>
+</div>
+
+<h2>A2 + New · Make a category without leaving <span class="tag">your ask</span></h2>
+<div class="demo">
+  <div class="phone" id="A2N"><div class="screen"></div><div class="hap"></div></div>
+  <div class="side">
+    <p>A2 with the dashed <b>New</b> tile after your own, as in Add (D138). Tap Food ▾, then <b>New</b>, and the grid folds into a naming step <b>inside the card</b>. The keyboard comes up and the card rises above it.</p>
+    <ul>
+      <li><b>Name:</b> type, or tap a chip (Groceries, Family, Pets, Salon…). The chips narrow as you type and leave out names you already have.</li>
+      <li><b>Icon:</b> picked from the name ("Icon from the name: Bag"). <i>Change</i> unfolds 8 icons in the card, not a new screen.</li>
+      <li><b>One key:</b> "Move to Groceries" makes the category and moves the entry into it. The grid folds and the chip's icon slides in, as with any other pick.</li>
+      <li><b>Already have it?</b> Type "food" and it says "You have Food already. It moves there."</li>
+      <li><b>Room:</b> after your 4th own category the New tile goes, and one line says how to make room, as in Add.</li>
+      <li><b>‹ Categories</b> goes back to the grid with nothing made. The note and Done wait underneath while you name.</li>
+    </ul>
+    <button class="reset" data-reset="A2N">Start again</button>
+  </div>
+</div>
+
+<h2>A2 in phone landscape <span class="tag">two panes, no dock</span></h2>
+<div class="demo" style="flex-direction:column">
+  <div class="phone land" id="L"><div class="screen"></div><div class="hap"></div></div>
+  <div class="side" style="max-width:84ch">
+    <p>A phone on its side (and a tablet, or an unfolded foldable in landscape) is <b>expanded</b>: Home on the left beside Spends, no dock, and the Add key at the bottom of the Home pane (§13). The card stays in its list, and the other pane becomes a <b>board with every part at once</b>: days on top, the keypad on the left, your categories (your own and New included) on the right, and a live line, "Today's share ₹430 → ₹330". Nothing has to be opened first. Tap the Food row, then just type or tap a tile.</p>
+    <ul>
+      <li>The Add key slides away while the card is open and comes back on Done, like the dock.</li>
+      <li>Move category: <b>row → tile → Done</b>. Fix the amount: <b>row → digits → Done</b> (the first digit replaces, and the card shows the digits as you type).</li>
+      <li>Tapping ₹250, Food ▾ or Today ▾ in the card outlines that part of the board for a moment, so the card and the board read as one.</li>
+      <li><b>New</b> swaps the categories for the naming step, in the same spot; the keypad and days stay. The note is still typed in the card.</li>
+      <li>An entry opened from Every entry (in the Spends pane) uses the mirror rule: the question opens in the pane that isn't holding the card.</li>
+    </ul>
+    <button class="reset" data-reset="L">Start again</button>
+  </div>
+</div>
+
+<h2>Every other window</h2>
+<div class="wrap">
+<table>
+  <tr><th>Window (§13)</th><th>Where the card is</th><th>Where the part you change opens</th><th>Dock or Add key</th></tr>
+  <tr><td>Phone portrait, folded foldable (compact)</td><td>In the list, where the row was</td><td>Inside the card, under the chips</td><td>Dock slides down while editing, back on Done; Undo sits above it</td></tr>
+  <tr><td>Small tablet, unfolded portrait (medium, 560dp column)</td><td>In the column's list</td><td>Inside the card</td><td>As phone portrait</td></tr>
+  <tr><td>Phone landscape, tablet, unfolded landscape (expanded)</td><td>In its pane's list</td><td>All parts at once, as a board in the other pane, with a live preview</td><td>Add key leaves the Home pane while editing</td></tr>
+  <tr><td>Book posture (vertical fold)</td><td>In its pane, never across the fold</td><td>In the other pane (the panes already split at the fold)</td><td>As expanded</td></tr>
+  <tr><td>Tabletop (horizontal fold)</td><td>Above the fold, in the list</td><td>Below the fold: controls go below, content above (§13)</td><td>Dock below the fold, hidden while editing</td></tr>
+  <tr><td>Short and narrow (split-screen 412×400, 412×300)</td><td>The list scrolls so the card's top meets the top bar; the hero scrolls away</td><td>Inside the card, keys at 48dp (compact height). If it still can't fit, the card scrolls and the open part's key stays pinned at the bottom</td><td>Hidden while editing</td></tr>
+  <tr><td>Short and wide (height under 480, width 560–839)</td><td>In the list</td><td>Inside the card, side by side: values left, keypad or grid right</td><td>Hidden while editing</td></tr>
+  <tr><td>2× text on a 320dp phone</td><td>In the list; chips wrap</td><td>Inside the card; grid labels wrap, keys stop growing at 1.5× (D185)</td><td>Hidden while editing</td></tr>
+</table>
+</div>
+<p class="lede">Rule of thumb: <b>the card always stays where the row was. The part you change goes wherever there's room</b>: under the chips when the window is tall, beside the card when it's wide, below the fold on a tabletop. Whatever opens, the dock or Add key steps aside, because neither means anything mid-edit.</p>
+
+<h2>A3 · Inside the card, with "was" <span class="tag">see and put back</span></h2>
+<div class="demo">
+  <div class="phone" id="A3"><div class="screen"></div><div class="hap"></div></div>
+  <div class="side">
+    <p>A2, plus a trail. Each part you change leaves a small <b><s>₹250</s> Put back</b> under the card. You can see exactly what changed before you leave, and undo one part without undoing the rest.</p>
+    <ul>
+      <li>Useful when a fix touches two things (amount and category) and you only meant one.</li>
+      <li>It reassures people who worry about "breaking" their numbers. The snackbar Undo still covers everything after Done.</li>
+      <li>Cost: one more line in the card, only after a change.</li>
+    </ul>
+    <button class="reset" data-reset="A3">Start again</button>
+  </div>
+</div>
+
+<h2>A4 · Tap where it's wrong <span class="tag">fewest taps</span></h2>
+<div class="demo">
+  <div class="phone" id="A4"><div class="screen"></div><div class="hap"></div></div>
+  <div class="side">
+    <p>A2, but the row itself has three tap zones. <b>Tap the amount</b> in the row and the card opens with the keypad already out. <b>Tap the icon</b> and it opens with the categories out. Tap anywhere else and it opens plain. Moving to Travel becomes <b>row icon → Travel → Done</b>.</p>
+    <ul>
+      <li><b>It teaches itself once:</b> the first time a card opens, a dotted line draws under each part you can tap (amount, Food, Today, note), one after another, and the ▾s nudge once. After that it stays quiet. With reduced motion the lines just appear.</li>
+      <li>The zones are a shortcut, not a secret. Tapping anywhere on the row still works, so nobody has to know about them.</li>
+      <li>TalkBack gets three actions on the row: "Change amount", "Change category" and "Open".</li>
+    </ul>
+    <button class="reset" data-reset="A4">Start again</button>
+  </div>
+</div>
+
+<h2>Side by side</h2>
+<div class="wrap">
+<table>
+  <tr><th></th><th>A1 Sheets</th><th>A2 In the card</th><th>A3 With "was"</th><th>A4 Tap where it's wrong</th></tr>
+  <tr><td>Move to Travel</td><td>row, Food, Travel, Done</td><td>row, Food, Travel, Done</td><td>same as A2</td><td><b>row icon, Travel, Done</b></td></tr>
+  <tr><td>Fix the amount</td><td>row, ₹250, digits, Save, Done</td><td>row, ₹250, digits, Done</td><td>same as A2</td><td><b>row amount, digits, Done</b></td></tr>
+  <tr><td>Change the note</td><td>row, note, type, Done</td><td>row, note, type, Done</td><td>same as A2</td><td>same as A2</td></tr>
+  <tr><td>Covers the list</td><td>yes, the sheets</td><td>no</td><td>no</td><td>no</td></tr>
+  <tr><td>Card height</td><td>steady</td><td>grows by up to 200dp</td><td>A2 + a line</td><td>same as A2</td></tr>
+  <tr><td>Hidden knowledge</td><td>none</td><td>none</td><td>none</td><td>tap zones (optional)</td></tr>
+  <tr><td>Build</td><td>card + existing steps</td><td>card + compact keypad, grid and pills</td><td>A2 + trail</td><td>A2 + zones + one-time teach</td></tr>
+</table>
+</div>
+
+<h2>Motion used in every version</h2>
+<div class="wrap">
+<table>
+  <tr><th>Moment</th><th>Motion</th><th>Token</th><th>Haptic</th><th>Reduced motion</th></tr>
+  <tr><td>Row → card</td><td>Height grows from the row; contents fade up 4dp; other rows fade to 35%; hero tucks to one line</td><td>standard 350ms</td><td>tick</td><td>150ms crossfade</td></tr>
+  <tr><td>Any press</td><td>Scale to 0.97</td><td>press 120ms</td><td>tick on keys only</td><td>none</td></tr>
+  <tr><td>A part unfolds</td><td>Height from 0; ▾ turns over</td><td>standard / snap</td><td>tick</td><td>appears</td></tr>
+  <tr><td>First digit over the old amount</td><td>Old number lifts and fades; new digit rises in</td><td>snap 250ms</td><td>tick</td><td>swap</td></tr>
+  <tr><td>10th digit</td><td>Amount shakes</td><td>300ms</td><td>reject</td><td>no shake; held ring and spoken line (FR-AD-2)</td></tr>
+  <tr><td>A part saved</td><td>Tick draws beside it, fades at 1.6 s; amount rolls; category icon slides in</td><td>roll 300ms</td><td>tick</td><td>tick appears</td></tr>
+  <tr><td>Done</td><td>Card folds into the row; row outlines once; hero opens, rolls and the bar moves</td><td>standard, then roll</td><td><b>success</b>, with the roll</td><td>crossfade, bar jumps</td></tr>
+  <tr><td>Done with no change</td><td>Card folds; nothing rolls</td><td>standard</td><td>none</td><td>crossfade</td></tr>
+  <tr><td>Delete</td><td>Card folds to nothing; list closes up; snackbar rises</td><td>standard</td><td>tick</td><td>crossfade</td></tr>
+  <tr><td>Undo</td><td>Row slides back in, or values roll back</td><td>standard</td><td>tick</td><td>crossfade</td></tr>
+</table>
+</div>
+
+<script>
+const BUILT_IN = [['food','Food'],['travel','Travel'],['shop','Shopping'],['bills','Bills'],['fun','Fun'],['health','Health'],['home','Home'],['other','Other']];
+// why: the user's own sit in row 3 under "Your own", as in the Add tray (D138); Petrol and Kids are examples
+const OWN = [['fuel','Petrol'],['kids','Kids']];
+const CATS = [...BUILT_IN, ...OWN];
+const DAYS = ['Today', 'Yesterday', 'Sun 15 Nov', 'Sat 14 Nov'];
+const START = { amt: 250, cat: 'food', day: 'Today', note: 'Chai and samosa' };
+const POOL = 1940;
+const PHONES = { A1: { sheets: true }, A2: {}, A2N: { newTile: true }, L: { newTile: true, twoPane: true, board: true }, A3: { trail: true }, A4: { zones: true, teach: true } };
+const SPR = { snap: 250, standard: 350 };
+const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';
+
+const fmt = n => '₹' + n.toLocaleString('en-IN');
+const ico = k => `<svg aria-hidden="true"><use href="#${k}"/></svg>`;
+// why: categories made in the card join this registry, so rows, chips and the grid can name and draw them
+const REG = Object.fromEntries(CATS.map(([k, n]) => [k, { n, icon: k }]));
+const nameOf = k => REG[k].n;
+const iconOf = k => REG[k].icon;
+const NAME_CHIPS = ['Groceries', 'Kids', 'Family', 'Pets', 'Petrol', 'Salon'];
+const ICONS = [['shop','Bag'],['food','Plate'],['kids','Child'],['home','House'],['fuel','Fuel'],['health','Pill'],['fun','Party'],['other','Box']];
+const ICON_WORD = Object.fromEntries(ICONS);
+const iconFromName = n => ({ groceries: 'shop', kids: 'kids', family: 'home', pets: 'other', petrol: 'fuel', salon: 'health', gym: 'health', milk: 'food' })[n.trim().toLowerCase()] || 'other';
+const K = () => document.body.classList.contains('slow') ? 4 : 1;
+const RM = () => document.body.classList.contains('rm');
+const todayTotal = (e, del) => (!del && e.day === 'Today' ? e.amt : 0) + 60 + 1200;
+const leftOf = (e, del) => Math.max(0, POOL - todayTotal(e, del));
+const pct = x => Math.round(x / POOL * 100);
+// why: what today's share would be if Done were pressed now, typed amount included
+const previewLeft = st => leftOf({ ...st.e, amt: st.typed > 0 ? st.typed : st.e.amt }, false);
+
+function anim(el, frames, ms) {
+  if (!el || !el.animate || RM()) return Promise.resolve();
+  return el.animate(frames, { duration: ms * K(), easing: EASE }).finished.catch(() => {});
+}
+function heightAnim(el, from, to, ms = SPR.standard) {
+  if (!el) return Promise.resolve();
+  const h = el.getBoundingClientRect().height;
+  const a = from === 'auto' ? h : from, b = to === 'auto' ? h : to;
+  el.style.overflow = 'hidden';
+  return anim(el, [{ height: a + 'px', opacity: from === 0 ? 0 : 1 }, { height: b + 'px', opacity: to === 0 ? 0 : 1 }], ms);
+}
+
+const S = {};
+function fresh(id) {
+  S[id] = { id, o: PHONES[id], scr: 'list', open: null, e: { ...START }, snap: null, typed: null, changes: {},
+    snack: null, deleted: false, fx: new Set(), heroShown: leftOf(START, false), amtFrom: null, ghost: null,
+    taught: false, hap: null, lastClosed: null, own: OWN.map(x => [...x]), draft: '', draftIcon: null, iconsOpen: false };
+}
+const el = (st, sel) => document.getElementById(st.id).querySelector(sel);
+
+/* ── view ── */
+function rollNum(from, to) {
+  if (from === null || from === to || RM()) return `<span class="rollbox"><span>${fmt(to)}</span></span>`;
+  const dir = to > from ? 'up' : 'down';
+  return `<span class="rollbox"><span class="rold ${dir}">${fmt(from)}</span><span class="rnew ${dir}">${fmt(to)}</span></span>`;
+}
+function hero(st) {
+  const fx = st.fx, from = st.heroShown;
+  if (st.scr === 'card') {
+    const next = previewLeft(st);
+    const change = next !== from ? `<span class="arrow">→ ${fmt(next)}</span>` : '';
+    return `<div class="hero compact ${fx.has('shrink') ? 'shrink' : ''}"><span class="q">Safe today</span><span class="num">${fmt(from)}</span>${change}<span class="held">${next !== from ? 'after Done' : "updates when you're done"}</span></div>`;
+  }
+  const to = fx.has('hero') ? leftOf(st.e, st.deleted) : from;
+  return `<div class="hero ${fx.has('unshrink') ? 'unshrink' : ''}"><div class="q">Safe to spend today</div><div class="num">${rollNum(from, to)}</div>
+    <div class="track"><i style="width:${pct(from)}%" data-w="${pct(to)}"></i></div></div>`;
+}
+function entryRow(st) {
+  if (st.deleted) return '';
+  const e = st.e, fx = st.fx;
+  const cls = [fx.has('rowflash') ? 'rowflash' : '', fx.has('rowin') ? 'rowin' : ''].join(' ');
+  const sub = (e.note || 'No note') + (e.day === 'Today' ? '' : ' · ' + e.day);
+  if (st.o.zones) {
+    return `<div class="entry ${cls}">
+      <button class="zone press" data-act="open" data-arg="cat" aria-label="Change category, ${nameOf(e.cat)}"><span class="ic">${ico(iconOf(e.cat))}</span></button>
+      <button class="zone t press" data-act="open"><span class="t">${nameOf(e.cat)}<small>${sub}</small></span></button>
+      <button class="zone a press" data-act="open" data-arg="amt" aria-label="Change amount, ${e.amt} rupees"><span class="a">${fmt(e.amt)}</span></button></div>`;
+  }
+  return `<button class="entry press ${cls}" data-act="open" aria-label="${nameOf(e.cat)}, ${e.amt} rupees. Double tap to change"><span class="ic">${ico(iconOf(e.cat))}</span><span class="t">${nameOf(e.cat)}<small>${sub}</small></span><span class="a">${fmt(e.amt)}</span></button>`;
+}
+function others(st, dim) {
+  const c = dim ? (st.fx.has('dimin') ? 'dim dimin' : 'dim') : (st.fx.has('undim') ? 'undim' : '');
+  return `<div class="entry ${c}"><span class="ic">${ico('travel')}</span><span class="t">Travel<small>Auto</small></span><span class="a">₹60</span></div>
+    <div class="entry ${c}"><span class="ic">${ico('shop')}</span><span class="t">Shopping<small>Shoes</small></span><span class="a">₹1,200</span></div>`;
+}
+const tick = (st, f) => st.fx.has('tick-' + f) ? `<svg class="tickdraw" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>` : '';
+function caret(st, f) {
+  const c = st.fx.has('flip-' + f) ? 'flip' : st.fx.has('unflip-' + f) ? 'unflip' : '';
+  return `<span class="caret ${c}" aria-hidden="true">▾</span>`;
+}
+function amountShown(st) {
+  const e = st.e;
+  if ((st.open !== 'amt' && st.open !== 'board') || st.o.sheets) return rollNum(st.amtFrom, e.amt);
+  if (st.typed === null) return `<span class="sel ${st.fx.has('selin') ? 'selin' : ''}">${fmt(e.amt)}</span>`;
+  const ghost = st.fx.has('pop') && !RM() ? `<span class="ghost">${fmt(st.ghost)}</span>` : '';
+  const s = fmt(st.typed);
+  return st.fx.has('din') ? `${ghost}${s.slice(0, -1)}<span class="din">${s.slice(-1)}</span>` : ghost + s;
+}
+const WAS = { amt: v => fmt(v), cat: v => nameOf(v), day: v => v, note: v => v ? `“${v}”` : 'no note' };
+function trails(st) {
+  if (!st.o.trail) return '';
+  const keys = Object.keys(st.changes);
+  if (!keys.length) return '';
+  return `<div class="trails">${keys.map(f => `<button class="was press" data-act="revert" data-arg="${f}" aria-label="Put back ${WAS[f](st.snap[f])}"><s>${WAS[f](st.snap[f])}</s> <b>Put back</b></button>`).join('')}</div>`;
+}
+function keypadLabel(st) {
+  if (st.typed === 0) return ['Type an amount', true];
+  if (st.typed === null || st.typed === st.e.amt) return [`Keep ${fmt(st.e.amt)}`, false];
+  return [`Change to ${fmt(st.typed)}`, false];
+}
+function secBody(st) {
+  const e = st.e;
+  if (st.open === 'amt') {
+    const [label, off] = keypadLabel(st);
+    const big = st.o.sheets ? `<div class="bigamt num"><span class="amtbox ${st.fx.has('shake') ? 'shake' : ''}">${st.typed === null ? `<span class="sel ${st.fx.has('selin') ? 'selin' : ''}">${fmt(e.amt)}</span>` : (st.fx.has('pop') && !RM() ? `<span class="ghost">${fmt(st.ghost)}</span>` : '') + fmt(st.typed)}</span></div>` : '';
+    return `${big}<div class="keys">${['1','2','3','⌫','4','5','6','00','7','8','9','0'].map(k => `<button class="press" data-act="key" data-arg="${k}" aria-label="${k === '⌫' ? 'Delete digit' : k}">${k}</button>`).join('')}</div>
+      <button class="key press" data-act="keep" ${off ? 'disabled' : ''}>${label}</button>`;
+  }
+  if (st.open === 'cat') return catGrid(st);
+  if (false) {
+    const tile = ([k, n]) => `<button class="tile press ${k === e.cat ? 'now' : ''}" data-act="pick" data-arg="${k}" aria-label="${n}${k === e.cat ? ', now' : ''}">${k === e.cat ? `<span class="tk">${ico('tick')}</span>` : ''}${ico(iconOf(k))}${n}</button>`;
+    const canAdd = st.o.newTile && st.own.length < 4;
+    const newTile = canAdd ? `<button class="tile newt press" data-act="newcat" aria-label="New category">${ico('plus')}New</button>` : '';
+    const full = st.o.newTile && !canAdd ? `<div class="hint" style="margin-top:8px">4 of your own is the most. Hide one in Settings to make room.</div>` : '';
+    return `<div class="grid">${BUILT_IN.map(tile).join('')}</div>
+      <div class="ownrule" aria-hidden="true"><span>Your own</span></div>
+      <div class="grid own">${st.own.map(tile).join('')}${newTile}</div>${full}`;
+  }
+  if (st.open === 'new') return nameStep(st);
+  if (st.open === 'day') {
+    return `<div class="pills">${DAYS.map(d => `<button class="press ${d === e.day ? 'now' : ''}" data-act="day" data-arg="${d}">${d}</button>`).join('')}<button class="press" aria-disabled="true">Earlier ▾</button></div>`;
+  }
+  return '';
+}
+function nameStep(st) {
+  return `<div class="nstep"><button class="backlink press" data-act="backcat">‹ Categories</button>
+    <div class="qq">What's it called?</div>
+    <input class="nameinput" id="name-${st.id}" maxlength="20" autocomplete="off" value="${st.draft.replace(/"/g, '&quot;')}" placeholder="Name" aria-label="Name for the new category">
+    <div class="nlive">${nameLive(st)}</div></div>`;
+}
+function catGrid(st) {
+  const e = st.e;
+  const tile = ([k, n]) => `<button class="tile press ${k === e.cat ? 'now' : ''}" data-act="pick" data-arg="${k}" aria-label="${n}${k === e.cat ? ', now' : ''}">${k === e.cat ? `<span class="tk">${ico('tick')}</span>` : ''}${ico(iconOf(k))}${n}</button>`;
+  const canAdd = st.o.newTile && st.own.length < 4;
+  const newTile = canAdd ? `<button class="tile newt press" data-act="newcat" aria-label="New category">${ico('plus')}New</button>` : '';
+  const full = st.o.newTile && !canAdd ? `<div class="hint" style="margin-top:8px">4 of your own is the most. Hide one in Settings to make room.</div>` : '';
+  return `<div class="grid">${BUILT_IN.map(tile).join('')}</div>
+    <div class="ownrule" aria-hidden="true"><span>Your own</span></div>
+    <div class="grid own">${st.own.map(tile).join('')}${newTile}</div>${full}`;
+}
+// why: in a wide window every part fits at once, so nothing has to be opened first
+function board(st) {
+  const e = st.e, fx = st.fx;
+  const before = st.heroShown, after = previewLeft(st);
+  const preview = e.day !== 'Today' && st.snap.day === 'Today' ? `Moves off today: ${fmt(before)} → ${fmt(after)}`
+    : after === before ? 'Today\'s share stays ' + fmt(before) : `Today's share ${fmt(before)} → ${fmt(after)}`;
+  const keys = ['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(k => `<button class="press" data-act="key" data-arg="${k}" aria-label="${k === '⌫' ? 'Delete digit' : k}">${k}</button>`).join('');
+  const days = DAYS.map(d => `<button class="press ${d === e.day ? 'now' : ''}" data-act="day" data-arg="${d}">${d}</button>`).join('');
+  return `<div class="board ${fx.has('secin') ? 'slidein' : ''}">
+    <div class="bhead"><div class="ptitle">Change anything</div><div class="preview">${preview}</div></div>
+    <div class="pills bdays ${fx.has('hl-day') ? 'hl' : ''}">${days}</div>
+    <div class="bcols">
+      <div class="bkeys ${fx.has('hl-amt') ? 'hl' : ''}"><div class="blabel">Amount</div><div class="keys k3">${keys}</div></div>
+      <div class="bcats ${fx.has('hl-cat') ? 'hl' : ''}"><div class="blabel">For</div>${st.sub === 'new' ? nameStep(st) : catGrid(st)}</div>
+    </div></div>`;
+}
+function matchOf(st) {
+  const d = st.draft.trim().toLowerCase();
+  return d ? [...BUILT_IN, ...st.own].find(([, n]) => n.toLowerCase() === d) : null;
+}
+function nameLive(st) {
+  const shown = new Set([...BUILT_IN, ...st.own].map(([, n]) => n.toLowerCase()));
+  const d = st.draft.trim().toLowerCase();
+  const chips = NAME_CHIPS.filter(n => !shown.has(n.toLowerCase()) && n.toLowerCase().includes(d) && n.toLowerCase() !== d);
+  const m = matchOf(st);
+  const icon = st.draftIcon || iconFromName(st.draft);
+  const iconLine = m ? `<div class="hint nl">You have ${m[1]} already. It moves there.</div>`
+    : `<div class="hint nl"><span class="ic sm">${ico(icon)}</span>${st.draft.trim() ? `Icon${st.draftIcon ? '' : ' from the name'}: ${ICON_WORD[icon]}` : 'The name picks an icon'} · <button class="link press" data-act="icons">Change</button></div>`;
+  const icons = st.iconsOpen && !m ? `<div class="iconrow">${ICONS.map(([k, w]) => `<button class="press ${k === icon ? 'now' : ''}" data-act="iconpick" data-arg="${k}" aria-label="Icon, ${w}">${ico(k)}<span>${w}</span></button>`).join('')}</div>` : '';
+  const label = m ? `Move to ${m[1]}` : st.draft.trim() ? `Move to ${st.draft.trim()}` : 'Type a name';
+  return `${chips.length ? `<div class="nchips">${chips.map(n => `<button class="press" data-act="namechip" data-arg="${n}">${n}</button>`).join('')}</div>` : ''}
+    ${iconLine}${icons}<button class="key press" data-act="savenew" ${st.draft.trim() ? '' : 'disabled'}>${label}</button>`;
+}
+const QUESTION = { amt: 'How much was it?', cat: 'What was it for?', day: 'Which day?', new: 'New category', board: 'Change anything' };
+function card(st) {
+  const e = st.e, fx = st.fx, open = st.open;
+  const inline = !st.o.sheets && open ? (st.o.twoPane ? `<div class="beside">${open === 'board' ? 'Change anything on the right →' : QUESTION[open] + ': pick on the right →'}</div>` : `<div class="sec" data-sec="${open}">${secBody(st)}</div>`) : '';
+  const anyChange = Object.keys(st.changes).length > 0;
+  return `<div class="xcard ${fx.has('expand') ? 'fadein' : ''} ${fx.has('teach') ? 'teach' : ''}">
+    <div class="xtop">
+      <span class="ic big ${fx.has('swap') ? 'swap' : ''}">${ico(iconOf(e.cat))}</span>
+      <span class="amtbox ${fx.has('shake') && !st.o.sheets ? 'shake' : ''}"><button class="tapnum press ${open === 'amt' ? 'on' : ''}" style="--d:0ms" data-act="sec" data-arg="amt" aria-label="Amount, ${e.amt} rupees. Double tap to change">${amountShown(st)}</button></span>
+      ${tick(st, 'amt')}
+    </div>
+    <div class="chips">
+      <button class="chip press ${open === 'cat' ? 'on' : ''}" style="--d:calc(var(--k) * 90ms)" data-act="sec" data-arg="cat" aria-label="For ${nameOf(e.cat)}. Double tap to change"><span class="${fx.has('swap') ? 'swap' : ''}" style="display:flex">${ico(iconOf(e.cat))}</span>${nameOf(e.cat)}${caret(st, 'cat')}</button>${tick(st, 'cat')}
+      <button class="chip press ${open === 'day' ? 'on' : ''}" style="--d:calc(var(--k) * 180ms)" data-act="sec" data-arg="day" aria-label="Day, ${e.day}. Double tap to change">${ico('cal')}${e.day}${caret(st, 'day')}</button>${tick(st, 'day')}
+    </div>
+    ${open === 'amt' || open === 'cat' || open === 'day' || open === 'new' ? inline : ''}
+    <div class="rest" ${open === 'new' && !st.o.twoPane ? 'hidden' : ''}>
+    <label class="noteline" style="--d:calc(var(--k) * 270ms)">${ico('notes')}<input class="ninput" id="note-${st.id}" maxlength="80" enterkeyhint="done" value="${e.note.replace(/"/g, '&quot;')}" placeholder="Add a note" aria-label="Note"><span class="count">${e.note.length} / 80</span>${tick(st, 'note')}</label>
+    ${trails(st)}
+    <div class="flash">${anyChange ? 'Saved as you go. Done when you’re finished.' : 'Tap any part to change it'}</div>
+    <div class="xfoot"><button class="key quiet press" data-act="del" aria-label="Delete">${ico('bin')}</button><button class="key ink press" data-act="close">Done</button></div></div>
+  </div>`;
+}
+function sheet(st) {
+  if (!st.o.sheets || !st.open) return '';
+  const q = { amt: 'How much was it?', cat: 'What was it for?', day: 'Which day?' }[st.open];
+  const inn = st.fx.has('sheetin');
+  return `<div class="scrim ${inn ? 'fadein' : ''}" data-act="sec" data-arg="${st.open}"></div>
+    <div class="sheet ${inn ? 'up' : ''}"><span class="handle"></span><div class="qq">${q}</div>${secBody(st)}</div>`;
+}
+function pane2(st) {
+  if (st.scr === 'card' && st.open === 'board') return board(st);
+  if (st.scr === 'card' && st.open) {
+    const e = st.e;
+    return `<div class="panel ${st.fx.has('secin') ? 'slidein' : ''}"><div class="ptitle">${QUESTION[st.open]}</div><div class="ctx">${fmt(e.amt)} · ${nameOf(e.cat)} · ${e.day}</div>${secBody(st)}</div>`;
+  }
+  const dim = st.scr === 'card' ? 'dimp' : '';
+  return `<div class="spends ${dim}"><div class="ptitle">Spends</div><div class="ctx">November</div>
+    ${[['Food', 64], ['Travel', 38], ['Shopping', 52], ['Bills', 80]].map(([n, v]) => `<div class="sbar"><span>${n}</span><i style="width:${v}%"></i></div>`).join('')}</div>`;
+}
+function view(st) {
+  const shownTotal = POOL - (st.fx.has('hero') ? leftOf(st.e, st.deleted) : st.heroShown);
+  const list = st.scr === 'card' ? card(st) + others(st, true) : entryRow(st) + others(st, false);
+  const snack = st.snack ? `<div class="snack" role="status"><span>${st.snack}</span><button data-act="undo">Undo</button></div>` : '';
+  const editing = st.scr === 'card';
+  if (st.o.twoPane) {
+    const addKey = `<div class="addkey ${editing ? 'away' : ''} ${st.fx.has('dockout') ? 'out' : ''} ${st.fx.has('dockin') ? 'in' : ''}" aria-hidden="${editing}">+ Add</div>`;
+    return `<div class="home pane1">${hero(st)}<h4>Today <span>${fmt(shownTotal)}</span></h4>${list}<div style="height:64px;flex:none"></div></div>${addKey}
+      <div class="pane2">${pane2(st)}</div>${snack}<div class="fkb" aria-hidden="true">keyboard</div>`;
+  }
+  const dock = `<nav class="dock ${editing ? 'away' : ''} ${st.fx.has('dockout') ? 'out' : ''} ${st.fx.has('dockin') ? 'in' : ''}" aria-hidden="${editing}"><span>Home</span><span class="addk">+ Add</span><span>Spends</span></nav>`;
+  return `<div class="home">${hero(st)}<h4>Today <span>${fmt(shownTotal)}</span></h4>${list}</div>${sheet(st)}${dock}${snack}<div class="fkb" aria-hidden="true">keyboard</div>`;
+}
+
+/* ── render and after-effects ── */
+function render(id) {
+  const st = S[id];
+  const phone = document.getElementById(id);
+  const screen = phone.querySelector('.screen');
+  screen.innerHTML = view(st);
+  const fx = st.fx;
+  st.fx = new Set();
+  st.amtFrom = null; // why: roll once, on the render after the change
+  if (fx.has('hero')) {
+    st.heroShown = leftOf(st.e, st.deleted);
+    const bar = screen.querySelector('.track i');
+    if (bar) requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = bar.dataset.w + '%'; }));
+  }
+  if (fx.has('expand')) heightAnim(screen.querySelector('.xcard'), 56, 'auto');
+  if (fx.has('secin') && !st.o.twoPane) heightAnim(screen.querySelector('.sec'), 0, 'auto');
+  if (fx.has('secin') && st.o.twoPane) anim(screen.querySelector('.panel, .board'), [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'none' }], SPR.standard);
+  if (st.hap && document.getElementById('hapt').checked) {
+    const b = phone.querySelector('.hap');
+    b.textContent = 'haptic · ' + st.hap;
+    b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+  }
+  st.hap = null;
+  if (fx.has('focusname')) { const f = screen.querySelector('.nameinput'); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }
+  if (fx.has('focusnote')) { const f = screen.querySelector('.ninput'); f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+  if (st.snack) {
+    const mine = st.snack + Date.now();
+    st.snackId = mine;
+    setTimeout(() => { if (st.snackId === mine) { st.snack = null; render(id); } }, 4000 * K());
+  }
+}
+
+/* ── behaviour ── */
+const MSG = {
+  amt: e => `Changed to ${fmt(e.amt)}`,
+  cat: e => `Moved to ${nameOf(e.cat)}`,
+  day: e => `Moved to ${e.day === 'Today' || e.day === 'Yesterday' ? e.day.toLowerCase() : e.day}`,
+  note: e => e.note ? 'Note changed' : 'Note removed',
+};
+function setField(st, f, v) {
+  const old = st.e[f];
+  if (v === old) return;
+  st.e[f] = v;
+  if (v === st.snap[f]) delete st.changes[f]; else st.changes[f] = true;
+  st.fx.add('tick-' + f);
+  if (f === 'amt') st.amtFrom = old;
+  if (f === 'cat') st.fx.add('swap');
+  st.hap = 'tick';
+}
+function commitNote(st) {
+  const f = el(st, '.ninput');
+  if (f && f.value.trim() !== st.e.note) setField(st, 'note', f.value.trim());
+}
+function commitAmount(st) {
+  if ((st.open === 'amt' || st.open === 'board') && st.typed !== null && st.typed > 0) setField(st, 'amt', st.typed);
+  st.typed = null;
+}
+// why: a part folds up inside the card on a phone; in two panes it slides out of the other pane
+function foldOut(st) {
+  if (st.o.twoPane) return anim(el(st, '.panel, .board'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(24px)' }], SPR.snap);
+  return heightAnim(el(st, '.sec'), 'auto', 0, SPR.snap);
+}
+async function closeSec(st) {
+  if (!st.open) return;
+  const f = st.open;
+  if (st.o.sheets) {
+    await Promise.all([anim(el(st, '.sheet'), [{ transform: 'translateY(0)' }, { transform: 'translateY(100%)' }], SPR.snap), anim(el(st, '.scrim'), [{ opacity: 1 }, { opacity: 0 }], SPR.snap)]);
+  } else {
+    await foldOut(st);
+  }
+  st.open = null;
+  st.fx.add('unflip-' + f);
+}
+
+const ACT = {
+  async open(st, arg) {
+    if (st.scr === 'card') return;
+    st.snap = { ...st.e }; st.changes = {}; st.snack = null; st.amtFrom = null; st.typed = null;
+    st.scr = 'card'; st.open = st.o.board ? 'board' : (arg || null); st.sub = null;
+    ['expand', 'shrink', 'dimin', 'dockout'].forEach(x => st.fx.add(x));
+    if (st.open === 'board') { st.fx.add('secin'); if (arg) st.fx.add('hl-' + arg); }
+    else if (st.open) { st.fx.add(st.o.sheets ? 'sheetin' : 'secin'); st.fx.add('flip-' + st.open); if (st.open === 'amt') st.fx.add('selin'); }
+    if (st.o.teach && !st.taught) { st.fx.add('teach'); st.taught = true; }
+    st.hap = 'tick';
+  },
+  async sec(st, f) {
+    commitNote(st);
+    if (st.open === 'board') { st.fx.add('hl-' + f); if (f === 'amt' && st.typed === null) st.fx.add('selin'); return; }
+    if (st.open === f) { commitAmount(st); await closeSec(st); return; }
+    if (st.open) { commitAmount(st); await closeSec(st); }
+    st.open = f; st.typed = null; st.amtFrom = null;
+    st.fx.add(st.o.sheets ? 'sheetin' : 'secin'); st.fx.add('flip-' + f);
+    if (f === 'amt') st.fx.add('selin');
+    st.hap = st.hap || 'tick';
+  },
+  key(st, k) {
+    const cur = st.typed;
+    st.hap = 'tick';
+    if (k === '⌫') { st.typed = Math.floor((cur === null ? st.e.amt : cur) / 10); return; }
+    const d = k === '00' ? 0 : +k;
+    if (cur === null) { st.ghost = st.e.amt; st.fx.add('pop'); st.typed = d; st.fx.add('din'); return; }
+    const next = k === '00' ? cur * 100 : cur * 10 + d;
+    if (next > 999999999) { st.fx.add('shake'); st.hap = 'reject'; return; }
+    st.typed = next; st.fx.add('din');
+  },
+  async keep(st) { commitAmount(st); await closeSec(st); st.hap = st.hap || 'tick'; },
+  async pick(st, k, t) {
+    t.classList.add('press-flash');
+    await new Promise(r => setTimeout(r, 120 * K()));
+    setField(st, 'cat', k); if (st.open !== 'board') await closeSec(st); st.hap = 'tick';
+  },
+  async day(st, d) { setField(st, 'day', d); if (st.open !== 'board') await closeSec(st); st.hap = 'tick'; },
+  revert(st, f) { setField(st, f, st.snap[f]); },
+  async newcat(st) {
+    if (st.open === 'board') { st.sub = 'new'; st.draft = ''; st.draftIcon = null; st.iconsOpen = false; st.fx.add('focusname'); st.hap = 'tick'; return; }
+    await foldOut(st);
+    st.open = 'new'; st.draft = ''; st.draftIcon = null; st.iconsOpen = false;
+    st.fx.add('secin'); st.fx.add('focusname'); st.hap = 'tick';
+  },
+  async backcat(st) {
+    if (st.open === 'board') { document.getElementById(st.id).classList.remove('typing'); st.sub = null; return; }
+    document.getElementById(st.id).classList.remove('typing');
+    await foldOut(st);
+    st.open = 'cat'; st.fx.add('secin');
+  },
+  namechip(st, n) { st.draft = n; st.draftIcon = null; st.fx.add('focusname'); },
+  icons(st) { st.iconsOpen = !st.iconsOpen; st.fx.add('focusname'); },
+  iconpick(st, k) { st.draftIcon = k === iconFromName(st.draft) ? null : k; st.iconsOpen = false; st.fx.add('focusname'); },
+  async savenew(st) {
+    const name = st.draft.trim();
+    if (!name) return;
+    const m = matchOf(st);
+    let key = m && m[0];
+    if (!key) {
+      key = 'own-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + st.own.length + '-' + st.id;
+      REG[key] = { n: name, icon: st.draftIcon || iconFromName(name) };
+      st.own.push([key, name]);
+    }
+    document.getElementById(st.id).classList.remove('typing');
+    if (st.open === 'board') { st.sub = null; setField(st, 'cat', key); return; }
+    await foldOut(st);
+    st.open = null; st.fx.add('unflip-cat');
+    setField(st, 'cat', key);
+  },
+  async close(st) {
+    commitNote(st); commitAmount(st);
+    if (st.open) await closeSec(st);
+    const keys = Object.keys(st.changes);
+    await heightAnim(el(st, '.xcard'), 'auto', 56);
+    st.scr = 'list'; st.open = null;
+    st.fx = new Set(['unshrink', 'undim', 'dockin']);
+    if (keys.length) {
+      st.snack = keys.length === 1 ? MSG[keys[0]](st.e) : `${keys.length} changes saved`;
+      st.fx.add('rowflash'); st.fx.add('hero'); st.hap = 'success';
+    } else { st.hap = null; }
+  },
+  async del(st) {
+    commitNote(st); commitAmount(st);
+    if (st.open) await closeSec(st);
+    await heightAnim(el(st, '.xcard'), 'auto', 0);
+    st.deleted = true; st.scr = 'list'; st.open = null; st.snack = 'Deleted';
+    st.fx = new Set(['unshrink', 'undim', 'hero', 'dockin']); st.hap = 'tick';
+  },
+  undo(st) {
+    const wasDeleted = st.deleted;
+    st.e = { ...st.snap }; st.deleted = false; st.snack = null; st.snackId = null; st.amtFrom = null;
+    st.fx.add(wasDeleted ? 'rowin' : 'rowflash'); st.fx.add('hero'); st.hap = 'tick';
+  },
+};
+
+for (const id of Object.keys(PHONES)) {
+  fresh(id); render(id);
+  const phone = document.getElementById(id);
+  let busy = false;
+  phone.addEventListener('click', async ev => {
+    const t = ev.target.closest('[data-act]');
+    if (!t || !phone.contains(t) || busy || t.disabled) return;
+    busy = true;
+    try { await ACT[t.dataset.act](S[id], t.dataset.arg, t); render(id); } finally { busy = false; }
+  });
+  phone.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && ev.target.classList.contains('ninput')) { commitNote(S[id]); phone.classList.remove('typing'); ev.target.blur(); render(id); }
+  });
+  phone.addEventListener('input', ev => {
+    if (ev.target.classList.contains('nameinput')) { S[id].draft = ev.target.value; S[id].draftIcon = null; phone.querySelector('.nlive').innerHTML = nameLive(S[id]); }
+  });
+  phone.addEventListener('input', ev => { if (ev.target.classList.contains('ninput')) ev.target.parentNode.querySelector('.count').textContent = ev.target.value.length + ' / 80'; });
+  // why: the note takes focus without a re-render; an open part folds first, keeping what was typed
+  phone.addEventListener('focusin', async ev => {
+    if (!ev.target.classList.contains('ninput')) return;
+    phone.classList.add('typing');
+    const st = S[id];
+    if (st.open && !busy) {
+      busy = true;
+      commitAmount(st); await closeSec(st); st.fx.add('focusnote'); render(id); phone.classList.add('typing');
+      busy = false;
+    }
+  });
+  phone.addEventListener('focusin', ev => { if (ev.target.classList.contains('nameinput')) phone.classList.add('typing'); });
+  phone.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.classList.contains('nameinput')) { const k = phone.querySelector('[data-act=savenew]'); if (k && !k.disabled) k.click(); } });
+  phone.addEventListener('focusout', ev => { if (ev.target.classList.contains('nameinput')) setTimeout(() => { if (!phone.querySelector('.nameinput:focus')) phone.classList.remove('typing'); }, 150); });
+  phone.addEventListener('focusout', ev => { if (ev.target.classList.contains('ninput')) setTimeout(() => phone.classList.remove('typing'), 150); });
+}
+document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => { fresh(b.dataset.reset); render(b.dataset.reset); }));
+document.getElementById('slow').addEventListener('change', e => document.body.classList.toggle('slow', e.target.checked));
+document.getElementById('rm').addEventListener('change', e => document.body.classList.toggle('rm', e.target.checked));
+</script>
+</body>
+</html>

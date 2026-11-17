@@ -18,6 +18,7 @@ class CategoryTile extends StatelessWidget {
     required this.semanticLabel,
     required this.onPressed,
     this.flashed = false,
+    this.current = false,
   });
 
   final AppIconData icon;
@@ -30,6 +31,12 @@ class CategoryTile extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool flashed;
 
+  /// Marks the category an entry is in now, by an `ink` edge and a check, never colour alone (FR-AD-8 AC-4).
+  final bool current;
+
+  static const double _currentEdge = 2;
+  static const double _checkSize = 14;
+
   @override
   Widget build(BuildContext context) {
     final Color foreground = flashed ? context.colors.background : context.colors.ink;
@@ -41,13 +48,16 @@ class CategoryTile extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: HisaabSizes.tileHeight),
         padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.xs, vertical: HisaabSpacing.s),
         decoration: ShapeDecoration(
-          color: flashed ? context.colors.ink : (pressed ? context.colors.hairline : context.colors.sunk),
-          shape: HisaabShapes.squircle(HisaabRadii.tile),
+          color: flashed ? context.colors.ink : (pressed ? context.colors.hairline : (current ? context.colors.surface : context.colors.sunk)),
+          shape: HisaabShapes.squircle(
+            HisaabRadii.tile,
+            side: current && !flashed ? BorderSide(color: context.colors.ink, width: _currentEdge) : BorderSide.none,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            AppIcon(icon, color: foreground),
+            current ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[AppIcon(icon, color: foreground), AppIcon(AppIcons.check, color: foreground, size: _checkSize)]) : AppIcon(icon, color: foreground),
             const SizedBox(height: 6),
             Text(
               label,
