@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 
-import '../../../add_entry/add_entry.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
@@ -65,19 +64,15 @@ class EntriesDay extends StatelessWidget {
             children: <Widget>[
               for (final (int index, Entry entry) in entries.indexed) ...<Widget>[
                 if (index > 0) Divider(indent: 74, endIndent: HisaabSpacing.gutter, color: context.colors.hairline),
-                EntryCardSlot(
-                  key: ValueKey<String>('slot-${entry.id}'),
-                  entryId: entry.id,
-                  row: EntryRow(
-                    key: ValueKey<int>(entry.id),
-                    entry: entry,
-                    category: categories[entry.categoryId],
-                    onEdit: () => onEdit(entry),
-                    onDelete: () => onDelete(entry),
-                    onThresholdReached: onThresholdReached,
-                    showUsedDetail: true,
-                    showNotLoggedDetail: true,
-                  ),
+                EntryRow(
+                  key: ValueKey<int>(entry.id),
+                  entry: entry,
+                  category: categories[entry.categoryId],
+                  onEdit: () => onEdit(entry),
+                  onDelete: () => onDelete(entry),
+                  onThresholdReached: onThresholdReached,
+                  showUsedDetail: true,
+                  showNotLoggedDetail: true,
                 ),
               ],
             ],

@@ -119,18 +119,6 @@ final class FakeLedgerRepository implements LedgerRepository {
 
   @override
   TaskEither<Failure, Entry> replace(int id, EntryDraft draft) {
-    final Completer<void>? gate = nextReplaceGate;
-    nextReplaceGate = null;
-    return gate == null ? _replace(id, draft) : TaskEither<Failure, Unit>(() async {
-      await gate.future;
-      return Either<Failure, Unit>.right(unit);
-    }).flatMap((Unit _) => _replace(id, draft));
-  }
-
-  /// When set, the next [replace] waits for it before it writes anything, like a slow write.
-  Completer<void>? nextReplaceGate;
-
-  TaskEither<Failure, Entry> _replace(int id, EntryDraft draft) {
     final int index = entries.indexWhere((Entry e) => e.id == id);
     if (index < 0 && failure == null) {
       return TaskEither<Failure, Entry>.left(EntryNotFoundFailure('No entry $id'));

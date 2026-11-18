@@ -1,9 +1,6 @@
 import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart' show Option;
-
-import '../../../add_entry/add_entry.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/extensions/build_context_extensions.dart';
@@ -23,7 +20,6 @@ import '../widgets/due_soon_row.dart';
 import '../widgets/fix_foot_row.dart';
 import '../widgets/waiting_bill_row.dart';
 import '../widgets/hero_card.dart';
-import '../widgets/hero_held_line.dart';
 import '../widgets/hero_skeleton.dart';
 import '../widgets/home_header.dart';
 import '../widgets/no_income_card.dart';
@@ -100,31 +96,16 @@ class HomePage extends StatelessWidget {
               listener: _offerFixUndo,
             ),
           ],
-          child: _withCardOutcomes(
-            context,
-            BlocConsumer<HomeBloc, HomeState>(
-              listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
-              listener: _offerUndo,
-              builder: (BuildContext context, HomeState state) => TopBarScrollView(
-                bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
-                children: _content(context, state),
-              ),
+          child: BlocConsumer<HomeBloc, HomeState>(
+            listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.undo.isSome(),
+            listener: _offerUndo,
+            builder: (BuildContext context, HomeState state) => TopBarScrollView(
+              bar: HomeHeader(today: _today(state), onOpenSettings: onOpenSettings),
+              children: _content(context, state),
             ),
           ),
         ),
       );
-
-  // why: an edit's Undo and a card's Delete show on Home, under its snackbar host (FR-AD-8 AC-9, AC-10).
-  static Widget _withCardOutcomes(BuildContext context, Widget page) {
-    final EntryCardScopeData? scope = EntryCardScope.maybeOf(context);
-    return scope == null
-        ? page
-        : EntryCardOutcomes(
-            bloc: scope.bloc,
-            onDelete: (Entry entry) => context.read<HomeBloc>().add(HomeDeleteRequested(entry)),
-            child: page,
-          );
-  }
 
   static CalendarDate? _today(HomeState state) => state is HomeReady ? state.summary.today : null;
 
@@ -138,7 +119,14 @@ class HomePage extends StatelessWidget {
             _todayList(context, state),
           ],
         HomeReady(:final CycleSummary summary) => <Widget>[
-            _hero(context, state, summary),
+            HeroCard(
+              summary: summary,
+              spends: state.todaySpends,
+              categories: state.categories,
+              week: state.showWeek,
+              onTap: () => context.read<HomeBloc>().add(const HomeWeekToggled()),
+              assemble: assemble,
+            ),
             if (OverCard.appliesTo(summary)) ...<Widget>[
               const SizedBox(height: HisaabSpacing.m),
               OverCard(summary: summary, onSeeWhereItWent: onSeeWhereItWent),
@@ -151,30 +139,6 @@ class HomePage extends StatelessWidget {
             if (onFixMyNumber case final VoidCallback fix) FixFootRow(onTap: fix),
           ],
       };
-
-  Widget _hero(BuildContext context, HomeReady state, CycleSummary summary) {
-    final Widget hero = HeroCard(
-      summary: summary,
-      spends: state.todaySpends,
-      categories: state.categories,
-      week: state.showWeek,
-      onTap: () => context.read<HomeBloc>().add(const HomeWeekToggled()),
-      assemble: assemble,
-    );
-    final EntryCardScopeData? scope = EntryCardScope.maybeOf(context);
-    if (scope == null) {
-      return hero;
-    }
-    // why: while a card is open Home holds its figure and tucks the hero into one line (FR-AD-8 AC-11).
-    return BlocBuilder<EntryCardBloc, EntryCardState>(
-      bloc: scope.bloc,
-      builder: (BuildContext context, EntryCardState card) => switch (card) {
-        EntryCardOpen(:final EntryCardForm form) || EntryCardSaving(:final EntryCardForm form) =>
-          HeroHeldLine(safeToday: summary.safeToday, preview: form.preview),
-        EntryCardClosed() => hero,
-      },
-    );
-  }
 
   static List<Widget> _savedYesterday(CycleSummary summary) => summary.savedYesterday.match(
         () => const <Widget>[],
@@ -215,18 +179,10 @@ class HomePage extends StatelessWidget {
       justFixed: state.justFixed,
       spentToday: state.summary.spentToday,
       onSeeAll: _seeAll(state.summary.cycle),
-      onEdit: _opener(context, state),
+      onEdit: onEdit,
       onDelete: (Entry entry) => bloc.add(HomeDeleteRequested(entry)),
       onThresholdReached: () => bloc.add(const HomeSwipeThresholdReached()),
     );
-  }
-
-  /// Opens a row as a card in place when a scope is above Home (FR-AD-8), else [onEdit].
-  ValueChanged<Entry> _opener(BuildContext context, HomeReady state) {
-    final EntryCardScopeData? scope = EntryCardScope.maybeOf(context);
-    return scope == null
-        ? onEdit
-        : (Entry entry) => scope.open(entry, categories: state.categories.values, summary: Option<CycleSummary>.of(state.summary));
   }
 
   VoidCallback? _seeAll(PayCycle cycle) {

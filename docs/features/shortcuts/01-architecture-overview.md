@@ -25,7 +25,7 @@ The home-screen widget, the Quick Settings tile and the app shortcut (SPEC FR-WG
 | `AndroidShortcutsPlatform` (`lib/shortcuts/data/platform/`) | data | The `hisaab/shortcuts` method channel |
 | `ShortcutsBloc` (`lib/app/bloc/`) | app | Publishes on every trigger (`sequential()`); holds a pending tap |
 | `ShortcutLaunchListener` (`lib/app/widgets/`) | app | Follows a pending tap on the root screen in view |
-| `AppRoutes.followLaunch` (`lib/app/routes.dart`) | app | Home, or the Add tray at the keypad; a tray already open, or an entry card open on Home, stays (FR-AD-8 AC-15) |
+| `AppRoutes.followLaunch` (`lib/app/routes.dart`) | app | Home, or the Add tray at the keypad; a tray already open stays |
 | `ShortcutRowsBloc`, `ShortcutsGroup` (`lib/settings/presentation/`) | presentation | The two Settings rows, hidden where the phone can't |
 | `MainActivity.kt` | Android | The channel, the launch URI, pin and add-tile requests |
 | `SnapshotReader.kt` | Android, pure | Parses the snapshot, picks today's row; stale when none |

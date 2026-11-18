@@ -117,17 +117,17 @@ void main() {
       expect(find.text('₹5'), findsWidgets);
     });
 
-    testWidgets('an Add tap while an entry card is open keeps the card (W6, FR-AD-8 AC-15)', (WidgetTester tester) async {
+    testWidgets('an Add tap while editing an entry keeps the edit tray (W6)', (WidgetTester tester) async {
       await boot(tester, FakeServices());
       await tester.tap(find.text('Groceries'));
       await settle(tester);
-      expect(find.byKey(const ValueKey<String>('entry-card-6')), findsOneWidget);
+      final AddEntryBloc editing = tester.element(find.byType(AddEntryTray)).read<AddEntryBloc>();
 
       services.shortcuts.tap(LaunchAction.add);
       await settle(tester);
 
-      expect(find.byType(AddEntryTray), findsNothing);
-      expect(find.byKey(const ValueKey<String>('entry-card-6')), findsOneWidget);
+      expect(find.byType(AddEntryTray), findsOneWidget);
+      expect(tester.element(find.byType(AddEntryTray)).read<AddEntryBloc>(), same(editing));
     });
 
     testWidgets('an Add tap in Settings goes back to Home, then opens the tray', (WidgetTester tester) async {

@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart' show Option;
 
-import '../add_entry/add_entry.dart';
 import '../core/extensions/build_context_extensions.dart';
 import '../core/layout/app_layout.dart';
 import '../core/time/clock.dart';
@@ -36,7 +35,6 @@ class MainScreen extends StatefulWidget {
     this.onFixMyNumber,
     this.installLineSlot,
     this.onOpenStory,
-    this.entryCard,
   });
 
   final Clock clock;
@@ -72,9 +70,6 @@ class MainScreen extends StatefulWidget {
   /// Opens the month story of the cycle so many cycles back (SPEC FR-SP-7); none hides its way in.
   final ValueChanged<int>? onOpenStory;
 
-  /// Opens Home's rows as cards in place (SPEC FR-AD-8); none keeps [onEdit].
-  final EntryCardBloc? entryCard;
-
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -95,36 +90,9 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _primary(Widget page) => widget.wrapPrimary?.call(page) ?? page;
 
-  Widget _scoped(bool partsInline, Widget home) {
-    final EntryCardBloc? bloc = widget.entryCard;
-    return bloc == null ? home : EntryCardScope(bloc: bloc, partsInline: partsInline, child: home);
-  }
-
-  /// The shell, told while a card is open so the dock steps aside and the board shows (AC-11, AC-12).
-  Widget _shell({required ValueNotifier<ShellDestination> destination, required Widget home, required Widget spends, required VoidCallback onAdd}) {
-    final EntryCardBloc? bloc = widget.entryCard;
-    if (bloc == null) {
-      return AppShell(destination: destination, home: home, spends: spends, onAdd: onAdd);
-    }
-    return BlocBuilder<EntryCardBloc, EntryCardState>(
-      bloc: bloc,
-      buildWhen: (EntryCardState previous, EntryCardState current) => (previous is EntryCardClosed) != (current is EntryCardClosed),
-      builder: (BuildContext context, EntryCardState state) => AppShell(
-        destination: destination,
-        home: home,
-        spends: spends,
-        onAdd: onAdd,
-        editing: state is! EntryCardClosed,
-        board: EntryBoard(bloc: bloc),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool spendsBeside = context.layout.panes is SideBySidePanes;
-    // why: in two panes or a tabletop the card's parts go on a board in the other pane (AC-12).
-    final bool partsInline = context.layout.panes is SinglePane;
     final Widget spends = SpendsPage(
       today: widget.clock.today(),
       onSeeEntries: widget.onSeeEntries,
@@ -138,10 +106,10 @@ class _MainScreenState extends State<MainScreen> {
         onNewDay: _reload,
         child: ResumeListener(
           onResume: _reload,
-          child: _shell(
+          child: AppShell(
             destination: _destination,
             home: _primary(
-              _scoped(partsInline, HomePage(
+              HomePage(
                 onAdd: widget.onAdd,
                 onEdit: widget.onEdit,
                 onOpenSettings: widget.onOpenSettings,
@@ -154,7 +122,7 @@ class _MainScreenState extends State<MainScreen> {
                 missedLogSlot: widget.missedLogSlot,
                 onFixMyNumber: widget.onFixMyNumber,
                 installLineSlot: widget.installLineSlot,
-              )),
+              ),
             ),
             // why: beside Home both pages are on screen, and one notice is enough; it shows over Home.
             spends: spendsBeside ? spends : _primary(spends),
