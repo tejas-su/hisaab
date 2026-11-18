@@ -15,6 +15,7 @@ final class HabitIndex extends Equatable {
     required this.habits,
     required this.loggedToday,
     required this.states,
+    this.warmedUp = false,
   });
 
   /// An index with no habits, for an empty ledger or before the first load.
@@ -37,6 +38,10 @@ final class HabitIndex extends Equatable {
   /// The quiet, rest and forget state of each category that has one, by category id.
   final Map<int, SuggestionState> states;
 
+  /// Whether BR-17 rule 1 holds for the whole app: at least 14 days since the first learned entry
+  /// and at least 10 days with one. Habits and the general nudge (BR-22.2) wait for it.
+  final bool warmedUp;
+
   /// The habit of category [categoryId] to show in Settings (FR-SE-2 AC-6).
   ///
   /// Returns [Some] with the habit of the day type [preferring], else the habit of the other day
@@ -49,5 +54,5 @@ final class HabitIndex extends Equatable {
   }
 
   @override
-  List<Object?> get props => <Object?>[builtOn, habits, loggedToday, states];
+  List<Object?> get props => <Object?>[builtOn, habits, loggedToday, states, warmedUp];
 }

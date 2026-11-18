@@ -311,6 +311,28 @@ void main() {
       expect(index.habits, isEmpty);
     });
 
+    test('warmedUp is false 13 days after the first entry and true at 14, with 10 active days', () {
+      final HabitIndex thirteen = _build(<Entry>[
+        ...entriesOn(_weekdays.skip(11), chai, firstId: 201),
+        entryAt(900, chai, 20, DateTime(2026, 10, 26, 10, 5)),
+      ]);
+      final HabitIndex fourteen = _build(entriesOn(_weekdays.skip(10), chai, firstId: 201));
+
+      expect(<bool>[thirteen.warmedUp, fourteen.warmedUp], <bool>[false, true]);
+    });
+
+    test('warmedUp is false with 9 active days and true with 10, 14 days after the first', () {
+      final HabitIndex nine = _build(entriesOn(_weekdays.skip(10).take(9), chai, firstId: 201));
+      final HabitIndex ten = _build(entriesOn(_weekdays.skip(10).take(10), chai, firstId: 201));
+
+      expect(<bool>[nine.warmedUp, ten.warmedUp], <bool>[false, true]);
+    });
+
+    test('warmedUp is false for an empty ledger', () {
+      expect(_build(const <Entry>[]).warmedUp, isFalse);
+      expect(HabitIndex.empty(_today).warmedUp, isFalse);
+    });
+
     test('the warm-up is app-wide: a category first used 13 days ago can be Regular', () {
       final HabitIndex index = _build(<Entry>[
         ...foodOn(List<CalendarDate>.generate(10, (int day) => const CalendarDate(2026, 9, 25).addDays(day))),

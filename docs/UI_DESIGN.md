@@ -544,6 +544,13 @@ Flutter: `SpringDescription.withDampingRatio(mass: 1, stiffness: (2π/response)�
 
 One effect per event, never buzzy.
 
+**Daily nudge notification (BR-22, D200).** Copy is final (§8); the structure is fixed.
+- **Channel:** its own Android channel, "Daily nudge", private visibility (a locked screen hides the text), default sound only, no exact alarm. The system's channel settings are the sound's off switch.
+- **Title and body:** the category and a plain ask, never an amount or a note. Three phrasings rotate by date (§8). Tapping opens the Add tray (`hisaab://nudge`).
+- **No action buttons in this release.** The notification is a tap target only; Part 2 is deferred to a later phase (D204).
+- **Deferred (later phase, BR-22.9 to BR-22.11):** two actions, *Add ₹{usual}* (only when the habit has an exact amount) and *Other amount* (inline reply; the general nudge has neither), and a confirmation that replaces the notification with no amount ("Added to {Category}") that times out by itself, with an *Undo* action for 4 s after *Add ₹{usual}* only.
+- **Haptics:** none of its own; the notification is the system's.
+
 ## 8. Voice
 - Plain and kind, with "a pinch of humour, not a dollop" (Monzo).
 - Never use: transaction, debit/credit, budget period, Oops, "You overspent!".
@@ -558,6 +565,13 @@ One effect per event, never buzzy.
   - "about" only on a figure that really is approximate (the per-day floor), never on an exact gap.
   - A zero is stated, not softened: "Safe to spend today: ₹0."
   - A preview slot is two sentences, the anchor first. "Saved" means only money put into a saving. *Not logged*, *Used from savings*, "set aside" and "Fix my number" are the new terms; one word per idea (D132).
+- **Daily nudge (BR-22) copy, final (`design-content`).** Never an amount or note in a title or body; never an urgency word, streak or guilt; no exclamation marks. Three phrasings rotate by date.
+  - Channel: "Daily nudge" (`nudgeChannel`) / "A gentle reminder to add what you usually spend".
+  - Category titles and bodies (`nudgeTitle1..3`, `nudgeBody1..3`): "{category} today?" / "Tap to add it"; "Anything for {category}?" / "Add it here, it takes a moment"; "Did {category} come up today?" / "Tap to add what you spent".
+  - General (`nudgeGeneralTitle1..3`, `nudgeGeneralBody1..3`): "Anything to add today?" / "Tap to add it"; "Spent anything today?" / "Add it here, it takes a moment"; "How did today go?" / "Tap to add what you spent".
+  - **Deferred (later phase), not in this release:** actions `nudgeActionAddUsual` "Add {amount}" (e.g. "Add ₹20"); `nudgeActionOther` "Other amount"; `nudgeReplyLabel` "Amount"; `nudgeReplyInvalid` "Enter an amount"; `nudgeAdded` "Added to {category}" (no body); `nudgeUndo` "Undo".
+  - Settings: `settingsNudge` "Daily nudge"; `settingsNudgeHint` "A gentle reminder when you usually spend"; switch label "Daily nudge".
+  - The ask: `nudgeAskTitle` "Remind you about this each day?" with `nudgeAskYes` "Remind me" / `nudgeAskNo` "Not now". If Android refuses, `nudgeRefused`: "Allow notifications in your phone's settings to turn this on."
 
 ## 9. Accessibility
 - Touch targets ≥ 48dp; keys and tiles are 64–96dp.

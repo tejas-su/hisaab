@@ -6,6 +6,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../core/errors/failure.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/notifications/nudges.dart';
 import '../../core/time/clock.dart';
 import '../../core/usecases/use_case.dart';
 import '../../ledger/ledger.dart';
@@ -15,7 +16,8 @@ import 'shortcuts_event.dart';
 import 'shortcuts_state.dart';
 
 /// Keeps the home-screen widget's snapshot fresh and holds a widget, tile or shortcut tap until
-/// the screen in view follows it (SPEC FR-WG-4 to FR-WG-7, widget spec §7–8).
+/// the screen in view follows it (SPEC FR-WG-4 to FR-WG-7, widget spec §7–8). A nudge tap is held
+/// the same way, as [LaunchAction.add] (BR-22.6).
 ///
 /// Driven by [ShortcutsStarted] (the tap that started the app), [ShortcutsPublishRequested]
 /// (every write through the ledger and rule change streams, plus the triggers the app root adds)
@@ -25,6 +27,7 @@ class ShortcutsBloc extends Bloc<ShortcutsEvent, ShortcutsState> {
     required this._project,
     required this._preferences,
     required this._platform,
+    required this._nudges,
     required this._clock,
     required this._words,
     required LedgerRepository ledger,
@@ -37,6 +40,8 @@ class ShortcutsBloc extends Bloc<ShortcutsEvent, ShortcutsState> {
     on<ShortcutsLaunched>((ShortcutsLaunched event, Emitter<ShortcutsState> emit) => emit(ShortcutsLaunchPending(event.action)));
     on<ShortcutsLaunchHandled>((ShortcutsLaunchHandled event, Emitter<ShortcutsState> emit) => emit(const ShortcutsIdle()));
     _launches = _platform.launches.listen((LaunchAction action) => add(ShortcutsLaunched(action)));
+    // why: a nudge tap opens the Add tray exactly as the widget's Add key does (BR-22.6).
+    _nudgeTaps = _nudges.taps.listen((void _) => add(const ShortcutsLaunched(LaunchAction.add)));
     _changes = ledger.changes.listen((void _) => add(const ShortcutsPublishRequested()));
     _ruleChanges = recurring.changes.listen((void _) => add(const ShortcutsPublishRequested()));
   }
@@ -44,14 +49,21 @@ class ShortcutsBloc extends Bloc<ShortcutsEvent, ShortcutsState> {
   final ProjectWidgetDays _project;
   final AppPreferencesRepository _preferences;
   final ShortcutsPlatform _platform;
+  final Nudges _nudges;
   final Clock _clock;
   final WidgetWords _words;
   late final StreamSubscription<LaunchAction> _launches;
+  late final StreamSubscription<void> _nudgeTaps;
   late final StreamSubscription<void> _changes;
   late final StreamSubscription<void> _ruleChanges;
 
-  Future<void> _onStarted(ShortcutsStarted event, Emitter<ShortcutsState> emit) async =>
-      (await _platform.launchAction()).map((LaunchAction action) => emit(ShortcutsLaunchPending(action)));
+  Future<void> _onStarted(ShortcutsStarted event, Emitter<ShortcutsState> emit) async {
+    final Option<LaunchAction> tapped = await _platform.launchAction();
+    // why: only one thing starts the app; a widget, tile or shortcut tap wins, else a nudge.
+    final bool nudged = tapped.isNone() && await _nudges.launchedByNudge();
+    (nudged ? const Option<LaunchAction>.of(LaunchAction.add) : tapped)
+        .map((LaunchAction action) => emit(ShortcutsLaunchPending(action)));
+  }
 
   Future<void> _onPublishRequested(ShortcutsPublishRequested event, Emitter<ShortcutsState> emit) async {
     final Either<Failure, WidgetSnapshot> snapshot = await _preferences
@@ -72,6 +84,7 @@ class ShortcutsBloc extends Bloc<ShortcutsEvent, ShortcutsState> {
   @override
   Future<void> close() async {
     await _launches.cancel();
+    await _nudgeTaps.cancel();
     await _changes.cancel();
     await _ruleChanges.cancel();
     return super.close();

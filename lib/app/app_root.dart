@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 
 import '../core/extensions/build_context_extensions.dart';
 import '../core/money/money_formatter.dart';
+import '../core/notifications/nudges.dart';
 import '../core/time/clock.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../ledger/ledger.dart';
@@ -41,6 +42,7 @@ class AppRoot extends StatelessWidget {
             project: getIt<ProjectWidgetDays>(),
             preferences: getIt<AppPreferencesRepository>(),
             platform: getIt<ShortcutsPlatform>(),
+            nudges: getIt<Nudges>(),
             clock: getIt<Clock>(),
             words: (strings: strings, money: getIt<MoneyFormatter>()),
             ledger: getIt<LedgerRepository>(),

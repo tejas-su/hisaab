@@ -90,6 +90,7 @@ abstract final class AppRoutes {
             create: (BuildContext _) => RemindersBloc(
               preferences: getIt<AppPreferencesRepository>(),
               arm: getIt<ArmBillReminders>(),
+              armNudges: getIt<ArmNudges>(),
               reminders: getIt<BillReminders>(),
               getCycleSummary: getIt<GetCycleSummary>(),
               ledger: getIt<LedgerRepository>(),
@@ -160,8 +161,15 @@ abstract final class AppRoutes {
                 onOpenSettings: () async {
                   final HomeBloc home = context.read<HomeBloc>();
                   final HabitsBloc habits = context.read<HabitsBloc>();
+                  final RemindersBloc reminders = context.read<RemindersBloc>();
                   await Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (BuildContext _) => settings(getIt, onDataReplaced: onDataReplaced)),
+                    MaterialPageRoute<void>(
+                      builder: (BuildContext _) => settings(
+                        getIt,
+                        onDataReplaced: onDataReplaced,
+                        onNudgeChanged: () => reminders.add(const RemindersArmRequested()),
+                      ),
+                    ),
                   );
                   // why: category edits (D138) don't pass through the ledger or rules streams Home
                   // listens to, so Home re-reads on the way back; the Add tray takes its tiles from it.
@@ -212,8 +220,12 @@ abstract final class AppRoutes {
   /// (AC-3).
   static Future<void> _openMissedLog(BuildContext context, GetIt getIt, MissedLog line) async {
     final HomeLinesBloc lines = context.read<HomeLinesBloc>();
+    final RemindersBloc reminders = context.read<RemindersBloc>();
+    // why: the line goes as the tray closes, taking this context with it; the navigator stays.
+    final NavigatorState navigator = Navigator.of(context);
+    bool undoShowing = false;
     try {
-      await openAddTray(
+      undoShowing = await openAddTray(
         context,
         getIt,
         carry: Option<UsualSpend>.of(UsualSpend(category: line.category, amount: line.amount)),
@@ -222,6 +234,32 @@ abstract final class AppRoutes {
       // why: the app may be torn down with the tray still open; the bloc is closed with it.
       if (!lines.isClosed) {
         lines.add(const HomeLinesTrayClosed());
+      }
+    }
+    // why: the sheet's barrier would cover the 4 s Undo of a pill add (FR-AD-10); the choice stays
+    // unanswered, so the ask comes with the next tap on the line.
+    if (navigator.mounted && !undoShowing) {
+      await offerNudge(navigator.context, getIt, reminders);
+    }
+  }
+
+  /// Asks "Remind you about this each day?" the first time the missed-log line was tapped, once the
+  /// Add tray has closed (BR-22.8, FR-SE-7 AC-4). Either answer is stored and never asked again; a
+  /// refused permission shows its line (E122). The nudges are re-armed after an answer.
+  static Future<void> offerNudge(BuildContext context, GetIt getIt, RemindersBloc reminders) async {
+    final bool ask = (await getIt<ShouldAskNudge>()(const NoParams()).run()).getOrElse((Failure _) => false);
+    if (!ask || !context.mounted) {
+      return;
+    }
+    final Option<bool> answer = await NudgeAskSheet.show(context);
+    if (answer case Some(:final bool value)) {
+      final bool on = (await getIt<AnswerNudge>()(value).run()).getOrElse((Failure _) => false);
+      if (!reminders.isClosed) {
+        reminders.add(const RemindersArmRequested());
+      }
+      // why: a refused permission is otherwise silent, and the ask never comes back (E122).
+      if (value && !on && context.mounted) {
+        await NudgeAskSheet.showRefused(context);
       }
     }
   }
@@ -416,8 +454,8 @@ abstract final class AppRoutes {
       );
 
   /// Settings, one level deep (FR-SE); [onDataReplaced] reloads the app after a restore, an undo or
-  /// *Delete everything* (D139).
-  static Widget settings(GetIt getIt, {required VoidCallback onDataReplaced}) => MultiBlocProvider(
+  /// *Delete everything* (D139). [onNudgeChanged] re-arms the nudges after the *Daily nudge* switch is flipped.
+  static Widget settings(GetIt getIt, {required VoidCallback onDataReplaced, required VoidCallback onNudgeChanged}) => MultiBlocProvider(
         providers: <BlocProvider<Object?>>[
           BlocProvider<IncomeBloc>(
             create: (BuildContext _) => IncomeBloc(
@@ -462,6 +500,14 @@ abstract final class AppRoutes {
             shortcuts: BlocProvider<ShortcutRowsBloc>(
               create: (BuildContext _) => ShortcutRowsBloc(platform: getIt<ShortcutsPlatform>())..add(const ShortcutRowsLoadRequested()),
               child: const ShortcutsGroup(),
+            ),
+            nudge: BlocProvider<NudgeRowBloc>(
+              create: (BuildContext _) => NudgeRowBloc(
+                getSwitch: getIt<GetNudgeSwitch>(),
+                answer: getIt<AnswerNudge>(),
+                haptics: getIt<Haptics>(),
+              )..add(const NudgeRowLoadRequested()),
+              child: NudgeRow(onChanged: onNudgeChanged),
             ),
             yourHisaab: _yourHisaab(getIt, onDataReplaced: () {
               onDataReplaced();
@@ -632,8 +678,9 @@ abstract final class AppRoutes {
   ///
   /// A new *Spent* tray gets *your usual* from the habits already loaded, so the pill is in its
   /// first frame or not there at all (FR-AD-10 AC-1); a one-tap add is handed back to the
-  /// [HabitsBloc] above [context] for its Undo (BR-10).
-  static Future<void> openAddTray(
+  /// [HabitsBloc] above [context] for its Undo (BR-10). Completes with true when such an Undo is
+  /// being offered, so a caller can keep a sheet from covering it.
+  static Future<bool> openAddTray(
     BuildContext context,
     GetIt getIt, {
     EntryKind kind = EntryKind.spent,
@@ -645,7 +692,7 @@ abstract final class AppRoutes {
         ? home.categories.values.toList()
         : (await getIt<CategoryRepository>().all().run()).getOrElse((Failure _) => const <Category>[]);
     if (!context.mounted) {
-      return;
+      return false;
     }
     final HabitsBloc habitsBloc = context.read<HabitsBloc>();
     final HabitsState habits = habitsBloc.state;
@@ -671,6 +718,8 @@ abstract final class AppRoutes {
     await holdingHome(context.read<HomeBloc>(), () => AddEntryTray.show(context, bloc));
     if (bloc.state case AddEntryFinished(added: Some<Entry>(value: final Entry entry))) {
       usual.map((UsualSpend spend) => habitsBloc.add(HabitsUsualAdded(UsualAdd(entry: entry, category: spend.category))));
+      return usual.isSome();
     }
+    return false;
   }
 }

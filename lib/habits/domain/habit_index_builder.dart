@@ -22,9 +22,11 @@ abstract final class HabitIndexBuilder {
   static HabitIndex build(HabitInputs inputs, {required CalendarDate today}) {
     final List<Entry> learned = _learned(inputs.entries, today);
     final _Days days = _Days(today, learned.map((Entry entry) => entry.date).toSet());
+    final bool warmedUp = _warmedUp(days);
     return HabitIndex(
       builtOn: today,
-      habits: _warmedUp(days)
+      warmedUp: warmedUp,
+      habits: warmedUp
           ? inputs.categories
               .where((Category category) => category.kind == EntryKind.spent && !category.hidden)
               .expand((Category category) => _habitsOf(category.id, _own(learned, category, inputs.states), days))
@@ -40,13 +42,16 @@ abstract final class HabitIndexBuilder {
   /// 56 days that were logged on the day they are dated.
   static List<Entry> _learned(List<Entry> entries, CalendarDate today) => entries.where((Entry entry) {
         final int age = entry.date.daysUntil(today);
-        return entry.kind == EntryKind.spent &&
-            entry.recurringId == null &&
-            !entry.isNotLogged &&
-            CalendarDate.fromDateTime(entry.createdAt) == entry.date &&
-            age >= 0 &&
-            age < HabitRules.horizonDays;
+        return isTypedSpend(entry) && age >= 0 && age < HabitRules.horizonDays;
       }).toList();
+
+  /// Whether [entry] was typed as a *Spent* entry on the day it is dated: not posted by a rule,
+  /// not a *Not logged* fix and logged on its own date. The age limit is the caller's.
+  static bool isTypedSpend(Entry entry) =>
+      entry.kind == EntryKind.spent &&
+      entry.recurringId == null &&
+      !entry.isNotLogged &&
+      CalendarDate.fromDateTime(entry.createdAt) == entry.date;
 
   /// Rule 1, for the whole app: enough days of use before anything is suggested.
   static bool _warmedUp(_Days days) =>

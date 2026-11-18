@@ -9,18 +9,20 @@ import '../../core/logging/app_logger.dart';
 import '../../core/notifications/bill_reminder.dart';
 import '../../core/notifications/bill_reminders.dart';
 import '../../core/usecases/use_case.dart';
+import '../../habits/habits.dart';
 import '../../ledger/ledger.dart';
 import '../../settings/settings.dart';
 import 'reminders_event.dart';
 import 'reminders_state.dart';
 
-/// Keeps the bill reminders armed and turns a tap on one into the bill's amount sheet (spec §6,
+/// Keeps the bill reminders and daily nudges armed and turns a tap on one into the bill's amount sheet (spec §6,
 /// D126). Driven by [RemindersStarted], [RemindersArmRequested] (resume, and every write through
 /// the ledger and rule change streams) and the taps of [BillReminders].
 class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
   RemindersBloc({
     required this._preferences,
     required this._arm,
+    required this._armNudges,
     required this._reminders,
     required this._getCycleSummary,
     required LedgerRepository ledger,
@@ -38,6 +40,7 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
 
   final AppPreferencesRepository _preferences;
   final ArmBillReminders _arm;
+  final ArmNudges _armNudges;
   final BillReminders _reminders;
   final GetCycleSummary _getCycleSummary;
   late final StreamSubscription<BillReminderTap> _taps;
@@ -52,13 +55,19 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
     await _armNow();
   }
 
-  /// Arms the reminders if the user said *Remind me*, and removes them otherwise.
+  /// Arms the reminders and the daily nudges if the user said yes to each, and removes them
+  /// otherwise.
   Future<void> _armNow() async {
     final Either<Failure, Unit> armed = await _preferences
         .billRemindersChoice()
         .flatMap((Option<bool> choice) => _arm(choice.getOrElse(() => false)))
         .run();
     armed.mapLeft(_logFailure('reminders.arm_failed'));
+    final Either<Failure, Unit> nudged = await _preferences
+        .nudgeChoice()
+        .flatMap((Option<bool> choice) => _armNudges(choice.getOrElse(() => false)))
+        .run();
+    nudged.mapLeft(_logFailure('nudges.arm_failed'));
   }
 
   Future<void> _open(Emitter<RemindersState> emit, BillReminderTap tap) async {

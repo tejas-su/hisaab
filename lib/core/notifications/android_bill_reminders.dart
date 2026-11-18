@@ -9,6 +9,7 @@ import '../../l10n/gen/app_localizations.dart';
 import '../logging/app_logger.dart';
 import 'bill_reminder.dart';
 import 'bill_reminders.dart';
+import 'notification_hub.dart';
 
 /// [BillReminders] on Android, through `flutter_local_notifications` (spec §6, D126).
 ///
@@ -16,27 +17,25 @@ import 'bill_reminders.dart';
 /// receiver re-arms them after a restart. The text comes from the ARB, and a locked screen
 /// hides it.
 final class AndroidBillReminders implements BillReminders {
-  AndroidBillReminders._(this._plugin, this._strings, this._taps);
+  AndroidBillReminders._(this._hub, this._strings, this._taps);
 
-  /// Starts the plugin; call once before `runApp`. Never throws.
-  static Future<AndroidBillReminders> start() async {
-    final FlutterLocalNotificationsPlugin plugin = FlutterLocalNotificationsPlugin();
+  /// Listens on [hub] for bill taps; call once before `runApp`. Never throws.
+  static AndroidBillReminders start(NotificationHub hub) {
     // ignore: close_sinks, why: taps can come for as long as the app runs, so it is never closed.
     final StreamController<BillReminderTap> taps = StreamController<BillReminderTap>.broadcast();
-    await _quietly('reminders.start_failed', () => plugin.initialize(
-          settings: const InitializationSettings(android: AndroidInitializationSettings(_icon)),
-          onDidReceiveNotificationResponse: (NotificationResponse response) => BillReminderTap.parse(response.payload).map(taps.add),
-        ));
-    return AndroidBillReminders._(plugin, lookupAppLocalizations(_locale), taps);
+    // ignore: cancel_subscriptions, why: it lives as long as the app.
+    hub.responses.listen((NotificationResponse response) => BillReminderTap.parse(response.payload).map(taps.add));
+    return AndroidBillReminders._(hub, lookupAppLocalizations(_locale), taps);
   }
 
-  static const String _icon = 'ic_launcher_monochrome';
   static const String _channel = 'bill_reminders';
   static const Locale _locale = Locale('en', 'IN');
 
-  final FlutterLocalNotificationsPlugin _plugin;
+  final NotificationHub _hub;
   final AppLocalizations _strings;
   final StreamController<BillReminderTap> _taps;
+
+  FlutterLocalNotificationsPlugin get _plugin => _hub.plugin;
 
   AndroidFlutterLocalNotificationsPlugin? get _android =>
       _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
@@ -94,7 +93,7 @@ final class AndroidBillReminders implements BillReminders {
   Future<Option<BillReminderTap>> launchTap() async {
     Option<BillReminderTap> tap = const Option<BillReminderTap>.none();
     await _quietly('reminders.launch_failed', () async {
-      final NotificationAppLaunchDetails? details = await _plugin.getNotificationAppLaunchDetails();
+      final NotificationAppLaunchDetails? details = await _hub.launchDetails();
       if (details?.didNotificationLaunchApp ?? false) {
         tap = BillReminderTap.parse(details?.notificationResponse?.payload);
       }

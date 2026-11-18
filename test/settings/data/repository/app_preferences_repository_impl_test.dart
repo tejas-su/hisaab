@@ -49,6 +49,17 @@ void main() {
       expect(await repository.billRemindersChoice().run(), Either<Failure, Option<bool>>.right(const Option<bool>.of(false)));
     });
 
+    test('daily nudges were never asked about on a fresh install (BR-22.8)', () async {
+      expect(await repository.nudgeChoice().run(), Either<Failure, Option<bool>>.right(const Option<bool>.none()));
+    });
+
+    test('remembers yes, and then no, to daily nudges', () async {
+      expect(await repository.saveNudgeChoice(on: true).run(), Either<Failure, Unit>.right(unit));
+      expect(await repository.nudgeChoice().run(), Either<Failure, Option<bool>>.right(const Option<bool>.of(true)));
+      await repository.saveNudgeChoice(on: false).run();
+      expect(await repository.nudgeChoice().run(), Either<Failure, Option<bool>>.right(const Option<bool>.of(false)));
+    });
+
     test('the look matches the phone on a fresh install (FR-SE-3)', () async {
       expect(await repository.themeChoice().run(), Either<Failure, ThemeChoice>.right(ThemeChoice.matchPhone));
     });

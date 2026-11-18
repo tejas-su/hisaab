@@ -44,6 +44,16 @@ final class AppPreferencesRepositoryImpl implements AppPreferencesRepository {
       });
 
   @override
+  TaskEither<Failure, Option<bool>> nudgeChoice() => dbTask(() => _preferences.read(SettingKeys.nudges))
+      .map((String? value) => Option<String>.fromNullable(value).map((String stored) => stored == _yes));
+
+  @override
+  TaskEither<Failure, Unit> saveNudgeChoice({required bool on}) => dbTask(() async {
+        await _preferences.write(SettingKeys.nudges, on ? _yes : _no);
+        return unit;
+      });
+
+  @override
   TaskEither<Failure, ThemeChoice> themeChoice() => dbTask(() => _preferences.read(SettingKeys.themeMode))
       .map((String? stored) => ThemeChoice.values.firstWhere((ThemeChoice choice) => choice.name == stored, orElse: () => ThemeChoice.matchPhone));
 

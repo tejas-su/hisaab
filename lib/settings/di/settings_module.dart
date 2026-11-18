@@ -2,12 +2,16 @@ import 'package:get_it/get_it.dart';
 
 import '../../core/db/app_database.dart';
 import '../../core/notifications/bill_reminders.dart';
+import '../../core/notifications/nudges.dart';
 import '../../ledger/ledger.dart';
 import '../data/datasource/preferences_local_data_source.dart';
 import '../data/repository/app_preferences_repository_impl.dart';
 import '../domain/repository/app_preferences_repository.dart';
 import '../domain/usecase/answer_bill_reminders.dart';
+import '../domain/usecase/answer_nudge.dart';
+import '../domain/usecase/get_nudge_switch.dart';
 import '../domain/usecase/should_ask_bill_reminders.dart';
+import '../domain/usecase/should_ask_nudge.dart';
 
 /// Registers the app preferences repository and the bill reminders ask; needs the core services
 /// registered first, and the ledger's before the ask is first used.
@@ -22,5 +26,8 @@ void registerSettingsServices(GetIt getIt) {
     )
     ..registerLazySingleton<AnswerBillReminders>(
       () => AnswerBillReminders(preferences: preferences, reminders: getIt<BillReminders>(), arm: getIt<ArmBillReminders>()),
-    );
+    )
+    ..registerLazySingleton<ShouldAskNudge>(() => ShouldAskNudge(preferences: preferences))
+    ..registerLazySingleton<AnswerNudge>(() => AnswerNudge(preferences: preferences, nudges: getIt<Nudges>()))
+    ..registerLazySingleton<GetNudgeSwitch>(() => GetNudgeSwitch(preferences: preferences, nudges: getIt<Nudges>()));
 }

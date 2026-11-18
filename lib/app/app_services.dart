@@ -5,6 +5,7 @@ import '../backup/backup.dart';
 import '../core/db/app_database.dart';
 import '../core/di/service_locator.dart';
 import '../core/notifications/bill_reminders.dart';
+import '../core/notifications/nudges.dart';
 import '../habits/habits.dart';
 import '../ledger/ledger.dart';
 import '../onboarding/onboarding.dart';
@@ -17,9 +18,10 @@ void registerAppServices(
   GetIt getIt, {
   required AppDatabase database,
   required BillReminders reminders,
+  required Nudges nudges,
   required ShortcutsPlatform shortcuts,
 }) {
-  registerCoreServices(getIt, database: database, reminders: reminders);
+  registerCoreServices(getIt, database: database, reminders: reminders, nudges: nudges);
   registerSettingsServices(getIt);
   registerLedgerServices(getIt);
   registerHabitsServices(getIt);

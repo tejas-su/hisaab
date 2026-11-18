@@ -29,6 +29,7 @@ class SettingsPage extends StatelessWidget {
     required this.themeBloc,
     this.onOpenCategories,
     this.shortcuts,
+    this.nudge,
     this.yourHisaab,
     this.onFixMyNumber,
     this.wrapContent,
@@ -54,6 +55,10 @@ class SettingsPage extends StatelessWidget {
   /// The *Shortcuts* group, heading included, between Look and *Your hisaab* (FR-SE-6, widget spec
   /// §15 #2), built by the route with its bloc; none leaves it out.
   final Widget? shortcuts;
+
+  /// The *Daily nudge* switch row after *Shortcuts* (FR-SE-7, D200); no bill reminders row exists to sit
+  /// beside. Built by the route with its bloc; none leaves it out.
+  final Widget? nudge;
 
   /// The *Your hisaab* group under Look (FR-SE-4, D139), built by the route with its bloc; none
   /// leaves the group out.
@@ -141,6 +146,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
             ?shortcuts,
+            ?nudge,
             if (data != null) ...<Widget>[
               Padding(
                 padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.xs, top: HisaabSpacing.xl, bottom: HisaabSpacing.s),

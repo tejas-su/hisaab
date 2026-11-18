@@ -5,6 +5,7 @@ import 'package:hisaab/core/design/haptics.dart';
 import 'package:hisaab/core/di/service_locator.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money_formatter.dart';
+import 'package:hisaab/core/notifications/nudges.dart';
 import 'package:hisaab/core/time/clock.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/settings/settings.dart';
@@ -12,6 +13,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/fakes/fake_bill_reminders.dart';
+import '../helpers/fakes/fake_nudges.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -75,9 +77,11 @@ void main() {
       addTearDown(database.close);
 
       final GetIt getIt = GetIt.asNewInstance();
-      registerCoreServices(getIt, database: database, reminders: FakeBillReminders());
+      final FakeNudges nudges = FakeNudges();
+      registerCoreServices(getIt, database: database, reminders: FakeBillReminders(), nudges: nudges);
 
       expect(getIt<AppDatabase>(), same(database));
+      expect(getIt<Nudges>(), same(nudges));
       expect(getIt<Clock>(), isA<SystemClock>());
       expect(getIt<Haptics>(), isA<SystemHaptics>());
       expect(getIt<MoneyFormatter>().locale, 'en_IN');

@@ -7,6 +7,7 @@ import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/notifications/bill_reminder.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
+import 'package:hisaab/habits/habits.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -15,9 +16,13 @@ import '../../helpers/bloc_dispatch.dart';
 import '../../helpers/fakes/fake_app_preferences_repository.dart';
 import '../../helpers/fakes/fake_bill_reminders.dart';
 import '../../helpers/fakes/fake_budget_settings_repository.dart';
+import '../../helpers/fakes/fake_category_repository.dart';
 import '../../helpers/fakes/fake_clock.dart';
 import '../../helpers/fakes/fake_ledger_repository.dart';
+import '../../helpers/fakes/fake_nudge_state_repository.dart';
+import '../../helpers/fakes/fake_nudges.dart';
 import '../../helpers/fakes/fake_recurring_repository.dart';
+import '../../helpers/fakes/fake_suggestion_state_repository.dart';
 import '../../helpers/fixtures/ledger/worked_example.dart';
 
 void main() {
@@ -25,6 +30,8 @@ void main() {
   late FakeLedgerRepository ledger;
   late FakeRecurringRepository recurring;
   late FakeBillReminders reminders;
+  late FakeNudges nudges;
+  late FakeNudgeStateRepository nudgeStates;
   late RemindersBloc bloc;
 
   // Electricity changes; it went out on Sat 24 Oct and still waits. Today is Mon 26 Oct, 8:00.
@@ -41,10 +48,13 @@ void main() {
     ledger = FakeLedgerRepository(WorkedExample.entries);
     recurring = FakeRecurringRepository(<RecurringRule>[WorkedExample.salary, WorkedExample.rent, electricity]);
     reminders = FakeBillReminders();
+    nudges = FakeNudges();
+    nudgeStates = FakeNudgeStateRepository();
   });
 
   RemindersBloc build() {
     final FakeClock clock = FakeClock(DateTime(2026, 10, 26, 8));
+    final FakeCategoryRepository categories = FakeCategoryRepository();
     final GetCycleSummary summary = GetCycleSummary(
       ledger: ledger,
       recurring: recurring,
@@ -55,6 +65,20 @@ void main() {
     return bloc = RemindersBloc(
       preferences: preferences,
       arm: ArmBillReminders(recurring: recurring, summary: summary, reminders: reminders, clock: clock),
+      armNudges: ArmNudges(
+        getHabitIndex: GetHabitIndex(
+          ledger: ledger,
+          categories: categories,
+          states: FakeSuggestionStateRepository(),
+          clock: clock,
+        ),
+        nudgeStates: nudgeStates,
+        ledger: ledger,
+        categories: categories,
+        nudges: nudges,
+        clock: clock,
+        categoryLabel: (Category category) => category.key,
+      ),
       reminders: reminders,
       getCycleSummary: summary,
       ledger: ledger,
@@ -66,6 +90,7 @@ void main() {
     await bloc.close();
     await ledger.dispose();
     await reminders.dispose();
+    await nudges.dispose();
   });
 
   final Matcher openedElectricity = isA<RemindersBillOpened>()
@@ -116,6 +141,46 @@ void main() {
       slowRead.complete();
       await pumpEventQueue();
       expect(reminders.scheduled.single.billName, 'Power');
+    });
+  });
+
+  group('RemindersBloc arming nudges (BR-22)', () {
+    test('on start, with nudges on, arms them', () async {
+      preferences.nudgesOn = const Option<bool>.of(true);
+      await build().dispatch(const RemindersStarted());
+      expect(nudges.arms, 1);
+    });
+
+    test('never asked, or off: every nudge is removed', () async {
+      await build().dispatch(const RemindersStarted());
+      expect(nudges.arms, 1);
+      expect(nudges.scheduled, isEmpty);
+      expect(nudgeStates.states, isEmpty);
+    });
+
+    test('on resume and on every write to the ledger, it arms again', () async {
+      preferences.nudgesOn = const Option<bool>.of(true);
+      build();
+      await bloc.dispatch(const RemindersArmRequested());
+      expect(nudges.arms, 1);
+      await ledger.add(EntryDraft(amount: WorkedExample.rent.amount, kind: EntryKind.spent, categoryId: 1, date: WorkedExample.today)).run();
+      await pumpEventQueue();
+      expect(nudges.arms, 2);
+    });
+
+    test('a failing arm stays quiet and the bill reminders still arm', () async {
+      preferences.nudgesOn = const Option<bool>.of(true);
+      nudgeStates.failure = DatabaseFailure('locked');
+      await build().dispatch(const RemindersArmRequested());
+      expect(nudges.arms, 0);
+      expect(reminders.arms, 1);
+      expect(bloc.state, const RemindersIdle());
+    });
+
+    test('a failed choice read arms no nudge and stays quiet', () async {
+      preferences.failure = DatabaseFailure('locked');
+      await build().dispatch(const RemindersArmRequested());
+      expect(nudges.arms, 0);
     });
   });
 

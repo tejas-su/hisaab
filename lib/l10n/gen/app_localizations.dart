@@ -1753,6 +1753,126 @@ abstract class AppLocalizations {
   /// **'On the day a changing bill or card bill is due'**
   String get reminderChannelDescription;
 
+  /// Android notification channel name for the daily nudge, shown in the system's notification settings
+  ///
+  /// In en, this message translates to:
+  /// **'Daily nudge'**
+  String get nudgeChannel;
+
+  /// Android notification channel description for the daily nudge, shown in the system's notification settings
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle reminder to add what you usually spend'**
+  String get nudgeChannelDescription;
+
+  /// Daily nudge title, phrasing 1 of 3 (rotated by date), naming the user's own category label. Never an amount or note.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} today?'**
+  String nudgeTitle1(String category);
+
+  /// Daily nudge body, phrasing 1 of 3. Never an amount or note.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add it'**
+  String get nudgeBody1;
+
+  /// Daily nudge title, phrasing 2 of 3, naming the user's own category label. Never an amount or note.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything for {category}?'**
+  String nudgeTitle2(String category);
+
+  /// Daily nudge body, phrasing 2 of 3. Never an amount or note.
+  ///
+  /// In en, this message translates to:
+  /// **'Add it here, it takes a moment'**
+  String get nudgeBody2;
+
+  /// Daily nudge title, phrasing 3 of 3, naming the user's own category label. Never an amount or note.
+  ///
+  /// In en, this message translates to:
+  /// **'Did {category} come up today?'**
+  String nudgeTitle3(String category);
+
+  /// Daily nudge body, phrasing 3 of 3. Never an amount or note.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add what you spent'**
+  String get nudgeBody3;
+
+  /// Daily nudge title with no category, phrasing 1 of 3 (rotated by date).
+  ///
+  /// In en, this message translates to:
+  /// **'Anything to add today?'**
+  String get nudgeGeneralTitle1;
+
+  /// Daily nudge body with no category, phrasing 1 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add it'**
+  String get nudgeGeneralBody1;
+
+  /// Daily nudge title with no category, phrasing 2 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent anything today?'**
+  String get nudgeGeneralTitle2;
+
+  /// Daily nudge body with no category, phrasing 2 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Add it here, it takes a moment'**
+  String get nudgeGeneralBody2;
+
+  /// Daily nudge title with no category, phrasing 3 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'How did today go?'**
+  String get nudgeGeneralTitle3;
+
+  /// Daily nudge body with no category, phrasing 3 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add what you spent'**
+  String get nudgeGeneralBody3;
+
+  /// One-tap notification action that adds the user's usual amount for the category. Only when the habit has an exact amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {amount}'**
+  String nudgeActionAddUsual(String amount);
+
+  /// Notification action that opens an inline reply to type a different amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Other amount'**
+  String get nudgeActionOther;
+
+  /// Hint and label of the inline reply box where the user types an amount in rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get nudgeReplyLabel;
+
+  /// Shown when the typed reply is empty, zero or not a number. Asks again; nothing is saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get nudgeReplyInvalid;
+
+  /// Title of the confirmation that replaces the nudge after a save. No amount. No body is needed; it clears by itself.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to {category}'**
+  String nudgeAdded(String category);
+
+  /// Action on the confirmation that takes back the one-tap add, for 4 seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get nudgeUndo;
+
   /// Asked once, after the first changing or card bill is saved (spec §5)
   ///
   /// In en, this message translates to:
@@ -1776,6 +1896,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reminders are off. Home still shows bills that need an amount.'**
   String get remindRefused;
+
+  /// Asked once, after the first missed-log tap (BR-22.8, FR-SE-7 AC-4)
+  ///
+  /// In en, this message translates to:
+  /// **'Remind you about this each day?'**
+  String get nudgeAskTitle;
+
+  /// Yes to the daily nudge; Android then asks for the permission
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get nudgeAskYes;
+
+  /// No to the daily nudge; never asked again
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get nudgeAskNo;
+
+  /// Shown after Android refused the notification permission, in the ask and under the Settings row (E122, FR-SE-7 AC-2); mirrors remindRefused
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications in your phone\'s settings to turn this on.'**
+  String get nudgeRefused;
+
+  /// Settings group heading above the Daily nudge switch row (FR-SE-7 AC-1)
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get settingsReminders;
+
+  /// Settings switch row title (FR-SE-7 AC-1)
+  ///
+  /// In en, this message translates to:
+  /// **'Daily nudge'**
+  String get settingsNudge;
+
+  /// Second line of the Daily nudge row (FR-SE-7 AC-1)
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle reminder when you usually spend'**
+  String get settingsNudgeHint;
+
+  /// TalkBack label of the Daily nudge switch, read with its state: 'Daily nudge, switch, on' (FR-SE-7 AC-5)
+  ///
+  /// In en, this message translates to:
+  /// **'Daily nudge'**
+  String get settingsNudgeSwitchLabel;
 
   /// Settings row and income sheet eyebrow for the income (FR-SE-1, D137)
   ///

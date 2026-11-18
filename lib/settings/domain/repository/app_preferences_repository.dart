@@ -38,6 +38,17 @@ abstract interface class AppPreferencesRepository {
   /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
   TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind});
 
+  /// The answer to the daily nudge question (SPEC BR-22.8).
+  ///
+  /// Returns [Right] with [Some] true for on, [Some] false for off, or [None] when it was never
+  /// asked; or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Option<bool>> nudgeChoice();
+
+  /// Remembers whether the daily nudge is [on].
+  ///
+  /// Returns [Right] with [unit], or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, Unit> saveNudgeChoice({required bool on});
+
   /// The look the user picked (SPEC FR-SE-3).
   ///
   /// Returns [Right] with the choice, [ThemeChoice.matchPhone] when none was picked or the stored

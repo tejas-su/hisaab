@@ -26,6 +26,7 @@ void main() {
         project: services.projectWidgetDays,
         preferences: services.preferences,
         platform: services.shortcuts,
+        nudges: services.nudges,
         clock: services.clock,
         words: (strings: lookupAppLocalizations(const Locale('en')), money: MoneyFormatter()),
         ledger: services.ledger,
@@ -122,6 +123,36 @@ void main() {
       await bloc.dispatch(const ShortcutsLaunchHandled());
 
       expect(bloc.state, const ShortcutsIdle());
+    });
+
+    test('a nudge tap while running opens the Add tray like the widget key', () async {
+      services.nudges.tap();
+      await pumpEventQueue();
+
+      expect(bloc.state, const ShortcutsLaunchPending(LaunchAction.add));
+    });
+
+    test('a start launched by a nudge holds the Add tray for the first screen', () async {
+      services.nudges.launchedBy = true;
+      final Future<void> expectation = expectLater(bloc.stream, emits(const ShortcutsLaunchPending(LaunchAction.add)));
+
+      await bloc.dispatch(const ShortcutsStarted());
+
+      await expectation;
+    });
+
+    test('a start launched by neither a nudge nor a shortcut stays idle', () async {
+      await bloc.dispatch(const ShortcutsStarted());
+
+      expect(bloc.state, const ShortcutsIdle());
+    });
+
+    test('a start launched by a widget tap still holds that tap, not the nudge', () async {
+      services.shortcuts.launchedBy = const Option<LaunchAction>.of(LaunchAction.home);
+
+      await bloc.dispatch(const ShortcutsStarted());
+
+      expect(bloc.state, const ShortcutsLaunchPending(LaunchAction.home));
     });
 
     test('events and states compare by value', () {

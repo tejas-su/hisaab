@@ -3,6 +3,7 @@ import 'package:hisaab/backup/backup.dart';
 import 'package:hisaab/core/design/haptics.dart';
 import 'package:hisaab/core/money/money_formatter.dart';
 import 'package:hisaab/core/notifications/bill_reminders.dart';
+import 'package:hisaab/core/notifications/nudges.dart';
 import 'package:hisaab/core/time/clock.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/habits/habits.dart';
@@ -23,6 +24,8 @@ import 'fakes/fake_budget_settings_repository.dart';
 import 'fakes/fake_category_repository.dart';
 import 'fakes/fake_clock.dart';
 import 'fakes/fake_haptics.dart';
+import 'fakes/fake_nudge_state_repository.dart';
+import 'fakes/fake_nudges.dart';
 import 'fakes/fake_ledger_repository.dart';
 import 'fakes/fake_recurring_repository.dart';
 import 'fakes/fake_shortcuts_platform.dart';
@@ -45,6 +48,10 @@ final class FakeServices {
   final FakeHaptics haptics = FakeHaptics();
   final FakeAiHandoff handoff = FakeAiHandoff();
   final FakeBillReminders reminders = FakeBillReminders();
+
+  /// The daily nudges and what they remember.
+  final FakeNudges nudges = FakeNudges();
+  final FakeNudgeStateRepository nudgeStates = FakeNudgeStateRepository();
   final FakeClock clock = FakeClock(WorkedExample.now);
   final FakeBackupRepository backups = FakeBackupRepository();
 
@@ -175,6 +182,9 @@ final class FakeServices {
     ..registerSingleton<ArmBillReminders>(armBillReminders)
     ..registerSingleton<ShouldAskBillReminders>(ShouldAskBillReminders(preferences: preferences, recurring: recurring))
     ..registerSingleton<AnswerBillReminders>(AnswerBillReminders(preferences: preferences, reminders: reminders, arm: armBillReminders))
+    ..registerSingleton<ShouldAskNudge>(ShouldAskNudge(preferences: preferences))
+    ..registerSingleton<AnswerNudge>(AnswerNudge(preferences: preferences, nudges: nudges))
+    ..registerSingleton<GetNudgeSwitch>(GetNudgeSwitch(preferences: preferences, nudges: nudges))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
     ..registerSingleton<GetSetAside>(GetSetAside(recurring: recurring, ledger: ledger))
     ..registerSingleton<UseFromSavings>(UseFromSavings(ledger: ledger, categories: categories, clock: clock))
@@ -205,9 +215,21 @@ final class FakeServices {
     ..registerSingleton<AiHandoff>(handoff)
     ..registerSingleton<BackupRepository>(backups)
     ..registerSingleton<ShortcutsPlatform>(shortcuts)
+    ..registerSingleton<Nudges>(nudges)
     ..registerSingleton<ProjectWidgetDays>(projectWidgetDays)
     ..registerSingleton<SuggestionStateRepository>(states)
     ..registerSingleton<GetHabitIndex>(GetHabitIndex(ledger: ledger, categories: categories, states: states, clock: clock))
+    ..registerSingleton<ArmNudges>(
+      ArmNudges(
+        getHabitIndex: GetHabitIndex(ledger: ledger, categories: categories, states: states, clock: clock),
+        nudgeStates: nudgeStates,
+        ledger: ledger,
+        categories: categories,
+        nudges: nudges,
+        clock: clock,
+        categoryLabel: (Category category) => category.key,
+      ),
+    )
     ..registerSingleton<UndoUsualAdd>(UndoUsualAdd(states: states, ledger: ledger, clock: clock))
     ..registerSingleton<MarkMissedLogAsked>(MarkMissedLogAsked(states: states, clock: clock))
     ..registerSingleton<ForgetUsual>(ForgetUsual(states: states, clock: clock))
@@ -229,6 +251,7 @@ final class FakeServices {
     await ledger.dispose();
     await recurring.dispose();
     await reminders.dispose();
+    await nudges.dispose();
     await shortcuts.dispose();
   }
 }

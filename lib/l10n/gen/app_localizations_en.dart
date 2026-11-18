@@ -1231,6 +1231,77 @@ class AppLocalizationsEn extends AppLocalizations {
       'On the day a changing bill or card bill is due';
 
   @override
+  String get nudgeChannel => 'Daily nudge';
+
+  @override
+  String get nudgeChannelDescription =>
+      'A gentle reminder to add what you usually spend';
+
+  @override
+  String nudgeTitle1(String category) {
+    return '$category today?';
+  }
+
+  @override
+  String get nudgeBody1 => 'Tap to add it';
+
+  @override
+  String nudgeTitle2(String category) {
+    return 'Anything for $category?';
+  }
+
+  @override
+  String get nudgeBody2 => 'Add it here, it takes a moment';
+
+  @override
+  String nudgeTitle3(String category) {
+    return 'Did $category come up today?';
+  }
+
+  @override
+  String get nudgeBody3 => 'Tap to add what you spent';
+
+  @override
+  String get nudgeGeneralTitle1 => 'Anything to add today?';
+
+  @override
+  String get nudgeGeneralBody1 => 'Tap to add it';
+
+  @override
+  String get nudgeGeneralTitle2 => 'Spent anything today?';
+
+  @override
+  String get nudgeGeneralBody2 => 'Add it here, it takes a moment';
+
+  @override
+  String get nudgeGeneralTitle3 => 'How did today go?';
+
+  @override
+  String get nudgeGeneralBody3 => 'Tap to add what you spent';
+
+  @override
+  String nudgeActionAddUsual(String amount) {
+    return 'Add $amount';
+  }
+
+  @override
+  String get nudgeActionOther => 'Other amount';
+
+  @override
+  String get nudgeReplyLabel => 'Amount';
+
+  @override
+  String get nudgeReplyInvalid => 'Enter an amount';
+
+  @override
+  String nudgeAdded(String category) {
+    return 'Added to $category';
+  }
+
+  @override
+  String get nudgeUndo => 'Undo';
+
+  @override
   String get remindAskTitle => 'Remind you on the day it\'s due?';
 
   @override
@@ -1242,6 +1313,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get remindRefused =>
       'Reminders are off. Home still shows bills that need an amount.';
+
+  @override
+  String get nudgeAskTitle => 'Remind you about this each day?';
+
+  @override
+  String get nudgeAskYes => 'Remind me';
+
+  @override
+  String get nudgeAskNo => 'Not now';
+
+  @override
+  String get nudgeRefused =>
+      'Allow notifications in your phone\'s settings to turn this on.';
+
+  @override
+  String get settingsReminders => 'Reminders';
+
+  @override
+  String get settingsNudge => 'Daily nudge';
+
+  @override
+  String get settingsNudgeHint => 'A gentle reminder when you usually spend';
+
+  @override
+  String get settingsNudgeSwitchLabel => 'Daily nudge';
 
   @override
   String get moneyComingIn => 'Money coming in';

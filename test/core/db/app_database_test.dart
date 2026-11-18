@@ -62,7 +62,7 @@ void main() {
     test('is at the latest schema version', () async {
       final List<Map<String, Object?>> rows = await db().rawQuery('PRAGMA user_version');
       expect(rows.single.values.single, AppDatabase.schemaVersion);
-      expect(AppDatabase.schemaVersion, 5);
+      expect(AppDatabase.schemaVersion, 6);
     });
 
     test('seeds the fixed category list in order (SPEC BR-11)', () async {
@@ -213,7 +213,7 @@ void main() {
       final AppDatabase upgraded = await _openOrFail(path);
       addTearDown(upgraded.close);
       final Database db = upgraded.db;
-      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 5);
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 6);
       final List<Map<String, Object?>> entries = await db.query(Tables.transactions, orderBy: TransactionColumns.id);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.id]), <int>[1, 2, 3]);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.recurringId]), <int?>[1, 2, null]);
@@ -385,7 +385,7 @@ void main() {
       final AppDatabase upgraded = await _openOrFail(path);
       addTearDown(upgraded.close);
       final Database db = upgraded.db;
-      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 5);
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 6);
       final List<Map<String, Object?>> entries = await db.query(Tables.transactions, orderBy: TransactionColumns.id);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.id]), <int>[2, 3]);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.recurringId]), <int?>[2, null]);

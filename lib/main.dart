@@ -17,6 +17,9 @@ import 'core/logging/app_bloc_observer.dart';
 import 'core/logging/app_logger.dart';
 import 'core/notifications/android_bill_reminders.dart';
 import 'core/notifications/bill_reminders.dart';
+import 'core/notifications/android_nudges.dart';
+import 'core/notifications/notification_hub.dart';
+import 'core/notifications/nudges.dart';
 import 'shortcuts/data/platform/android_shortcuts_platform.dart';
 
 Future<void> main() async {
@@ -27,7 +30,9 @@ Future<void> main() async {
   registerFontLicenses();
   Bloc.observer = const AppBlocObserver();
 
-  final BillReminders reminders = await AndroidBillReminders.start();
+  final NotificationHub hub = await NotificationHub.start();
+  final BillReminders reminders = AndroidBillReminders.start(hub);
+  final Nudges nudges = AndroidNudges(hub);
   final String path = p.join(await getDatabasesPath(), AppDatabase.fileName);
   final Either<Failure, AppDatabase> opened = await AppDatabase.open(factory: databaseFactory, path: path).run();
 
@@ -37,7 +42,7 @@ Future<void> main() async {
       runApp(const HisaabApp.startupFailed());
     },
     (AppDatabase database) {
-      registerAppServices(GetIt.I, database: database, reminders: reminders, shortcuts: AndroidShortcutsPlatform());
+      registerAppServices(GetIt.I, database: database, reminders: reminders, nudges: nudges, shortcuts: AndroidShortcutsPlatform());
       runApp(HisaabApp(getIt: GetIt.I));
     },
   );

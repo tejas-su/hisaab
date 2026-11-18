@@ -126,7 +126,7 @@ void main() {
       final AppDatabase upgraded = await reopen(await versionFile(4, rentAndEntries));
       final Database db = upgraded.db;
 
-      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 5);
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 6);
       final List<Map<String, Object?>> entries = await db.query(Tables.transactions, orderBy: TransactionColumns.id);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.id]), <int>[2, 3]);
       expect(entries.map((Map<String, Object?> e) => e[TransactionColumns.recurringId]), <int?>[2, null]);
@@ -184,7 +184,7 @@ void main() {
       for (final int version in <int>[1, 3]) {
         final AppDatabase upgraded = await reopen(await versionFile(version, (Database db) async {}));
 
-        expect((await upgraded.db.rawQuery('PRAGMA user_version')).single.values.single, 5, reason: 'from v$version');
+        expect((await upgraded.db.rawQuery('PRAGMA user_version')).single.values.single, 6, reason: 'from v$version');
         expect(await upgraded.db.query(Tables.categories, where: "${CategoryColumns.key} = 'not_logged_in'"), hasLength(1));
       }
     });

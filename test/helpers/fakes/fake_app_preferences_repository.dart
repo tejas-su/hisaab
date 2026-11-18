@@ -10,6 +10,7 @@ final class FakeAppPreferencesRepository implements AppPreferencesRepository {
     this.done = false,
     this.draftJson,
     this.reminders = const Option<bool>.none(),
+    this.nudgesOn = const Option<bool>.none(),
     this.theme = ThemeChoice.matchPhone,
   });
 
@@ -18,6 +19,9 @@ final class FakeAppPreferencesRepository implements AppPreferencesRepository {
 
   /// The answer to "Remind you on the day it's due?"; [None] when never asked.
   Option<bool> reminders;
+  /// The answer to the daily nudge question; [None] when never asked.
+  Option<bool> nudgesOn;
+
   /// The saved look (FR-SE-3).
   ThemeChoice theme;
   Failure? failure;
@@ -65,6 +69,15 @@ final class FakeAppPreferencesRepository implements AppPreferencesRepository {
   @override
   TaskEither<Failure, Unit> saveBillRemindersChoice({required bool remind}) => _run(() {
         reminders = Option<bool>.of(remind);
+        return unit;
+      });
+
+  @override
+  TaskEither<Failure, Option<bool>> nudgeChoice() => _run(() => nudgesOn);
+
+  @override
+  TaskEither<Failure, Unit> saveNudgeChoice({required bool on}) => _run(() {
+        nudgesOn = Option<bool>.of(on);
         return unit;
       });
 

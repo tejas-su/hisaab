@@ -10,6 +10,9 @@ abstract final class Tables {
 
   /// The quiet, rest and forget state of each category's *your usual* (schema v4, D153).
   static const String suggestionState = 'suggestion_state';
+
+  /// The daily nudge's armed time, ignored streak and rest, per category or for the general nudge (schema v6, BR-22.12).
+  static const String nudgeState = 'nudge_state';
 }
 
 /// Columns of [Tables.categories].
@@ -82,6 +85,21 @@ abstract final class SuggestionStateColumns {
   static const String askedOn = 'asked_on';
 }
 
+/// Columns of [Tables.nudgeState] (SPEC BR-22.12).
+abstract final class NudgeStateColumns {
+  /// The category the row belongs to; 0 is the general nudge, so there is no foreign key. Also the primary key.
+  static const String categoryId = 'category_id';
+
+  /// When the nudge was last armed, a local ISO instant like `transactions.created_at`; null when never.
+  static const String armedFor = 'armed_for';
+
+  /// Nudges settled *ignored* in a row.
+  static const String ignoredStreak = 'ignored_streak';
+
+  /// The last day of the nudge's rest, `YYYY-MM-DD`; null when not resting.
+  static const String restUntil = 'rest_until';
+}
+
 /// Stored values of [RecurringColumns.amountMode].
 abstract final class AmountModeValues {
   static const String fixed = 'fixed';
@@ -132,6 +150,9 @@ abstract final class SettingKeys {
 
   /// Whether the user wants bill reminders: '1' yes, '0' no, unset when never asked (D126).
   static const String billReminders = 'bill_reminders';
+
+  /// Whether the user wants the daily nudge: '1' yes, '0' no, unset when never asked (BR-22.8).
+  static const String nudges = 'nudges';
 
   /// Backup-feature-owned, and local to this phone: never written into a backup file (D139).
   /// The day of the last backup made here, `YYYY-MM-DD`.
