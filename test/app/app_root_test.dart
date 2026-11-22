@@ -132,6 +132,32 @@ void main() {
       expect(find.byType(SettingsPage), findsNothing);
     });
 
+    testWidgets('going back from Settings after a restore there lands on Home without an error (D139)', (WidgetTester tester) async {
+      await boot(tester, FakeServices());
+      final HomeBloc replaced = tester.element(find.byType(AppShell)).read<HomeBloc>();
+      await tester.tap(find.byKey(const ValueKey<String>('open-settings')));
+      await settle(tester);
+      await tester.scrollUntilVisible(find.byKey(const ValueKey<String>('restore')), 200, scrollable: find.byType(Scrollable).last);
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('restore')));
+      await settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('restore-replace')));
+      await settle(tester);
+      // why: the replaced blocs close after their stream cancels, which need a real event-loop turn;
+      // on a phone that has long happened by the time the user goes back.
+      await settle(tester);
+      expect(services.backups.restores, hasLength(1));
+      expect(() => replaced.add(const HomeLoadRequested()), throwsStateError);
+      expect(find.byType(SettingsPage), findsOneWidget);
+
+      await tester.tap(findTooltip('Back'));
+      await settle(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SettingsPage), findsNothing);
+      expect(find.byType(AppShell), findsOneWidget);
+    });
+
     testWidgets('a category added in Settings is a tile the next time Add opens (FR-SE-2, D138)', (WidgetTester tester) async {
       await boot(tester, FakeServices());
       await tester.tap(find.byKey(const ValueKey<String>('open-settings')));

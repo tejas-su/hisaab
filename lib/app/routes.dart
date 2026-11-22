@@ -171,6 +171,11 @@ abstract final class AppRoutes {
                       ),
                     ),
                   );
+                  // why: a restore, its undo or Delete everything in Settings rebuilt this screen
+                  // with new blocs that load for themselves (D139), and closed these.
+                  if (!context.mounted) {
+                    return;
+                  }
                   // why: category edits (D138) don't pass through the ledger or rules streams Home
                   // listens to, so Home re-reads on the way back; the Add tray takes its tiles from it.
                   home.add(const HomeLoadRequested());
