@@ -20,6 +20,7 @@ import 'core/notifications/bill_reminders.dart';
 import 'core/notifications/android_nudges.dart';
 import 'core/notifications/notification_hub.dart';
 import 'core/notifications/nudges.dart';
+import 'core/time/clock.dart';
 import 'shortcuts/data/platform/android_shortcuts_platform.dart';
 
 Future<void> main() async {
@@ -32,7 +33,7 @@ Future<void> main() async {
 
   final NotificationHub hub = await NotificationHub.start();
   final BillReminders reminders = AndroidBillReminders.start(hub);
-  final Nudges nudges = AndroidNudges(hub);
+  final Nudges nudges = AndroidNudges(hub, const SystemClock());
   final String path = p.join(await getDatabasesPath(), AppDatabase.fileName);
   final Either<Failure, AppDatabase> opened = await AppDatabase.open(factory: databaseFactory, path: path).run();
 

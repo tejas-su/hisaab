@@ -26,7 +26,7 @@ People stop using a tracker when they forget to log, and then the day's number i
 
 ## Constraints
 
-- Entry speed: the Add flow gains no tap and no field. A tap on the nudge opens the existing Add tray (`hisaab://add`, an existing launch action). No new Add behaviour.
+- Entry speed: the Add flow gains no tap and no field. A tap on the nudge opens the existing Add tray (`hisaab://nudge`, which opens the plain Add tray like the widget's Add key). No new Add behaviour.
 - Scheduled notifications cannot check anything when they fire, so every condition is checked when arming, and arming repeats on every start, resume and write (as the bill reminders do through `RemindersBloc`).
 - Strings only in `lib/l10n/app_en.arb`; banned words apply ("transaction", "debit/credit", "Oops"). Copy goes through the `design-content` agent.
 - Android 13+ needs the notification permission; refusal is respected and never re-asked (E30 pattern).

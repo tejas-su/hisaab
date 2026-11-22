@@ -86,38 +86,38 @@ class NudgeRow extends StatelessWidget {
         radius: HisaabRadii.card - FocusRing.outset,
         inset: const EdgeInsets.all(FocusRing.outset),
         child: InkWell(
-        key: const ValueKey<String>('nudge-row'),
-        onTap: flip,
-        focusColor: context.colors.clear,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: minHeight),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: HisaabSpacing.m),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 42,
-                  height: 42,
-                  alignment: Alignment.center,
-                  decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
-                  child: const AppIcon(AppIcons.nudge),
-                ),
-                const SizedBox(width: HisaabSpacing.m),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(strings.settingsNudge, style: text.bodyLarge),
-                      Text(strings.settingsNudgeHint, style: text.bodySmall?.copyWith(color: context.colors.ink2)),
-                    ],
+          key: const ValueKey<String>('nudge-row'),
+          onTap: flip,
+          focusColor: context.colors.clear,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: minHeight),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: HisaabSpacing.m),
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    width: 42,
+                    height: 42,
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(color: context.colors.sunk, shape: HisaabShapes.squircle(14)),
+                    child: const AppIcon(AppIcons.nudge),
                   ),
-                ),
-                const SizedBox(width: HisaabSpacing.s),
-                Switch(key: const ValueKey<String>('nudge-switch'), value: state.on, onChanged: (bool _) => flip()),
-              ],
+                  const SizedBox(width: HisaabSpacing.m),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(strings.settingsNudge, style: text.bodyLarge),
+                        Text(strings.settingsNudgeHint, style: text.bodySmall?.copyWith(color: context.colors.ink2)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: HisaabSpacing.s),
+                  Switch(key: const ValueKey<String>('nudge-switch'), value: state.on, onChanged: (bool _) => flip()),
+                ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     );

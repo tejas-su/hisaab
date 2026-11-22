@@ -1837,42 +1837,6 @@ abstract class AppLocalizations {
   /// **'Tap to add what you spent'**
   String get nudgeGeneralBody3;
 
-  /// One-tap notification action that adds the user's usual amount for the category. Only when the habit has an exact amount.
-  ///
-  /// In en, this message translates to:
-  /// **'Add {amount}'**
-  String nudgeActionAddUsual(String amount);
-
-  /// Notification action that opens an inline reply to type a different amount.
-  ///
-  /// In en, this message translates to:
-  /// **'Other amount'**
-  String get nudgeActionOther;
-
-  /// Hint and label of the inline reply box where the user types an amount in rupees.
-  ///
-  /// In en, this message translates to:
-  /// **'Amount'**
-  String get nudgeReplyLabel;
-
-  /// Shown when the typed reply is empty, zero or not a number. Asks again; nothing is saved.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter an amount'**
-  String get nudgeReplyInvalid;
-
-  /// Title of the confirmation that replaces the nudge after a save. No amount. No body is needed; it clears by itself.
-  ///
-  /// In en, this message translates to:
-  /// **'Added to {category}'**
-  String nudgeAdded(String category);
-
-  /// Action on the confirmation that takes back the one-tap add, for 4 seconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Undo'**
-  String get nudgeUndo;
-
   /// Asked once, after the first changing or card bill is saved (spec §5)
   ///
   /// In en, this message translates to:

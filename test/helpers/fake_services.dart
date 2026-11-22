@@ -234,7 +234,7 @@ final class FakeServices {
     ..registerSingleton<MarkMissedLogAsked>(MarkMissedLogAsked(states: states, clock: clock))
     ..registerSingleton<ForgetUsual>(ForgetUsual(states: states, clock: clock))
     ..registerSingleton<RestoreUsual>(RestoreUsual(states: states))
-    ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: reminders))
+    ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: reminders, nudges: nudges))
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(
       CompleteOnboarding(

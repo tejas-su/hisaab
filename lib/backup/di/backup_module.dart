@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../core/db/app_database.dart';
 import '../../core/notifications/bill_reminders.dart';
+import '../../core/notifications/nudges.dart';
 import '../data/datasource/backup_local_data_source.dart';
 import '../data/platform/backup_files.dart';
 import '../data/repository/backup_repository_impl.dart';
@@ -17,5 +18,5 @@ void registerBackupServices(GetIt getIt) {
   );
   getIt
     ..registerSingleton<BackupRepository>(backups)
-    ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: getIt<BillReminders>()));
+    ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: getIt<BillReminders>(), nudges: getIt<Nudges>()));
 }

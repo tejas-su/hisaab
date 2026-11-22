@@ -13,6 +13,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_backup_repository.dart';
 import '../../../helpers/fakes/fake_bill_reminders.dart';
+import '../../../helpers/fakes/fake_nudges.dart';
 import '../../../helpers/fakes/fake_clock.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/pump_app.dart';
@@ -36,7 +37,7 @@ void main() {
       () => YourHisaabBloc(backups: backups, clock: FakeClock(DateTime(2026, 11, 6, 10)), haptics: haptics),
     );
     final DeleteEverythingBloc delete = await tester.buildBloc(
-      () => DeleteEverythingBloc(deleteEverything: DeleteEverything(backups: backups, reminders: FakeBillReminders()), haptics: haptics),
+      () => DeleteEverythingBloc(deleteEverything: DeleteEverything(backups: backups, reminders: FakeBillReminders(), nudges: FakeNudges()), haptics: haptics),
     );
     addTearDown(yourHisaab.close);
     addTearDown(delete.close);

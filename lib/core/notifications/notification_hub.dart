@@ -12,10 +12,7 @@ final class NotificationHub {
   NotificationHub._(this.plugin, this._responses);
 
   /// Initialises the plugin; call once before `runApp`. Never throws.
-  ///
-  /// [onBackground] must be a top-level function; it receives action-button taps while the app
-  /// is closed.
-  static Future<NotificationHub> start({DidReceiveBackgroundNotificationResponseCallback? onBackground}) async {
+  static Future<NotificationHub> start() async {
     final FlutterLocalNotificationsPlugin plugin = FlutterLocalNotificationsPlugin();
     // ignore: close_sinks, why: taps can come for as long as the app runs, so it is never closed.
     final StreamController<NotificationResponse> responses = StreamController<NotificationResponse>.broadcast();
@@ -23,7 +20,6 @@ final class NotificationHub {
       await plugin.initialize(
         settings: const InitializationSettings(android: AndroidInitializationSettings(_icon)),
         onDidReceiveNotificationResponse: responses.add,
-        onDidReceiveBackgroundNotificationResponse: onBackground,
       );
     } on Object catch (error, stackTrace) {
       AppLogger.recordError(error, stackTrace, tag: 'notifications.start_failed');

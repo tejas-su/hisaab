@@ -44,15 +44,15 @@ final class ArmNudges implements UseCase<Unit, bool> {
   final String Function(Category) _categoryLabel;
 
   /// Returns [Right] with [unit] once the nudges are armed, or [Left] with `DatabaseFailure` or
-  /// `InvalidDataFailure` when anything can't be read or stored, in which case nothing is armed
-  /// for a read failure.
+  /// `InvalidDataFailure` when anything can't be read or stored. A read failure also removes every
+  /// pending nudge, so one an entry just logged should have cancelled can't fire.
   @override
   TaskEither<Failure, Unit> call(bool params) {
     if (!params) {
       return _arm(const <NudgeNotice>[]).flatMap((Unit _) => _disarmStates());
     }
-    return _nudgeStates.all().flatMap(
-          (Map<int, NudgeState> stored) => _categories.all().flatMap(
+    return _orClear(_nudgeStates.all()).flatMap(
+          (Map<int, NudgeState> stored) => _orClear(_categories.all()).flatMap(
                 (List<Category> categories) =>
                     _settle(stored, categories).flatMap((Map<int, NudgeState> settled) => _plan(settled, categories)),
               ),
@@ -63,6 +63,11 @@ final class ArmNudges implements UseCase<Unit, bool> {
         await _nudges.arm(notices);
         return Either<Failure, Unit>.right(unit);
       });
+
+  // why: when the plan can't be read, a missed nudge is better than one that fires after the user
+  // logged (the design's anti-goal), so every pending nudge goes and the failure is still returned.
+  TaskEither<Failure, T> _orClear<T>(TaskEither<Failure, T> read) =>
+      read.orElse((Failure failure) => _arm(const <NudgeNotice>[]).flatMap((Unit _) => TaskEither<Failure, T>.left(failure)));
 
   // why: a nudge cancelled by switching off was never shown, so a later switch-on must not
   // settle it as ignored (BR-22.4); the streak and rest stay.
@@ -78,7 +83,7 @@ final class ArmNudges implements UseCase<Unit, bool> {
       );
 
   TaskEither<Failure, Unit> _plan(Map<int, NudgeState> settled, List<Category> categories) =>
-      _getHabitIndex(const NoParams()).flatMap(
+      _orClear(_getHabitIndex(const NoParams())).flatMap(
         (HabitIndex index) {
           final List<Nudge> planned = NudgePlanner.plan(
             index,
@@ -120,7 +125,7 @@ final class ArmNudges implements UseCase<Unit, bool> {
           return TaskEither<Failure, NudgeState>.right(state);
         }
         final CalendarDate day = CalendarDate.fromDateTime(armed);
-        return _ledger.entriesBetween(day, day).flatMap((List<Entry> entries) {
+        return _orClear(_ledger.entriesBetween(day, day)).flatMap((List<Entry> entries) {
           final NudgeState result = NudgeSettler.settle(
             state,
             now: now,

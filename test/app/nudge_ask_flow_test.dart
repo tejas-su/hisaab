@@ -165,12 +165,25 @@ void main() {
       final int armsBefore = services.nudges.arms;
 
       await tester.ensureVisible(find.byKey(const ValueKey<String>('nudge-row')));
+      // why: the Reminders heading puts the row below the fold; the scroll only lands after a pump.
+      await _settle(tester);
       await tester.tap(find.byKey(const ValueKey<String>('nudge-row')));
       await _settle(tester);
 
       expect(services.preferences.nudgesOn, const Option<bool>.of(true));
       expect(services.nudges.permissionAsks, 1);
       expect(services.nudges.arms, greaterThan(armsBefore));
+    });
+
+    testWidgets('coming back from Settings re-arms, since Forget, hide and rename write outside the ledger streams (BR-22.3)', (WidgetTester tester) async {
+      await boot(tester);
+      await openSettings(tester);
+      final int armsInSettings = services.nudges.arms;
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(services.nudges.arms, greaterThan(armsInSettings));
     });
   });
 }

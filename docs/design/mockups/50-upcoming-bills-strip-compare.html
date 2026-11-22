@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en" data-t="light" data-s="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab — Next 7 days strip: A, B and C compared</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+/* One set of tokens, copied from 02-home.html (light) and 05-home-dark-over-today.html (dark). No new tokens.
+   Page chrome (the grey canvas, the sticky bar) is mockup furniture, not product. */
+:root{--gs:1;--pbg:#D3D0C8;--pink:#161615;--pmut:#3d3c38;--pcard:#FFFEFB;--pline:#B9B6AD;--psunk:#E4E1DA}
+html[data-s="1.5"]{--gs:1.5}
+html[data-t=dark]{--pbg:#262624;--pink:#F2F1EC;--pmut:#C9C8C2;--pcard:#1C1C1A;--pline:#3A3A37;--psunk:#121211}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pbg);color:var(--pink);font-family:'Mukta',sans-serif;overflow-x:hidden}
+.bar{position:sticky;top:0;z-index:50;background:var(--pbg);border-bottom:1px solid var(--pline);padding:8px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px}
+.bar h1{font-family:'Anek Latin',sans-serif;font-size:22px;line-height:28px;font-weight:600;margin:0;flex:1 1 280px}
+.tg{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.seg{display:flex;background:var(--psunk);border-radius:14px;padding:3px}
+.seg button{font:inherit;font-weight:600;font-size:14px;min-height:40px;padding:0 14px;border:0;border-radius:11px;background:transparent;color:var(--pink);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--pcard);box-shadow:0 0 0 1.5px var(--pink)}
+main{padding:0 16px 64px;max-width:1500px;margin:0 auto}
+.lede{max-width:900px;font-size:15px;line-height:22px;color:var(--pmut);margin:16px 0 0}
+section.row{margin-top:36px}
+section.row>h2{font-family:'Anek Latin',sans-serif;font-size:22px;line-height:28px;font-weight:600;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
+@media(max-width:899px){.grid{grid-template-columns:minmax(0,1fr)}}
+.cell{min-width:0}
+.ch{font-weight:700;font-size:15px;line-height:20px;margin:0 0 6px}
+.scroll{overflow-x:auto;padding-bottom:4px}
+.stack{display:flex;flex-direction:column;gap:14px;width:max-content;margin:0 auto}
+.pc{font-size:13px;line-height:18px;color:var(--pmut);margin:0 0 4px}
+.look{margin:10px 0 0;font-size:14px;line-height:20px;color:var(--pmut);max-width:1000px}
+.look b{color:var(--pink)}
+.none{width:390px;max-width:100%;border:1.5px dashed var(--pmut);border-radius:20px;padding:16px;font-size:14px;line-height:20px;color:var(--pmut)}
+
+/* ===== shared phone: tokens + Home shell (hero, header, Today) ===== */
+.ph{--bg:#EEECE6;--surf:#FFFEFB;--sunk:#E4E1DA;--line:#D3D0C8;--ink:#161615;--mut:#62615C;--hb:transparent;--blk:#D3D0C8;--ring:0 0 0 1px #161615;--scrim:rgba(22,22,21,.32);
+  --s:var(--gs);--min:calc(48px + 76px*(var(--s) - 1));
+  position:relative;overflow:hidden;width:390px;background:var(--bg);color:var(--ink);padding:52px 20px 20px;font-family:'Mukta',sans-serif}
+html[data-t=dark] .ph{--bg:#121211;--surf:#1C1C1A;--sunk:#262624;--line:#2C2C29;--ink:#F2F1EC;--mut:#9C9B95;--hb:#2C2C29;--blk:#3A3A37;--ring:0 0 0 0 transparent;--scrim:rgba(0,0,0,.55)}
+.ph.crop{padding-top:0}
+.ph.narrow{width:320px;padding:20px;--s:1.5;--min:86px}
+.ph.fixed{height:844px}
+svg.i{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hdr{display:flex;align-items:center;justify-content:space-between;height:44px}
+.logo{display:flex;align-items:baseline;gap:2px;font-family:'Anek Latin',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.4px;line-height:28px}
+.dot{width:8px;height:8px;border-radius:4px;background:#FFB020;box-shadow:var(--ring)}
+.date{font-size:15px;font-weight:600;color:var(--mut)}
+.gear{width:44px;height:44px;border-radius:14px;background:var(--sunk);display:flex;align-items:center;justify-content:center}
+.hero{margin-top:14px;border-radius:28px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--hb);padding:20px 20px 18px;display:flex;flex-direction:column}
+.hero .l{font-size:15px;font-weight:500;color:var(--mut);line-height:20px}
+.hero .n{margin-top:4px;font-family:'Anek Latin',sans-serif;font-weight:600;font-size:76px;line-height:76px;font-stretch:85%;font-variation-settings:'wdth' 85;letter-spacing:-.8px;font-feature-settings:'tnum'}
+.hero .n.z{color:var(--mut)}
+.blocks{margin-top:16px;display:flex;align-items:flex-end;gap:10px}
+.blocks .r{flex-grow:1;display:flex;gap:6px}
+.blk{flex:1;height:40px;border-radius:8px;background:var(--blk);position:relative;overflow:hidden}
+.blk.t{outline:1.5px solid var(--ink);outline-offset:-1.5px}
+.blk.t i{position:absolute;left:0;right:0;bottom:0;background:#FFB020}
+.flag{display:flex;flex-direction:column;align-items:center;gap:2px;width:44px;font-size:12px;font-weight:600;color:var(--mut);line-height:14px}
+.sub12{display:flex;justify-content:space-between;margin-top:6px;padding-right:54px;font-size:12px;color:var(--mut);line-height:14px}
+.foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px}
+.foot .m{color:var(--mut)} .foot b{font-weight:700;font-feature-settings:'tnum'}
+.today{margin-top:12px;border-radius:28px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--hb);padding:6px 0 8px}
+.today .h{display:flex;align-items:baseline;gap:10px;padding:8px 20px 6px;font-family:'Anek Latin',sans-serif;font-weight:600;font-size:22px;line-height:28px}
+.today .h em{font-family:'Mukta',sans-serif;font-style:normal;font-size:15px;font-weight:700;color:var(--mut);font-feature-settings:'tnum'}
+.te{display:flex;align-items:center;gap:12px;padding:9px 20px}
+.well{width:42px;height:42px;border-radius:14px;background:var(--sunk);display:flex;align-items:center;justify-content:center;flex:none}
+.te .nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.te .nm b{font-size:16px;font-weight:600;line-height:1.25}.te .nm span{font-size:14px;line-height:1.3;color:var(--mut)}
+.te .amt{font-size:17px;font-weight:700;font-feature-settings:'tnum'}
+.te.empty{padding:9px 20px;font-size:14px;color:var(--mut)}
+.cut{border-radius:0 0 28px 28px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--hb);padding:12px 20px;font-size:12px;color:var(--mut);display:flex;justify-content:space-between;line-height:14px}
+.cut b{font-weight:600}
+
+/* ===== A: card with one row per bill (from 47) ===== */
+.a-strip{margin-top:12px;border-radius:28px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--hb);padding:14px 12px 12px}
+.a-th{padding:2px 8px 10px}
+.a-ti{font-family:'Anek Latin',sans-serif;font-weight:600;font-size:calc(22px*var(--s));line-height:1.27}
+.a-to{font-size:calc(15px*var(--s));line-height:1.35;color:var(--mut);font-feature-settings:'tnum'}
+.a-to b{color:var(--ink);font-weight:700}
+.a-warn{display:flex;align-items:flex-start;gap:10px;margin:0 0 8px;padding:12px;border-radius:18px;background:var(--sunk);border:1px solid var(--line);font-size:calc(15px*var(--s));line-height:1.35;font-weight:600}
+.a-warn svg{margin-top:1px}
+.a-row{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px 8px 8px;margin-top:8px;border-radius:18px;background:var(--sunk);text-decoration:none;color:var(--ink)}
+.a-row:first-of-type{margin-top:0}
+.a-well{width:40px;height:40px;border-radius:14px;background:var(--surf);display:flex;align-items:center;justify-content:center;flex:none}
+.a-nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-nm b{font-size:calc(16px*var(--s));font-weight:600;line-height:1.25}
+.a-nm span{font-size:calc(14px*var(--s));line-height:1.3;color:var(--mut)}
+.a-amt{font-size:calc(17px*var(--s));font-weight:700;font-feature-settings:'tnum';text-align:right;line-height:1.2;flex:none}
+.a-amt .ab{font-size:calc(14px*var(--s));font-weight:400;color:var(--mut)}
+.a-amt.cc{font-weight:600;color:var(--mut)}
+html[data-s="1.5"] .a-amt .ab,.narrow .a-amt .ab{display:block}
+.waitA{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 16px;border-radius:20px;background:var(--surf);border:1px solid var(--line);font-size:15px;line-height:20px}
+.waitA>span:nth-child(2){flex-grow:1}
+.waitA .btn{height:44px;padding:0 16px;border-radius:14px;background:var(--sunk);display:flex;align-items:center;font-weight:700;font-size:15px;flex:none}
+
+/* ===== B: week rail (from 48) ===== */
+.b-strip{margin-top:12px;border-radius:28px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--hb);padding:6px 4px 8px}
+.b-st{display:flex;align-items:baseline;justify-content:space-between;padding:8px 16px 6px}
+.b-ttl{font-family:'Anek Latin',sans-serif;font-weight:600;font-size:calc(22px*var(--s));line-height:1.27}
+.b-range{font-size:calc(14px*var(--s));color:var(--mut);font-weight:600;font-feature-settings:'tnum'}
+.b-rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--min),1fr))}
+.b-c{all:unset;box-sizing:border-box;display:flex;padding:2px;min-height:48px;cursor:pointer}
+div.b-c{cursor:default}
+.b-v{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:14px;border:1.5px solid transparent;min-width:0}
+.b-c:focus-visible .b-v{outline:2px solid var(--ink);outline-offset:1px}
+.b-v.empty{border:1px solid var(--line)}
+.b-v.on{background:var(--sunk);border:1.5px solid var(--ink)}
+.b-v.card{background:var(--surf);border:1.5px dashed var(--mut)}
+.b-v.hatch{background:repeating-linear-gradient(135deg,var(--line) 0 2px,transparent 2px 7px),var(--sunk)}
+html[data-t=dark] .b-v.hatch{background:repeating-linear-gradient(135deg,#3A3A37 0 2px,transparent 2px 7px),var(--sunk)}
+.b-v.open{background:var(--sunk);border:2px solid var(--ink)}
+.b-wd{font-size:calc(12px*var(--s));line-height:1.17;font-weight:600;color:var(--mut)}
+.b-dn{font-family:'Anek Latin',sans-serif;font-size:calc(17px*var(--s));font-weight:600;line-height:1.18;font-feature-settings:'tnum'}
+.b-v svg{width:calc(18px*var(--s));height:calc(18px*var(--s))}
+.b-sp{height:calc(18px*var(--s))}
+.b-cnt{width:calc(20px*var(--s));height:calc(20px*var(--s));border-radius:50%;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:calc(12px*var(--s));font-weight:700;font-feature-settings:'tnum';line-height:1}
+.b-am{font-size:calc(12px*var(--s));font-weight:600;line-height:1.17;font-feature-settings:'tnum';white-space:nowrap;min-height:calc(14px*var(--s))}
+.b-v.card .b-am,.b-v.card .b-wd{color:var(--mut)}
+.b-v.empty .b-dn{color:var(--mut)}
+.b-exp{--caret:67px;position:relative;margin:10px 4px 0;border:1.5px solid var(--ink);border-radius:20px;background:var(--surf);padding:4px 0}
+html[data-s="1.5"] .b-exp{--caret:165px}
+.b-exp::before{content:"";position:absolute;top:-8px;left:var(--caret);width:12px;height:12px;background:var(--surf);border-left:1.5px solid var(--ink);border-top:1.5px solid var(--ink);transform:rotate(45deg)}
+.b-eh{padding:8px 16px 2px;font-size:calc(14px*var(--s));font-weight:600;color:var(--mut)}
+.b-brow{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 16px;cursor:pointer}
+.b-bt{display:flex;flex-direction:column;flex-grow:1;min-width:0}
+.b-bn{font-size:calc(16px*var(--s));font-weight:600;line-height:1.25}
+.b-bs{font-size:calc(14px*var(--s));color:var(--mut);line-height:1.29}
+.b-ba{font-size:calc(17px*var(--s));font-weight:700;font-feature-settings:'tnum';white-space:nowrap}
+.b-hl{height:1px;background:var(--line);margin:0 16px 0 70px}
+.b-sum{margin:8px 4px 0;border-radius:20px;background:var(--sunk);padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.b-l1{font-size:calc(15px*var(--s));line-height:1.35}
+.b-l1 b{font-weight:700;font-feature-settings:'tnum'}
+.b-l1 span{color:var(--mut)}
+.b-l2{font-size:calc(14px*var(--s));line-height:1.3;color:var(--mut)}
+.b-warn{display:flex;gap:8px;align-items:flex-start;font-size:calc(15px*var(--s));line-height:1.35;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.b-warn svg{width:calc(18px*var(--s));height:calc(18px*var(--s));margin-top:2px}
+.waitB{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 16px;border-radius:20px;background:var(--surf);border:1px solid var(--line);font-size:15px;line-height:20px}
+.waitB svg{color:var(--mut)}
+.waitB>span{flex-grow:1}
+
+/* ===== C: one 56dp row that opens a sheet (from 49, re-based on the 02/05 tokens) ===== */
+.c-row{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px 8px 8px;margin-top:12px;border-radius:18px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--line);width:100%;font:inherit;color:var(--ink);text-align:left;border-top:0;border-left:0;border-right:0;border-bottom:0;cursor:pointer}
+.c-row.warn{box-shadow:inset 0 0 0 1.5px var(--mut)}
+.c-w{width:40px;height:40px;border-radius:14px;background:var(--sunk);display:flex;align-items:center;justify-content:center;flex:none}
+.c-w b{font:600 calc(var(--s)*18px)/1 'Anek Latin',sans-serif;font-feature-settings:'tnum'}
+.c-t{flex:1;min-width:0;font-size:calc(var(--s)*15px);line-height:calc(var(--s)*20px);font-weight:600}
+.c-t>span{display:block;font-size:calc(var(--s)*13px);line-height:calc(var(--s)*18px);font-weight:400;color:var(--mut)}
+.c-t>span b{font:600 calc(var(--s)*13px)/calc(var(--s)*18px) 'Anek Latin',sans-serif;font-feature-settings:'tnum';color:var(--ink)}
+.c-row.one .c-t{font-weight:400}
+.c-row.one .c-t b{font:600 calc(var(--s)*15px)/calc(var(--s)*20px) 'Anek Latin',sans-serif;font-feature-settings:'tnum'}
+.c-t>span.wl{display:flex;gap:6px;color:var(--ink)}
+.c-t>span.wl svg{width:16px;height:16px;margin-top:calc((var(--s)*18px - 16px)/2)}
+.c-chev{color:var(--mut)}
+.c-wait{display:flex;gap:8px;margin-top:12px;font-size:calc(var(--s)*15px);line-height:calc(var(--s)*22px);color:var(--mut);padding:0 4px}
+.c-wait svg{margin-top:2px}
+.c-draft{font:600 11px/14px 'Mukta',sans-serif;box-shadow:inset 0 0 0 1px var(--mut);border-radius:6px;padding:1px 5px;margin-inline-start:6px;white-space:nowrap}
+.c-scrim{position:absolute;inset:0;background:var(--scrim);z-index:8}
+.c-sheet{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow-y:auto;background:var(--bg);border-radius:28px 28px 0 0;padding:8px 20px 20px;z-index:9;box-shadow:inset 0 1px 0 var(--hb)}
+.c-sheet.flow{position:relative;margin:12px -20px -20px;border-radius:28px 28px 0 0;padding-top:12px;max-height:none}
+.c-handle{width:32px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.c-hd{min-height:48px;display:flex;flex-direction:column;justify-content:center;margin-bottom:8px}
+.c-q{font:600 calc(var(--s)*22px)/calc(var(--s)*28px) 'Anek Latin',sans-serif}
+.c-s{font-size:calc(var(--s)*15px);line-height:calc(var(--s)*22px);color:var(--mut)}
+.c-s b{font:600 calc(var(--s)*15px)/calc(var(--s)*22px) 'Anek Latin',sans-serif;font-feature-settings:'tnum';color:var(--ink)}
+.c-warnTop{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:12px 16px;border-radius:16px;background:var(--sunk);box-shadow:inset 0 0 0 1.5px var(--mut);font-size:calc(var(--s)*15px);line-height:calc(var(--s)*22px)}
+.c-card{background:var(--surf);border-radius:24px;padding:4px 0;box-shadow:inset 0 0 0 1px var(--hb)}
+.c-srow{border:0;background:none;font:inherit;color:inherit;text-align:left;position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px 8px 16px}
+.c-srow+.c-srow::before{content:'';position:absolute;top:0;left:68px;right:16px;height:1px;background:var(--line)}
+.c-srow .c-t{font-size:calc(var(--s)*16px);line-height:calc(var(--s)*22px);overflow-wrap:anywhere;font-weight:400}
+.c-srow .c-t span{font-size:calc(var(--s)*13px);line-height:calc(var(--s)*18px)}
+.c-a{text-align:right;font:600 calc(var(--s)*16px)/calc(var(--s)*22px) 'Anek Latin',sans-serif;font-feature-settings:'tnum';white-space:nowrap}
+.c-a i{font:400 calc(var(--s)*13px)/calc(var(--s)*18px) 'Mukta',sans-serif;font-style:normal;color:var(--mut);display:block}
+.c-a.cc{color:var(--mut);font-weight:400}
+.c-foot{display:flex;gap:8px;font-size:calc(var(--s)*13px);line-height:calc(var(--s)*18px);color:var(--mut);padding:12px 4px 0}
+.c-foot svg{margin-top:1px}
+
+/* ===== scorecard and notes ===== */
+.card{background:var(--pcard);border-radius:24px;padding:20px;margin-top:12px;font-size:15px;line-height:21px}
+.card h3{font-family:'Anek Latin',sans-serif;font-size:19px;line-height:26px;font-weight:600;margin:0 0 8px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px;line-height:20px}
+th,td{text-align:left;vertical-align:top;padding:8px 12px 8px 0;border-bottom:1px solid var(--pline)}
+th{font-weight:700}
+td:first-child{font-weight:600;white-space:nowrap}
+.card ul,.card ol{margin:0;padding-left:20px}.card li{margin-bottom:6px}
+.flagbox{border:1.5px dashed var(--pmut);border-radius:16px;padding:12px 16px;margin-top:12px;font-size:14px;line-height:20px}
+code{background:var(--psunk);border-radius:6px;padding:0 5px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Next 7 days strip: A, B and C compared</h1>
+  <div class="tg">Theme <div class="seg" role="group" aria-label="Theme"><button id="tl" aria-pressed="true">Light</button><button id="td" aria-pressed="false">Dark</button></div></div>
+  <div class="tg">Text <div class="seg" role="group" aria-label="Text scale"><button id="s1" aria-pressed="true">1x</button><button id="s15" aria-pressed="false">1.5x</button></div></div>
+</div>
+<main>
+<p class="lede">One data set in every column. Today is <b>Mon 26 Oct 2026</b>, payday 4 Nov (9 days), so the window is Tue 27 Oct to Mon 2 Nov. Hero is the SPEC worked example (₹1,430). Bills: Emergency fund ₹2,000 put aside Tue 27; Electricity about ₹1,200 Wed 28; Broadband ₹700 Wed 28; Credit card ₹6,400 pay by Thu 29 (never in the total); Rent ₹10,000 Fri 30; Water ₹400 Sat 31. Source mockups: 47 (A), 48 (B), 49 (C). The text toggle scales every strip at once; the theme toggle flips every phone.</p>
+<div id="rows"></div>
+
+<section class="row" id="score"></section>
+</main>
+
+<script>
+const I={
+ home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+ bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+ card:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/>',
+ save:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+ drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+ wifi:'<path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0M12 19h.01"/>',
+ chev:'<path d="M9 6l6 6-6 6"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/>',
+ alert:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.01"/>',
+ ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/>',
+ flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+ set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+ bag:'<path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+ fork:'<path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/>'
+};
+const sv=(k,s=22,sw)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"${sw?` style="stroke-width:${sw}"`:''}>${I[k]}</svg>`;
+const inr=n=>'₹'+n.toLocaleString('en-IN');
+const plain=n=>n.toLocaleString('en-IN');
+
+/* ---- the one data set ---- */
+const DAYS={27:['Tuesday','Tue','T'],28:['Wednesday','Wed','W'],29:['Thursday','Thu','T'],30:['Friday','Fri','F'],31:['Saturday','Sat','S'],1:['Sunday','Sun','S'],2:['Monday','Mon','M']};
+const mon=d=>d<10?'Nov':'Oct';
+const BILL={
+ sip:{name:'Emergency fund',ic:'save',amt:2000,day:27,save:1},
+ elec:{name:'Electricity',ic:'bolt',amt:1200,day:28,about:1},
+ net:{name:'Broadband',ic:'wifi',amt:700,day:28},
+ cc:{name:'Credit card',ic:'card',amt:6400,day:29,card:1},
+ rent:{name:'Rent',ic:'home',amt:10000,day:30},
+ water:{name:'Water',ic:'drop',amt:400,day:31}
+};
+const total=bs=>bs.filter(b=>!b.card).reduce((a,b)=>a+b.amt,0);
+const full=b=>DAYS[b.day][0], short=b=>DAYS[b.day][1];
+const say=b=>b.save?`${b.name}, put aside ${plain(b.amt)} rupees, tomorrow.`:b.card?`${b.name}, ${plain(b.amt)} rupees, pay by ${full(b)}.`:`${b.name}, ${b.about?'about ':''}${plain(b.amt)} rupees, ${full(b)}.`;
+
+const normal=[BILL.elec,BILL.cc,BILL.rent];
+const warnSet=[BILL.elec,BILL.rent];
+const one=[BILL.rent];
+const waitSet=[BILL.cc,BILL.rent];
+const six=[BILL.sip,BILL.elec,BILL.net,BILL.cc,BILL.rent,BILL.water];
+
+/* ---- shared Home shell ---- */
+const header=`<div class="hdr"><div class="logo">hisaab<span class="dot"></span></div><div style="display:flex;align-items:center;gap:12px"><span class="date">Mon, 26 Oct</span><div class="gear">${sv('set')}</div></div></div>`;
+function hero(zero){
+ const blks=[...Array(9)].map((_,i)=>i?'<div class="blk"></div>':`<div class="blk t">${zero?'':'<i style="height:77%"></i>'}</div>`).join('');
+ return `<section class="hero" aria-label="Safe to spend today: ${zero?'zero':'1,430'} rupees. 9 days to payday."><span class="l">Safe to spend today</span>
+ <span class="n${zero?' z':''}">${zero?'₹0':'₹1,430'}</span>
+ <div class="blocks"><div class="r">${blks}</div><div class="flag">${sv('flag',18)}<span>4 Nov</span></div></div>
+ <div class="sub12"><span>Today</span><span>9 days to payday</span></div>
+ <div class="foot">${sv('ok',18,1.8)}<span class="m">Lasts till payday · about</span><b>${zero?'₹300 spare':'₹9,300 spare'}</b></div></section>`;
+}
+const today=zero=>zero
+ ?`<div class="today"><div class="h">Today<em>₹0</em></div><div class="te empty">Nothing spent yet today</div></div>`
+ :`<div class="today"><div class="h">Today<em>₹420</em></div>
+ <div class="te"><span class="well">${sv('fork')}</span><span class="nm"><b>Food</b><span>Lunch thali</span></span><span class="amt">₹180</span></div>
+ <div class="te"><span class="well">${sv('bag')}</span><span class="nm"><b>Shopping</b><span>DMart</span></span><span class="amt">₹240</span></div></div>`;
+const home=(strip,{zero=0,wait=''}={})=>header+hero(zero)+wait+strip+today(zero);
+const ph=(inner,cls='')=>`<div class="ph ${cls}">${inner}</div>`;
+const cut=`<div class="cut"><b>Today</b><span>9 days to payday</span></div>`;
+
+/* ---- A: card, one row per bill ---- */
+const aRow=b=>`<a href="#" class="a-row" aria-label="${say(b)} Opens the bill.">
+ <span class="a-well">${sv(b.ic)}</span>
+ <span class="a-nm"><b>${b.name}</b><span>${b.save?'Put aside · tomorrow':b.card?'pay by '+short(b):full(b)}</span></span>
+ <span class="a-amt${b.card?' cc':''}">${b.about?'<span class="ab">about </span>':''}${inr(b.amt)}</span>
+ <span style="display:flex;color:var(--mut)">${sv('chev',20,1.8)}</span></a>`;
+function A(bs,{warn=0}={}){
+ return `<section class="a-strip" aria-label="Next 7 days. ${inr(total(bs))} goes out.">
+ <div class="a-th"><div class="a-ti">Next 7 days</div><div class="a-to"><b>${inr(total(bs))}</b> goes out</div></div>
+ ${warn?`<div class="a-warn" role="note">${sv('info',20,1.8)}<span>Bills coming up use all of today's share.</span></div>`:''}
+ ${bs.map(aRow).join('')}</section>`;
+}
+const waitA=`<div class="waitA">${sv('bolt',22)}<span><b>Electricity</b> is due today. How much was it?</span><span class="btn">How much?</span></div>`;
+
+/* ---- B: week rail with inline day expansion ---- */
+function B(bs,{warn=0,open=0}={}){
+ const cells=[27,28,29,30,31,1,2].map(d=>{
+  const g=bs.filter(b=>b.day==d), [fn,sn,L]=DAYS[d];
+  if(!g.length) return `<div class="b-c"><span class="b-v empty"><span class="b-wd">${L}</span><span class="b-dn">${d}</span><span class="b-sp"></span><span class="b-am"></span></span></div>`;
+  const sum=g.reduce((a,b)=>a+b.amt,0), cardOnly=g.every(b=>b.card);
+  const cls=open==d?'open':cardOnly?'card':warn?'on hatch':'on';
+  const mid=g.length>1?`<span class="b-cnt">${g.length}</span>`:sv(g[0].ic,18);
+  const lbl=`${fn} ${d} ${mon(d)=='Oct'?'October':'November'}: ${g.map(say).join(' ').replace(/\.$/,'')}${cardOnly?', not counted':''}${warn&&!cardOnly?". Uses today's share":''}. Opens the bills for this day.`;
+  return `<button class="b-c"${open==d?' aria-expanded="true"':''} aria-label="${lbl}"><span class="b-v ${cls}"><span class="b-wd">${L}</span><span class="b-dn">${d}</span>${mid}<span class="b-am">${inr(sum)}</span></span></button>`;
+ }).join('');
+ let exp='';
+ if(open){
+  const g=bs.filter(b=>b.day==open);
+  exp=`<div class="b-exp" role="region" aria-label="${DAYS[open][0]} ${open} October, ${g.length} bills"><div class="b-eh">${DAYS[open][1]} ${open} Oct · ${g.length} bills</div>`+
+   g.map((b,i)=>`${i?'<div class="b-hl"></div>':''}<button class="b-brow"><span class="well">${sv(b.ic)}</span><span class="b-bt"><span class="b-bn">${b.name}</span><span class="b-bs">${b.about?'about':short(b)}</span></span><span class="b-ba">${inr(b.amt)}</span>${sv('chev',18)}</button>`).join('')+`</div>`;
+ }
+ const first=bs.find(b=>!b.card), cc=bs.find(b=>b.card), ab=bs.find(b=>b.about);
+ const l1=`<span class="b-l1"><b>${inr(total(bs))} goes out</b> <span>· ${first.name}${bs.length>1?' next':''}, ${short(first)}</span></span>`;
+ const l2=[cc?`Credit card, pay by ${short(cc)}, is not counted.`:'',ab?`${ab.name} is about ${inr(ab.amt)}.`:''].filter(Boolean).join(' ');
+ const sum=warn?`<span class="b-warn">${sv('info',18)}<span>Bills coming up use all of today's share.</span></span>${l1}`:l1+(l2?`<span class="b-l2">${l2}</span>`:'');
+ return `<section class="b-strip" aria-label="Next 7 days"><div class="b-st"><span class="b-ttl">Next 7 days</span><span class="b-range">27 Oct – 2 Nov</span></div>
+ <div class="b-rail">${cells}</div>${exp}<div class="b-sum">${sum}</div></section>`;
+}
+const waitB=`<div class="waitB">${sv('bolt',22)}<span><b style="font-weight:700">Electricity about ₹1,200</b> is waiting for you</span>${sv('chev',18)}</div>`;
+
+/* ---- C: one row, opens a sheet ---- */
+const WARN="Bills coming up use all of today's share.";
+const cnt=bs=>`${bs.length} ${bs.length==1?'bill':'bills'}`;
+function Crow(bs,{warn=0}={}){
+ if(bs.length==1){const b=bs[0];
+  return `<button class="c-row one" aria-label="${b.name}, ${b.about?'about ':''}${plain(b.amt)} rupees, goes out ${full(b)}. Opens the bill."><span class="c-w">${sv(b.ic)}</span><span class="c-t">${b.name}, ${b.about?'about ':''}<b>${inr(b.amt)}</b>, goes out ${full(b)}<span>${short(b)} ${b.day} ${mon(b.day)}</span></span><span class="c-chev">${sv('chev',18)}</span></button>`;}
+ const second=warn?`<span class="wl">${sv('alert',16)}<span>${WARN}</span></span>`:`<span>${cnt(bs)} · <b>${inr(total(bs))}</b></span>`;
+ return `<button class="c-row${warn?' warn':''}" aria-label="Next 7 days: ${cnt(bs)}, ${plain(total(bs))} rupees.${warn?' '+WARN:''} Opens the list."><span class="c-w"><b>${bs.length}</b></span><span class="c-t">Next 7 days${second}</span><span class="c-chev">${sv('chev',18)}</span></button>`;
+}
+function Csheet(bs,{warn=0,flow=0}={}){
+ const rows=bs.map(b=>{
+  const when=b.card?`pay by ${short(b)} · not in the total`:b.save?'Put aside · tomorrow':`${short(b)} ${b.day} ${mon(b.day)}`;
+  const amt=b.card?`<span class="c-a cc">${inr(b.amt)}</span>`:`<span class="c-a">${b.about?'<i>about</i>':''}${inr(b.amt)}</span>`;
+  return `<button class="c-srow" aria-label="${say(b)}${b.card?' Not in the total.':''} Opens the bill."><span class="c-w">${sv(b.ic)}</span><span class="c-t">${b.name}<span>${when}</span></span>${amt}<span class="c-chev">${sv('chev',18)}</span></button>`;}).join('');
+ return `${flow?'':'<div class="c-scrim"></div>'}<div class="c-sheet${flow?' flow':''}" role="dialog" aria-label="Next 7 days">${flow?'':'<div class="c-handle"></div>'}
+ <div class="c-hd"><div class="c-q">Next 7 days</div><div class="c-s">${cnt(bs)} · <b>${inr(total(bs))}</b> goes out</div></div>
+ ${warn?`<div class="c-warnTop">${sv('alert',20)}<span>${WARN}</span></div>`:''}
+ <div class="c-card">${rows}</div>
+ ${bs.some(b=>b.card)?`<div class="c-foot">${sv('info',16)}<span>A card bill is listed so you can pay it, and is not in the total.</span></div>`:''}</div>`;
+}
+const waitC=`<div class="c-wait">${sv('info',18)}<span>Electricity is waiting to be counted<span class="c-draft">draft</span></span></div>`;
+
+/* ---- page rows ---- */
+const col=(t,body)=>`<div class="cell"><div class="ch">${t}</div><div class="scroll"><div class="stack">${body}</div></div></div>`;
+const T=['A Card','B Week rail','C One line'];
+const row=(n,title,cols,look)=>`<section class="row"><h2>${n}. ${title}</h2><div class="grid">${cols.map((c,i)=>col(T[i],c)).join('')}</div><p class="look">${look}</p></section>`;
+const cap=t=>`<p class="pc">${t}</p>`;
+const homeNone=ph(home('',{}));
+const rows=[
+ row(1,'Normal, 3 bills',[
+  ph(home(A(normal))),ph(home(B(normal))),ph(home(Crow(normal)))],
+  '<b>Look at:</b> height each strip takes under the hero, and whether the three bills can be named without a tap. A names all three; B names none until a tap (only the next one, in its line); C names none and gives a count and total. The card bill is out of ₹11,200 in all three.'),
+ row(2,'Warning (₹0 share)',[
+  ph(home(A(warnSet,{warn:1}),{zero:1})),ph(home(B(warnSet,{warn:1}),{zero:1})),ph(home(Crow(warnSet,{warn:1}),{zero:1}))],
+  '<b>Look at:</b> what the warning looks like and whether it is seen without a tap. A: sunk box with glyph and words under the title. B: first line of the sunk block under the rail, plus hatched days. C: words replace the count line in the row, with an outline, so the total is not visible until the sheet opens.'),
+ row(3,'One bill only',[
+  ph(home(A(one))),ph(home(B(one))),ph(home(Crow(one)))],
+  '<b>Look at:</b> smallest state, and taps to reach the bill. A: card of title, total and one row, 1 tap. B: rail plus line, the day opens inline first, 2 taps. C: the row is the bill (due-soon style), 1 tap.'),
+ row(4,'No bills (strip absent)',[
+  cap('Strip absent. Same Home as today, nothing reserved.')+homeNone,
+  cap('Strip absent. Identical to column A and C.')+homeNone,
+  cap('Strip absent. Identical to column A and B.')+homeNone],
+  '<b>Look at:</b> all three phones are the same Home as today without a due-soon line. Nothing is drawn, no gap, no empty rail.'),
+ row(5,'Waiting-bill line above the strip',[
+  ph(home(A(waitSet),{wait:waitA})),ph(home(B(waitSet),{wait:waitB})),ph(home(Crow(waitSet),{wait:waitC}))],
+  '<b>Look at:</b> how the waiting line and the strip stack. Electricity is due today, so it is waiting and not in the strip; the strip holds the card bill and Rent (total ₹10,000). The waiting-line copy is each designer\'s own and is a placeholder in B and C, to confirm with design-content.'),
+ row(6,'Six bills, busy',[
+  cap('At the page text scale (toggle above).')+ph(home(A(six)))+cap('Fixed 1.5x, 320dp wide, strip only.')+ph(A(six),'narrow'),
+  cap('At the page text scale (toggle above).')+ph(home(B(six)))+cap('Fixed 1.5x, 320dp wide, strip only. The rail wraps.')+ph(B(six),'narrow'),
+  cap('At the page text scale (toggle above).')+ph(home(Crow(six)))+cap('Fixed 1.5x, 320dp wide: the row, then the sheet it opens.')+ph(Crow(six)+Csheet(six,{flow:1}),'narrow')],
+  '<b>Look at:</b> height at 1x against 1.5x. A grows to about six full rows and, at 320dp, the amount column overlaps long names. B stays about the same height at 1x and wraps 3+3+1 at 1.5x. C stays a single row and the sheet scrolls inside its cap.'),
+ row(7,'The second step',[
+  `<div class="none"><b>No second step.</b> Every bill is already on Home, and each row opens its bill directly.</div>`,
+  cap('Wed 28 tapped open: two bills share that day.')+ph(cut+B(six,{open:28}),'crop'),
+  cap('Row tapped: the sheet over Home.')+ph(home(Crow(six))+Csheet(six),'fixed')],
+  '<b>Look at:</b> taps and where a bill opens from. A: 1 tap to the bill. B: tap a day, then tap a row (2 taps), and a day with 2 bills shows a count, not an icon. C: tap the row, then a bill (2 taps) with names, dates and the card note all in one list. The six-bill set is used here because B needs a day with 2 bills.')
+];
+document.getElementById('rows').innerHTML=rows.join('');
+
+/* ---- scorecard ---- */
+document.getElementById('score').innerHTML=`<h2>Scorecard</h2>
+<div class="card"><div class="tw"><table>
+<tr><th></th><th>A Card</th><th>B Week rail</th><th>C One line</th></tr>
+<tr><td>Home height added, 3 bills</td><td>about 282dp (12 gap, 14 pad, 60 header, 3 x 56 rows + 2 x 8 gaps, 12 pad)</td><td>about 254dp (12 gap, 6 pad, 42 title, 91 rail, 95 summary of 2 lines, 8 pad)</td><td>68dp (12 gap + one 56dp row)</td></tr>
+<tr><td>Home height added, 1 bill</td><td>about 154dp</td><td>about 211dp (summary is one line)</td><td>68dp</td></tr>
+<tr><td>Taps to open a bill</td><td>1</td><td>2 (day, then the row), also for a day with one bill</td><td>2 for 2 or more bills; 1 when there is one bill</td></tr>
+<tr><td>Taps to see all bills</td><td>0, all named on Home</td><td>Amounts per day on Home with 0 taps; names need 1 tap per day (up to 5 here)</td><td>1, then all are in one list</td></tr>
+<tr><td>Warning visibility</td><td>Visible: glyph and words inside the card, adds about 54dp</td><td>Visible: first line of the summary plus hatched days, adds about 40dp</td><td>Visible in the row (words, outline) but replaces the count and total; repeated in the sheet; no extra height beyond a possible second text line</td></tr>
+<tr><td>1.5x text behaviour</td><td>Rows grow, "about" drops above the amount, the page scrolls. In this render at 320dp the long names (Electricity, Broadband) collide with the amount column, so the source's "nothing clips" claim did not hold here</td><td>Rail wraps 3+3+1, cells at least 86 x 48dp, caret position moves</td><td>Row grows past 56dp; the sheet scrolls inside 92% of the screen</td></tr>
+<tr><td>Risk of confusing the Today hero</td><td>Medium: a tall card of ₹ amounts sits right under it and pushes the Today list down</td><td>Medium: a dense calendar of small figures and hatch, but no big numbers</td><td>Low: one quiet row, hero then Day Blocks stay first and second</td></tr>
+<tr><td>Effort to build in Flutter</td><td>Low: a column of rows reusing the due-soon row look and an existing list pattern</td><td>High: custom wrapping rail sized by measured text, inline expansion with caret, focus and semantics for empty and live cells, hatch painting</td><td>Medium: one row plus a modal bottom sheet reusing the bill sheet shell, a second warning copy, and a one-bill mode that acts differently</td></tr>
+<tr><td>Pros</td><td>Everything visible, no taps to scan, simplest; one tap to a bill</td><td>Shows when, so clusters (rent plus card) read at a glance; quiet when the week is empty; bounded height at 1x</td><td>Smallest footprint, nothing moves when bills change; one bill is as fast as today</td></tr>
+<tr><td>Cons</td><td>Tallest, grows with every bill; six bills push Today list below the fold</td><td>Names hidden, cryptic weekday letters, extra tap, count loses the icon, wrapping at large text</td><td>Count not names for 2+ bills, a second layer to learn, warning hides the total in the row</td></tr>
+</table></div>
+<div class="flagbox"><b>Measured how.</b> Heights are arithmetic from this markup's CSS at 1x with the fallback line heights, not read from a device; fonts load from Google Fonts and fall back offline. Treat as estimates (plus or minus about 10dp). Nothing here was checked on an Android device.</div>
+<div class="flagbox"><b>Unconfirmed, not silently fixed.</b> (1) C's warning glyph <code>Alert02</code> is not confirmed to be in the free Hugeicons set (else drawn in <code>HisaabGlyphs</code>, D48); A and B use an information-circle glyph, so the three differ here. (2) The waiting-line copy is a placeholder in B and C ("Electricity about ₹1,200 is waiting for you", "Electricity is waiting to be counted"); A's differs again. (3) A, B and C all need design-content to approve their copy and the plan's decision A (the strip replaces the due-soon row) still needs the owner's OK.</div>
+<div class="flagbox"><b>What was normalised.</b> One date and data set; the 02/05 tokens everywhere (C's own colours replaced, its hero rebuilt as 02's hero); text-scale and theme driven by the page toggles. C's row is drawn as a surface row with a hairline, like 02's due-soon line, instead of 27's sunk row, because on the 02 grey it would otherwise vanish. C's one-bill line now reads "goes out Friday" because Rent is Friday, not tomorrow.</div>
+<div class="card"><h3>Recommendation</h3><p style="margin:0">Pick C as the default: it adds 68dp, keeps the hero then Day Blocks order, and still shows the warning on Home without a tap. If the owner will not accept a count instead of bill names for 2 or more bills, fall back to A with a cap of four rows, because B costs the most to build and hides the most.</p></div>
+<div class="card"><h3>Open questions (combined, deduplicated)</h3><ol>
+<li>Cap the list at about 4 rows with a "+2 more" expansion (A), or draw it uncapped?</li>
+<li>Chevron on each row or none (A)?</li>
+<li>Total wording: "goes out", "to pay", or "goes out, card bill extra"? When a counted bill is a changing one, should the total say "about"?</li>
+<li>The card bill shows an amount that is not in the total: add "not counted", or rely on "pay by"? In a list, in date order or after the counted bills (C)?</li>
+<li>A day with 2 or more bills (B): show the sum or only the count? The sum may include a card bill and look counted.</li>
+<li>At large text, is a wrapped rail acceptable (B), or should the strip fall back to a plain list?</li>
+<li>A day or Home with exactly one bill: expand inline (B) or open the bill directly (C)? Is the one extra tap for 2 or more bills acceptable (C), or must the soonest bill's name show on Home?</li>
+<li>Two-pane layout: same strip in the same column was assumed (A); no Home two-pane sketch exists to check.</li>
+</ol></div>`;
+
+/* ---- toggles ---- */
+const root=document.documentElement;
+const pr=(id,on)=>document.getElementById(id).setAttribute('aria-pressed',on);
+function setT(t){root.dataset.t=t;pr('tl',t=='light');pr('td',t=='dark')}
+function setS(s){root.dataset.s=s;pr('s1',s=='1');pr('s15',s=='1.5')}
+document.getElementById('tl').onclick=()=>setT('light');
+document.getElementById('td').onclick=()=>setT('dark');
+document.getElementById('s1').onclick=()=>setS('1');
+document.getElementById('s15').onclick=()=>setS('1.5');
+</script>
+</body>
+</html>

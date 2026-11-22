@@ -22,6 +22,17 @@ void main() {
   late FakeHaptics haptics;
   late NudgeRowBloc bloc;
 
+  group('NudgeRow values', () {
+    test('events and states compare by what they hold', () {
+      expect(const NudgeRowLoadRequested(), const NudgeRowLoadRequested());
+      expect(const NudgeRowToggled(on: true), const NudgeRowToggled(on: true));
+      expect(const NudgeRowToggled(on: true), isNot(const NudgeRowToggled(on: false)));
+      expect(const NudgeRowLoading(), const NudgeRowLoading());
+      expect(const NudgeRowLoading().props, isEmpty);
+      expect(const NudgeRowLoadRequested().props, isEmpty);
+    });
+  });
+
   setUp(() {
     preferences = FakeAppPreferencesRepository(done: true);
     nudges = FakeNudges();

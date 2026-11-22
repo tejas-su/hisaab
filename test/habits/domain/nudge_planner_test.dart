@@ -175,6 +175,19 @@ void main() {
       expect(_plan(foodIndex, now: DateTime(2026, 10, 26, 15, 31)), <Nudge>[_nudge(tuesday, 1, 15, 30)]);
     });
 
+    test('now 31 Dec 2026 evening: today is past, tomorrow is 1 Jan 2027 at 15:30 (year crossing)', () {
+      final HabitIndex newYearsEve = _index(<UsualHabit>[_habit(food)], builtOn: const CalendarDate(2026, 12, 31));
+      expect(_plan(newYearsEve, now: DateTime(2026, 12, 31, 21)), <Nudge>[_nudge(const CalendarDate(2027, 1, 1), 1, 15, 30)]);
+    });
+
+    test("now 31 Dec 2027 evening: tomorrow's day type is used, so a weekend habit plans only Sat 1 Jan 2028", () {
+      final HabitIndex newYearsEve = _index(
+        <UsualHabit>[_habit(food, dayType: DayType.weekend)],
+        builtOn: const CalendarDate(2027, 12, 31),
+      );
+      expect(_plan(newYearsEve, now: DateTime(2027, 12, 31, 9)), <Nudge>[_nudge(const CalendarDate(2028, 1, 1), 1, 15, 30)]);
+    });
+
     test('now exactly at its time: today is skipped (strictly after)', () {
       expect(_plan(foodIndex, now: DateTime(2026, 10, 26, 15, 30)), <Nudge>[_nudge(tuesday, 1, 15, 30)]);
       expect(_plan(foodIndex, now: DateTime(2026, 10, 26, 15, 29)).length, 2);

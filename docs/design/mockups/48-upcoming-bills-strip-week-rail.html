@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab — Home, Next 7 days, direction B: week rail</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..700&amp;family=Mukta:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+/* Tokens copied from 02-home.html (light) and 05-home-dark-over-today.html (dark). No new tokens. */
+body{margin:0;padding:24px;background:#D3D0C8;font-family:'Mukta',sans-serif;color:#161615}
+.page{display:flex;flex-direction:column;align-items:center;gap:32px}
+h1{font-family:'Anek Latin',sans-serif;font-size:26px;font-weight:600;margin:0}
+.intro{max-width:840px;font-size:15px;line-height:21px;margin:0}
+.row-of{display:flex;flex-wrap:wrap;justify-content:center;gap:28px;align-items:flex-start}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figcaption{font-size:14px;line-height:19px;font-weight:600;max-width:390px}
+figcaption small{display:block;font-weight:400;color:#3A3A37}
+
+/* phone */
+.ph{--bg:#EEECE6;--surf:#FFFEFB;--sunk:#E4E1DA;--line:#D3D0C8;--ink:#161615;--mut:#62615C;--hb:transparent;--s:1;--min:48px;
+  width:390px;box-sizing:border-box;position:relative;overflow:hidden;background:var(--bg);color:var(--ink);padding:52px 20px 20px}
+.ph[data-t=dark]{--bg:#121211;--surf:#1C1C1A;--sunk:#262624;--line:#2C2C29;--ink:#F2F1EC;--mut:#9C9B95;--hb:#2C2C29}
+.ph.crop{padding-top:0}
+.ph.narrow{width:320px;--s:1.5;--min:86px}
+.ph.guides::after{content:"";position:absolute;top:0;bottom:0;left:20px;right:20px;border-left:1px dashed var(--ink);border-right:1px dashed var(--ink);opacity:.35;pointer-events:none}
+.top{display:flex;align-items:center;justify-content:space-between;height:44px}
+.logo{display:flex;align-items:baseline;gap:2px;font-family:'Anek Latin',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.4px;line-height:28px}
+.dot{width:8px;height:8px;border-radius:4px;background:#FFB020}
+.ph[data-t=light] .dot{box-shadow:0 0 0 1px #161615}
+.dt{font-size:15px;font-weight:600;color:var(--mut)}
+.gear{width:44px;height:44px;border-radius:14px;background:var(--sunk);display:flex;align-items:center;justify-content:center;margin-left:12px}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* hero (copied) */
+.hero{margin-top:14px;border-radius:28px;background:var(--surf);border:1px solid var(--hb);padding:20px 20px 18px;display:flex;flex-direction:column}
+.hero .lbl{font-size:15px;font-weight:500;color:var(--mut);line-height:20px}
+.hero .big{margin-top:4px;font-family:'Anek Latin',sans-serif;font-weight:600;font-size:76px;line-height:76px;font-stretch:85%;font-variation-settings:'wdth' 85;letter-spacing:-.8px;font-feature-settings:'tnum'}
+.bar{margin-top:16px;display:flex;gap:10px;align-items:flex-end}
+.blocks{flex-grow:1;display:flex;gap:6px}
+.blk{flex:1;height:40px;border-radius:8px;background:var(--line);position:relative;overflow:hidden}
+.ph[data-t=dark] .blk{background:#3A3A37}
+.blk.now{outline:1.5px solid var(--ink);outline-offset:-1.5px}
+.blk.now i{position:absolute;left:0;right:0;bottom:0;height:77%;background:#FFB020}
+.blk.zero{background:transparent;outline:1.5px solid var(--ink);outline-offset:-1.5px}
+.flag{display:flex;flex-direction:column;align-items:center;gap:2px;width:44px;font-size:12px;font-weight:600;color:var(--mut);line-height:14px}
+.flag svg{width:18px;height:18px;color:var(--ink)}
+.cap{display:flex;justify-content:space-between;margin-top:6px;padding-right:54px;font-size:12px;color:var(--mut);line-height:14px}
+.foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px}
+.foot svg{width:18px;height:18px}
+.cut{margin-top:0;border-radius:0 0 28px 28px;background:var(--surf);border:1px solid var(--hb);border-top:0;padding:0 20px 12px;font-size:12px;color:var(--mut);display:flex;justify-content:space-between;line-height:14px}
+.cut b{font-weight:600}
+
+/* waiting line (copied from 02 due-soon look) */
+.wait{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 16px;border-radius:20px;background:var(--surf);border:1px solid var(--line);font-size:15px;line-height:20px}
+.wait svg{color:var(--mut)}
+.wait span{flex-grow:1}
+
+/* ===== the strip ===== */
+.strip{margin-top:12px;border-radius:28px;background:var(--surf);padding:6px 4px 8px}
+.st{display:flex;align-items:baseline;justify-content:space-between;padding:8px 16px 6px}
+.ttl{font-family:'Anek Latin',sans-serif;font-weight:600;font-size:calc(22px*var(--s));line-height:1.27}
+.range{font-size:calc(14px*var(--s));color:var(--mut);font-weight:600;font-feature-settings:'tnum'}
+.rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--min),1fr))}
+.c{all:unset;box-sizing:border-box;display:flex;padding:2px;min-height:48px;cursor:pointer}
+div.c{cursor:default}
+.v{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:14px;box-sizing:border-box;border:1.5px solid transparent}
+.c:focus-visible .v{outline:2px solid var(--ink);outline-offset:1px}
+.v.empty{border:1px solid var(--line)}
+.v.on{background:var(--sunk);border:1.5px solid var(--ink)}
+.v.card{background:var(--surf);border:1.5px dashed var(--mut)}
+.v.hatch{background:repeating-linear-gradient(135deg,var(--line) 0 2px,transparent 2px 7px),var(--sunk)}
+.ph[data-t=dark] .v.hatch{background:repeating-linear-gradient(135deg,#3A3A37 0 2px,transparent 2px 7px),var(--sunk)}
+.v.open{background:var(--sunk);border:2px solid var(--ink)}
+.wd{font-size:calc(12px*var(--s));line-height:1.17;font-weight:600;color:var(--mut)}
+.dn{font-family:'Anek Latin',sans-serif;font-size:calc(17px*var(--s));font-weight:600;line-height:1.18;font-feature-settings:'tnum'}
+.v svg.i{width:calc(18px*var(--s));height:calc(18px*var(--s))}
+.v .sp{height:calc(18px*var(--s))}
+.cnt{width:calc(20px*var(--s));height:calc(20px*var(--s));border-radius:50%;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:calc(12px*var(--s));font-weight:700;font-feature-settings:'tnum';line-height:1}
+.am{font-size:calc(12px*var(--s));font-weight:600;line-height:1.17;font-feature-settings:'tnum';white-space:nowrap;min-height:calc(14px*var(--s))}
+.v.card .am,.v.card .wd{color:var(--mut)}
+.v.empty .dn{color:var(--mut)}
+
+.exp{position:relative;margin:10px 4px 0;border:1.5px solid var(--ink);border-radius:20px;background:var(--surf);padding:4px 0}
+.exp::before{content:"";position:absolute;top:-8px;left:var(--caret);width:12px;height:12px;background:var(--surf);border-left:1.5px solid var(--ink);border-top:1.5px solid var(--ink);transform:rotate(45deg)}
+.exp .eh{padding:8px 16px 2px;font-size:calc(14px*var(--s));font-weight:600;color:var(--mut)}
+.brow{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 16px;cursor:pointer}
+.well{width:42px;height:42px;border-radius:14px;background:var(--sunk);display:flex;align-items:center;justify-content:center;flex:none}
+.bt{display:flex;flex-direction:column;flex-grow:1;min-width:0}
+.bn{font-size:calc(16px*var(--s));font-weight:600;line-height:1.25}
+.bs{font-size:calc(14px*var(--s));color:var(--mut);line-height:1.29}
+.ba{font-size:calc(17px*var(--s));font-weight:700;font-feature-settings:'tnum';white-space:nowrap}
+.ba.m{color:var(--mut)}
+.hl{height:1px;background:var(--line);margin:0 16px 0 70px}
+
+.sum{margin:8px 4px 0;border-radius:20px;background:var(--sunk);padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.sum .l1{font-size:calc(15px*var(--s));line-height:1.35}
+.sum .l1 b{font-weight:700;font-feature-settings:'tnum'}
+.sum .l1 span{color:var(--mut)}
+.sum .l2{font-size:calc(14px*var(--s));line-height:1.3;color:var(--mut)}
+.warn{display:flex;gap:8px;align-items:flex-start;font-size:calc(15px*var(--s));line-height:1.35;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.warn svg{width:calc(18px*var(--s));height:calc(18px*var(--s));margin-top:2px}
+
+/* Today sliver */
+.today{margin-top:12px;border-radius:28px;background:var(--surf);padding:6px 0 8px}
+.today .th{display:flex;align-items:baseline;gap:10px;padding:8px 20px 6px}
+.today .th .ttl{font-size:22px}
+.today .th b{font-size:15px;color:var(--mut);font-feature-settings:'tnum'}
+.today .tr{display:flex;align-items:center;gap:12px;padding:9px 20px}
+.absent{margin-top:12px;border:1.5px dashed var(--mut);border-radius:20px;padding:10px 16px;font-size:13px;line-height:18px;color:var(--mut)}
+
+/* annotations */
+.notes{width:100%;max-width:1220px;background:#FFFEFB;border-radius:28px;padding:28px 32px;box-sizing:border-box;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px 40px}
+.notes h2{font-family:'Anek Latin',sans-serif;font-size:19px;font-weight:600;margin:0 0 6px}
+.notes p,.notes li{font-size:14.5px;line-height:21px;margin:0 0 6px}
+.notes ul{margin:0;padding-left:18px}
+.notes table{border-collapse:collapse;font-size:13.5px;width:100%}
+.notes td,.notes th{border-top:1px solid #D3D0C8;padding:4px 8px 4px 0;text-align:left;vertical-align:top}
+.notes code{background:#E4E1DA;border-radius:6px;padding:0 5px;font-size:13px}
+.notes .wide{grid-column:1/-1}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-house" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0M12 19.5v.01"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></symbol>
+    <symbol id="i-fork" viewBox="0 0 24 24"><path d="M7 3v18M5 3v5a2 2 0 0 0 4 0V3M17 21V3c-2 1-3 4-3 8h3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+<header style="max-width:840px;text-align:left">
+  <h1>Home, Next 7 days: direction B, a week rail</h1>
+  <p class="intro" style="margin-top:8px">Seven calm day cells, tomorrow to day 7. A day with bills shows an icon (or a count) and its amount; empty days stay quiet outlines. One <code>sunk</code> line below says what goes out. Tap a day to open its bills in place. Today in these frames is Mon 26 Oct, as in 02-home. Marigold is not used on the strip (the hero keeps its today block). State is outline, dash, hatch and words, never colour alone.</p>
+</header>
+
+<div class="row-of">
+
+<!-- ========== FRAME 1 light ========== -->
+<figure>
+<figcaption>1a. Normal, light<small>3 bills on 3 days. Solid outline = counted. Dashed = card bill, listed but not counted.</small></figcaption>
+<div class="ph" data-t="light">
+  <div class="top"><div class="logo">hisaab<span class="dot"></span></div><div style="display:flex;align-items:center"><span class="dt">Mon, 26 Oct</span><span class="gear"><svg class="i"><use href="#i-gear"/></svg></span></div></div>
+  <section class="hero" aria-label="Safe to spend today: 1,430 rupees. 9 days to payday.">
+    <span class="lbl">Safe to spend today</span><span class="big">₹1,430</span>
+    <div class="bar"><div class="blocks"><div class="blk now"><i></i></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div></div><div class="flag"><svg class="i"><use href="#i-flag"/></svg>4 Nov</div></div>
+    <div class="cap"><span>Today</span><span>9 days to payday</span></div>
+  </section>
+
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Wednesday 28 October: Electricity, about 1,200 rupees. Opens the bills for this day."><span class="v on"><span class="wd">W</span><span class="dn">28</span><svg class="i"><use href="#i-bolt"/></svg><span class="am">₹1,200</span></span></button>
+      <button class="c" aria-label="Thursday 29 October: Credit card, 8,400 rupees, pay by Thursday, not counted. Opens the bills for this day."><span class="v card"><span class="wd">T</span><span class="dn">29</span><svg class="i"><use href="#i-card"/></svg><span class="am">₹8,400</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Sunday 1 November: Rent, 12,000 rupees. Opens the bills for this day."><span class="v on"><span class="wd">S</span><span class="dn">1</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum">
+      <span class="l1"><b>₹13,200 goes out</b> <span>· Electricity next, Wed</span></span>
+      <span class="l2">Credit card, pay by Thu, is not counted. Electricity is about ₹1,200.</span>
+    </div>
+  </section>
+
+  <div class="today"><div class="th"><span class="ttl">Today</span><b>₹420</b></div>
+    <div class="tr"><span class="well"><svg class="i"><use href="#i-fork"/></svg></span><span class="bt"><span class="bn">Food</span><span class="bs">Lunch thali</span></span><span class="ba">₹140</span></div></div>
+</div>
+</figure>
+
+<!-- ========== FRAME 1 dark ========== -->
+<figure>
+<figcaption>1b. Normal, dark<small>Same layout. Surface #1C1C1A, sunk #262624, hatch and dash colours from 05.</small></figcaption>
+<div class="ph" data-t="dark">
+  <div class="top"><div class="logo">hisaab<span class="dot"></span></div><div style="display:flex;align-items:center"><span class="dt">Mon, 26 Oct</span><span class="gear"><svg class="i"><use href="#i-gear"/></svg></span></div></div>
+  <section class="hero" aria-label="Safe to spend today: 1,430 rupees. 9 days to payday.">
+    <span class="lbl">Safe to spend today</span><span class="big">₹1,430</span>
+    <div class="bar"><div class="blocks"><div class="blk now"><i></i></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div></div><div class="flag"><svg class="i"><use href="#i-flag"/></svg>4 Nov</div></div>
+    <div class="cap"><span>Today</span><span>9 days to payday</span></div>
+  </section>
+
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Wednesday 28 October: Electricity, about 1,200 rupees. Opens the bills for this day."><span class="v on"><span class="wd">W</span><span class="dn">28</span><svg class="i"><use href="#i-bolt"/></svg><span class="am">₹1,200</span></span></button>
+      <button class="c" aria-label="Thursday 29 October: Credit card, 8,400 rupees, pay by Thursday, not counted. Opens the bills for this day."><span class="v card"><span class="wd">T</span><span class="dn">29</span><svg class="i"><use href="#i-card"/></svg><span class="am">₹8,400</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Sunday 1 November: Rent, 12,000 rupees. Opens the bills for this day."><span class="v on"><span class="wd">S</span><span class="dn">1</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum">
+      <span class="l1"><b>₹13,200 goes out</b> <span>· Electricity next, Wed</span></span>
+      <span class="l2">Credit card, pay by Thu, is not counted. Electricity is about ₹1,200.</span>
+    </div>
+  </section>
+
+  <div class="today"><div class="th"><span class="ttl">Today</span><b>₹420</b></div>
+    <div class="tr"><span class="well"><svg class="i"><use href="#i-fork"/></svg></span><span class="bt"><span class="bn">Food</span><span class="bs">Lunch thali</span></span><span class="ba">₹140</span></div></div>
+</div>
+</figure>
+
+<!-- ========== FRAME 2 light ========== -->
+<figure>
+<figcaption>2a. Warning, light<small>Share is ₹0 because of the bills. The line sits first inside the sunk block; counted days get a hatch as well as the outline.</small></figcaption>
+<div class="ph" data-t="light">
+  <div class="top"><div class="logo">hisaab<span class="dot"></span></div><div style="display:flex;align-items:center"><span class="dt">Mon, 26 Oct</span><span class="gear"><svg class="i"><use href="#i-gear"/></svg></span></div></div>
+  <section class="hero" aria-label="Safe to spend today: zero rupees. Each day after gets 590 rupees.">
+    <span class="lbl">Safe to spend today</span><span class="big">₹0</span>
+    <div class="bar"><div class="blocks"><div class="blk zero"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div></div><div class="flag"><svg class="i"><use href="#i-flag"/></svg>4 Nov</div></div>
+    <div class="cap"><span>Today</span><span>Each day after: ₹590</span></div>
+  </section>
+
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Wednesday 28 October: Electricity, about 1,200 rupees. Uses today's share. Opens the bills for this day."><span class="v on hatch"><span class="wd">W</span><span class="dn">28</span><svg class="i"><use href="#i-bolt"/></svg><span class="am">₹1,200</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">29</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Sunday 1 November: Rent, 12,000 rupees. Uses today's share. Opens the bills for this day."><span class="v on hatch"><span class="wd">S</span><span class="dn">1</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum">
+      <span class="warn"><svg class="i"><use href="#i-info"/></svg><span>Bills coming up use all of today's share.</span></span>
+      <span class="l1"><b>₹13,200 goes out</b> <span>· Electricity next, Wed</span></span>
+    </div>
+  </section>
+
+  <div class="today"><div class="th"><span class="ttl">Today</span><b>₹0</b></div>
+    <div class="tr"><span class="bs">Nothing spent yet today</span></div></div>
+</div>
+</figure>
+
+<!-- ========== FRAME 2 dark ========== -->
+<figure>
+<figcaption>2b. Warning, dark<small>Hatch lines #3A3A37 on sunk #262624; amounts stay full ink.</small></figcaption>
+<div class="ph" data-t="dark">
+  <div class="top"><div class="logo">hisaab<span class="dot"></span></div><div style="display:flex;align-items:center"><span class="dt">Mon, 26 Oct</span><span class="gear"><svg class="i"><use href="#i-gear"/></svg></span></div></div>
+  <section class="hero" aria-label="Safe to spend today: zero rupees. Each day after gets 590 rupees.">
+    <span class="lbl">Safe to spend today</span><span class="big">₹0</span>
+    <div class="bar"><div class="blocks"><div class="blk zero"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div></div><div class="flag"><svg class="i"><use href="#i-flag"/></svg>4 Nov</div></div>
+    <div class="cap"><span>Today</span><span>Each day after: ₹590</span></div>
+  </section>
+
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Wednesday 28 October: Electricity, about 1,200 rupees. Uses today's share. Opens the bills for this day."><span class="v on hatch"><span class="wd">W</span><span class="dn">28</span><svg class="i"><use href="#i-bolt"/></svg><span class="am">₹1,200</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">29</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Sunday 1 November: Rent, 12,000 rupees. Uses today's share. Opens the bills for this day."><span class="v on hatch"><span class="wd">S</span><span class="dn">1</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum">
+      <span class="warn"><svg class="i"><use href="#i-info"/></svg><span>Bills coming up use all of today's share.</span></span>
+      <span class="l1"><b>₹13,200 goes out</b> <span>· Electricity next, Wed</span></span>
+    </div>
+  </section>
+
+  <div class="today"><div class="th"><span class="ttl">Today</span><b>₹0</b></div>
+    <div class="tr"><span class="bs">Nothing spent yet today</span></div></div>
+</div>
+</figure>
+
+<!-- ========== FRAME 3 one day open ========== -->
+<figure>
+<figcaption>3. One day tapped open, light<small>Wed 28 holds 2 bills, so the cell shows a count and the summed amount. The open cell has a 2dp outline and a caret into the panel. Rows are 56dp; each opens the bill sheet. Dashed lines mark the 20dp gutter.</small></figcaption>
+<div class="ph crop guides" data-t="light">
+  <div class="cut"><b>Today</b><span>9 days to payday</span></div>
+  <section class="strip" aria-label="Next 7 days" style="--caret:67px">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-expanded="true" aria-label="Wednesday 28 October: Electricity, about 1,200 rupees, and Wi-Fi, 799 rupees. Open. Opens the bills for this day."><span class="v open"><span class="wd">W</span><span class="dn">28</span><span class="cnt">2</span><span class="am">₹1,999</span></span></button>
+      <button class="c"><span class="v card"><span class="wd">T</span><span class="dn">29</span><svg class="i"><use href="#i-card"/></svg><span class="am">₹8,400</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c"><span class="v on"><span class="wd">S</span><span class="dn">1</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="exp" role="region" aria-label="Wednesday 28 October, 2 bills">
+      <div class="eh">Wed 28 Oct · 2 bills</div>
+      <button class="brow"><span class="well"><svg class="i"><use href="#i-bolt"/></svg></span><span class="bt"><span class="bn">Electricity</span><span class="bs">about</span></span><span class="ba">₹1,200</span><svg class="i" style="width:18px;height:18px;color:var(--mut)"><use href="#i-chev"/></svg></button>
+      <div class="hl"></div>
+      <button class="brow"><span class="well"><svg class="i"><use href="#i-wifi"/></svg></span><span class="bt"><span class="bn">Wi-Fi</span><span class="bs">Wed</span></span><span class="ba">₹799</span><svg class="i" style="width:18px;height:18px;color:var(--mut)"><use href="#i-chev"/></svg></button>
+    </div>
+    <div class="sum">
+      <span class="l1"><b>₹21,999 goes out</b> <span>· Electricity next, Wed</span></span>
+      <span class="l2">Credit card, pay by Thu, is not counted. Electricity is about ₹1,200.</span>
+    </div>
+  </section>
+</div>
+</figure>
+
+<!-- ========== FRAME 4 single + none ========== -->
+<figure>
+<figcaption>4a. Single bill, light<small>One filled cell; the other six stay outlines. The summary names the one bill.</small></figcaption>
+<div class="ph crop" data-t="light">
+  <div class="cut"><b>Today</b><span>9 days to payday</span></div>
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">W</span><span class="dn">28</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">29</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c" aria-label="Friday 30 October: Rent, 12,000 rupees. Opens the bills for this day."><span class="v on"><span class="wd">F</span><span class="dn">30</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">1</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum"><span class="l1"><b>₹12,000 goes out</b> <span>· Rent, Fri</span></span></div>
+  </section>
+</div>
+<figcaption style="margin-top:12px">4b. No bills, light<small>The strip builds nothing: no card, no empty rail, no gap. Today follows the hero at the normal 12dp.</small></figcaption>
+<div class="ph crop" data-t="light">
+  <div class="cut"><b>Today</b><span>9 days to payday</span></div>
+  <div class="absent">Strip absent: nothing is drawn here (dashed box is only this mockup's marker).</div>
+  <div class="today"><div class="th"><span class="ttl">Today</span><b>₹420</b></div>
+    <div class="tr"><span class="well"><svg class="i"><use href="#i-fork"/></svg></span><span class="bt"><span class="bn">Food</span><span class="bs">Lunch thali</span></span><span class="ba">₹140</span></div></div>
+</div>
+</figure>
+
+<!-- ========== FRAME 5 busy, 1.5x ========== -->
+<figure>
+<figcaption>5. Busy week, 1.5x text, 320dp wide, light<small>6 bills. The cell minimum is the larger of 48dp and the measured amount, so the rail wraps (3 + 3 + 1) instead of shrinking or clipping. Every cell is at least 90 × 48dp. Cell heights grow with the text.</small></figcaption>
+<div class="ph crop narrow" data-t="light">
+  <div class="cut"><b>Today</b><span>9 days to payday</span></div>
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span></div>
+    <div class="rail">
+      <button class="c"><span class="v on"><span class="wd">T</span><span class="dn">27</span><svg class="i"><use href="#i-play"/></svg><span class="am">₹649</span></span></button>
+      <button class="c"><span class="v on"><span class="wd">W</span><span class="dn">28</span><span class="cnt">2</span><span class="am">₹1,999</span></span></button>
+      <button class="c"><span class="v card"><span class="wd">T</span><span class="dn">29</span><svg class="i"><use href="#i-card"/></svg><span class="am">₹8,400</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c"><span class="v on"><span class="wd">S</span><span class="dn">31</span><svg class="i"><use href="#i-trend"/></svg><span class="am">₹5,000</span></span></button>
+      <button class="c"><span class="v on"><span class="wd">S</span><span class="dn">1</span><svg class="i"><use href="#i-house"/></svg><span class="am">₹12,000</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum">
+      <span class="l1"><b>₹19,648 goes out</b> <span>· Netflix next, Tue</span></span>
+      <span class="l2">Credit card, pay by Thu, is not counted. Electricity is about ₹1,200.</span>
+    </div>
+  </section>
+</div>
+</figure>
+
+<!-- ========== FRAME 6 waiting line ========== -->
+<figure>
+<figcaption>6. Waiting-bill line above the strip, light<small>The waiting line keeps its slot above; the strip is below it and untouched (decision F). Copy in the waiting line is a placeholder.</small></figcaption>
+<div class="ph" data-t="light">
+  <div class="top"><div class="logo">hisaab<span class="dot"></span></div><div style="display:flex;align-items:center"><span class="dt">Mon, 26 Oct</span><span class="gear"><svg class="i"><use href="#i-gear"/></svg></span></div></div>
+  <section class="hero" aria-label="Safe to spend today: 1,430 rupees. 9 days to payday.">
+    <span class="lbl">Safe to spend today</span><span class="big">₹1,430</span>
+    <div class="bar"><div class="blocks"><div class="blk now"><i></i></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div><div class="blk"></div></div><div class="flag"><svg class="i"><use href="#i-flag"/></svg>4 Nov</div></div>
+    <div class="cap"><span>Today</span><span>9 days to payday</span></div>
+  </section>
+  <div class="wait"><svg class="i"><use href="#i-house"/></svg><span><b style="font-weight:700">Rent ₹12,000</b> is waiting for you</span><svg class="i" style="width:18px;height:18px"><use href="#i-chev"/></svg></div>
+
+  <section class="strip" aria-label="Next 7 days">
+    <div class="st"><span class="ttl">Next 7 days</span><span class="range">27 Oct – 2 Nov</span></div>
+    <div class="rail">
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">27</span><span class="sp"></span><span class="am"></span></span></div>
+      <button class="c"><span class="v on"><span class="wd">W</span><span class="dn">28</span><svg class="i"><use href="#i-bolt"/></svg><span class="am">₹1,200</span></span></button>
+      <div class="c"><span class="v empty"><span class="wd">T</span><span class="dn">29</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">F</span><span class="dn">30</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">31</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">S</span><span class="dn">1</span><span class="sp"></span><span class="am"></span></span></div>
+      <div class="c"><span class="v empty"><span class="wd">M</span><span class="dn">2</span><span class="sp"></span><span class="am"></span></span></div>
+    </div>
+    <div class="sum"><span class="l1"><b>₹1,200 goes out</b> <span>· Electricity, Wed</span></span><span class="l2">Electricity is about ₹1,200.</span></div>
+  </section>
+</div>
+</figure>
+
+</div>
+
+<!-- ========== ANNOTATIONS ========== -->
+<section class="notes" aria-label="Annotations">
+  <div>
+    <h2>Alignment and spacing</h2>
+    <ul>
+      <li>Strip card has the hero card's outer edges: 20dp from the screen (<code>HisaabSpacing.gutter</code>), 28dp radius, 12dp below the line above.</li>
+      <li>Title and summary text start 20dp in: card padding 4 plus 16 inner, the same inset as the hero's text. Expansion rows use the 16dp row inset and the hairline starts at the text start (74dp from the card edge), as in the Today list.</li>
+      <li>The rail's hit areas fill the card's 342dp inner width at 48.9dp each. Visuals are inset 2dp, giving 4dp between boxes. Gaps and radii use the 4/8dp scale (14dp radius as the icon wells).</li>
+      <li>Frame 3 draws the 20dp gutter as dashed lines. This is my reading of the CSS, not a measured screenshot; check the real edges in a widget test (<code>rows_share_the_hero_cards_edges</code>).</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Tap targets</h2>
+    <ul>
+      <li>Day with bills: at least 48.9 × 82dp hit area; the whole cell is the button.</li>
+      <li>Empty day: not a button, no action. It is an outline so the week still reads as seven days.</li>
+      <li>Expansion row: full card width, 56dp high, opens that bill's sheet (existing <code>onOpenBill</code>).</li>
+      <li>Cell minimum = max(48dp, measured amount width). At 1x on a 390dp phone that is 48.9dp, so seven fit. Narrower or larger text wraps the rail (frame 5). It never shrinks below 48dp or clips.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>TalkBack</h2>
+    <ul>
+      <li>Group: "Next 7 days. 13,200 rupees goes out. Electricity next, Wednesday." The warning, when shown, is read straight after the title.</li>
+      <li>Day cell: "Wednesday 28 October: Electricity, about 1,200 rupees. Opens the bills for this day." (The brief's example said Thursday 26 October, but 26 Oct is a Monday in these frames, so the example is moved to Wed 28.)</li>
+      <li>Card day: "Thursday 29 October: Credit card, 8,400 rupees, pay by Thursday, not counted. Opens the bills for this day." A counted day under warning adds "Uses today's share."</li>
+      <li>Empty days are excluded from semantics. The open day reports expanded, and the panel is a labelled region. Focus moves to the first row on open and back to the cell on close.</li>
+      <li>The letter T and S are ambiguous; the label always carries the full weekday and date, so the letter is visual only.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Contrast (estimated by hand, not tool-measured)</h2>
+    <table>
+      <tr><th>Pair</th><th>About</th><th>Need</th></tr>
+      <tr><td>ink #161615 on surface #FFFEFB</td><td>17:1</td><td>4.5</td></tr>
+      <tr><td>muted #62615C on surface</td><td>6:1</td><td>4.5</td></tr>
+      <tr><td>muted on sunk #E4E1DA (summary line 2, weekday letter on filled cells)</td><td>4.7:1</td><td>4.5</td></tr>
+      <tr><td>dark: muted #9C9B95 on #1C1C1A / #262624</td><td>6:1 / 5.2:1</td><td>4.5</td></tr>
+      <tr><td>solid ink outline and dashed muted outline on surface</td><td>over 3:1</td><td>3</td></tr>
+      <tr><td>empty-day outline #D3D0C8 on surface</td><td>1.4:1</td><td>exempt: non-interactive, no meaning</td></tr>
+    </table>
+    <p style="margin-top:6px">Hatch lines are 2dp on 5dp gaps; amounts in hatched cells use full ink, because muted on the line colour would be about 4:1. Re-measure with the colour tooling before any ship.</p>
+  </div>
+  <div>
+    <h2>Against a plain list (direction A style)</h2>
+    <p><b>Pros</b></p>
+    <ul>
+      <li>Shows when, not just what: clusters (rent plus card on one weekend) are visible at a glance.</li>
+      <li>Quiet when the week is empty or light: six outlines cost less attention than rows.</li>
+      <li>Short by default: about 170dp for the rail and 56dp for the line, however many bills there are, until a day is opened.</li>
+    </ul>
+    <p><b>Cons</b></p>
+    <ul>
+      <li>Names are hidden until a tap (or the soonest named in the line). A list shows every name now.</li>
+      <li>An extra tap for the second bill on a day, and a count instead of an icon loses what the bills are.</li>
+      <li>Weekday letters are cryptic (T, S twice). Dates carry the meaning.</li>
+      <li>Large text or narrow windows break the seven-in-a-row shape; the wrapped rail reads more like a calendar grid than a timeline.</li>
+      <li>Cell amounts at 12sp are small, and "about" cannot fit in a cell; it lives in the line and the expansion.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Open questions for the owner</h2>
+    <ol style="margin:0;padding-left:18px">
+      <li style="font-size:14.5px;line-height:21px;margin-bottom:6px">A day with 2 or more bills: show the sum (as here) or only the count? The sum includes the card bill if there is one, which could look like it is counted.</li>
+      <li style="font-size:14.5px;line-height:21px;margin-bottom:6px">When text is large, is a wrapped rail acceptable, or should the strip fall back to a plain list below a certain scale?</li>
+      <li style="font-size:14.5px;line-height:21px;margin-bottom:6px">A day with exactly one bill: expand inline anyway (consistent, one tap) or open the bill sheet directly (faster, but the same cell then acts two ways)?</li>
+    </ol>
+    <p style="margin-top:10px">Assumptions: the strip replaces the due-soon row (decision A); the cell amount for a card bill is shown muted; fonts load from Google Fonts as in the other mockups and fall back to a system sans offline, which changes widths slightly. I have not viewed this file in a browser.</p>
+  </div>
+</section>
+</div>
+</body>
+</html>

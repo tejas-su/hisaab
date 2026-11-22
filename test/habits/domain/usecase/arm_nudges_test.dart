@@ -238,22 +238,27 @@ void main() {
       expect(states.states[0]?.ignoredStreak, 0);
     });
 
-    test('E122: nothing is armed and nothing throws when the system refuses (arm swallows), and a failed read returns Left', () async {
+    test('E122: nothing throws when the system refuses (arm swallows), and a failed read returns Left after clearing every nudge', () async {
       build(chaiHabit());
+      nudges.scheduled = <NudgeNotice>[NudgeNotice(id: 7, at: _mondayNudge, categoryName: const Option<String>.none())];
       states.failure = DatabaseFailure('locked');
 
       final Either<Failure, Unit> result = await armNudges(true).run();
 
       expect(result, Either<Failure, Unit>.left(DatabaseFailure('locked')));
-      expect(nudges.arms, 0);
+      // why: a missed nudge is better than one that fires after the user logged (design anti-goal).
+      expect(nudges.arms, 1);
+      expect(nudges.scheduled, isEmpty);
     });
 
-    test('a failed ledger read arms nothing and returns Left', () async {
+    test('a failed ledger read clears every nudge and returns Left', () async {
       build(chaiHabit());
+      nudges.scheduled = <NudgeNotice>[NudgeNotice(id: 7, at: _mondayNudge, categoryName: const Option<String>.none())];
       ledger.failure = DatabaseFailure('locked');
 
       expect((await armNudges(true).run()).isLeft(), isTrue);
-      expect(nudges.arms, 0);
+      expect(nudges.arms, 1);
+      expect(nudges.scheduled, isEmpty);
     });
   });
 }

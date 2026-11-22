@@ -56,8 +56,8 @@ class SettingsPage extends StatelessWidget {
   /// §15 #2), built by the route with its bloc; none leaves it out.
   final Widget? shortcuts;
 
-  /// The *Daily nudge* switch row after *Shortcuts* (FR-SE-7, D200); no bill reminders row exists to sit
-  /// beside. Built by the route with its bloc; none leaves it out.
+  /// The *Reminders* group after *Shortcuts*: its heading and the *Daily nudge* switch row (FR-SE-7, D200,
+  /// D206); no bill reminders row exists to sit beside. Built by the route with its bloc; none leaves it out.
   final Widget? nudge;
 
   /// The *Your hisaab* group under Look (FR-SE-4, D139), built by the route with its bloc; none

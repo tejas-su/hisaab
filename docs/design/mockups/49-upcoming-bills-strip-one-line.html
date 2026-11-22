@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Next 7 days, direction C: one quiet line (proposal)</title>
+<style>
+  /* Direction C for docs/superpowers/plans/2026-11-19-upcoming-bills-strip.md. Nothing here is built yet.
+     Home gets ONE 56dp sunk row ("Next 7 days", "3 bills · ₹4,200", chevron). A tap opens a bottom sheet in the bill-sheet
+     style (mockup 27) with one 56dp row per bill. The gentle warning shows in the row AND at the top of the sheet.
+     One bill: the row reads like today's due-soon row and opens that bill's sheet directly.
+     Tokens, fonts, hero card, sheet and dark mode are copied from mockup 27. No new tokens. No marigold on the strip.
+     Today is Thu 19 Nov 2026. Copy marked draft needs design-content. Icons are hand-drawn stand-ins for Hugeicons
+     stroke-rounded glyphs (named in the token table). Contrast ratios were computed from the hex values with the WCAG formula;
+     nothing here was checked on a device. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .lt {
+    --bg: #F1EBE4; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5; --pick: #FFFEFC;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #65605A; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #161615; --onInverse: #F2F1EC;
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650;
+  }
+  .dk {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632; --pick: #3A3A37;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b { color: var(--canvasInk); font-weight: 600; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--canvasInk2); box-shadow: inset 0 0 0 1px var(--canvasInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px; white-space: nowrap; }
+  .controls { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; padding: 8px 0; background: var(--canvas); border-bottom: 1px solid var(--hairline); }
+  .controls label { display: flex; align-items: center; gap: 6px; font: 600 14px/20px 'Mukta', sans-serif; min-height: 44px; cursor: pointer; }
+  .controls input { width: 18px; height: 18px; accent-color: var(--canvasInk); }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 980px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--hairline); }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: 13px; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(306px, 306px)); gap: 24px 16px; margin-top: 16px; }
+  .gallery figure { margin: 0; }
+  .gallery figcaption { font-size: 13px; line-height: 19px; color: var(--canvasInk2); margin-top: 8px; max-width: 306px; }
+  .gallery figcaption b { color: var(--canvasInk); font-weight: 600; }
+  .gallery .phone { zoom: 0.85; pointer-events: none; }
+
+  /* Phone. --fs is the text scale: 1 normally, 1.5 in the busy frames. */
+  .phone { --fs: 1; position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  .phone.narrow { width: 320px; }
+  .gallery figure:has(.narrow) { width: 306px; }
+  .x15 { --fs: 1.5; }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+
+  /* Home (simplified; the hero follows mockups 25 and 27) */
+  .home { position: absolute; inset: 0; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; height: 48px; gap: 8px; }
+  .wm { font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); }
+  .dk .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: calc(var(--fs) * 14px); line-height: calc(var(--fs) * 20px); color: var(--displayInk2); }
+  .hero .amt { font: 600 72px/72px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .x15 .hero .amt { font-size: 44px; line-height: 48px; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+  .hero .bar { display: flex; gap: 4px; height: 40px; margin-top: 20px; }
+  .hero .bar .f { flex: 77; background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 12px 6px 6px 12px; }
+  .hero .bar .b { flex: 23; background: var(--blockIdle); border-radius: 6px 12px 12px 6px; }
+  .hero .bar .b.all { flex: 1; border-radius: 12px; }
+  .hero .cap { font-size: calc(var(--fs) * 13px); line-height: calc(var(--fs) * 18px); color: var(--displayInk2); margin-top: 8px; }
+  .dueNow { display: flex; gap: 8px; font-size: calc(var(--fs) * 15px); line-height: calc(var(--fs) * 22px); color: var(--ink2); padding: 0 4px; }
+  .dueNow svg { width: 18px; height: 18px; margin-top: 2px; }
+  .listHd { font: 600 calc(var(--fs) * 17px)/calc(var(--fs) * 24px) 'Anek Latin', sans-serif; margin-top: 4px; }
+  .entry { display: flex; justify-content: space-between; font-size: calc(var(--fs) * 16px); line-height: calc(var(--fs) * 22px); padding: 10px 4px; border-bottom: 1px solid var(--hairline); }
+  .entry b { font: 600 calc(var(--fs) * 16px)/calc(var(--fs) * 22px) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dk .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+
+  /* THE STRIP ROW: one 56dp sunk row. Same shape as the due-soon row (mockup 27) so Home gains the least height. */
+  .strip { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px 8px 8px; border-radius: 18px; background: var(--sunk); width: 100%; transition: background 120ms; }
+  .strip:active, .strip.pressed { background: var(--hairline); }
+  .strip .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .strip .w b { font: 600 calc(var(--fs) * 18px)/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .strip .t { flex: 1; min-width: 0; font-size: calc(var(--fs) * 15px); line-height: calc(var(--fs) * 20px); font-weight: 600; }
+  .strip .t > span { display: block; font-size: calc(var(--fs) * 13px); line-height: calc(var(--fs) * 18px); font-weight: 400; color: var(--ink2); }
+  .strip .t > span b { font: 600 calc(var(--fs) * 13px)/calc(var(--fs) * 18px) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .strip .chev { color: var(--ink2); width: 18px; height: 18px; }
+  /* one bill: exactly today's due-soon look */
+  .strip.one .t { font-weight: 400; }
+  .strip.one .t b { font: 600 calc(var(--fs) * 15px)/calc(var(--fs) * 20px) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  /* warning: second line swaps to words with a glyph, and the row gains a 1.5dp ink2 outline (state is never colour or fill alone) */
+  .strip.warn { box-shadow: inset 0 0 0 1.5px var(--ink2); }
+  .strip .t > span.wline { display: flex; gap: 6px; color: var(--ink); }
+  .strip .t > span.wline svg { width: 16px; height: 16px; margin-top: calc((var(--fs) * 18px - 16px) / 2); }
+
+  /* Alignment guides (toggle) */
+  .guides .phone::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 20;
+    background: linear-gradient(var(--ink), var(--ink)) 16px 0 / 1px 100% no-repeat, linear-gradient(var(--ink), var(--ink)) calc(100% - 17px) 0 / 1px 100% no-repeat; opacity: .55; }
+  .guides .phone .sheet::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(var(--ink), var(--ink)) 20px 0 / 1px 100% no-repeat, linear-gradient(var(--ink), var(--ink)) calc(100% - 21px) 0 / 1px 100% no-repeat; opacity: .55; }
+
+  /* Sheet (mockup 27's bottom sheet, static here) */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 92%; overflow-y: auto; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 20px 20px; z-index: 9; }
+  .dk .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; }
+  .shHd { min-height: 48px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 8px; }
+  .shHd .q { font: 600 calc(var(--fs) * 22px)/calc(var(--fs) * 28px) 'Anek Latin', sans-serif; }
+  .shHd .s { font-size: calc(var(--fs) * 15px); line-height: calc(var(--fs) * 22px); color: var(--ink2); }
+  .shHd .s b { font: 600 calc(var(--fs) * 15px)/calc(var(--fs) * 22px) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; color: var(--ink); }
+  /* the sheet's warning: same words as the row, sunk fill, 1.5dp ink2 outline, glyph */
+  .warnTop { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; padding: 12px 16px; border-radius: 16px; background: var(--sunk); box-shadow: inset 0 0 0 1.5px var(--ink2); font-size: calc(var(--fs) * 15px); line-height: calc(var(--fs) * 22px); }
+  .warnTop svg { width: 20px; height: 20px; margin-top: calc((var(--fs) * 22px - 20px) / 2); }
+  .card { background: var(--surface); border-radius: 24px; padding: 4px 0; }
+  .srow { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 12px 8px 16px; transition: background 120ms; }
+  .srow:first-child { border-radius: 20px 20px 0 0; } .srow:last-child { border-radius: 0 0 20px 20px; } .srow:only-child { border-radius: 20px; }
+  .srow:active, .srow.pressed { background: var(--sunk); }
+  .srow + .srow::before { content: ''; position: absolute; top: 0; left: 68px; right: 16px; height: 1px; background: var(--hairline); }
+  .srow .w { width: 40px; height: 40px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .srow .t { flex: 1; min-width: 0; font-size: calc(var(--fs) * 16px); line-height: calc(var(--fs) * 22px); overflow-wrap: anywhere; }
+  .srow .t span { display: block; font-size: calc(var(--fs) * 13px); line-height: calc(var(--fs) * 18px); color: var(--ink2); }
+  .srow .a { text-align: right; font: 600 calc(var(--fs) * 16px)/calc(var(--fs) * 22px) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .srow .a i { font: 400 calc(var(--fs) * 13px)/calc(var(--fs) * 18px) 'Mukta', sans-serif; font-style: normal; color: var(--ink2); display: block; }
+  .srow .a.cardAmt { color: var(--ink2); font-weight: 400; }
+  .srow .chev { color: var(--ink2); width: 18px; height: 18px; }
+  .foot { display: flex; gap: 8px; font-size: calc(var(--fs) * 13px); line-height: calc(var(--fs) * 18px); color: var(--ink2); padding: 12px 4px 0; }
+  .foot svg { width: 16px; height: 16px; margin-top: 1px; }
+
+  /* Annotation panel */
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px 32px; max-width: 1100px; margin-top: 16px; }
+  .notes section { background: var(--surface); border-radius: 24px; padding: 20px; }
+  .notes h3 { font: 600 17px/24px 'Anek Latin', sans-serif; margin: 0 0 8px; }
+  .notes ul { margin: 0; padding-inline-start: 18px; }
+  .notes li { font-size: 14px; line-height: 21px; margin-bottom: 6px; }
+  .say { font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>Next 7 days, direction C: one quiet line <span class="tag">proposal</span></h1>
+<p class="lede">Home gets <b>one 56dp <code>sunk</code> row</b> and nothing else changes. The row says <b>Next 7 days</b> and <b>3 bills · ₹4,200</b>; a tap opens a <b>bottom sheet</b> (the bill sheet's look, mockup 27) with every bill and saving due tomorrow to day 7, one 56dp row each; each row opens that bill's own sheet. When bills use all of today's share, the same gentle words show in <b>both</b> places. With <b>one bill</b> the row is today's due-soon row and opens that bill directly. Today is <b>Thu 19 Nov 2026</b>. Frames are static; the sheet rise uses mockup 27's spring and is not redrawn here.</p>
+
+<div class="controls">
+  <label><input type="checkbox" id="guides"> Show alignment guides (hero edge and sheet inset)</label>
+</div>
+
+<h2>Frames</h2>
+<div class="gallery" id="gallery"></div>
+
+<h2>Annotations</h2>
+<div class="notes">
+  <section>
+    <h3>Alignment (HisaabSpacing.gutter)</h3>
+    <ul>
+      <li>The row spans the hero card's outer edges: 16dp from the screen on both sides (turn the guides on above). It is the same box as today's due-soon row, so it needs no new edge.</li>
+      <li>Inside the row: 8dp start padding, a 40dp well, 12dp gap, text, 12dp end padding. The dart row uses <code>HisaabSpacing.m</code> for the start inset so the well's glyph lands on the hero's content inset; mockup 27 draws 8dp. I kept 8dp and have not measured the glyph against the hero's 20dp inset on a device.</li>
+      <li>In the sheet, title, warning and list card share the sheet's 20dp edge. Rows inset 16dp; hairlines start at 68dp (16 + 40 well + 12 gap), the text start, and end 16dp from the card edge.</li>
+      <li>Amounts sit in a right column that ends 12dp before the chevron. There is no <code>Flexible</code> beside <code>Expanded</code>: the text column is the only flexible child.</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Tap targets</h3>
+    <ul>
+      <li>Strip row: full width, minimum 56dp, grows with text. One target; no inner buttons.</li>
+      <li>Sheet rows: full card width, minimum 56dp, each row one target. No row is under 48dp at 1.5x text (frame 4).</li>
+      <li>The sheet closes by scrim tap, drag and system back. No separate close key, so nothing small is added.</li>
+      <li>Pressed state: the row steps from <code>sunk</code> to <code>hairline</code> (strip) or from <code>surface</code> to <code>sunk</code> (sheet row), as in mockup 27.</li>
+    </ul>
+  </section>
+  <section>
+    <h3>TalkBack</h3>
+    <ul>
+      <li>Row, normal: <span class="say">"Next 7 days: 3 bills, 4,200 rupees. Opens the list."</span></li>
+      <li>Row, warning: <span class="say">"Next 7 days: 3 bills, 4,200 rupees. Bills coming up use all of today's share. Opens the list."</span> The glyph is decorative; the words carry the state.</li>
+      <li>One bill: <span class="say">"Electricity, about 1,200 rupees, goes out tomorrow. Opens the bill."</span></li>
+      <li>Sheet: a modal; focus lands on the title, then the warning, then rows. Row: <span class="say">"Electricity, about 1,200 rupees, tomorrow. Opens the bill."</span> Card: <span class="say">"HDFC card, 8,500 rupees, pay by Thursday. Not in the total. Opens the bill."</span> Labels are unique because names are.</li>
+      <li>Closing the sheet returns focus to the row.</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Contrast (WCAG ratios computed from the hex values)</h3>
+    <ul>
+      <li>Light: <code>ink2</code> on <code>sunk</code> 5.55:1; <code>ink2</code> on <code>surface</code> 7.20:1; <code>ink2</code> on pressed <code>hairline</code> 4.71:1; <code>ink</code> on <code>sunk</code> 13.84:1.</li>
+      <li>Dark: <code>ink2</code> on <code>sunk</code> 5.48:1; <code>ink2</code> on <code>surface</code> 6.42:1; <code>ink2</code> on pressed <code>hairline</code> 4.68:1; <code>ink</code> on <code>sunk</code> 12.41:1.</li>
+      <li>The warning outline is <code>ink2</code> on <code>bg</code> 6.14:1 (light), above the 3:1 for UI parts. The warning words are <code>ink</code>, not <code>ink2</code>, so the one line that matters is the strongest on the row.</li>
+      <li>No marigold, red or green. State is words, a glyph, an outline and a fill.</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Honest pros and cons against a plain list</h3>
+    <ul>
+      <li><b>Pro:</b> least height: 56dp on Home, the same as today's row, so the hero and Day Blocks stay first and second and the Today list loses nothing. Nothing moves when bills change.</li>
+      <li><b>Pro:</b> the warning is visible without opening anything, and the sheet repeats it where the bills are.</li>
+      <li><b>Pro:</b> with one bill, which is common, no slower than today.</li>
+      <li><b>Con:</b> it costs a tap to see the bills. With 2 or more bills Home shows only a count and a total, not which bill.</li>
+      <li><b>Con:</b> the sheet is a second layer to learn, and the plan's "strip lists each bill on Home" becomes "strip points to a list". The plan's strip rows would be dropped from Home.</li>
+      <li><b>Con:</b> a count well tells less at a glance than the bill's own icon.</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Open questions for the owner</h3>
+    <ul>
+      <li><b>1.</b> Is one tap to see the bills acceptable for 2 or more bills, or must the soonest bill's name show on Home (for example, "Electricity and 2 more")?</li>
+      <li><b>2.</b> In the sheet, should a card bill sit in date order among the others (drawn) or after the counted bills, so the total's rows stay together?</li>
+      <li><b>3.</b> The total counts changing bills at their estimate, as the pool does. Should the row say "about ₹4,200" when any counted bill is changing? Drawn: no, only the row for that bill says "about".</li>
+    </ul>
+  </section>
+</div>
+
+<h2>Token table (every token this mockup uses)</h2>
+<table>
+  <tr><th>Kind</th><th>Token</th><th>Used for</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>sunk</code>, <code>hairline</code></td><td>Screen; list card and well inside the row; the strip row, sheet row wells, pressed sheet row; hairlines and the pressed strip</td></tr>
+  <tr><td>Colour</td><td><code>ink</code>, <code>ink2</code></td><td>Primary text and the warning words; second lines, chevrons, warning outline</td></tr>
+  <tr><td>Colour</td><td><code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>blockIdle</code>, <code>displayEdge</code>, <code>scrim</code></td><td>Hero card, its bar, the sheet scrim. <code>signal</code> appears only in the hero bar and dock Add key, as in mockup 27</td></tr>
+  <tr><td>Type</td><td>Anek Latin 600 22/28; 17/24; 15/20 and 13/18 on amounts and the count (tabular)</td><td>Sheet title; Today heading; amounts</td></tr>
+  <tr><td>Type</td><td>Mukta 400 and 600: 16/22 row names; 15/20 strip title (600) and body; 13/18 second lines</td><td>Row and sheet text. Two weights</td></tr>
+  <tr><td>Spacing</td><td>4, 8, 12, 16, 20dp</td><td>Gaps and insets; the 16dp gutter and 20dp sheet inset</td></tr>
+  <tr><td>Size</td><td>Row min 56dp; well 40dp</td><td>Strip row, sheet rows, wells (<code>HisaabSizes.iconWell</code>)</td></tr>
+  <tr><td>Radius</td><td>12 well, 16 warning, 18 strip, 20 row ends, 24 list card, 28 sheet</td><td>Squircle corners from the scale</td></tr>
+  <tr><td>Icons</td><td>Hugeicons stroke-rounded: <code>Flash</code>, <code>Home01</code>, <code>CreditCard</code>, <code>Tv01</code>, <code>SmartPhone01</code>, <code>User</code> (bill icons from mockup 27), <code>ArrowRight01</code> (chevron, <code>AppIcons.next</code>), <code>Alert02</code> (warning glyph, <b>needs checking against the free set</b>; else drawn in <code>HisaabGlyphs</code> per D48), <code>InformationCircle</code> (waiting line)</td><td>Every icon sits beside a visible label</td></tr>
+</table>
+
+<script>
+const P = {
+  power: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  card: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h3"/>',
+  tv: '<rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+  help: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17v.01"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+};
+const svg = (k, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[k]}</svg>`;
+const n = v => new Intl.NumberFormat('en-IN').format(v);
+const inr = v => '₹' + n(v);
+const WARN = "Bills coming up use all of today's share.";
+
+const B = {
+  elec: { name: 'Electricity', icon: 'power', amt: 1200, about: true, when: 'Tomorrow', date: 'Fri 20 Nov', spoken: 'tomorrow' },
+  netflix: { name: 'Netflix', icon: 'tv', amt: 649, when: 'Sat 21 Nov' },
+  maid: { name: 'Maid', icon: 'help', amt: 3000, when: 'Mon 23 Nov' },
+  airtel: { name: 'Airtel', icon: 'phone', amt: 999, when: 'Tue 24 Nov' },
+  card: { name: 'HDFC card', icon: 'card', amt: 8500, card: true, when: 'pay by Thu' },
+  cardWed: { name: 'HDFC card', icon: 'card', amt: 8500, card: true, when: 'pay by Wed' },
+  rent: { name: 'Rent', icon: 'home', amt: 18000, when: 'Thu 26 Nov' },
+};
+const total = bs => bs.filter(b => !b.card).reduce((s, b) => s + b.amt, 0);
+const count = bs => `${bs.length} ${bs.length === 1 ? 'bill' : 'bills'}`;
+
+function hero(zero) {
+  return zero
+    ? `<div class="hero"><div class="ttl">Today</div><div class="amt"><span class="rs">₹</span>0</div>
+       <div class="bar"><span class="b all"></span></div><div class="cap">₹0 to spend today · 11 days to payday</div></div>`
+    : `<div class="hero"><div class="ttl">Today</div><div class="amt"><span class="rs">₹</span>1,430</div>
+       <div class="bar"><span class="f"></span><span class="b"></span></div><div class="cap">₹420 spent of ₹1,850 · 11 days to payday</div></div>`;
+}
+function rowHTML(bs, warn, pressed) {
+  if (!bs.length) return '';
+  if (bs.length === 1) {
+    const b = bs[0];
+    return `<button class="strip one${pressed ? ' pressed' : ''}" aria-label="${b.name}, ${b.about ? 'about ' : ''}${n(b.amt)} rupees, goes out ${b.spoken}. Opens the bill.">
+      <span class="w">${svg(b.icon)}</span>
+      <span class="t">${b.name}, ${b.about ? 'about ' : ''}<b>${inr(b.amt)}</b>, goes out ${b.spoken}<span>${b.date}</span></span>${svg('chev', 'i chev')}</button>`;
+  }
+  const second = warn
+    ? `<span class="wline">${svg('alert')}<span>${WARN}</span></span>`
+    : `<span>${count(bs)} · <b>${inr(total(bs))}</b></span>`;
+  return `<button class="strip${warn ? ' warn' : ''}${pressed ? ' pressed' : ''}" aria-label="Next 7 days: ${count(bs)}, ${n(total(bs))} rupees.${warn ? ' ' + WARN : ''} Opens the list.">
+    <span class="w"><b>${bs.length}</b></span>
+    <span class="t">Next 7 days${second}</span>${svg('chev', 'i chev')}</button>`;
+}
+const list = '<div class="listHd">Today</div><div class="entry"><span>Food · chai</span><b>₹40</b></div><div class="entry"><span>Food · lunch</span><b>₹380</b></div>';
+function home(o) {
+  return `<div class="home">
+    <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${svg('gear')}</span></div>
+    ${hero(o.zero)}
+    ${o.waiting ? `<div class="dueNow">${svg('info')}<span>Rent is waiting to be counted<span class="draft">draft</span></span></div>` : ''}
+    ${rowHTML(o.bills, o.warn, o.pressed)}
+    ${list}
+  </div>
+  <div class="dock"><span>Home</span><span class="add">${svg('plus')}</span><span>Spends</span></div>`;
+}
+function sheet(bs, warn, pressIdx) {
+  const rows = bs.map((b, i) => {
+    const amt = b.card ? `<span class="a cardAmt">${inr(b.amt)}</span>`
+      : `<span class="a">${b.about ? '<i>about</i>' : ''}${inr(b.amt)}</span>`;
+    const label = `${b.name}, ${b.about ? 'about ' : ''}${n(b.amt)} rupees, ${b.card ? b.when.replace('Thu', 'Thursday').replace('Wed', 'Wednesday') + '. Not in the total' : b.when.toLowerCase()}. Opens the bill.`;
+    return `<button class="srow${pressIdx === i ? ' pressed' : ''}" aria-label="${label}">
+      <span class="w">${svg(b.icon)}</span>
+      <span class="t">${b.name}<span>${b.card ? b.when + ' · not in the total' : b.when}</span></span>${amt}${svg('chev', 'i chev')}</button>`;
+  }).join('');
+  return `<div class="scrim"></div><div class="sheet" role="dialog" aria-label="Next 7 days">
+    <div class="handle"></div>
+    <div class="shHd"><div class="q">Next 7 days</div><div class="s">${count(bs)} · <b>${inr(total(bs))}</b> goes out</div></div>
+    ${warn ? `<div class="warnTop">${svg('alert')}<span>${WARN}</span></div>` : ''}
+    <div class="card">${rows}</div>
+    ${bs.some(b => b.card) ? `<div class="foot">${svg('info')}<span>A card bill is listed so you can pay it, and is not in the total.</span></div>` : ''}
+  </div>`;
+}
+function phone(o) {
+  const cls = ['phone', o.dark ? 'dk' : 'lt', o.x15 ? 'x15' : '', o.narrow ? 'narrow' : ''].join(' ');
+  return `<div class="${cls}">${home(o)}${o.sheet ? sheet(o.bills, o.warn, o.pressIdx) : ''}</div>`;
+}
+const fig = (cap, o) => `<figure>${phone(o)}<figcaption>${cap}</figcaption></figure>`;
+
+const three = [B.elec, B.maid, B.card];
+const six = [B.elec, B.netflix, B.maid, B.airtel, B.cardWed, B.rent];
+const frames = [];
+for (const dark of [false, true]) {
+  const m = dark ? 'dark' : 'light';
+  frames.push(fig(`<b>1a. Normal row, ${m}.</b> 3 bills, ₹4,200 (the card bill is not in it). A 56dp <code>sunk</code> row with a count well. Hero and Today list unchanged.`, { bills: three, dark, pressed: !dark }));
+  frames.push(fig(`<b>1b. Its sheet, ${m}.</b> One 56dp row per bill: icon, name, day, amount. Electricity says <i>about</i>; the card bill says <i>pay by Thu</i>, is greyer, and is not in the total.`, { bills: three, dark, sheet: true, pressIdx: dark ? -1 : 0 }));
+}
+for (const dark of [false, true]) {
+  const m = dark ? 'dark' : 'light';
+  frames.push(fig(`<b>2a. Warning row, ${m}.</b> Hero share is ₹0. The second line swaps to the warning words with a glyph, and the row gains an <code>ink2</code> outline.`, { bills: three, warn: true, zero: true, dark }));
+  frames.push(fig(`<b>2b. Warning sheet, ${m}.</b> The same words repeat at the top, in a <code>sunk</code> box with the same outline and glyph.`, { bills: three, warn: true, zero: true, dark, sheet: true }));
+}
+frames.push(fig('<b>3a. One bill.</b> Reads like today\'s due-soon row: bill icon, "Electricity, about ₹1,200, goes out tomorrow", the date. A tap opens that bill\'s sheet (mockup 27) directly.', { bills: [B.elec] }));
+frames.push(fig('<b>3b. No bills.</b> The strip is absent: no row, no gap, Home is as it is today.', { bills: [] }));
+frames.push(fig('<b>4a. Busy sheet, 1.5x text, narrow (320dp).</b> 6 bills. Rows grow past 56dp and names wrap; the sheet scrolls inside its 92% cap and the amount column stays on the right.', { bills: six, sheet: true, x15: true, narrow: true }));
+frames.push(fig('<b>4b. Row at 1.5x text, narrow.</b> The row grows taller than 56dp; the hero amount steps down to 44 as the rules say.', { bills: six, warn: true, zero: true, x15: true, narrow: true }));
+frames.push(fig('<b>5. Waiting-bill line above the row.</b> The waiting line keeps its place (FR-HO-3); the strip row sits below it, 16dp gap, same edges. The waiting copy is a stand-in.', { bills: three, waiting: true }));
+document.getElementById('gallery').innerHTML = frames.join('');
+document.getElementById('guides').addEventListener('change', e => document.getElementById('gallery').classList.toggle('guides', e.target.checked));
+</script>
+</body>
+</html>

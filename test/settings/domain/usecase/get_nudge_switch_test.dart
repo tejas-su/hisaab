@@ -52,4 +52,9 @@ void main() {
       expect((await GetNudgeSwitch(preferences: preferences, nudges: nudges)(const NoParams()).run()).isLeft(), isTrue);
     });
   });
+
+  test('NudgeSwitch compares by both answers', () {
+    expect(const NudgeSwitch(answeredYes: true, enabled: false), const NudgeSwitch(answeredYes: true, enabled: false));
+    expect(const NudgeSwitch(answeredYes: true, enabled: false), isNot(const NudgeSwitch(answeredYes: true, enabled: true)));
+  });
 }

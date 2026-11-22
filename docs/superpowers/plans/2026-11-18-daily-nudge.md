@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** One local evening notification, timed from the user's own *your usual* pattern, that backs off when ignored and lets the user add the amount from the notification itself.
+**Goal:** One local evening notification, timed from the user's own *your usual* pattern, that backs off when ignored and opens the Add tray when tapped. This is Part 1; Part 2 (adding the amount from the notification) is deferred (D204).
 
 **Architecture:** Pure planning and settling logic in `lib/habits/domain/` reuses `MissedLogDetector` and `HabitIndex`. Arming rides the existing start/resume/write path of `RemindersBloc`. The notification actions run in a background isolate whose entry point lives in `lib/app/` (the composition root), because `lib/core/` may not import features.
 

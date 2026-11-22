@@ -10,6 +10,7 @@ import '../logging/app_logger.dart';
 import 'bill_reminder.dart';
 import 'bill_reminders.dart';
 import 'notification_hub.dart';
+import 'notification_route.dart';
 
 /// [BillReminders] on Android, through `flutter_local_notifications` (spec §6, D126).
 ///
@@ -47,7 +48,10 @@ final class AndroidBillReminders implements BillReminders {
   Future<void> arm(List<BillReminder> upcoming, {required Set<int> keep}) => _quietly('reminders.arm_failed', () async {
         final Set<int> wanted = <int>{...keep, ...upcoming.map((BillReminder r) => r.id)};
         final Set<int> current = <int>{
-          ...(await _plugin.pendingNotificationRequests()).map((PendingNotificationRequest p) => p.id),
+          // why: only bill reminders are this class's to cancel; a pending daily nudge is Nudges' (E125).
+          ...(await _plugin.pendingNotificationRequests())
+              .where((PendingNotificationRequest p) => NotificationRoute.of(p.payload) == NotificationRoute.bill)
+              .map((PendingNotificationRequest p) => p.id),
           ...(await _android?.getActiveNotifications() ?? const <ActiveNotification>[])
               .where((ActiveNotification a) => a.channelId == _channel)
               .map((ActiveNotification a) => a.id)

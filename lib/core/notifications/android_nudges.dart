@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../../l10n/gen/app_localizations.dart';
 import '../logging/app_logger.dart';
+import '../time/clock.dart';
 import 'notification_hub.dart';
 import 'notification_route.dart';
 import 'nudge_notice.dart';
@@ -17,12 +18,9 @@ import 'nudges.dart';
 /// Inexact (`inexactAllowWhileIdle`), so no exact-alarm permission is needed. A locked screen
 /// hides the text, and it never carries an amount or a note.
 final class AndroidNudges implements Nudges {
-  /// Subscribes to [hub]'s responses for the app's lifetime to emit [taps]. [now] is the clock
-  /// used to skip notices already in the past.
-  AndroidNudges(this._hub, {DateTime Function() now = DateTime.now})
-      // ignore: prefer_initializing_formals, why: a named parameter cannot be private.
-      : _now = now,
-        _strings = lookupAppLocalizations(_locale) {
+  /// Subscribes to [hub]'s responses for the app's lifetime to emit [taps]. [clock] is used to
+  /// skip notices already in the past.
+  AndroidNudges(this._hub, this._clock) : _strings = lookupAppLocalizations(_locale) {
     // ignore: cancel_subscriptions, why: it lives as long as the app.
     _hub.responses
         .where((NotificationResponse r) => NotificationRoute.of(r.payload) == NotificationRoute.nudge)
@@ -33,7 +31,7 @@ final class AndroidNudges implements Nudges {
   static const Locale _locale = Locale('en', 'IN');
 
   final NotificationHub _hub;
-  final DateTime Function() _now;
+  final Clock _clock;
   final AppLocalizations _strings;
   // ignore: close_sinks, why: taps can come for as long as the app runs, so it is never closed.
   final StreamController<void> _taps = StreamController<void>.broadcast();
@@ -60,7 +58,7 @@ final class AndroidNudges implements Nudges {
           await _hub.plugin.cancel(id: stale);
         }
         // why: scheduling an id again replaces it, so re-arming never shows two.
-        final DateTime now = _now();
+        final DateTime now = _clock.now();
         for (final NudgeNotice notice in upcoming.where((NudgeNotice n) => n.isAfter(now))) {
           // why: one notice the plugin refuses must not stop the rest being scheduled.
           await _quietly('nudges.schedule_failed', () => _schedule(notice));
@@ -70,15 +68,15 @@ final class AndroidNudges implements Nudges {
   Future<void> _schedule(NudgeNotice notice) {
     final ({String title, String body}) text = NudgeText.of(_strings, notice);
     return _hub.plugin.zonedSchedule(
-        id: notice.id,
-        // why: a one-off instant needs no time-zone database; UTC is the same moment as local.
-        scheduledDate: tz.TZDateTime.from(notice.at, tz.UTC),
-        notificationDetails: NotificationDetails(android: _details),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        title: text.title,
-        body: text.body,
-        payload: NotificationRoute.nudgeLink,
-      );
+      id: notice.id,
+      // why: a one-off instant needs no time-zone database; UTC is the same moment as local.
+      scheduledDate: tz.TZDateTime.from(notice.at, tz.UTC),
+      notificationDetails: NotificationDetails(android: _details),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      title: text.title,
+      body: text.body,
+      payload: NotificationRoute.nudgeLink,
+    );
   }
 
   AndroidNotificationDetails get _details => AndroidNotificationDetails(

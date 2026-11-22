@@ -48,7 +48,8 @@ awk -v exclude="$EXCLUDE" -v floor="$FLOOR" '
     }
     next
   }
-  /^SF:/ { sf = substr($0, 4); hasdata[sf] = 1; next }      # pass 2: lcov
+  # pass 2: lcov. Windows writes backslash (and sometimes absolute) paths; match the diff paths (lib/...).
+  /^SF:/ { sf = substr($0, 4); gsub(/\\/, "/", sf); if (sf !~ /^lib\//) sub(/^.*\/lib\//, "lib/", sf); hasdata[sf] = 1; next }
   /^DA:/ { split(substr($0, 4), d, ","); line[sf, d[1]] = d[2]; files[sf] = 1; next }
   END {
     bad = 0; alltot = allcov = 0

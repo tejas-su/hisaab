@@ -11,6 +11,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_backup_repository.dart';
 import '../../../helpers/fakes/fake_bill_reminders.dart';
+import '../../../helpers/fakes/fake_nudges.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 
 void main() {
@@ -22,7 +23,7 @@ void main() {
     backups = FakeBackupRepository();
     haptics = FakeHaptics();
     bloc = DeleteEverythingBloc(
-      deleteEverything: DeleteEverything(backups: backups, reminders: FakeBillReminders()),
+      deleteEverything: DeleteEverything(backups: backups, reminders: FakeBillReminders(), nudges: FakeNudges()),
       haptics: haptics,
     );
     addTearDown(bloc.close);

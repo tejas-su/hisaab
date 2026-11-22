@@ -1280,28 +1280,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nudgeGeneralBody3 => 'Tap to add what you spent';
 
   @override
-  String nudgeActionAddUsual(String amount) {
-    return 'Add $amount';
-  }
-
-  @override
-  String get nudgeActionOther => 'Other amount';
-
-  @override
-  String get nudgeReplyLabel => 'Amount';
-
-  @override
-  String get nudgeReplyInvalid => 'Enter an amount';
-
-  @override
-  String nudgeAdded(String category) {
-    return 'Added to $category';
-  }
-
-  @override
-  String get nudgeUndo => 'Undo';
-
-  @override
   String get remindAskTitle => 'Remind you on the day it\'s due?';
 
   @override

@@ -176,6 +176,8 @@ abstract final class AppRoutes {
                   home.add(const HomeLoadRequested());
                   // why: neither do a category hidden or a usual forgotten there (FR-SE-2 AC-6).
                   habits.add(const HabitsLoadRequested());
+                  // why: and the nudges name those habits and categories (BR-22.3), so they re-arm too.
+                  reminders.add(const RemindersArmRequested());
                 },
                 onOpenBill: (RecurringRule rule) async {
                   final HomeBloc home = context.read<HomeBloc>();

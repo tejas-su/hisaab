@@ -87,6 +87,20 @@ void main() {
       expect(result.armedFor, const Option<DateTime>.none());
     });
 
+    test('rest crosses the year: third ignored armed 15 Dec 2026 rests through 14 Jan 2027 (BR-22.5)', () {
+      final DateTime armed = DateTime(2026, 12, 15, 15, 30);
+      final NudgeState third = _state(armedFor: Option<DateTime>.of(armed), streak: 2);
+      final NudgeState result = _settled(third, armed.add(const Duration(hours: 2)), <DateTime>[]);
+      expect(result.restUntil, Option<CalendarDate>.of(const CalendarDate(2027, 1, 14)));
+    });
+
+    test('rest counts the leap day: third ignored armed 31 Jan 2028 rests through 1 Mar 2028 (BR-22.5)', () {
+      final DateTime armed = DateTime(2028, 1, 31, 15, 30);
+      final NudgeState third = _state(armedFor: Option<DateTime>.of(armed), streak: 2);
+      final NudgeState result = _settled(third, armed.add(const Duration(hours: 2)), <DateTime>[]);
+      expect(result.restUntil, Option<CalendarDate>.of(const CalendarDate(2028, 3, 1)));
+    });
+
     test('counts two ignored in a row without a rest', () {
       final NudgeState result = _settled(_state(streak: 1), afterWindow, <DateTime>[]);
       expect(result.ignoredStreak, 2);

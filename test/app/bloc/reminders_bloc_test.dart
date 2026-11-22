@@ -172,7 +172,9 @@ void main() {
       preferences.nudgesOn = const Option<bool>.of(true);
       nudgeStates.failure = DatabaseFailure('locked');
       await build().dispatch(const RemindersArmRequested());
-      expect(nudges.arms, 0);
+      // why: an unreadable plan clears every pending nudge rather than leave a stale one (BR-22.4).
+      expect(nudges.arms, 1);
+      expect(nudges.scheduled, isEmpty);
       expect(reminders.arms, 1);
       expect(bloc.state, const RemindersIdle());
     });
