@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Your usual options</title>
+<style>
+  /* Proposals to improve the "your usual" pill on step 1 of the Add tray (FR-AD-10, UI_DESIGN §5.3, D153).
+     Nothing here is approved or built. Baseline = what ships today (usual_pill.dart, mockup 40).
+     Tokens, type and icons copied from mockup 40. Worked example: Mon 10:05 am, Chai ₹20 habit, Travel ₹60 habit. */
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EDE8; --surface: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --displayEdge: #161615; --scrim: #16161552; --inverse: #312E29; --onInverse: #F2F1EC;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --displayEdge: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; text-align: inherit; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .toggles { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .toggles button { min-height: 40px; padding: 0 14px; border-radius: 12px; background: #FFFEFC; font: 600 14px/20px 'Mukta', sans-serif; }
+  .toggles button[aria-pressed="true"] { background: #161615; color: #F1EBE4; }
+  .tblWrap { overflow-x: auto; max-width: 100%; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 1100px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+  .rec { display: inline-block; font: 600 11px/14px 'Mukta', sans-serif; background: #161615; color: #F1EBE4; border-radius: 6px; padding: 2px 6px; margin-inline-start: 6px; vertical-align: 2px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; align-items: flex-start; }
+  figure { margin: 0; width: 360px; }
+  figcaption { margin-top: 10px; }
+  figcaption b { display: block; font: 600 17px/22px 'Anek Latin', sans-serif; }
+  figcaption span { display: block; font-size: 14px; line-height: 20px; color: var(--canvasInk2); margin-top: 2px; }
+
+  /* Phone: only the tray matters, Home is a dimmed stand-in behind the scrim. */
+  .phone { position: relative; width: 360px; height: 690px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } figure { width: 306px; } }
+  .ghostHome { position: absolute; inset: 40px 20px 0; display: flex; flex-direction: column; gap: 14px; }
+  .ghostHome i { display: block; border-radius: 24px; background: var(--surface); }
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .tray { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 36px 36px 0 0; padding: 16px 20px 24px; }
+  .dark .tray { box-shadow: inset 0 1px 0 var(--hairline); }
+  .kind { display: flex; width: 220px; margin: 0 auto; height: 44px; border-radius: 14px; background: var(--sunk); padding: 3px; }
+  .kind span { flex: 1; display: grid; place-items: center; border-radius: 11px; font: 600 15px/1 'Mukta', sans-serif; color: var(--ink2); }
+  .kind span.on { background: var(--ink); color: var(--surface); }
+  .bigAmt { text-align: center; margin-top: 20px; font: 600 60px/64px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .bigAmt.zero { color: var(--ink2); }
+  .rs { font-size: .5em; line-height: 1; vertical-align: top; position: relative; top: .35em; margin-inline-end: .04em; }
+  .slot { min-height: 48px; margin-top: 4px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+  .pv { font-size: 15px; line-height: 20px; color: var(--ink2); text-align: center; }
+  .qchips { display: flex; gap: 6px; margin-top: 8px; }
+  .qchips span, .qchips button { flex: 1; height: 40px; border-radius: 12px; background: var(--sunk); display: grid; place-items: center; font: 600 14px/1 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .keys button { height: 56px; border-radius: 16px; background: var(--sunk); display: grid; place-items: center; font: 600 24px/1 'Anek Latin', sans-serif; }
+  .keys button:active { background: var(--hairline); }
+  .signal { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 56px; margin-top: 14px; border-radius: 18px; font: 600 17px/1 'Mukta', sans-serif; background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .signal:disabled { background: var(--sunk); color: var(--ink2); box-shadow: none; cursor: default; }
+  .fade { animation: fade 150ms ease-out; }
+  @keyframes fade { from { opacity: 0; } }
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 16px; min-height: 52px; border-radius: 16px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; font-size: 15px; animation: fade 150ms ease-out; }
+  .snack b { font-weight: 600; padding: 0 12px; }
+
+  /* 0 · Today: outlined pill, "· your usual" tag (usual_pill.dart). */
+  .p0 { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 12px; border-radius: 20px; box-shadow: inset 0 0 0 1px var(--ink2); background: var(--surface); font: 600 16px/20px 'Mukta', sans-serif; white-space: nowrap; }
+  .p0 svg { width: 20px; height: 20px; }
+  .amt { font: 600 17px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .p0 .u { color: var(--ink2); font-weight: 400; }
+  .done { background: var(--ink) !important; color: var(--surface) !important; box-shadow: none !important; }
+  .done .u, .done .sub { color: var(--surface) !important; }
+
+  /* A · Filled offer: a sunk capsule (fill-only, like chips and keys) with an icon well and an add cap. */
+  .pA { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 4px 0 4px; border-radius: 22px; background: var(--sunk); font: 600 16px/20px 'Mukta', sans-serif; white-space: nowrap; }
+  .pA .w { width: 36px; height: 36px; border-radius: 18px; background: var(--surface); display: grid; place-items: center; }
+  .pA .w svg { width: 20px; height: 20px; }
+  .pA .u { color: var(--ink2); font-weight: 400; }
+  .pA .cap { width: 36px; height: 36px; border-radius: 18px; background: var(--ink); color: var(--surface); display: grid; place-items: center; margin-inline-start: 2px; }
+  .pA .cap svg { width: 18px; height: 18px; stroke-width: 2; }
+  .pA.done .w { background: var(--inverse); color: var(--onInverse); }
+  .pA.done .cap { background: var(--surface); color: var(--ink); }
+
+  /* B · Usual row under the chips: full width, two lines, tray grows upward, keypad stays put. */
+  .rowB { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; margin-top: 8px; padding: 6px 6px 6px 8px; border-radius: 18px; background: var(--sunk); text-align: left; }
+  .rowB .w { width: 40px; height: 40px; border-radius: 14px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .rowB .w svg { width: 22px; height: 22px; }
+  .rowB .t { flex: 1; min-width: 0; font: 600 16px/20px 'Mukta', sans-serif; }
+  .rowB .sub { display: block; font: 400 13px/18px 'Mukta', sans-serif; color: var(--ink2); }
+  .rowB .go { height: 44px; padding: 0 14px; border-radius: 14px; background: var(--ink); color: var(--surface); display: inline-flex; align-items: center; gap: 6px; font: 600 15px/1 'Mukta', sans-serif; flex: none; }
+  .rowB .go svg { width: 18px; height: 18px; stroke-width: 2; }
+  .rowB.done .w { background: var(--inverse); color: var(--onInverse); }
+  .rowB.done .go { background: var(--surface); color: var(--ink); }
+
+  /* C · First chip: the usual leads the quick-chip row, ink-filled, the +₹20 chip makes room. */
+  .qchips .cC { flex: 1.7; display: inline-flex; gap: 6px; align-items: center; justify-content: center; background: var(--ink); color: var(--surface); font: 600 15px/1 'Anek Latin', sans-serif; }
+  .qchips .cC svg { width: 18px; height: 18px; }
+  .qchips .cC.done { background: var(--inverse); }
+
+  /* D · Two usuals: up to two compact offers share the slot when two habits qualify. */
+  .pD { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 6px; border-radius: 22px; background: var(--sunk); font: 600 15px/20px 'Mukta', sans-serif; white-space: nowrap; }
+  .pD .w { width: 32px; height: 32px; border-radius: 16px; background: var(--surface); display: grid; place-items: center; }
+  .pD .w svg { width: 18px; height: 18px; }
+  .pD.done .w { background: var(--inverse); color: var(--onInverse); }
+  .capD { display: block; text-align: center; font: 400 12px/16px 'Mukta', sans-serif; color: var(--ink2); margin-top: 2px; }
+
+  /* Large text (1.3x). */
+  .lg .tray { font-size: 1.3em; }
+  .lg .p0, .lg .pA, .lg .pD { font-size: 20px; }
+  .lg .amt { font-size: 21px; }
+  .lg .p0 .u, .lg .pA .u { display: none; }
+  .lg .rowB .t { font-size: 20px; line-height: 24px; }
+  .lg .rowB .sub { font-size: 16px; line-height: 20px; }
+  .lg .pD .nm { display: none; }
+</style>
+</head>
+<body class="light">
+<h1>Your usual: five ways to show it</h1>
+<p class="lede"><b>Decided: option A (D207).</b> The app builds it at 40dp in the same 48dp slot, with a 32dp well and cap, so the 12dp gap to the chips holds.</p>
+<p class="lede">These are proposals for the <b>your usual</b> offer on step 1 of the Add tray. <b>0</b> is what shipped before D207. <b>A</b> to <b>D</b> are new options. All of them run the same example: Monday, 10:05 am, with a <b>Chai ₹20</b> habit. Use the "Two habits" switch to add a <b>Travel ₹60</b> habit at the same time. Type on the keypad to see the offer give way to the preview. Tap the offer to see it save, close the tray and show Undo.</p>
+<p class="lede">Each option keeps the same rules. It's one tap and adds no step to Add → digits → Next → tile. The keypad, dock and category tiles stay where they are. Marigold stays on <b>Next</b> only. There's no colour, and state is shown by fill and words.</p>
+
+<div class="toggles" role="group" aria-label="View">
+  <button data-t="theme" aria-pressed="false">Dark</button>
+  <button data-t="lg" aria-pressed="false">Large text 1.3×</button>
+  <button data-t="two" aria-pressed="false">Two habits now (Chai + Travel)</button>
+  <button data-t="reset">Reset all</button>
+</div>
+
+<div class="row" id="phones"></div>
+
+<h2>Compare</h2>
+<div class="tblWrap"><table>
+  <tr><th>Option</th><th>What changes</th><th>Good</th><th>Risk</th><th>Docs and code it touches</th></tr>
+  <tr><td>0 · Today</td><td>Nothing. An outlined pill, "Chai ₹20 · your usual".</td><td>Quiet, and nothing moves when it appears.</td><td>Easy to miss. The thin outline among filled chips and keys reads like a label, not a button. Nothing says that a tap <b>saves</b>.</td><td>None</td></tr>
+  <tr><td>A · Filled offer <span class="rec">Recommended</span></td><td>The same slot and size, but the pill is filled <code>sunk</code> like the chips and keys. The category icon sits in a round well, and a round <code>ink</code> "+" cap on the end says "add this".</td><td>Reads as a button, and the "+" cap says it adds. Matches the fill-only chips and keys around it (D88). Nothing moves, and the layout B spacing stays.</td><td>Sitting next to the sunk chips, it looks more like them. The 12dp gap and the icon well keep them apart. The <code>ink</code> cap is a second dark mark in the tray, next to the Spent/Got segment.</td><td>UI_DESIGN §5.3 pill description, D-row (drop the outline exception), <code>usual_pill.dart</code> styling and its golden-free widget tests (sizes, AC-2 fit rule)</td></tr>
+  <tr><td>B · Row under the chips</td><td>A full-width row between the chips and the keypad: icon, "Chai ₹20", "Your usual around 10 am", and an <b>Add</b> key. The slot under the amount holds only the preview.</td><td>The most visible option, in the place you first looked for it. It has room for "around 10 am", so it explains itself. It's a big target, and far from the amount's digits.</td><td>The tray is 64dp taller when the row is there. The keypad stays pinned, but the amount and chips move up when it comes or goes. That breaks "nothing moves" (D153). Short phones and tabletop mode switch to side by side sooner (<code>_headerExtent</code>).</td><td>SPEC FR-AD-10 AC-1/AC-2, UI_DESIGN §5.3 layout, D153 amendment, <code>amount_step.dart</code>, <code>usual_slot.dart</code>, the <code>_headerExtent</code> budget, layout tests at the <code>TestWindows</code> sizes</td></tr>
+  <tr><td>C · First chip</td><td>The usual becomes the first quick chip, filled <code>ink</code> with its icon. The +₹20 chip is dropped to make room.</td><td>No new row and no new shape. It sits right where the thumb already goes for small amounts.</td><td>Mixes two meanings in one row: the chips <b>add to the amount</b>, while this chip <b>saves an entry</b>. The chip positions shift whenever a usual comes or goes, which breaks muscle memory. It's also too narrow for a category name at large text.</td><td>SPEC FR-AD-2 (chips) and FR-AD-10, UI_DESIGN §5.3, <code>quick_add_chips.dart</code>, D-row</td></tr>
+  <tr><td>D · Two usuals</td><td>When two habits qualify, both offers share the slot as compact capsules. With one habit it looks like A without the cap.</td><td>Covers the common morning overlap (chai and the auto ride) in one tap each.</td><td>Changes BR-17, which offers one suggestion. It's tight at 360dp and only icon and amount fit at large text. Two choices at once ask the user to read more.</td><td>SPEC BR-17 and FR-AD-10, <code>UsualSpendDetector.suggest</code> (returns a list), bloc state, D-row</td></tr>
+</table></div>
+
+<h2>Recommendation</h2>
+<p><b>Go with A.</b> It fixes the real problem (the pill doesn't look tappable) without moving anything or changing any rule. It also takes away the one outline exception in a fill-only design. If people still miss it after A, <b>B</b> is the next step, but it needs a decision to let the tray grow when an offer is there. <b>D</b> can be added on top of A later, once we know overlapping habits are common.</p>
+
+<script>
+const P = {
+  chai: '<path d="M14.6 8.5H9.4C8.1 8.5 7.45 8.5 7.08 8.9C6.72 9.3 6.77 9.95 6.87 11.2L7.47 18.4C7.58 19.9 7.64 20.68 8.13 21.08C8.62 21.5 9.4 21.5 10.95 21.5H13.05C14.6 21.5 15.38 21.5 15.87 21.08C16.36 20.68 16.42 19.9 16.53 18.4L17.13 11.2C17.23 9.95 17.28 9.3 16.92 8.9C16.55 8.5 15.9 8.5 14.6 8.5Z"/><path d="M7.2 12H16.8"/><path d="M10.2 14.5V18.5M13.8 14.5V18.5"/><path d="M13.3089 2.5C12.7622 2.83861 12.0012 4 12.0012 5.5M9.53971 4C9.53971 4 9 4.5 9 5.5M16.0012 4C15.7279 4.1693 15.5 5 15.5 5.5"/>',
+  travel: '<rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18l-1.5 3M16 18l1.5 3"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  next: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  bksp: '<path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>',
+};
+const svg = (k) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[k]}</svg>`;
+const inr = (n) => '₹' + n.toLocaleString('en-IN');
+const amtHtml = (n) => `<span class="rs">₹</span>${n.toLocaleString('en-IN')}`;
+const SAFE = 1430;
+const HABITS = [{ cat: 'Chai', icon: 'chai', amt: 20, around: '10 am' }, { cat: 'Travel', icon: 'travel', amt: 60, around: '10 am' }];
+
+const OPTIONS = [
+  { id: '0', name: '0 · Today', note: 'Outlined pill under the amount. Quiet, but reads like a label.' },
+  { id: 'A', name: 'A · Filled offer', note: 'Same slot, sunk fill, icon well and a "+" cap that says "add".' },
+  { id: 'B', name: 'B · Row under the chips', note: 'Full-width row with "around 10 am" and an Add key. The tray grows.' },
+  { id: 'C', name: 'C · First chip', note: 'The usual leads the quick chips. Compact, but mixes "add to amount" with "save".' },
+  { id: 'D', name: 'D · Two usuals', note: 'Up to two offers when habits overlap. Changes BR-17.' },
+];
+const view = { two: false, lg: false };
+const state = {};
+const fresh = () => ({ amount: 0, saved: null, snack: null });
+OPTIONS.forEach((o) => { state[o.id] = fresh(); });
+
+const offers = () => (view.two ? HABITS : HABITS.slice(0, 1));
+// Today's detector offers one: the higher share of days wins (Chai here).
+const single = () => [offers()[0]];
+
+function offerHtml(id, s) {
+  const list = id === 'D' ? offers() : single();
+  const on = (h) => s.saved === h.cat ? ' done' : '';
+  const act = (h) => `data-act="save" data-cat="${h.cat}" aria-label="${h.cat}, ${h.amt} rupees, your usual. Adds it now"`;
+  if (id === '0') return list.map((h) => `<button class="p0${on(h)} fade" ${act(h)}>${svg(h.icon)}<span>${h.cat}</span><span class="amt">${inr(h.amt)}</span><span class="u">· your usual</span></button>`).join('');
+  if (id === 'A') return list.map((h) => `<button class="pA${on(h)} fade" ${act(h)}><span class="w">${svg(h.icon)}</span><span>${h.cat} <span class="amt">${inr(h.amt)}</span></span><span class="u">· usual</span><span class="cap">${svg(s.saved === h.cat ? 'check' : 'plus')}</span></button>`).join('');
+  if (id === 'D') return list.map((h) => `<button class="pD${on(h)} fade" ${act(h)}><span class="w">${svg(h.icon)}</span><span class="nm">${h.cat}</span><span class="amt">${inr(h.amt)}</span></button>`).join('');
+  return '';
+}
+
+function preview(s) {
+  return s.amount <= SAFE ? `Leaves ${inr(SAFE - s.amount)} for today` : `${inr(s.amount - SAFE)} over today's share`;
+}
+
+function trayHtml(id) {
+  const s = state[id];
+  const showOffer = s.amount === 0;
+  const h = single()[0];
+  let slot = '';
+  if (s.amount > 0) slot = `<span class="pv fade">${preview(s)}</span>`;
+  else if (id !== 'B' && id !== 'C') slot = offerHtml(id, s);
+  const capD = id === 'D' && showOffer && view.two ? '<span class="capD">Your usuals around 10 am</span>' : '';
+  let chips = [10, 20, 50, 100, 500].map((n) => `<button data-act="chip" data-n="${n}">+₹${n}</button>`).join('');
+  if (id === 'C' && showOffer) {
+    chips = `<button class="cC${s.saved ? ' done' : ''} fade" data-act="save" data-cat="${h.cat}" aria-label="${h.cat}, ${h.amt} rupees, your usual. Adds it now">${svg(s.saved ? 'check' : h.icon)}${inr(h.amt)}</button>`
+      + [10, 50, 100, 500].map((n) => `<button data-act="chip" data-n="${n}">+₹${n}</button>`).join('');
+  }
+  const rowB = id === 'B' && showOffer
+    ? `<button class="rowB${s.saved ? ' done' : ''} fade" data-act="save" data-cat="${h.cat}" aria-label="${h.cat}, ${h.amt} rupees, your usual around ${h.around}. Adds it now"><span class="w">${svg(h.icon)}</span><span class="t">${h.cat} <span class="amt">${inr(h.amt)}</span><span class="sub">Your usual around ${h.around}</span></span><span class="go">${svg(s.saved ? 'check' : 'plus')}${s.saved ? 'Added' : 'Add'}</span></button>`
+    : '';
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', 'bk'].map((k) => k === 'bk'
+    ? `<button data-act="bk" aria-label="Delete last digit">${svg('bksp')}</button>` : `<button data-act="key" data-k="${k}">${k}</button>`).join('');
+  const tray = s.snack ? '' : `<div class="scrim"></div><div class="tray">
+      <div class="kind"><span class="on">Spent</span><span>Got</span></div>
+      <div class="bigAmt${s.amount ? '' : ' zero'}">${amtHtml(s.amount)}</div>
+      <div class="slot">${slot}</div>${capD}
+      <div class="qchips">${chips}</div>
+      ${rowB}
+      <div class="keys">${keys}</div>
+      <button class="signal" data-act="next" ${s.amount > 0 ? '' : 'disabled'}>Next ${svg('next')}</button>
+    </div>`;
+  const snack = s.snack ? `<div class="snack">${s.snack}<button data-act="undo"><b>Undo</b></button></div>` : '';
+  return `<div class="ghostHome"><i style="height:48px;background:none"></i><i style="height:220px"></i><i style="height:64px"></i><i style="height:180px"></i></div>${tray}${snack}`;
+}
+
+function render() {
+  document.getElementById('phones').innerHTML = OPTIONS.map((o) => `<figure>
+      <div class="phone" data-id="${o.id}">${trayHtml(o.id)}</div>
+      <figcaption><b>${o.name}</b><span>${o.note}</span></figcaption>
+    </figure>`).join('');
+}
+
+document.getElementById('phones').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  const phone = e.target.closest('.phone');
+  if (!b || !phone) return;
+  const id = phone.dataset.id;
+  const s = state[id];
+  const act = b.dataset.act;
+  if (act === 'key') s.amount = Math.min(999999999, Number(String(s.amount === 0 ? '' : s.amount) + b.dataset.k) || 0);
+  if (act === 'bk') s.amount = Math.floor(s.amount / 10);
+  if (act === 'chip') s.amount = Math.min(999999999, s.amount + Number(b.dataset.n));
+  if (act === 'next') { state[id] = fresh(); }
+  if (act === 'undo') { state[id] = fresh(); }
+  if (act === 'save' && !s.saved) {
+    const h = HABITS.find((x) => x.cat === b.dataset.cat);
+    s.saved = h.cat;
+    render();
+    setTimeout(() => { s.snack = `Added ${inr(h.amt)} to ${h.cat}`; render(); }, 450);
+    return;
+  }
+  render();
+});
+
+document.querySelector('.toggles').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const t = b.dataset.t;
+  if (t === 'reset') { OPTIONS.forEach((o) => { state[o.id] = fresh(); }); render(); return; }
+  const on = b.getAttribute('aria-pressed') !== 'true';
+  b.setAttribute('aria-pressed', String(on));
+  if (t === 'theme') { document.body.classList.toggle('dark', on); document.body.classList.toggle('light', !on); }
+  if (t === 'lg') { view.lg = on; document.body.classList.toggle('lg', on); }
+  if (t === 'two') { view.two = on; }
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

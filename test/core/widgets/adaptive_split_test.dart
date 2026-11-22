@@ -117,5 +117,40 @@ void main() {
       expect(find.byKey(_header), findsOneWidget);
       expect(find.byKey(_art), findsNothing);
     });
+
+    group('headerFillsPane (D208)', () {
+      const Key top = ValueKey<String>('top');
+      const Key bottom = ValueKey<String>('bottom');
+
+      Widget spreading({double gap = 0}) => Scaffold(
+            body: AdaptiveSplit(
+              headerFillsPane: true,
+              header: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const SizedBox(key: top, height: 40, width: 200),
+                  SizedBox(height: gap),
+                  const SizedBox(key: bottom, height: 40, width: 200),
+                ],
+              ),
+              controls: const SizedBox(key: _controls, height: 200, width: 200),
+            ),
+          );
+
+      testWidgets('the header is as tall as its pane, so a spreading header reaches the controls', (WidgetTester tester) async {
+        await pumpApp(tester, spreading());
+
+        expect(tester.getRect(find.byKey(top)).top, lessThan(100));
+        expect(tester.getRect(find.byKey(_controls)).top - tester.getRect(find.byKey(bottom)).bottom, 24);
+      });
+
+      testWidgets('a header taller than its pane keeps its height and scrolls, with nothing overflowing', (WidgetTester tester) async {
+        await pumpApp(tester, spreading(gap: 1200));
+
+        expect(tester.takeException(), isNull);
+        expect(tester.getRect(find.byKey(bottom)).top - tester.getRect(find.byKey(top)).bottom, 1200);
+        expect(find.byType(SingleChildScrollView), findsOneWidget);
+      });
+    });
   });
 }

@@ -17,11 +17,12 @@ import '../../../ledger/ledger.dart';
 /// The *your usual* pill of the Add tray: "Chai ₹20 · your usual"; one tap saves it (SPEC
 /// FR-AD-10, UI_DESIGN §5.3).
 ///
-/// The one outlined control in the app: a fully round 1dp `ink2` edge on `surface`, never
-/// marigold. It is [height] tall and grows with the text up to [maxHeight], inside a tap target
-/// of [maxHeight]. It keeps to one line: when the line doesn't fit the width it gets, the
-/// "· your usual" tag drops; when it still doesn't fit, or the text is taller than [maxHeight],
-/// nothing is built (AC-2).
+/// A fully round `sunk` capsule with no edge, like the chips, never marigold (D207). The
+/// category icon sits in a round `surface` well at the start and a round `ink` add cap ends it,
+/// so it reads as a button that adds. It is [height] tall and grows with the text up to
+/// [maxHeight], inside a tap target of [maxHeight]. It keeps to one line: when the line doesn't
+/// fit the width it gets, the "· your usual" tag drops; when it still doesn't fit, or the text is
+/// taller than [maxHeight], nothing is built (AC-2).
 class UsualPill extends StatelessWidget {
   /// Offers [usual]; [onPressed] runs on a tap, also to try again when [failed].
   const UsualPill({super.key, required this.usual, required this.onPressed, this.filled = false, this.failed = false});
@@ -32,7 +33,8 @@ class UsualPill extends StatelessWidget {
   /// Called on a tap, on Enter and on a screen reader's activate.
   final VoidCallback onPressed;
 
-  /// Paints the pill `ink` while its save runs and the tray closes (AC-4).
+  /// Paints the pill `ink`, and its cap `surface` with a tick, while its save runs and the tray
+  /// closes (AC-4).
   final bool filled;
 
   /// Shows "Couldn't save. Try again." in place of the offer (AC-4).
@@ -44,13 +46,16 @@ class UsualPill extends StatelessWidget {
   /// The tallest the pill grows to, and the height of its tap target: the slot's 48dp.
   static const double maxHeight = HisaabSizes.minTouchTarget;
 
-  static const double _edge = 1;
+  /// The well and the cap; 4dp inside the 40dp pill, so the pill stays 40dp and the 12dp gap
+  /// to the chips holds (D153).
+  static const double _circle = 32;
   static const double _iconSize = 20;
+  static const double _capIconSize = 18;
   static const double _amountSize = 17;
   static const double _lineHeight = 20;
 
-  /// What is drawn beside the text: the insets, the icon, its gap and the two edges.
-  static const double _chrome = HisaabSpacing.m + _iconSize + HisaabSpacing.s + HisaabSpacing.l + 2 * _edge;
+  /// What is drawn beside the text: the insets, the well, the cap and their gaps.
+  static const double _chrome = 2 * HisaabSpacing.xs + 2 * _circle + 2 * HisaabSpacing.s;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -128,21 +133,28 @@ class UsualPill extends StatelessWidget {
           child: AnimatedContainer(
             duration: HisaabMotion.reduceMotion(context) ? Duration.zero : HisaabMotion.press,
             height: pillHeight,
-            padding: const EdgeInsetsDirectional.only(start: HisaabSpacing.m, end: HisaabSpacing.l),
-            decoration: ShapeDecoration(
-              color: filled ? colors.ink : colors.surface,
-              shape: StadiumBorder(side: BorderSide(color: filled ? colors.ink : colors.ink2, width: _edge)),
-            ),
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.xs),
+            decoration: ShapeDecoration(color: filled ? colors.ink : colors.sunk, shape: const StadiumBorder()),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                AppIcon(
-                  AppIcons.forKey(usual.category.iconKey),
-                  size: _iconSize,
-                  color: filled ? colors.surface : colors.ink,
+                _round(
+                  const ValueKey<String>('usual-pill-well'),
+                  colors.surface,
+                  AppIcon(AppIcons.forKey(usual.category.iconKey), size: _iconSize, color: colors.ink),
                 ),
                 const SizedBox(width: HisaabSpacing.s),
                 Text.rich(line, style: _style(context), maxLines: 1, softWrap: false),
+                const SizedBox(width: HisaabSpacing.s),
+                _round(
+                  const ValueKey<String>('usual-pill-cap'),
+                  filled ? colors.surface : colors.ink,
+                  AppIcon(
+                    filled ? AppIcons.check : AppIcons.add,
+                    size: _capIconSize,
+                    color: filled ? colors.ink : colors.surface,
+                  ),
+                ),
               ],
             ),
           ),
@@ -150,4 +162,14 @@ class UsualPill extends StatelessWidget {
       ),
     );
   }
+
+  /// A [_circle]-wide round fill of [color] holding [icon]: the well and the cap.
+  static Widget _round(Key key, Color color, Widget icon) => SizedBox.square(
+        dimension: _circle,
+        child: DecoratedBox(
+          key: key,
+          decoration: ShapeDecoration(color: color, shape: const CircleBorder()),
+          child: Center(child: icon),
+        ),
+      );
 }

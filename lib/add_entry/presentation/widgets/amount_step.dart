@@ -43,40 +43,58 @@ class AmountStep extends StatelessWidget {
   /// Below this width the halves are too narrow, so the tray stays stacked and scrolls.
   static const double _sideBySideMinWidth = 360;
 
+  /// The least tray height for the 76 amount (D209): the stacked step measures 662dp at 1× text
+  /// with the 60 amount, plus 16 for 76. Measured, not summed, because [_headerExtent] is kept
+  /// loose for the side-by-side rule; the tray tests pin it at 412×781 and 412×782.
+  static const double _largeAmountMinHeight = 678;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (BuildContext context, BoxConstraints box) {
       final double needed = MediaQuery.textScalerOf(context).scale(_headerExtent) + _stackedControlsExtent;
       final bool crowded = box.hasBoundedHeight && box.maxWidth >= _sideBySideMinWidth && box.maxHeight < needed;
-      return _body(context, sideBySide || crowded);
+      // why: at larger text the amount already grows with the scale, so it keeps 60 (D209).
+      final bool roomy = box.hasBoundedHeight && box.maxHeight >= _largeAmountMinHeight && MediaQuery.textScalerOf(context).scale(1) <= 1;
+      return _body(context, sideBySide || crowded, roomy);
     },
   );
 
-  Widget _body(BuildContext context, bool sideBySide) {
+  Widget _body(BuildContext context, bool sideBySide, bool roomy) {
     final AddEntryBloc bloc = context.read<AddEntryBloc>();
     final bool short = sideBySide || context.layout.heightClass == HeightClass.compact;
     final AddEntryState current = state;
+    final TextTheme text = Theme.of(context).textTheme;
     return AdaptiveSplit(
       fullWindow: false,
       sideBySide: sideBySide,
+      headerFillsPane: true,
+      // why: in a tray taller than its content the spare height splits evenly above the amount
+      // and below its slot, so the amount stands out; Spent | Got stays on top and the chips on
+      // the keypad (D208). The gaps inside the middle group are the least.
       header: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           KindSwitch(kind: state.form.kind, onChanged: (EntryKind kind) => bloc.add(AddEntryKindChanged(kind))),
-          SizedBox(height: short ? HisaabSpacing.m : _aboveAmount),
-          AmountCapRing(
-            rejections: current is AddEntryEditing ? current.rejections : 0,
-            amount: state.form.amount,
-            child: Shake(
-              trigger: current is AddEntryEditing ? current.rejections : 0,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: AmountText(state.form.amount, roll: false, style: Theme.of(context).textTheme.displayMedium),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              SizedBox(height: short ? HisaabSpacing.m : _aboveAmount),
+              AmountCapRing(
+                rejections: current is AddEntryEditing ? current.rejections : 0,
+                amount: state.form.amount,
+                child: Shake(
+                  trigger: current is AddEntryEditing ? current.rejections : 0,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: AmountText(state.form.amount, roll: false, style: roomy && !short ? text.displayLarge : text.displayMedium),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: HisaabSpacing.xs),
+              UsualSlot(key: const ValueKey<String>('usual-slot'), state: state),
+              const SizedBox(height: HisaabSpacing.s),
+            ],
           ),
-          const SizedBox(height: HisaabSpacing.xs),
-          UsualSlot(key: const ValueKey<String>('usual-slot'), state: state),
-          const SizedBox(height: HisaabSpacing.s),
           QuickAddChips(onAdd: (int rupees) => bloc.add(AddEntryQuickAdded(rupees))),
         ],
       ),

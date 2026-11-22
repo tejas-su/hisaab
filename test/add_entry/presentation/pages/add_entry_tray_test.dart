@@ -532,8 +532,11 @@ void main() {
       expect(tester.getRect(find.byType(Keypad)), keypadWithPill);
     });
 
-    testWidgets('layout B: 20dp switch to amount, 4dp to the slot, 8dp to the chips (UI_DESIGN §5.3)', (WidgetTester tester) async {
-      await openUsual(tester);
+    testWidgets('layout B: 20dp switch to amount, 4dp to the slot, 8dp to the chips where the content fills the tray (UI_DESIGN §5.3)', (WidgetTester tester) async {
+      // why: a stacked tray with no spare height. Narrower windows wrap the chip labels, and a
+      // shorter one goes side by side (D192).
+      await openUsual(tester, size: const Size(412, 740));
+      expect(headerScroll(tester).maxScrollExtent, greaterThan(0));
       expect(tester.getRect(amount).top - tester.getRect(find.byType(KindSwitch)).bottom, 20);
       expect(tester.getRect(slot).top - tester.getRect(amount).bottom, 4);
       expect(tester.getSize(slot).height, 48);
@@ -541,6 +544,45 @@ void main() {
       expect(tester.getRect(pill).center.dx, moreOrLessEquals(tester.getRect(slot).center.dx, epsilon: 0.5));
       expect(tester.getRect(find.byType(AmountText)).center.dx, moreOrLessEquals(tester.getRect(slot).center.dx, epsilon: 0.5));
     });
+
+    testWidgets('in a tall tray the spare height splits evenly above the amount and below its slot (D208)', (WidgetTester tester) async {
+      await openUsual(tester);
+      final Rect header = tester.getRect(find.ancestor(of: find.byType(KindSwitch), matching: find.byType(Scrollable)).first);
+      final double above = tester.getRect(amount).top - tester.getRect(find.byType(KindSwitch)).bottom - 20;
+      final double below = tester.getRect(chips).top - tester.getRect(slot).bottom - 8;
+      expect(above, greaterThan(40));
+      expect(above, moreOrLessEquals(below, epsilon: 0.5));
+      expect(tester.getRect(slot).top - tester.getRect(amount).bottom, 4);
+      expect(tester.getRect(find.byType(KindSwitch)).top - header.top, 16);
+      expect(tester.getRect(find.byType(Keypad)).top - tester.getRect(chips).bottom, 24);
+      expect(headerScroll(tester).maxScrollExtent, 0);
+    });
+
+    double? amountSize(WidgetTester tester) => tester.widget<AmountText>(find.byType(AmountText)).style?.fontSize;
+
+    testWidgets('in a tray with room the amount is the hero size, 76 (D209)', (WidgetTester tester) async {
+      await openUsual(tester);
+      expect(amountSize(tester), 76);
+      expect(headerScroll(tester).maxScrollExtent, 0);
+    });
+
+    testWidgets('in the smallest tray with room for 76, the 76 amount fits without scrolling (D209)', (WidgetTester tester) async {
+      await openUsual(tester, size: const Size(412, 782));
+      expect(amountSize(tester), 76);
+      expect(headerScroll(tester).maxScrollExtent, 0);
+    });
+
+    for (final (String name, Size size, double textScale) in <(String, Size, double)>[
+      ('a tray the content fills', const Size(412, 740), 1),
+      ('a tray 1dp short of room for 76', const Size(412, 781), 1),
+      ('the short tray', TestWindows.phoneLandscape, 1),
+      ('1.5× text', TestWindows.phone, 1.5),
+    ]) {
+      testWidgets('in $name the amount stays 60 (D209)', (WidgetTester tester) async {
+        await openUsual(tester, size: size, textScale: textScale);
+        expect(amountSize(tester), 60);
+      });
+    }
 
     testWidgets('the short tray keeps 12dp above the amount (UI_DESIGN §5.3)', (WidgetTester tester) async {
       await openUsual(tester, size: TestWindows.phoneLandscape);
@@ -624,7 +666,7 @@ void main() {
       final Completer<void> slowSave = Completer<void>();
       services.ledger.nextAddGate = slowSave;
       await openUsual(tester);
-      expect(pillFill(tester), HisaabColors.light.surface);
+      expect(pillFill(tester), HisaabColors.light.sunk);
       await tester.tap(pill);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 150));
@@ -647,7 +689,7 @@ void main() {
       await settle(tester);
       expect(find.byType(AddEntryTray), findsOneWidget);
       expect(find.descendant(of: pill, matching: find.text("Couldn't save. Try again.", findRichText: true)), findsOneWidget);
-      expect(pillFill(tester), HisaabColors.light.surface);
+      expect(pillFill(tester), HisaabColors.light.sunk);
       expect(tester.getRect(chips), before);
       expect(services.haptics.events.last, 'reject');
       services.ledger.failure = null;

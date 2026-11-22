@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisaab/add_entry/presentation/widgets/usual_pill.dart';
 import 'package:hisaab/core/design/app_icon.dart';
+import 'package:hisaab/core/design/app_icons.dart';
 import 'package:hisaab/core/design/hisaab_colors.dart';
 import 'package:hisaab/core/design/hisaab_motion.dart';
 import 'package:hisaab/core/extensions/build_context_extensions.dart';
@@ -58,6 +59,14 @@ Finder _body() => find.descendant(of: find.byKey(_pillKey), matching: find.byTyp
 
 ShapeDecoration _decoration(WidgetTester tester) => tester.widget<AnimatedContainer>(_body()).decoration! as ShapeDecoration;
 
+Finder _well() => find.descendant(of: find.byKey(_pillKey), matching: find.byKey(const ValueKey<String>('usual-pill-well')));
+
+Finder _addCap() => find.descendant(of: find.byKey(_pillKey), matching: find.byKey(const ValueKey<String>('usual-pill-cap')));
+
+Color? _fill(WidgetTester tester, Finder circle) => (tester.widget<DecoratedBox>(circle).decoration as ShapeDecoration).color;
+
+AppIcon _iconIn(WidgetTester tester, Finder circle) => tester.widget<AppIcon>(find.descendant(of: circle, matching: find.byType(AppIcon)));
+
 Finder _line(String text) => find.descendant(of: find.byKey(_pillKey), matching: find.text(text, findRichText: true));
 
 Color? _lineColor(WidgetTester tester) => tester.widget<RichText>(find.descendant(of: _body(), matching: find.byType(RichText))).text.style?.color;
@@ -67,8 +76,24 @@ void main() {
     testWidgets('shows the icon, name, amount and tag: Chai ₹20 · your usual (AC-2)', (WidgetTester tester) async {
       await _pump(tester);
       expect(_line('Chai ₹20 · your usual'), findsOneWidget);
-      expect(find.descendant(of: _body(), matching: find.byType(AppIcon)), findsOneWidget);
-      expect(tester.getSize(find.descendant(of: _body(), matching: find.byType(AppIcon))), const Size(20, 20));
+      expect(_iconIn(tester, _well()).icon, AppIcons.forKey(chai.iconKey));
+      expect(tester.getSize(find.descendant(of: _well(), matching: find.byType(AppIcon))), const Size(20, 20));
+    });
+
+    testWidgets('starts with a 32dp round well and ends with a 32dp round add cap (AC-2, D207)', (WidgetTester tester) async {
+      await _pump(tester);
+      expect(tester.getSize(_well()), const Size(32, 32));
+      expect(tester.getSize(_addCap()), const Size(32, 32));
+      expect((tester.widget<DecoratedBox>(_well()).decoration as ShapeDecoration).shape, const CircleBorder());
+      expect((tester.widget<DecoratedBox>(_addCap()).decoration as ShapeDecoration).shape, const CircleBorder());
+      expect(_iconIn(tester, _addCap()).icon, AppIcons.add);
+      expect(tester.getCenter(_well()).dx, lessThan(tester.getCenter(find.byType(RichText).last).dx));
+      expect(tester.getCenter(_addCap()).dx, greaterThan(tester.getCenter(find.byType(RichText).last).dx));
+    });
+
+    testWidgets('the cap still says add when the save failed, as a tap tries again (AC-4)', (WidgetTester tester) async {
+      await _pump(tester, failed: true);
+      expect(_iconIn(tester, _addCap()).icon, AppIcons.add);
     });
 
     testWidgets('is 40dp tall with a 48dp tap area (AC-2, NFR-4)', (WidgetTester tester) async {
@@ -82,26 +107,36 @@ void main() {
       (ThemeMode.light, HisaabColors.light),
       (ThemeMode.dark, HisaabColors.dark),
     ]) {
-      testWidgets('has a fully round 1dp ink2 edge on surface in ${mode.name} (AC-2)', (WidgetTester tester) async {
+      testWidgets('is a fully round sunk capsule with no edge, a surface well and an ink cap in ${mode.name} (AC-2, D207)', (WidgetTester tester) async {
         await _pump(tester, themeMode: mode);
         final ShapeDecoration decoration = _decoration(tester);
-        expect(decoration.color, colors.surface);
-        expect(decoration.shape, StadiumBorder(side: BorderSide(color: colors.ink2)));
+        expect(decoration.color, colors.sunk);
+        expect(decoration.shape, const StadiumBorder());
         expect(_lineColor(tester), colors.ink);
+        expect(_fill(tester, _well()), colors.surface);
+        expect(_iconIn(tester, _well()).color, colors.ink);
+        expect(_fill(tester, _addCap()), colors.ink);
+        expect(_iconIn(tester, _addCap()).color, colors.surface);
       });
 
       testWidgets('never uses the signal colour in ${mode.name}, at rest or filled (AC-2)', (WidgetTester tester) async {
         await _pump(tester, themeMode: mode);
-        expect(_decoration(tester).color, isNot(colors.signal));
+        expect(<Color?>[_decoration(tester).color, _fill(tester, _well()), _fill(tester, _addCap())], everyElement(isNot(colors.signal)));
         await _pump(tester, themeMode: mode, filled: true);
-        expect(_decoration(tester).color, isNot(colors.signal));
-        expect((_decoration(tester).shape as StadiumBorder).side.color, isNot(colors.signal));
+        expect(<Color?>[_decoration(tester).color, _fill(tester, _well()), _fill(tester, _addCap())], everyElement(isNot(colors.signal)));
       });
 
       testWidgets('filled paints ink with surface text in ${mode.name} (AC-4)', (WidgetTester tester) async {
         await _pump(tester, themeMode: mode, filled: true);
         expect(_decoration(tester).color, colors.ink);
         expect(_lineColor(tester), colors.surface);
+      });
+
+      testWidgets('filled turns the cap surface with an ink tick in ${mode.name} (AC-4, D207)', (WidgetTester tester) async {
+        await _pump(tester, themeMode: mode, filled: true);
+        expect(_fill(tester, _addCap()), colors.surface);
+        expect(_iconIn(tester, _addCap()).icon, AppIcons.check);
+        expect(_iconIn(tester, _addCap()).color, colors.ink);
       });
 
       testWidgets('meets tap-target, label and contrast guidelines in ${mode.name}', (WidgetTester tester) async {

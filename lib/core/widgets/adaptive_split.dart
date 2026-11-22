@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../design/hisaab_dimensions.dart';
@@ -25,6 +27,7 @@ class AdaptiveSplit extends StatelessWidget {
     this.art,
     this.fullWindow = true,
     this.sideBySide = false,
+    this.headerFillsPane = false,
   });
 
   final Widget header;
@@ -39,6 +42,11 @@ class AdaptiveSplit extends StatelessWidget {
 
   /// Put header and controls side by side even in a tall window, e.g. in a short, wide tray.
   final bool sideBySide;
+
+  /// In the header-on-top arrangement, makes [header] at least as tall as the space above
+  /// [controls], so a header that spreads its children (a `Column` with
+  /// `MainAxisAlignment.spaceBetween`) shares out the spare height. A taller header still scrolls.
+  final bool headerFillsPane;
 
   static const double readableWidth = 560;
   static const EdgeInsetsDirectional _padding = EdgeInsetsDirectional.fromSTEB(
@@ -74,7 +82,7 @@ class AdaptiveSplit extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: readableWidth),
           child: Column(
             children: <Widget>[
-              Expanded(child: art == null ? _scrolling(header) : _withArt(header, art!)),
+              Expanded(child: _onTop(header)),
               Padding(padding: _padding.copyWith(top: 0), child: controls),
             ],
           ),
@@ -101,6 +109,25 @@ class AdaptiveSplit extends StatelessWidget {
   }
 
   static Widget _scrolling(Widget child) => SingleChildScrollView(padding: _padding, child: child);
+
+  Widget _onTop(Widget header) {
+    final Widget? picture = art;
+    if (picture != null) {
+      return _withArt(header, picture);
+    }
+    return headerFillsPane ? _filling(header) : _scrolling(header);
+  }
+
+  // why: a min height, not intrinsics, so headers holding a LayoutBuilder (the usual pill, the
+  // chips) can fill the pane; a Column under a min height spreads its spare space by its alignment.
+  static Widget _filling(Widget header) => LayoutBuilder(
+        builder: (BuildContext _, BoxConstraints pane) => _scrolling(
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: math.max(0, pane.maxHeight - _padding.vertical)),
+            child: header,
+          ),
+        ),
+      );
 
   // why: the header keeps its natural height and still scrolls when it can't fit (large text);
   // the art takes only what is left below it.
