@@ -18,6 +18,9 @@ const Map<String, Object?> _row = <String, Object?>{
   RecurringColumns.isIncomeSource: 1,
   RecurringColumns.icon: null,
   RecurringColumns.amountMode: 'fixed',
+  RecurringColumns.targetMinor: null,
+  RecurringColumns.targetReachedFor: null,
+  RecurringColumns.targetReachedOn: null,
 };
 
 void main() {

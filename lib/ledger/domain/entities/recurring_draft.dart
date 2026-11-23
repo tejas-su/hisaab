@@ -20,6 +20,9 @@ final class RecurringDraft extends Equatable {
     this.isIncomeSource = false,
     this.icon = const Option<BillIcon>.none(),
     this.amountMode = AmountMode.fixed,
+    this.target = const Option<Money>.none(),
+    this.targetReachedFor = const Option<Money>.none(),
+    this.targetReachedOn = const Option<CalendarDate>.none(),
   });
 
   final String label;
@@ -38,6 +41,15 @@ final class RecurringDraft extends Equatable {
   /// Whether the amount is fixed, changes, or is a card bill (D123).
   final AmountMode amountMode;
 
+  /// The amount this saving aims to reach; none means no target (SPEC BR-23).
+  final Option<Money> target;
+
+  /// The target the user was last told was reached, so it is announced once (SPEC BR-23).
+  final Option<Money> targetReachedFor;
+
+  /// The day [targetReachedFor] was reached (SPEC BR-23).
+  final Option<CalendarDate> targetReachedOn;
+
   @override
-  List<Object?> get props => <Object?>[label, amount, kind, categoryId, schedule, nextDue, isIncomeSource, icon, amountMode];
+  List<Object?> get props => <Object?>[label, amount, kind, categoryId, schedule, nextDue, isIncomeSource, icon, amountMode, target, targetReachedFor, targetReachedOn];
 }

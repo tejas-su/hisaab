@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/design/app_icons.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_motion.dart';
 import '../../../core/extensions/build_context_extensions.dart';
@@ -22,15 +23,25 @@ import 'story_where_page.dart';
 
 /// The month story's pages, one at a time (SPEC FR-SP-7): progress and Back on top, the page in the
 /// middle with its two tap zones, and on the last page *Ask an AI* and *Done* below. Nothing moves
-/// on by itself (AC-3).
+/// on by itself (AC-3). [onPageShown] hears each page turn, so the route can draw that page's
+/// line art behind the whole window (D210).
 class MonthStoryView extends StatefulWidget {
-  const MonthStoryView({super.key, required this.story, required this.cycleLabel, required this.previousLabel, required this.onAskAi, required this.onDone});
+  const MonthStoryView({
+    super.key,
+    required this.story,
+    required this.cycleLabel,
+    required this.previousLabel,
+    required this.onAskAi,
+    required this.onDone,
+    this.onPageShown,
+  });
 
   final MonthStory story;
   final String cycleLabel;
   final String previousLabel;
   final VoidCallback onAskAi;
   final VoidCallback onDone;
+  final ValueChanged<StoryPage>? onPageShown;
 
   @override
   State<MonthStoryView> createState() => _MonthStoryViewState();
@@ -48,6 +59,7 @@ class _MonthStoryViewState extends State<MonthStoryView> {
     final int next = (_index + delta).clamp(0, _pages.length - 1);
     if (next != _index) {
       setState(() => _index = next);
+      widget.onPageShown?.call(_pages[next]);
     }
   }
 
@@ -92,21 +104,24 @@ class _MonthStoryViewState extends State<MonthStoryView> {
 
   Widget _header(BuildContext context, AppLocalizations strings) => Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(HisaabSpacing.gutter, HisaabSpacing.s, HisaabSpacing.gutter, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        // why: Back leads the top line, in the corner Android users reach for (owner request, D210);
+        // the bars take the rest of that line and the page count sits under them.
+        child: Row(
           children: <Widget>[
-            StoryProgress(count: _pages.length, current: _index),
-            Row(
-              children: <Widget>[
-                const HisaabBackButton(),
-                const SizedBox(width: HisaabSpacing.s),
-                Expanded(
-                  child: Text(
+            const HisaabBackButton(),
+            const SizedBox(width: HisaabSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  StoryProgress(count: _pages.length, current: _index),
+                  const SizedBox(height: HisaabSpacing.xs),
+                  Text(
                     strings.storyProgress(widget.cycleLabel, _index + 1, _pages.length),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.ink2),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -165,7 +180,12 @@ class _MonthStoryViewState extends State<MonthStoryView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            SignalKey(key: const ValueKey<String>('story-ask-ai'), label: strings.askAiCardTitle(widget.cycleLabel), onPressed: widget.onAskAi),
+            SignalKey(
+              key: const ValueKey<String>('story-ask-ai'),
+              label: strings.askAiCardTitle(widget.cycleLabel),
+              icon: AppIcons.askAi,
+              onPressed: widget.onAskAi,
+            ),
             const SizedBox(height: HisaabSpacing.s),
             StoryOutlinedButton(key: const ValueKey<String>('story-done'), label: strings.done, onPressed: widget.onDone),
           ],

@@ -115,6 +115,9 @@ final class RecurringRepositoryImpl implements RecurringRepository {
         isIncomeSource: draft.isIncomeSource,
         icon: draft.icon,
         amountMode: draft.amountMode,
+        target: draft.target,
+        targetReachedFor: draft.targetReachedFor,
+        targetReachedOn: draft.targetReachedOn,
       );
 
   Either<Failure, EntryModel> _validatedModel(Occurrence occurrence) {

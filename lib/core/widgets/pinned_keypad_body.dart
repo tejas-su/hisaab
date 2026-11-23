@@ -7,7 +7,8 @@ import '../layout/window_class.dart';
 import 'signal_key.dart';
 
 /// The body of a keypad question in a bottom sheet: the typed [figure], the keypad and its action
-/// key stay on screen, and only the [lead] (title, caption, slot) scrolls (SPEC FR-HO-8, FR-SE-1).
+/// key stay on screen, and only the [lead] (title, caption, slot) scrolls, anchored to its end so
+/// the slot stays beside the figure (SPEC FR-HO-8, FR-SE-1, AC-T12).
 ///
 /// Stacked in a tall window. Side by side (the figure under the lead on one side, the controls on
 /// the other) in a compact-height window, a tabletop, or when the stacked scroll region would be
@@ -66,11 +67,15 @@ class PinnedKeypadBody extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: <Widget>[
-      if (scrolling) Flexible(child: SingleChildScrollView(child: lead)) else lead,
+      if (scrolling) Flexible(child: _anchoredLead()) else lead,
       figure,
       controls(context, keyHeight),
     ],
   );
+
+  // why: anchored to its end, so when the lead is cut it is the title that scrolls off, and the
+  // preview line under it stays next to the figure it describes (AC-T12 B1, SC 1.4.10).
+  Widget _anchoredLead() => SingleChildScrollView(reverse: true, child: lead);
 
   Widget _sideBySide(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +85,7 @@ class PinnedKeypadBody extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Flexible(child: SingleChildScrollView(child: lead)),
+            Flexible(child: _anchoredLead()),
             figure,
           ],
         ),

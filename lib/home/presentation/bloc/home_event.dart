@@ -107,6 +107,28 @@ final class HomeUsedDone extends HomeEvent {
   List<Object?> get props => <Object?>[outcome];
 }
 
+/// *I bought it* finished on a saving's sheet opened from Home: the whole set-aside amount was used
+/// and the saving deleted; Home offers one Undo for both (AC-T9). It waits for the next good load
+/// when Home can't show yet.
+final class HomeBoughtDone extends HomeEvent {
+  const HomeBoughtDone(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
+/// The user tapped Undo after *I bought it*: bring the saving back, then delete the *Used* entry.
+final class HomeBoughtUndoRequested extends HomeEvent {
+  const HomeBoughtUndoRequested(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
 /// The user tapped Undo after a *Used* save: delete the entry, which sets the amount aside again.
 final class HomeUsedUndoRequested extends HomeEvent {
   const HomeUsedUndoRequested(this.entry);

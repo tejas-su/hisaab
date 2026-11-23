@@ -110,3 +110,23 @@ final class BillSheetDeleteRequested extends BillSheetEvent {
 final class BillSheetSavedNoteExpired extends BillSheetEvent {
   const BillSheetSavedNoteExpired();
 }
+
+/// The user tapped Save on the *Saving up to* question (AC-T4).
+final class BillSheetTargetSaved extends BillSheetEvent {
+  const BillSheetTargetSaved();
+}
+
+/// The user tapped *Clear* on the *Saving up to* question: the target goes at once (AC-T2).
+final class BillSheetTargetCleared extends BillSheetEvent {
+  const BillSheetTargetCleared();
+}
+
+/// The user tapped *I bought it* on a reached saving (AC-T9, D213).
+final class BillSheetBoughtRequested extends BillSheetEvent {
+  const BillSheetBoughtRequested();
+}
+
+/// The user tapped *Keep saving* on a reached saving: the target is cleared (AC-T10, D213).
+final class BillSheetKeepSavingRequested extends BillSheetEvent {
+  const BillSheetKeepSavingRequested();
+}

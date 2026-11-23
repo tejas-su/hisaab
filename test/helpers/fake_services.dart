@@ -82,7 +82,7 @@ final class FakeServices {
   ArmBillReminders get armBillReminders =>
       ArmBillReminders(recurring: recurring, summary: getCycleSummary, reminders: reminders, clock: clock);
 
-  PostDueRecurring get postDue => PostDueRecurring(recurring: recurring, clock: clock);
+  PostDueRecurring get postDue => PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock);
 
   /// A [HomeBloc] over these fakes; the caller loads and closes it.
   HomeBloc homeBloc() => HomeBloc(

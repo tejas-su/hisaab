@@ -170,5 +170,8 @@ final class FakeRecurringRepository implements RecurringRepository {
         isIncomeSource: draft.isIncomeSource,
         icon: draft.icon,
         amountMode: draft.amountMode,
+        target: draft.target,
+        targetReachedFor: draft.targetReachedFor,
+        targetReachedOn: draft.targetReachedOn,
       );
 }

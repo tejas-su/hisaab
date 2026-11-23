@@ -21,6 +21,7 @@ import '../widgets/bill_sheet/bill_icon_question.dart';
 import '../widgets/bill_sheet/bill_mode_question.dart';
 import '../widgets/bill_sheet/bill_name_question.dart';
 import '../widgets/bill_sheet/bill_summary.dart';
+import '../widgets/bill_sheet/target_question.dart';
 import '../widgets/bill_sheet/used_question.dart';
 import '../widgets/bill_sheet/used_sheet_link.dart';
 
@@ -153,7 +154,7 @@ class _BillSheetState extends State<BillSheet> {
   // why: the amount question pins its keypad and scrolls only its lead (P2), so it brings its own
   // padding and scroll; every other question scrolls whole, clear of the keyboard and the system bar.
   static Widget _body(BuildContext context, BillSheetReady state) {
-    if (state.open.toNullable() == BillAnswer.amount || state.open.toNullable() == BillAnswer.used) {
+    if (<BillAnswer?>[BillAnswer.amount, BillAnswer.target, BillAnswer.used].contains(state.open.toNullable())) {
       return _view(state);
     }
     return SingleChildScrollView(
@@ -174,6 +175,7 @@ class _BillSheetState extends State<BillSheet> {
         BillAnswer.name => BillNameQuestion(state: state),
         BillAnswer.icon => BillIconQuestion(state: state),
         BillAnswer.mode => BillModeQuestion(state: state),
+        BillAnswer.target => TargetQuestion(state: state),
         BillAnswer.used => UsedQuestion(rule: state.rule),
       };
 }

@@ -1,10 +1,16 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hisaab/core/design/hisaab_motion.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/spends/domain/entities/month_story.dart';
 import 'package:hisaab/spends/presentation/widgets/day_bars.dart';
 import 'package:hisaab/spends/presentation/widgets/month_story_view.dart';
+import 'package:hisaab/spends/presentation/widgets/story_progress.dart';
+import 'package:hisaab/spends/presentation/widgets/story_outlined_button.dart';
+import 'package:hisaab/core/widgets/signal_key.dart';
+import 'package:hisaab/core/design/app_icons.dart';
+import 'package:hisaab/core/widgets/hisaab_back_button.dart';
 import 'package:hisaab/spends/presentation/widgets/story_split_bar.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -86,6 +92,22 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('story-ask-ai')));
       await tester.tap(find.byKey(const ValueKey<String>('story-done')));
       expect((asked, done), (1, 1));
+    });
+
+    testWidgets('Ask an AI and Done are one matched pair: same size and corners, the key with the Ask AI glyph', (WidgetTester tester) async {
+      await pump(tester, SeptemberStory.story());
+      for (int i = 0; i < 5; i++) {
+        await next(tester);
+      }
+      final Size ask = tester.getSize(find.byKey(const ValueKey<String>('story-ask-ai')));
+      final Size done = tester.getSize(find.byKey(const ValueKey<String>('story-done')));
+      expect(done, ask);
+      expect(StoryOutlinedButton.height, SignalKey.minHeight);
+      expect(tester.widget<SignalKey>(find.byKey(const ValueKey<String>('story-ask-ai'))).icon, AppIcons.askAi);
+      final TestGesture held = await tester.press(find.byKey(const ValueKey<String>('story-done')));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      await held.up();
     });
 
     testWidgets('the left zone goes back, and does nothing on page 1', (WidgetTester tester) async {
@@ -188,6 +210,54 @@ void main() {
         await next(tester);
       }
       expect(find.text('Left over'), findsNothing);
+    });
+
+    testWidgets('Back leads the top line, level with the bars, with the page count under them', (WidgetTester tester) async {
+      await pump(tester, SeptemberStory.story());
+      final Rect back = tester.getRect(find.byType(HisaabBackButton));
+      final Rect bars = tester.getRect(find.byType(StoryProgress));
+      final Rect count = tester.getRect(find.text('September · 1 of 6'));
+      expect(back.right, lessThanOrEqualTo(bars.left));
+      expect(bars.top, greaterThanOrEqualTo(back.top));
+      expect(bars.bottom, lessThanOrEqualTo(back.bottom));
+      expect(count.top, greaterThan(bars.bottom));
+      expect(count.left, bars.left);
+    });
+
+    testWidgets('tells the route each page it turns to, so the art can follow (D210)', (WidgetTester tester) async {
+      final List<StoryPage> shown = <StoryPage>[];
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: MonthStoryView(
+            story: SeptemberStory.story(),
+            cycleLabel: 'September',
+            previousLabel: 'August',
+            onAskAi: () {},
+            onDone: () {},
+            onPageShown: shown.add,
+          ),
+        ),
+      );
+      for (int i = 0; i < 5; i++) {
+        await next(tester);
+      }
+      await tester.tap(find.byKey(const ValueKey<String>('story-back')));
+      await tester.pumpAndSettle();
+      expect(shown, <StoryPage>[...StoryPage.values.skip(1), StoryPage.against]);
+    });
+
+    testWidgets('a page moves when it opens and has stopped once it has been read a while', (WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        Scaffold(body: MonthStoryView(story: SeptemberStory.story(), cycleLabel: 'September', previousLabel: 'August', onAskAi: () {}, onDone: () {})),
+        settle: false,
+      );
+      await tester.pump();
+      expect(tester.hasRunningAnimations, isTrue);
+      await tester.pump(HisaabMotion.storyDrift);
+      await tester.pump(HisaabMotion.storyReveal);
+      expect(tester.hasRunningAnimations, isFalse);
     });
 
     testWidgets('holds at 2.0× text on a small phone and in landscape, and under reduced motion (AC-6, AC-7)', (WidgetTester tester) async {

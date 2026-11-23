@@ -73,7 +73,7 @@ final class _RealLedger {
   /// Opens the "app" on [day]: the engine runs, then Home's summary is read, as HomeBloc does.
   Future<ProjectedDay> openOn(CalendarDate day) async {
     clock.current = DateTime(day.year, day.month, day.day, 9);
-    _right(await PostDueRecurring(recurring: recurring, clock: clock).call(const NoParams()).run());
+    _right(await PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock).call(const NoParams()).run());
     final CycleSummary summary = _right(
       await GetCycleSummary(ledger: ledger, recurring: recurring, settings: settings, periods: const PeriodCalculator(), clock: clock)
           .call(const NoParams())

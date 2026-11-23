@@ -20,6 +20,9 @@ RecurringModel _model({
   String nextDue = '2026-10-31',
   String? icon,
   String amountMode = 'fixed',
+  int? targetMinor,
+  int? targetReachedFor,
+  String? targetReachedOn,
 }) =>
     RecurringModel(
       id: id,
@@ -35,6 +38,9 @@ RecurringModel _model({
       isIncomeSource: false,
       icon: icon,
       amountMode: amountMode,
+      targetMinor: targetMinor,
+      targetReachedFor: targetReachedFor,
+      targetReachedOn: targetReachedOn,
     );
 
 const RecurringDraft _draft = RecurringDraft(
@@ -154,5 +160,50 @@ void main() {
         expect(RecurringMapper.toEntity(model).getLeft().toNullable(), isA<InvalidDataFailure>());
       });
     }
+  });
+
+  group('RecurringMapper saving target (BR-23)', () {
+    test('toModel then toEntity round-trips the three target fields', () {
+      final RecurringDraft draft = RecurringDraft(
+        label: 'RD',
+        amount: Money.fromMajor(1000),
+        kind: EntryKind.saved,
+        categoryId: 7,
+        schedule: _draft.schedule,
+        nextDue: _draft.nextDue,
+        target: some(Money.fromMajor(50000)),
+        targetReachedFor: some(Money.fromMajor(50000)),
+        targetReachedOn: some(const CalendarDate(2026, 11, 23)),
+      );
+      final RecurringRule rule = RecurringMapper.toEntity(RecurringMapper.toModel(draft, id: 3)).getOrElse((Failure f) => throw f);
+      expect(rule.target, some(Money.fromMajor(50000)));
+      expect(rule.targetReachedFor, some(Money.fromMajor(50000)));
+      expect(rule.targetReachedOn, some(const CalendarDate(2026, 11, 23)));
+      expect(rule.draft, draft);
+    });
+
+    test('null columns map to none', () {
+      final RecurringRule rule = RecurringMapper.toEntity(_model()).getOrElse((Failure f) => throw f);
+      expect(rule.target, const Option<Money>.none());
+      expect(rule.targetReachedFor, const Option<Money>.none());
+      expect(rule.targetReachedOn, const Option<CalendarDate>.none());
+    });
+
+    test('a bad reached-on date is InvalidDataFailure', () {
+      expect(RecurringMapper.toEntity(_model(targetReachedOn: 'nope')).getLeft().toNullable(), isA<InvalidDataFailure>());
+    });
+
+    test('copyWith replaces and clears the target fields', () {
+      final RecurringRule rule = RecurringMapper.toEntity(_model(targetMinor: 100)).getOrElse((Failure f) => throw f);
+      final RecurringRule set = rule.copyWith(
+        target: some(Money.fromMajor(5)),
+        targetReachedFor: some(Money.fromMajor(5)),
+        targetReachedOn: some(const CalendarDate(2026, 1, 1)),
+      );
+      expect(set.target, some(Money.fromMajor(5)));
+      expect(set.targetReachedFor, some(Money.fromMajor(5)));
+      expect(set.targetReachedOn, some(const CalendarDate(2026, 1, 1)));
+      expect(set.copyWith(target: const Option<Money>.none()).target, const Option<Money>.none());
+    });
   });
 }

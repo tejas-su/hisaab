@@ -8,6 +8,10 @@ import 'package:hisaab/spends/spends.dart';
 import 'package:hisaab/core/widgets/hisaab_back_button.dart';
 import 'package:hisaab/spends/presentation/bloc/month_story_state.dart';
 import 'package:hisaab/spends/presentation/widgets/month_story_view.dart';
+import 'package:hisaab/spends/presentation/widgets/story_art.dart';
+import 'package:hisaab/spends/presentation/widgets/story_backdrop.dart';
+import 'package:hisaab/spends/presentation/widgets/story_motif.dart';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
@@ -104,6 +108,32 @@ void main() {
       bloc.add(const MonthStoryLoadRequested());
       await tester.settle();
       expect(find.byType(MonthStoryPage), findsNothing);
+    });
+
+    testWidgets('the line art fills the whole window, past the column, and follows the page (D210)', (WidgetTester tester) async {
+      await pump(tester);
+      tester.view.physicalSize = TestWindows.phoneLandscape;
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.byType(StoryBackdrop)), Offset.zero & TestWindows.phoneLandscape);
+      expect(tester.widget<StoryArt>(find.byType(StoryArt)).motif, StoryMotif.rosette);
+      await tester.tap(find.byKey(const ValueKey<String>('story-next')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<StoryArt>(find.byType(StoryArt)).motif, StoryMotif.rings);
+    });
+
+    testWidgets('the status bar has light icons over the dark story, in the light theme too', (WidgetTester tester) async {
+      await pump(tester);
+      final AnnotatedRegion<SystemUiOverlayStyle> region = tester.widget(
+        find.descendant(of: find.byType(MonthStoryPage), matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>)).first,
+      );
+      expect(region.value.statusBarIconBrightness, Brightness.light);
+    });
+
+    testWidgets('a failed load has no line art, only Back and Try again', (WidgetTester tester) async {
+      services.ledger.failure = DatabaseFailure('locked');
+      await pump(tester);
+      expect(find.byType(StoryBackdrop), findsNothing);
+      expect(find.byType(HisaabBackButton), findsOneWidget);
     });
 
     testWidgets('the story column is no wider than 480dp on a tablet (AC-7)', (WidgetTester tester) async {

@@ -50,6 +50,22 @@ class PinnedBillQuestion extends StatelessWidget {
   // why: the slip's paper and torn edge around the figure, plus the figure itself, at 1x text.
   static const double defaultFigureExtent = slipChrome + amountExtent;
 
+  /// The text scale from which a chip beside the amount drops below it.
+  static const double stackChipFrom = 1.3;
+
+  static const double _chipExtent = 48 + HisaabSpacing.s;
+  static const double _actionKeyGrowth = 16;
+
+  /// The [figureExtent] for an amount with a 48dp chip stacked below it (B2).
+  // why: the body multiplies the figure's extent by the text scale, but the slip's chrome and the
+  // chip do not grow with it, so each is divided by the scale first. The action key does grow with
+  // large text past the body's fixed estimate (74dp at 2.0x), so that growth is added too: a window
+  // too short for it then hands over to the all-scrolling layout instead of overflowing.
+  static double stackedChipExtent(BuildContext context) {
+    final double scale = MediaQuery.textScalerOf(context).scale(1);
+    return (slipChrome + _chipExtent + _actionKeyGrowth) / scale + amountExtent;
+  }
+
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;

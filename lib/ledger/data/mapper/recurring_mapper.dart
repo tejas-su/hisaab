@@ -25,7 +25,8 @@ abstract final class RecurringMapper {
             (AmountMode amountMode) => _frequencyOf(model.frequency).flatMap(
             (Frequency frequency) => CalendarDate.parse(model.anchorDate).flatMap(
               (CalendarDate anchor) => CalendarDate.parse(model.nextDue).flatMap(
-                (CalendarDate nextDue) => Option<int>.fromNullable(model.id)
+                (CalendarDate nextDue) => _reachedOnOf(model.targetReachedOn).flatMap(
+                  (Option<CalendarDate> reachedOn) => Option<int>.fromNullable(model.id)
                     .toEither<Failure>(() => const InvalidDataFailure('Recurring row without an id'))
                     .map(
                       (int id) => RecurringRule(
@@ -40,8 +41,12 @@ abstract final class RecurringMapper {
                         // why: an icon from a newer version maps to none, so the bill still loads.
                         icon: BillIcon.fromValue(model.icon),
                         amountMode: amountMode,
+                        target: _moneyOf(model.targetMinor, currency),
+                        targetReachedFor: _moneyOf(model.targetReachedFor, currency),
+                        targetReachedOn: reachedOn,
                       ),
                     ),
+                ),
               ),
             ),
           ),
@@ -63,12 +68,22 @@ abstract final class RecurringMapper {
         nextDue: draft.nextDue.toIso(),
         isIncomeSource: draft.isIncomeSource,
         icon: draft.icon.map((BillIcon icon) => icon.value).toNullable(),
+        targetMinor: draft.target.map((Money m) => m.amountMinor).toNullable(),
+        targetReachedFor: draft.targetReachedFor.map((Money m) => m.amountMinor).toNullable(),
+        targetReachedOn: draft.targetReachedOn.map((CalendarDate d) => d.toIso()).toNullable(),
         amountMode: switch (draft.amountMode) {
           AmountMode.fixed => AmountModeValues.fixed,
           AmountMode.varies => AmountModeValues.varies,
           AmountMode.card => AmountModeValues.card,
         },
       );
+
+  static Option<Money> _moneyOf(int? minor, CurrencySpec currency) =>
+      Option<int>.fromNullable(minor).map((int value) => Money(value, currency: currency));
+
+  static Either<Failure, Option<CalendarDate>> _reachedOnOf(String? iso) => iso == null
+      ? Either<Failure, Option<CalendarDate>>.right(const Option<CalendarDate>.none())
+      : CalendarDate.parse(iso).map(Option<CalendarDate>.of);
 
   static Either<Failure, AmountMode> _amountModeOf(String value) => switch (value) {
         AmountModeValues.fixed => Either<Failure, AmountMode>.right(AmountMode.fixed),

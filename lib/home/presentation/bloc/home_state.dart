@@ -24,6 +24,7 @@ final class HomeLoading extends HomeState {
 /// does the same for a bill deleted from its sheet (D118), and [amountUndo] for a waiting bill
 /// just entered or skipped (D123), [usedUndo] for a *Used* save (AC-Y9) and [fixUndo] for a fix (FR-FX-5). [billUndoKeepsHistory]
 /// says the saving in [billUndo] has had a put-in, so its Undo bar says what stays (AC-Y10).
+/// [boughtUndo] holds an *I bought it* just made, for its one Undo (AC-T9).
 /// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
 /// [billNames] names each bill rule by id, so a row a bill posted says which bill it is.
 final class HomeReady extends HomeState {
@@ -43,6 +44,7 @@ final class HomeReady extends HomeState {
     this.billUndoKeepsHistory = false,
     this.showWeek = false,
     this.billNames = const <int, String>{},
+    this.boughtUndo = const Option<UsedOutcome>.none(),
   });
 
   final CycleSummary summary;
@@ -76,9 +78,10 @@ final class HomeReady extends HomeState {
   final bool billUndoKeepsHistory;
   final bool showWeek;
   final Map<int, String> billNames;
+  final Option<UsedOutcome> boughtUndo;
 
-  /// Returns a copy with the given fields replaced; [undo], [billUndo], [amountUndo], [usedUndo], [fixUndo] and
-  /// [billUndoKeepsHistory] reset unless passed.
+  /// Returns a copy with the given fields replaced; [undo], [billUndo], [amountUndo], [usedUndo], [fixUndo],
+  /// [boughtUndo] and [billUndoKeepsHistory] reset unless passed.
   HomeReady copyWith({
     List<Entry>? todayEntries,
     Option<Entry> undo = const Option<Entry>.none(),
@@ -90,6 +93,7 @@ final class HomeReady extends HomeState {
     bool? installDue,
     bool billUndoKeepsHistory = false,
     bool? showWeek,
+    Option<UsedOutcome> boughtUndo = const Option<UsedOutcome>.none(),
   }) =>
       HomeReady(
         summary: summary,
@@ -107,10 +111,11 @@ final class HomeReady extends HomeState {
         billUndoKeepsHistory: billUndoKeepsHistory,
         showWeek: showWeek ?? this.showWeek,
         billNames: billNames,
+        boughtUndo: boughtUndo,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, usedUndo, fixUndo, justFixed, installDue, billUndoKeepsHistory, showWeek, billNames];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, usedUndo, fixUndo, justFixed, installDue, billUndoKeepsHistory, showWeek, billNames, boughtUndo];
 }
 
 /// Loading failed; a quiet message with Try again.

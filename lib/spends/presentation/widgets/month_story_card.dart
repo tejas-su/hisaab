@@ -9,10 +9,13 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../domain/entities/month_story.dart';
 import '../month_story_copy.dart';
 import 'day_bars.dart';
+import 'story_art.dart';
+import 'story_motif.dart';
 
 /// The month story card, directly below the Ask AI card on a finished cycle (SPEC FR-SP-7 AC-1):
 /// *Your month*, page 2's headline, a small day-bars preview and *See the story*, on the story's
-/// dark surface in either theme. One button for TalkBack.
+/// dark surface in either theme over a still rosette and grain ([StoryArt], D210). One button for
+/// TalkBack.
 class MonthStoryCard extends StatelessWidget {
   const MonthStoryCard({super.key, required this.story, required this.cycleLabel, required this.onPressed});
 
@@ -36,12 +39,18 @@ class MonthStoryCard extends StatelessWidget {
           focusRadius: HisaabRadii.card,
           builder: (BuildContext context, bool pressed) => Container(
             key: const ValueKey<String>('month-story-card-surface'),
-            padding: const EdgeInsetsDirectional.all(HisaabSpacing.gutter),
+            clipBehavior: Clip.antiAlias,
             decoration: ShapeDecoration(
               color: pressed ? context.colors.sunk : context.colors.surface,
               shape: HisaabShapes.squircle(HisaabRadii.card),
             ),
-            child: _content(context, strings),
+            child: Stack(
+              children: <Widget>[
+                // why: still on the card; Spends is a page people scroll, and only the story moves.
+                const Positioned.fill(child: StoryArt(motif: StoryMotif.rosette, animate: false)),
+                Padding(padding: const EdgeInsetsDirectional.all(HisaabSpacing.gutter), child: _content(context, strings)),
+              ],
+            ),
           ),
         ),
       ),

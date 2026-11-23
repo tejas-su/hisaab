@@ -21,6 +21,9 @@ final class RecurringModel extends Equatable {
     required this.isIncomeSource,
     this.icon,
     this.amountMode = AmountModeValues.fixed,
+    this.targetMinor,
+    this.targetReachedFor,
+    this.targetReachedOn,
   });
 
   /// Reads a `recurring` row.
@@ -42,6 +45,9 @@ final class RecurringModel extends Equatable {
           isIncomeSource: row.intAt(RecurringColumns.isIncomeSource) == 1,
           icon: row.stringOrNullAt(RecurringColumns.icon),
           amountMode: row.stringAt(RecurringColumns.amountMode),
+          targetMinor: row.intOrNullAt(RecurringColumns.targetMinor),
+          targetReachedFor: row.intOrNullAt(RecurringColumns.targetReachedFor),
+          targetReachedOn: row.stringOrNullAt(RecurringColumns.targetReachedOn),
         ),
       );
 
@@ -65,6 +71,15 @@ final class RecurringModel extends Equatable {
   /// [AmountModeValues] value.
   final String amountMode;
 
+  /// The saving target in paise, or null for none (`target_minor`).
+  final int? targetMinor;
+
+  /// The target in paise last announced as reached, or null (`target_reached_for`).
+  final int? targetReachedFor;
+
+  /// The ISO day the target was reached, or null (`target_reached_on`).
+  final String? targetReachedOn;
+
   /// The row to insert; omits `id` when null. New rules are always active.
   Map<String, Object?> toRow() => <String, Object?>{
         if (id != null) RecurringColumns.id: id,
@@ -81,9 +96,12 @@ final class RecurringModel extends Equatable {
         RecurringColumns.isIncomeSource: isIncomeSource ? 1 : 0,
         RecurringColumns.icon: icon,
         RecurringColumns.amountMode: amountMode,
+        RecurringColumns.targetMinor: targetMinor,
+        RecurringColumns.targetReachedFor: targetReachedFor,
+        RecurringColumns.targetReachedOn: targetReachedOn,
       };
 
   @override
   List<Object?> get props =>
-      <Object?>[id, label, amountMinor, currency, kind, categoryId, frequency, anchorDate, lastDayOfMonth, nextDue, isIncomeSource, icon, amountMode];
+      <Object?>[id, label, amountMinor, currency, kind, categoryId, frequency, anchorDate, lastDayOfMonth, nextDue, isIncomeSource, icon, amountMode, targetMinor, targetReachedFor, targetReachedOn];
 }

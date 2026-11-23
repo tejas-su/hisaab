@@ -35,6 +35,23 @@ abstract final class HisaabMotion {
   /// A size change that only a curve can drive (`AnimatedSize`): the hero growing for its week
   /// bars. It matches [standard]'s response.
   static const Duration resize = Duration(milliseconds: 350);
+
+  /// A month story page's line art settling in behind its words: slower than the page turn, so
+  /// the words land first and the pattern follows.
+  static const Duration storyArt = Duration(milliseconds: 900);
+
+  /// The whole course of a month story page's line art: it settles in over [storyArt], drifts
+  /// slowly, then stops, so a page someone is reading costs no frames (D210). It never loops.
+  static const Duration storyDrift = Duration(seconds: 16);
+
+  /// One line of a month story page rising into place.
+  static const Duration storyReveal = Duration(milliseconds: 450);
+
+  /// The gap between one story line starting to rise and the next.
+  static const Duration storyStagger = Duration(milliseconds: 70);
+
+  /// Ease-in-out for a slow drift: it starts and stops softly, so a pattern never jolts.
+  static const Curve drift = Cubic(0.37, 0, 0.63, 1);
   /// The only transition used when the system asks for reduced motion.
   static const Duration reducedCrossfade = Duration(milliseconds: 150);
 

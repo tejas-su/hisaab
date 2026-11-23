@@ -74,6 +74,8 @@ Tests should cite the ID they cover.
 | **Held** (`H`) | What hisaab expects the user still holds of this cycle's money (BR-18). The word is never shown: the copy says "hisaab thought ₹17,430." |
 | **Set aside** | Money put into a saving and not yet used. It is a computed total, never called a balance or a worth (BR-19) |
 | **Used from savings** | Paid a cost out of what a saving holds ("Used some of it" on the key). A fourth kind of entry that touches no number (BR-19). *Saved* still means only money put into a saving |
+| **Saving up to** | An optional amount a saving is working toward; never a balance. The saving stops putting in when set aside reaches it (BR-23) |
+| **Reached** | The word for set aside being at or above a saving's *Saving up to* amount. A fact in words, never a celebration (BR-23) |
 
 ---
 
@@ -231,6 +233,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - When a bill's **day changes**, its next date is the new day in the month of the old `next_due` (the first month not yet posted), or, if that day has passed, the next due date from today. No month is posted twice and nothing is back-posted (D34).
   - **Delete** stops the rule at once, with Undo (4 s) that resumes it (D35).
   - **Yearly costs stay savings** (D174): the bill sheet is still monthly (D35). A *Used* entry is not a rule's entry: it has no `recurring_id` and links to its saving by its own `saving_id` column, because `(recurring_id, date)` is unique and a use on a put-in's date would be refused. Deleting a saving keeps its past entries, *Used* included (BR-19).
+  - **A saving's target and stopping (D212, D213, BR-23).** A target is a rule attribute: it is kept by delete's Undo and is never posted. A saving with a target posts nothing once its set aside `S` (BR-19) is at or above the target `T`. The put-in that would pass `T` posts only the gap `T − S`, `next_due` keeps moving, and a catch-up after days away stops at `T` the same way. A later *Used* entry that brings `S` below `T` resumes posting from `next_due`, with no back-posting of the months skipped (D33). A saving with no target never stops.
 - **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label}, ₹{amount}, due in {n} days" ("due tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown. Saving rules are nudged the same way, worded "{Label}, ₹{amount}, due on {weekday}" ("due tomorrow" when `n = 1`) (D120). A changing or card bill says "about": "Electricity, about ₹1,200, due tomorrow" (D123, D132).
 - **Bill stamp (D118):** the bill sheet (FR-SE-1) stamps the bill:
   - When its next unposted occurrence is 1 to 5 days away (the due-soon window): "Due in {n} days" ("Due tomorrow" when `n = 1`).
@@ -318,10 +321,17 @@ At most **3** are shown, chosen in priority order:
      - Safe to spend today is the hero's number: ₹0 when today or the cycle is over.
      - The forecast reads "at this pace it lasts till payday with about ₹X spare" ("till month end" for a month-end cycle, D117) or "at this pace it runs out on YYYY-MM-DD", and is left out while it is too early to forecast (`E < 3`). It stays for "It changes" income, as on Home.
      - The savings clause lists every active saving rule, soonest first, and their monthly total: "I save ₹5,500 a month (RD on the 10th, Chit on the 15th)". It is left out when there are none (D120).
+     - **Saving target (D215, BR-23):** one sentence per active saving that has a target, right after the savings clause, soonest first, using the Savings list's own numbers (never recomputed in `PromptBuilder`, D79) and ISO dates. They are in the first person, like the clause beside them:
+       - estimate: `My RD saving has a target of ₹50,000 and ₹18,000 set aside. At ₹5,000 a month it would reach the target around 2027-05-10.` (nothing set aside: `... and nothing set aside yet. ...`)
+       - reached: `My Insurance saving has reached its target of ₹12,000, with ₹12,000 set aside. It puts in nothing more.`
+       - far: `My RD saving has a target of ₹50,000 and ₹500 set aside. At ₹500 a month it is more than 10 years from the target.`
+       - **Reached savings are left out of the savings clause's monthly total** (`S ≥ T`, so they post nothing); the reached sentence says "It puts in nothing more." and the clause names only the savings that still put in. A saving that resumes (a *Used* entry, or a raised target) is counted again.
+       - Both the sentences and the explaining line below are added only when at least one active saving has a target, so every other export stays byte-identical.
      - With no income at all (Home shows the No income card), the whole line is left out.
      - **Explaining lines (D188):** one fixed sentence for each kind the export holds, right after the facts, so every other export stays byte-identical (two new goldens: one with each clause).
        - *Not logged:* `Entries with the category "not logged" are corrections. When the user checked their real money it differed from this list, so one entry was added for the difference. Treat each as a one-off, not as a purchase or a habit, and do not give spending advice about it.`
        - *Used:* `Entries of kind "used" are costs the user paid from money they had already set aside in a saving, such as a yearly insurance bill. That money was counted when it was put in, so it is not spending in this period and does not change the daily number. Do not add it to spending.`
+       - *Target:* `A saving with a target is something the user chose to save up to. The date is an estimate at the current monthly amount, and a saving with a target stops putting in when it reaches the target. Treat the target as a goal, not as spending.` One new golden holds an estimate, a reached one and this line; existing goldens do not change.
   4. Summary table by category (spent / limit).
   5. Recurring bills.
   6. Entries as CSV (`date,amount,kind,category,note`, oldest first; the note column is dropped when notes are hidden). `kind` is `spent`, `got`, `saved`, `used` or `card_bill_paid`; a saved or used entry's category is `savings` (D120, D175), a card bill's is `card bill` (D123), and a fix keeps `kind` `spent` or `got` with category `not logged` and note `Not logged` (D166). A used entry's note is its saving's name. In the recurring bills, a changing bill reads "Electricity monthly on day 20 (changes, about 1,200)" and a card bill ends "(credit card; purchases already listed)".
@@ -357,7 +367,7 @@ Mockup [34](design/mockups/34-data-controls.html), copy deck [34](design/mockups
   - The replace runs in one transaction. Before it, the current data is copied to an app-private snapshot.
   - Afterwards the user stays on Settings, where they tapped, with "Backup from {date} restored" and *Undo*; Home behind it is rebuilt on the restored data. For 7 days Settings also shows an *Undo restore* row. Undo puts the snapshot back. The snapshot is dropped after 7 days, on the next restore, on Undo, or on *Delete everything*.
   - Reminders are re-armed from the restored bills. The recurring engine then runs once as on any start (BR-9), so no catch-up is posted twice.
-- The backup and restore carry every table, including the *your usual* quiet states and their `asked_on` dates (BR-17; category ids and dates only), the hidden `not logged` rows and their entries (BR-18), `used` entries with their `saving_id` (BR-19), and the install line's *seen* flag (FR-FX-1). The backup's schema version is 6 (the daily nudge's `nudge_state`, BR-22.12); an older file restores as before.
+- The backup and restore carry every table, including the *your usual* quiet states and their `asked_on` dates (BR-17; category ids and dates only), the hidden `not logged` rows and their entries (BR-18), `used` entries with their `saving_id` (BR-19), and the install line's *seen* flag (FR-FX-1). The backup's schema version is 7 (the saving target's three `recurring` columns, BR-23; schema 6 added the daily nudge's `nudge_state`, BR-22.12). An older file restores as before, with no targets.
 - **Delete everything** (FR-SE-4) wipes the database in one transaction, then the stored preferences (onboarding done, its draft, Look, last-backup date, the install line's *seen* flag), the restore snapshot and every scheduled reminder and daily nudge (the `nudge_state` table goes with the database, and the nudge ask's answer with the preferences). It keeps no hidden copy. Backup files the user saved are not touched.
 - **CSV export:** entries only, in the same columns as BR-15 (M6; not part of the backup work).
 - **Android Auto Backup is off** (`allowBackup="false"` plus `dataExtractionRules` excluding everything), so the only copy of the data that leaves the phone is a backup the user makes (FR-SE-5).
@@ -561,6 +571,58 @@ Design: mockup [46](design/mockups/46-spends-graphs-v2.html), its copy deck and 
   - **The split:** `I = 45,000`, `B = 8,200`, `E = 19,370`, `Sv = 1,000`, `NL = 0`, so `L = 16,430`: "₹16,430 not spent yet".
   - **The comparison:** today is day 23. September's day 23 is Sat 26 Sep, and BR-20's September had spent ₹32,330 by then (rent ₹8,200 and ₹24,130 everyday). So `Δ = 27,570 − 32,330 = −4,760`: "₹4,760 less than by this day in September." (Mockup 46's ₹2,100 was illustrative.)
 
+
+### BR-23 Saving target (D211 to D215)
+Design: `docs/superpowers/specs/2026-11-22-saving-target-design.md`, case study 17, mockup [54](design/mockups/54-saving-target.html). The screens are in FR-SE-1 (Savings, AC-T1 to AC-T11) and FR-HO-3 (the reached line).
+
+- **What it is.** An optional `T` on a saving (a *Saved* rule), set from the saving's sheet only, so *Add a saving* stays three questions. It touches no BR-3 symbol. It appears in the saving's sheet, the Savings list, the Ask AI export (BR-15) and, once, Home's nudge slot (FR-HO-3). It is offered on every saving, yearly costs included (D174): *Used* lowers `S`, so the estimate restarts by itself.
+- **Definitions.**
+  - `T`: the target in whole rupees, or none.
+  - `S`: that saving's set aside (BR-19): `Σ Saved entries posted by its rule − Σ Used entries with its saving_id`, floored at ₹0, computed and never stored.
+  - `M`: the rule's amount per put-in, at least ₹1.
+  - `next_due`: the rule's next put-in date (BR-9). After the engine's run on start and resume it is after today.
+- **Formula.**
+  ```
+  gap = T − S
+  if gap ≤ 0:            state = reached
+  else:
+    n = ceil(gap / M)                       // put-ins still needed, integer paise arithmetic
+    if n > 120:          state = far        // "over 10 years to go"
+    else:                d_n = next_due + (n − 1) months, clamped (BR-1);  state = estimate(d_n)
+  ```
+  `T` and `S` are never compared with the hero, `P`, `A`, `K`, `remaining` or any BR-4 to BR-8 symbol. A target moves no number by itself.
+- **Done by.** "Done by {Mon}" names the calendar month of the put-in that brings `S` to `T` (`d_n`). The put-ins are the rule's own monthly dates (BR-9), never pay-cycle dates. The month is `MMM`, with the year when it is not today's year (`Clock`). A saving on the 31st lands on the last day of shorter months (BR-1); the month named is unchanged by the clamp.
+- **Stop at the target (D213).** Reaching `T` stops the saving (BR-9): the put-in that would pass `T` posts only `T − S`, so `S = T` exactly, `next_due` keeps moving, and nothing more is posted while `S ≥ T`. A *Used* entry that brings `S` below `T`, or a raised `T`, resumes posting from `next_due`, with no back-posting. *Keep saving* clears `T` (FR-SE-1 AC-T10). A stopped saving puts in nothing, so from the cycle after it stops it no longer holds `K`; today's share moves only then, after the user was told "reached".
+- **Display states** (the list row's third line, extends AC-Y3; "·" is preceded by a no-break space):
+
+  | State | Line |
+  |---|---|
+  | No target | unchanged: "{amount} set aside" only above ₹0 |
+  | `S > 0`, estimate | "₹18,000 set aside · done by May 2027" |
+  | `S = 0`, estimate | "Up to ₹30,000 · done by Jan 2028" |
+  | reached | "₹50,000 set aside · reached ₹50,000" |
+  | far | "₹500 set aside · over 10 years to go" ("Up to ₹X · over 10 years to go" when `S = 0`) |
+
+  The status wraps to two lines at large text and is never ellipsised; the schedule line "Every month on the 10th" stays as the second line.
+- **Reached line on Home (D214).** A saving is *pending* when it is active, has `T`, `S ≥ T` and `target_reached_for ≠ T`. The slot's candidate is the saving **shown today** (`target_reached_on = today`, `target_reached_for = T`, `S ≥ T`) first, else the first pending saving (rule saved first). The moment the line is on screen with Home visible and no tray or sheet over it, `target_reached_for = T` and `target_reached_on = today` are written (as the install line's *seen* flag). It shows while `target_reached_on = today` and `S ≥ T`, goes at midnight, and never returns for the same `T`.
+  - **Set while already reached** (a target set or edited so that `S ≥ T`): the save writes only `target_reached_for = T` and leaves `target_reached_on` empty, so no line shows; only a later genuine crossing does.
+  - ***Clear*** nulls both columns, so a target set later, even the same number, is new. Raising `T` and reaching it again shows the line once more; a *Used* dip and a re-reach of the same `T` does not.
+  - Backup and restore carry both columns; a restored file shows a line again only when a saving is pending by these rules.
+- **Reached choices (D213).** When `S ≥ T` the saving's sheet offers *I bought it* and *Keep saving* (FR-SE-1 AC-T9, AC-T10); closing the sheet leaves everything as it is (AC-T11). There is no progress bar and no percentage.
+- **Storage (schema v7, migration 007).** Three nullable columns on `recurring`, for `kind = saved` only: `target_minor` (paise, `NULL` = no target, `CHECK (target_minor IS NULL OR target_minor > 0)`), `target_reached_for` (paise) and `target_reached_on` (`YYYY-MM-DD`). `S`, the estimate and "reached" itself are never stored.
+- **Worked example A**, the *Insurance* saving of BR-19 (`I = 45,000`, `B = 1,200`, `S_prev = 27,150`, cycle 4 Oct to 3 Nov, `t` = 26 Oct, `D = 9`, ₹420 spent today; ₹1,000 on the 5th, put in 12 times; `M = 1,000`; `next_due` 5 Nov 2026). The owner sets `T = 12,000`:
+
+  | Step | `S` | Row line | Hero | `P` | `remaining` |
+  |---|---|---|---|---|---|
+  | Target set (already reached: no Home line) | 12,000 | "₹12,000 set aside · reached ₹12,000" | ₹1,318 | 15,650 | 15,230 |
+  | *Used* ₹5,000 | 7,000 | `gap = 5,000`, `n = 5`, `d_5` = 5 Mar 2027: "₹7,000 set aside · done by Mar 2027" | ₹1,318 | 15,650 | 15,230 |
+  | *Used* the rest (₹7,000) | 0 | `gap = 12,000`, `n = 12`, `d_12` = 5 Oct 2027: "Up to ₹12,000 · done by Oct 2027" | ₹1,318 | 15,650 | 15,230 |
+
+  The hero is ₹1,318 and `remaining` ₹15,230 at every step: neither the target nor the *Used* entry moves a BR-3 symbol (BR-19). Posting resumes from 5 Nov after each *Used* step, because `S < T`.
+- **Worked example B**, an RD of ₹5,000 on the 10th, same date and cycle: `next_due` 10 Nov 2026, `S = 18,000`, `T = 50,000`: `gap = 32,000`, `n = ceil(6.4) = 7`, `d_7` = 10 May 2027. Row "₹18,000 set aside · done by May 2027"; the sheet's slot "At ₹5,000 a month, done by May 2027." With `M = 4,000`: `n = 8`, `d_8` = 10 Jun 2027. Hero ₹1,318 throughout.
+- **Worked example C (stop):** the RD with `S = 48,000`, `T = 50,000`. The put-in due 10 Nov posts ₹2,000 (the gap), not ₹5,000; `S = 50,000`, `next_due` 10 Dec. On 10 Dec and every later date nothing is posted. The user taps *Keep saving*: `T` is cleared and ₹5,000 is posted from 10 Dec; 10 Nov to 10 Dec is not back-posted.
+- **Privacy:** dates and amounts only; nothing is logged.
+
 ---
 
 ## 4. Functional requirements
@@ -589,14 +651,22 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - The week's spending starts on Monday, or on the cycle start if that is later, and runs to today (DECISIONS D37). It counts typed spending only; bills posted in the week are in each day's pool (D119).
     - The title reads "Safe to spend this week". The number never shows below ₹0; past it, the hero shows ₹0, muted, beside "₹X over this week".
     - Today's bar and its captions give way to the week bars and weekday letters (BR-6a), in a 150ms crossfade; the days rail and its flag stay. The card's height never changes between the two (BR-6, D114). The range slot says the week in words (BR-6a). TalkBack reads each day by its full name with its amount, then the week sentence, and offers "Double tap to show this week" (or "show today") (D111).
-- **FR-HO-3** **The nudge slot** shows one line, the first that applies of four: a bill **waiting** for its amount (BR-9), the due-soon nudge, the **install line**, the **missed-log line**, else nothing (D123, D170). The saved-yesterday note (BR-8) is not a slot item: it sits above the slot and never silences a line.
+- **FR-HO-3** **The nudge slot** shows one line, the first that applies of five: a bill **waiting** for its amount (BR-9), the due-soon nudge, the **reached line** (D214), the **install line**, the **missed-log line**, else nothing (D123, D170). The saved-yesterday note (BR-8) is not a slot item: it sits above the slot and never silences a line.
   - **Waiting:** "Electricity went out today. How much?" ("…went out on 24 Oct. How much?" for an earlier day); a card bill reads "Credit card bill is due today. How much did you pay?" ("…was due on 24 Oct…"), naming the card. The oldest waits first; on a tie, the rule saved first. It has the due-soon row's shape and edges; TalkBack reads the sentence, then "Opens the keypad." A tap opens the bill amount sheet (FR-HO-8).
   - **Due-soon nudge** (BR-9), when applicable. It is a tappable `sunk` row at least 56dp tall: the bill's icon in a well, the sentence, the date under it, and a chevron. TalkBack reads the sentence, then "Opens the bill." ("Opens the saving." for a saving, D120). A tap opens that bill's or saving's sheet (FR-SE-1) over Home. After a change Home reloads; *Delete bill* deletes it from Home with Undo (D35, D118).
+  - **Reached line** (D214, BR-23): "{name} reached ₹{target}." in the due-soon row's shape, a `sunk` row at least 56dp tall: the saving's glyph in a `surface` well, the sentence (the name is never cut), and a chevron. It is news, so it outranks the install and missed-log lines, and both yield to it.
+    - **AC-R1** It shows when a saving is pending or shown today (BR-23) at an evaluation point (D170), Home is ready, not *No income* and not in an over state, and no waiting or due-soon line holds the slot. In an over state and in *No income* it waits unwritten.
+    - **AC-R2** *Shown* is written (`target_reached_for`, `target_reached_on`) only when the line is on screen with Home visible and no tray or sheet over it, as the install line's *seen* flag (AC-2 below). A line drawn under a door-opened tray is not written, and a day when a bill line holds the slot loses nothing: the line comes on the first later day it can.
+    - **AC-R3** It stays the whole day through resumes, leaves at midnight, leaves at the next Home reload if the saving no longer qualifies (set aside below its target, the target changed or cleared, the saving deleted), and never returns for the same target. Focus then goes to the "Today" heading, as for the other lines. Raising the target and reaching it again shows it once more.
+    - **AC-R4** With two pending savings, one line: the rule saved first. A saving already shown today keeps the slot all day, so the other shows the next day it is not held back.
+    - **AC-R5** A tap fires `tick` and opens that saving's sheet over Home (FR-SE-1), as the due-soon row does for a saving. A tap does not remove the line and writes nothing beyond AC-R2; there is no *tapped* guard, because the line stays when the sheet closes.
+    - **AC-R6** No amount other than the target, no ×, no haptic on arrival, no notification, no marigold, no animation beyond the slot's normal arrival.
+    - **AC-R7** TalkBack reads one button, "Insurance reached ₹12,000.", then "Opens the saving.". It is not a live region and announces nothing on appearing or leaving.
   - **Install line** (D169): "Already spent some this month?" ("this week" for a weekly cycle) with "Fix my number" under it, in the due-soon row's shape. TalkBack reads one node: "Already spent some this month? Fix my number. Opens the keypad." A tap opens FR-FX. It is a pointer, not an onboarding question (Q6).
     - **AC-1** It shows only when the first Home visit's cycle started before the install day, taken as the local date of the earliest entry's `created_at` (`MIN(created_at)`, as D39; `recurring` has no `created_at`, and onboarding saves its first entries on the install day) (no new column), and only in that cycle.
     - **AC-2** It shows once. *Seen* is written when the line is on screen with Home visible and no tray or sheet over it, and it never returns after that, tapped or not. A bill line holding the slot, a tray over Home or an over state means it was not seen, so it waits. Any *Not logged* entry consumes it. The flag is backed up, restored and wiped with everything else (BR-16).
   - **Missed-log line** (D171): "Spent on {Category} today?" with "Usually around 1 pm." under it, when BR-17's rules hold. It is a `sunk` row at least 56dp tall, the due-soon row's shape: a neutral question glyph in a `surface` well (never the category's glyph, so it can't read as a logged entry), the two lines (the category name is never cut) and a chevron. It shows no amount and has **no ×**. Pressed it fills `hairline`; hovered or focused on a large screen, a 1dp `ink2` outline and the focus ring. Never marigold.
-    - **AC-1** Home is ready, not *No income* and not in an over state, and no waiting, due-soon or install line holds the slot. In an over state and in *No income* it waits.
+    - **AC-1** Home is ready, not *No income* and not in an over state, and no waiting, due-soon, reached or install line holds the slot. In an over state and in *No income* it waits.
     - **AC-2** A tap fires `tick` and opens the Add tray at step 1 (₹0, *Spent*, dated today) carrying this habit, so the *your usual* pill shows outside its window (FR-AD-10 AC-1). The category is not pre-selected on step 2; no tap is added to Add and nothing is reordered. A second tap is ignored until the tray has closed. The first time, the nudge ask (BR-22.8, FR-SE-7 AC-4) rises once the tray has closed.
     - **AC-3** Back without saving (system back, drag down, scrim) removes the line: the tap answered the day's question, and a line that came back would be a repeat. No haptic. The slot collapses after the tray has closed; after a save the collapse finishes no later than the drain. It also leaves when an entry in that category is logged by any door, when the category goes quiet or is forgotten, and at midnight.
     - **AC-4** *Asked* (`asked_on`, BR-17) is written only when the line is on screen with Home visible and no tray or sheet over it. A line drawn under a door-opened tray is **not asked**, and the tray's close can only remove it, never add it.
@@ -808,6 +878,23 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - **AC-Y9** *Save* posts the entry of BR-19 and closes the question to the list (Settings door) or to Home (due-soon door). The hero does not move. `success` fires with the first visible change: the list's figures rolling (Settings door), or the *Used* row growing into Today (Home door). The snackbar reads "Insurance: ₹12,000 used" with *Undo* (4 s, D105; name first, D132); Undo deletes the entry and doesn't reopen the sheet. A failed save keeps the keypad with "Couldn't save. Try again."; Back while writing closes it and the Undo still shows.
     - **AC-Y10** Deleting a saving's Undo reads "Insurance deleted. What you put in stays in your history." No extra *Used* step is offered on delete (D175).
     - **AC-Y11** TalkBack reads the slot as a polite live region (FR-KS-4); *All of it* as "All of it, button, selected".
+    - **AC-T1** *Saving up to* (D212, BR-23): the saving's sheet has a fourth and last row, after *Name* and before *Used some of it*, answered "Not set" or "₹50,000". A bill never shows it. *Add a saving* stays three questions.
+    - **AC-T2** The row opens a question inside the sheet, "How much are you saving up to?": the shared pinned keypad with `00`, the amount empty or prefilled with the current target (the first key replaces it, FR-AD-8), and a full-width marigold *Save*. *Clear* is a 48dp chip beside the amount (below it at large text), shown only when a target is set; it writes at once, nulls both reached columns, returns to the sheet and shows no Undo.
+    - **AC-T3** The slot has two lines in a polite live region (FR-KS-4): line 1 is "Type the amount you want to reach." until a number is typed or a target exists, then "At ₹5,000 a month, done by May 2027." updating as digits are typed ("At ₹500 a month, that is over 10 years to go." when `n > 120`; "You've already set aside that much." when `T ≤ S`); line 2 is always "Your daily number doesn't change.". Each line with figures has a spoken twin (spoken amounts, the full month name).
+    - **AC-T4** *Save* stays off at ₹0 ("Type an amount first."); a refused 10th digit gives the reject haptic, the shake and the held ring (FR-KS-2); a failed save keeps the question with "Couldn't save. Try again."; saving an unchanged target writes nothing. A target at or below what is set aside is allowed (E129). *Save* and *Clear* return to the sheet, flash the row, and the footer reads "Changed." for 2.4 s. Back returns to the sheet and drops the draft, with no prompt.
+    - **AC-T5** The list's third line follows BR-23's display table, on every saving with a target; a saving with no target is unchanged. The line wraps at large text and is never ellipsised.
+    - **AC-T6** The sheet slip's "{amount} set aside" line takes the same text as the list row.
+    - **AC-T7** TalkBack reads the row as "Change saving up to, 50,000 rupees" ("Set saving up to. Not set yet."), and the list row's line as one sentence with no middle dot and the full month name.
+    - **AC-T8** The footer's two lines (AC-Y4) are unchanged.
+    - **AC-T9** **I bought it** (D213): shown when set aside is at or above the target. It records a *Used* entry for the whole set-aside amount (BR-19) and then deletes the saving as *Delete saving* does (history kept). One snackbar with *Undo* (4 s, D105) restores both the entry and the saving. The hero does not move.
+    - **AC-T10** **Keep saving** (D213): shown with *I bought it*. It clears the target and both reached columns, so the saving is plain again and posts from its next due date, with no back-posting (BR-9). It returns to the sheet and the footer reads "Changed.".
+    - **AC-T11** Closing the sheet, or doing nothing, leaves it as it is: the money stays set aside and the row reads "reached" for as long as the user likes. *Used some of it* stays available for any amount up to what is set aside.
+    - **AC-T12** (accessibility, WCAG 2.2 AA; saving-target spec section 16, B1 to B4) The question and the rows are verified at the `TestWindows` sizes (320x568, a tablet, a fold) at text scales 1.0, 1.5 and 2.0, light and dark:
+      - **Layout (B1, B2):** the pinned keypad body's scrolling lead is anchored to its end, so slot line 1 stays visible beside the amount at 320x568 and 1.5x (the title and caption may scroll off; AC-Y2 still holds). *Clear* sits in the pinned figure, never the lead, and the figure's measured height allows for the stacked chip.
+      - **Spoken twins (B3):** the slot's estimate and far lines have spoken twins (spoken amount "5,000 rupees", full month name, the year when it is not this year), as `entryUsedSpoken` does for *Used*. The blank line has no figures and does not announce when the question opens. Typing is spoken once, after the digits settle, and at once only when the line's class (blank, reached, estimate, far) changes.
+      - **One node (B4):** the visible third line and slot line expose only their spoken twin (`semanticsLabel`), so the middle dot and the no-break space are never read and "Mar" reads "March". Rows in different states never read alike.
+      - **Targets and contrast:** *Clear* is a 48dp chip, "Clear saving up to" to TalkBack, `enabled: false` while its write is in flight and absent (not disabled) with no target; the row and the Home line are at least 56dp. `ink` and `ink2` text on `sunk` and `hairline` is 4.5:1 or more in both themes; no state relies on colour alone, and every state carries a word.
+      - **Order and motion:** the question's focus order is Back, amount, *Clear*, keypad, *Save*; Enter on the row opens it. The row's flash and the slot's arrival are a 150 ms fade under reduced motion.
   - My month starts on: *Payday* / *1st*.
   - **Fix my number** (D169, FR-FX-1): the last row of *Money*, after *My month starts on*, with the detail "When the number on Home looks wrong.". It opens the sheet of FR-FX over Settings, and is hidden in *No income*. A tree test (T8) may move it to *Your hisaab*; a tie keeps *Money*.
 - **FR-SE-2** Categories (D138, mockup [33](design/mockups/33-own-categories.html)):
@@ -1077,6 +1164,32 @@ Maths in BR-18; strings in the [copy deck](design/mockups/41-fix-my-number-copy-
 | E126 | **Deferred to a later phase (not in this release).** A double action: *Add ₹20* tapped twice, or the user also logs the spend in the app | The first save clears the nudge's id; the second does nothing and says the category is already logged (BR-22.11). One entry only |
 | E127 | **Deferred to a later phase (not in this release).** An action is used when the category already has an entry today | No save; "Already added today" is shown and the nudge is cleared (BR-22.11) |
 | E128 | **Deferred to a later phase (not in this release).** *Other amount* gets `0`, blank, `12.5`, text or 10 digits | Nothing is saved; the notification stays and shows "Enter an amount" (BR-22.10). `1,200` saves ₹1,200 |
+| E129 | A target at or below what is already set aside, when set or edited | Allowed and saved. The row reads "reached"; the slot says "You've already set aside that much."; the save writes only `target_reached_for = T`, so no Home line shows (BR-23). Never refused: the user may only want to say "this one is done" |
+| E130 | `T` edited below `S` later | Same as E129; the saving posts nothing from then on |
+| E131 | `T` edited above `S` after reached | The line returns to an estimate and posting resumes from `next_due`, with no back-posting |
+| E132 | `T` = ₹0, blank, or only a clear | *Save* stays off at ₹0 and on blank; *Clear* removes the target and nulls both reached columns |
+| E133 | `T` over the keypad's 9-digit cap | The keypad refuses the 10th digit (FR-KS-2, D184) |
+| E134 | Monthly amount changed | The estimate is recomputed from the next put-in; `S` unchanged; past put-ins are not rewritten (BR-9) |
+| E135 | Put-in day changed (D34) | `next_due` moves, so the month named may move; no put-in is posted twice |
+| E136 | *Used* lowers `S` below `T` after reaching it | The line goes back to an estimate with no message, and posting resumes from `next_due` with no back-posting. For a yearly cost this restarts the count |
+| E137 | `S` floored at ₹0 (a used amount above put-ins by an edited-away entry) | `gap = T`; as `S = 0` |
+| E138 | `n` over 120 | "over 10 years to go"; no date is computed, so no overflow |
+| E139 | Saving deleted | The target and its reached columns go with it; Undo (4 s) brings them back; past entries stay (BR-19). A deleted saving is out of the list and the export |
+| E140 | Backup and restore | The three columns are carried. An older file (schema 6) restores with no targets |
+| E141 | *Put in extra* | Belongs to no saving (BR-19), so it never moves `S` and never counts toward `T` |
+| E142 | Month change and `Clock` | A line saying "done by Dec" in December reads "done by Jan 2027" next month only after `S` and `next_due` change; the year suffix follows today's year |
+| E143 | A saving started today with no put-in | `S = 0`; the line reads "Up to ₹X · done by {Mon}" counted from `next_due` |
+| E144 | Two savings pending on the same day | One Home line, for the saving shown today, else the rule saved first; the other stays pending and shows the next day it is not held back |
+| E145 | *Used* drops `S` below `T` after the line was shown, then `S` reaches the same `T` | No second line (`target_reached_for = T`) |
+| E146 | A target is raised and reached again | `T` differs from `target_reached_for`, so the line shows once more |
+| E147 | A target is set or edited so that `S ≥ T` already | No Home line: only `target_reached_for = T` is written and `target_reached_on` stays empty. The row and the export read "reached" |
+| E148 | The saving is deleted on the day the line shows | The line leaves at the next Home reload; Undo restores the saving and its columns, and the line returns at the next evaluation point (D170) |
+| E149 | A waiting bill, the due-soon nudge, an over state or *No income* holds the slot | The reached line waits unwritten and shows on the first later day it can; nothing is lost |
+| E150 | `S` drops below `T`, or `T` is changed or cleared, while the line shows the same day | The line leaves at the next Home reload, because "reached" is no longer true; focus goes to the "Today" heading |
+| E151 | A put-in would pass the target (including a catch-up after days away) | Only `T − S` is posted, `next_due` keeps moving, and nothing more is posted while `S ≥ T` (BR-9, D213) |
+| E152 | *I bought it* | A *Used* entry for the whole set-aside amount, then the saving is deleted; one Undo (4 s) restores both. Nothing in the hero moves |
+| E153 | *Keep saving* | The target and both reached columns are cleared; the saving posts from `next_due`; skipped months are not back-posted |
+| E154 | The reached sheet is closed with no choice | Nothing changes; the money stays set aside and the saving stays stopped |
 
 ---
 

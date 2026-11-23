@@ -168,3 +168,5 @@ Where the build differs from this file or the plan, and why:
 - **Focus:** a tapped line that is removed returns focus to the "Today" heading through `HomeHeadingFocus`; when the tray closes and the line stays, Flutter's route focus restoration returns to the opener.
 - **B6 (habit-derived Spends insights wait for the line, single pane)** is not built: BR-14 has no habit-derived insight yet. Add the hook with the first one.
 - **Known narrow race, check on a device (08 §5 D15):** the covered check reads `HomeBloc.isCovered` in the line's first post-frame callback. A door-opened tray whose hold event has not been handled by then would let `asked_on` be written. The tray's own open path adds the hold in the same turn as the evaluation, so it is not expected, but only a device can confirm.
+
+Note (saving target, D214): the slot now holds five lines: waiting, due-soon, the **reached line** ("{name} reached ₹{target}.", BR-23, FR-HO-3 AC-R1 to AC-R7), the install line, then this line. The missed-log line is the fifth and lowest, and yields to the reached line.

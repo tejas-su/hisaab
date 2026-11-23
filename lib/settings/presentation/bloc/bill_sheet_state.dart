@@ -2,10 +2,13 @@ import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/money/money.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../../ledger/ledger.dart';
 
 /// The bill's answers, each a row on the bill sheet, in row order.
-enum BillAnswer { amount, mode, day, name, icon, used }
+///
+/// [target] is a saving's *Saving up to* (BR-23, AC-T1).
+enum BillAnswer { amount, mode, day, name, icon, target, used }
 
 /// What the bill sheet did, for the screen that opened it to act on (D118).
 sealed class BillSheetOutcome extends Equatable {
@@ -51,6 +54,17 @@ final class BillSheetUsed extends BillSheetOutcome {
   List<Object?> get props => <Object?>[outcome];
 }
 
+/// *I bought it* used the whole set-aside amount and deleted the saving; the opening screen offers
+/// one Undo that restores both (AC-T9, D213).
+final class BillSheetBought extends BillSheetOutcome {
+  const BillSheetBought(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
 /// The bill sheet's situation.
 sealed class BillSheetState extends Equatable {
   const BillSheetState();
@@ -62,7 +76,8 @@ sealed class BillSheetState extends Equatable {
 /// the first key); [draftName] is the name question's text. [justSaved] flashes that row and
 /// shows "Saved."; [changed] is true once anything has been saved; [rejections] counts refused
 /// keys so the amount can shake. [setAside] is what a saving still has set aside, once read
-/// (BR-19); it decides whether *Used some of it* shows.
+/// (BR-19); it decides whether *Used some of it* shows. [today] comes from the sheet's clock, so a
+/// target's month carries its year only when it is not this year (BR-23).
 final class BillSheetReady extends BillSheetState {
   const BillSheetReady({
     required this.rule,
@@ -77,6 +92,7 @@ final class BillSheetReady extends BillSheetState {
     this.saveFailed = false,
     this.rejections = 0,
     this.setAside = const Option<Money>.none(),
+    this.today = const Option<CalendarDate>.none(),
   });
 
   final RecurringRule rule;
@@ -91,6 +107,24 @@ final class BillSheetReady extends BillSheetState {
   final bool saveFailed;
   final int rejections;
   final Option<Money> setAside;
+  final Option<CalendarDate> today;
+
+  /// True when a saving with a target has at least that much set aside: it has stopped putting in
+  /// and offers *I bought it* and *Keep saving* (BR-23, D213).
+  bool get reached => switch ((rule.target, setAside)) {
+        (Some<Money>(value: final Money target), Some<Money>(value: final Money aside)) => aside.compareTo(target) >= 0,
+        _ => false,
+      };
+
+  /// How far the saving is from its target, for the slip's line (AC-T6); none without a target.
+  Option<TargetProgress> get targetProgress => rule.target.map(_progressTo);
+
+  /// How far the saving is from the amount typed on the *Saving up to* question (AC-T3); none at ₹0.
+  Option<TargetProgress> get typedProgress =>
+      rupees == 0 ? const Option<TargetProgress>.none() : Option<TargetProgress>.of(_progressTo(Money.fromMajor(rupees)));
+
+  TargetProgress _progressTo(Money target) =>
+      SavingTarget.progress(target: target, setAside: setAside.getOrElse(() => Money.zero), saving: rule);
 
   /// What closing the sheet now would report.
   BillSheetOutcome get outcome => changed ? BillSheetChanged(rule) : const BillSheetUnchanged();
@@ -123,11 +157,12 @@ final class BillSheetReady extends BillSheetState {
         saveFailed: saveFailed,
         rejections: rejections ?? this.rejections,
         setAside: setAside ?? this.setAside,
+        today: today,
       );
 
   @override
   List<Object?> get props =>
-      <Object?>[rule, status, open, rupees, fresh, draftName, justSaved, changed, saving, saveFailed, rejections, setAside];
+      <Object?>[rule, status, open, rupees, fresh, draftName, justSaved, changed, saving, saveFailed, rejections, setAside, today];
 }
 
 /// The sheet should close, reporting [outcome].

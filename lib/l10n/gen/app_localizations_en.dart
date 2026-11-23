@@ -2751,6 +2751,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spendsStripOpen => 'Open';
+
+  @override
+  String get savingTargetLabel => 'Saving up to';
+
+  @override
+  String get savingTargetNotSet => 'Not set';
+
+  @override
+  String savingTargetRowSet(String amount) {
+    return 'Change saving up to, $amount';
+  }
+
+  @override
+  String get savingTargetRowNotSet => 'Set saving up to. Not set yet.';
+
+  @override
+  String get savingTargetQuestion => 'How much are you saving up to?';
+
+  @override
+  String get savingTargetBlank => 'Type the amount you want to reach.';
+
+  @override
+  String savingTargetLive(String monthly, String month) {
+    return 'At $monthly a month, done by $month.';
+  }
+
+  @override
+  String savingTargetLiveSpoken(String monthly, String month) {
+    return 'At $monthly a month, done by $month.';
+  }
+
+  @override
+  String savingTargetLiveFar(String monthly) {
+    return 'At $monthly a month, that is over 10 years to go.';
+  }
+
+  @override
+  String savingTargetLiveFarSpoken(String monthly) {
+    return 'At $monthly a month, that is over 10 years to go.';
+  }
+
+  @override
+  String get savingTargetLiveReached => 'You\'ve already set aside that much.';
+
+  @override
+  String get savingTargetClear => 'Clear';
+
+  @override
+  String get savingTargetClearSpoken => 'Clear saving up to';
+
+  @override
+  String savingTargetEstimate(String amount, String month) {
+    return '$amount set aside · done by $month';
+  }
+
+  @override
+  String savingTargetEstimateNone(String target, String month) {
+    return 'Up to $target · done by $month';
+  }
+
+  @override
+  String savingTargetReached(String amount, String target) {
+    return '$amount set aside · reached $target';
+  }
+
+  @override
+  String savingTargetFar(String amount) {
+    return '$amount set aside · over 10 years to go';
+  }
+
+  @override
+  String savingTargetFarNone(String target) {
+    return 'Up to $target · over 10 years to go';
+  }
+
+  @override
+  String savingTargetEstimateSpoken(String amount, String month) {
+    return '$amount set aside, done by $month';
+  }
+
+  @override
+  String savingTargetEstimateNoneSpoken(String target, String month) {
+    return 'Up to $target, done by $month';
+  }
+
+  @override
+  String savingTargetReachedSpoken(String amount, String target) {
+    return '$amount set aside, reached $target';
+  }
+
+  @override
+  String savingTargetFarSpoken(String amount) {
+    return '$amount set aside, over 10 years to go';
+  }
+
+  @override
+  String savingTargetFarNoneSpoken(String target) {
+    return 'Up to $target, over 10 years to go';
+  }
+
+  @override
+  String get savingBoughtIt => 'I bought it';
+
+  @override
+  String get savingKeepSaving => 'Keep saving';
+
+  @override
+  String savingBoughtSnack(String amount, String saving) {
+    return 'Used $amount from $saving';
+  }
 }
 
 /// The translations for English, as used in India (`en_IN`).

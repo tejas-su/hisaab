@@ -88,7 +88,7 @@ final class ProjectWidgetDays implements UseCase<List<ProjectedDay>, NoParams> {
   TaskEither<Failure, ProjectedDay> _project(ProjectedBook book, CalendarDate day) {
     final Clock clock = _DayClock(day);
     book.runningOn = day;
-    return PostDueRecurring(recurring: book.recurring, clock: clock)
+    return PostDueRecurring(recurring: book.recurring, ledger: book.ledger, clock: clock)
         .call(const NoParams())
         .flatMap(
           (int _) => GetCycleSummary(

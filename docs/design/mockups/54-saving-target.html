@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hisaab• Saving target: Saving up to (proposal)</title>
+<style>
+  /* Saving target: Saving up to, "done by", and the Home reached line (proposed 2026-11-23;
+     docs/superpowers/specs/2026-11-22-saving-target-design.md, sections 14 copy and 15 interaction; section 15 wins).
+     Nothing here is in SPEC or built. Worked examples (spec section 4): RD Rs 5,000 on the 10th, Rs 18,000 set aside, target
+     Rs 50,000: gap 32,000, n = 7, d_7 = 10 May 2027. Insurance Rs 1,000 on the 5th, target Rs 12,000, set aside Rs 12,000: reached.
+     Gold scheme Rs 2,000 on the 15th, target Rs 30,000, nothing set aside (illustrative, not in SPEC): n = 15, d_15 = 15 Jan 2028.
+     Today is Mon 26 Oct 2026; hero Rs 1,318 in every frame, because a target moves no BR-3 symbol.
+     Updated for D213 (owner, 2026-11-23): a saving STOPS putting in when its set-aside amount reaches the target. The reached sheet,
+     the Undo snackbar after I bought it, and Keep saving (frames 6 to 8) are new; the old "keeps going" wording is gone.
+     Worked example C is the RD at Rs 50,000 set aside, target Rs 50,000 (SPEC BR-23).
+     Tokens: light from mockup 40 (after D145), dark from mockup 33, sizes from mockups 42 and 43. Nothing new.
+     Icons are hand-drawn stand-ins for Hugeicons stroke-rounded. 320dp frames carry --ts: 1.5 (text at 1.5x). */
+
+  @font-face { font-family: 'Anek Latin'; src: url(../../../assets/fonts/AnekLatin-Variable.ttf); font-weight: 100 900; font-stretch: 75% 125%; }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url(../../../assets/fonts/Mukta-Regular.ttf); }
+  @font-face { font-family: 'Mukta'; font-weight: 600; src: url(../../../assets/fonts/Mukta-SemiBold.ttf); }
+  :root, .light {
+    --bg: #F1EDE8; --surface: #FFFEFC; --control: #FFFEFC; --sunk: #E7E0D8; --hairline: #D7CFC5;
+    --ink: #161615; --ink2: #5B5650; --signal: #FFB020; --onSignal: #161615;
+    --display: #FFFEFC; --displayInk: #161615; --displayInk2: #5B5650; --blockIdle: #D7CFC5;
+    --displayEdge: #161615; --displayShadow: #1616152E; --scrim: #16161552; --inverse: #312E29; --onInverse: #F2F1EC;
+  }
+  :root { --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; }
+  .dark {
+    --bg: #131210; --surface: #211F1C; --control: #211F1C; --sunk: #2F2B27; --hairline: #3A3632;
+    --ink: #F2F1EC; --ink2: #A7A199; --signal: #FFB020; --onSignal: #161615;
+    --display: #211F1C; --displayInk: #F2F1EC; --displayInk2: #A7A199; --blockIdle: #413D38;
+    --displayEdge: #00000000; --displayShadow: #00000000; --scrim: #0000008C; --inverse: #F2F1EC; --onInverse: #161615;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 96px; background: var(--canvas); color: var(--canvasInk); font-family: 'Mukta', sans-serif; }
+  h1 { font: 600 28px/32px 'Anek Latin', sans-serif; margin: 32px 0 4px; }
+  h2 { font: 600 22px/28px 'Anek Latin', sans-serif; margin: 48px 0 4px; }
+  p, li { max-width: 82ch; font-size: 15px; line-height: 22px; }
+  .lede { color: var(--canvasInk2); }
+  .lede b, li b, p b, .why b, td b { color: var(--canvasInk); font-weight: 600; }
+  code { font-size: .92em; }
+  .tag { display: inline-block; font: 600 13px/16px 'Mukta', sans-serif; padding: 4px 10px; border-radius: 12px; background: var(--canvasInk); color: var(--canvas); vertical-align: 3px; }
+  .draft { font: 600 11px/14px 'Mukta', sans-serif; color: var(--canvasInk2); box-shadow: inset 0 0 0 1px var(--canvasInk2); border-radius: 6px; padding: 1px 5px; margin-inline-start: 6px; vertical-align: 2px; white-space: nowrap; }
+  .tblWrap { overflow-x: auto; max-width: 100%; }
+  table { border-collapse: collapse; margin-top: 12px; max-width: 1000px; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid #C9C0B5; }
+  th { font-weight: 600; }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; }
+  .pair { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; align-items: flex-start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font: 600 13px/18px 'Mukta', sans-serif; color: var(--canvasInk2); margin-top: 8px; max-width: 360px; }
+  .why { font-size: 14px; line-height: 20px; color: var(--canvasInk2); max-width: 780px; margin: 10px 0 0; }
+  .prob { max-width: 780px; margin: 10px 0 0; padding: 10px 14px; border-radius: 14px; background: #FFFEFC; font-size: 14px; line-height: 20px; box-shadow: inset 0 0 0 1.5px var(--canvasInk); }
+  .prob b { font-weight: 600; }
+
+  /* Phone. --ts is the text scale: 1 on 360dp frames, 1.5 on the 320dp frame */
+  .phone { --ts: 1; position: relative; width: 360px; height: 760px; border-radius: 28px; overflow: hidden; background: var(--bg); color: var(--ink); flex: none; }
+  .phone.s320 { width: 320px; height: 568px; }
+  .phone.ts15 { --ts: 1.5; }
+  @media (max-width: 420px) { .phone { zoom: 0.85; } }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .status { height: 28px; padding: 6px 24px 0; font: 600 13px/16px 'Mukta', sans-serif; display: flex; justify-content: space-between; }
+  .page { position: absolute; inset: 28px 0 0; padding: 4px 20px 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+  .page.dense { gap: 12px; }
+  .topbar { display: flex; align-items: center; height: 48px; gap: 12px; flex: none; }
+  .topbar .ttl { flex: 1; font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .wm { flex: 1; font: 600 26px/1 'Anek Latin', sans-serif; letter-spacing: -0.01em; }
+  .wm i { display: inline-block; width: 7px; height: 7px; border-radius: 4px; background: var(--ink); margin-left: 2px; }
+  .well40 { width: 40px; height: 40px; border-radius: 12px; background: var(--control); display: grid; place-items: center; flex: none; }
+  .secHd { font: 600 19px/24px 'Anek Latin', sans-serif; padding-inline-start: 4px; margin-bottom: -8px; flex: none; }
+  .hint { font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--ink2); margin: 0; flex: none; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 16px 4px 12px; border-radius: 12px; background: var(--control); font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Mukta', sans-serif; flex: none; }
+  .chip.self { align-self: flex-start; }
+  .chip.on { background: var(--ink); color: var(--bg); }
+
+  /* Card of rows: 42dp sunk wells, 20dp inset, hairline indented to the text start (74dp) */
+  .card { background: var(--surface); border-radius: 28px; padding: 6px 0; flex: none; }
+  .row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 7px 20px; }
+  .row + .row::before { content: ''; position: absolute; top: 0; left: 74px; right: 20px; height: 1px; background: var(--hairline); }
+  .row .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .row .t { flex: 1; min-width: 0; font-size: calc(16px * var(--ts)); line-height: calc(22px * var(--ts)); }
+  .row .t span { display: block; font-size: calc(13px * var(--ts)); line-height: calc(18px * var(--ts)); color: var(--ink2); }
+  .row .t span.k { color: var(--ink); font-weight: 600; }
+  .row b { font: 600 calc(16px * var(--ts))/calc(22px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row > svg:last-child { color: var(--ink2); }
+  .row.tall { align-items: flex-start; padding-top: 11px; padding-bottom: 11px; }
+  .foot { display: flex; flex-direction: column; gap: 2px; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--ink2); padding-inline-start: 4px; flex: none; }
+  .foot b { color: var(--ink); font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .rs { font-size: 0.42em; line-height: 1; vertical-align: top; position: relative; top: 0.55em; margin-inline-end: 0.04em; }
+
+  /* Home (hero as mockup 40) */
+  .hero { background: var(--display); color: var(--displayInk); border-radius: 28px; padding: 20px; box-shadow: 0 10px 28px -12px var(--displayShadow); flex: none; }
+  .dark .hero { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .hero .ttl { font-size: 14px; line-height: 20px; color: var(--displayInk2); }
+  .hero .amt { font: 600 76px/76px 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; margin-top: 8px; }
+  .tbar { display: flex; gap: 3px; height: 40px; margin-top: 16px; }
+  .tbar .f { background: var(--signal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); border-radius: 14px 6px 6px 14px; }
+  .tbar .bite { background: var(--blockIdle); border-radius: 6px; }
+  .tbar .bite.end { border-radius: 6px 14px 14px 6px; }
+  .capRow { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; color: var(--displayInk2); margin-top: 6px; }
+  .capRow b { color: var(--displayInk); font: 600 13px/18px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd { display: flex; align-items: baseline; gap: 8px; padding-inline-start: 4px; margin-bottom: -4px; flex: none; }
+  .listHd .h { flex: 1; font: 600 17px/24px 'Anek Latin', sans-serif; }
+  .listHd b { font: 600 15px/20px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .listHd span { font: 600 14px/20px 'Mukta', sans-serif; color: var(--ink2); }
+  .dock { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 64px; border-radius: 32px; background: var(--surface); display: flex; align-items: center; justify-content: space-around; font: 600 13px/16px 'Mukta', sans-serif; color: var(--ink2); }
+  .dark .dock { box-shadow: inset 0 0 0 1px var(--hairline); }
+  .dock .add { width: 56px; height: 48px; border-radius: 16px; background: var(--signal); color: var(--onSignal); display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--displayEdge); }
+  .dock .on { color: var(--ink); }
+
+  /* Spends */
+  .pace { height: 120px; padding: 0; flex: none; }
+  .pace svg { width: 100%; height: 100%; display: block; }
+  .tally { font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--ink2); padding-inline-start: 4px; flex: none; }
+  .tally b { color: var(--ink); font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .tally .part { display: inline-block; white-space: nowrap; }
+  .tally .part.wrapok { white-space: normal; }
+  .cardHd { font: 600 17px/24px 'Anek Latin', sans-serif; padding: 12px 20px 4px; }
+  .cat { display: flex; align-items: center; gap: 12px; padding: 8px 20px; }
+  .cat .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; flex: none; }
+  .cat .n { flex: 1; font-size: 16px; line-height: 22px; }
+  .cat b { font: 600 16px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+
+  /* Sheet: handle, a scrolling body, and a fixed foot (keypad) */
+  .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 8; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: calc(100% - 28px); display: flex; flex-direction: column; background: var(--bg); border-radius: 28px 28px 0 0; padding: 8px 20px 20px; z-index: 9; }
+  .dark .sheet { box-shadow: inset 0 1px 0 var(--hairline); }
+  .sheet .body { flex: 1 1 auto; min-height: 0; overflow: hidden; position: relative; }
+  /* cut: the body is scrolled to its end, so the title leaves at the top and the slip stays beside the keypad */
+  .sheet .body.cut { display: flex; flex-direction: column; justify-content: flex-end; }
+  .sheet .body.cut > * { flex: none; }
+  .sheet .body.cut::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 24px; background: linear-gradient(var(--bg), transparent); }
+  .sheet .foot2 { flex: none; }
+  .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--hairline); margin: 0 auto 12px; flex: none; }
+  .stepHd { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-bottom: 8px; }
+  .stepHd .q { font: 600 calc(19px * var(--ts))/calc(24px * var(--ts)) 'Anek Latin', sans-serif; }
+  .slip { position: relative; background: var(--display); color: var(--displayInk); border-radius: 20px 20px 0 0; padding: 18px 20px 14px; margin-bottom: 8px; }
+  .slip::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px; background: conic-gradient(from -45deg at 50% 100%, var(--display) 0 90deg, transparent 90deg) 0 0 / 14px 100% repeat-x; }
+  .slip.compact { padding: 14px 20px 12px; }
+  .eyebrow { font: 600 12px/16px 'Anek Latin', sans-serif; letter-spacing: .12em; color: var(--displayInk2); }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .who .w { width: 42px; height: 42px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; }
+  .who .nm { font: 600 22px/28px 'Anek Latin', sans-serif; }
+  .amtRow { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; }
+  .big { font: 600 calc(48px * (1 + (var(--ts) - 1) * .5))/calc(52px * (1 + (var(--ts) - 1) * .5)) 'Anek Latin', sans-serif; font-stretch: 85%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .big.zero { color: var(--displayInk2); }
+  .big.reject { box-shadow: 0 0 0 2px var(--displayInk); border-radius: 10px; padding: 0 8px; margin: 0 -8px; }
+  .big.slipAmt { font-size: 56px; line-height: 60px; }
+  .caret { display: inline-block; width: 3px; height: .8em; margin-left: 3px; vertical-align: -.08em; background: var(--signal); border-radius: 2px; box-shadow: 0 0 0 1px var(--displayEdge); }
+  .every { font-size: 15px; line-height: 22px; color: var(--displayInk2); }
+  .stamp { font: 600 12px/14px 'Anek Latin', sans-serif; letter-spacing: .1em; color: var(--displayInk2); white-space: nowrap; padding: 6px 10px; border: 2px solid var(--displayInk2); border-radius: 6px; }
+  .perf { position: relative; height: 20px; margin: 8px -20px; }
+  .perf::before { content: ''; position: absolute; left: 22px; right: 22px; top: 9px; border-top: 2px dashed var(--hairline); }
+  .perf i { position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .perf i.l { left: -8px; } .perf i.r { right: -8px; }
+  .line { display: flex; align-items: center; margin: 0 -8px; min-height: 48px; padding: 8px; font-size: 16px; line-height: 22px; }
+  .line .lead { flex: 1; min-width: 12px; border-bottom: 2px dotted var(--hairline); margin: 0 8px; align-self: flex-end; transform: translateY(-13px); }
+  .line .v { font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .line > svg { width: 18px; height: 18px; margin-inline-start: 6px; color: var(--displayInk2); }
+  .slipFoot { font-size: 14px; line-height: 20px; color: var(--displayInk2); padding-top: 2px; }
+  .slipFoot b { color: var(--displayInk); font-weight: 600; }
+  .bal { margin-top: 10px; font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .bal span { font: 400 14px/20px 'Mukta', sans-serif; color: var(--displayInk); }
+  .balHint { font-size: 14px; line-height: 20px; color: var(--displayInk2); margin: 2px 0 10px; }
+  .used { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; border-radius: 18px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--displayInk); font: 600 17px/1 'Mukta', sans-serif; color: var(--displayInk); }
+  .wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; margin-top: 16px; border-radius: 18px; font: 600 calc(17px * var(--ts))/1 'Mukta', sans-serif; flex: none; }
+  .wide.del { background: var(--sunk); color: var(--ink); }
+  .wide.sig { background: var(--signal); color: var(--onSignal); box-shadow: inset 0 0 0 1.5px var(--displayEdge); margin-top: 12px; }
+  .wide.off { background: var(--sunk); color: var(--ink2); box-shadow: none; background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--hairline) 6px 7px); }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .key { height: 56px; border-radius: 16px; background: var(--sunk); font: 600 24px/1 'Anek Latin', sans-serif; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+
+  /* The fixed-height slot: L1 then L2 (the IndexedStack is as tall as its tallest state) */
+  .slot { margin-top: 8px; min-height: calc(58px * var(--ts)); }
+  .slot .l1 { font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--displayInk); }
+  .slot .l1.strong { font-weight: 600; }
+  .slot .l1 b { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .slot .l2 { font-size: calc(14px * var(--ts)); line-height: calc(20px * var(--ts)); color: var(--displayInk2); }
+  /* All of it: 48dp chip. Rest hairline, selected ink2 (D89) */
+  .all { min-height: 48px; padding: 0 16px; border-radius: 12px; display: inline-flex; align-items: center; background: var(--hairline); color: var(--displayInk); font: 600 calc(15px * var(--ts))/1 'Mukta', sans-serif; flex: none; }
+  .all.sel { background: var(--ink2); color: var(--surface); }
+  .all.sel::before { content: ''; width: 6px; height: 6px; border-radius: 3px; background: var(--surface); margin-inline-end: 8px; }
+
+  .snack { position: absolute; left: 16px; right: 16px; bottom: 16px; min-height: 52px; border-radius: 16px; background: var(--inverse); color: var(--onInverse); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 8px 4px 16px; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); z-index: 12; }
+  .snack b { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .snack i { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Mukta', sans-serif; font-style: normal; padding: 12px; min-height: 48px; display: grid; place-items: center; }
+  .field { display: flex; align-items: center; width: 100%; min-height: 56px; margin-top: 16px; border-radius: 16px; background: var(--sunk); box-shadow: inset 0 0 0 1.5px var(--ink2); padding: 0 16px; font: 400 calc(18px * var(--ts))/1 'Mukta', sans-serif; color: var(--ink2); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips .chip { padding: 4px 16px; }
+  .anno { position: relative; }
+  .tok { display: inline-block; font: 600 12px/16px 'Anek Latin', sans-serif; padding: 2px 6px; border-radius: 6px; background: var(--canvasInk); color: var(--canvas); }
+  /* Mockup 52 additions */
+  .phone.tall { height: 820px; }
+  .phone.s320.free { height: 1400px; }
+  /* Savings list row: third line is regular ink with the amounts in Anek (the one line on the row read as a number) */
+  .row .t span.k { color: var(--ink); font-weight: 400; }
+  .row .t b.a { font: 600 calc(13px * var(--ts))/calc(18px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* The sheet's new last row: value muted when not set */
+  .line .v.muted { font: 400 17px/22px 'Mukta', sans-serif; color: var(--displayInk2); }
+  .bal b { font: 600 17px/22px 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; }
+  .bal .est { font: 400 14px/20px 'Mukta', sans-serif; color: var(--displayInk); }
+  .line.flash { background: var(--sunk); border-radius: 12px; }
+  .slip .for { display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 20px; color: var(--displayInk2); margin-bottom: 8px; }
+  .slip .for b { font-weight: 600; color: var(--displayInk); font-family: 'Mukta', sans-serif; }
+  /* Clear: a 48dp chip beside the amount (hairline at rest, D89) */
+  .all.clear::before { content: none; }
+  /* The nudge slot: DueSoonRow's shape (mockup 29, 43): 18dp radius, min 56dp, 12dp start inset */
+  .nudge { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; border-radius: 18px; background: var(--sunk); flex: none; }
+  .nudge .w { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+  .nudge .w svg { width: 24px; height: 24px; }
+  .nudge .t { flex: 1; min-width: 0; font-size: calc(15px * var(--ts)); line-height: calc(20px * var(--ts)); }
+  .nudge .t b { font: 600 calc(15px * var(--ts))/calc(20px * var(--ts)) 'Anek Latin', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .nudge > svg:last-child { width: 18px; height: 18px; color: var(--ink2); }
+  .nudge.pressed { background: var(--hairline); }
+  /* D213 reached keys: two sunk keys under the set-aside line, never marigold (UI_DESIGN 5.6). 56dp, radius 18 as Save/Used */
+  .phone.tall.xl { height: 900px; }
+  .twoKeys { display: flex; gap: 8px; margin: 10px 0 10px; }
+  .k2 { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 8px; border-radius: 18px; background: var(--sunk); color: var(--displayInk); font: 600 17px/1 'Mukta', sans-serif; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Saving target: Saving up to <span class="tag">proposal, not built</span></h1>
+<p class="lede">A saving gets one optional number, <b>Saving up to</b>, set from a last row in its sheet. The Savings list's third line then says how far along it is in words (<b>done by May 2027</b>, <b>reached ₹12,000</b>), and Home says <b>"Insurance reached ₹12,000."</b> once, in the existing nudge slot. Nothing else on Home, in Add or in the hero changes: the hero is <b>₹1,318</b> in every frame, because a target moves no BR-3 symbol. Every frame is drawn at 360dp in light and dark; the 320dp frames carry text at 1.5×.</p>
+<div class="prob"><b>Changed after D213</b> (owner, 2026-11-23): a saving now <b>stops putting in</b> when what is set aside reaches the target. (1) The saving's sheet, when reached, shows two <code>sunk</code> keys under the set-aside line, <b>I bought it</b> and <b>Keep saving</b>; closing the sheet leaves it as it is (frame 6). (2) <b>I bought it</b> closes the sheet and the Savings list shows the snackbar "Used ₹50,000 from RD" with <b>Undo</b>, 4 s; Undo restores the saving and removes the Used entry (frame 7). (3) <b>Keep saving</b> clears the target, the row reads as a plain saving, and the footer reads "Changed." (frame 8). (4) The "Put in 10 Oct" stamp and the "Next goes in" foot are not drawn on a stopped saving; no copy says it keeps putting in. The Home line "Insurance reached ₹12,000." is unchanged. The hero stays ₹1,318 in every frame (Used moves no BR-3 symbol).</div>
+<p class="lede">Colour use: marigold is only on the <b>Save</b> key (the act), today's bar and the Add key, as everywhere. The reached line, the <i>Clear</i> chip, the new row and the <i>I bought it</i> and <i>Keep saving</i> keys use <code>sunk</code>, <code>hairline</code>, <code>ink</code> and <code>ink2</code> only. No red, no green, no progress bar: the words carry the state.</p>
+
+<div id="frames"></div>
+
+<h2>Token table</h2>
+<div class="tblWrap"><table>
+  <tr><th>Kind</th><th>Tokens used</th></tr>
+  <tr><td>Colour</td><td><code>bg</code>, <code>surface</code>, <code>control</code>, <code>sunk</code>, <code>hairline</code>, <code>ink</code>, <code>ink2</code>, <code>display</code>, <code>displayInk</code>, <code>displayInk2</code>, <code>displayEdge</code>, <code>blockIdle</code>, <code>scrim</code>, <code>signal</code> on <code>onSignal</code> (Save key, today's bar, Add). The reached row: <code>sunk</code> fill, <code>surface</code> well, <code>hairline</code> pressed, <code>ink2</code> chevron. Nothing new.</td></tr>
+  <tr><td>Type</td><td><code>bodyLarge</code> (row title), <code>bodySmall</code> (row lines 2 and 3, slot line 2), <code>bodyMedium</code> (slot line 1, the reached line, hint), <code>titleLarge</code> (page and question titles), <code>labelLarge</code> (<i>Clear</i>, keys' labels). Amounts in Anek Latin Semibold with tabular figures: the row's trailing amount 16, the third line's amounts 13, the slip's set-aside figure 17, the sheet row's value 17, the slip amount 56, the question amount 48, the reached line's figure 15, keys 24. "done by May 2027" and "reached" are Mukta Regular: figures weight 600, words 400 (two weights on the line).</td></tr>
+  <tr><td>Spacing</td><td><code>gutter</code> 20 (page, sheet inset, row inset), <code>l</code> 16 (between blocks), <code>m</code> 12 (well to text, keypad to Save, nudge inset and gap), <code>s</code> 8 (chips, keys, slot to amount), <code>xs</code> 4 (list hint inset). Hairlines start at 74dp (the text start).</td></tr>
+  <tr><td>Radius</td><td><code>card</code> 28, 18 (nudge row, Save), <code>chip</code> 12 (<i>Clear</i>, 40dp wells, the sheet row's flash), 14 (42dp wells), <code>key</code> 16, 20 (slip)</td></tr>
+  <tr><td>Targets</td><td>List rows 56dp min (about 100dp with a wrapped third line), sheet rows 48dp, <i>Clear</i> 48dp, keys 56dp, Save 56dp, nudge row 56dp min</td></tr>
+  <tr><td>D213 frames</td><td>Keys <code>sunk</code> fill, <code>displayInk</code> label, Mukta 600 17, 56dp, radius 18, gap <code>s</code> 8, 10dp above and below. Snackbar <code>inverse</code> / <code>onInverse</code>, radius 16, 16dp from the edges, 52dp min. Nothing new.</td></tr>
+  <tr><td>Glyphs</td><td>PiggyBank (every saving, and the reached line's well), ArrowLeft01, ArrowRight01 (chevrons), Add01, Settings01, Backspace, Delete02. No new glyph.</td></tr>
+</table></div>
+
+<h2>Decisions</h2>
+<div class="tblWrap"><table>
+  <tr><th>Decision</th><th>Why</th></tr>
+  <tr><td>The row's third line has two weights</td><td>Figures Anek Semibold, words Mukta Regular, both <code>ink</code>. A third line fully in weight 600 (mockup 42) would out-shout the name above it once it carries two amounts and a date.</td></tr>
+  <tr><td>The sheet row's value never says "reached" or the date</td><td>The slip's set-aside line above it does (AC-T6). One place for the estimate, so the two cannot drift.</td></tr>
+  <tr><td><i>Clear</i> is a chip beside the amount</td><td>The place <i>All of it</i> holds on the <i>Used</i> question. Same 48dp chip and <code>hairline</code> rest, so the question reads as a sibling and no new component is made. Absent, not disabled, when no target is set.</td></tr>
+  <tr><td>The slot is the <i>Used</i> slot</td><td>Line 1 (the estimate) changes in the same frame as the digit; line 2 never changes, so the keypad never moves.</td></tr>
+  <tr><td>The reached line is the due-soon row's shape</td><td>A <code>sunk</code> squircle, 56dp min, the saving's glyph in a <code>surface</code> well, one sentence, a chevron. No second line, no ×, no marigold. The same pixels as the missed-log line (mockup 43).</td></tr>
+</table></div>
+
+<h2>Questions for the spec and the owner</h2>
+<ol style="list-style:none;padding:0" id="qs"></ol>
+
+<script>
+const P = {
+  piggy: '<path d="M19 9.5c.9.8 1.5 1.7 1.8 2.7H22v3.3h-1.4c-.5 1-1.3 1.9-2.3 2.5V20h-2.6v-1.3h-4.4V20H8.7v-2.2C6.4 16.6 5 14.6 5 12.3c0-3.6 3.4-6.5 7.6-6.5 1.2 0 2.4.2 3.4.7L18.8 5z"/><path d="M5 11.3c-1.4 0-2.3-.8-2.3-2"/><path d="M10.5 8.6h3.6"/><path d="M16.6 11h.01"/>',
+  food: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>', back: '<path d="M15 6l-6 6 6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
+  bs: '<path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
+};
+const ic = (k, label, cls) => `<svg class="i" viewBox="0 0 24 24" role="img" aria-label="${label || k}"${cls ? ` style="width:${cls}px;height:${cls}px"` : ''}>${P[k]}</svg>`;
+const R = (n) => `<span class="rs">₹</span>${n}`;
+const fmt = (n) => n.toLocaleString('en-IN');
+const a = (n) => `<b class="a">₹${fmt(n)}</b>`;
+const status = '<div class="status"><span>2:10 pm</span><span>Mon 26</span></div>';
+const dockH = '<div class="dock"><span class="on">Home</span><span>Spends</span><span class="add">' + ic('plus', 'Add') + '</span><span>Ask AI</span><span>Settings</span></div>';
+
+/* The estimate: RD next_due 10 Nov 2026, M 5,000, S 18,000 (spec section 4). Short month, with the year when not 2026. */
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function estimate(T, S, M, dueMonth0, dueYear) {
+  const gap = T - S;
+  if (gap <= 0) return { k: 'reached' };
+  const n = Math.ceil(gap / M);
+  if (n > 120) return { k: 'far' };
+  const m = dueMonth0 + (n - 1), y = dueYear + Math.floor(m / 12);
+  return { k: 'est', n, month: MON[m % 12] + (y !== 2026 ? ' ' + y : '') };
+}
+const RD = { M: 5000, S: 18000, T: 50000 };
+
+/* ---- Settings > Savings (rows: estimate, nothing set aside yet, reached) ---- */
+const sRow = (name, day, amt, third, spoken) => `<div class="row tall" role="group" aria-label="${spoken}"><span class="w">${ic('piggy', 'Saving')}</span>
+  <span class="t">${name}<span>Every month on the ${day}</span><span class="k">${third}</span></span><b>₹${fmt(amt)}</b></div>`;
+const ROWS = {
+  est: sRow('RD', '10th', 5000, `${a(18000)} set aside&nbsp;· done by May 2027`, 'RD, 5,000 rupees. 18,000 rupees set aside, done by May 2027'),
+  none: sRow('Gold scheme', '15th', 2000, `Up to ${a(30000)}&nbsp;· done by Jan 2028`, 'Gold scheme, 2,000 rupees. Up to 30,000 rupees, done by January 2028'),
+  reached: sRow('Insurance', '5th', 1000, `${a(12000)} set aside&nbsp;· reached ${a(12000)}`, 'Insurance, 1,000 rupees. 12,000 rupees set aside, reached 12,000 rupees'),
+  far: sRow('Emergency', '20th', 500, `${a(500)} set aside&nbsp;· over 10 years to go`, 'Emergency, 500 rupees. 500 rupees set aside, over 10 years to go'),
+  rdReached: sRow('RD', '10th', 5000, `${a(50000)} set aside&nbsp;· reached ${a(50000)}`, 'RD, 5,000 rupees. 50,000 rupees set aside, reached 50,000 rupees'),
+  rdPlain: sRow('RD', '10th', 5000, `${a(50000)} set aside`, 'RD, 5,000 rupees. 50,000 rupees set aside'),
+  plain: sRow('SIP', '1st', 3000, `${a(9000)} set aside`, 'SIP, 3,000 rupees. 9,000 rupees set aside'),
+};
+function list(rows) {
+  return `<div class="page">
+    <div class="topbar"><span class="well40">${ic('back', 'Back')}</span><span class="ttl">Savings</span></div>
+    <p class="hint">Money you put away on the same day every month, like an RD. Today's share already leaves room for it.</p>
+    <span class="chip self">${ic('plus', 'Add')} Add a saving</span>
+    <div class="card">${rows.map((r) => ROWS[r]).join('')}</div>
+    <span class="chip self">${ic('piggy', 'Saving')} Put in extra</span>
+  </div>`;
+}
+
+/* ---- The saving's sheet (RD) with the new last row ---- */
+const perf = '<div class="perf"><i class="l"></i><i class="r"></i></div>';
+const sline = (l, v, o = {}) => `<div class="line${o.flash ? ' flash' : ''}"><span>${l}</span><i class="lead"></i><span class="v${o.muted ? ' muted' : ''}">${v}</span>${ic('chev', 'Change')}</div>`;
+function savingSheet(o = {}) {
+  const e = o.target ? estimate(RD.T, RD.S, RD.M, 10, 2026) : null;
+  const bal = `<div class="bal"><b>₹18,000</b> <span class="est">set aside${e ? ' · done by ' + e.month : ''}</span></div>`;
+  return `${list(['est', 'none', 'reached'])}<div class="scrim"></div><div class="sheet"><div class="body">
+    <div class="handle"></div>
+    <div class="slip">
+      <div class="eyebrow">Saving</div>
+      <div class="who"><span class="w">${ic('piggy', 'Saving')}</span><span class="nm">RD</span></div>
+      <div class="amtRow"><div class="big slipAmt">${R('5,000')}</div><div class="stamp">Put in 10 Oct</div></div>
+      <div class="every">Every month on the 10th</div>
+      ${bal}
+      <div class="balHint">Paid the cost from this? Tap Used some of it.</div>
+      <div class="used">Used some of it</div>
+      ${perf}${sline('Amount', '₹5,000')}${sline('Day of the month', '10th')}${sline('Name', 'RD')}${o.target ? sline('Saving up to', '₹50,000', { flash: o.flash }) : sline('Saving up to', 'Not set', { muted: true })}${perf}
+      <div class="slipFoot">Next goes in on <b>10 Nov</b>${o.flash ? ' · <b>Changed.</b>' : ''}</div>
+    </div></div>
+    <div class="foot2"><div class="wide del" style="margin-top:8px">${ic('trash', 'Delete')} Delete saving</div></div></div>`;
+}
+
+/* ---- D213: the reached sheet (S = T = 50,000) and the sheet after Keep saving ---- */
+function reachedSheet(kept) {
+  const bal = kept ? `<div class="bal"><b>₹50,000</b> <span class="est">set aside</span></div>`
+    : `<div class="bal"><b>₹50,000</b> <span class="est">set aside · reached <b>₹50,000</b></span></div>`;
+  const keys = kept ? '' : `<div class="twoKeys"><div class="k2" role="button">I bought it</div><div class="k2" role="button">Keep saving</div></div>`;
+  return `${list([kept ? 'rdPlain' : 'rdReached', 'none', 'reached'])}<div class="scrim"></div><div class="sheet"><div class="body">
+    <div class="handle"></div>
+    <div class="slip">
+      <div class="eyebrow">Saving</div>
+      <div class="who"><span class="w">${ic('piggy', 'Saving')}</span><span class="nm">RD</span></div>
+      <div class="amtRow"><div class="big slipAmt">${R('5,000')}</div></div>
+      <div class="every">Every month on the 10th</div>
+      ${bal}${keys}
+      <div class="balHint">Paid the cost from this? Tap Used some of it.</div>
+      <div class="used">Used some of it</div>
+      ${perf}${sline('Amount', '₹5,000')}${sline('Day of the month', '10th')}${sline('Name', 'RD')}${kept ? sline('Saving up to', 'Not set', { muted: true, flash: true }) : sline('Saving up to', '₹50,000')}${perf}
+      ${kept ? '<div class="slipFoot">Next goes in on <b>10 Dec</b> · <b>Changed.</b></div>' : ''}
+    </div></div>
+    <div class="foot2"><div class="wide del" style="margin-top:8px">${ic('trash', 'Delete')} Delete saving</div></div></div>`;
+}
+const snackUsed = '<div class="snack" role="status"><span>Used <b>₹50,000</b> from RD</span><i role="button">Undo</i></div>';
+
+/* ---- The question: How much are you saving up to? ---- */
+const keypad = (off) => `<div class="keys">${['1','2','3','4','5','6','7','8','9','00','0'].map((k) => `<div class="key">${k}</div>`).join('')}<div class="key">${ic('bs', 'Delete last digit', 24)}</div></div>
+  <div class="wide sig${off ? ' off' : ''}">Save</div>`;
+function question(o = {}) {
+  const amt = o.amt || 0;
+  let l1;
+  if (amt === 0) l1 = `<div class="l1">Type the amount you want to reach.</div>`;
+  else {
+    const e = estimate(amt, RD.S, RD.M, 10, 2026);
+    l1 = e.k === 'reached' ? `<div class="l1">You've already set aside that much.</div>`
+      : e.k === 'far' ? `<div class="l1">At <b>₹5,000</b> a month, that is over 10 years to go.</div>`
+      : `<div class="l1">At <b>₹5,000</b> a month, done by ${e.month}.</div>`;
+  }
+  return `${list(['est', 'none', 'reached'])}<div class="scrim"></div><div class="sheet"><div class="body${o.cut ? ' cut' : ''}">
+    <div class="handle"></div><div class="stepHd"><span class="well40" style="background:var(--sunk)">${ic('back', 'Back')}</span><div class="q">How much are you saving up to?</div></div>
+    <div class="slip compact">
+      <div class="for">${ic('piggy', 'Saving', 18)}<span><b>RD</b> · Every month on the 10th</span></div>
+      <div class="amtRow" style="margin-top:0"><div class="big ${amt ? '' : 'zero'}">${R(amt ? fmt(amt) : '0')}<span class="caret"></span></div>
+        ${o.clear ? '<span class="all clear" role="button" aria-label="Clear saving up to">Clear</span>' : ''}</div>
+      <div class="slot">${l1}<div class="l2">Your daily number doesn't change.</div></div>
+    </div></div>
+    <div class="foot2">${keypad(amt === 0)}</div></div>`;
+}
+
+/* ---- Home ---- */
+const rowHome = (n, sub, v, k) => `<div class="row"><span class="w">${ic(k, n)}</span><span class="t">${n}<span>${sub}</span></span><b>${v}</b></div>`;
+const reachedLine = (name, target, cls = '') => `<div class="nudge ${cls}" role="button" aria-label="${name} reached ${target.replace('₹', '')} rupees. Opens the saving.">
+  <span class="w">${ic('piggy', 'Saving')}</span><span class="t">${name} reached <b>${target}</b>.</span>${ic('chev', 'Opens the saving')}</div>`;
+function home(o = {}) {
+  return `<div class="page dense">
+    <div class="topbar"><span class="wm">hisaab<i></i></span><span class="well40">${ic('gear', 'Settings')}</span></div>
+    <div class="hero"><div class="ttl">Safe to spend today</div><div class="amt">${R('1,318')}</div>
+      <div class="tbar"><span class="f" style="flex:1318"></span><span class="bite" style="flex:380"></span><span class="bite end" style="flex:40;min-width:4px"></span></div>
+      <div class="capRow"><span><b>₹420</b> spent</span><span>of <b>₹1,738</b> for today</span></div></div>
+    ${o.slot === undefined ? reachedLine('Insurance', '₹12,000') : o.slot}
+    <div class="listHd"><span class="h">Today</span><b>₹420</b><span>See all</span></div>
+    <div class="card">${rowHome('Lunch', 'Food', '₹380', 'food')}${rowHome('Chai', 'Food', '₹40', 'food')}</div>
+  </div>${dockH}`;
+}
+
+/* ---- Layout ---- */
+const fig = (inner, theme, cap, cls = '') => `<figure><div class="phone ${theme} ${cls}" inert>${status}${inner}</div><figcaption>${cap}</figcaption></figure>`;
+const both = (inner, cap, cls) => fig(inner, 'light', cap + ' Light.', cls) + fig(inner, 'dark', cap + ' Dark.', cls);
+const T = 'tall';
+
+const SECTIONS = [
+  ['1. Settings › Savings: three rows, three states', `<div class="pair">${both(list(['est', 'none', 'reached']), 'RD with an estimate, Gold scheme with nothing set aside yet, Insurance reached.')}</div>`,
+    'Each row keeps its name and "Every month on the 5th" and gains the third line from the spec table: <i>₹18,000 set aside · done by May 2027</i>; <i>Up to ₹30,000 · done by Jan 2028</i> (S = 0); <i>₹12,000 set aside · reached ₹12,000</i>. The year shows because it is not 2026. The trailing amount stays the put-in. No bar, no percent, no colour: "reached" is a word. At 360dp the status takes two lines (owner: schedule line kept); a no-break space before the "·" keeps "· done by {month}" together, so no lone word starts a line.'],
+  ['1b. The other two list states', `<div class="pair">${both(list(['far', 'plain']), 'Far ("over 10 years to go") and a saving with no target (unchanged).')}</div>`,
+    'A saving with no target is the row as it is today ("₹9,000 set aside" only above ₹0).'],
+  ['2. The saving\'s sheet: the Saving up to row', `<div class="pair">${both(savingSheet({ target: false }), 'No target: the row\'s value reads <i>Not set</i> in <code>displayInk2</code>; the slip\'s line is unchanged.', T)}${both(savingSheet({ target: true }), 'Target ₹50,000: the value is <code>displayInk</code>; the slip\'s set-aside line gains the estimate (AC-T6).', T)}</div>`,
+    'The new row is the fourth and last of the rows, below Name, above the perforation: same 48dp line, dotted lead and chevron as Amount, Day and Name. Its value is only the target; "done by May 2027" lives in the slip line above it, once. These frames are 820dp tall because the slip is long; on shorter windows the body scrolls with Delete saving pinned, as in mockup 42.'],
+  ['2b. Just saved', `<div class="pair">${both(savingSheet({ target: true, flash: true }), 'After Save: back at the sheet, the row holds one <code>sunk</code> flash.', T)}</div>`,
+    'The flash is one <code>sunk</code> fill for 1400ms (150ms crossfade under reduced motion). "Changed." is drawn in the slip foot only because the spec does not say where the sheet\'s footer text sits (question 5).'],
+  ['3. The question: empty, with the blank line', `<div class="pair">${both(question({ amt: 0 }), 'No target set: ₹0 is muted, Save is off, no Clear chip, line 1 is the blank line.', T)}</div>`,
+    'Built from the <i>Used</i> question (mockup 42): the Back well and title, the compact slip, a chip slot beside the amount (empty here, so nothing dead), the fixed two-line slot, the shared keypad with <code>00</code> and a wide marigold Save. Save is the only marigold. TalkBack on the off Save reads "Type an amount first."'],
+  ['3b. The question: typing, with the live line', `<div class="pair">${both(question({ amt: 50000 }), '₹50,000 typed: "At ₹5,000 a month, done by May 2027."', T)}${both(question({ amt: 15000 }), 'Typed ₹15,000, below the ₹18,000 set aside: "You\'ve already set aside that much."', T)}${both(question({ amt: 900000 }), 'Typed ₹9,00,000: "At ₹5,000 a month, that is over 10 years to go."', T)}</div>`,
+    'Line 1 changes in the same frame as the digit and line 2 ("Your daily number doesn\'t change.") never does, so no key moves. The slot is a polite live region that speaks the final text once. A figure is Anek Semibold, the rest Mukta Regular. At ₹15,000 the line is a fact, not a refusal: Save stays live (E129).'],
+  ['3c. The question: with the Clear chip', `<div class="pair">${both(question({ amt: 50000, clear: true }), 'Target already ₹50,000: prefilled, the first key replaces it, <i>Clear</i> beside the amount.', T)}</div>`,
+    '<i>Clear</i> is the 48dp <code>hairline</code> chip with an <code>ink</code> label that <i>All of it</i> is on the <i>Used</i> question (pressed: <code>ink2</code> fill, <code>surface</code> label). Shown only when a target exists. It writes at once and returns to the sheet, so Save never needs to work at ₹0. From 1.3× text it drops below the amount.'],
+  ['4. Home: the reached line in the nudge slot', `<div class="pair">${both(home(), 'Hero ₹1,318; the line sits where the due-soon row sits.')}${both(home({ slot: reachedLine('Insurance', '₹12,000', 'pressed') }), 'Pressed: <code>hairline</code> fill, as the due-soon row.')}${both(home({ slot: reachedLine('School fees', '₹1,00,000') }), 'A longer name and target.')}</div>`,
+    'Squint test: the hero number first, today\'s bar second, then the line (the one filled <code>sunk</code> shape on the page), then Today. 16dp above and below, the page\'s own block gap. One figure (the target), no marigold, no ×, no second line. Drawn on the worked example\'s Mon 26 Oct to keep the hero at ₹1,318; in use it first appears on the first open after the put-in that reaches the target (question 6). A tap opens the saving\'s sheet.'],
+  ['6. D213: the reached sheet (set aside has reached the target)', `<div class="pair">${both(reachedSheet(false), 'RD at ₹50,000 set aside, target ₹50,000: the slip reads "₹50,000 set aside · reached ₹50,000"; under it the two keys. Closing the sheet leaves it as it is.', 'tall xl')}</div>`,
+    'The keys are <code>sunk</code> with a <code>displayInk</code> label, 56dp tall, radius 18, side by side under the set-aside line and above <i>Used some of it</i> (outlined, unchanged). Never marigold: both replace or remove data (UI_DESIGN 5.6). No bar, no percent. The "Put in 10 Oct" stamp is not drawn because nothing is put in while the saving is stopped, and there is no "Next goes in" foot (no copy for a stopped saving is in the spec; question 11). The list behind reads "reached ₹50,000". Frame is 900dp tall; on shorter windows the body scrolls with Delete saving pinned.'],
+  ['7. D213: after <i>I bought it</i>, then Undo', `<div class="pair">${both(list(['none', 'reached']) + snackUsed, 'The sheet has closed and RD has gone from the list; the snackbar says "Used ₹50,000 from RD" with Undo, 4 s.', 'tall')}${both(list(['rdReached', 'none', 'reached']), 'After Undo: RD is back, still reading reached ₹50,000, and the Used entry is gone.', 'tall')}</div>`,
+    'One snackbar, one Undo (AC-T9, E152): it restores the saving and removes the Used entry together. <code>inverse</code> fill on <code>onInverse</code>, the figure in Anek Semibold, Undo a 48dp target. The hero does not move, so Home is not redrawn. If the user opened the sheet from the Home reached line, the same snackbar shows on Home above the dock.'],
+  ['8. D213: after <i>Keep saving</i>', `<div class="pair">${both(reachedSheet(true), 'The target is cleared and the sheet is back: the key pair is gone, "Saving up to" reads Not set, the row behind is a plain saving, the foot reads "Next goes in on 10 Dec · Changed.".', 'tall xl')}</div>`,
+    'The saving posts from its next due date, 10 Dec, with 10 Nov to 10 Dec not back-posted (worked example C). The <code>sunk</code> flash is on the changed row, as in frame 2b. The list behind reads "₹50,000 set aside" with no status, exactly as a saving with no target.'],
+  ['5. 320dp, text at 1.5×', `<div class="pair">${both(list(['est', 'none', 'reached']), 'Savings list at the smallPhone size (320 × 568): the page does not fit, so Gold scheme is cut by the window, not an ellipsis.', 's320 ts15')}${both(list(['est', 'none', 'reached']), 'The same list with the window opened out (320 × 1400) to show every wrap.', 's320 ts15 free')}${both(home(), 'Home at 320 × 568: the line wraps inside its row, which grows past 56dp.', 's320 ts15')}${both(home({ slot: reachedLine('School fees', '₹1,00,000') }), 'A long name wraps further; the name is never cut.', 's320 ts15')}${both(question({ amt: 50000, clear: true, cut: true }), 'The question at 320 × 568, scrolled to its end: the amount being typed has scrolled off the top (see question 10).', 's320 ts15')}</div>`,
+    'At 1.5× the list\'s text column is about 90dp, so the row is name, a three-line schedule and a three-line status: about 250dp tall, and one row fills most of a 568dp window (the intro text above it takes the rest). The "·" stays with the words after it (no-break space before it) and can only end a line. Nothing is ellipsised. The display amount is drawn at 1.25× as in mockup 42 (assumption: check <code>hisaab_type.dart</code>).'],
+];
+document.getElementById('frames').innerHTML = SECTIONS.map(([t, body, why]) => `<h2>${t}</h2>${body}<p class="why">${why}</p>`).join('');
+
+const QS = [
+  '<b>Resolved by the owner (spec section 12, item 13)</b>',
+  '<b>1. Row wrap at 360dp:</b> keep the schedule line; the status may take two lines. A no-break space before the "·" in the five ARB keys that carry it, so "· done by {month}" never leaves a lone word. Applied in frames 1, 1b, 2 and 5. <i>Resolved.</i>',
+  '<b>2. Hierarchy at 1.5× and 320dp:</b> follows 1 (schedule kept). The list scrolls; one saving fills a 568dp window. <i>Resolved.</i>',
+  '<b>3. Weight:</b> figures 600, words 400, confirmed. <i>Resolved.</i>',
+  '<b>4. The "·" break point:</b> no-break space before it. <i>Resolved.</i>',
+  '<b>5. "Changed.":</b> in the slip foot, confirmed. <i>Resolved.</i>',
+  '<b>7. The chevron on the Home line:</b> kept. The blind read in section 11 should still ask "is anything asked of you?" with a due-soon row beside it. <i>Resolved.</i>',
+  '<b>8. Mockup number:</b> 54; the spec\'s "mockup 52" should read 54. <i>Resolved.</i>',
+  '<b>9. "Saving up to" on a row with nothing set aside:</b> now "Up to ₹30,000 · done by Jan 2028" (and "Up to ₹X · over 10 years to go"), with the ARB values and spoken twins updated in spec section 14. <i>Resolved.</i>',
+  '<b>Still open</b>',
+  '<b>11. Copy the spec does not give (D213).</b> The ARB in the saving-target design carries no strings for <i>I bought it</i>, <i>Keep saving</i> or the snackbar "Used ₹50,000 from {name}" (from the brief), and nothing says what a stopped saving\'s slip foot reads. The mockup draws the keys and the snackbar and leaves the foot empty. Needs design-content.',
+  '<b>6. The Home line and the worked example.</b> Insurance reaches ₹12,000 on the 5th, but the worked-example day is the 26th. The line shows on 26 Oct only if the app was not opened between. Does the spec want a dated Home example (say Mon 5 Oct, with its own hero) so the mockup and SPEC tie on one date?',
+  '<b>10. The amount is off screen in the 320 × 568 question at 1.5×.</b> With the Clear chip below the amount, the three-line slot and the fixed keypad with a wide Save, the body scrolls and the amount being typed leaves the top, the same problem mockup 42 found for <i>Used</i> (its problem 1). Options: at large text show the live line above the keypad and keep the amount pinned, or let Clear sit on the title row, or put Save in the keypad. Needs design-interaction.',
+];
+document.getElementById('qs').innerHTML = QS.map((q) => `<li class="why"${/^<b>(Resolved|Still)/.test(q) ? ' style="margin-top:18px;font-size:15px"' : ''}>${q}</li>`).join('');
+</script>
+</body>
+</html>

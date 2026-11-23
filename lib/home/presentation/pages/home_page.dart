@@ -92,6 +92,10 @@ class HomePage extends StatelessWidget {
               listener: _offerUsedUndo,
             ),
             BlocListener<HomeBloc, HomeState>(
+              listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.boughtUndo.isSome(),
+              listener: _offerBoughtUndo,
+            ),
+            BlocListener<HomeBloc, HomeState>(
               listenWhen: (HomeState previous, HomeState current) => current is HomeReady && current.fixUndo.isSome(),
               listener: _offerFixUndo,
             ),
@@ -236,6 +240,23 @@ class HomePage extends StatelessWidget {
             SemanticsService.sendAnnouncement(View.of(context), strings.undone, Directionality.of(context));
           },
         ),
+      ),
+    );
+  }
+
+  // why: one Undo restores both the saving and the money set aside (AC-T9).
+  static void _offerBoughtUndo(BuildContext context, HomeState state) {
+    final UsedOutcome? bought = state is HomeReady ? state.boughtUndo.toNullable() : null;
+    if (bought == null) {
+      return;
+    }
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final HomeBloc bloc = context.read<HomeBloc>();
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.savingBoughtSnack(context.money.format(bought.entry.amount), bought.saving.label),
+        semanticsLabel: strings.savingBoughtSnack(strings.spokenAmount(context.money.digits(bought.entry.amount)), bought.saving.label),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(HomeBoughtUndoRequested(bought))),
       ),
     );
   }

@@ -314,3 +314,5 @@ What the code does where this flow was open, or where the build chose:
 | Deleting a saving | "{saving} deleted. What you put in stays in your history." when the saving has had a put-in; read before the delete, since the reload no longer lists the rule (AC-Y10). |
 | Hint on the sheet | "Paid the cost from this?" shows when the saving's name is Insurance, School fees or Festival (any case), since a saved rule has no other mark of the pill it came from. |
 | Large text | At 2.0× text on a 320×568 window the amount, *All of it* and the keys do not all fit pinned; the keypad body hands over to its all-scrolling layout (every key reachable), instead of the pinned layout. |
+
+Note (saving target, BR-23, D212, D213): a yearly cost can also carry a *Saving up to* amount like any saving. The estimate and the "reached" line restart by themselves after *Used*: set aside falls below the target, so the saving shows "done by {month}" again and, if it had stopped, resumes putting in from its next due date (no flag marks a yearly cost).

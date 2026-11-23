@@ -4,7 +4,9 @@ import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/ledger/data/datasource/entries_local_data_source.dart';
 import 'package:hisaab/ledger/data/datasource/recurring_local_data_source.dart';
+import 'package:hisaab/ledger/data/repository/ledger_repository_impl.dart';
 import 'package:hisaab/ledger/data/repository/recurring_repository_impl.dart';
 import 'package:hisaab/ledger/domain/entities/amount_mode.dart';
 import 'package:hisaab/ledger/domain/entities/bill_icon.dart';
@@ -59,7 +61,7 @@ void main() {
 
   T right<T>(Either<Failure, T> result) => result.getOrElse((Failure f) => fail(f.message));
   Future<List<Map<String, Object?>>> entries() => database.db.query(Tables.transactions, orderBy: TransactionColumns.date);
-  PostDueRecurring engine() => PostDueRecurring(recurring: repository, clock: clock);
+  PostDueRecurring engine() => PostDueRecurring(recurring: repository, ledger: LedgerRepositoryImpl(entries: SqfliteEntriesLocalDataSource(database), clock: clock), clock: clock);
 
   group('RecurringRepositoryImpl.startFresh', () {
     test('stores the rules and opening entries', () async {
@@ -293,6 +295,21 @@ void main() {
 
       right(await repository.update(added.copyWith(icon: const Option<BillIcon>.none())).run());
       expect(right(await repository.activeRules().run()).last.icon, const Option<BillIcon>.none());
+    });
+
+    test('update stores a saving target and its reached marker (BR-23)', () async {
+      final RecurringRule added = right(await repository.add(_milk).run());
+      right(await repository
+          .update(added.copyWith(
+            target: some(Money.fromMajor(50000)),
+            targetReachedFor: some(Money.fromMajor(50000)),
+            targetReachedOn: some(const CalendarDate(2026, 11, 23)),
+          ))
+          .run());
+      final RecurringRule stored = right(await repository.activeRules().run()).last;
+      expect(stored.target, some(Money.fromMajor(50000)));
+      expect(stored.targetReachedFor, some(Money.fromMajor(50000)));
+      expect(stored.targetReachedOn, some(const CalendarDate(2026, 11, 23)));
     });
 
     test('update returns RuleNotFoundFailure for a missing rule and doesn\'t notify', () async {

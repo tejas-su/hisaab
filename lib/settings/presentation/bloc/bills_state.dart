@@ -21,7 +21,8 @@ final class BillsLoading extends BillsState {
 /// Undo once; [saved] is the savings list's "put in" total, [None] for bills or before any save;
 /// [setAside] is what each saving still has set aside (BR-19), [None] for bills; [usedUndo] holds a
 /// *Used* save just made, so the page can offer Undo once (AC-Y9); [undoKeepsHistory] says the saving
-/// in [undo] has had a put-in, so its Undo bar says what stays (AC-Y10).
+/// in [undo] has had a put-in, so its Undo bar says what stays (AC-Y10); [boughtUndo] holds an
+/// *I bought it* just made, for its one Undo (AC-T9).
 final class BillsReady extends BillsState {
   const BillsReady({
     required this.bills,
@@ -30,6 +31,7 @@ final class BillsReady extends BillsState {
     this.setAside = const Option<SetAsideSummary>.none(),
     this.usedUndo = const Option<UsedOutcome>.none(),
     this.undoKeepsHistory = false,
+    this.boughtUndo = const Option<UsedOutcome>.none(),
   });
 
   final List<RecurringRule> bills;
@@ -38,9 +40,10 @@ final class BillsReady extends BillsState {
   final Option<SetAsideSummary> setAside;
   final Option<UsedOutcome> usedUndo;
   final bool undoKeepsHistory;
+  final Option<UsedOutcome> boughtUndo;
 
   /// Returns a copy with the given fields replaced; [undo] and [saved] reset unless passed,
-  /// [setAside] is kept unless passed; [usedUndo] and [undoKeepsHistory] reset unless passed.
+  /// [setAside] is kept unless passed; [usedUndo], [undoKeepsHistory] and [boughtUndo] reset unless passed.
   BillsReady copyWith({
     List<RecurringRule>? bills,
     Option<RecurringRule> undo = const Option<RecurringRule>.none(),
@@ -48,6 +51,7 @@ final class BillsReady extends BillsState {
     Option<SetAsideSummary>? setAside,
     Option<UsedOutcome> usedUndo = const Option<UsedOutcome>.none(),
     bool undoKeepsHistory = false,
+    Option<UsedOutcome> boughtUndo = const Option<UsedOutcome>.none(),
   }) =>
       BillsReady(
         bills: bills ?? this.bills,
@@ -56,10 +60,11 @@ final class BillsReady extends BillsState {
         setAside: setAside ?? this.setAside,
         usedUndo: usedUndo,
         undoKeepsHistory: undoKeepsHistory,
+        boughtUndo: boughtUndo,
       );
 
   @override
-  List<Object?> get props => <Object?>[bills, undo, saved, setAside, usedUndo, undoKeepsHistory];
+  List<Object?> get props => <Object?>[bills, undo, saved, setAside, usedUndo, undoKeepsHistory, boughtUndo];
 }
 
 /// Loading failed; a quiet message with Try again.

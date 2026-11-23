@@ -22,6 +22,9 @@ final class RecurringRule extends Equatable {
     this.isIncomeSource = false,
     this.icon = const Option<BillIcon>.none(),
     this.amountMode = AmountMode.fixed,
+    this.target = const Option<Money>.none(),
+    this.targetReachedFor = const Option<Money>.none(),
+    this.targetReachedOn = const Option<CalendarDate>.none(),
   });
 
   final int id;
@@ -46,6 +49,15 @@ final class RecurringRule extends Equatable {
   /// engine (D123).
   final AmountMode amountMode;
 
+  /// The amount this saving aims to reach; none means no target (SPEC BR-23).
+  final Option<Money> target;
+
+  /// The target the user was last told was reached, so it is announced once (SPEC BR-23).
+  final Option<Money> targetReachedFor;
+
+  /// The day [targetReachedFor] was reached (SPEC BR-23).
+  final Option<CalendarDate> targetReachedOn;
+
   /// The icon the bill shows: the picked one, or the one its name suggests (SPEC BR-9).
   BillIcon get shownIcon => icon.getOrElse(() => BillIcon.forName(label));
 
@@ -60,6 +72,9 @@ final class RecurringRule extends Equatable {
         isIncomeSource: isIncomeSource,
         icon: icon,
         amountMode: amountMode,
+        target: target,
+        targetReachedFor: targetReachedFor,
+        targetReachedOn: targetReachedOn,
       );
 
   /// Returns a copy with the given fields replaced.
@@ -71,6 +86,9 @@ final class RecurringRule extends Equatable {
     Option<BillIcon>? icon,
     AmountMode? amountMode,
     int? categoryId,
+    Option<Money>? target,
+    Option<Money>? targetReachedFor,
+    Option<CalendarDate>? targetReachedOn,
   }) =>
       RecurringRule(
         id: id,
@@ -83,6 +101,9 @@ final class RecurringRule extends Equatable {
         isIncomeSource: isIncomeSource,
         icon: icon ?? this.icon,
         amountMode: amountMode ?? this.amountMode,
+        target: target ?? this.target,
+        targetReachedFor: targetReachedFor ?? this.targetReachedFor,
+        targetReachedOn: targetReachedOn ?? this.targetReachedOn,
       );
 
   @override
@@ -97,5 +118,8 @@ final class RecurringRule extends Equatable {
     isIncomeSource,
     icon,
     amountMode,
+    target,
+    targetReachedFor,
+    targetReachedOn,
   ];
 }

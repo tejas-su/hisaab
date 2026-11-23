@@ -158,7 +158,35 @@ void main() {
       ),
       throwsUnsupportedError,
     );
-    expect(() => book.ledger.savingTotals(), throwsUnsupportedError);
+  });
+
+  test('a projected ledger reports the put-in and use of each saving from its entries (BR-23)', () async {
+    Entry entry(int id, EntryKind kind, int rupees, {int? recurringId, int? savingId}) => Entry(
+          id: id,
+          amount: Money.fromMajor(rupees),
+          kind: kind,
+          categoryId: 11,
+          date: const CalendarDate(2026, 10, 1),
+          createdAt: DateTime(2026, 10, 1),
+          recurringId: recurringId,
+          savingId: savingId,
+        );
+    final ProjectedBook saved = ProjectedBook(
+      entries: <Entry>[
+        entry(1, EntryKind.saved, 5000, recurringId: 5),
+        entry(2, EntryKind.saved, 3000, recurringId: 5),
+        entry(3, EntryKind.used, 2000, savingId: 5),
+      ],
+      rules: const <RecurringRule>[],
+      skips: const <BillSkip>[],
+      settings: const BudgetSettings(),
+      firstLogged: const Option<CalendarDate>.none(),
+    );
+
+    final SavingTotals totals = right(await saved.ledger.savingTotals().run());
+
+    expect(totals.bySaving, <int, ({Money putIn, Money used})>{5: (putIn: Money.fromMajor(8000), used: Money.fromMajor(2000))});
+    expect(totals.anyUse, isTrue);
   });
 
 }

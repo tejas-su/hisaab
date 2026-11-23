@@ -67,7 +67,7 @@ void registerLedgerServices(GetIt getIt) {
     ..registerSingleton<SaveEntry>(SaveEntry(ledger: ledger, recurring: recurring, clock: clock))
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
-    ..registerSingleton<PostDueRecurring>(PostDueRecurring(recurring: recurring, clock: clock))
+    ..registerSingleton<PostDueRecurring>(PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock))
     ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
     ..registerSingleton<GetLastBillAmount>(GetLastBillAmount(ledger: ledger, clock: clock))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))

@@ -16,8 +16,8 @@ void main() {
 
   group('migration 006 (BR-22.12)', () {
     test('the schema is at version 6', () {
-      expect(migrations, hasLength(6));
-      expect(AppDatabase.schemaVersion, 6);
+      expect(migrations, hasLength(7));
+      expect(AppDatabase.schemaVersion, 7);
     });
 
     test('a new database has an empty nudge_state with the four columns and no foreign key', () async {
@@ -66,7 +66,7 @@ void main() {
       addTearDown(upgraded.close);
       final Database db = upgraded.db;
 
-      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 6);
+      expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 7);
       expect((await db.query(Tables.transactions)).single[TransactionColumns.note], 'Chai');
       expect((await db.query(Tables.suggestionState)).single[SuggestionStateColumns.quietOn], '2026-10-26');
       expect(await db.query(Tables.categories), hasLength(categories));

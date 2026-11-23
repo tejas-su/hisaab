@@ -6,6 +6,7 @@ import 'migration_003_savings_and_changing_bills.dart';
 import 'migration_004_suggestion_state.dart';
 import 'migration_005_fix_used_and_asked.dart';
 import 'migration_006_nudge_state.dart';
+import 'migration_007_saving_target.dart';
 
 /// One schema step; migration `n` upgrades the database from version `n - 1` to `n`.
 typedef Migration = Future<void> Function(DatabaseExecutor db);
@@ -18,6 +19,7 @@ const List<Migration> migrations = <Migration>[
   migration004SuggestionState,
   migration005FixUsedAndAsked,
   migration006NudgeState,
+  migration007SavingTarget,
 ];
 
 /// Runs the migrations that take a database from version [from] to version [to].

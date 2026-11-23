@@ -51,6 +51,27 @@ final class BillsUsedDone extends BillsEvent {
   List<Object?> get props => <Object?>[outcome];
 }
 
+/// *I bought it* finished on a saving's sheet opened from this list: the whole set-aside amount was
+/// used and the saving deleted; the page offers one Undo for both (AC-T9).
+final class BillsBoughtDone extends BillsEvent {
+  const BillsBoughtDone(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
+/// The user tapped Undo after *I bought it*: bring the saving back, then delete the *Used* entry.
+final class BillsBoughtUndoRequested extends BillsEvent {
+  const BillsBoughtUndoRequested(this.outcome);
+
+  final UsedOutcome outcome;
+
+  @override
+  List<Object?> get props => <Object?>[outcome];
+}
+
 /// The user tapped Undo after a *Used* save: delete the entry, which sets the amount aside again.
 final class BillsUsedUndoRequested extends BillsEvent {
   const BillsUsedUndoRequested(this.entry);

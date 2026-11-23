@@ -50,6 +50,7 @@ export 'domain/repository/category_repository.dart';
 export 'domain/repository/ledger_repository.dart';
 export 'domain/repository/recurring_repository.dart';
 export 'domain/safe_to_spend.dart';
+export 'domain/saving_target.dart';
 export 'domain/set_aside.dart';
 export 'domain/usecase/add_bill.dart';
 export 'domain/usecase/arm_bill_reminders.dart';

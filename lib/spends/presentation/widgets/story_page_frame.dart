@@ -3,9 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
+import 'story_reveal.dart';
 
-/// One month story page (SPEC FR-SP-7): an eyebrow, a big line and the page's [children], scrolling
-/// when taller than the window (AC-7). TalkBack reads it as one node, [spoken] (AC-5).
+/// One month story page (SPEC FR-SP-7): an eyebrow, a big line and the page's [children], rising in
+/// one after another ([StoryReveal]) and scrolling when taller than the window (AC-7). TalkBack
+/// reads it as one node, [spoken] (AC-5).
 class StoryPageFrame extends StatelessWidget {
   const StoryPageFrame({
     super.key,
@@ -36,8 +38,7 @@ class StoryPageFrame extends StatelessWidget {
       excludeSemantics: true,
       child: SingleChildScrollView(
         padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.gutter, vertical: HisaabSpacing.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: StoryReveal(
           children: <Widget>[
             Text(eyebrow, style: type.labelMedium?.copyWith(color: context.colors.ink2)),
             const SizedBox(height: HisaabSpacing.s),

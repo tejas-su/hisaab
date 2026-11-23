@@ -26,11 +26,6 @@ class UsedQuestion extends StatelessWidget {
 
   final RecurringRule rule;
 
-  /// The text scale from which *All of it* drops below the amount instead of sitting beside it.
-  static const double _stackChipFrom = 1.3;
-  static const double _chipExtent = 48 + HisaabSpacing.s;
-  static const double _actionKeyGrowth = 16;
-
   @override
   Widget build(BuildContext context) => BlocBuilder<UsedBloc, UsedState>(
         builder: (BuildContext context, UsedState state) => switch (state) {
@@ -40,19 +35,10 @@ class UsedQuestion extends StatelessWidget {
         },
       );
 
-  // why: the body multiplies the figure's extent by the text scale, but the slip's chrome and the
-  // chip do not grow with it, so each is divided by the scale first. The action key does grow with
-  // large text past the body's fixed estimate (74dp at 2.0x), so that growth is added too: a window
-  // too short for it then hands over to the all-scrolling layout instead of overflowing.
-  static double _stackedFigureExtent(BuildContext context) {
-    final double scale = MediaQuery.textScalerOf(context).scale(1);
-    return (PinnedBillQuestion.slipChrome + _chipExtent + _actionKeyGrowth) / scale + PinnedBillQuestion.amountExtent;
-  }
-
   Widget _keypad(BuildContext context, UsedReady state) {
     final AppLocalizations strings = AppLocalizations.of(context);
     final UsedBloc bloc = context.read<UsedBloc>();
-    final bool stacked = MediaQuery.textScalerOf(context).scale(1) >= _stackChipFrom;
+    final bool stacked = MediaQuery.textScalerOf(context).scale(1) >= PinnedBillQuestion.stackChipFrom;
     final Widget amount = AmountDisplay(amount: Money.fromMajor(state.rupees), rejections: state.rejections);
     final Widget chip = UsedAllChip(
       selected: state.allSelected,
@@ -65,7 +51,7 @@ class UsedQuestion extends StatelessWidget {
       caption: strings.billEveryMonth(rule.schedule.anchor.day),
       slot: UsedSlot(state: state),
       saveFailed: state.saveFailed,
-      figureExtent: stacked ? _stackedFigureExtent(context) : PinnedBillQuestion.defaultFigureExtent,
+      figureExtent: stacked ? PinnedBillQuestion.stackedChipExtent(context) : PinnedBillQuestion.defaultFigureExtent,
       figure: stacked
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,

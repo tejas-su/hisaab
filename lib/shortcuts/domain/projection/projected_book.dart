@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
+import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_switch.dart';
 import '../../../ledger/ledger.dart';
@@ -97,6 +98,26 @@ final class ProjectedBook {
     return inserted;
   }
 
+  SavingTotals _savingTotals() {
+    Money sumOf(EntryKind kind, int id, int? Function(Entry) link) => _entries
+        .where((Entry e) => e.kind == kind && link(e) == id)
+        .fold(Money.zero, (Money total, Entry e) => total + e.amount);
+    final Set<int> ids = <int>{
+      ..._entries.where((Entry e) => e.kind == EntryKind.saved).map((Entry e) => e.recurringId).nonNulls,
+      ..._entries.where((Entry e) => e.kind == EntryKind.used).map((Entry e) => e.savingId).nonNulls,
+    };
+    return SavingTotals(
+      bySaving: <int, ({Money putIn, Money used})>{
+        for (final int id in ids)
+          id: (
+            putIn: sumOf(EntryKind.saved, id, (Entry e) => e.recurringId),
+            used: sumOf(EntryKind.used, id, (Entry e) => e.savingId),
+          ),
+      },
+      anyUse: _entries.any((Entry e) => e.kind == EntryKind.used),
+    );
+  }
+
   bool _answered(Occurrence occurrence) {
     bool same(int? ruleId, CalendarDate date) => ruleId == occurrence.rule.id && date == occurrence.date;
     return _entries.any((Entry e) => same(e.recurringId, e.date)) || _skips.any((BillSkip s) => same(s.ruleId, s.date));
@@ -143,8 +164,10 @@ final class _ProjectedLedger implements LedgerRepository {
   @override
   TaskEither<Failure, Option<SavedTotal>> savedTotal() => throw _readOnly;
 
+  // why: the engine stops a saving at its target from these totals, so a projected day must see the
+  // puts-in it has already posted (SPEC BR-23, D213).
   @override
-  TaskEither<Failure, SavingTotals> savingTotals() => throw _readOnly;
+  TaskEither<Failure, SavingTotals> savingTotals() => TaskEither<Failure, SavingTotals>.right(_book._savingTotals());
 }
 
 /// [ProjectedBook]'s rules and skips; [post] is the only write.

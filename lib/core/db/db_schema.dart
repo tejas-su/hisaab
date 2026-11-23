@@ -59,6 +59,15 @@ abstract final class RecurringColumns {
 
   /// How the amount behaves ([AmountModeValues]); `fixed` for every rule before schema v3 (D120).
   static const String amountMode = 'amount_mode';
+
+  /// The amount a saving aims for, in paise; null means no target. Positive when set (BR-23, schema v7).
+  static const String targetMinor = 'target_minor';
+
+  /// The target amount the saving last reached, so a reached target is celebrated once (BR-23, schema v7).
+  static const String targetReachedFor = 'target_reached_for';
+
+  /// The day the target was reached, `YYYY-MM-DD` (BR-23, schema v7).
+  static const String targetReachedOn = 'target_reached_on';
 }
 
 /// Columns of [Tables.recurringSkips].

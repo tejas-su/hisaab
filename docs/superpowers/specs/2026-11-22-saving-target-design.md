@@ -1,9 +1,15 @@
 # Saving target: design
 
-**Status:** proposal, 2026-11-22, revised after the owner's answers (section 12). Not yet in SPEC, UI_DESIGN, DECISIONS or code. One small new question remains (section 12, "Still open").
+Status: approved 2026-11-23; folded into SPEC/UI_DESIGN/DECISIONS/PLAN
+
+**Precedence inside this doc:** section 12 (owner decisions) > section 16 (accessibility, B1 to B4 accepted) > section 15 (interaction, F1 to F4 approved) > section 14 (copy) > the earlier sections. Where an earlier section was stale it has been corrected.
+
+**Amended after approval (2026-11-23):** the can-i-afford design (`2026-11-22-can-i-afford-design.md`, section 7) and DECISIONS **D213** supersede this spec's first proposal that reaching the target never stops the saving. The saving now **stops putting in when set aside reaches the target**, and its sheet offers *I bought it* and *Keep saving* (BR-23, BR-9, FR-SE-1 AC-T9 to AC-T11, E151 to E154). Where an earlier section below still says "never stops", this note wins. The words-only parts (the list line, the Home line, no progress bar, no notification) are unchanged.
+
+**Built:** not yet (no `lib/` change). The docs are updated; the build is milestone M12.
 **Origin:** the owner was pitched a broad "Savings & Planning" module. Most of it is already covered; one small piece is built here.
 **Research:** [case study 17, savings and RD](../../design-research/case-studies/17-savings-and-rd.md). Yearly costs: `docs/features/yearly-costs/01-ux-flow.md`.
-**Next numbers (checked 2026-11-22):** D208 to D212 (D207 is the last), BR-23, E129 to E150, migration 007, backup schema 7, mockup 52. If parallel work takes any, renumber on merge.
+**Numbers used (rechecked 2026-11-23):** D211 to D215 (D208 to D210 were taken by parallel work, so this spec's first draft D208 to D212 became D211 to D215), BR-23, E129 to E154, FR-SE-1 AC-T1 to AC-T12, FR-HO-3 AC-R1 to AC-R7, migration 007, backup schema 7, milestone M12, mockup 54.
 
 ## 1. Problem and job
 
@@ -27,7 +33,7 @@
 
 ## 2. The proposal in one paragraph
 
-A saving gets one optional number, *Saving up to*, set from a row in the saving's sheet after it exists. It touches no BR-3 symbol, so the hero, Day Blocks and the Add flow are untouched. The Savings list's third line (AC-Y3) says how far along it is and when it will be done, in words, and "reached" in words when set aside meets it. Reaching it never stops the saving. **Home says "reached" once, in the existing nudge slot (FR-HO-3), on one day, with no new Home element.** The Ask AI export carries the target and the estimate.
+A saving gets one optional number, *Saving up to*, set from a row in the saving's sheet after it exists. It touches no BR-3 symbol, so the hero, Day Blocks and the Add flow are untouched. The Savings list's third line (AC-Y3) says how far along it is and when it will be done, in words, and "reached" in words when set aside meets it. Reaching it stops the saving (D213; the first proposal said it never stops). **Home says "reached" once, in the existing nudge slot (FR-HO-3), on one day, with no new Home element.** The Ask AI export carries the target and the estimate.
 
 ## 3. The journey
 
@@ -38,7 +44,7 @@ Money apps cause anxiety, so each step names the feeling we want.
 3. **See.** The saving's list row third line reads "₹18,000 set aside · done by May 2027". Nothing else on the app changes.
 4. **Daily loop.** Untouched while a target is being worked toward: the estimate is not on Home.
 5. **Payday and put-in days.** The engine posts the put-in (BR-9); set aside rises; the estimate shortens by a month when a full amount went in. The list is current the next time Settings opens.
-6. **Reached.** When set aside is at least the target, the list line reads "₹50,000 set aside · reached ₹50,000". The first time Home is opened with that true, the nudge slot says "Insurance reached ₹12,000." for the rest of that day (section 4a); tapping it opens the saving's sheet. It is only words: the saving keeps putting in and today's share does not change (D209, D210). Feeling: quiet satisfaction; no confetti, no animation, no notification, no colour.
+6. **Reached.** When set aside is at least the target, the list line reads "₹50,000 set aside · reached ₹50,000". The first time Home is opened with that true, the nudge slot says "Insurance reached ₹12,000." for the rest of that day (section 4a); tapping it opens the saving's sheet. The saving stops putting in (D213), and the sheet offers *I bought it* and *Keep saving* (AC-T9 to AC-T11). The line itself is only words and moves no number. Feeling: quiet satisfaction; no confetti, no animation, no notification, no colour.
 7. **Used some of it.** Set aside falls (BR-19). If it falls below the target the line returns to an estimate without comment. For a yearly cost this is exactly right: pay the premium, and the line starts counting the next year.
 8. **Change the monthly amount.** The estimate is recomputed from the next put-in. Set aside is unchanged.
 9. **Clear it.** *Clear*, a 48dp chip beside the amount in the question, removes the target. The row goes back to *Not set*.
@@ -88,9 +94,9 @@ A saving's put-ins are the rule's own monthly dates (BR-9: "on the 5th", clamped
 |---|---|
 | No target | unchanged: "{amount} set aside" only above ₹0 |
 | `S > 0`, estimate | "₹18,000 set aside · done by May 2027" |
-| `S = 0`, estimate | "Saving up to ₹50,000 · done by May 2027" |
+| `S = 0`, estimate | "Up to ₹50,000 · done by May 2027" |
 | reached | "₹50,000 set aside · reached ₹50,000" |
-| far | "₹500 set aside · over 10 years to go" ("Saving up to ₹X · over 10 years to go" when `S = 0`) |
+| far | "₹500 set aside · over 10 years to go" ("Up to ₹X · over 10 years to go" when `S = 0`) |
 
 The line wraps to two lines at large text (never ellipsised); the row grows from about 84dp as needed.
 
@@ -102,7 +108,7 @@ The line wraps to two lines at large text (never ellipsised); the row grows from
 |---|---|---|---|---|---|
 | Target set | 12,000 | "₹12,000 set aside · reached ₹12,000" | ₹1,318 | 15,650 | 15,230 |
 | *Used* ₹5,000 | 7,000 | `gap = 5,000`, `n = 5`, `d_5` = 5 Mar 2027: "₹7,000 set aside · done by Mar 2027" | ₹1,318 | 15,650 | 15,230 |
-| *Used* the rest (₹7,000) | 0 | `gap = 12,000`, `n = 12`, `d_12` = 5 Oct 2027: "Saving up to ₹12,000 · done by Oct 2027" | ₹1,318 | 15,650 | 15,230 |
+| *Used* the rest (₹7,000) | 0 | `gap = 12,000`, `n = 12`, `d_12` = 5 Oct 2027: "Up to ₹12,000 · done by Oct 2027" | ₹1,318 | 15,650 | 15,230 |
 
 The hero is ₹1,318 and `remaining` ₹15,230 at every step: neither the target nor the *Used* entry moves a BR-3 symbol (BR-19). (Reached, then falling below on *Used*, then restarting is the yearly-cost cycle working as designed.)
 
@@ -124,18 +130,18 @@ The one place Home mentions a target. It reuses the nudge slot (FR-HO-3): no new
 - `target_reached_for`: the target value (paise) the line was last shown for.
 - `target_reached_on`: the local date `YYYY-MM-DD` it was shown.
 
-**Pending** means: the saving is active, has a target `T`, `S ≥ T`, and `target_reached_for ≠ T`. At an evaluation point the first pending saving (ordered as the due-soon row's tie-break: the rule saved first) holds the line when no waiting or due-soon line does. **It is written the moment the line is on screen with Home visible and no tray or sheet over it** (as the install line's *seen* flag, FR-HO-3 AC-2, and `asked_on`): `target_reached_for = T`, `target_reached_on = today`. Until then it stays pending, so a day when a bill line holds the slot loses nothing: the line comes the next day instead.
+**Pending** means: the saving is active, has a target `T`, `S ≥ T`, and `target_reached_for ≠ T`. At an evaluation point the slot candidate is the saving that is *Shown* today, if any (F2), else the first pending saving (ordered as the due-soon row's tie-break: the rule saved first); it holds the line when no waiting or due-soon line does. So a saving shown today keeps the slot all day and a second pending saving waits for tomorrow. **It is written the moment the line is on screen with Home visible and no tray or sheet over it** (as the install line's *seen* flag, FR-HO-3 AC-2, and `asked_on`): `target_reached_for = T`, `target_reached_on = today`. Until then it stays pending, so a day when a bill line holds the slot loses nothing: the line comes the next day instead.
 
-**Shown** means `target_reached_on = today` and `target_reached_for = T` and `S ≥ T`. So the line stays the whole day through resumes, goes at midnight (its date is no longer today), and also goes if `S` drops below `T` the same day (a *Used* entry), since "reached" would no longer be true. It never returns for the same `T`.
+**Shown** means `target_reached_on = today` and `target_reached_for = T` and `S ≥ T`. So the line stays the whole day through resumes, goes at midnight (its date is no longer today), and also goes if `S` drops below `T`, or `T` changes or is cleared, the same day (a *Used* entry or the user's own act in the sheet the line opened), since "reached" would no longer be true. It leaves at the **next Home reload** (F3), and focus then goes to the "Today" heading. It never returns for the same `T`.
 
 **Day rules.**
 - The day it "first reaches": the first evaluation point at which `S ≥ T` is seen, not the put-in's date. After days away, a catch-up put-in (BR-9) that reaches it shows on the first open, which is when the user learns it.
-- **Target set while already reached** (including edited down to or below `S`): no Home line. The save writes `target_reached_for = T` and `target_reached_on = t`, so only a genuine crossing by a later put-in shows the line; the user was just told "reached" in the sheet (owner, section 12 item 10; E147).
+- **Target set while already reached** (including edited down to or below `S`): no Home line. The save writes **only `target_reached_for = T`** and leaves `target_reached_on` NULL (F1), so *Shown* is false and *Pending* is false, and only a genuine crossing by a later put-in shows the line; the user was just told "reached" in the sheet (owner, section 12 item 10; E147).
 - **Raising the target** and reaching it again: `T` differs from `target_reached_for`, so it is pending again and shows once more.
 - ***Used* drops `S` below `T`, then it reaches the same `T` again:** no repeat (`target_reached_for = T`).
 - ***Clear*** removes the target and both columns' values, so setting a target later, even the same number, is a new target.
 - **Two savings pending on the same day:** one line only, the first (rule saved first). The other stays pending and shows the next day it is not held back. Never a combined line: it needs more copy and a longer row, and one line a day matches the slot's one-line rule.
-- **The saving is deleted on the day:** the rule is inactive, so the line leaves at once (Home reloads on the next evaluation point or change); Undo (4 s) restores it with its columns, so the line is as it was.
+- **The saving is deleted on the day:** the rule is inactive, so the line leaves on the delete's reload; Undo (4 s) restores it with its columns, and the line returns at the next evaluation point rather than at once (section 12 item 12).
 - **Backup and restore** carry both columns; a restored file shows a line again only when it is pending by the rules above.
 
 ## 5. Edge cases (proposed E129 onward)
@@ -143,9 +149,9 @@ The one place Home mentions a target. It reuses the nudge slot (FR-HO-3): no new
 | ID | Situation | Behaviour |
 |---|---|---|
 | E129 | `T ≤ S` when set (including `T` below what is already set aside) | Allowed and saved. Row reads "reached"; the sheet slot while typing says "You've already set aside that much." Never refused: the user may only want to say "this one is done" |
-| E130 | `T` edited below `S` later | Same as E129: reached |
+| E130 | `T` edited below `S` later | Same as E129: reached; no Home line (E147) |
 | E131 | `T` edited above `S` after reached | The line returns to an estimate |
-| E132 | `T` = ₹0, blank, or only a clear | ₹0 is refused with a shake (the keypad's rule, FR-KS-2); blank does nothing; *Clear* removes the target |
+| E132 | `T` = ₹0, blank, or only a clear | *Save* stays off at ₹0 (F4; the shake and the held ring are for a refused 10th digit only); blank does nothing; *Clear* writes at once and removes the target, with no Undo |
 | E133 | `T` over the keypad's 9-digit cap | The keypad refuses the digit (FR-KS-2, D184) |
 | E134 | Monthly amount changed | Estimate recomputed from the next put-in; `S` unchanged; past put-ins are not rewritten (BR-9) |
 | E135 | Put-in day changed (D34) | `next_due` moves, so the month named may move; no put-in is posted twice |
@@ -156,14 +162,18 @@ The one place Home mentions a target. It reuses the nudge slot (FR-HO-3): no new
 | E140 | Backup and restore | The column is carried. An older file (schema 6) restores with no targets |
 | E141 | *Put in extra* | Belongs to no saving (BR-19), so it never moves `S` and never counts toward `T` |
 | E142 | Month change and `Clock` | A line saying "done by Dec" in December reads "done by Jan 2027" next month only after `S` and `next_due` change; the year suffix follows today's year |
-| E143 | A saving started today with no put-in | `S = 0`; the line reads "Saving up to ₹X · done by {Mon}" counted from `next_due` |
+| E143 | A saving started today with no put-in | `S = 0`; the line reads "Up to ₹X · done by {Mon}" counted from `next_due` |
 | E144 | Two savings reach their targets before the same evaluation point | One Home line, for the rule saved first; the other stays pending and shows the next day it is not held back (section 4a) |
 | E145 | *Used* drops `S` below `T` after the line was shown, then `S` reaches the same `T` | No second line (`target_reached_for = T`) |
 | E146 | A target is raised and reached again | `T` differs from `target_reached_for`, so the line shows once more |
-| E147 | A target is set or edited so that `S ≥ T` already | No Home line: the save writes `target_reached_for = T` and `target_reached_on = t`. The row and the export read "reached" (owner, section 12 item 10) |
-| E148 | The saving is deleted on the day the line shows | The line leaves; Undo restores it and its state |
+| E147 | A target is set or edited so that `S ≥ T` already | No Home line: the save writes only `target_reached_for = T`, leaving `target_reached_on` NULL (F1). The row and the export read "reached" (owner, section 12 item 10) |
+| E148 | The saving is deleted on the day the line shows | The line leaves on the reload; Undo restores it and its columns, and the line returns at the next evaluation point |
 | E149 | A waiting bill, the due-soon nudge, an over state or *No income* holds the slot | The reached line waits unwritten and shows on the first later day it can; nothing is lost |
-| E150 | `S` drops below `T` (a *Used* entry) while the line shows the same day | The line leaves at the next evaluation point, because "reached" is no longer true |
+| E150 | `S` drops below `T` (a *Used* entry), or `T` is changed or cleared, while the line shows the same day | The line leaves at the next Home reload (F3), because "reached" is no longer true; focus goes to the "Today" heading |
+| E151 | A put-in would pass the target (including a catch-up after days away) | Only `T − S` is posted, `next_due` keeps moving, and nothing more is posted while `S ≥ T` (BR-9, D213) |
+| E152 | *I bought it* | A *Used* entry for the whole set-aside amount, then the saving is deleted; one Undo (4 s) restores both. Nothing in the hero moves |
+| E153 | *Keep saving* | The target and both reached columns are cleared; the saving posts from `next_due`; skipped months are not back-posted |
+| E154 | The reached sheet is closed with no choice | Nothing changes; the money stays set aside and the saving stays stopped |
 
 ## 6. Schema impact
 
@@ -187,84 +197,84 @@ The one place Home mentions a target. It reuses the nudge slot (FR-HO-3): no new
 | Add tray, hero, Day Blocks, Spends | **Unchanged** |
 | Ask AI | The export gains one sentence and one explaining line when a target exists |
 
-## 8. Ask AI export (amends BR-15; D211)
+## 8. Ask AI export (amends BR-15; D214)
 
 Both lines are added only when at least one active saving has a target, so every other export stays byte-identical, as D188 did. The numbers are the list's own, never recomputed in `PromptBuilder` (D79).
 
 - **Facts**, a sentence right after the savings clause. Dates are ISO as elsewhere in the export:
   - estimate: `Saving up to a target: RD has ₹18,000 set aside of ₹50,000 and, at ₹5,000 a month, would be done by 2027-05-10.`
-  - reached: `Saving up to a target: Insurance has ₹12,000 set aside, which reaches its ₹12,000 target, and still puts in ₹1,000 a month.`
+  - reached: `Saving up to a target: Insurance has ₹12,000 set aside, which reaches its ₹12,000 target, and has stopped putting in.`
   - far: `... at ₹500 a month, is more than 10 years away.`
   - several: one sentence each, in the savings clause's order (soonest first).
-- **Explaining line**, after the facts, with D188's other lines: `A saving with a target is something the user chose to save up to. The date is an estimate at the current monthly amount, and reaching it does not stop the saving. Treat it as a goal, not as spending.`
+- **Explaining line**, after the facts, with D188's other lines: `A saving with a target is something the user chose to save up to. The date is an estimate at the current monthly amount, and the saving stops putting in once it reaches the target. Treat it as a goal, not as spending.`
 - Saving names are names the user typed; they are listed as today, and "Leave out my notes" does not hide them (unchanged).
 - One new golden: a target estimate, a reached one, and the explaining line. Existing goldens must not change.
 
 ## 9. Proposed doc text
 
-**BR-23 Saving target (D208 to D212)** (new; place after BR-22)
+**BR-23 Saving target (D211 to D215)** (new; place after BR-22)
 - An optional `T` on a saving (a *Saved* rule). It touches no BR-3 symbol and appears only in the saving's sheet, the Savings list, the Ask AI export and, once, Home's nudge slot (FR-HO-3).
-- **Reached line (D212):** a saving is *pending* when it is active, has `T`, `S ≥ T` and `target_reached_for ≠ T`. The first pending saving (rule saved first) holds the Home slot line when no higher line does; the moment it is on screen with Home visible and no tray or sheet over it, `target_reached_for = T` and `target_reached_on = today` are written. It shows while `target_reached_on = today` and `S ≥ T`, goes at midnight, never returns for the same `T`, and is cleared with the target (section 4a).
+- **Reached line (D215):** a saving is *pending* when it is active, has `T`, `S ≥ T` and `target_reached_for ≠ T`. The first pending saving (rule saved first) holds the Home slot line when no higher line does; the moment it is on screen with Home visible and no tray or sheet over it, `target_reached_for = T` and `target_reached_on = today` are written. A target saved while `S ≥ T` writes only `target_reached_for = T` (F1). It shows while `target_reached_on = today` and `S ≥ T`, a saving already shown today keeping the slot (F2); it goes at midnight, and at the next Home reload when it no longer qualifies (F3); it never returns for the same `T`, and is cleared with the target (section 4a).
 - `gap = T − S`; `reached` when `gap ≤ 0`; otherwise `n = ceil(gap / M)` and the estimate is the calendar month of the n-th put-in from `next_due` (BR-9), shown `MMM` with the year when it is not this year; `n > 120` reads "over 10 years to go".
-- Reaching `T` only says so in words. It does not stop, pause or change the saving, and moves no number.
+- Reaching `T` stops the saving (D213): see BR-23 in the SPEC. The words ("reached ₹50,000", the Home line) move no number; the stop does, because a saving that no longer puts in no longer takes a share, and the Home line tells the user first.
 - Set aside follows BR-19, so a *Used* entry that lowers it brings the estimate back.
 - Worked examples A and B of section 4.
 
 **FR-SE-1, Savings, new acceptance criteria**
 - **AC-T1** The saving's sheet has a last row *Saving up to*, answered "Not set" or "₹50,000". The Add flow for a saving stays three questions.
-- **AC-T2** The row opens a question inside the sheet, "How much are you saving up to?", the shared pinned keypad with `00`, the amount empty or prefilled with the current target (the first key replaces it, FR-AD-8), and *Save*. *Clear* is a 48dp chip beside the amount (below it at large text), shown only when a target is set.
-- **AC-T3** The slot has two fixed lines: the estimate "At ₹5,000 a month, done by May 2027." updating as digits are typed ("You've already set aside that much." when `T ≤ S`), and always "Your daily number doesn't change.". A polite live region (FR-KS-4).
-- **AC-T4** ₹0 is refused with a shake; the 9-digit cap applies; a failed save keeps the question with "Couldn't save. Try again."; saving an unchanged target writes nothing. *Save* and *Clear* return to the sheet, flash the row, and the footer reads "Changed." for 2.4 s.
+- **AC-T2** The row opens a question inside the sheet, "How much are you saving up to?", the shared pinned keypad with `00`, the amount empty or prefilled with the current target (the first key replaces it, FR-AD-8), and *Save*. *Clear* is a 48dp chip beside the amount (below it at large text), in the pinned figure, shown only when a target is set; it writes at once and returns to the sheet. Back returns to the sheet and drops the draft, with no prompt.
+- **AC-T3** The slot has two fixed lines: the estimate "At ₹5,000 a month, done by May 2027." updating as digits are typed ("You've already set aside that much." when `T ≤ S`), and always "Your daily number doesn't change.". A polite live region (FR-KS-4). Line 1 reads `savingTargetBlank` until a number is typed or a target exists.
+- **AC-T4** *Save* stays off at ₹0 (F4); the 9-digit cap applies, a refused 10th digit shaking; a failed save keeps the question with "Couldn't save. Try again."; saving an unchanged target writes nothing. *Save* and *Clear* return to the sheet, flash the row, and the footer reads "Changed." for 2.4 s.
 - **AC-T5** The list's third line follows the section 4 table, on every saving with a target. A saving with no target is unchanged. The line wraps at large text.
 - **AC-T6** The sheet slip's "{amount} set aside" line takes the same text as the list row.
-- **AC-T7** TalkBack reads the row as "Change saving up to, ₹50,000" ("Set saving up to, not set"), and the list row's line as one sentence.
+- **AC-T7** TalkBack reads the row as "Change saving up to, 50,000 rupees" ("Set saving up to. Not set yet."), and the list row's line as one sentence.
 - **AC-T8** The footer's two lines (AC-Y4) are unchanged.
 
-**FR-HO-3, the nudge slot (amended, D212)**
+**FR-HO-3, the nudge slot (amended, D215)**
 - The lead sentence becomes "the first that applies of **five**: a bill **waiting**, the due-soon nudge, the **reached line**, the install line, the missed-log line, else nothing". The install line's and the missed-log line's AC-1 "no waiting, due-soon or install line holds the slot" gains "or reached" where it applies (the missed-log line yields to it; the install line yields to it).
-- **Reached line** (D212): "{name} reached ₹{target}." in the due-soon row's shape, a `sunk` row at least 56dp tall: the saving's glyph in a `surface` well, the sentence, a chevron.
+- **Reached line** (D215): "{name} reached ₹{target}." in the due-soon row's shape, a `sunk` row at least 56dp tall: the saving's glyph in a `surface` well, the sentence, a chevron.
   - **AC-R1** It shows when a saving is pending (BR-23) at an evaluation point (D170), Home is ready, not *No income* and not in an over state, and no waiting or due-soon line holds the slot. In an over state and in *No income* it waits.
-  - **AC-R2** *Shown* is written (`target_reached_for`, `target_reached_on`) only when the line is on screen with Home visible and no tray or sheet over it. A line drawn under a door-opened tray is not written.
-  - **AC-R3** It stays the whole day through resumes, leaves at midnight, leaves at the next evaluation point if the saving's set aside falls below its target, and never returns for the same target. Raising the target and reaching it again shows it once more.
-  - **AC-R4** With two pending savings, one line: the rule saved first. The other shows the next day it is not held back.
-  - **AC-R5** A tap fires `tick` and opens that saving's sheet over Home (FR-SE-1), as the due-soon row does for a saving. A tap does not remove the line or write anything.
+  - **AC-R2** *Shown* is written, as the install line's *seen* flag is (FR-HO-3 AC-2), (`target_reached_for`, `target_reached_on`) only when the line is on screen with Home visible and no tray or sheet over it. A line drawn under a door-opened tray is not written.
+  - **AC-R3** It stays the whole day through resumes, leaves at midnight, leaves at the next Home reload if the saving no longer qualifies (its set aside falls below its target, or the target is changed or cleared), and never returns for the same target. Raising the target and reaching it again shows it once more.
+  - **AC-R4** With two pending savings, one line: the rule saved first. The other shows the next day it is not held back. A saving already shown today keeps the slot.
+  - **AC-R5** A tap fires `tick` and opens that saving's sheet over Home (FR-SE-1), as the due-soon row does for a saving. A tap does not remove the line or write anything, and there is no `tapped` guard: the line stays when the sheet closes.
   - **AC-R6** No amount other than the target, no ×, no haptic, no notification, no marigold, no animation beyond the slot's normal arrival.
   - **AC-R7** TalkBack reads one button, "Insurance reached ₹12,000.", then "Opens the saving." It is not a live region and announces nothing on appearing or leaving.
 
 **BR-9**: add one clause to "Editing a rule": a saving's target is a rule attribute, kept on delete's Undo and never posted.
-**BR-15**: sections 8's two lines in 3. and the golden.
+**BR-15**: section 8's two lines in 3. and the golden.
 **BR-16**: schema version 7; an older file restores with no targets.
 **Glossary**: *Saving up to*: an optional amount a saving is working toward; never a balance (BR-23).
 
-**UI_DESIGN**: the Settings saving sheet and list row sections: the row, the question, *Clear*, and the third-line forms; copy table; mockup 52.
+**UI_DESIGN**: the Settings saving sheet and list row sections: the row, the question, *Clear*, and the third-line forms; copy table; mockup 54.
 
 ## 10. What we are not doing, and why
 
 - **What-if simulations.** A second hypothetical number beside the hero competes with the one answer the app gives (UI_DESIGN §2: less but better). Ask AI already answers what-ifs, which is why it exists. The one live line in the question (AC-T3) only echoes what Save will record; it has no second input and no comparison.
 - **A Goals screen or dashboard.** A new screen and a second place for money, against "no new screen" and one-thing-per-screen. The Savings list is the goals list.
 - **An Emergency (or any) preset or suggested names.** The owner's decision 2; users can already name a saving anything.
-- **Auto-stop at the target.** The owner's decision 1: stopping a saving changes today's share and the days after it without being asked. The user stops it themselves by deleting the saving.
+- **Auto-stop at the target.** Rejected in the first proposal; **reversed by the owner on 2026-11-22 (D213)**: a goal stops when reached, and the Home line tells the user before the daily number rises. *Keep saving* clears the target and resumes the put-ins.
 - **A target in the three-question Add flow.** It would add a fourth question to a path that must stay three taps; the target is set once the saving exists.
 - **A "set aside of target" progress bar or percentage.** A bar needs a colour or a fill to mean progress; "one colour one meaning" and "no red or green". The words carry it.
 - **A notification on reaching it.** D174 stands for notifications. Engagement nags are out; the only nudge is "spend less / save".
-- **A Home banner, card or celebration on reaching it.** The owner allows only one quiet line in the existing nudge slot, once (D212). No new Home element, no animation, no colour, no repeat.
+- **A Home banner, card or celebration on reaching it.** The owner allows only one quiet line in the existing nudge slot, once (D215). No new Home element, no animation, no colour, no repeat.
 - **A "paid for the year" state for yearly costs.** There is no flag distinguishing a yearly saving from any other (the pills only fill the name), so a special case would need new stored state. The uniform rule gives the right answer anyway (E136).
 
 ### Decisions to log (proposed DECISIONS rows)
 
 | ID | Date | Decision | Why | Alternatives |
 |---|---|---|---|---|
-| D208 | 2026-11-22 | **What-if simulations, a separate Goals screen or dashboard, and an *Emergency* preset are rejected** (owner, from a "Savings & Planning" pitch). Savings goals, emergency fund and purchase planning are covered by D120, D174, D175 and BR-19; completion estimates are built as a line on the saving (D209) | A second hypothetical number competes with the hero, a Goals screen is a second place for money, and Ask AI already covers what-ifs. No suggested names, so no preset | A Goals tab; a simulator; a preset *Emergency* saving |
-| D209 | 2026-11-22 | **A saving may have an optional *Saving up to* amount, with a done-by estimate** (new BR-23; FR-SE-1 AC-T1 to AC-T8; amends BR-9, BR-15, BR-16; schema v7, migration 007, `recurring.target_minor`; the Home line is D212). `n = ceil((T − S) / M)`; "done by" is the calendar month of the n-th put-in from `next_due`, never a pay-cycle date; beyond 120 put-ins it reads "over 10 years to go". Set from the saving's sheet only, so adding a saving stays three questions. Offered on every saving, yearly costs included: *Used* lowers set aside, so the estimate restarts by itself. Never stored: set aside, the estimate, "reached" | Answers "how far and when" without a screen and moves no BR-3 symbol. One uniform rule avoids a stored yearly flag. The put-in dates are the saving's own, so pay cycles never matter | A target in the Add questions; a `saving_targets` table; a target only for the three yearly pills; a progress bar; D120's option C (pots with targets) |
-| D210 | 2026-11-22 | **Reaching the target only says so in words; it never stops or pauses the saving** (owner decision 1; BR-23). The list line reads "reached ₹50,000"; Home says it once (D212). No notification | Stopping would change today's share without being asked; the user remains in charge by deleting the saving | Auto-stop; a "Stop saving?" sheet on reaching it |
-| D212 | 2026-11-22 | **Reaching a target shows one quiet line in Home's nudge slot, once per target** (owner decision 4; amends D174's "never a Home banner or notification for savings": the notification half stands; new BR-23 reached line, FR-HO-3, FR-HO-3 AC-R1 to AC-R7; schema v7 `target_reached_for`, `target_reached_on`). "{name} reached ₹{target}." for the rest of the day it is first on screen; slot order is waiting, due-soon, **reached**, install, missed-log; decided at evaluation points (D170), written when seen; tap opens the saving's sheet (as the due-soon row does); waits in an over state and in *No income*; one line a day, the rule saved first; raising the target shows it again, a *Used* dip and re-reach of the same target does not | The owner wants Home to say it. Using the existing slot adds no Home element, and "once" with stored state is not a nag. The columns sit on the rule's row so delete's Undo, backup and restore carry them with no new table | A new Home card or banner; a notification; showing on every open; a combined line for two savings; a `suggestion_state`-style table |
-| D211 | 2026-11-22 | **The target and its estimate are in the Ask AI export** (BR-15; owner decision 3): one facts sentence per saving with a target, plus one fixed explaining line, only when one exists, with one new golden | *Where can I save?* can reason about what the user is already saving toward and not suggest cutting it blindly. The export stays the only data that leaves, user-triggered and previewed | Leaving the target out; hiding it under *Leave out my notes* |
+| D211 | 2026-11-22 | **What-if simulations, a separate Goals screen or dashboard, and an *Emergency* preset are rejected** (owner, from a "Savings & Planning" pitch). Savings goals, emergency fund and purchase planning are covered by D120, D174, D175 and BR-19; completion estimates are built as a line on the saving (D212) | A second hypothetical number competes with the hero, a Goals screen is a second place for money, and Ask AI already covers what-ifs. No suggested names, so no preset | A Goals tab; a simulator; a preset *Emergency* saving |
+| D212 | 2026-11-22 | **A saving may have an optional *Saving up to* amount, with a done-by estimate** (new BR-23; FR-SE-1 AC-T1 to AC-T8; amends BR-9, BR-15, BR-16; schema v7, migration 007, `recurring.target_minor`; the Home line is D215). `n = ceil((T − S) / M)`; "done by" is the calendar month of the n-th put-in from `next_due`, never a pay-cycle date; beyond 120 put-ins it reads "over 10 years to go". Set from the saving's sheet only, so adding a saving stays three questions. Offered on every saving, yearly costs included: *Used* lowers set aside, so the estimate restarts by itself. Never stored: set aside, the estimate, "reached" | Answers "how far and when" without a screen and moves no BR-3 symbol. One uniform rule avoids a stored yearly flag. The put-in dates are the saving's own, so pay cycles never matter | A target in the Add questions; a `saving_targets` table; a target only for the three yearly pills; a progress bar; D120's option C (pots with targets) |
+| D213 | 2026-11-22 | **A saving with a target posts nothing once set aside reaches it** (see DECISIONS D213; supersedes the first proposal's "never stops"). The put-in that would pass the target posts only the gap, `next_due` keeps moving, and a later *Used* below the target resumes posting with no back-posting. The sheet offers *I bought it* and *Keep saving* | The owner wants a goal to stop when reached; every way out is one tap and reversible | Never stopping; a "Stop saving?" prompt |
+| D214 | 2026-11-22 | **The target and its estimate are in the Ask AI export** (BR-15; owner decision 3): one facts sentence per saving with a target, plus one fixed explaining line, only when one exists, with one new golden | *Where can I save?* can reason about what the user is already saving toward and not suggest cutting it blindly. The export stays the only data that leaves, user-triggered and previewed | Leaving the target out; hiding it under *Leave out my notes* |
+| D215 | 2026-11-22 | **Reaching a target shows one quiet line in Home's nudge slot, once per target** (owner decision 4; amends D174's "never a Home banner or notification for savings": the notification half stands; new BR-23 reached line, FR-HO-3, FR-HO-3 AC-R1 to AC-R7; schema v7 `target_reached_for`, `target_reached_on`). "{name} reached ₹{target}." for the rest of the day it is first on screen; slot order is waiting, due-soon, **reached**, install, missed-log; decided at evaluation points (D170), written when seen; tap opens the saving's sheet (as the due-soon row does); waits in an over state and in *No income*; one line a day, the rule saved first; raising the target shows it again, a *Used* dip and re-reach of the same target does not | The owner wants Home to say it. Using the existing slot adds no Home element, and "once" with stored state is not a nag. The columns sit on the rule's row so delete's Undo, backup and restore carry them with no new table | A new Home card or banner; a notification; showing on every open; a combined line for two savings; a `suggestion_state`-style table |
 
 ## 11. Risks and validation
 
 | Risk | Cheapest test |
 |---|---|
-| "Saving up to" and "done by May 2027" are not understood without teaching | **Blind read** of mockup 52 with 5 people: show the list row alone and ask "what does this say?" Pass at 4 of 5 (the yearly-costs bar, D174). Then the sheet's question |
+| "Saving up to" and "done by May 2027" are not understood without teaching | **Blind read** of mockup 54 with 5 people: show the list row alone and ask "what does this say?" Pass at 4 of 5 (the yearly-costs bar, D174). Then the sheet's question |
 | The estimate is read as a promise ("it will be done by May") | The question's slot says "At ₹5,000 a month"; the row's phrase is "done by". Include "will it be done in May for sure?" in the blind read. If 2 of 5 say yes, soften to "about May" |
 | The row wraps to a mess at 2.0× text or 320dp | Device check at the `TestWindows` sizes and 2.0× text (UI_DESIGN §13); no ellipsis |
 | The Home "reached" line is noise, or reads as a prompt to act | Blind read of the Home slot alone: "what does this tell you? is anything asked of you?" Pass at 4 of 5 saying it is news and nothing is asked. Also ask whether it is odd when they just typed that target (question 10) |
@@ -280,7 +290,7 @@ North-star check: the feature adds no nag and no prompt; it neither raises nor l
 1. **Row wording.** Accepted: keep "₹18,000 set aside · done by May 2027", no "of ₹X". The target shows in the sheet and as "reached ₹X".
 2. **Month format.** Accepted: short month, with the year only when it is not this year.
 3. **Live line while typing.** Accepted: keep "At ₹5,000 a month, done by May 2027."
-4. **Where "reached" shows.** **Changed by the owner:** also on Home, in the existing nudge slot (FR-HO-3), once per target, as a plain-text line with no new Home element, no notification and no celebration. Specified in section 4a; amends D174 (D212).
+4. **Where "reached" shows.** **Changed by the owner:** also on Home, in the existing nudge slot (FR-HO-3), once per target, as a plain-text line with no new Home element, no notification and no celebration. Specified in section 4a; amends D174 (D215).
 5. **A target at or below what is already set aside.** Decided: allowed; the list row reads "reached" immediately (E129).
 6. **Yearly costs.** Accepted: offered on every saving with no flag; the estimate restarts after *Used* (E136).
 7. **Far-off estimates.** Accepted: "over 10 years to go" beyond 120 put-ins.
@@ -289,14 +299,19 @@ North-star check: the feature adds no nag and no prompt; it neither raises nor l
 
 10. **A target set or edited while already reached.** Decided by the owner: **no Home line.** Saving a target with `S ≥ T` writes `target_reached_for = T` (and `target_reached_on = t`) at save time, so only a genuine crossing by a later put-in shows the line. The Settings row and the export still say "reached" (E147).
 11. **Two savings reaching targets together.** Accepted: one line a day, for the rule saved first; the other shows the next day (E144).
+12. **Section 15 fixes and questions (2026-11-23).** The owner approved all: F1 (an already-reached save writes only `target_reached_for`, leaving `target_reached_on` NULL), F2 (the saving shown today keeps the slot all day), F3 (the line leaves at the next Home reload when `S` falls below `T`), F4 (₹0 keeps *Save* off), the line returning at the next evaluation point after a delete's Undo, and *Clear* with no Undo snackbar. Sections 4a, 5 and 9 have been corrected to match (folded in 2026-11-23).
+13. **Mockup 54 review (2026-11-23).** Owner decisions:
+    - **Row wrap: option A.** The list row keeps the schedule line ("Every month on the 10th") and the status may take two lines at 360dp. A non-breaking space before the "·" keeps "· done by {month}" together, so no lone word wraps.
+    - **Nothing set aside yet** reads "Up to ₹30,000 · done by Jan 2028" (not "Saving up to …").
+    - **Settled without objection:** in the status, figures at 600 and words at 400; "Changed." shows in the saving sheet's slip foot; the Home line keeps the due-soon row's chevron, and the blind read asks "is anything asked of you here?"; no separate dated Home example in the mockup.
 
-## 13. Doc changes needed (not made)
+## 13. Doc changes needed (made 2026-11-23)
 
-- `docs/SPEC.md`: new BR-23 (with the reached-line state), E129 to E150, AC-T1 to AC-T8 in FR-SE-1 Savings, **FR-HO-3** (slot order becomes five items; a new **Reached line** bullet with its ACs), BR-9 clause, BR-15 (lines and golden), BR-16 (schema 7 and the three columns), glossary, the status line.
+- `docs/SPEC.md`: new BR-23 (with the reached-line state), E129 to E154, AC-T1 to AC-T12 in FR-SE-1 Savings, **FR-HO-3** (slot order becomes five items; a new **Reached line** bullet with its ACs), BR-9 clause, BR-15 (lines and golden), BR-16 (schema 7 and the three columns), glossary, the status line.
 - `docs/UI_DESIGN.md`: Settings saving sheet and list row, the Home nudge slot (order and the new row), copy table, the mockup link.
-- `docs/DECISIONS.md`: D208 to D212 (section 10).
+- `docs/DECISIONS.md`: D211 to D215 (section 10).
 - `docs/PLAN.md`: data model (`recurring.target_minor`, `target_reached_for`, `target_reached_on`), schema v7, the milestone line.
-- `docs/design/mockups/52-saving-target.html` (new, including the Home slot row) and the mockups README.
+- `docs/design/mockups/54-saving-target.html` (new, including the Home slot row) and the mockups README.
 - `lib/l10n/app_en.arb`: keys for the row label, the question, the chip, the four row-line forms, the slot lines, the Home line and the export lines. Draft copy is in sections 3, 4, 4a and 9.
 - `docs/features/yearly-costs/`: a one-line note that the target restarts after *Used*.
 - `docs/features/` for the nudge slot, if one documents its order.
@@ -306,7 +321,7 @@ North-star check: the feature adds no nag and no prompt; it neither raises nor l
 1. `design-content`: the copy (row label, question, slot lines, the four row-line forms, "over 10 years to go", the Home line "{name} reached ₹{target}.", the Ask AI sentences), banned-word check.
 2. `design-interaction`: the row and the in-sheet question, the *Clear* chip, the live line, the flash and the footer; **the slot's new priority, its evaluation-point and written-when-seen rules (section 4a), and the tap**; reduced motion.
 3. `design-ux`: the Home line's place in the journey, the same-session "set while reached" case and the one-line-a-day rule (questions 10 and 11).
-4. `design-ui`: mockup 52 (the list row's wrap, the sheet's last row, the Home slot row) on the design tokens, no new colour.
+4. `design-ui`: mockup 54 (the list row's wrap, the sheet's last row, the Home slot row) on the design tokens, no new colour.
 5. `design-accessibility`: TalkBack sentences ("Insurance reached ₹12,000. Opens the saving."), the live region, wrap at 2.0× text and 320dp, tap targets.
 6. `design-validation`: the blind read and the hallway test (section 11), and the design QA against the build.
 7. `design-ia`: confirm the label, the row's position among the sheet's rows, and the slot order.
@@ -332,6 +347,8 @@ The promise risk is handled by framing, not by hedging every line. The sheet's l
 
 Placeholders: `{amount}`, `{monthly}`, `{target}` are `String`, already formatted by `MoneyFormatter` (`₹18,000`). In the `...Spoken` keys the amounts are the spoken form ("18,000 rupees", as `entryUsedSpoken` does) and `{month}` is the **full** month name, with the year when it is not this year ("March", "May 2027"), because TalkBack reads "Mar" as a word. In the visual keys `{month}` is short ("Mar", "May 2027"), built in code with `DateFormat`, never by concatenation in a widget.
 
+**Separator (owner, mockup 54 review):** in the five keys that carry a middle dot (`savingTargetEstimate`, `savingTargetEstimateNone`, `savingTargetReached`, `savingTargetFar`, `savingTargetFarNone`) the dot is preceded by a no-break space (` ·`), so a wrapped line never leaves "· done by {month}" or "· reached {target}" as a lone word at a line start. When nothing is set aside the row reads "Up to {target} · done by {month}" (not "Saving up to").
+
 ```json
   "savingTargetLabel": "Saving up to",
   "@savingTargetLabel": {"description": "Label of the last row on a saving's sheet: an optional amount the saving is working toward. Never 'goal', 'balance' or 'saved' (BR-23, AC-T1)."},
@@ -355,28 +372,28 @@ Placeholders: `{amount}`, `{monthly}`, `{target}` are `String`, already formatte
   "@savingTargetClear": {"description": "Chip beside the amount on the Saving up to keypad; removes the target. Shown only when a target is set (AC-T2). Visible label."},
   "savingTargetClearSpoken": "Clear saving up to",
   "@savingTargetClearSpoken": {"description": "TalkBack label of the Clear chip, so it makes sense alone (AC-T2)"},
-  "savingTargetEstimate": "{amount} set aside · done by {month}",
+  "savingTargetEstimate": "{amount} set aside · done by {month}",
   "@savingTargetEstimate": {"description": "Third line of a saving's row in the Savings list, and the sheet slip (AC-T6), when a target is set, something is set aside and it is not reached. amount is what is set aside; month is short, e.g. May 2027 (AC-T5).", "placeholders": {"amount": {"type": "String"}, "month": {"type": "String"}}},
-  "savingTargetEstimateNone": "Saving up to {target} · done by {month}",
+  "savingTargetEstimateNone": "Up to {target} · done by {month}",
   "@savingTargetEstimateNone": {"description": "Third line of a saving's row when a target is set and nothing is set aside yet (AC-T5)", "placeholders": {"target": {"type": "String"}, "month": {"type": "String"}}},
-  "savingTargetReached": "{amount} set aside · reached {target}",
-  "@savingTargetReached": {"description": "Third line of a saving's row when what is set aside is at or above the target (AC-T5). Words only; the saving keeps putting in (D210).", "placeholders": {"amount": {"type": "String"}, "target": {"type": "String"}}},
-  "savingTargetFar": "{amount} set aside · over 10 years to go",
+  "savingTargetReached": "{amount} set aside · reached {target}",
+  "@savingTargetReached": {"description": "Third line of a saving's row when what is set aside is at or above the target (AC-T5). Words only; the saving has stopped putting in (D213).", "placeholders": {"amount": {"type": "String"}, "target": {"type": "String"}}},
+  "savingTargetFar": "{amount} set aside · over 10 years to go",
   "@savingTargetFar": {"description": "Third line of a saving's row when the target needs more than 120 put-ins (E138) and something is set aside", "placeholders": {"amount": {"type": "String"}}},
-  "savingTargetFarNone": "Saving up to {target} · over 10 years to go",
+  "savingTargetFarNone": "Up to {target} · over 10 years to go",
   "@savingTargetFarNone": {"description": "Same as savingTargetFar when nothing is set aside yet", "placeholders": {"target": {"type": "String"}}},
   "savingTargetEstimateSpoken": "{amount} set aside, done by {month}",
   "@savingTargetEstimateSpoken": {"description": "TalkBack sentence for savingTargetEstimate. amount is spoken (18,000 rupees); month is the full name. The visible middle dot is excluded from semantics.", "placeholders": {"amount": {"type": "String"}, "month": {"type": "String"}}},
-  "savingTargetEstimateNoneSpoken": "Saving up to {target}, done by {month}",
+  "savingTargetEstimateNoneSpoken": "Up to {target}, done by {month}",
   "@savingTargetEstimateNoneSpoken": {"description": "TalkBack sentence for savingTargetEstimateNone. target is spoken.", "placeholders": {"target": {"type": "String"}, "month": {"type": "String"}}},
   "savingTargetReachedSpoken": "{amount} set aside, reached {target}",
   "@savingTargetReachedSpoken": {"description": "TalkBack sentence for savingTargetReached. Both amounts are spoken.", "placeholders": {"amount": {"type": "String"}, "target": {"type": "String"}}},
   "savingTargetFarSpoken": "{amount} set aside, over 10 years to go",
   "@savingTargetFarSpoken": {"description": "TalkBack sentence for savingTargetFar. amount is spoken.", "placeholders": {"amount": {"type": "String"}}},
-  "savingTargetFarNoneSpoken": "Saving up to {target}, over 10 years to go",
+  "savingTargetFarNoneSpoken": "Up to {target}, over 10 years to go",
   "@savingTargetFarNoneSpoken": {"description": "TalkBack sentence for savingTargetFarNone. target is spoken.", "placeholders": {"target": {"type": "String"}}},
   "savingReachedLine": "{saving} reached {target}.",
-  "@savingReachedLine": {"description": "Home's nudge-slot line, shown once when a saving's set-aside amount meets its target (FR-HO-3 reached line, D212). saving is the user's own name and is never cut; target is formatted by MoneyFormatter. One sentence, no second line, no exclamation mark.", "placeholders": {"saving": {"type": "String"}, "target": {"type": "String"}}},
+  "@savingReachedLine": {"description": "Home's nudge-slot line, shown once when a saving's set-aside amount meets its target (FR-HO-3 reached line, D215). saving is the user's own name and is never cut; target is formatted by MoneyFormatter. One sentence, no second line, no exclamation mark.", "placeholders": {"saving": {"type": "String"}, "target": {"type": "String"}}},
   "savingReachedLineSpoken": "{saving} reached {target}.",
   "@savingReachedLineSpoken": {"description": "TalkBack label of the reached line (AC-R7); the hint is the existing dueSoonOpensSaving, 'Opens the saving.'. target is spoken, e.g. 12,000 rupees.", "placeholders": {"saving": {"type": "String"}, "target": {"type": "String"}}}
 ```
@@ -394,7 +411,7 @@ Smallest `TestWindows` size is `smallPhone` (320 x 568). A row line has about 23
 | `savingTargetLiveReached` | You've already set aside that much. | 35 | 2 lines | A fact; the amount is still accepted (E129) |
 | `savingTargetClear` | Clear | 5 | one line | Verb; 48dp chip |
 | `savingTargetEstimate` | ₹18,000 set aside · done by May 2027 | 36 | 2 lines | |
-| `savingTargetEstimateNone` | Saving up to ₹50,000 · done by May 2027 | 39 | 2 lines | |
+| `savingTargetEstimateNone` | Up to ₹50,000 · done by May 2027 | 39 | 2 lines | |
 | `savingTargetReached` | ₹50,000 set aside · reached ₹50,000 | 35 | 2 lines | |
 | `savingTargetFar` / `FarNone` | ₹500 set aside · over 10 years to go | 36 | 2 lines | |
 | `savingReachedLine` | Insurance reached ₹12,000. | 26 | one line | "School fees reached ₹1,00,000." is 30 and may wrap beside the glyph and chevron; the name is never cut |
@@ -412,18 +429,18 @@ Hindi runs 30 to 40% longer; every line already allows two lines, so no key need
 
 ### 14.5 Ask AI export (not ARB)
 
-Export text is English-only constants and small builders in `lib/ask_ai/domain/prompt_builder.dart` (`_role`, `_notLoggedClause`, `_usedClause`), with amounts through `_money.format` and ISO dates. They do not go in the ARB. The prompt speaks as the user ("I save ₹6,000 a month (RD on the 10th)"), so the facts do too; the explaining clause says "the user", like `_usedClause`. Add a `// why:` citing BR-15 and D211.
+Export text is English-only constants and small builders in `lib/ask_ai/domain/prompt_builder.dart` (`_role`, `_notLoggedClause`, `_usedClause`), with amounts through `_money.format` and ISO dates. They do not go in the ARB. The prompt speaks as the user ("I save ₹6,000 a month (RD on the 10th)"), so the facts do too; the explaining clause says "the user", like `_usedClause`. Add a `// why:` citing BR-15 and D214.
 
 Facts, one sentence per saving with a target, right after the "I save ..." clause, soonest first. Numbers are the list's own (D79):
 
 - Estimate: `My RD saving has a target of ₹50,000 and ₹18,000 set aside. At ₹5,000 a month it would reach the target around 2027-05-10.`
 - Estimate, nothing set aside: `My RD saving has a target of ₹50,000 and nothing set aside yet. At ₹5,000 a month it would reach the target around 2027-05-10.`
-- Reached: `My Insurance saving has reached its target of ₹12,000, with ₹13,000 set aside. It still puts in ₹1,000 a month.`
+- Reached: `My Insurance saving has reached its target of ₹12,000, with ₹12,000 set aside, and has stopped putting in.`
 - Far: `My RD saving has a target of ₹50,000 and ₹500 set aside. At ₹500 a month it is more than 10 years from the target.`
 
 Explaining line, once, after the facts and D188's other clauses, only when a target exists:
 
-`A saving with a target is something the user chose to save up to. The date is an estimate at the current monthly amount, and reaching the target does not stop the saving. Treat the target as a goal, not as spending.`
+`A saving with a target is something the user chose to save up to. The date is an estimate at the current monthly amount, and the saving stops putting in once it reaches the target. Treat the target as a goal, not as spending.`
 
 One new golden: an estimate, a reached one and the explaining line. Existing goldens do not change.
 
@@ -442,7 +459,7 @@ One new golden: an estimate, a reached one and the explaining line. Existing gol
 2. **Added `savingTargetLiveFar`.** Typing a huge amount would otherwise show a date more than 10 years out in the sheet while the row says "over 10 years to go".
 3. **TalkBack for no target** changed from "Set saving up to, not set" to "Set saving up to. Not set yet." (the original repeated "set" and ran two ideas together). AC-T7 should follow.
 4. **Spoken keys are separate** from the visible ones: the middle dot and "Mar" read badly aloud.
-5. **Export:** first person to match the "I save ..." clause beside it (the working copy was a third-person label, "Saving up to a target: RD has ..."); "around" marks the date as an estimate for the model; "reach the target" replaces "done", which a model could read as "stop"; the reached form states the real set-aside figure, which can exceed the target.
+5. **Export:** first person to match the "I save ..." clause beside it (the working copy was a third-person label, "Saving up to a target: RD has ..."); "around" marks the date as an estimate for the model; "reach the target" replaces "done", which a model could read as "stop"; the reached form states the real set-aside figure and, after the owner's reversal (D213, 2026-11-23), says the saving "has stopped putting in".
 6. **Kept unchanged:** "done by" (weighed in 14.1), "over 10 years to go", "reached ₹X", "Saving up to", "Not set", "Clear", and "{name} reached ₹{target}." (an exact fact, names the saving, no promise).
 7. **No new validation strings**; existing keys cover them (14.4).
 
@@ -450,7 +467,7 @@ One new golden: an estimate, a reached one and the explaining line. Existing gol
 
 - `docs/UI_DESIGN.md` section 8: add a bullet: "Saving target (BR-23): *Saving up to* is the row; *done by {month}* is an estimate at the saving's own monthly amount; *reached* is a fact. Never 'saved' or 'goal complete'; no 'goal' in the UI."
 - `docs/SPEC.md` glossary: *Saving up to* (section 9) and *reached*. AC-T7's TalkBack text becomes "Set saving up to. Not set yet."
-- The mockup 52 copy deck lists the keys above.
+- The mockup 54 copy deck lists the keys above.
 
 ## 15. Interaction (design-interaction)
 
@@ -630,3 +647,124 @@ A new widget in the due-soon row's shape: `sunk`, at least 56dp, 18dp squircle, 
 - **SPEC BR-23, section 4a, E147, E150:** F1 (`target_reached_for` only at save-while-reached) and F3.
 - **UI_DESIGN section 5:** the row, the question, *Clear*, the slot table of 15.2 and the reached row. **Section 6:** no new motion; the row flash and slot arrival reuse tokens, with the reduced-motion notes. **Section 7:** row save and *Clear* `tick()`, failure `reject()`, no `success()`, reached-line tap `tick()`, no arrival haptic.
 - **Tests to name** (widget, at the `TestWindows` sizes): the row in each state; the question empty and prefilled; *Clear* absent, present and immediate; *Save* off at ₹0, no write when unchanged, failure keeps the question; the slot's four classes; 1.3x and 2.0x text; slot order against waiting, due-soon, install and missed-log; written only when uncovered; shown all day across resumes with `FakeClock`; leaves at midnight and on reload when `S < T`; a second pending saving does not take the slot the same day; tap opens the saving's sheet; two panes show it once.
+
+## 16. Accessibility (design-accessibility)
+
+Reviewed 2026-11-23 against WCAG 2.2 AA, `.claude/rules/accessibility.md`, NFR-4, D185, AC-Y2, and the code as it is (`PinnedKeypadBody`, `PolitePreviewSlot`, `PinnedBillQuestion`). Contrast was computed from `hisaab_colors.dart` (mockup 54's custom properties carry the same hex values). Section 16 adds to sections 14 and 15; it overrides neither.
+
+### 16.1 Verdict
+
+| # | Item | Result |
+|---|---|---|
+| 1 | Tight-window layout (320x568, 1.5x) | **Pass with conditions** (B1, B2): the amount does not scroll in the shared component; the live line can |
+| 2a | Settings row semantics | Pass |
+| 2b | Live line semantics | **Fail** (B3: no spoken twins) |
+| 2c | Clear chip | Pass |
+| 2d | Home reached line | Pass (the button role is honest) |
+| 3a | Contrast, both themes | Pass, tightest 4.68:1 |
+| 3b | 48dp targets | Pass; guideline test to add |
+| 3c | 2.0x wrap (row, Home line) | Pass by design; unverified until T5 and T6 |
+| 3d | NBSP and middle dot not read | Pass on paper; needs a test (B4, T4) |
+| 4 | "done by" for low literacy | Risk, not a blocker; the blind read is the gate (16.5) |
+
+### 16.2 Item 1: the 320x568 / 1.5x layout (recommendation: keep the scroll, anchor it to the end)
+
+What the code does. `PinnedKeypadBody` pins `figure` (the amount in its `BillSlip`), the keypad and *Save*. Only `lead` scrolls, and `lead` is the Back well, title, name head, caption and the slot (`PinnedBillQuestion`). So the typed amount cannot scroll off the top if *Clear* sits inside `figure`, as 15.2 says ("beside the amount, below it from 1.3x"). The reported failure (amount off the top) is therefore either a mockup frame that puts the chip or amount in `lead`, or a build that would. The real risks in the shared design are different:
+
+- **What scrolls away is the title and caption, not the answer.** That is the AC-Y2 precedent and it is acceptable here: the user sees the number they type and, if the slot stays visible, the line that reacts to it. SC 1.4.10 asks for no loss of content or function; the title stays reachable by scrolling and by TalkBack header navigation.
+- **The live line is the problem.** It is the last child of `lead`. If `lead` starts at its top, slot line 1 (the estimate) can sit below the fold: a sighted user types and never sees it, and a polite announcement fires for clipped text (Flutter culls clipped nodes from semantics, so it may not announce at all).
+- **The pinned figure is under-measured.** `figureExtent` defaults to 64 at 1x. With a stacked *Clear* chip the figure is about 64 + 8 + 48 = 120dp before text scaling, so the arrangement test (`room = height - bottom - figureHeight - controls`) overestimates the room and picks the stacked layout when side by side is needed.
+
+**Recommendation (one change): *Clear* stays in the pinned `figure`; pass a larger `figureExtent` when it shows; and the scrolling `lead` is anchored to its end** (initial offset at `maxScrollExtent`, or `reverse: true`), so title and caption scroll off the top and the slot stays next to the amount. It lives in the shared component, so it also fixes *Used*, and needs no copy change, no new component and no change to the Add flow. Rejected: cutting line 2 ("Your daily number doesn't change.") to save a line, because it is the reassurance the cognitive review wants kept; moving *Clear* out of the question, because it breaks 15.2 and still leaves the slot hidden. When the body is too short, `PinnedKeypadBody` already goes side by side (the 2.0x path). D185 keeps the keypad at 248dp at 2.0x, so no new exception is needed.
+
+**Blockers**
+- **B1.** The scrolling `lead` of the pinned keypad body is anchored to its end, so slot line 1 is always visible with the amount (SC 1.4.10, 1.3.1, 4.1.3). The existing AC-Y2 test must still pass.
+- **B2.** *Clear* lives inside the pinned `figure` (never `lead`) and `figureExtent` accounts for the stacked chip (SC 1.4.10, 2.5.8). Mockup 54's tight frame must show the same.
+
+### 16.3 Item 2: TalkBack
+
+| Element | Semantics | Result |
+|---|---|---|
+| Row, not set | "Set saving up to. Not set yet." button | Pass; contains the visible label "Saving up to" in order (SC 2.5.3) |
+| Row, set | "Change saving up to, 50,000 rupees" button | Pass; visible "₹50,000" is never read as "rupee sign" |
+| Row position | Fourth and last of the sheet's rows, before *Used some of it*, top-to-bottom order | Pass; labels unique within the sheet |
+| List row third line | One sentence from the `...Spoken` keys; "Mar" read as "March" | Pass if the visible text exposes only the spoken twin (B4) |
+| Slot | `PolitePreviewSlot`: `liveRegion`, 1.2 s debounce, spoken at once when `stateClass` changes | **Fail on twins (B3)**; politeness is right |
+| *Clear* | Button, "Clear saving up to"; visible "Clear" is its first word (SC 2.5.3) | Pass; absent (not disabled) with no target; `enabled: false` while writing |
+| Home reached line | One button: "Insurance reached 12,000 rupees." then hint "Opens the saving."; not a live region | Pass |
+| Footer "Changed." | Existing polite live region | Pass |
+
+**B3 (blocker).** Section 14 says every visible line has a spoken twin, but the slot lines have none: `savingTargetLive`, `savingTargetLiveFar`, `savingTargetLiveReached`. The live line carries `{monthly}` ("₹5,000") and a short month ("Mar", "Jun"), which TalkBack reads badly. `entryUsedSpoken` is the precedent. Add `savingTargetLiveSpoken` and `savingTargetLiveFarSpoken` (spoken amount, full month name, the year when not this year). `savingTargetLiveReached` and `savingTargetBlank` have no figures and need no twin. SC 1.3.1, 4.1.3.
+
+**Live-region chatter.** Debounce handles typing: the estimate text changes per digit but `stateClass` does not, so it speaks once, 1.2 s after the last key. The risk is the immediate class change: typing can cross reached, estimate and far, each speaking at once with line 2 repeated each time. Suggestion S1. The blank class must not announce when the question opens (the title was just read); only after the first key.
+
+**Home line role.** A button is truthful: a tap opens the saving's sheet, and the hint says so, as the due-soon row does. The sentence is past-tense news, so nothing reads as a demand. It is not a live region and appears only at evaluation points, so it never interrupts TalkBack. When it leaves after the user's own act (F3), focus goes to the "Today" heading (SC 2.4.3); this needs a test because `HomeLinesDriver`'s focus listener names only `missed` and `install` today.
+
+### 16.4 Item 3: contrast, targets, wrap, the NBSP
+
+Measured from the token hex values (WCAG relative luminance), light / dark:
+
+| Pair | Light | Dark | Needs | Result |
+|---|---|---|---|---|
+| `ink` on `surface` (row value, slot, amount) | 17.97 | 14.54 | 4.5 | Pass |
+| `ink2` on `surface` (row "Not set", caption) | 7.20 | 6.42 | 4.5 | Pass |
+| `ink` on `sunk` (Home line text, pressed row) | 13.84 | 12.41 | 4.5 | Pass |
+| `ink2` on `sunk` (chevron) | 5.55 | 5.48 | 3 | Pass |
+| `ink` on `hairline` (Clear label) | 11.75 | 10.59 | 4.5 | Pass |
+| `ink2` on `hairline` | 4.71 | 4.68 | 4.5 | Pass, thinnest margin; no smaller or lighter `ink2` text on a `hairline` fill |
+| `ink2` 1dp focus or hover outline on `surface` | 7.20 | 6.42 | 3 | Pass (SC 1.4.11) |
+| `hairline` chip fill vs `surface` | 1.53 | 1.37 | n/a | Not relied on; the "Clear" label identifies it (D89 precedent) |
+| `sunk` Home row vs `background` | 1.12 | 1.33 | n/a | Not relied on; glyph, sentence and chevron identify it, as the due-soon row |
+
+No new text or state uses colour alone (SC 1.4.1): states are words ("reached", "done by", "over 10 years to go"), fill and the 1dp outline; no red or green. The lowest text pair is 4.68:1, the app's usual headroom for outdoor light.
+
+**Targets (SC 2.5.8, Android 48dp).** *Clear* chip 48dp, settings row at least 56dp (`BillAnswerRow`), Home line at least 56dp: all pass. Add the guideline tests.
+
+**2.0x text.** Row: the status wraps to two lines by design and, with the NBSP, "· done by {month}" stays together; at 2.0x and 320dp it can reach three lines and the row has no fixed height, so it grows. Home line: at 2.0x the text column is about 190dp, so "School fees reached ₹1,00,000." takes about four lines and the slot pushes the hero down. Accepted; test for no overflow. The worst case is a 30+ character user name with no spaces: it must wrap by character, never clip.
+
+**NBSP and the dot.** The visible key has ` ·`, the spoken key has neither. They stay silent only if the visible `Text` carries `semanticsLabel` set to the spoken string (one node), and a test asserts the merged label contains neither `·` nor U+00A0 (B4).
+
+### 16.5 Item 4: cognitive and low-literacy
+
+- **"Done by" can be read as a deadline or promise.** In Hindi-first English "by" can mean "no later than", which is a commitment; "done" can read as "closed", which could clash with a saving that has stopped and can be kept going (D213). The sheet slot's "At ₹5,000 a month, ..." carries the condition, but the list row, which most users see, has none.
+- **"Up to ₹30,000" with nothing set aside** (decision 13) can read as a cap or spending limit rather than a target. It is the weakest string for low literacy.
+- In place already: no colour, confetti or notification; one line; plain words; no blame; *Clear* is one tap and the first key replaces the number (undo over confirm); nothing reorders.
+- **Not a blocker and not an owner question now.** Section 11's blind read decides it. Add to it: "What does 'Up to ₹30,000' mean here, a limit or something you are saving toward?" (S2). If 2 of 5 get either wrong, use the pre-agreed fallbacks: "about May 2027", and "Saving up to ₹30,000" (the longer form).
+
+### 16.6 Required changes (blockers)
+
+1. **B1** Anchor the pinned keypad body's scrolling `lead` to its end (16.2).
+2. **B2** *Clear* in the pinned `figure`, with `figureExtent` set for the stacked chip; fix mockup 54's tight frame (16.2).
+3. **B3** Add `savingTargetLiveSpoken` and `savingTargetLiveFarSpoken` and use them as the slot's spoken text (16.3).
+4. **B4** The visible third line and slot line expose only the spoken twin through `semanticsLabel`, so the dot and U+00A0 are never read and "Mar" reads "March" (16.4).
+
+### 16.7 Suggestions
+
+- **S1** Speak line 2 only on the first announcement per open question; debounce class changes by about 400 ms; no announcement for the blank class.
+- **S2** Add the "limit or goal?" question for "Up to" to the blind read.
+- **S3** Dartdoc note on the chip: `ink2` text on `hairline` is 4.68:1, the margin is thin.
+- **S4** If the blind read fails on "done by", switch to option B through the ARB keys only (14.1).
+- **S5** Run Accessibility Scanner and a TalkBack pass on a 320dp device before release: open the question, type to the far state, *Clear*, return, then the Home line after a restart.
+
+### 16.8 Tests to write
+
+All widget tests use `tester.ensureSemantics()`, `pumpApp` at the `TestWindows` sizes (`smallPhone` 320x568, a tablet, a fold), text scale 1.0, 1.5 and 2.0, light and dark.
+
+| # | Test | Asserts |
+|---|---|---|
+| T1 | Question, `smallPhone`, 1.5x and 2.0x, target set | `androidTapTargetGuideline`, `labeledTapTargetGuideline`, `textContrastGuideline`; no overflow; the amount, slot line 1, keypad and *Save* all inside the window (`tester.getRect`); the title may be off-screen but reachable (B1, B2) |
+| T2 | Same with *Clear* present, stacked from 1.3x | *Clear* height >= 48; the figure is not under the keypad; `figureExtent` reflects the chip |
+| T3 | Slot semantics | `liveRegion` true; label equals the spoken key ("5,000 rupees", full month), not the visible text; far and reached classes; blank does not announce on open (B3, S1) |
+| T4 | Third line, all five forms | merged label equals the `...Spoken` key; contains neither `·` nor U+00A0; "March" not "Mar"; two rows have different labels (B4) |
+| T5 | Settings row, not set and set | exact labels; a button; focusable; height >= 48; at 2.0x the status wraps with no overflow and "done by" never starts a line |
+| T6 | Home reached line | one button node; label "Insurance reached 12,000 rupees."; hint "Opens the saving."; `liveRegion` false; height >= 56; a 40-character name and "School fees reached ₹1,00,000." wrap at 2.0x on `smallPhone`; tap opens the sheet; no announcement on build or removal |
+| T7 | Focus | after the line leaves through the user's own act, focus is on the "Today" heading (driver covers `reached`) |
+| T8 | *Clear* | label "Clear saving up to"; `enabled: false` while a write is in flight; absent with no target |
+| T9 | Colour independence | every row state carries a word; reached is not shown by fill alone |
+| T10 | Token test | extend `test/core/design/hisaab_colors_test.dart`: `ink2` on `hairline`, `ink` and `ink2` on `sunk`, at 4.5:1 in both themes |
+| T11 | Reduced motion | row flash and slot arrival use the 150 ms fade under `disableAnimations` |
+| T12 | Keyboard and Switch Access | order in the question: Back, amount, *Clear*, keypad, *Save*; Enter on the row opens it; the focus ring is visible and not covered by the pinned keypad (SC 2.4.7, 2.4.11) |
+
+### 16.9 Question for the owner
+
+None that blocks the build. The four blockers are engineering fixes, not product choices. The one product judgement left ("done by" and "Up to" for low-literacy readers) is already the gate of the blind read, with fallbacks agreed.

@@ -193,6 +193,8 @@ abstract final class AppRoutes {
                       home.add(HomeBillDeleteRequested(rule));
                     case BillSheetUsed(:final UsedOutcome outcome):
                       home.add(HomeUsedDone(outcome));
+                    case BillSheetBought(:final UsedOutcome outcome):
+                      home.add(HomeBoughtDone(outcome));
                     case BillSheetUnchanged() || BillSheetChanged():
                   }
                 },
@@ -643,6 +645,8 @@ abstract final class AppRoutes {
                   bills.add(BillsDeleteRequested(rule));
                 case BillSheetUsed(:final UsedOutcome outcome):
                   bills.add(BillsUsedDone(outcome));
+                case BillSheetBought(:final UsedOutcome outcome):
+                  bills.add(BillsBoughtDone(outcome));
                 case BillSheetUnchanged() || BillSheetChanged():
               }
             },
@@ -668,6 +672,10 @@ abstract final class AppRoutes {
         getStatus: getIt<GetBillStatus>(),
         haptics: getIt<Haptics>(),
         getSetAside: getIt<GetSetAside>(),
+        useFromSavings: getIt<UseFromSavings>(),
+        deleteBill: getIt<DeleteBill>(),
+        deleteEntry: getIt<DeleteEntry>(),
+        clock: getIt<Clock>(),
       ),
       used: rule.kind == EntryKind.saved
           ? UsedBloc(getSetAside: getIt<GetSetAside>(), useFromSavings: getIt<UseFromSavings>(), haptics: getIt<Haptics>())

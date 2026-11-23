@@ -9,6 +9,8 @@ import '../../../core/errors/failure.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/money/amount_input.dart';
 import '../../../core/money/money.dart';
+import '../../../core/time/calendar_date.dart';
+import '../../../core/time/clock.dart';
 import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
 import 'bill_sheet_event.dart';
@@ -17,8 +19,9 @@ import 'bill_sheet_state.dart';
 /// Owns one fixed bill shown in the bill sheet (SPEC FR-SE-1, D118): the bill, the question
 /// open on it, and saving one answer at a time. Driven by `BillSheet`.
 ///
-/// It never deletes: *Delete bill* closes with [BillSheetDeleted] so the opening screen can
-/// delete and offer Undo.
+/// It never deletes a bill: *Delete bill* closes with [BillSheetDeleted] so the opening screen can
+/// delete and offer Undo. A reached saving's *I bought it* is the one exception: it writes *Used*
+/// and deletes in one step, then closes with [BillSheetBought] for the opening screen's Undo (D213).
 class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   BillSheetBloc({
     required RecurringRule rule,
@@ -26,7 +29,11 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     required this._getStatus,
     required this._haptics,
     this._getSetAside,
-  }) : super(BillSheetReady(rule: rule)) {
+    this._useFromSavings,
+    this._deleteBill,
+    this._deleteEntry,
+    Clock? clock,
+  }) : super(BillSheetReady(rule: rule, today: Option<CalendarDate>.fromNullable(clock?.today()))) {
     on<BillSheetStatusRequested>(_onStatusRequested, transformer: restartable());
     on<BillSheetAnswerOpened>(_onAnswerOpened);
     on<BillSheetBackPressed>(_onBackPressed);
@@ -50,6 +57,10 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     on<BillSheetIconChosen>(_onIconChosen, transformer: droppable());
     on<BillSheetDeleteRequested>(_onDeleteRequested);
     on<BillSheetSavedNoteExpired>(_onSavedNoteExpired);
+    on<BillSheetTargetSaved>(_onTargetSaved, transformer: droppable());
+    on<BillSheetTargetCleared>(_onTargetCleared, transformer: droppable());
+    on<BillSheetBoughtRequested>(_onBoughtRequested, transformer: droppable());
+    on<BillSheetKeepSavingRequested>(_onKeepSavingRequested, transformer: droppable());
     add(const BillSheetStatusRequested());
   }
 
@@ -59,6 +70,15 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
 
   /// Reads what a saving has set aside; null for a bill sheet that never offers *Used some of it*.
   final GetSetAside? _getSetAside;
+
+  /// Writes *I bought it*'s *Used* entry; null for a bill sheet, which never offers it.
+  final UseFromSavings? _useFromSavings;
+
+  /// Deletes the saving after *I bought it*; null for a bill sheet, which never offers it.
+  final DeleteBill? _deleteBill;
+
+  /// Takes *I bought it*'s *Used* entry back when the saving can't be deleted; null for a bill sheet.
+  final DeleteEntry? _deleteEntry;
 
   Future<void> _onStatusRequested(BillSheetStatusRequested event, Emitter<BillSheetState> emit) => _loadStatus(emit);
 
@@ -88,7 +108,9 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   void _onAnswerOpened(BillSheetAnswerOpened event, Emitter<BillSheetState> emit) => _whenOnBill((BillSheetReady bill) => emit(
         bill.copyWith(
           open: Option<BillAnswer>.of(event.answer),
-          rupees: bill.rule.amount.floorMajor,
+          rupees: event.answer == BillAnswer.target
+              ? bill.rule.target.map((Money target) => target.floorMajor).getOrElse(() => 0)
+              : bill.rule.amount.floorMajor,
           fresh: true,
           draftName: bill.rule.label,
           justSaved: const Option<BillAnswer>.none(),
@@ -166,6 +188,100 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   void _onDeleteRequested(BillSheetDeleteRequested event, Emitter<BillSheetState> emit) =>
       _whenOnBill((BillSheetReady bill) => emit(BillSheetClosed(BillSheetDeleted(bill.rule))));
 
+  // why: Save is off at ₹0 (F4). A target already covered by what is set aside is stored as
+  // announced (target_reached_for only), so Home never says "reached" for it (F1, E147).
+  Future<void> _onTargetSaved(BillSheetTargetSaved event, Emitter<BillSheetState> emit) => _whenAt(
+        BillAnswer.target,
+        (BillSheetReady form) {
+          if (form.rupees == 0) {
+            return Future<void>.value();
+          }
+          final Money target = Money.fromMajor(form.rupees);
+          if (form.rule.target == Option<Money>.of(target)) {
+            return _save(emit, form, none());
+          }
+          final RecurringRule rule = form.rule.copyWith(target: Option<Money>.of(target));
+          final bool covered = form.setAside.getOrElse(() => Money.zero).compareTo(target) >= 0;
+          return _saveRule(
+            emit,
+            form,
+            covered ? rule.copyWith(targetReachedFor: Option<Money>.of(target), targetReachedOn: const Option<CalendarDate>.none()) : rule,
+          );
+        },
+      );
+
+  Future<void> _onTargetCleared(BillSheetTargetCleared event, Emitter<BillSheetState> emit) => _whenAt(
+        BillAnswer.target,
+        (BillSheetReady form) => form.rule.target.isNone() ? Future<void>.value() : _saveRule(emit, form, _withoutTarget(form.rule)),
+      );
+
+  Future<void> _onKeepSavingRequested(BillSheetKeepSavingRequested event, Emitter<BillSheetState> emit) {
+    final BillSheetState current = state;
+    if (current is! BillSheetReady || current.open.isSome()) {
+      return Future<void>.value();
+    }
+    return _saveRule(emit, current, _withoutTarget(current.rule));
+  }
+
+  // why: the Used write comes first; if the saving then can't be deleted, the entry is taken back
+  // so nothing half-done is left and the sheet stays with "Couldn't save." (AC-T9).
+  Future<void> _onBoughtRequested(BillSheetBoughtRequested event, Emitter<BillSheetState> emit) async {
+    final BillSheetState current = state;
+    final UseFromSavings? use = _useFromSavings;
+    if (current is! BillSheetReady || current.open.isSome() || use == null || _deleteBill == null || _deleteEntry == null) {
+      return;
+    }
+    final Money whole = Money.fromMajor(current.setAside.getOrElse(() => Money.zero).floorMajor);
+    emit(current.copyWith(saving: true));
+    final Either<Failure, Entry> used = await use(UseFromSavingsParams(saving: current.rule, amount: whole)).run();
+    await used.match(
+      (Failure failure) async => _failBought(emit, current, failure),
+      (Entry entry) => _deleteBought(emit, current, UsedOutcome(entry: entry, saving: current.rule)),
+    );
+  }
+
+  void _failBought(Emitter<BillSheetState> emit, BillSheetReady form, Failure failure) {
+    AppLogger.log(tag: 'bills.sheet_bought_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
+    unawaited(_haptics.reject());
+    emit(form.copyWith(saveFailed: true));
+  }
+
+  Future<void> _deleteBought(Emitter<BillSheetState> emit, BillSheetReady form, UsedOutcome outcome) async {
+    // why: both are non-null here; _onBoughtRequested returns early without them.
+    final Either<Failure, Unit> deleted = await _deleteBill!(outcome.saving.id).run();
+    await deleted.match(
+      (Failure failure) async {
+        AppLogger.log(tag: 'bills.sheet_bought_delete_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
+        await _rollBackBought(emit, form, outcome);
+      },
+      (Unit _) async {
+        unawaited(_haptics.tick());
+        emit(BillSheetClosed(BillSheetBought(outcome)));
+      },
+    );
+  }
+
+  // why: if the Used entry can't be taken back either, closing as a plain Used save is the only
+  // honest outcome left: the opening screen offers that entry's own Undo.
+  Future<void> _rollBackBought(Emitter<BillSheetState> emit, BillSheetReady form, UsedOutcome outcome) async {
+    // why: non-null here; _onBoughtRequested returns early without it.
+    final Either<Failure, Entry> undone = await _deleteEntry!(outcome.entry.id).run();
+    unawaited(_haptics.reject());
+    undone.match(
+      (Failure failure) {
+        AppLogger.log(tag: 'bills.sheet_bought_rollback_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
+        emit(BillSheetClosed(BillSheetUsed(outcome)));
+      },
+      (Entry _) => emit(form.copyWith(saveFailed: true)),
+    );
+  }
+
+  static RecurringRule _withoutTarget(RecurringRule rule) => rule.copyWith(
+        target: const Option<Money>.none(),
+        targetReachedFor: const Option<Money>.none(),
+        targetReachedOn: const Option<CalendarDate>.none(),
+      );
+
   void _onSavedNoteExpired(BillSheetSavedNoteExpired event, Emitter<BillSheetState> emit) {
     final BillSheetState current = state;
     if (current is BillSheetReady) {
@@ -176,15 +292,22 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   /// Saves [input] for the open question, or just returns to the bill when it is none
   /// (the answer didn't change).
   Future<void> _save(Emitter<BillSheetState> emit, BillSheetReady form, Option<BillInput> input) async {
-    final BillAnswer answer = form.open.getOrElse(() => BillAnswer.amount);
-    if (input case None()) {
-      emit(form.copyWith(open: const Option<BillAnswer>.none()));
-      return;
+    if (input case Some<BillInput>(:final BillInput value)) {
+      return _write(emit, form, EditBillParams(rule: form.rule, input: value));
     }
+    emit(form.copyWith(open: const Option<BillAnswer>.none()));
+  }
+
+  /// Saves [rule]'s target columns, which a [BillInput] does not carry, as the *Saving up to* answer.
+  // why: EditBill keeps every field of the rule it is given that the input doesn't name.
+  Future<void> _saveRule(Emitter<BillSheetState> emit, BillSheetReady form, RecurringRule rule) =>
+      _write(emit, form, EditBillParams(rule: rule, input: _inputOf(form.rule)), answer: BillAnswer.target);
+
+  Future<void> _write(Emitter<BillSheetState> emit, BillSheetReady form, EditBillParams params, {BillAnswer? answer}) async {
+    final BillAnswer saved = answer ?? form.open.getOrElse(() => BillAnswer.amount);
     emit(form.copyWith(saving: true));
-    final Either<Failure, RecurringRule> saved =
-        await _editBill(EditBillParams(rule: form.rule, input: input.getOrElse(() => _inputOf(form.rule)))).run();
-    await saved.match(
+    final Either<Failure, RecurringRule> written = await _editBill(params).run();
+    await written.match(
       (Failure failure) async {
         AppLogger.log(tag: 'bills.sheet_save_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});
         unawaited(_haptics.reject());
@@ -195,7 +318,7 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
         emit(form.copyWith(
           rule: rule,
           open: const Option<BillAnswer>.none(),
-          justSaved: Option<BillAnswer>.of(answer),
+          justSaved: Option<BillAnswer>.of(saved),
           changed: true,
         ));
         return _loadStatus(emit);
@@ -205,7 +328,8 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
 
   void _editAmount(Emitter<BillSheetState> emit, Option<int> Function(int rupees, bool fresh) edit) {
     final BillSheetState current = state;
-    if (current is! BillSheetReady || current.open != const Option<BillAnswer>.of(BillAnswer.amount)) {
+    final BillAnswer? open = current is BillSheetReady ? current.open.toNullable() : null;
+    if (current is! BillSheetReady || (open != BillAnswer.amount && open != BillAnswer.target)) {
       return;
     }
     edit(current.rupees, current.fresh).match(

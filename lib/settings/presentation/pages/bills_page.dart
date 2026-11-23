@@ -108,6 +108,10 @@ class BillsPage extends StatelessWidget {
           listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.usedUndo.isSome(),
           listener: _offerUsedUndo,
         ),
+        BlocListener<BillsBloc, BillsState>(
+          listenWhen: (BillsState previous, BillsState current) => current is BillsReady && current.boughtUndo.isSome(),
+          listener: _offerBoughtUndo,
+        ),
       ],
       child: list,
     ),
@@ -181,6 +185,23 @@ class BillsPage extends StatelessWidget {
       HisaabSnackbar(
         message: strings.ruleDeleted(deleted, keepsHistory: keepsHistory),
         action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(BillsUndoRequested(deleted))),
+      ),
+    );
+  }
+
+  // why: one Undo restores both the saving and the money set aside (AC-T9).
+  static void _offerBoughtUndo(BuildContext context, BillsState state) {
+    final UsedOutcome? bought = state is BillsReady ? state.boughtUndo.toNullable() : null;
+    if (bought == null) {
+      return;
+    }
+    final AppLocalizations strings = AppLocalizations.of(context);
+    final BillsBloc bloc = context.read<BillsBloc>();
+    HisaabSnackbarHost.of(context).show(
+      HisaabSnackbar(
+        message: strings.savingBoughtSnack(context.money.format(bought.entry.amount), bought.saving.label),
+        semanticsLabel: strings.savingBoughtSnack(strings.spokenAmount(context.money.digits(bought.entry.amount)), bought.saving.label),
+        action: HisaabSnackbarAction(label: strings.undo, onPressed: () => bloc.add(BillsBoughtUndoRequested(bought))),
       ),
     );
   }

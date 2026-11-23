@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -13,12 +14,16 @@ import '../bloc/month_story_bloc.dart';
 import '../bloc/month_story_event.dart';
 import '../bloc/month_story_state.dart';
 import '../cycle_label.dart';
+import '../../domain/entities/month_story.dart';
 import '../widgets/month_story_view.dart';
+import '../widgets/story_backdrop.dart';
 
-/// The month story route (SPEC FR-SP-7): always in the dark theme's tokens, a centred column no
-/// wider than [maxWidth] (AC-4, AC-7). Needs a [MonthStoryBloc] above it; closes itself when the
-/// cycle no longer has a story. [today] names cycles; [onAskAi] opens Ask AI for a cycle (AC-8).
-class MonthStoryPage extends StatelessWidget {
+/// The month story route (SPEC FR-SP-7): always in the dark theme's tokens with light status-bar
+/// icons, a centred column no wider than [maxWidth] (AC-4, AC-7) over the page's line art, which
+/// fills the whole window ([StoryBackdrop], D210). Needs a [MonthStoryBloc] above it; closes itself
+/// when the cycle no longer has a story. [today] names cycles; [onAskAi] opens Ask AI for a cycle
+/// (AC-8).
+class MonthStoryPage extends StatefulWidget {
   const MonthStoryPage({super.key, required this.today, required this.onAskAi});
 
   final CalendarDate today;
@@ -27,21 +32,31 @@ class MonthStoryPage extends StatelessWidget {
   static const double maxWidth = 480;
 
   @override
+  State<MonthStoryPage> createState() => _MonthStoryPageState();
+}
+
+class _MonthStoryPageState extends State<MonthStoryPage> {
+  /// The page the view shows; null until the first turn, when it is the story's first page.
+  StoryPage? _shown;
+
+  @override
   Widget build(BuildContext context) => Theme(
         data: HisaabTheme.dark(),
         child: Builder(
-          builder: (BuildContext context) => Scaffold(
-            backgroundColor: context.colors.background,
-            body: SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: maxWidth),
-                  child: BlocConsumer<MonthStoryBloc, MonthStoryState>(
-                    listenWhen: (MonthStoryState _, MonthStoryState next) => next is MonthStoryGone,
-                    listener: (BuildContext context, MonthStoryState _) => Navigator.of(context).maybePop(),
-                    builder: _body,
-                  ),
-                ),
+          // why: the story is dark in either theme, so the status bar needs light icons here even
+          // when the rest of the app is light.
+          builder: (BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: context.colors.clear,
+              systemNavigationBarColor: context.colors.clear,
+              systemNavigationBarContrastEnforced: false,
+            ),
+            child: Scaffold(
+              backgroundColor: context.colors.background,
+              body: BlocConsumer<MonthStoryBloc, MonthStoryState>(
+                listenWhen: (MonthStoryState _, MonthStoryState next) => next is MonthStoryGone,
+                listener: (BuildContext context, MonthStoryState _) => Navigator.of(context).maybePop(),
+                builder: _body,
               ),
             ),
           ),
@@ -49,16 +64,30 @@ class MonthStoryPage extends StatelessWidget {
       );
 
   Widget _body(BuildContext context, MonthStoryState state) => switch (state) {
-        MonthStoryReady(:final story) => MonthStoryView(
-            story: story,
-            cycleLabel: _label(context, story.cycle),
-            previousLabel: _label(context, story.previous),
-            onAskAi: () => onAskAi(story.cycle),
-            onDone: () => Navigator.of(context).maybePop(),
+        MonthStoryReady(:final story) => Stack(
+            children: <Widget>[
+              Positioned.fill(child: StoryBackdrop(page: _shown ?? story.pages.first)),
+              _column(
+                MonthStoryView(
+                  story: story,
+                  cycleLabel: _label(context, story.cycle),
+                  previousLabel: _label(context, story.previous),
+                  onAskAi: () => widget.onAskAi(story.cycle),
+                  onDone: () => Navigator.of(context).maybePop(),
+                  onPageShown: (StoryPage page) => setState(() => _shown = page),
+                ),
+              ),
+            ],
           ),
-        MonthStoryFailed() => _failed(context),
-        MonthStoryLoading() || MonthStoryGone() => const Align(alignment: AlignmentDirectional.topStart, child: _BackOnly()),
+        MonthStoryFailed() => _column(_failed(context)),
+        MonthStoryLoading() || MonthStoryGone() => _column(const Align(alignment: AlignmentDirectional.topStart, child: _BackOnly())),
       };
+
+  Widget _column(Widget child) => SafeArea(
+        child: Center(
+          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: MonthStoryPage.maxWidth), child: child),
+        ),
+      );
 
   Widget _failed(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);
@@ -82,7 +111,7 @@ class MonthStoryPage extends StatelessWidget {
   }
 
   String _label(BuildContext context, PayCycle cycle) =>
-      CycleLabel.of(cycle, locale: Localizations.localeOf(context).toString(), today: today);
+      CycleLabel.of(cycle, locale: Localizations.localeOf(context).toString(), today: widget.today);
 }
 
 /// Back alone, while the story loads or after it failed.

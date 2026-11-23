@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Month Story Art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..800&family=Mukta:wght@400;600&display=swap">
+<style>
+  /* Mockup 53 · Month story art. Version 1 (quiet etch) approved and built (D210), with a slow
+     16s drift and Back moved to the top line; versions 2 and 3 were not chosen.
+     Three versions of line art for the Your month card and the six story pages, all monochrome
+     (option A: no new hue; marigold only on the one act key at the end). Numbers are mockup 45's
+     September worked example. */
+  :root {
+    --canvas: #DDD5CB; --canvasInk: #161615; --canvasInk2: #5B5650; --rule: #C9C0B5;
+    --bg: #F1EDE8; --surface: #FFFEFC;
+    --sBg: #131210; --sSurface: #211F1C; --sSunk: #2F2B27; --sLine: #3A3632;
+    --sInk: #F2F1EC; --sInk2: #A7A199; --signal: #FFB020;
+    --amount: 'Anek Latin', 'Arial Narrow', system-ui, sans-serif;
+    --text: 'Mukta', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199; --rule: #34302C; --bg: #131210; --surface: #211F1C; }
+  }
+  :root[data-theme="dark"] { color-scheme: dark; --canvas: #0B0A09; --canvasInk: #F2F1EC; --canvasInk2: #A7A199; --rule: #34302C; --bg: #131210; --surface: #211F1C; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--canvasInk); font: 15px/22px var(--text); padding: 32px 16px 80px; }
+  .wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+  h1 { font: 600 32px/36px var(--amount); margin: 0 0 8px; }
+  h2 { font: 600 24px/30px var(--amount); margin: 0; }
+  p { margin: 0; }
+  .lede { color: var(--canvasInk2); max-width: 75ch; }
+  .lede b { color: var(--canvasInk); }
+  .version { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--rule); padding-top: 24px; }
+  .vhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+  .tag { font: 600 12px/16px var(--text); letter-spacing: .06em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--canvasInk2); color: var(--canvasInk2); }
+  .tag.pick { background: var(--canvasInk); color: var(--canvas); box-shadow: none; }
+  .vnote { color: var(--canvasInk2); max-width: 80ch; }
+  .row { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; scroll-snap-type: x mandatory; }
+  .row > * { scroll-snap-align: start; flex: none; }
+  .cap { font-size: 12px; line-height: 16px; color: var(--canvasInk2); margin-top: 6px; max-width: 240px; }
+
+  /* Spends context for the card */
+  .spends { width: 300px; background: var(--bg); border-radius: 28px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .ghost { background: var(--surface); border-radius: 20px; height: 54px; }
+  .card { position: relative; overflow: hidden; border-radius: 24px; background: var(--sSurface); color: var(--sInk); padding: 20px; min-height: 196px; display: flex; flex-direction: column; gap: 6px; }
+  .card > *:not(svg) { position: relative; }
+  .card svg.art, .phone svg.art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .eyebrow { font: 600 12px/16px var(--text); letter-spacing: .08em; text-transform: uppercase; color: var(--sInk2); }
+  .cardbig { font: 700 34px/36px var(--amount); font-stretch: 82%; font-variant-numeric: tabular-nums; }
+  .mini { display: flex; align-items: end; gap: 2px; height: 36px; margin: 8px 0 10px; }
+  .mini i { flex: 1; background: var(--sInk); border-radius: 2px 2px 0 0; }
+  .mini i.l { background: var(--sInk2); }
+  .pill { align-self: stretch; text-align: center; padding: 6px 0; border-radius: 18px; box-shadow: inset 0 0 0 1.5px var(--sLine); font-weight: 600; background: var(--sSurface); }
+
+  /* story phone */
+  .phone { position: relative; overflow: hidden; width: 240px; height: 470px; border-radius: 26px; background: var(--sBg); color: var(--sInk); padding: 12px 16px 16px; display: flex; flex-direction: column; }
+  .phone > *:not(svg) { position: relative; }
+  .bars { display: flex; gap: 3px; }
+  .bars span { flex: 1; height: 3px; border-radius: 2px; background: var(--sLine); }
+  .bars span.on { background: var(--sInk); }
+  .top { font-size: 11px; color: var(--sInk2); margin: 8px 0 14px; }
+  .big { font: 700 44px/44px var(--amount); font-stretch: 80%; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+  .big.s { font-size: 30px; line-height: 32px; }
+  .line { font-size: 14px; line-height: 20px; }
+  .line.q { color: var(--sInk2); }
+  .split { display: flex; height: 22px; border-radius: 8px; overflow: hidden; background: var(--sSunk); margin-top: 14px; }
+  .split i:nth-child(1) { width: 21%; background: var(--sInk); }
+  .split i:nth-child(2) { width: 2%; box-shadow: inset 0 0 0 2px var(--sInk); }
+  .split i:nth-child(3) { width: 67%; background: var(--sInk2); }
+  .catrow { display: grid; grid-template-columns: 1fr auto; font-size: 13px; margin-top: 8px; }
+  .catrow b { height: 7px; grid-column: 1/-1; border-radius: 4px; background: var(--sSunk); overflow: hidden; margin-top: 3px; }
+  .catrow b i { display: block; height: 100%; background: var(--sInk); }
+  .daybars { display: flex; align-items: end; gap: 2px; height: 70px; margin-top: 16px; border-bottom: 1px solid var(--sLine); }
+  .daybars i { flex: 1; background: var(--sInk2); border-radius: 2px 2px 0 0; }
+  .daybars i.pk { background: var(--sInk); }
+  .vs { display: flex; gap: 10px; align-items: end; height: 90px; margin-top: 16px; }
+  .vs div { flex: 1; text-align: center; font-size: 12px; color: var(--sInk2); }
+  .vs i { display: block; border-radius: 6px 6px 0 0; margin-bottom: 4px; }
+  .fill { flex: 1; }
+  .act { height: 40px; border-radius: 20px; display: grid; place-items: center; font-weight: 600; font-size: 13px; }
+  .act.p { background: var(--signal); color: #161615; }
+  .act.g { box-shadow: inset 0 0 0 1.5px var(--sLine); margin-top: 8px; background: var(--sBg); }
+  .hint { font-size: 11px; color: var(--sInk2); text-align: center; }
+
+  /* poster type (version 3) */
+  .poster { position: absolute; left: -6px; right: -6px; bottom: 6px; font: 800 120px/0.85 var(--amount); font-stretch: 75%; letter-spacing: -0.03em; color: transparent; -webkit-text-stroke: 1.2px #5A534C; white-space: nowrap; overflow: hidden; pointer-events: none; font-variant-numeric: tabular-nums; }
+  .card .poster { font-size: 96px; bottom: -8px; left: auto; right: -10px; text-align: right; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 20px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 16px 9px 0; border-bottom: 1px solid var(--rule); }
+  td { color: var(--canvasInk2); }
+  td:first-child { color: var(--canvasInk); font-weight: 600; white-space: nowrap; }
+  .tablebox { overflow-x: auto; }
+  .tablebox table { min-width: 640px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Month story art: three versions</h1>
+    <p class="lede">These are line patterns for the <b>Your month</b> card and the six story pages, in the style of the hero card's banknote etch and with Spotify Wrapped as the reference. All three are <b>monochrome</b>: no new colour, no category colours, and marigold stays on the one act key at the end. Each page has its own motif: <b>rosette</b> (the month), <b>ripples</b> (kept), <b>sunburst</b> (where it went), <b>waves</b> (your days), <b>two orbits</b> (against last month) and <b>day-block confetti</b> (the end). Scroll each row sideways.</p>
+  </header>
+
+  <section class="version" data-v="1">
+    <div class="vhead"><h2>1 · Quiet etch</h2><span class="tag">closest to the hero</span></div>
+    <p class="vnote">Thin 1dp lines in <code>hairline</code> over a faint grain, at the same strength as the hero's rosette. It feels premium and calm, but it reads as texture rather than as an event. In the app, each page's art would settle in once (a slight turn and fade) behind the words.</p>
+    <div class="row"></div>
+  </section>
+
+  <section class="version" data-v="2">
+    <div class="vhead"><h2>2 · Bold art</h2><span class="tag pick">my pick</span></div>
+    <p class="vnote">The same motifs, larger and brighter: lines step up to a mid-grey (still under 3:1 on the page, so the words always win), they fill about half of each page and some shapes are solid. It's the closest to Wrapped's energy without adding a hue. The card gets the rosette, grain and the hero's double keyline.</p>
+    <div class="row"></div>
+  </section>
+
+  <section class="version" data-v="3">
+    <div class="vhead"><h2>3 · Poster</h2><span class="tag">most Wrapped</span></div>
+    <p class="vnote">Bold art plus the page's key number set huge in outline type, cropped off the bottom edge like a poster. It's the loudest version. Watch for: the outline number repeats what the page already says (it's hidden from TalkBack), and at 2× text it needs to shrink or drop.</p>
+    <div class="row"></div>
+  </section>
+
+  <section class="version">
+    <h2>What changes in the build</h2>
+    <div class="tablebox"><table>
+      <tr><th>Part</th><th>1 Quiet</th><th>2 Bold</th><th>3 Poster</th></tr>
+      <tr><td>Line colour</td><td><code>hairline</code> #3A3632</td><td>a new neutral step, about #5A534C</td><td>same as 2</td></tr>
+      <tr><td>New token</td><td>none</td><td>one: <code>storyArt</code> line colour</td><td>same as 2</td></tr>
+      <tr><td>Card</td><td>rosette + grain</td><td>rosette + grain + double keyline</td><td>plus a cropped outline month name</td></tr>
+      <tr><td>Motion</td><td colspan="3">The art settles in once per page (turn, grow and fade, 900ms ease-out); it's still under reduced motion. Nothing loops.</td></tr>
+      <tr><td>Accessibility</td><td colspan="3">Decoration only: excluded from TalkBack, never tappable, and it never carries meaning.</td></tr>
+    </table></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const STYLE = {
+    1: { line: '#3A3632', width: 1, scale: 1, solid: false, grain: 90 },
+    2: { line: '#5A534C', width: 1.3, scale: 1.25, solid: true, grain: 70 },
+    3: { line: '#4A443E', width: 1.2, scale: 1.25, solid: true, grain: 70 },
+  };
+  const rand = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const poly = (pts) => 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+  const line = (pts) => 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L');
+
+  const motifs = {
+    rosette(w, h, s) {
+      const reach = Math.min(w, h) * 0.5 * s, cx = w * 0.82, cy = Math.min(h * 0.3, reach);
+      let d = '';
+      for (let r = 0; r < 16; r++) {
+        const base = reach * (0.3 + 0.7 * r / 16), pts = [];
+        for (let i = 0; i < 240; i++) {
+          const t = i / 240 * Math.PI * 2, rad = base + reach * (0.05 * Math.sin(18 * t + r * 0.35) + 0.025 * Math.sin(5 * t));
+          pts.push([cx + rad * Math.cos(t), cy + rad * Math.sin(t)]);
+        }
+        d += poly(pts);
+      }
+      return { d };
+    },
+    rings(w, h, s) {
+      let d = ''; const cx = w, cy = h * 0.92, step = 14 / s * 1.1;
+      for (let r = step; r < Math.max(w, h) * 1.1; r += step) d += `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+      const solid = `M${cx - 40 * s} ${cy}a${40 * s} ${40 * s} 0 1 0 ${80 * s} 0a${40 * s} ${40 * s} 0 1 0 ${-80 * s} 0`;
+      return { d, solid };
+    },
+    rays(w, h, s) {
+      let d = ''; const n = Math.round(30 * s), reach = Math.max(w, h) * 1.5;
+      for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 * i / n; d += `M0 ${h}L${(Math.cos(a) * reach).toFixed(1)} ${(h + Math.sin(a) * reach).toFixed(1)}`; }
+      for (let r = 80; r < reach; r += 80) d += `M${r} ${h}A${r} ${r} 0 0 0 0 ${h - r}`;
+      let solid = '';
+      for (let i = 0; i < n; i += 4) { const a1 = -Math.PI / 2 * i / n, a2 = -Math.PI / 2 * (i + 1) / n; solid += `M0 ${h}L${Math.cos(a1) * reach} ${h + Math.sin(a1) * reach}L${Math.cos(a2) * reach} ${h + Math.sin(a2) * reach}Z`; }
+      return { d, solid };
+    },
+    waves(w, h, s) {
+      let d = ''; const count = Math.round(12 * s), top = h * (1 - 0.42 * s), gap = (h - top) / count, wl = w / 2.2;
+      for (let k = 0; k < count; k++) {
+        const base = top + gap * (k + 0.5), amp = gap * (0.7 + 0.08 * k), pts = [];
+        for (let i = 0; i <= 80; i++) { const x = w * i / 80; pts.push([x, base + amp * Math.sin(2 * Math.PI * x / wl + k * 0.6)]); }
+        d += line(pts);
+      }
+      return { d };
+    },
+    orbits(w, h, s) {
+      let d = ''; const r = Math.min(w, h) * 0.4 * s, y = h - r * 0.8;
+      [[w * 0.3, y], [w * 0.72, y]].forEach(([cx, cy], idx) => {
+        for (let q = 10; q <= r * (idx ? 0.85 : 1); q += 10) d += `M${cx - q} ${cy}a${q} ${q} 0 1 0 ${2 * q} 0a${q} ${q} 0 1 0 ${-2 * q} 0`;
+      });
+      return { d };
+    },
+    blocks(w, h, s) {
+      const R = rand(23); let d = '', solid = '';
+      const count = Math.round(w * h / 4200 * s);
+      for (let i = 0; i < count; i++) {
+        const side = 8 + R() * 20 * s, bw = side, bh = side * 1.4, cx = R() * w, cy = h * (0.42 + 0.58 * R()), a = (R() - 0.5) * Math.PI / 2;
+        const c = Math.cos(a), sn = Math.sin(a), pts = [[-bw / 2, -bh / 2], [bw / 2, -bh / 2], [bw / 2, bh / 2], [-bw / 2, bh / 2]].map(([x, y]) => [cx + x * c - y * sn, cy + x * sn + y * c]);
+        if (i % 3 === 0) solid += poly(pts); else d += poly(pts);
+      }
+      return { d, solid };
+    },
+  };
+
+  function grain(w, h, per) {
+    const R = rand(11); let d = '';
+    for (let i = 0; i < w * h / per; i++) { const x = R() * w, y = R() * h; d += `M${x.toFixed(1)} ${y.toFixed(1)}h.9`; }
+    return d;
+  }
+
+  function art(motif, w, h, v, keyline) {
+    const st = STYLE[v], m = motifs[motif](w, h, st.scale);
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'art'); svg.setAttribute('viewBox', `0 0 ${w} ${h}`); svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    const add = (d, attrs) => { if (!d) return; const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); Object.entries(attrs).forEach(([k, val]) => p.setAttribute(k, val)); svg.appendChild(p); };
+    if (st.solid && m.solid) add(m.solid, { fill: '#2A2723' });
+    add(m.d, { fill: 'none', stroke: st.line, 'stroke-width': st.width });
+    add(grain(w, h, st.grain), { stroke: st.line, 'stroke-width': 1, 'stroke-linecap': 'round' });
+    if (keyline) {
+      add(`M${6 + 18} 6H${w - 24}Q${w - 6} 6 ${w - 6} 24V${h - 24}Q${w - 6} ${h - 6} ${w - 24} ${h - 6}H24Q6 ${h - 6} 6 ${h - 24}V24Q6 6 24 6Z`, { fill: 'none', stroke: st.line, 'stroke-width': 1 });
+      add(`M${10 + 14} 10H${w - 24}Q${w - 10} 10 ${w - 10} 24V${h - 24}Q${w - 10} ${h - 10} ${w - 24} ${h - 10}H24Q10 ${h - 10} 10 ${h - 24}V24Q10 10 24 10Z`, { fill: 'none', stroke: '#3A3632', 'stroke-width': 1, 'stroke-dasharray': '4 3' });
+    }
+    return svg;
+  }
+
+  const bars = (n) => '<div class="bars">' + Array.from({ length: 6 }, (_, i) => `<span class="${i < n ? 'on' : ''}"></span>`).join('') + '</div>';
+  const days = [3, 1, 0, 2, 5, 9, 1, 0, 2, 4, 1, 14, 6, 0, 2, 1, 3, 7, 0, 2, 1, 4, 9, 0, 1, 2, 3, 6, 1, 2];
+  const dayBars = (cls) => `<div class="${cls}">` + days.map(d => `<i class="${d === 14 ? 'pk' : ''}" style="height:${Math.max(4, d / 14 * 100)}%"></i>`).join('') + '</div>';
+
+  const PAGES = [
+    { motif: 'rosette', poster: 'SEPT', cap: 'Page 1 · the month: rosette', html: `<div class="eyebrow">Your month</div><div class="big">September</div><div class="line q">4 Sept – 3 Oct · 30 days</div><div class="line q">31 entries</div><div class="fill"></div>${dayBars('daybars')}<div class="hint" style="margin-top:10px">Tap to go on</div>` },
+    { motif: 'rings', poster: '4,400', cap: 'Page 2 · what you kept: ripples', html: `<div class="eyebrow">What you spent</div><div class="big">₹39,600</div><div class="line q">of ₹45,000 that came in</div><div class="split"><i></i><i></i><i></i></div><div class="line" style="margin-top:14px">₹4,400 left over</div><div class="line q">and ₹1,000 saved</div>` },
+    { motif: 'rays', poster: '30%', cap: 'Page 3 · where it went: sunburst', html: `<div class="eyebrow">Where it went</div><div class="big s">The most went on Food</div>${[['Food', 30], ['Travel', 22], ['Shopping', 14], ['Bills', 21]].map(([n, p]) => `<div class="catrow"><span>${n}</span><span>${p}%</span><b><i style="width:${p * 3}%"></i></b></div>`).join('')}` },
+    { motif: 'waves', poster: '12', cap: 'Page 4 · your days: waves', html: `<div class="eyebrow">Your days</div><div class="big s">Biggest day: Sat 12 Sept</div><div class="line q">₹4,850 · Train tickets</div>${dayBars('daybars')}<div class="line" style="margin-top:12px">9 days with nothing spent.</div>` },
+    { motif: 'orbits', poster: '7,500', cap: 'Page 5 · against last month: two orbits', html: `<div class="eyebrow">Against August</div><div class="big s">₹7,500 less than August</div><div class="line q">August spent ₹47,100</div><div class="vs"><div><i style="height:80px;background:#A7A199"></i>Aug</div><div><i style="height:67px;background:#F2F1EC"></i>Sept</div></div>` },
+    { motif: 'blocks', poster: 'DONE', cap: 'Page 6 · the end: day-block confetti', html: `<div class="eyebrow">The end</div><div class="big s">That was September</div><div class="line q">₹4,400 left over</div><div class="fill"></div><div class="act p">Ask an AI about September</div><div class="act g">Done</div>` },
+  ];
+
+  function card(v) {
+    const wrap = document.createElement('div');
+    const sp = document.createElement('div'); sp.className = 'spends';
+    sp.innerHTML = '<div class="ghost"></div>';
+    const c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = `<div class="eyebrow">Your month</div><div class="cardbig">₹4,400 left over</div><div class="mini">${days.map(d => `<i class="${d === 14 ? '' : 'l'}" style="height:${Math.max(6, d / 14 * 100)}%"></i>`).join('')}</div><div class="pill">See the story</div>`;
+    sp.appendChild(c); sp.insertAdjacentHTML('beforeend', '<div class="ghost"></div><div class="ghost"></div>');
+    wrap.appendChild(sp);
+    wrap.insertAdjacentHTML('beforeend', '<p class="cap">The card on Spends, under Ask AI</p>');
+    requestAnimationFrame(() => {
+      const r = c.getBoundingClientRect();
+      c.prepend(art('rosette', Math.round(r.width), Math.round(r.height), v, v >= 2));
+      if (v === 3) c.insertAdjacentHTML('afterbegin', '<div class="poster" aria-hidden="true">SEPT</div>');
+    });
+    return wrap;
+  }
+
+  document.querySelectorAll('.version[data-v]').forEach(sec => {
+    const v = +sec.dataset.v, row = sec.querySelector('.row');
+    row.appendChild(card(v));
+    PAGES.forEach((p, i) => {
+      const wrap = document.createElement('div');
+      const ph = document.createElement('div'); ph.className = 'phone';
+      ph.innerHTML = `${bars(i + 1)}<div class="top">September · ${i + 1} of 6</div>${p.html}`;
+      ph.prepend(art(p.motif, 240, 470, v, false));
+      if (v === 3) ph.insertAdjacentHTML('afterbegin', `<div class="poster" aria-hidden="true">${p.poster}</div>`);
+      wrap.appendChild(ph);
+      wrap.insertAdjacentHTML('beforeend', `<p class="cap">${p.cap}</p>`);
+      row.appendChild(wrap);
+    });
+  });
+})();
+</script>
+</body>
+</html>

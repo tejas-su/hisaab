@@ -54,6 +54,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeFixUndoRequested>(_onFixUndoRequested);
     on<HomeUsedDone>(_onUsedDone);
     on<HomeUsedUndoRequested>(_onUsedUndoRequested);
+    on<HomeBoughtDone>(_onBoughtDone);
+    on<HomeBoughtUndoRequested>(_onBoughtUndoRequested);
     on<HomeSwipeThresholdReached>((HomeSwipeThresholdReached event, Emitter<HomeState> emit) => unawaited(_haptics.threshold()));
     _changes = _ledger.changes.listen((void _) => add(const HomeLoadRequested()));
     _ruleChanges = _recurring.changes.listen((void _) => add(const HomeLoadRequested()));
@@ -96,6 +98,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   // why: the same for a *Used* save, whose Undo would otherwise be lost while Home can't show.
   Option<UsedOutcome> _pendingUsedUndo = const Option<UsedOutcome>.none();
+  Option<UsedOutcome> _pendingBoughtUndo = const Option<UsedOutcome>.none();
 
   // why: the same for a fix, whose Undo would otherwise be lost while Home can't show (D127).
   Option<FixOutcome> _pendingFixUndo = const Option<FixOutcome>.none();
@@ -185,6 +188,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final Option<BillAmountOutcome> pending = _pendingAmountUndo;
     final Option<UsedOutcome> pendingUsed = _pendingUsedUndo;
     final Option<FixOutcome> pendingFix = _pendingFixUndo;
+    final Option<UsedOutcome> pendingBought = _pendingBoughtUndo;
+    _pendingBoughtUndo = const Option<UsedOutcome>.none();
     _pendingAmountUndo = const Option<BillAmountOutcome>.none();
     _pendingUsedUndo = const Option<UsedOutcome>.none();
     _pendingFixUndo = const Option<FixOutcome>.none();
@@ -192,7 +197,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (justFixed.isSome()) {
       _pendingJustFixed = const Option<int>.none();
     }
-    return ready.copyWith(showWeek: _showingWeek, amountUndo: pending, usedUndo: pendingUsed, fixUndo: pendingFix, justFixed: justFixed);
+    return ready.copyWith(
+      showWeek: _showingWeek,
+      amountUndo: pending,
+      usedUndo: pendingUsed,
+      fixUndo: pendingFix,
+      justFixed: justFixed,
+      boughtUndo: pendingBought,
+    );
   }
 
   /// Flips the hero between *Today* and *This week*; the choice lasts for the session (FR-HO-2).
@@ -287,6 +299,23 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       return;
     }
     emit(current.copyWith(usedUndo: Option<UsedOutcome>.of(event.outcome)));
+  }
+
+  void _onBoughtDone(HomeBoughtDone event, Emitter<HomeState> emit) {
+    final HomeState current = state;
+    if (current is! HomeReady) {
+      _pendingBoughtUndo = Option<UsedOutcome>.of(event.outcome);
+      return;
+    }
+    emit(current.copyWith(boughtUndo: Option<UsedOutcome>.of(event.outcome)));
+  }
+
+  /// Brings the saving back, then deletes the *Used* entry, so the money is set aside again; the
+  /// change streams reload Home (AC-T9).
+  Future<void> _onBoughtUndoRequested(HomeBoughtUndoRequested event, Emitter<HomeState> emit) async {
+    final Either<Failure, Entry> undone =
+        await _restoreBill(event.outcome.saving.id).flatMap((Unit _) => _deleteEntry(event.outcome.entry.id)).run();
+    undone.mapLeft(_logFailure('home.bought_undo_failed'));
   }
 
   // why: success fires here, once the sheet has closed and Home is back in view, so it lands as the

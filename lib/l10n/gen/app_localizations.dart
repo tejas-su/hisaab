@@ -3666,6 +3666,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get spendsStripOpen;
+
+  /// Label of the last row on a saving's sheet: an optional amount the saving is working toward. Never 'goal', 'balance' or 'saved' (BR-23, AC-T1).
+  ///
+  /// In en, this message translates to:
+  /// **'Saving up to'**
+  String get savingTargetLabel;
+
+  /// Value of the Saving up to row when the saving has no target (AC-T1). When set, the row shows the amount from MoneyFormatter instead.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get savingTargetNotSet;
+
+  /// TalkBack label of the Saving up to row when a target is set (AC-T7). amount is spoken, e.g. 50,000 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'Change saving up to, {amount}'**
+  String savingTargetRowSet(String amount);
+
+  /// TalkBack label of the Saving up to row when no target is set (AC-T7)
+  ///
+  /// In en, this message translates to:
+  /// **'Set saving up to. Not set yet.'**
+  String get savingTargetRowNotSet;
+
+  /// Title of the Saving up to keypad inside a saving's sheet (AC-T2). Same shape as savingAmountQuestion; the saving's name is already the sheet's eyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'How much are you saving up to?'**
+  String get savingTargetQuestion;
+
+  /// Line 1 of the Saving up to slot before any digit is typed and no target is set (AC-T3). One action, no figures.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the amount you want to reach.'**
+  String get savingTargetBlank;
+
+  /// Line 1 of the Saving up to slot while digits are typed, and when a target is already set: the estimate from the saving's own monthly amount (AC-T3, BR-23). monthly is the saving's amount per put-in; month is short, with the year when it is not this year, e.g. May 2027. Polite live region (FR-KS-4).
+  ///
+  /// In en, this message translates to:
+  /// **'At {monthly} a month, done by {month}.'**
+  String savingTargetLive(String monthly, String month);
+
+  /// TalkBack twin of savingTargetLive (AC-T12, B3). monthly is spoken, e.g. 5,000 rupees; month is the full name, with the year when it is not this year, e.g. May 2027.
+  ///
+  /// In en, this message translates to:
+  /// **'At {monthly} a month, done by {month}.'**
+  String savingTargetLiveSpoken(String monthly, String month);
+
+  /// Line 1 of the Saving up to slot when the typed amount needs more than 120 put-ins (E138)
+  ///
+  /// In en, this message translates to:
+  /// **'At {monthly} a month, that is over 10 years to go.'**
+  String savingTargetLiveFar(String monthly);
+
+  /// TalkBack twin of savingTargetLiveFar (AC-T12, B3). monthly is spoken, e.g. 500 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'At {monthly} a month, that is over 10 years to go.'**
+  String savingTargetLiveFarSpoken(String monthly);
+
+  /// Line 1 of the Saving up to slot when the typed amount is at or below what is set aside (E129). A fact, not a refusal: the amount is still allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already set aside that much.'**
+  String get savingTargetLiveReached;
+
+  /// Chip beside the amount on the Saving up to keypad; removes the target. Shown only when a target is set (AC-T2). Visible label.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get savingTargetClear;
+
+  /// TalkBack label of the Clear chip, so it makes sense alone (AC-T2)
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saving up to'**
+  String get savingTargetClearSpoken;
+
+  /// Third line of a saving's row in the Savings list, and the sheet slip (AC-T6), when a target is set, something is set aside and it is not reached. amount is what is set aside; month is short, e.g. May 2027 (AC-T5). A no-break space comes before the middle dot.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside · done by {month}'**
+  String savingTargetEstimate(String amount, String month);
+
+  /// Third line of a saving's row when a target is set and nothing is set aside yet (AC-T5)
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {target} · done by {month}'**
+  String savingTargetEstimateNone(String target, String month);
+
+  /// Third line of a saving's row when what is set aside is at or above the target (AC-T5). Words only; the saving has stopped putting in (D213).
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside · reached {target}'**
+  String savingTargetReached(String amount, String target);
+
+  /// Third line of a saving's row when the target needs more than 120 put-ins (E138) and something is set aside
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside · over 10 years to go'**
+  String savingTargetFar(String amount);
+
+  /// Same as savingTargetFar when nothing is set aside yet
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {target} · over 10 years to go'**
+  String savingTargetFarNone(String target);
+
+  /// TalkBack sentence for savingTargetEstimate. amount is spoken (18,000 rupees); month is the full name. The visible middle dot is excluded from semantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside, done by {month}'**
+  String savingTargetEstimateSpoken(String amount, String month);
+
+  /// TalkBack sentence for savingTargetEstimateNone. target is spoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {target}, done by {month}'**
+  String savingTargetEstimateNoneSpoken(String target, String month);
+
+  /// TalkBack sentence for savingTargetReached. Both amounts are spoken.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside, reached {target}'**
+  String savingTargetReachedSpoken(String amount, String target);
+
+  /// TalkBack sentence for savingTargetFar. amount is spoken.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} set aside, over 10 years to go'**
+  String savingTargetFarSpoken(String amount);
+
+  /// TalkBack sentence for savingTargetFarNone. target is spoken.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {target}, over 10 years to go'**
+  String savingTargetFarNoneSpoken(String target);
+
+  /// Key on a saving's sheet when what is set aside has reached the target (AC-T9, D213): records Used for the whole set-aside amount, then deletes the saving, with one Undo. A sunk key, never marigold.
+  ///
+  /// In en, this message translates to:
+  /// **'I bought it'**
+  String get savingBoughtIt;
+
+  /// Key beside I bought it on a reached saving's sheet (AC-T10, D213): clears the target so the saving puts in again from its next date.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep saving'**
+  String get savingKeepSaving;
+
+  /// Snackbar with Undo after I bought it (AC-T9). amount is formatted by MoneyFormatter (spoken form for TalkBack); saving is the user's own name.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {amount} from {saving}'**
+  String savingBoughtSnack(String amount, String saving);
 }
 
 class _AppLocalizationsDelegate

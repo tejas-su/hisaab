@@ -19,6 +19,7 @@ import '../../../helpers/bloc_dispatch.dart';
 import '../../../helpers/fakes/fake_app_preferences_repository.dart';
 import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
+import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_haptics.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
@@ -39,7 +40,7 @@ void main() {
         categories: FakeCategoryRepository(),
         recurring: recurring,
         preferences: preferences,
-        postDue: PostDueRecurring(recurring: recurring, clock: clock),
+        postDue: PostDueRecurring(recurring: recurring, ledger: FakeLedgerRepository(), clock: clock),
         clock: clock,
       ),
       haptics: haptics,

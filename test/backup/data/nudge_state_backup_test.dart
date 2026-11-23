@@ -63,7 +63,7 @@ void main() {
 
       final BackupFile file =
           BackupJsonMapper.decode(files.saved.single.$2, currentVersion: AppDatabase.schemaVersion).getRight().toNullable()!;
-      expect(file.schemaVersion, 6);
+      expect(file.schemaVersion, 7);
       expect(file.tables[Tables.nudgeState], isEmpty);
     });
 

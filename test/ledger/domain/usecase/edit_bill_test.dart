@@ -8,6 +8,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/fakes/fake_category_repository.dart';
 import '../../../helpers/fakes/fake_clock.dart';
+import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fixtures/ledger/categories.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
@@ -79,7 +80,7 @@ void main() {
       recurring.rules = <RecurringRule>[stale];
       final RecurringRule rule = await edited(params(stale, day: 20, mode: AmountMode.fixed));
       expect(rule.nextDue, const CalendarDate(2026, 10, 20));
-      await PostDueRecurring(recurring: recurring, clock: FakeClock(WorkedExample.now))(const NoParams()).run();
+      await PostDueRecurring(recurring: recurring, ledger: FakeLedgerRepository(), clock: FakeClock(WorkedExample.now))(const NoParams()).run();
       expect(recurring.postings.single.occurrences.map((Occurrence o) => o.date), <CalendarDate>[const CalendarDate(2026, 10, 20)]);
       expect(recurring.postings.single.occurrences.single.rule.amount, Money.fromMajor(1200));
     });

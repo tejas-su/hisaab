@@ -37,7 +37,7 @@ void main() {
         periods: const PeriodCalculator(),
         clock: clock,
       ),
-      postDueRecurring: PostDueRecurring(recurring: recurring, clock: clock),
+      postDueRecurring: PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock),
       getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
       ledger: ledger,
       recurring: recurring,
@@ -136,7 +136,7 @@ void main() {
       final FakeClock clock = FakeClock(WorkedExample.now);
       final HomeBloc home = HomeBloc(
         getCycleSummary: GetCycleSummary(ledger: book, recurring: recurring, settings: settings, periods: const PeriodCalculator(), clock: clock),
-        postDueRecurring: PostDueRecurring(recurring: recurring, clock: clock),
+        postDueRecurring: PostDueRecurring(recurring: recurring, ledger: book, clock: clock),
         getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
         ledger: book,
         recurring: recurring,

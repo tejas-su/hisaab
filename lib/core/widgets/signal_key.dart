@@ -24,8 +24,15 @@ class SignalKey extends StatelessWidget {
 
   /// The tallest default; keys grow with text but never shrink below this.
   static const double minHeight = 58;
-  static const double _lip = 2;
-  static const double _radius = 18;
+
+  /// The ink lip under the key at rest; an outlined twin keeps the same room below it.
+  static const double lip = 2;
+
+  /// The key's corner radius, shared by an outlined twin beside it.
+  static const double radius = 18;
+
+  /// The label's size, a step up from `titleLarge`, shared by an outlined twin.
+  static const double labelSize = 21;
 
   final String label;
   final AppIconData? icon;
@@ -44,18 +51,18 @@ class SignalKey extends StatelessWidget {
       semanticLabel: label,
       semanticHint: semanticHint,
       onPressed: onPressed,
-      focusRadius: _radius,
+      focusRadius: radius,
       builder: (BuildContext context, bool pressed) {
-        final double lip = enabled && !pressed ? _lip : 0;
+        final double lip = enabled && !pressed ? SignalKey.lip : 0;
         return AnimatedContainer(
           duration: HisaabMotion.reduceMotion(context) ? Duration.zero : HisaabMotion.press,
           curve: HisaabMotion.easeOut,
           constraints: BoxConstraints(minHeight: height),
-          margin: EdgeInsetsDirectional.only(top: _lip - lip, bottom: lip),
+          margin: EdgeInsetsDirectional.only(top: SignalKey.lip - lip, bottom: lip),
           padding: const EdgeInsetsDirectional.symmetric(horizontal: HisaabSpacing.l, vertical: HisaabSpacing.s),
           decoration: ShapeDecoration(
             color: enabled ? context.colors.signal : context.colors.sunk,
-            shape: HisaabShapes.squircle(_radius, side: BorderSide(color: enabled ? context.colors.onSignal : context.colors.hairline, width: 1.5)),
+            shape: HisaabShapes.squircle(radius, side: BorderSide(color: enabled ? context.colors.onSignal : context.colors.hairline, width: 1.5)),
             shadows: <BoxShadow>[if (lip > 0) BoxShadow(color: context.colors.onSignal, offset: Offset(0, lip))],
           ),
           child: Row(
@@ -67,7 +74,7 @@ class SignalKey extends StatelessWidget {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: ink, fontSize: 21),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: ink, fontSize: labelSize),
                 ),
               ),
             ],

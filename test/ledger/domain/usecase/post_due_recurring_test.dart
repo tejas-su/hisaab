@@ -3,6 +3,7 @@ import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/usecases/use_case.dart';
+import 'package:hisaab/ledger/domain/entities/entry.dart';
 import 'package:hisaab/ledger/domain/entities/entry_kind.dart';
 import 'package:hisaab/ledger/domain/entities/frequency.dart';
 import 'package:hisaab/ledger/domain/entities/occurrence.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../helpers/fakes/fake_clock.dart';
+import '../../../helpers/fakes/fake_ledger_repository.dart';
 import '../../../helpers/fakes/fake_recurring_repository.dart';
 import '../../../helpers/fixtures/ledger/worked_example.dart';
 
@@ -27,13 +29,37 @@ final RecurringRule _weeklyMilk = RecurringRule(
   nextDue: const CalendarDate(2026, 9, 18),
 );
 
+RecurringRule _saving({required CalendarDate nextDue}) => RecurringRule(
+      id: 5,
+      label: 'RD',
+      amount: Money.fromMajor(5000),
+      kind: EntryKind.saved,
+      categoryId: 4,
+      schedule: const Schedule(frequency: Frequency.weekly, anchor: CalendarDate(2026, 10, 12)),
+      nextDue: nextDue,
+      target: Option<Money>.of(Money.fromMajor(50000)),
+    );
+
+Entry _entry(int id, EntryKind kind, int rupees, {int? recurringId, int? savingId}) => Entry(
+      id: id,
+      amount: Money.fromMajor(rupees),
+      kind: kind,
+      categoryId: 4,
+      date: const CalendarDate(2026, 10, 1),
+      createdAt: DateTime(2026, 10, 1),
+      recurringId: recurringId,
+      savingId: savingId,
+    );
+
 void main() {
   late FakeRecurringRepository recurring;
+  late FakeLedgerRepository ledger;
   late PostDueRecurring postDue;
 
   setUp(() {
+    ledger = FakeLedgerRepository();
     recurring = FakeRecurringRepository(WorkedExample.rules);
-    postDue = PostDueRecurring(recurring: recurring, clock: FakeClock(WorkedExample.now));
+    postDue = PostDueRecurring(recurring: recurring, ledger: ledger, clock: FakeClock(WorkedExample.now));
   });
 
   group('PostDueRecurring (BR-9)', () {
@@ -76,7 +102,7 @@ void main() {
           nextDue: const CalendarDate(2026, 10, 10),
         ),
       ];
-      postDue = PostDueRecurring(recurring: recurring, clock: FakeClock(DateTime(2026, 11, 26, 9)));
+      postDue = PostDueRecurring(recurring: recurring, ledger: ledger, clock: FakeClock(DateTime(2026, 11, 26, 9)));
       await postDue(const NoParams()).run();
       final RecurringPosting posting = recurring.postings.single;
       expect(posting.occurrences.map((Occurrence o) => o.date).toList(),
@@ -132,7 +158,7 @@ void main() {
     test('E9: a clock moved backwards posts nothing and never moves next_due back', () async {
       recurring.rules = <RecurringRule>[_weeklyMilk];
       final PostDueRecurring inThePast =
-          PostDueRecurring(recurring: recurring, clock: FakeClock(DateTime(2026, 9, 1)));
+          PostDueRecurring(recurring: recurring, ledger: ledger, clock: FakeClock(DateTime(2026, 9, 1)));
       expect(await inThePast(const NoParams()).run(), Either<Failure, int>.right(0));
       expect(recurring.postings, isEmpty);
     });
@@ -141,6 +167,65 @@ void main() {
       recurring.failure = DatabaseFailure('locked');
       final Either<Failure, int> result = await postDue(const NoParams()).run();
       expect(result.getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
+  group('PostDueRecurring stops at the target (BR-9, BR-23, D213)', () {
+    void seed(int putIn, {int used = 0}) => ledger.entries
+      ..add(_entry(1, EntryKind.saved, putIn, recurringId: 5))
+      ..addAll(used == 0 ? <Entry>[] : <Entry>[_entry(2, EntryKind.used, used, savingId: 5)]);
+
+    List<int> postedRupees() =>
+        recurring.postings.single.occurrences.map((Occurrence o) => o.rule.amount.amountMinor ~/ 100).toList();
+
+    test('stops_at_target: the last put-in is capped at the gap', () async {
+      seed(48000);
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 26))];
+      await postDue(const NoParams()).run();
+      expect(postedRupees(), <int>[2000]);
+    });
+
+    test('catch_up_caps_then_stops: later dates post nothing, next_due moves past them', () async {
+      seed(40000);
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 12))];
+      await postDue(const NoParams()).run();
+      expect(postedRupees(), <int>[5000, 5000]);
+      expect(recurring.postings.single.nextDueByRuleId, <int, CalendarDate>{5: const CalendarDate(2026, 11, 2)});
+    });
+
+    test('reached_posts_nothing_but_moves_next_due', () async {
+      seed(50000);
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 26))];
+      await postDue(const NoParams()).run();
+      expect(recurring.postings.single.occurrences, isEmpty);
+      expect(recurring.postings.single.nextDueByRuleId, <int, CalendarDate>{5: const CalendarDate(2026, 11, 2)});
+    });
+
+    test('used_below_target_resumes: a use re-opens the gap', () async {
+      seed(50000, used: 5000);
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 26))];
+      await postDue(const NoParams()).run();
+      expect(postedRupees(), <int>[5000]);
+    });
+
+    test('a saving with a target and no entries yet posts in full', () async {
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 26))];
+      await postDue(const NoParams()).run();
+      expect(postedRupees(), <int>[5000]);
+    });
+
+    test('a catch-up that crosses the target posts only what fits, then moves next_due past both dates', () async {
+      seed(47000);
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 19))];
+      await postDue(const NoParams()).run();
+      expect(postedRupees(), <int>[3000]);
+      expect(recurring.postings.single.nextDueByRuleId, <int, CalendarDate>{5: const CalendarDate(2026, 11, 2)});
+    });
+
+    test('passes a ledger failure through', () async {
+      ledger.failure = DatabaseFailure('locked');
+      recurring.rules = <RecurringRule>[_saving(nextDue: const CalendarDate(2026, 10, 26))];
+      expect((await postDue(const NoParams()).run()).getLeft().toNullable(), isA<DatabaseFailure>());
     });
   });
 }

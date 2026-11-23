@@ -36,6 +36,8 @@ class BillsBloc extends Bloc<BillsEvent, BillsState> {
     on<BillsUndoRequested>(_onUndoRequested);
     on<BillsUsedDone>(_onUsedDone);
     on<BillsUsedUndoRequested>(_onUsedUndoRequested);
+    on<BillsBoughtDone>(_onBoughtDone);
+    on<BillsBoughtUndoRequested>(_onBoughtUndoRequested);
     on<BillsSwipeThresholdReached>((BillsSwipeThresholdReached event, Emitter<BillsState> emit) => unawaited(_haptics.threshold()));
     _changes = recurring.changes.listen((void _) => add(const BillsLoadRequested()));
     _entryChanges = _ledger.changes.listen((void _) {
@@ -143,6 +145,26 @@ class BillsBloc extends Bloc<BillsEvent, BillsState> {
     }
     final Either<Failure, Entry> deleted = await deleteEntry(event.entry.id).run();
     deleted.mapLeft((Failure failure) => _log('bills.used_undo_failed', failure));
+  }
+
+  /// Offers one Undo for an *I bought it* made on a saving's sheet from this list (AC-T9).
+  void _onBoughtDone(BillsBoughtDone event, Emitter<BillsState> emit) {
+    final BillsState current = state;
+    if (current is BillsReady) {
+      emit(current.copyWith(boughtUndo: Option<UsedOutcome>.of(event.outcome), saved: current.saved));
+    }
+  }
+
+  /// Brings the saving back, then deletes the *Used* entry, so the money is set aside again; the
+  /// change streams reload the list (AC-T9).
+  Future<void> _onBoughtUndoRequested(BillsBoughtUndoRequested event, Emitter<BillsState> emit) async {
+    final DeleteEntry? deleteEntry = _deleteEntry;
+    if (deleteEntry == null) {
+      return;
+    }
+    final Either<Failure, Entry> undone =
+        await _restoreBill(event.outcome.saving.id).flatMap((Unit _) => deleteEntry(event.outcome.entry.id)).run();
+    undone.mapLeft((Failure failure) => _log('bills.bought_undo_failed', failure));
   }
 
   /// Brings back a deleted bill; the change stream reloads the list.

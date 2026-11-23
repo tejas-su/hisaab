@@ -5,6 +5,8 @@ import 'package:hisaab/spends/domain/entities/month_story.dart';
 import 'package:hisaab/spends/presentation/widgets/day_bars.dart';
 import 'package:hisaab/spends/presentation/widgets/month_story_card.dart';
 import 'package:hisaab/spends/presentation/widgets/month_story_row.dart';
+import 'package:hisaab/spends/presentation/widgets/story_art.dart';
+import 'package:hisaab/spends/presentation/widgets/story_motif.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../helpers/fixtures/ledger/september_story.dart';
@@ -62,6 +64,14 @@ void main() {
     testWidgets('a story without page 4 has no preview', (WidgetTester tester) async {
       await pumpCard(tester, SeptemberStory.story(entries: SeptemberStory.septemberEntries().take(8).toList()));
       expect(find.byType(DayBars), findsNothing);
+    });
+
+    testWidgets('sits over a still rosette (D210)', (WidgetTester tester) async {
+      await pumpCard(tester, SeptemberStory.story());
+      final StoryArt art = tester.widget(find.byType(StoryArt));
+      expect(art.motif, StoryMotif.rosette);
+      expect(art.animate, isFalse);
+      expect(tester.hasRunningAnimations, isFalse);
     });
 
     testWidgets('holds at 2.0× text on a small phone', (WidgetTester tester) async {
