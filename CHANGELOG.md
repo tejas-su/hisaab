@@ -4,8 +4,6 @@ All notable changes to **hisaab•** are recorded here. The format follows [Keep
 
 The app is Android-only and built for Indian users (INR). Dates are `YYYY-MM-DD`. Versions are `pubspec.yaml` versions (`name+build`).
 
-## [Unreleased]
-
 ## [0.1.1+3] - 2026-11-26
 
 Database schema **v7**; backups are v7 too. Older backups restore as before.
