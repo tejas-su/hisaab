@@ -40,6 +40,8 @@ class AffordSheet extends StatelessWidget {
       context,
       builder: (BuildContext _) => BlocProvider<AffordBloc>.value(value: bloc, child: const AffordSheet()),
       settings: const RouteSettings(name: routeName),
+      // why: no paper slip here, so the sheet itself is the raised layer (UI_DESIGN §3).
+      raised: true,
     );
     await Navigator.of(context).push(route);
     await route.completed;

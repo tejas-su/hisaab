@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 
+import '../../../core/design/hisaab_colors.dart';
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_motion.dart';
 import '../../../core/design/hisaab_shapes.dart';
@@ -80,7 +81,16 @@ class BillSheet extends StatefulWidget {
   /// The bottom-sheet route the bill sheet rises in, shared with the *Put in extra* sheet (D120):
   /// [builder] builds its body and [settings] names the route. Its `completed` waits for the exit
   /// animation to end.
-  static ModalBottomSheetRoute<void> route(BuildContext context, {required WidgetBuilder builder, RouteSettings? settings}) {
+  ///
+  /// A sheet with no paper slip passes [raised]: it rises on `surface` so it stands off the page,
+  /// and its controls fill `hairline` (UI_DESIGN §3, D100). The default `background` sheet is the
+  /// ground a slip is raised on (D118).
+  static ModalBottomSheetRoute<void> route(
+    BuildContext context, {
+    required WidgetBuilder builder,
+    RouteSettings? settings,
+    bool raised = false,
+  }) {
     final bool tabletop = context.layout.panes is TabletopPanes;
     final NavigatorState navigator = Navigator.of(context);
     final MaterialLocalizations localizations = MaterialLocalizations.of(context);
@@ -92,13 +102,27 @@ class BillSheet extends StatefulWidget {
       isScrollControlled: true,
       useSafeArea: true,
       anchorPoint: tabletop ? Offset(0, MediaQuery.sizeOf(context).height) : null,
-      backgroundColor: context.colors.background,
+      backgroundColor: raised ? context.colors.surface : context.colors.background,
       modalBarrierColor: context.colors.scrim,
       shape: HisaabShapes.trayTop(),
       constraints: const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop && MediaQuery.sizeOf(context).height >= _handleMinHeight,
-      builder: builder,
+      builder: raised ? (BuildContext sheet) => _onSurface(sheet, builder(sheet)) : builder,
       settings: settings,
+    );
+  }
+
+  // why: in light `control` equals `surface`, so every field, chip and Back well on a raised sheet
+  // would vanish; one override gives them all the `hairline` step instead of a flag on each (D100).
+  static Widget _onSurface(BuildContext context, Widget child) {
+    final ThemeData theme = Theme.of(context);
+    final HisaabColors colors = context.colors;
+    return Theme(
+      data: theme.copyWith(
+        extensions: <ThemeExtension<dynamic>>[colors.copyWith(control: colors.hairline)],
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(fillColor: colors.hairline),
+      ),
+      child: child,
     );
   }
 

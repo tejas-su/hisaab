@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart' hide State;
+import 'package:hisaab/core/design/hisaab_colors.dart';
+import 'package:hisaab/core/design/hisaab_dimensions.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
@@ -23,6 +25,7 @@ import 'package:hisaab/spends/presentation/widgets/afford/afford_rise_in.dart';
 import 'package:hisaab/spends/presentation/widgets/afford/afford_undo_listener.dart';
 import 'package:hisaab/spends/presentation/widgets/afford/afford_verdict_block.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../helpers/bloc_dispatch.dart';
@@ -496,6 +499,30 @@ void main() {
       expect(find.bySemanticsLabel('Usually, 1,066 rupees a day'), findsOneWidget);
       expect(find.bySemanticsLabel('Mac, 1,27,000 rupees'), findsOneWidget);
       handle.dispose();
+    });
+  });
+
+  group('AffordSheet layer (UI_DESIGN §3, D100)', () {
+    testWidgets('the sheet is raised on surface, so it stands off the page behind it', (WidgetTester tester) async {
+      await open(tester);
+
+      expect(tester.widget<BottomSheet>(find.byType(BottomSheet)).backgroundColor, HisaabColors.light.surface);
+    });
+
+    testWidgets('the name field and the Back well fill hairline on the surface sheet', (WidgetTester tester) async {
+      await open(tester);
+
+      final BuildContext field = tester.element(find.byKey(const ValueKey<String>('afford-name')));
+      expect(Theme.of(field).inputDecorationTheme.fillColor, HisaabColors.light.hairline);
+      final ShapeDecoration well = tester.widget<Container>(find.byKey(const ValueKey<String>('back-well'))).decoration! as ShapeDecoration;
+      expect(well.color, HisaabColors.light.hairline);
+    });
+
+    testWidgets('the shopping glyph in the name field draws at the icon size, not the 48dp slot', (WidgetTester tester) async {
+      await open(tester);
+
+      final Finder glyph = find.descendant(of: find.byKey(const ValueKey<String>('afford-name')), matching: find.byType(HugeIcon));
+      expect(tester.getSize(glyph), const Size.square(HisaabSizes.iconSize));
     });
   });
 

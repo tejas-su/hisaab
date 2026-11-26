@@ -63,7 +63,9 @@ class _AffordItemStepState extends State<AffordItemStepView> {
             decoration: InputDecoration(
               labelText: strings.affordNameLabel,
               counterText: '',
-              prefixIcon: ExcludeSemantics(child: AppIcon(AppIcons.forKey('shopping'))),
+              // why: the prefix slot is at least 48dp and HugeIcon stretches to fill it; centring
+              // keeps the glyph at its 24dp size, as Material's Icon does.
+              prefixIcon: Center(widthFactor: 1, heightFactor: 1, child: AppIcon(AppIcons.forKey('shopping'))),
             ),
           ),
           const SizedBox(height: HisaabSpacing.m),
