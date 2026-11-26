@@ -32,6 +32,7 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     this._useFromSavings,
     this._deleteBill,
     this._deleteEntry,
+    this._getTargetDayEffect,
     Clock? clock,
   }) : super(BillSheetReady(rule: rule, today: Option<CalendarDate>.fromNullable(clock?.today()))) {
     on<BillSheetStatusRequested>(_onStatusRequested, transformer: restartable());
@@ -80,6 +81,9 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   /// Takes *I bought it*'s *Used* entry back when the saving can't be deleted; null for a bill sheet.
   final DeleteEntry? _deleteEntry;
 
+  /// Reads what a typed target does to today's share; null for a sheet that doesn't say it.
+  final GetTargetDayEffect? _getTargetDayEffect;
+
   Future<void> _onStatusRequested(BillSheetStatusRequested event, Emitter<BillSheetState> emit) => _loadStatus(emit);
 
   Future<void> _loadStatus(Emitter<BillSheetState> emit) async {
@@ -105,17 +109,39 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
     return summary.toOption().flatMap((SetAsideSummary s) => Option<Money>.fromNullable(s.perSaving[rule.id]));
   }
 
-  void _onAnswerOpened(BillSheetAnswerOpened event, Emitter<BillSheetState> emit) => _whenOnBill((BillSheetReady bill) => emit(
-        bill.copyWith(
-          open: Option<BillAnswer>.of(event.answer),
-          rupees: event.answer == BillAnswer.target
-              ? bill.rule.target.map((Money target) => target.floorMajor).getOrElse(() => 0)
-              : bill.rule.amount.floorMajor,
-          fresh: true,
-          draftName: bill.rule.label,
-          justSaved: const Option<BillAnswer>.none(),
-        ),
-      ));
+  Future<void> _onAnswerOpened(BillSheetAnswerOpened event, Emitter<BillSheetState> emit) async {
+    final BillSheetState current = state;
+    if (current is! BillSheetReady || current.open.isSome()) {
+      return;
+    }
+    emit(current.copyWith(
+      open: Option<BillAnswer>.of(event.answer),
+      rupees: event.answer == BillAnswer.target
+          ? current.rule.target.map((Money target) => target.floorMajor).getOrElse(() => 0)
+          : current.rule.amount.floorMajor,
+      fresh: true,
+      draftName: current.rule.label,
+      justSaved: const Option<BillAnswer>.none(),
+      dayEffect: const Option<TargetDayEffect>.none(),
+    ));
+    if (event.answer == BillAnswer.target) {
+      await _loadDayEffect(emit, current.rule);
+    }
+  }
+
+  // why: read once as the question opens, so each digit is a pure recompute; a failed read just
+  // leaves line 2 saying the daily number doesn't change.
+  Future<void> _loadDayEffect(Emitter<BillSheetState> emit, RecurringRule saving) async {
+    final GetTargetDayEffect? read = _getTargetDayEffect;
+    if (read == null) {
+      return;
+    }
+    final Option<TargetDayEffect> effect = (await read(saving).run()).toOption();
+    final BillSheetState latest = state;
+    if (latest is BillSheetReady && latest.open == const Option<BillAnswer>.of(BillAnswer.target)) {
+      emit(latest.copyWith(dayEffect: effect, saving: latest.saving));
+    }
+  }
 
   void _onBackPressed(BillSheetBackPressed event, Emitter<BillSheetState> emit) {
     final BillSheetState current = state;
@@ -217,7 +243,8 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
 
   Future<void> _onKeepSavingRequested(BillSheetKeepSavingRequested event, Emitter<BillSheetState> emit) {
     final BillSheetState current = state;
-    if (current is! BillSheetReady || current.open.isSome()) {
+    // why: the two reached choices are separate handlers, so one in flight must stop the other.
+    if (current is! BillSheetReady || current.open.isSome() || current.saving) {
       return Future<void>.value();
     }
     return _saveRule(emit, current, _withoutTarget(current.rule));
@@ -228,7 +255,7 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
   Future<void> _onBoughtRequested(BillSheetBoughtRequested event, Emitter<BillSheetState> emit) async {
     final BillSheetState current = state;
     final UseFromSavings? use = _useFromSavings;
-    if (current is! BillSheetReady || current.open.isSome() || use == null || _deleteBill == null || _deleteEntry == null) {
+    if (current is! BillSheetReady || !_canBuy(current) || use == null || _deleteBill == null || _deleteEntry == null) {
       return;
     }
     final Money whole = Money.fromMajor(current.setAside.getOrElse(() => Money.zero).floorMajor);
@@ -239,6 +266,9 @@ class BillSheetBloc extends Bloc<BillSheetEvent, BillSheetState> {
       (Entry entry) => _deleteBought(emit, current, UsedOutcome(entry: entry, saving: current.rule)),
     );
   }
+
+  // why: only a reached saving offers *I bought it*, and never while Keep saving is writing.
+  static bool _canBuy(BillSheetReady sheet) => sheet.open.isNone() && sheet.reached && !sheet.saving;
 
   void _failBought(Emitter<BillSheetState> emit, BillSheetReady form, Failure failure) {
     AppLogger.log(tag: 'bills.sheet_bought_failed', data: <String, Object?>{'type': failure.runtimeType.toString()});

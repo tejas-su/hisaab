@@ -64,6 +64,11 @@ abstract interface class LedgerRepository {
   /// `DatabaseFailure`, or `InvalidDataFailure` for an unreadable date.
   TaskEither<Failure, Option<SavedTotal>> savedTotal();
 
+  /// Whether any *Got* entry exists, on any day.
+  ///
+  /// Returns [Right] with the answer, or [Left] with `DatabaseFailure`.
+  TaskEither<Failure, bool> anyGot();
+
   /// What was put into each saving by its rule and what was used from it, all time (BR-19).
   ///
   /// Returns [Right] with the totals (empty when nothing was put in or used), or [Left] with

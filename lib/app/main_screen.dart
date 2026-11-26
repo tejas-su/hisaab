@@ -6,6 +6,7 @@ import '../core/extensions/build_context_extensions.dart';
 import '../core/layout/app_layout.dart';
 import '../core/time/clock.dart';
 import '../core/time/pay_cycle.dart';
+import '../core/widgets/hisaab_snackbar_host.dart';
 import '../home/home.dart';
 import '../ledger/ledger.dart';
 import '../spends/spends.dart';
@@ -34,7 +35,11 @@ class MainScreen extends StatefulWidget {
     this.missedLogSlot,
     this.onFixMyNumber,
     this.installLineSlot,
+    this.reachedLineSlot,
     this.onOpenStory,
+    this.onAfford,
+    this.wrapSpends,
+    this.destination,
   });
 
   final Clock clock;
@@ -67,19 +72,34 @@ class MainScreen extends StatefulWidget {
   /// Builds the install line in Home's nudge slot (FR-HO-3); none when null.
   final WidgetBuilder? installLineSlot;
 
+  /// Builds the reached line in Home's nudge slot (FR-HO-3, BR-23); none when null.
+  final WidgetBuilder? reachedLineSlot;
+
   /// Opens the month story of the cycle so many cycles back (SPEC FR-SP-7); none hides its way in.
   final ValueChanged<int>? onOpenStory;
+
+  /// Opens *Can I afford it?* from Spends (SPEC FR-SP-9); none hides its card.
+  final VoidCallback? onAfford;
+
+  /// Wraps Spends wherever it is shown, inside the snackbar host over it; the app uses it for the
+  /// *Start saving* Undo (FR-SP-9 AC-6). With none, Spends is built as it is.
+  final Widget Function(Widget page)? wrapSpends;
+
+  /// The screen in view, when the caller needs to switch it (the *Can I afford it?* shortcut,
+  /// FR-WG-9); the caller owns it. With none, the screen keeps its own, starting on Home.
+  final ValueNotifier<ShellDestination>? destination;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final ValueNotifier<ShellDestination> _destination = ValueNotifier<ShellDestination>(ShellDestination.home);
+  late final ValueNotifier<ShellDestination> _destination = widget.destination ?? (_own = ValueNotifier<ShellDestination>(ShellDestination.home));
+  ValueNotifier<ShellDestination>? _own;
 
   @override
   void dispose() {
-    _destination.dispose();
+    _own?.dispose();
     super.dispose();
   }
 
@@ -93,13 +113,15 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final bool spendsBeside = context.layout.panes is SideBySidePanes;
-    final Widget spends = SpendsPage(
+    final Widget page = SpendsPage(
       today: widget.clock.today(),
       onSeeEntries: widget.onSeeEntries,
       onAskAi: widget.onAskAi,
       onOpenStory: widget.onOpenStory,
       onAddIncome: widget.onOpenSettings,
+      onAfford: widget.onAfford,
     );
+    final Widget spends = widget.wrapSpends?.call(page) ?? page;
     return Scaffold(
       body: MidnightListener(
         clock: widget.clock,
@@ -122,10 +144,12 @@ class _MainScreenState extends State<MainScreen> {
                 missedLogSlot: widget.missedLogSlot,
                 onFixMyNumber: widget.onFixMyNumber,
                 installLineSlot: widget.installLineSlot,
+                reachedLineSlot: widget.reachedLineSlot,
               ),
             ),
             // why: beside Home both pages are on screen, and one notice is enough; it shows over Home.
-            spends: spendsBeside ? spends : _primary(spends),
+            // Spends' own notices (FR-SP-9 AC-6) need a host there, since Home's is in the other pane.
+            spends: spendsBeside ? HisaabSnackbarHost(child: spends) : _primary(spends),
             onAdd: () => widget.onAdd(EntryKind.spent),
           ),
         ),

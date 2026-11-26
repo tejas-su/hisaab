@@ -8,6 +8,7 @@ void main() {
       'hisaab://add': LaunchAction.add,
       'hisaab://home': LaunchAction.home,
       'hisaab://setup': LaunchAction.setUp,
+      'hisaab://afford': LaunchAction.afford,
     };
     for (final MapEntry<String, LaunchAction> uri in known.entries) {
       test('reads "${uri.key}" as ${uri.value.name}', () {
@@ -22,6 +23,7 @@ void main() {
       'hisaab://',
       'hisaab://pay',
       'hisaab://add/extra',
+      'hisaab://afford/x',
       'hisaab://add?amount=500',
       'https://add',
       'add',

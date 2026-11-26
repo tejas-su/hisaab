@@ -9,7 +9,8 @@ import '../../bloc/bill_sheet_state.dart';
 import '../saving_target_copy.dart';
 
 /// The two lines under the *Saving up to* question (AC-T3): what the typed amount means at the
-/// saving's monthly amount, then "Your daily number doesn't change.".
+/// saving's monthly amount, then how it moves today's share ("Your daily number goes up by ₹56.",
+/// or "doesn't change." at ₹0; BR-23, owner 2026-11-26).
 ///
 /// Each line with figures is read as its spoken twin (B3, B4). Typing is announced politely
 /// (FR-KS-4); the blank line, which has no figures, is not a live region, so opening the question
@@ -34,11 +35,12 @@ class TargetSlot extends StatelessWidget {
     final SpokenLine line = progress
         .map((TargetProgress typed) => context.targetLiveLine(progress: typed, saving: state.rule, today: state.today))
         .getOrElse(() => (shown: strings.savingTargetBlank, spoken: strings.savingTargetBlank));
+    final SpokenLine day = context.targetDayLine(state.typedDayChange);
     final Widget lines = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(line.shown, key: const ValueKey<String>('target-slot-line-1'), semanticsLabel: line.spoken, style: style),
-        Text(strings.savingUsedSame, key: const ValueKey<String>('target-slot-line-2'), style: style),
+        Text(day.shown, key: const ValueKey<String>('target-slot-line-2'), semanticsLabel: day.spoken, style: style),
       ],
     );
     final _SlotClass kind = _classOf(progress);
@@ -48,7 +50,7 @@ class TargetSlot extends StatelessWidget {
     return PolitePreviewSlot(
       key: const ValueKey<String>('target-slot'),
       stateClass: kind,
-      liveText: strings.spokenPair(line.spoken, strings.savingUsedSame),
+      liveText: strings.spokenPair(line.spoken, day.spoken),
       child: lines,
     );
   }

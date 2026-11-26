@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
+import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../entities/bill_skip.dart';
 import '../entities/ledger_setup.dart';
@@ -39,12 +40,32 @@ abstract interface class RecurringRepository {
   /// id, or `DatabaseFailure`.
   TaskEither<Failure, RecurringRule> update(RecurringRule rule);
 
+  /// Marks the active saving [id] as having reached [target] [on] that day (BR-23, AC-R2), writing
+  /// only `target_reached_for` and `target_reached_on`, so an edit made since Home read the rule is
+  /// kept. Emits on [changes].
+  ///
+  /// Returns [Right] with [unit], [Left] with `RuleNotFoundFailure` when no active rule has that
+  /// id, or `DatabaseFailure`.
+  TaskEither<Failure, Unit> markTargetReached(
+    int id,
+    Money target,
+    CalendarDate on,
+  );
+
   /// Stops (`active: false`) or resumes rule [id]; a stopped rule posts nothing but its past
   /// entries stay.
   ///
   /// Returns [Right] with [unit], [Left] with `RuleNotFoundFailure` when [id] doesn't exist, or
   /// `DatabaseFailure`.
   TaskEither<Failure, Unit> setActive(int id, {required bool active});
+
+  /// Deletes every entry rule [id] posted on or after [since] and stops the rule, in one
+  /// transaction, so a failure leaves both untouched (Undo of *Start saving*, E164). Earlier
+  /// entries stay. Emits on [changes] once.
+  ///
+  /// Returns [Right] with [unit], [Left] with `RuleNotFoundFailure` when [id] doesn't exist, or
+  /// `DatabaseFailure`.
+  TaskEither<Failure, Unit> removeWithPostedEntries(int id, {required CalendarDate since});
 
   /// Records [skip]: that occurrence didn't go out, so it no longer waits (D123). A repeat is
   /// harmless. Emits on [changes].
@@ -63,6 +84,7 @@ abstract interface class RecurringRepository {
   /// `InvalidDataFailure` for a bad stored date.
   TaskEither<Failure, List<BillSkip>> skipsBetween(CalendarDate from, CalendarDate to);
 
-  /// Emits once after each successful [add], [update], [setActive], [skip] or [unskip]; never errors.
+  /// Emits once after each successful [add], [update], [markTargetReached], [setActive], [removeWithPostedEntries], [skip] or
+  /// [unskip]; never errors.
   Stream<void> get changes;
 }

@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/errors/failure.dart';
 import '../../../ledger/ledger.dart';
+import '../../domain/entities/reached_line.dart';
 
 /// What Home shows.
 sealed class HomeState extends Equatable {
@@ -24,7 +25,8 @@ final class HomeLoading extends HomeState {
 /// does the same for a bill deleted from its sheet (D118), and [amountUndo] for a waiting bill
 /// just entered or skipped (D123), [usedUndo] for a *Used* save (AC-Y9) and [fixUndo] for a fix (FR-FX-5). [billUndoKeepsHistory]
 /// says the saving in [billUndo] has had a put-in, so its Undo bar says what stays (AC-Y10).
-/// [boughtUndo] holds an *I bought it* just made, for its one Undo (AC-T9).
+/// [boughtUndo] holds an *I bought it* just made, for its one Undo (AC-T9). [reachedLine] is the
+/// saving whose target was reached, for the nudge slot's reached line (BR-23).
 /// [showWeek] puts the hero on *This week* instead of *Today* (FR-HO-2).
 /// [billNames] names each bill rule by id, so a row a bill posted says which bill it is.
 final class HomeReady extends HomeState {
@@ -45,6 +47,7 @@ final class HomeReady extends HomeState {
     this.showWeek = false,
     this.billNames = const <int, String>{},
     this.boughtUndo = const Option<UsedOutcome>.none(),
+    this.reachedLine = const Option<ReachedLine>.none(),
   });
 
   final CycleSummary summary;
@@ -80,6 +83,10 @@ final class HomeReady extends HomeState {
   final Map<int, String> billNames;
   final Option<UsedOutcome> boughtUndo;
 
+  /// The reached line's candidate: the saving shown today, else the first pending one; none when no
+  /// saving qualifies (FR-HO-3, BR-23).
+  final Option<ReachedLine> reachedLine;
+
   /// Returns a copy with the given fields replaced; [undo], [billUndo], [amountUndo], [usedUndo], [fixUndo],
   /// [boughtUndo] and [billUndoKeepsHistory] reset unless passed.
   HomeReady copyWith({
@@ -94,6 +101,7 @@ final class HomeReady extends HomeState {
     bool billUndoKeepsHistory = false,
     bool? showWeek,
     Option<UsedOutcome> boughtUndo = const Option<UsedOutcome>.none(),
+    Option<ReachedLine>? reachedLine,
   }) =>
       HomeReady(
         summary: summary,
@@ -112,10 +120,11 @@ final class HomeReady extends HomeState {
         showWeek: showWeek ?? this.showWeek,
         billNames: billNames,
         boughtUndo: boughtUndo,
+        reachedLine: reachedLine ?? this.reachedLine,
       );
 
   @override
-  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, usedUndo, fixUndo, justFixed, installDue, billUndoKeepsHistory, showWeek, billNames, boughtUndo];
+  List<Object?> get props => <Object?>[summary, todayEntries, categories, todaySpends, dueSoon, undo, billUndo, amountUndo, usedUndo, fixUndo, justFixed, installDue, billUndoKeepsHistory, showWeek, billNames, boughtUndo, reachedLine];
 }
 
 /// Loading failed; a quiet message with Try again.

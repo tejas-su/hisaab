@@ -2803,6 +2803,12 @@ abstract class AppLocalizations {
   /// **'Add a spend'**
   String get shortcutAddSpend;
 
+  /// Launcher-icon shortcut; it opens Can I afford it? over Spends (FR-WG-9). Mirrored in android strings.xml as shortcut_afford
+  ///
+  /// In en, this message translates to:
+  /// **'Can I afford it?'**
+  String get shortcutAfford;
+
   /// Settings group heading for the widget and the tile (FR-SE-6)
   ///
   /// In en, this message translates to:
@@ -3733,6 +3739,30 @@ abstract class AppLocalizations {
   /// **'You\'ve already set aside that much.'**
   String get savingTargetLiveReached;
 
+  /// Line 2 of the Saving up to slot when the typed target frees part of a put-in still due this cycle, so today's share rises (AC-T3, BR-23). amount is the rise from MoneyFormatter, e.g. ₹56.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily number goes up by {amount}.'**
+  String savingTargetDayUp(String amount);
+
+  /// TalkBack twin of savingTargetDayUp (AC-T12, B3). amount is spoken, e.g. 56 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily number goes up by {amount}.'**
+  String savingTargetDayUpSpoken(String amount);
+
+  /// Line 2 of the Saving up to slot when the typed target lets more of a put-in still due this cycle go in, so today's share falls (AC-T3, BR-23). amount is the fall from MoneyFormatter, e.g. ₹56, never negative.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily number goes down by {amount}.'**
+  String savingTargetDayDown(String amount);
+
+  /// TalkBack twin of savingTargetDayDown (AC-T12, B3). amount is spoken, e.g. 56 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily number goes down by {amount}.'**
+  String savingTargetDayDownSpoken(String amount);
+
   /// Chip beside the amount on the Saving up to keypad; removes the target. Shown only when a target is set (AC-T2). Visible label.
   ///
   /// In en, this message translates to:
@@ -3822,6 +3852,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Used {amount} from {saving}'**
   String savingBoughtSnack(String amount, String saving);
+
+  /// Home's nudge-slot line, shown once when a saving's set-aside amount meets its target (FR-HO-3 reached line, D214). saving is the user's own name and is never cut; target is formatted by MoneyFormatter. One sentence, no second line, no exclamation mark.
+  ///
+  /// In en, this message translates to:
+  /// **'{saving} reached {target}.'**
+  String savingReachedLine(String saving, String target);
+
+  /// TalkBack label of the reached line (AC-R7); the hint is the existing dueSoonOpensSaving, 'Opens the saving.'. target is spoken, e.g. 12,000 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'{saving} reached {target}.'**
+  String savingReachedLineSpoken(String saving, String target);
+
+  /// Title of the Can I afford it? sheet before the item is named, and of its card on Spends (FR-SP-9, UI_DESIGN 5.4a).
+  ///
+  /// In en, this message translates to:
+  /// **'Can I afford it?'**
+  String get affordTitle;
+
+  /// Quieter line under the Can I afford it? card title on Spends (FR-SP-9 AC-1, UI_DESIGN 5.4a).
+  ///
+  /// In en, this message translates to:
+  /// **'Check a big buy'**
+  String get affordCardNote;
+
+  /// Sheet title once step 1 is done (mockup 52): the item's own name and its price, formatted by MoneyFormatter. A no-break space comes before the middle dot.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {price}'**
+  String affordHeading(String name, String price);
+
+  /// TalkBack twin of affordHeading; price is spoken, e.g. 1,27,000 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {price}'**
+  String affordHeadingSpoken(String name, String price);
+
+  /// Heading of step 1 (FR-SP-9 AC-2).
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to buy?'**
+  String get affordItemQuestion;
+
+  /// Label of the item's name field on step 1; at most 40 characters.
+  ///
+  /// In en, this message translates to:
+  /// **'What is it called?'**
+  String get affordNameLabel;
+
+  /// Caption under the price on step 1 (AC-2).
+  ///
+  /// In en, this message translates to:
+  /// **'How much it costs'**
+  String get affordPriceLabel;
+
+  /// Heading of step 2 (AC-3).
+  ///
+  /// In en, this message translates to:
+  /// **'Saved anything for it already?'**
+  String get affordHaveQuestion;
+
+  /// Chip on step 2, the default: nothing is put away for this item (AC-3).
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet'**
+  String get affordNothingYet;
+
+  /// Chip on step 2: shows the keypad for the money already put away (AC-3).
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get affordHaveYes;
+
+  /// Caption under the saved amount on step 2 after Yes (AC-3). This money is outside the app and never recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Money you\'ve put away for this, in any account'**
+  String get affordHaveHint;
+
+  /// The marigold key on step 2 (AC-3).
+  ///
+  /// In en, this message translates to:
+  /// **'See the answer'**
+  String get affordSeeAnswer;
+
+  /// Verdict when the money put away covers the price (BR-24 need = 0).
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, you can.'**
+  String get affordFromSavingsVerdict;
+
+  /// Sentence under 'Yes, you can.'; have is what the user typed on step 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay it from the {have} you\'ve saved.'**
+  String affordFromSavingsLine(String have);
+
+  /// Verdict when the rest fits on the card and is paid in full from the next pay (BR-24, D219). The only place the word loan may appear.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, without a loan.'**
+  String get affordWithCardVerdict;
+
+  /// Sentence under 'Yes, without a loan.' (D219): the card part is logged on the day the card bill is paid, not the day of the buy. 'Card', never 'credit'.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your {have} and put {need} on the card. Add {need} when you pay the card bill.'**
+  String affordWithCardLine(String have, String need);
+
+  /// Same as affordWithCardLine when nothing is put away (Nothing yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Put {need} on the card. Add {need} when you pay the card bill.'**
+  String affordCardOnlyLine(String need);
+
+  /// Second sentence of 'Yes, without a loan.': the next cycle's day amount after the card bill is paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Your days stay at about {perDay}.'**
+  String affordWithCardDays(String perDay);
+
+  /// Verdict when it doesn't fit yet (BR-24 saveUp and daysFull).
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet.'**
+  String get affordNotYetVerdict;
+
+  /// Sentence under 'Not yet.' with a plan: spare a month, done by the month of the last put-in (BR-23 estimate). month is short with the year, e.g. Dec 2027.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {spare} a month and it\'s yours by {month}.'**
+  String affordSaveUpLine(String spare, String month);
+
+  /// Same as affordSaveUpLine when it needs more than 120 put-ins (BR-23 far).
+  ///
+  /// In en, this message translates to:
+  /// **'Save {spare} a month. It would take over 10 years.'**
+  String affordSaveUpFarLine(String spare);
+
+  /// Second sentence of the Not yet plan: the day amount while saving, against the day amount with nothing set aside.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s about {saving} a day for now, instead of {usually}.'**
+  String affordSaveUpDays(String saving, String usually);
+
+  /// Sentence under 'Not yet.' when nothing is spare (BR-24 spare = 0). No Start saving key.
+  ///
+  /// In en, this message translates to:
+  /// **'Your usual days already use your monthly money.'**
+  String get affordDaysFullLine;
+
+  /// The answer with no finished, fully tracked cycle yet (BR-24 history gate, E160). 'After payday', never 'next month' (D117).
+  ///
+  /// In en, this message translates to:
+  /// **'Ask again after payday.'**
+  String get affordTooEarlyVerdict;
+
+  /// The one marigold key on a Not yet answer (AC-6, D220).
+  ///
+  /// In en, this message translates to:
+  /// **'Start saving {amount} a month'**
+  String affordStartSaving(String amount);
+
+  /// Quiet outlined key that closes the answer (AC-4).
+  ///
+  /// In en, this message translates to:
+  /// **'Okay'**
+  String get affordOkay;
+
+  /// Caption under the day-amount bars (UI_DESIGN 5.4a): the tick on each bar is the usual day's spend plus 20%.
+  ///
+  /// In en, this message translates to:
+  /// **'The line is your breathing space: usual {usual} a day + 20%.'**
+  String affordBreathingSpace(String usual);
+
+  /// Label of the outlined bar: the next cycle's day amount with nothing set aside.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually'**
+  String get affordBarUsually;
+
+  /// Label of the filled bar: the day amount with this buy or saving.
+  ///
+  /// In en, this message translates to:
+  /// **'With this buy'**
+  String get affordBarWithThis;
+
+  /// TalkBack label of one day-amount bar; perDay is spoken, e.g. 900 rupees.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {perDay} a day'**
+  String affordBarSpoken(String label, String perDay);
+
+  /// The collapsed toggle under the answer (AC-5).
+  ///
+  /// In en, this message translates to:
+  /// **'Other ways'**
+  String get affordOtherWays;
+
+  /// Title of the first Other ways row (AC-5).
+  ///
+  /// In en, this message translates to:
+  /// **'From savings'**
+  String get affordWayFromSavings;
+
+  /// Title of the second Other ways row (AC-5). 'Card', never 'credit'.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings, then the card'**
+  String get affordWayCard;
+
+  /// Title of the third Other ways row (AC-5).
+  ///
+  /// In en, this message translates to:
+  /// **'Save up'**
+  String get affordWaySaveUp;
+
+  /// The suggested Other ways row's title (AC-5); way is that row's title. A no-break space comes before the middle dot.
+  ///
+  /// In en, this message translates to:
+  /// **'{way} · suggested'**
+  String affordWaySuggested(String way);
+
+  /// From savings line when the saved money covers the price.
+  ///
+  /// In en, this message translates to:
+  /// **'Covered. {have} saved for it.'**
+  String affordWayCovered(String have);
+
+  /// From savings line when the saved money is not enough.
+  ///
+  /// In en, this message translates to:
+  /// **'{have} saved. Short by {need}.'**
+  String affordWayShort(String have, String need);
+
+  /// From savings line after Nothing yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing saved yet. Short by {need}.'**
+  String affordWayNothingSaved(String need);
+
+  /// Savings, then the card line when the card part leaves at least the breathing space a day.
+  ///
+  /// In en, this message translates to:
+  /// **'{need} on the card. After payday about {perDay} a day.'**
+  String affordWayCardFits(String need, String perDay);
+
+  /// Savings, then the card line when the card part would leave less than the breathing space a day (never 'about ₹0 a day').
+  ///
+  /// In en, this message translates to:
+  /// **'{need} on the card would leave less than your {floor} a day.'**
+  String affordWayCardBelow(String need, String floor);
+
+  /// Save up line with a plan; month is short with the year, e.g. Dec 2027.
+  ///
+  /// In en, this message translates to:
+  /// **'{spare} a month, ready by {month}.'**
+  String affordWaySaveFits(String spare, String month);
+
+  /// Save up line past 120 put-ins (BR-23 far).
+  ///
+  /// In en, this message translates to:
+  /// **'{spare} a month, over 10 years to go.'**
+  String affordWaySaveFar(String spare);
+
+  /// Save up line when nothing is spare (spare = 0).
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing spare after your usual days.'**
+  String get affordWayNothingSpare;
+
+  /// An Other ways line for a path that isn't needed because the saved money covers it.
+  ///
+  /// In en, this message translates to:
+  /// **'Not needed.'**
+  String get affordWayNotNeeded;
+
+  /// An Other ways line for a path that needs a finished, fully tracked cycle first (E160).
+  ///
+  /// In en, this message translates to:
+  /// **'Not available yet.'**
+  String get affordWayNotYet;
+
+  /// Snackbar with Undo after Start saving (AC-6); name is the user's own item name.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving {amount} a month for {name}'**
+  String affordSavingStarted(String amount, String name);
 }
 
 class _AppLocalizationsDelegate

@@ -14,6 +14,7 @@ object LaunchIntents {
     const val ADD = "hisaab://add"
     const val HOME = "hisaab://home"
     const val SET_UP = "hisaab://setup"
+    const val AFFORD = "hisaab://afford"
 
     /** An intent that opens [uri] in hisaab. */
     fun intent(context: Context, uri: String): Intent = Intent(context, MainActivity::class.java)

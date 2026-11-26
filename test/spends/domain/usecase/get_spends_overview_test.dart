@@ -174,6 +174,32 @@ void main() {
       expect((result.budget, result.saved), (Money.fromMajor(40000), Money.zero));
     });
 
+    test('a reached saving reserves nothing, as with the saving deleted (D213)', () async {
+      ledger.entries.add(Entry(
+        id: 52,
+        amount: Money.fromMajor(12000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        date: const CalendarDate(2026, 9, 30),
+        createdAt: WorkedExample.now,
+        recurringId: 4,
+      ));
+      final SpendsOverview deleted = await overview();
+      recurring.rules = <RecurringRule>[
+        ...WorkedExample.rules,
+        WorkedExample.rd.copyWith(
+          amount: Money.fromMajor(1000),
+          schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 9, 30)),
+          nextDue: const CalendarDate(2026, 10, 30),
+          target: Option<Money>.of(Money.fromMajor(12000)),
+        ),
+      ];
+
+      final SpendsOverview reached = await overview();
+
+      expect(reached.budget, deleted.budget);
+    });
+
     test('saves never reach the rows, the pace or the insights', () async {
       final SpendsOverview before = await overview();
       ledger.entries.add(Entry(

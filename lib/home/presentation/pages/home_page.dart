@@ -49,6 +49,7 @@ class HomePage extends StatelessWidget {
     this.missedLogSlot,
     this.onFixMyNumber,
     this.installLineSlot,
+    this.reachedLineSlot,
   });
 
   final ValueChanged<EntryKind> onAdd;
@@ -72,6 +73,10 @@ class HomePage extends StatelessWidget {
   /// Builds the nudge slot's install item, the one-time "Already spent some this month?" line
   /// (FR-HO-3); none when null. It sits above the missed-log line.
   final WidgetBuilder? installLineSlot;
+
+  /// Builds the nudge slot's reached item, "Insurance reached ₹12,000." (FR-HO-3, BR-23); none when
+  /// null. It sits above the install line, which yields to it.
+  final WidgetBuilder? reachedLineSlot;
 
   @override
   // why: the dock or the Add key sits right below Home, and its own top padding is the gap.
@@ -164,6 +169,7 @@ class HomePage extends StatelessWidget {
     }
     return state.dueSoon.match(
       () => <Widget>[
+        if (reachedLineSlot case final WidgetBuilder reached) reached(context),
         if (installLineSlot case final WidgetBuilder install) install(context),
         if (missedLogSlot case final WidgetBuilder slot) slot(context),
       ],

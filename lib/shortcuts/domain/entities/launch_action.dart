@@ -9,9 +9,12 @@ enum LaunchAction {
   home,
 
   /// The widget's *Set up* key.
-  setUp;
+  setUp,
 
-  /// The action [uri] names (`hisaab://add`, `hisaab://home`, `hisaab://setup`); [None] for no
+  /// *Can I afford it?* over Spends: the app shortcut (FR-WG-9).
+  afford;
+
+  /// The action [uri] names (`hisaab://add`, `hisaab://home`, `hisaab://setup`, `hisaab://afford`); [None] for no
   /// URI, another scheme or anything else.
   static Option<LaunchAction> parse(String? uri) {
     final Uri? parsed = uri == null ? null : Uri.tryParse(uri);
@@ -26,5 +29,6 @@ enum LaunchAction {
     'add': LaunchAction.add,
     'home': LaunchAction.home,
     'setup': LaunchAction.setUp,
+    'afford': LaunchAction.afford,
   };
 }

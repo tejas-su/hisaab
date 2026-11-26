@@ -72,6 +72,26 @@ void main() {
     });
   });
 
+  group('LedgerRepositoryImpl.anyGot', () {
+    EntryDraft got(CalendarDate date) => EntryDraft(amount: Money.fromMajor(500), kind: EntryKind.got, categoryId: 9, date: date);
+
+    test('is false on an empty ledger and with only spends', () async {
+      expect(_right(await repository.anyGot().run()), isFalse);
+      _right(await repository.add(_draft()).run());
+      expect(_right(await repository.anyGot().run()), isFalse);
+    });
+
+    test('is true with a Got on any day, however old', () async {
+      _right(await repository.add(got(const CalendarDate(2019, 3, 1))).run());
+      expect(_right(await repository.anyGot().run()), isTrue);
+    });
+
+    test('returns DatabaseFailure when the database is closed', () async {
+      await database.close();
+      expect((await repository.anyGot().run()).getLeft().toNullable(), isA<DatabaseFailure>());
+    });
+  });
+
   group('LedgerRepositoryImpl.savedTotal (D120)', () {
     EntryDraft saved(int rupees, CalendarDate date) =>
         EntryDraft(amount: Money.fromMajor(rupees), kind: EntryKind.saved, categoryId: 11, date: date);

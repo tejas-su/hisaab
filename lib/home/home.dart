@@ -11,6 +11,7 @@ export 'presentation/bloc/home_lines_state.dart';
 export 'presentation/widgets/home_lines_driver.dart';
 export 'presentation/widgets/home_heading_focus.dart';
 export 'presentation/widgets/install_line_slot.dart';
+export 'presentation/widgets/reached_line_slot.dart';
 export 'presentation/widgets/missed_log_slot.dart';
 export 'presentation/days_rail_mapper.dart';
 export 'presentation/hero_copy.dart';

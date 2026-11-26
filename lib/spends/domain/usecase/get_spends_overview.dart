@@ -48,20 +48,36 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
   TaskEither<Failure, SpendsOverview> call(int params) {
     final CalendarDate today = _clock.today();
     return _settings.read().flatMap(
-          (BudgetSettings settings) => _recurring.activeRules().flatMap((List<RecurringRule> rules) {
-            final List<PayCycle> cycles = _cyclesBack(today, settings, rules, params + SpendsBreakdown.stripCycles);
-            final _Viewed viewed = _Viewed(
-              cycle: cycles[params],
-              previous: cycles[params + 1],
-              cyclesBack: params,
-              today: today,
-              strip: <StripCycle>[
-                for (int back = params; back < params + SpendsBreakdown.stripCycles; back++) (cycle: cycles[back], cyclesBack: back),
-              ],
-            );
-            return _overview(viewed, (savings: _savingsDue(viewed, rules), bills: _billsDue(viewed, rules)));
-          }),
-        );
+      (BudgetSettings settings) => _recurring.activeRules().flatMap(
+        (List<RecurringRule> rules) =>
+            _ledger.savingTotals().flatMap((SavingTotals totals) {
+              final List<PayCycle> cycles = _cyclesBack(
+                today,
+                settings,
+                rules,
+                params + SpendsBreakdown.stripCycles,
+              );
+              final _Viewed viewed = _Viewed(
+                cycle: cycles[params],
+                previous: cycles[params + 1],
+                cyclesBack: params,
+                today: today,
+                strip: <StripCycle>[
+                  for (
+                    int back = params;
+                    back < params + SpendsBreakdown.stripCycles;
+                    back++
+                  )
+                    (cycle: cycles[back], cyclesBack: back),
+                ],
+              );
+              return _overview(viewed, (
+                savings: _savingsDue(viewed, rules, totals),
+                bills: _billsDue(viewed, rules),
+              ));
+            }),
+      ),
+    );
   }
 
   /// The current cycle and the [count] before it, newest first.
@@ -79,8 +95,26 @@ final class GetSpendsOverview implements UseCase<SpendsOverview, int> {
 
   // why: `K` is computed (D120): a saving still to come this cycle is reserved like a bill. A past
   // cycle has nothing still to come.
-  static Money _savingsDue(_Viewed viewed, List<RecurringRule> rules) => viewed.cyclesBack == 0
-      ? DueAmounts.after(rules.where((RecurringRule r) => r.kind == EntryKind.saved), today: viewed.asOf, cycle: viewed.cycle)
+  // A saving with a target reserves at most its gap, as Home does (D213).
+  static Money _savingsDue(
+    _Viewed viewed,
+    List<RecurringRule> rules,
+    SavingTotals totals,
+  ) => viewed.cyclesBack == 0
+      ? rules
+            .where((RecurringRule r) => r.kind == EntryKind.saved)
+            .expand(
+              (RecurringRule saving) => SavingCaps.reservedAfter(
+                saving,
+                totals,
+                today: viewed.asOf,
+                cycle: viewed.cycle,
+              ),
+            )
+            .fold(
+              Money.zero,
+              (Money total, DatedAmount due) => total + due.amount,
+            )
       : Money.zero;
 
   // why: the steady line steps up by each bill on its day (D129). A card bill is never reserved,

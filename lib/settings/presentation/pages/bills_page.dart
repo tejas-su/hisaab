@@ -34,12 +34,16 @@ class BillsPage extends StatelessWidget {
     required this.onEdit,
     this.kind = EntryKind.spent,
     this.onPutInExtra,
+    this.today = const Option<CalendarDate>.none(),
   });
 
   final VoidCallback onAdd;
   final ValueChanged<RecurringRule> onEdit;
   final EntryKind kind;
   final VoidCallback? onPutInExtra;
+
+  /// Today, for a saving target's "done by" month (BR-23); none always names the year.
+  final Option<CalendarDate> today;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +144,7 @@ class BillsPage extends StatelessWidget {
             onDelete: (RecurringRule bill) => bloc.add(BillsDeleteRequested(bill)),
             onThresholdReached: () => bloc.add(const BillsSwipeThresholdReached()),
             setAside: setAside.map((SetAsideSummary summary) => summary.perSaving).getOrElse(() => const <int, Money>{}),
+            today: today,
           ),
         if (saved case Some<SavedTotal>(:final SavedTotal value)) ...<Widget>[
           const SizedBox(height: HisaabSpacing.m),

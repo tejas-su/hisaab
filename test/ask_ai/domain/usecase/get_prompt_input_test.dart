@@ -129,6 +129,17 @@ void main() {
       expect(input.savings, <RecurringRule>[WorkedExample.rd]);
     });
 
+    test("carries what is set aside in each saving, from the Savings list's own use case (BR-15, D215)", () async {
+      recurring.rules = <RecurringRule>[...recurring.rules, WorkedExample.insurance];
+      ledger.entries.addAll(WorkedExample.insurancePutIns);
+      final PromptInput input = await load(_october);
+      final SetAsideSummary expected = (await GetSetAside(recurring: recurring, ledger: ledger)(const NoParams()).run()).getOrElse(
+        (Failure f) => throw StateError('unexpected $f'),
+      );
+      expect(input.setAsideBySaving, expected.perSaving);
+      expect(input.setAsideBySaving[WorkedExample.insurance.id], Money.fromMajor(12000));
+    });
+
     test('a past cycle carries no summary', () async {
       expect((await load(_september)).summary, const Option<CycleSummary>.none());
     });

@@ -3,8 +3,9 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/time/calendar_date.dart';
 import '../../../habits/habits.dart';
+import '../../domain/entities/reached_line.dart';
 
-/// The missed-log line Home shows, if any (SPEC FR-HO-3).
+/// The nudge-slot line Home shows below a bill line, if any: reached, install or missed-log (SPEC FR-HO-3).
 final class HomeLinesState extends Equatable {
   /// Creates the state; by default nothing is decided and no point is latched.
   const HomeLinesState({
@@ -16,6 +17,8 @@ final class HomeLinesState extends Equatable {
     this.askedOn = const Option<CalendarDate>.none(),
     this.install = false,
     this.installMarked = false,
+    this.reached = const Option<ReachedLine>.none(),
+    this.reachedMarked = false,
   });
 
   /// The habit the line asks about; [None] when there is no line.
@@ -43,8 +46,26 @@ final class HomeLinesState extends Equatable {
   /// Whether the install line has been written as seen, so a later reload keeps it on screen.
   final bool installMarked;
 
+  /// The saving whose reached line holds the nudge slot (FR-HO-3, BR-23); it outranks the install
+  /// line. None when there is no reached line.
+  final Option<ReachedLine> reached;
+
+  /// Whether the reached line has been written as shown from here, so it is not written twice.
+  final bool reachedMarked;
+
   /// Returns a copy with the given fields replaced.
-  HomeLinesState copyWith({Option<MissedLog>? missed, int? serial, bool? asked, bool? tapped, bool? pointPending, Option<CalendarDate>? askedOn, bool? install, bool? installMarked}) =>
+  HomeLinesState copyWith({
+    Option<MissedLog>? missed,
+    int? serial,
+    bool? asked,
+    bool? tapped,
+    bool? pointPending,
+    Option<CalendarDate>? askedOn,
+    bool? install,
+    bool? installMarked,
+    Option<ReachedLine>? reached,
+    bool? reachedMarked,
+  }) =>
       HomeLinesState(
         missed: missed ?? this.missed,
         serial: serial ?? this.serial,
@@ -54,8 +75,10 @@ final class HomeLinesState extends Equatable {
         askedOn: askedOn ?? this.askedOn,
         install: install ?? this.install,
         installMarked: installMarked ?? this.installMarked,
+        reached: reached ?? this.reached,
+        reachedMarked: reachedMarked ?? this.reachedMarked,
       );
 
   @override
-  List<Object?> get props => <Object?>[missed, serial, asked, tapped, pointPending, askedOn, install, installMarked];
+  List<Object?> get props => <Object?>[missed, serial, asked, tapped, pointPending, askedOn, install, installMarked, reached, reachedMarked];
 }

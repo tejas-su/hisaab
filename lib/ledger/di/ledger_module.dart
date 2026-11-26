@@ -42,6 +42,7 @@ import '../domain/usecase/correct_latest_pay.dart';
 import '../domain/usecase/get_income.dart';
 import '../domain/usecase/get_saved_total.dart';
 import '../domain/usecase/get_set_aside.dart';
+import '../domain/usecase/get_target_day_effect.dart';
 import '../domain/usecase/use_from_savings.dart';
 import '../domain/usecase/put_in_extra.dart';
 import '../domain/usecase/post_due_recurring.dart';
@@ -54,29 +55,74 @@ import '../domain/usecase/set_category_hidden.dart';
 void registerLedgerServices(GetIt getIt) {
   final AppDatabase database = getIt<AppDatabase>();
   final Clock clock = getIt<Clock>();
-  final LedgerRepositoryImpl ledger = LedgerRepositoryImpl(entries: SqfliteEntriesLocalDataSource(database), clock: clock);
-  final RecurringRepositoryImpl recurring =
-      RecurringRepositoryImpl(recurring: SqfliteRecurringLocalDataSource(database), clock: clock);
+  final LedgerRepositoryImpl ledger = LedgerRepositoryImpl(
+    entries: SqfliteEntriesLocalDataSource(database),
+    clock: clock,
+  );
+  final RecurringRepositoryImpl recurring = RecurringRepositoryImpl(
+    recurring: SqfliteRecurringLocalDataSource(database),
+    clock: clock,
+  );
   getIt
-    ..registerSingleton<LedgerRepository>(ledger, dispose: (LedgerRepository _) => ledger.dispose())
-    ..registerSingleton<RecurringRepository>(recurring, dispose: (RecurringRepository _) => recurring.dispose())
-    ..registerSingleton<CategoryRepository>(CategoryRepositoryImpl(categories: SqfliteCategoriesLocalDataSource(database)))
-    ..registerSingleton<BudgetSettingsRepository>(
-      BudgetSettingsRepositoryImpl(settings: SqfliteBudgetSettingsLocalDataSource(database)),
+    ..registerSingleton<LedgerRepository>(
+      ledger,
+      dispose: (LedgerRepository _) => ledger.dispose(),
     )
-    ..registerSingleton<SaveEntry>(SaveEntry(ledger: ledger, recurring: recurring, clock: clock))
+    ..registerSingleton<RecurringRepository>(
+      recurring,
+      dispose: (RecurringRepository _) => recurring.dispose(),
+    )
+    ..registerSingleton<CategoryRepository>(
+      CategoryRepositoryImpl(
+        categories: SqfliteCategoriesLocalDataSource(database),
+      ),
+    )
+    ..registerSingleton<BudgetSettingsRepository>(
+      BudgetSettingsRepositoryImpl(
+        settings: SqfliteBudgetSettingsLocalDataSource(database),
+      ),
+    )
+    ..registerSingleton<SaveEntry>(
+      SaveEntry(ledger: ledger, recurring: recurring, clock: clock),
+    )
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
-    ..registerSingleton<PostDueRecurring>(PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock))
-    ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
-    ..registerSingleton<GetLastBillAmount>(GetLastBillAmount(ledger: ledger, clock: clock))
+    ..registerSingleton<PostDueRecurring>(
+      PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock),
+    )
+    ..registerSingleton<GetDueSoonBill>(
+      GetDueSoonBill(recurring: recurring, ledger: ledger, clock: clock),
+    )
+    ..registerSingleton<GetLastBillAmount>(
+      GetLastBillAmount(ledger: ledger, clock: clock),
+    )
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
-    ..registerSingleton<AddBill>(AddBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
-    ..registerSingleton<EditBill>(EditBill(recurring: recurring, categories: getIt<CategoryRepository>(), clock: clock))
-    ..registerSingleton<EnterBillAmount>(EnterBillAmount(ledger: ledger, recurring: recurring))
-    ..registerSingleton<UndoBillAmount>(UndoBillAmount(ledger: ledger, recurring: recurring))
-    ..registerSingleton<SkipBillOccurrence>(SkipBillOccurrence(recurring: recurring))
-    ..registerSingleton<UnskipBillOccurrence>(UnskipBillOccurrence(recurring: recurring))
+    ..registerSingleton<AddBill>(
+      AddBill(
+        recurring: recurring,
+        categories: getIt<CategoryRepository>(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<EditBill>(
+      EditBill(
+        recurring: recurring,
+        categories: getIt<CategoryRepository>(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<EnterBillAmount>(
+      EnterBillAmount(ledger: ledger, recurring: recurring),
+    )
+    ..registerSingleton<UndoBillAmount>(
+      UndoBillAmount(ledger: ledger, recurring: recurring),
+    )
+    ..registerSingleton<SkipBillOccurrence>(
+      SkipBillOccurrence(recurring: recurring),
+    )
+    ..registerSingleton<UnskipBillOccurrence>(
+      UnskipBillOccurrence(recurring: recurring),
+    )
     ..registerSingleton<DeleteBill>(DeleteBill(recurring: recurring))
     ..registerSingleton<RestoreBill>(RestoreBill(recurring: recurring))
     ..registerSingleton<GetCycleSummary>(
@@ -98,17 +144,48 @@ void registerLedgerServices(GetIt getIt) {
       ),
     )
     ..registerSingleton<ArmBillReminders>(
-      ArmBillReminders(recurring: recurring, summary: getIt<GetCycleSummary>(), reminders: getIt<BillReminders>(), clock: clock),
+      ArmBillReminders(
+        recurring: recurring,
+        summary: getIt<GetCycleSummary>(),
+        reminders: getIt<BillReminders>(),
+        clock: clock,
+      ),
     )
-    ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock, summary: getIt<GetCycleSummary>()))
+    ..registerSingleton<GetBillStatus>(
+      GetBillStatus(
+        ledger: ledger,
+        clock: clock,
+        summary: getIt<GetCycleSummary>(),
+      ),
+    )
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
-    ..registerSingleton<GetSetAside>(GetSetAside(recurring: recurring, ledger: ledger))
-    ..registerSingleton<UseFromSavings>(UseFromSavings(ledger: ledger, categories: getIt<CategoryRepository>(), clock: clock))
-    ..registerSingleton<GetIncome>(GetIncome(recurring: recurring, ledger: ledger, clock: clock))
-    ..registerSingleton<ChangeIncomeAmount>(ChangeIncomeAmount(recurring: recurring))
+    ..registerSingleton<GetSetAside>(
+      GetSetAside(recurring: recurring, ledger: ledger),
+    )
+    ..registerSingleton<GetTargetDayEffect>(
+      GetTargetDayEffect(summary: getIt<GetCycleSummary>(), ledger: ledger),
+    )
+    ..registerSingleton<UseFromSavings>(
+      UseFromSavings(
+        ledger: ledger,
+        categories: getIt<CategoryRepository>(),
+        clock: clock,
+      ),
+    )
+    ..registerSingleton<GetIncome>(
+      GetIncome(recurring: recurring, ledger: ledger, clock: clock),
+    )
+    ..registerSingleton<ChangeIncomeAmount>(
+      ChangeIncomeAmount(recurring: recurring),
+    )
     ..registerSingleton<CorrectLatestPay>(CorrectLatestPay(ledger: ledger))
     ..registerSingleton<ChangePayRule>(
-      ChangePayRule(recurring: recurring, settings: getIt<BudgetSettingsRepository>(), categories: getIt<CategoryRepository>(), clock: clock),
+      ChangePayRule(
+        recurring: recurring,
+        settings: getIt<BudgetSettingsRepository>(),
+        categories: getIt<CategoryRepository>(),
+        clock: clock,
+      ),
     )
     ..registerSingleton<PutInExtra>(
       PutInExtra(
@@ -128,9 +205,19 @@ void registerLedgerServices(GetIt getIt) {
         clock: clock,
       ),
     )
-    ..registerSingleton<ApplySuggestedLimits>(ApplySuggestedLimits(categories: getIt<CategoryRepository>()))
-    ..registerSingleton<AddOwnCategory>(AddOwnCategory(categories: getIt<CategoryRepository>()))
-    ..registerSingleton<RenameCategory>(RenameCategory(categories: getIt<CategoryRepository>()))
-    ..registerSingleton<ChangeCategoryIcon>(ChangeCategoryIcon(categories: getIt<CategoryRepository>()))
-    ..registerSingleton<SetCategoryHidden>(SetCategoryHidden(categories: getIt<CategoryRepository>()));
+    ..registerSingleton<ApplySuggestedLimits>(
+      ApplySuggestedLimits(categories: getIt<CategoryRepository>()),
+    )
+    ..registerSingleton<AddOwnCategory>(
+      AddOwnCategory(categories: getIt<CategoryRepository>()),
+    )
+    ..registerSingleton<RenameCategory>(
+      RenameCategory(categories: getIt<CategoryRepository>()),
+    )
+    ..registerSingleton<ChangeCategoryIcon>(
+      ChangeCategoryIcon(categories: getIt<CategoryRepository>()),
+    )
+    ..registerSingleton<SetCategoryHidden>(
+      SetCategoryHidden(categories: getIt<CategoryRepository>()),
+    );
 }

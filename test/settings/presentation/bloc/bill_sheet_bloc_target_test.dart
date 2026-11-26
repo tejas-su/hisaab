@@ -392,6 +392,33 @@ void main() {
 
       expect(ledger.entries.last.kind, isNot(EntryKind.used));
     });
+
+    test('does nothing before the saving has reached its target', () async {
+      await open(withTarget(50000));
+
+      await bloc.dispatch(const BillSheetBoughtRequested());
+
+      expect(ledger.entries.last.kind, isNot(EntryKind.used));
+      expect(recurring.stopped, isEmpty);
+      expect(bloc.state, isA<BillSheetReady>());
+    });
+
+    test('does nothing while Keep saving is writing', () async {
+      await open(withTarget(12000));
+      final Completer<void> gate = Completer<void>();
+      recurring.nextUpdateGate = gate;
+
+      bloc.add(const BillSheetKeepSavingRequested());
+      await pumpEventQueue();
+      expect(ready().saving, isTrue);
+      bloc.add(const BillSheetBoughtRequested());
+      await pumpEventQueue();
+      gate.complete();
+      await pumpEventQueue();
+
+      expect(ledger.entries.where((Entry e) => e.kind == EntryKind.used), isEmpty);
+      expect(recurring.stopped, isEmpty);
+    });
   });
 
   group('Keep saving (AC-T10, E153)', () {
@@ -424,6 +451,22 @@ void main() {
       await bloc.dispatch(const BillSheetAnswerOpened(BillAnswer.name));
 
       await bloc.dispatch(const BillSheetKeepSavingRequested());
+
+      expect(recurring.updates, isEmpty);
+    });
+
+    test('does nothing while I bought it is writing', () async {
+      await open(withTarget(12000));
+      final Completer<void> gate = Completer<void>();
+      ledger.nextAddGate = gate;
+
+      bloc.add(const BillSheetBoughtRequested());
+      await pumpEventQueue();
+      expect(ready().saving, isTrue);
+      bloc.add(const BillSheetKeepSavingRequested());
+      await pumpEventQueue();
+      gate.complete();
+      await pumpEventQueue();
 
       expect(recurring.updates, isEmpty);
     });

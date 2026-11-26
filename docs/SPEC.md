@@ -234,7 +234,7 @@ Replaces the Day Blocks (D114; [mockup 25](design/mockups/25-today-bar-and-rail.
   - **Delete** stops the rule at once, with Undo (4 s) that resumes it (D35).
   - **Yearly costs stay savings** (D174): the bill sheet is still monthly (D35). A *Used* entry is not a rule's entry: it has no `recurring_id` and links to its saving by its own `saving_id` column, because `(recurring_id, date)` is unique and a use on a put-in's date would be refused. Deleting a saving keeps its past entries, *Used* included (BR-19).
   - **A saving's target and stopping (D212, D213, BR-23).** A target is a rule attribute: it is kept by delete's Undo and is never posted. A saving with a target posts nothing once its set aside `S` (BR-19) is at or above the target `T`. The put-in that would pass `T` posts only the gap `T − S`, `next_due` keeps moving, and a catch-up after days away stops at `T` the same way. A later *Used* entry that brings `S` below `T` resumes posting from `next_due`, with no back-posting of the months skipped (D33). A saving with no target never stops.
-- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label}, ₹{amount}, due in {n} days" ("due tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown. Saving rules are nudged the same way, worded "{Label}, ₹{amount}, due on {weekday}" ("due tomorrow" when `n = 1`) (D120). A changing or card bill says "about": "Electricity, about ₹1,200, due tomorrow" (D123, D132).
+- **Due-soon nudge:** when an unposted *Spent* occurrence falls 1 to 5 days after today, Home shows "{Label}, ₹{amount}, due in {n} days" ("due tomorrow" when `n = 1`). Only the soonest one is shown; on a tie, the rule saved first wins. Occurrences due today are the engine's and never shown. Saving rules are nudged the same way, worded "{Label}, ₹{amount}, due on {weekday}" ("due tomorrow" when `n = 1`) (D120). A saving with a target is nudged at what the engine will post (BR-23, D213): the last put-in at its gap `T − S`, and a reached saving (`S ≥ T`) not at all, so the next bill or saving takes the row (D216). A changing or card bill says "about": "Electricity, about ₹1,200, due tomorrow" (D123, D132).
 - **Bill stamp (D118):** the bill sheet (FR-SE-1) stamps the bill:
   - When its next unposted occurrence is 1 to 5 days away (the due-soon window): "Due in {n} days" ("Due tomorrow" when `n = 1`).
   - Otherwise, when an entry posted by this rule is dated on or after the occurrence one month before `next_due`: "Went out {d MMM}" with that entry's date, or "Went out today" when it is today (D132).
@@ -324,7 +324,7 @@ At most **3** are shown, chosen in priority order:
      - **Saving target (D215, BR-23):** one sentence per active saving that has a target, right after the savings clause, soonest first, using the Savings list's own numbers (never recomputed in `PromptBuilder`, D79) and ISO dates. They are in the first person, like the clause beside them:
        - estimate: `My RD saving has a target of ₹50,000 and ₹18,000 set aside. At ₹5,000 a month it would reach the target around 2027-05-10.` (nothing set aside: `... and nothing set aside yet. ...`)
        - reached: `My Insurance saving has reached its target of ₹12,000, with ₹12,000 set aside. It puts in nothing more.`
-       - far: `My RD saving has a target of ₹50,000 and ₹500 set aside. At ₹500 a month it is more than 10 years from the target.`
+       - far: `My RD saving has a target of ₹50,000 and ₹500 set aside. At ₹300 a month it is more than 10 years from the target.`
        - **Reached savings are left out of the savings clause's monthly total** (`S ≥ T`, so they post nothing); the reached sentence says "It puts in nothing more." and the clause names only the savings that still put in. A saving that resumes (a *Used* entry, or a raised target) is counted again.
        - Both the sentences and the explaining line below are added only when at least one active saving has a target, so every other export stays byte-identical.
      - With no income at all (Home shows the No income card), the whole line is left out.
@@ -590,9 +590,10 @@ Design: `docs/superpowers/specs/2026-11-22-saving-target-design.md`, case study 
     if n > 120:          state = far        // "over 10 years to go"
     else:                d_n = next_due + (n − 1) months, clamped (BR-1);  state = estimate(d_n)
   ```
-  `T` and `S` are never compared with the hero, `P`, `A`, `K`, `remaining` or any BR-4 to BR-8 symbol. A target moves no number by itself.
+  `T` and `S` are never compared with the hero, `P`, `A`, `K`, `remaining` or any BR-4 to BR-8 symbol.
+- **Capped reservation (D216, owner 2026-11-26).** A saving with a target reserves in `R` (BR-3) only what the engine will post: its put-ins in `(t, end]`, in date order, each cut to what is left of `T − S`, so the last one is short and later ones are dropped (D213, AC-T9). So setting, raising, lowering or clearing `T` (or *Keep saving*) moves today's share **only when a put-in of that saving is still due later this cycle** and the change alters how much of it fits under `T`; otherwise no number moves. Example (the worked example, 9 days left): a ₹1,000 put-in due on the 30th with ₹12,000 set aside; typing `T` = ₹12,500 cuts it to ₹500, so ₹500 more is spread over the days left and today's share goes up by ₹56. The *Saving up to* question says so before it is saved (AC-T3). Clear and *Keep saving* act at once, with no preview; Home's hero simply follows the reload.
 - **Done by.** "Done by {Mon}" names the calendar month of the put-in that brings `S` to `T` (`d_n`). The put-ins are the rule's own monthly dates (BR-9), never pay-cycle dates. The month is `MMM`, with the year when it is not today's year (`Clock`). A saving on the 31st lands on the last day of shorter months (BR-1); the month named is unchanged by the clamp.
-- **Stop at the target (D213).** Reaching `T` stops the saving (BR-9): the put-in that would pass `T` posts only `T − S`, so `S = T` exactly, `next_due` keeps moving, and nothing more is posted while `S ≥ T`. A *Used* entry that brings `S` below `T`, or a raised `T`, resumes posting from `next_due`, with no back-posting. *Keep saving* clears `T` (FR-SE-1 AC-T10). A stopped saving puts in nothing, so from the cycle after it stops it no longer holds `K`; today's share moves only then, after the user was told "reached".
+- **Stop at the target (D213).** Reaching `T` stops the saving (BR-9): the put-in that would pass `T` posts only `T − S`, so `S = T` exactly, `next_due` keeps moving, and nothing more is posted while `S ≥ T`. A *Used* entry that brings `S` below `T`, or a raised `T`, resumes posting from `next_due`, with no back-posting. *Keep saving* clears `T` (FR-SE-1 AC-T10). A stopped saving puts in nothing, so it no longer holds `K`, and a put-in it would have made later this cycle is no longer reserved (capped reservation, above).
 - **Display states** (the list row's third line, extends AC-Y3; "·" is preceded by a no-break space):
 
   | State | Line |
@@ -622,6 +623,44 @@ Design: `docs/superpowers/specs/2026-11-22-saving-target-design.md`, case study 
 - **Worked example B**, an RD of ₹5,000 on the 10th, same date and cycle: `next_due` 10 Nov 2026, `S = 18,000`, `T = 50,000`: `gap = 32,000`, `n = ceil(6.4) = 7`, `d_7` = 10 May 2027. Row "₹18,000 set aside · done by May 2027"; the sheet's slot "At ₹5,000 a month, done by May 2027." With `M = 4,000`: `n = 8`, `d_8` = 10 Jun 2027. Hero ₹1,318 throughout.
 - **Worked example C (stop):** the RD with `S = 48,000`, `T = 50,000`. The put-in due 10 Nov posts ₹2,000 (the gap), not ₹5,000; `S = 50,000`, `next_due` 10 Dec. On 10 Dec and every later date nothing is posted. The user taps *Keep saving*: `T` is cleared and ₹5,000 is posted from 10 Dec; 10 Nov to 10 Dec is not back-posted.
 - **Privacy:** dates and amounts only; nothing is logged.
+
+---
+
+### BR-24 Can I afford it? (D217 to D221)
+Design: `docs/superpowers/specs/2026-11-22-can-i-afford-design.md`, mockup [52](design/mockups/52-can-i-afford.html) (its progress bar is dropped: the goal row is words only, BR-23). The screens are in FR-SP-9 and FR-WG-9.
+
+- **What it is.** A one-off check for one big purchase, on Spends. It gives one answer (*Yes, you can* / *Yes, without a loan* / *Not yet*) from the user's own pay-cycle money. The check itself stores nothing and records nothing. It touches no BR-3 to BR-8 symbol and never changes the hero. It offers and models no loan and no EMI. It is not a simulator (D218).
+- **Inputs** (integer paise, read once when the answer opens; the same data gives the same answer):
+
+  | Symbol | Meaning |
+  |---|---|
+  | `price` | Typed in step 1: the item's cost, 9-digit cap, no paise |
+  | `H` | Typed in step 2: money already put away for this, or 0. It sits outside the app and is never recorded |
+  | `room` | For the one full cycle after the current one (its dates from `PeriodCalculator`): the income rule's amount, minus every *Same every month* and *Changes every month* bill occurrence due inside that cycle's dates (a changing bill at its estimate, D123; card bills excluded), minus every active saving's put-ins due inside those dates, **each cut by the target gap** (BR-23's `SavingCaps` walk, D216): a reached saving subtracts ₹0 and a partly done one only what is left of `T − S`. With *It changes* income, the last finished cycle's *Got* total stands in for the income amount. Counted by dates, never "monthly", so weekly, month-end and 28 to 31-day cycles agree |
+  | `days` | The length of that next cycle |
+  | `usual` | Average *Spent* a day over the last finished, fully tracked cycle, counted exactly as BR-7's `V_prev` (no rule-posted bills, no *Not logged*), floored to the rupee |
+  | `floor` | `usual × 1.2` rounded **up** to ₹10: the breathing space |
+
+- **Rule.**
+  ```
+  spare = max(0, roundDown500(room − floor × days))   // card room after payday, and the most asked to save a month
+  need  = max(0, price − H)
+
+  need = 0          → Yes, you can.        (from savings; ₹0 to put in)
+  need ≤ spare      → Yes, without a loan. (H from savings, `need` on the card, paid in full)
+  spare > 0         → Not yet.             (save `spare` a month; n = ceil(need / spare) put-ins)
+  spare = 0         → Not yet.             ("your usual days already use your monthly money")
+  ```
+  The day amount after the card path is `floor((room − need) / days)`; while saving it is `floor((room − spare) / days)`. Both are at least `floor` by construction. *Not yet* leads to *Start saving* only when `spare > 0`.
+- **Card timing (D219).** The card part is planned against the *next* cycle, because the bill is paid from that cycle's income. The *Yes, without a loan* answer tells the user to log the card part on the day they pay the card bill: "Add ₹17,000 when you pay the card bill." This is a deliberate exception to D123's "a card purchase counts the day it is made", for this one purchase. `H` is not recorded, since it sits outside the app; money set aside in a hisaab saving is recorded only as *Used* (BR-19), on the day it is spent.
+- **Done by (*Not yet*).** BR-23's estimate: the calendar month of the `n`-th put-in from the new saving's first `next_due`, so the answer and the Savings row never disagree. With `n > 120` it reads BR-23's *far* state ("over 10 years to go") and still offers *Start saving*.
+- **History gate.** "Not enough history" means no finished, fully tracked cycle, or `usual = 0` (so the floor is never ₹0), or *It changes* income with no finished cycle. Then the card path and *Not yet* are not computed and the answer reads "Ask again after payday"; *Yes, you can* (`need = 0`) still works, since it needs no history.
+- **No income set up:** the card is hidden and the shortcut opens Spends with no sheet. Income is set up when a salary rule exists or any *Got* has ever been recorded (*It changes*); the card and the shortcut ask the same question, read fresh, so they never disagree, and the card then shows on any cycle (D223).
+- **Start saving (D220).** Creates one *Saved* rule: name = the item's name, monthly amount = `spare`, day = the day after payday, target `T = need` (`H` is outside the app, so it is not in `T`), starting at `S = 0`. It reuses BR-23's `target_minor`; no new column and no schema change. Like any saving it lowers today's share from its first put-in (D120), and it stops by itself at `T` (D213). On a re-check (D221) the saving keeps what it holds, so `T = price − H + S` (= `need + S`; with step 2 prefilled `H = S`, that is the price; after *Nothing yet*, `price + S`) and BR-23's gap equals `need`, so the Savings row's date matches the answer's (D222).
+- **Re-checking by name (D221).** If an active saving has the same name as the item (case-insensitive), step 2 is prefilled with that saving's `S`, that saving is left out of `room`, and *Start saving* changes that saving's amount and target instead of making a second one. `H` is never added to `S`.
+- **Determinism and tests.** A pure domain function of its inputs, TDD with `FakeClock`: `need = 0`, `need = spare`, `need = spare + 1`, `spare = 0`, the 9-digit cap, 28 to 31-day and weekly cycles, *It changes* income, a reached and a partly done saving in `room`.
+- **Worked example** (the owner's numbers, mockup 52). Income ₹45,000, bills ₹13,000, no savings in the next cycle: `room = 32,000`, `usual = 750`, `floor = 900`, `days = 30` → `spare = roundDown500(32,000 − 27,000) = 5,000`. `price = 1,27,000`, `H = 60,000` → `need = 67,000 > 5,000` → **Not yet.** "Save ₹5,000 a month and it's yours by Dec 2027" (`n = 14`, put-ins from Nov 2026); "That's about ₹900 a day for now, instead of ₹1,066." With `H = 1,27,000` the answer is *Yes, you can*; with `price = 1,00,000` and `H = 95,000` (`need = 5,000 = spare`) it is *Yes, without a loan*: "Add ₹5,000 when you pay the card bill."
+- **Privacy:** nothing typed here is logged; the item name and amounts leave the device only as a saving the user chose to start (and then only in a backup or the Ask AI export they trigger).
 
 ---
 
@@ -831,6 +870,21 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
   - **TalkBack:** each month is one button with that same sentence (spoken amounts) and its selected state.
   - **Large text:** at 1.5× text and above, the bars become 48dp rows (month, bar, amount).
 
+- **FR-SP-9** **Can I afford it?** (BR-24, D217 to D221, mockup [52](design/mockups/52-can-i-afford.html)). Layout is tested at the `TestWindows` sizes.
+  - **AC-1** **The card** sits beside the Ask AI card: "Can I afford it?" with "Check a big buy" below, one button for TalkBack. It shows whenever income is set up, on any cycle shown; it opens the sheet. No income: hidden.
+  - **AC-2** **Step 1, "What do you want to buy?":** a name field and the price on the shared keypad (9-digit cap, no paise). The marigold *Next* is off until the name has a letter or digit and the price is above ₹0. The name is at most 40 characters, as a saving's name is.
+  - **AC-3** **Step 2, "Saved anything for it already?":** chips *Nothing yet* (the default) and *Yes*. *Yes* shows the keypad for `H`, hint "Money you've put away for this, in any account". Re-checking a saving of the same name (BR-24) preselects *Yes* with its `S`. The marigold key is *See the answer*.
+  - **AC-4** **The answer:** the verdict (Anek, large), one or two sentences, and one or two day-amount lines drawn in words and ink only; never marigold, red or green, and no progress bar. *Other ways* is collapsed under it.
+    - *Yes, you can:* "Yes, you can. Pay it from the ₹1,27,000 you've saved." A quiet *Okay* closes the sheet.
+    - *Yes, without a loan:* "Yes, without a loan. Use your ₹95,000 and put ₹5,000 on the card. Add ₹5,000 when you pay the card bill." Then "Your days stay at about ₹X". A quiet *Okay*.
+    - *Not yet:* "Not yet. Save ₹5,000 a month and it's yours by Dec 2027." Then "That's about ₹900 a day for now, instead of ₹1,066." One marigold key, *Start saving ₹5,000 a month* (AC-6). When `spare = 0`: "Not yet. Your usual days already use your monthly money." with a quiet *Okay* only.
+    - *Not enough history:* "Ask again after payday." with a quiet *Okay* (BR-24).
+  - **AC-5** ***Other ways*** (tap to open) lists three rows with their numbers, one line each, the suggested one ending "· suggested": *From savings* (saved vs price, short by), *Savings, then the card* (card part and the next cycle's day amount, or why it is below the floor), *Save up* (monthly amount and the done-by month). A path that does not apply reads "Not needed." or "Not available yet."
+  - **AC-6** ***Start saving ₹X a month*** creates the saving (BR-24, D220), closes the sheet and shows a snackbar "Saving ₹5,000 a month for Mac" with *Undo* (4 s). *Undo* deletes the new rule (or, for a re-check, restores the old amount and target). The saving appears in Savings (FR-SE-1) with BR-23's words-only line; the daily number follows from its first put-in.
+  - **AC-7** **Back**, system Back and a tap outside step back one step (answer to step 2 to step 1); from step 1 they close it, as *Fix my number* does (D222). The draft is dropped on close; there is no "discard?" prompt. Nothing is recorded by the check itself.
+  - **AC-8** **Tabletop and two-pane:** the sheet is full height over Spends, content in `AdaptiveSplit.readableWidth`, the keypad pinned, as other sheets. Large text scrolls and never clips *Next*, *See the answer* or *Start saving*.
+  - **AC-9** **TalkBack:** the verdict and its sentences are read first as one heading and text, with amounts spoken ("one lakh twenty-seven thousand rupees"); each *Other ways* row is one line; the key says what it does. Focus lands on the name field when step 1 opens; when the answer opens, the verdict and its sentences are announced once (D222).
+
 ### 4.5 Ask AI (FR-AI)
 - **FR-AI-1** The goals (4, or 3 when *Will my money last till payday?* is hidden, BR-15) are a single column of list rows, each with an icon, followed by an own-question row: a 200-character text field that is always visible, with the placeholder "Ask something else". While it has focus and is empty, the placeholder reads "Like: can I afford a new phone this month?" (DECISIONS D73). Tapping or typing in it picks it. The pick shows an ink check at the row's end and a bold label, never a fill or marigold (DECISIONS D67).
 - **FR-AI-2** The period segments and the *Leave out my notes* switch regenerate the preview immediately. The segments are named by their dates, as the cycle switcher names cycles: the shown cycle ("October"), and the three cycles oldest to newest ("Aug – Oct" for monthly cycles, short month names with no year; "12 Oct – 1 Nov" for weekly ones, the oldest start to the newest end) (DECISIONS D76).
@@ -880,7 +934,7 @@ Acceptance criteria are written as Given / When / Then. Copy in quotes is the En
     - **AC-Y11** TalkBack reads the slot as a polite live region (FR-KS-4); *All of it* as "All of it, button, selected".
     - **AC-T1** *Saving up to* (D212, BR-23): the saving's sheet has a fourth and last row, after *Name* and before *Used some of it*, answered "Not set" or "₹50,000". A bill never shows it. *Add a saving* stays three questions.
     - **AC-T2** The row opens a question inside the sheet, "How much are you saving up to?": the shared pinned keypad with `00`, the amount empty or prefilled with the current target (the first key replaces it, FR-AD-8), and a full-width marigold *Save*. *Clear* is a 48dp chip beside the amount (below it at large text), shown only when a target is set; it writes at once, nulls both reached columns, returns to the sheet and shows no Undo.
-    - **AC-T3** The slot has two lines in a polite live region (FR-KS-4): line 1 is "Type the amount you want to reach." until a number is typed or a target exists, then "At ₹5,000 a month, done by May 2027." updating as digits are typed ("At ₹500 a month, that is over 10 years to go." when `n > 120`; "You've already set aside that much." when `T ≤ S`); line 2 is always "Your daily number doesn't change.". Each line with figures has a spoken twin (spoken amounts, the full month name).
+    - **AC-T3** The slot has two lines in a polite live region (FR-KS-4): line 1 is "Type the amount you want to reach." until a number is typed or a target exists, then "At ₹5,000 a month, done by May 2027." updating as digits are typed ("At ₹500 a month, that is over 10 years to go." when `n > 120`; "You've already set aside that much." when `T ≤ S`); line 2 says what the typed `T` does to today's share (BR-23 capped reservation, D216): "Your daily number goes up by ₹56." or "Your daily number goes down by ₹56." when it moves, and "Your daily number doesn't change." when it doesn't, or before a number is typed. The change is today's share with the typed `T` minus today's share now, worked out in the domain by the same capped walk Home uses, read once when the question opens and recomputed per digit. Each line with figures has a spoken twin (spoken amounts, the full month name).
     - **AC-T4** *Save* stays off at ₹0 ("Type an amount first."); a refused 10th digit gives the reject haptic, the shake and the held ring (FR-KS-2); a failed save keeps the question with "Couldn't save. Try again."; saving an unchanged target writes nothing. A target at or below what is set aside is allowed (E129). *Save* and *Clear* return to the sheet, flash the row, and the footer reads "Changed." for 2.4 s. Back returns to the sheet and drops the draft, with no prompt.
     - **AC-T5** The list's third line follows BR-23's display table, on every saving with a target; a saving with no target is unchanged. The line wraps at large text and is never ellipsised.
     - **AC-T6** The sheet slip's "{amount} set aside" line takes the same text as the list row.
@@ -961,6 +1015,10 @@ Everything here only opens hisaab sooner. The entry path is unchanged: Add → d
   - The widget reads the hero's own sentence (FR-HO-7), with amounts spoken: "Safe to spend today: 1,430 rupees. 9 days to payday. Lasts till payday, about 9,300 rupees spare." (D156)
   - The Add key reads "Add a spend".
   - The tile reads "Add a spend, hisaab".
+- **FR-WG-9** ***Can I afford it?* shortcut** (BR-24, D217). Long-pressing the launcher icon also offers "Can I afford it?", next to "Add a spend" (FR-WG-7).
+  - **AC-1** It opens Spends with the FR-SP-9 sheet up at step 1, from a cold start or a running app. It shows no money and the entry path (Add → digits → Next → tile) is unchanged.
+  - **AC-2** With no income set up it opens Spends with no sheet, as Spends already does; if onboarding is unfinished it opens onboarding (FR-WG-4 AC-2).
+  - **AC-3** TalkBack reads "Can I afford it?". No widget or tile change.
 
 ### 4.8 Keypad sheets (FR-KS)
 Every keypad sheet in the bill sheet's route: the bill sheet's amount question, *Bill amount* (FR-HO-8), *Put in extra*, *Money coming in*'s amount, Fix my number (FR-FX) and the *Used* question. The Add tray and onboarding keep their own layouts but share FR-KS-2 and FR-KS-3, since they share the keypad. D178 to D180, D184 to D186; mockups [41](design/mockups/41-fix-my-number.html) and [42](design/mockups/42-yearly-costs.html); platform review `docs/features/fix-my-number/07-platform-review.md`.
@@ -1190,6 +1248,19 @@ Maths in BR-18; strings in the [copy deck](design/mockups/41-fix-my-number-copy-
 | E152 | *I bought it* | A *Used* entry for the whole set-aside amount, then the saving is deleted; one Undo (4 s) restores both. Nothing in the hero moves |
 | E153 | *Keep saving* | The target and both reached columns are cleared; the saving posts from `next_due`; skipped months are not back-posted |
 | E154 | The reached sheet is closed with no choice | Nothing changes; the money stays set aside and the saving stays stopped |
+| E155 | *Can I afford it?* with `need = 0` (`H ≥ price`) | *Yes, you can*; works with no history; nothing is recorded (BR-24) |
+| E156 | `need = spare` exactly | *Yes, without a loan* (the card part fits, boundary included) |
+| E157 | `need = spare + 1` (one paise over) | *Not yet*, with `spare` a month and `n = ceil(need / spare)` |
+| E158 | `spare = 0`, or `room` below `floor × days` (rounds to ₹0) | *Not yet*, "your usual days already use your monthly money"; no *Start saving* key |
+| E159 | Price at the 9-digit cap, or `H` above the price | The keypad stops at the cap as everywhere; `need` is floored at ₹0; no overflow; `n > 120` reads "over 10 years to go" |
+| E160 | No finished, fully tracked cycle, `usual = 0`, or *It changes* income with no finished cycle | "Ask again after payday"; no card path and no *Not yet*; *Yes, you can* still works. The floor is never ₹0 |
+| E161 | Weekly, month-end, 28, 29, 30 and 31-day next cycles | `room` is counted by the dates inside the next cycle and `days` is its length; the same data gives the same answer |
+| E162 | A saving in the next cycle has reached its target, or has a partial gap | A reached one subtracts ₹0 from `room`; a partly done one subtracts only `T − S` (BR-24, D216) |
+| E163 | The item's name matches an active saving (case-insensitive) | Step 2 prefilled with its `S`; it is left out of `room`; *Start saving* changes it, no second saving (D221) |
+| E164 | *Start saving*, then *Undo* inside 4 s | The new rule is deleted with any put-in it already posted (on payday or the day after, the first one can be today), so today's share is back where it was; or a re-checked saving gets only its old amount and target back. Nothing else changes. A failed Undo says "Couldn't save. Try again." with the reject haptic and leaves the saving as it was (D223) |
+| E165 | Back, a tap outside or a rotate or fold during the sheet | Back and a tap outside step back one step, and close from step 1; closing drops the draft with no prompt; rotating or folding keeps the typed values and step (D222) |
+| E166 | A card bill, a changing bill, or *Not logged* in the last cycle | Card bills are excluded from `room` (D123); *Not logged* and rule-posted bills are excluded from `usual` (BR-7) |
+| E167 | The shortcut with no income, or with the sheet already up | No income: Spends with no sheet. Already up: the sheet stays as it is |
 
 ---
 

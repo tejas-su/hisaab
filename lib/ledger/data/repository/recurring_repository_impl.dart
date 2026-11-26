@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/db/db_row.dart';
 import '../../../core/errors/failure.dart';
+import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../domain/entities/bill_skip.dart';
@@ -72,8 +73,22 @@ final class RecurringRepositoryImpl implements RecurringRepository {
           .map((Unit _) => _notify(rule));
 
   @override
+  TaskEither<Failure, Unit> markTargetReached(
+    int id,
+    Money target,
+    CalendarDate on,
+  ) => dbTask(
+    () => _recurring.markTargetReached(id, target.amountMinor, on.toIso()),
+  ).flatMap((int changed) => _changedOne(changed, id)).map(_notify);
+
+  @override
   TaskEither<Failure, Unit> setActive(int id, {required bool active}) =>
       dbTask(() => _recurring.setActive(id, active: active)).flatMap((int changed) => _changedOne(changed, id)).map(_notify);
+
+  @override
+  TaskEither<Failure, Unit> removeWithPostedEntries(int id, {required CalendarDate since}) =>
+      dbTask(() => _recurring.removeWithPostedEntries(id, since.toIso()))
+          .map((int _) => _notify(unit));
 
   @override
   TaskEither<Failure, Unit> skip(BillSkip skip) =>

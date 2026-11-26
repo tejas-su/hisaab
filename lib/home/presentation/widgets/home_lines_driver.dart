@@ -1,11 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart' show Option;
+import 'package:fpdart/fpdart.dart' show Option, Some;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/clock.dart';
 import '../../../habits/habits.dart';
 import '../../../ledger/ledger.dart';
+import '../../domain/entities/reached_line.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_lines_bloc.dart';
 import '../bloc/home_lines_event.dart';
@@ -20,8 +21,9 @@ import 'over_card.dart';
 /// - **Evaluation:** when a point is latched and Home is ready, once, at the first moment both
 ///   hold: the bloc reads the habits synchronously then, so habits that load later never produce
 ///   a line that open (E106).
-/// - **Removals:** an entry in the line's category, a gate that closed, or a bill line taking
-///   the slot. These only ever make the line leave.
+/// - **Removals:** an entry in the line's category, a gate that closed, a bill line taking the
+///   slot, or a reached line whose saving no longer qualifies at a reload. These only ever make
+///   the line leave.
 /// - **Focus:** when a line the user tapped is removed, focus goes to Home's "Today" heading, the
 ///   node now in its place, never to the top of the page.
 class HomeLinesDriver extends StatefulWidget {
@@ -55,7 +57,7 @@ class _HomeLinesDriverState extends State<HomeLinesDriver> {
             ),
             BlocListener<HomeLinesBloc, HomeLinesState>(
               listenWhen: (HomeLinesState previous, HomeLinesState current) =>
-                  (previous.missed.isSome() || previous.install) && previous.tapped && current.missed.isNone() && !current.install,
+                  _holdsLine(previous) && previous.tapped && !_holdsLine(current),
               // why: after the frame that collapses the slot, so the heading has taken its place.
               listener: (BuildContext context, HomeLinesState _) =>
                   WidgetsBinding.instance.addPostFrameCallback((Duration _) => _headingFocus.requestFocus()),
@@ -89,8 +91,13 @@ class _HomeLinesDriverState extends State<HomeLinesDriver> {
       lines.add(HomeLinesEvaluated(_facts(context, home)));
       return;
     }
-    if ((lines.state.missed.isSome() || lines.state.install) && _billLineShowing(home)) {
+    if (_holdsLine(lines.state) && _billLineShowing(home)) {
       lines.add(const HomeLinesSlotTaken());
+    }
+    // why: "reached" must still be true for the same saving and target, or the line goes at this
+    // reload, never waiting for the next point (AC-R3, F3).
+    if (lines.state.reached case Some<ReachedLine>(:final ReachedLine value) when !_stillReached(value, home)) {
+      lines.add(const HomeLinesReachedGone());
     }
     // why: a fix uses the install line up; the bloc keeps one already on screen (C11).
     if (lines.state.install && !home.installDue) {
@@ -128,8 +135,15 @@ class _HomeLinesDriverState extends State<HomeLinesDriver> {
       overState: OverCard.appliesTo(home.summary),
       billLineShowing: _billLineShowing(home),
       installDue: home.installDue,
+      reached: home.reachedLine,
     );
   }
+
+  static bool _holdsLine(HomeLinesState state) => state.missed.isSome() || state.install || state.reached.isSome();
+
+  static bool _stillReached(ReachedLine line, HomeReady home) => home.reachedLine
+      .filter((ReachedLine latest) => latest.saving.id == line.saving.id && latest.target == line.target)
+      .isSome();
 
   static bool _billLineShowing(HomeReady home) => home.summary.waitingBills.isNotEmpty || home.dueSoon.isSome();
 }

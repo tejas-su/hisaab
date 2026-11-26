@@ -58,6 +58,7 @@ void main() {
       'widget_stale': 'widgetStale',
       'tile_add_spend': 'tileAddSpend',
       'shortcut_add_spend': 'shortcutAddSpend',
+      'shortcut_afford': 'shortcutAfford',
     };
 
     for (final MapEntry<String, String> mirror in mirrors.entries) {

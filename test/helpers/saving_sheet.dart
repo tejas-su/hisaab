@@ -49,26 +49,24 @@ final class SavingSheet {
   }) async {
     recurring.rules = <RecurringRule>[...WorkedExample.rules.where((RecurringRule r) => r.id != rule.id), rule];
     final FakeClock clock = FakeClock(WorkedExample.now);
+    final GetCycleSummary summary = GetCycleSummary(
+      ledger: ledger,
+      recurring: recurring,
+      settings: FakeBudgetSettingsRepository(),
+      periods: const PeriodCalculator(),
+      clock: clock,
+    );
     final BillSheetBloc bloc = await tester.buildBloc(
       () => BillSheetBloc(
         rule: rule,
         editBill: EditBill(recurring: recurring, categories: categories, clock: clock),
-        getStatus: GetBillStatus(
-          ledger: ledger,
-          clock: clock,
-          summary: GetCycleSummary(
-            ledger: ledger,
-            recurring: recurring,
-            settings: FakeBudgetSettingsRepository(),
-            periods: const PeriodCalculator(),
-            clock: clock,
-          ),
-        ),
+        getStatus: GetBillStatus(ledger: ledger, clock: clock, summary: summary),
         haptics: haptics,
         getSetAside: GetSetAside(recurring: recurring, ledger: ledger),
         useFromSavings: UseFromSavings(ledger: ledger, categories: categories, clock: clock),
         deleteBill: DeleteBill(recurring: recurring),
         deleteEntry: DeleteEntry(ledger: ledger),
+        getTargetDayEffect: GetTargetDayEffect(summary: summary, ledger: ledger),
         clock: clock,
       ),
     );

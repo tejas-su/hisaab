@@ -77,7 +77,8 @@ sealed class BillSheetState extends Equatable {
 /// shows "Saved."; [changed] is true once anything has been saved; [rejections] counts refused
 /// keys so the amount can shake. [setAside] is what a saving still has set aside, once read
 /// (BR-19); it decides whether *Used some of it* shows. [today] comes from the sheet's clock, so a
-/// target's month carries its year only when it is not this year (BR-23).
+/// target's month carries its year only when it is not this year (BR-23). [dayEffect] is read when
+/// the *Saving up to* question opens, so each typed digit can say how today's share moves (AC-T3).
 final class BillSheetReady extends BillSheetState {
   const BillSheetReady({
     required this.rule,
@@ -93,6 +94,7 @@ final class BillSheetReady extends BillSheetState {
     this.rejections = 0,
     this.setAside = const Option<Money>.none(),
     this.today = const Option<CalendarDate>.none(),
+    this.dayEffect = const Option<TargetDayEffect>.none(),
   });
 
   final RecurringRule rule;
@@ -108,6 +110,7 @@ final class BillSheetReady extends BillSheetState {
   final int rejections;
   final Option<Money> setAside;
   final Option<CalendarDate> today;
+  final Option<TargetDayEffect> dayEffect;
 
   /// True when a saving with a target has at least that much set aside: it has stopped putting in
   /// and offers *I bought it* and *Keep saving* (BR-23, D213).
@@ -122,6 +125,12 @@ final class BillSheetReady extends BillSheetState {
   /// How far the saving is from the amount typed on the *Saving up to* question (AC-T3); none at ₹0.
   Option<TargetProgress> get typedProgress =>
       rupees == 0 ? const Option<TargetProgress>.none() : Option<TargetProgress>.of(_progressTo(Money.fromMajor(rupees)));
+
+  /// How the amount typed on the *Saving up to* question moves today's share (AC-T3, BR-23): above
+  /// ₹0 it goes up, below ₹0 down. None at ₹0 typed, or before the effect is read.
+  Option<Money> get typedDayChange => rupees == 0
+      ? const Option<Money>.none()
+      : dayEffect.map((TargetDayEffect effect) => effect.changeFor(Money.fromMajor(rupees)));
 
   TargetProgress _progressTo(Money target) =>
       SavingTarget.progress(target: target, setAside: setAside.getOrElse(() => Money.zero), saving: rule);
@@ -143,6 +152,7 @@ final class BillSheetReady extends BillSheetState {
     bool saveFailed = false,
     int? rejections,
     Option<Money>? setAside,
+    Option<TargetDayEffect>? dayEffect,
   }) =>
       BillSheetReady(
         rule: rule ?? this.rule,
@@ -158,11 +168,12 @@ final class BillSheetReady extends BillSheetState {
         rejections: rejections ?? this.rejections,
         setAside: setAside ?? this.setAside,
         today: today,
+        dayEffect: dayEffect ?? this.dayEffect,
       );
 
   @override
   List<Object?> get props =>
-      <Object?>[rule, status, open, rupees, fresh, draftName, justSaved, changed, saving, saveFailed, rejections, setAside, today];
+      <Object?>[rule, status, open, rupees, fresh, draftName, justSaved, changed, saving, saveFailed, rejections, setAside, today, dayEffect];
 }
 
 /// The sheet should close, reporting [outcome].

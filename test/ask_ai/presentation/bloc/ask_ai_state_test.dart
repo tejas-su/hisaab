@@ -39,6 +39,7 @@ void main() {
       input.entries,
       input.summary,
       input.savings,
+      input.setAsideBySaving,
     ]);
   });
 }

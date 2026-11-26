@@ -35,6 +35,12 @@ abstract final class PromptBuilder {
       'such as a yearly insurance bill. That money was counted when it was put in, so it is not spending '
       'in this period and does not change the daily number. Do not add it to spending.';
 
+  // why: the AI would otherwise read a target as a spending limit, or suggest cutting a saving the user
+  // is already saving up for; a saving stops at its target, so the date is only an estimate (BR-15, BR-23, D215).
+  static const String _targetClause =
+      'A saving with a target is something the user chose to save up to. The date is an estimate at the current monthly amount, '
+      'and a saving with a target stops putting in when it reaches the target. Treat the target as a goal, not as spending.';
+
   /// The longest text before the oldest entries are grouped by week.
   static const int maxLength = 12000;
 
@@ -61,6 +67,7 @@ abstract final class PromptBuilder {
         _role,
         _context(input, period),
         ..._facts(input),
+        ..._targetLines(input),
         if (entries.any((Entry e) => e.isNotLogged)) _notLoggedClause,
         if (entries.any((Entry e) => e.kind == EntryKind.used)) _usedClause,
         _summary(entries, names),
@@ -111,7 +118,7 @@ abstract final class PromptBuilder {
           'From my app, and correct: ${<String>[
             'safe to spend today ${_money.format(_safeToday(summary))}',
             ..._forecast(summary),
-            ..._savings(input.savings),
+            ..._savings(_stillPuttingIn(input)),
           ].join('; ')}.',
         ],
       );
@@ -144,6 +151,50 @@ abstract final class PromptBuilder {
     return <String>['I save ${_money.format(total)} a month ($each)'];
   }
 
+  // why: a saving that has reached its target posts nothing, so it is left out of the monthly total
+  // the AI is told; it is named in its own "reached" sentence instead (BR-15, BR-23, D215).
+  static List<RecurringRule> _stillPuttingIn(PromptInput input) =>
+      input.savings.where((RecurringRule r) => _progress(input, r) is! TargetReached).toList();
+
+  // why: the numbers come from SavingTarget, as the Savings list's do, never recomputed here (BR-15, D79, D215).
+  static TargetProgress? _progress(PromptInput input, RecurringRule saving) => saving.target.match(
+    () => null,
+    (Money target) => SavingTarget.progress(
+      target: target,
+      setAside: input.setAsideBySaving[saving.id] ?? Money.zero,
+      saving: saving,
+    ),
+  );
+
+  // why: first person like the savings clause, one line after the facts, and the explaining line only
+  // when a target exists, so every other export stays byte-identical (BR-15, D188, D215). Without a
+  // facts line (no income) there is nothing to attach them to.
+  static List<String> _targetLines(PromptInput input) {
+    final bool hasFacts = input.summary.filter((CycleSummary s) => s.state is! NoIncome).isSome();
+    final List<RecurringRule> withTarget = (input.savings.where((RecurringRule r) => r.target.isSome()).toList()
+      ..sort((RecurringRule a, RecurringRule b) => a.nextDue.compareTo(b.nextDue)));
+    if (!hasFacts || withTarget.isEmpty) {
+      return const <String>[];
+    }
+    return <String>[withTarget.map((RecurringRule r) => _targetSentence(input, r)).join(' '), _targetClause];
+  }
+
+  static String _targetSentence(PromptInput input, RecurringRule saving) {
+    final Money target = saving.target.match(() => Money.zero, (Money t) => t);
+    final Money setAside = input.setAsideBySaving[saving.id] ?? Money.zero;
+    final String held = setAside.isZero ? 'nothing set aside yet' : '${_money.format(setAside)} set aside';
+    final String each = '${_money.format(saving.amount)} a month';
+    return switch (_progress(input, saving)) {
+      TargetReached() =>
+        'My ${saving.label} saving has reached its target of ${_money.format(target)}, with ${_money.format(setAside)} set aside. '
+            'It puts in nothing more.',
+      TargetEstimate(:final CalendarDate doneOn) =>
+        'My ${saving.label} saving has a target of ${_money.format(target)} and $held. '
+            'At $each it would reach the target around ${doneOn.toIso()}.',
+      _ => 'My ${saving.label} saving has a target of ${_money.format(target)} and $held. '
+          'At $each it is more than ${SavingTarget.maxPutIns ~/ 12} years from the target.',
+    };
+  }
 
   static String _per(Frequency frequency) => switch (frequency) {
     Frequency.weekly => 'week',

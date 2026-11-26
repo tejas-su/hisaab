@@ -7,6 +7,7 @@ import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/spends/domain/entities/insight.dart';
 import 'package:hisaab/spends/domain/usecase/get_spends_overview.dart';
+import 'package:hisaab/spends/domain/usecase/is_income_set_up.dart';
 import 'package:hisaab/spends/presentation/bloc/spends_bloc.dart';
 import 'package:hisaab/spends/presentation/bloc/spends_event.dart';
 import 'package:hisaab/spends/presentation/bloc/spends_state.dart';
@@ -24,6 +25,7 @@ import '../../../helpers/fixtures/ledger/worked_example.dart';
 
 void main() {
   late FakeLedgerRepository ledger;
+  late FakeRecurringRepository recurring;
   late FakeCategoryRepository categories;
   late FakeHaptics haptics;
   late SpendsBloc bloc;
@@ -31,7 +33,7 @@ void main() {
 
   setUp(() {
     ledger = FakeLedgerRepository(WorkedExample.entries);
-    final FakeRecurringRepository recurring = FakeRecurringRepository(WorkedExample.rules);
+    recurring = FakeRecurringRepository(WorkedExample.rules);
     final FakeBudgetSettingsRepository settings = FakeBudgetSettingsRepository();
     categories = FakeCategoryRepository();
     haptics = FakeHaptics();
@@ -54,6 +56,7 @@ void main() {
         clock: clock,
       ),
       applyLimits: ApplySuggestedLimits(categories: categories),
+      isIncomeSetUp: IsIncomeSetUp(getIncome: GetIncome(recurring: recurring, ledger: ledger, clock: clock), ledger: ledger),
       ledger: ledger,
       haptics: haptics,
     );
@@ -160,6 +163,33 @@ void main() {
       slowRead.complete();
       await pumpEventQueue();
       expect(ready().overview.spent, Money.fromMajor(27670));
+    });
+  });
+
+  group('SpendsBloc income set up (FR-SP-9 AC-1, D223)', () {
+    test('a salary rule shows income as set up', () async {
+      await bloc.dispatch(const SpendsLoadRequested());
+      expect(ready().incomeSetUp, isTrue);
+    });
+
+    test('no income rule and no Got ever shows it as not set up', () async {
+      recurring.rules = <RecurringRule>[];
+      ledger.entries.removeWhere((Entry e) => e.kind == EntryKind.got);
+      await bloc.dispatch(const SpendsLoadRequested());
+      expect(ready().incomeSetUp, isFalse);
+    });
+
+    test('a limits save keeps it', () async {
+      await bloc.dispatch(const SpendsLoadRequested());
+      categories.failure = DatabaseFailure('locked');
+      await bloc.dispatch(SpendsLimitsAccepted(offer));
+      expect(ready().limitsFailed, isTrue);
+      expect(ready().incomeSetUp, isTrue);
+    });
+
+    test('ready states compare by it', () async {
+      await bloc.dispatch(const SpendsLoadRequested());
+      expect(SpendsReady(ready().overview, incomeSetUp: true), isNot(SpendsReady(ready().overview)));
     });
   });
 

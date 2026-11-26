@@ -67,6 +67,20 @@ extension SavingTargetCopy on BuildContext {
     };
   }
 
+  /// Line 2 of the *Saving up to* slot: how the typed target moves today's share by [change]
+  /// (AC-T3, BR-23); "doesn't change" at ₹0 or when nothing is known yet.
+  SpokenLine targetDayLine(Option<Money> change) {
+    final AppLocalizations strings = AppLocalizations.of(this);
+    final Money moved = change.getOrElse(() => Money.zero);
+    if (moved == Money.zero) {
+      return (shown: strings.savingUsedSame, spoken: strings.savingUsedSame);
+    }
+    final SpokenLine amount = _amount(moved.isNegative ? Money.zero - moved : moved);
+    return moved.isNegative
+        ? (shown: strings.savingTargetDayDown(amount.shown), spoken: strings.savingTargetDayDownSpoken(amount.spoken))
+        : (shown: strings.savingTargetDayUp(amount.shown), spoken: strings.savingTargetDayUpSpoken(amount.spoken));
+  }
+
   SpokenLine _amount(Money amount) =>
       (shown: money.format(amount), spoken: AppLocalizations.of(this).spokenAmount(money.digits(amount)));
 }

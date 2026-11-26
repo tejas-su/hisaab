@@ -1,9 +1,11 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/design/hisaab_dimensions.dart';
 import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/money/money.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../../ledger/ledger.dart';
 import 'bill_row.dart';
 
@@ -16,12 +18,16 @@ class BillsList extends StatelessWidget {
     required this.onDelete,
     required this.onThresholdReached,
     this.setAside = const <int, Money>{},
+    this.today = const Option<CalendarDate>.none(),
   });
 
   final List<RecurringRule> bills;
 
   /// What each saving has set aside, by rule id; empty for the fixed bills.
   final Map<int, Money> setAside;
+
+  /// Today, for a target's "done by" month (BR-23); none always names the year.
+  final Option<CalendarDate> today;
   final ValueChanged<RecurringRule> onEdit;
   final ValueChanged<RecurringRule> onDelete;
   final VoidCallback onThresholdReached;
@@ -42,6 +48,7 @@ class BillsList extends StatelessWidget {
                   key: ValueKey<int>(bill.id),
                   bill: bill,
                   setAside: setAside[bill.id],
+                  today: today,
                   onEdit: () => onEdit(bill),
                   onDelete: () => onDelete(bill),
                   onThresholdReached: onThresholdReached,

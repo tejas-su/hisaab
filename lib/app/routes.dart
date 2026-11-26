@@ -11,6 +11,7 @@ import '../backup/backup.dart';
 import '../core/design/haptics.dart';
 import '../core/errors/failure.dart';
 import '../core/notifications/bill_reminders.dart';
+import '../core/time/calendar_date.dart';
 import '../core/time/clock.dart';
 import '../core/time/pay_cycle.dart';
 import '../core/usecases/use_case.dart';
@@ -28,6 +29,8 @@ import 'bloc/reminders_bloc.dart';
 import 'bloc/reminders_event.dart';
 import 'bloc/reminders_state.dart';
 import 'main_screen.dart';
+import 'shell_destination.dart';
+import 'widgets/shell_destination_host.dart';
 import 'widgets/shortcut_launch_listener.dart';
 import 'widgets/midnight_listener.dart';
 import 'widgets/resume_listener.dart';
@@ -66,7 +69,12 @@ abstract final class AppRoutes {
 
   /// Home and Spends; [assemble] plays the blocks entrance once. [onDataReplaced] reloads the app
   /// after a restore, an undo or *Delete everything* in Settings (D139).
-  static Widget main(GetIt getIt, {required VoidCallback onDataReplaced, bool assemble = false}) => MultiBlocProvider(
+  static Widget main(GetIt getIt, {required VoidCallback onDataReplaced, bool assemble = false}) => ShellDestinationHost(
+        builder: (ValueNotifier<ShellDestination> destination) => _main(getIt, destination, onDataReplaced: onDataReplaced, assemble: assemble),
+      );
+
+  static Widget _main(GetIt getIt, ValueNotifier<ShellDestination> destination, {required VoidCallback onDataReplaced, required bool assemble}) =>
+      MultiBlocProvider(
         providers: <BlocProvider<Object?>>[
           BlocProvider<HomeBloc>(
             create: (BuildContext _) => HomeBloc(
@@ -84,6 +92,7 @@ abstract final class AppRoutes {
               unskipBill: getIt<UnskipBillOccurrence>(),
               haptics: getIt<Haptics>(),
               settings: getIt<BudgetSettingsRepository>(),
+              getSetAside: getIt<GetSetAside>(),
             )..add(const HomeLoadRequested()),
           ),
           BlocProvider<RemindersBloc>(
@@ -101,9 +110,15 @@ abstract final class AppRoutes {
             create: (BuildContext _) => SpendsBloc(
               getOverview: getIt<GetSpendsOverview>(),
               applyLimits: getIt<ApplySuggestedLimits>(),
+              isIncomeSetUp: getIt<IsIncomeSetUp>(),
               ledger: getIt<LedgerRepository>(),
               haptics: getIt<Haptics>(),
             )..add(const SpendsLoadRequested()),
+          ),
+          // why: the sheet's own bloc closes with the sheet; the Undo of *Start saving* outlives it on
+          // Spends (FR-SP-9 AC-6), as FixUndoBloc does in Settings (D179).
+          BlocProvider<AffordUndoBloc>(
+            create: (BuildContext _) => AffordUndoBloc(undo: getIt<UndoStartSaving>(), haptics: getIt<Haptics>()),
           ),
           BlocProvider<HomeLinesBloc>(
             // why: a cold start is an evaluation point (D170); the bloc latches it until Home is ready.
@@ -113,6 +128,7 @@ abstract final class AppRoutes {
               clock: getIt<Clock>(),
               haptics: getIt<Haptics>(),
               settings: getIt<BudgetSettingsRepository>(),
+              recurring: getIt<RecurringRepository>(),
             )..add(const HomeLinesPointReached()),
           ),
           BlocProvider<HabitsBloc>(
@@ -132,7 +148,7 @@ abstract final class AppRoutes {
           builder: (BuildContext context) => BlocListener<RemindersBloc, RemindersState>(
             listener: (BuildContext context, RemindersState state) => _openReminded(context, getIt, state),
             child: ShortcutLaunchListener(
-              onLaunch: (LaunchAction action) => followLaunch(context, getIt, action),
+              onLaunch: (LaunchAction action) => followLaunch(context, getIt, action, destination: destination),
               child: ResumeListener(
               onResume: () {
                 // why: a resume is an evaluation point; the habits are read as they are at that instant.
@@ -151,11 +167,16 @@ abstract final class AppRoutes {
                 clock: getIt<Clock>(),
                 child: MainScreen(
                 clock: getIt<Clock>(),
+                destination: destination,
                 missedLogSlot: (BuildContext context) => MissedLogSlot(onTap: (MissedLog line) => _openMissedLog(context, getIt, line)),
                 onFixMyNumber: () => openFixFromHome(context, getIt),
                 installLineSlot: (BuildContext context) => InstallLineSlot(onTap: () => _openInstallLine(context, getIt)),
+                reachedLineSlot: (BuildContext context) =>
+                    ReachedLineSlot(onOpenBill: (RecurringRule rule) => _openBillFromHome(context, getIt, rule)),
                 assemble: assemble,
                 wrapPrimary: (Widget page) => UsualAddedNotice(child: page),
+                wrapSpends: (Widget page) => AffordUndoListener(child: page),
+                onAfford: () => openAfford(context, getIt),
                 onAdd: (EntryKind kind) => openAddTray(context, getIt, kind: kind),
                 onEdit: (Entry entry) => openAddTray(context, getIt, editing: Option<Entry>.of(entry)),
                 onOpenSettings: () async {
@@ -184,20 +205,7 @@ abstract final class AppRoutes {
                   // why: and the nudges name those habits and categories (BR-22.3), so they re-arm too.
                   reminders.add(const RemindersArmRequested());
                 },
-                onOpenBill: (RecurringRule rule) async {
-                  final HomeBloc home = context.read<HomeBloc>();
-                  // why: a change reloads Home through RecurringRepository.changes; a delete goes
-                  // through Home so its Undo shows there.
-                  switch (await holdingHome(home, () => openBillSheet(context, getIt, rule))) {
-                    case BillSheetDeleted(:final RecurringRule rule):
-                      home.add(HomeBillDeleteRequested(rule));
-                    case BillSheetUsed(:final UsedOutcome outcome):
-                      home.add(HomeUsedDone(outcome));
-                    case BillSheetBought(:final UsedOutcome outcome):
-                      home.add(HomeBoughtDone(outcome));
-                    case BillSheetUnchanged() || BillSheetChanged():
-                  }
-                },
+                onOpenBill: (RecurringRule rule) => _openBillFromHome(context, getIt, rule),
                 onEnterBill: (Occurrence occurrence) => enterBill(context, getIt, occurrence),
                 onAskAi: (PayCycle cycle) => Navigator.of(context).push(
                   MaterialPageRoute<void>(builder: (BuildContext _) => askAi(getIt, cycle: cycle)),
@@ -275,17 +283,29 @@ abstract final class AppRoutes {
 
   /// Follows a widget, tile or shortcut tap on Home (widget spec §8): Home for [LaunchAction.home]
   /// and [LaunchAction.setUp]; for [LaunchAction.add], the Add tray at the keypad, unless one is
-  /// already open (an edit tray stays as it is, W6).
+  /// already open (an edit tray stays as it is, W6); for [LaunchAction.afford], Spends, with
+  /// *Can I afford it?* up when income is set up, or the check already open kept as it is
+  /// (FR-WG-9, E167). [destination] switches the screen in view.
   ///
   /// When the app was only just started, the tray waits for the habits and Home's figures, so
   /// *your usual* and the spend preview are in its first frame (FR-AD-10 AC-1, D154).
-  static Future<void> followLaunch(BuildContext context, GetIt getIt, LaunchAction action) async {
-    bool trayOpen = false;
+  static Future<void> followLaunch(
+    BuildContext context,
+    GetIt getIt,
+    LaunchAction action, {
+    ValueNotifier<ShellDestination>? destination,
+  }) async {
+    bool keptOpen = false;
     Navigator.of(context).popUntil((Route<void> route) {
-      trayOpen = route.settings.name == AddEntryTray.routeName;
-      return trayOpen || route.isFirst;
+      // why: an Add tap keeps an open tray and an afford tap an open check, with what was typed
+      // (W6, E167); anything else goes back to the first route.
+      keptOpen = _keeps(action, route.settings.name);
+      return keptOpen || route.isFirst;
     });
-    if (action != LaunchAction.add || trayOpen) {
+    if (action == LaunchAction.afford) {
+      return _followAfford(context, getIt, destination, checkOpen: keptOpen);
+    }
+    if (action != LaunchAction.add || keptOpen) {
       return;
     }
     await _settled(context.read<HabitsBloc>(), (HabitsState state) => state is! HabitsLoading);
@@ -295,6 +315,30 @@ abstract final class AppRoutes {
     await _settled(context.read<HomeBloc>(), (HomeState state) => state is! HomeLoading);
     if (context.mounted) {
       await openAddTray(context, getIt);
+    }
+  }
+
+  static bool _keeps(LaunchAction action, String? routeName) => switch (action) {
+        LaunchAction.add => routeName == AddEntryTray.routeName,
+        LaunchAction.afford => routeName == AffordSheet.routeName,
+        LaunchAction.home || LaunchAction.setUp => false,
+      };
+
+  static Future<void> _followAfford(
+    BuildContext context,
+    GetIt getIt,
+    ValueNotifier<ShellDestination>? destination, {
+    required bool checkOpen,
+  }) async {
+    destination?.value = ShellDestination.spends;
+    if (checkOpen) {
+      return;
+    }
+    // why: read fresh, with the same predicate as the Spends card, so the two never disagree;
+    // with no income set up the check has no money to weigh (FR-SP-9 AC-1, FR-WG-9 AC-2, D223).
+    final bool incomeSetUp = (await getIt<IsIncomeSetUp>()(const NoParams()).run()).getOrElse((Failure _) => false);
+    if (incomeSetUp && context.mounted) {
+      await openAfford(context, getIt);
     }
   }
 
@@ -323,6 +367,22 @@ abstract final class AppRoutes {
     }
   }
 
+  /// Opens [rule]'s sheet over Home, from the due-soon row or the reached line (D118, FR-HO-3).
+  static Future<void> _openBillFromHome(BuildContext context, GetIt getIt, RecurringRule rule) async {
+    final HomeBloc home = context.read<HomeBloc>();
+    // why: a change reloads Home through RecurringRepository.changes; a delete goes
+    // through Home so its Undo shows there.
+    switch (await holdingHome(home, () => openBillSheet(context, getIt, rule))) {
+      case BillSheetDeleted(:final RecurringRule rule):
+        home.add(HomeBillDeleteRequested(rule));
+      case BillSheetUsed(:final UsedOutcome outcome):
+        home.add(HomeUsedDone(outcome));
+      case BillSheetBought(:final UsedOutcome outcome):
+        home.add(HomeBoughtDone(outcome));
+      case BillSheetUnchanged() || BillSheetChanged():
+    }
+  }
+
   /// Opens *Fix my number* from the install line (FR-HO-3). The line goes once the sheet has closed,
   /// and focus moves to Home's "Today" heading, since the opener is gone (FR-FX-6).
   static Future<void> _openInstallLine(BuildContext context, GetIt getIt) async {
@@ -334,6 +394,29 @@ abstract final class AppRoutes {
       if (!lines.isClosed) {
         lines.add(const HomeLinesTrayClosed());
       }
+    }
+  }
+
+  /// Opens *Can I afford it?* over Spends (FR-SP-9). A saving *Start saving* wrote goes to the
+  /// [AffordUndoBloc], so its Undo shows on Spends once the sheet has gone (AC-6).
+  static Future<void> openAfford(BuildContext context, GetIt getIt) async {
+    // why: a second tap before the sheet's first frame must not open a second sheet.
+    if (ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
+    final AffordUndoBloc undo = context.read<AffordUndoBloc>();
+    final Option<SavingStarted> started = await AffordSheet.show(
+      context,
+      AffordBloc(
+        getInputs: getIt<GetAffordInputs>(),
+        startSaving: getIt<StartSavingFor>(),
+        clock: getIt<Clock>(),
+        haptics: getIt<Haptics>(),
+      ),
+    );
+    // why: the app may be rebuilt while the sheet is up (a restore), closing this bloc with it.
+    if (!undo.isClosed) {
+      started.map((SavingStarted saving) => undo.add(AffordUndoOffered(saving)));
     }
   }
 
@@ -620,6 +703,7 @@ abstract final class AppRoutes {
         child: Builder(
           builder: (BuildContext context) => BillsPage(
             kind: kind,
+            today: Option<CalendarDate>.of(getIt<Clock>().today()),
             onPutInExtra: kind == EntryKind.saved
                 ? () => PutInSheet.show(
                       context,
@@ -675,6 +759,7 @@ abstract final class AppRoutes {
         useFromSavings: getIt<UseFromSavings>(),
         deleteBill: getIt<DeleteBill>(),
         deleteEntry: getIt<DeleteEntry>(),
+        getTargetDayEffect: getIt<GetTargetDayEffect>(),
         clock: getIt<Clock>(),
       ),
       used: rule.kind == EntryKind.saved

@@ -312,6 +312,38 @@ void main() {
       expect(stored.targetReachedOn, some(const CalendarDate(2026, 11, 23)));
     });
 
+    test('markTargetReached writes only the reached marker: next due, amount and label are kept (BR-23)', () async {
+      final RecurringRule added = right(await repository.add(_milk).run());
+      final RecurringRule edited = added.copyWith(
+        label: 'Trip',
+        amount: Money.fromMajor(400),
+        nextDue: const CalendarDate(2026, 11, 6),
+        target: some(Money.fromMajor(12000)),
+      );
+      right(await repository.update(edited).run());
+
+      right(await repository.markTargetReached(added.id, Money.fromMajor(12000), const CalendarDate(2026, 11, 23)).run());
+      await settle();
+
+      expect(
+        right(await repository.activeRules().run()).last,
+        edited.copyWith(
+          targetReachedFor: some(Money.fromMajor(12000)),
+          targetReachedOn: some(const CalendarDate(2026, 11, 23)),
+        ),
+      );
+      expect(changes, hasLength(3));
+    });
+
+    test('markTargetReached returns RuleNotFoundFailure for a missing rule and does not notify', () async {
+      expect(
+        (await repository.markTargetReached(99, Money.fromMajor(1), const CalendarDate(2026, 11, 23)).run()).getLeft().toNullable(),
+        isA<RuleNotFoundFailure>(),
+      );
+      await settle();
+      expect(changes, isEmpty);
+    });
+
     test('update returns RuleNotFoundFailure for a missing rule and doesn\'t notify', () async {
       final RecurringRule ghost = RecurringRule(
         id: 99,
@@ -364,6 +396,65 @@ void main() {
       expect((await repository.add(zero).run()).getLeft().toNullable(), isA<DatabaseFailure>());
       await settle();
       expect(changes, isEmpty);
+    });
+  });
+
+  group('RecurringRepositoryImpl.removeWithPostedEntries (E164)', () {
+    late RecurringRule saving;
+    late List<void> changes;
+
+    setUp(() async {
+      saving = right(await repository.add(RecurringDraft(
+        label: 'Mac',
+        amount: Money.fromMajor(5000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 10, 10)),
+        nextDue: const CalendarDate(2026, 10, 10),
+      )).run());
+      right(await repository.post(RecurringPosting(
+        occurrences: <Occurrence>[Occurrence(rule: saving, date: const CalendarDate(2026, 10, 10))],
+        nextDueByRuleId: <int, CalendarDate>{saving.id: const CalendarDate(2026, 11, 10)},
+      )).run());
+      changes = <void>[];
+      repository.changes.listen(changes.add);
+    });
+
+    Future<List<Map<String, Object?>>> putIns() =>
+        database.db.query(Tables.transactions, where: '${TransactionColumns.recurringId} = ?', whereArgs: <Object?>[saving.id]);
+
+    test('deletes every entry the rule posted and stops the rule, announcing once', () async {
+      right(await repository.removeWithPostedEntries(saving.id, since: const CalendarDate(2026, 10, 10)).run());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(await putIns(), isEmpty);
+      expect(right(await repository.activeRules().run()).where((RecurringRule r) => r.id == saving.id), isEmpty);
+      expect(changes, hasLength(1));
+    });
+
+    test('a failing write rolls back both, leaving the entry and the active rule', () async {
+      await database.db.execute(
+        "CREATE TRIGGER block_stop BEFORE UPDATE ON ${Tables.recurring} BEGIN SELECT RAISE(ABORT, 'no'); END",
+      );
+
+      final Either<Failure, Unit> result = await repository.removeWithPostedEntries(saving.id, since: const CalendarDate(2026, 10, 10)).run();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result.getLeft().toNullable(), isA<DatabaseFailure>());
+      expect(await putIns(), hasLength(1));
+      expect(right(await repository.activeRules().run()).map((RecurringRule r) => r.id), contains(saving.id));
+      expect(changes, isEmpty);
+    });
+
+    test('keeps entries dated before since', () async {
+      right(await repository.removeWithPostedEntries(saving.id, since: const CalendarDate(2026, 10, 11)).run());
+
+      expect(await putIns(), hasLength(1));
+    });
+
+    test('a missing rule is RuleNotFoundFailure and deletes nothing', () async {
+      expect((await repository.removeWithPostedEntries(999, since: const CalendarDate(2026, 10, 10)).run()).getLeft().toNullable(), isA<RuleNotFoundFailure>());
+      expect(await putIns(), hasLength(1));
     });
   });
 }

@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:hisaab/core/errors/failure.dart';
+import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/ledger/domain/entities/bill_skip.dart';
+import 'package:hisaab/ledger/domain/entities/entry.dart';
 import 'package:hisaab/ledger/domain/entities/ledger_setup.dart';
 import 'package:hisaab/ledger/domain/entities/recurring_draft.dart';
 import 'package:hisaab/ledger/domain/entities/recurring_posting.dart';
@@ -11,10 +13,16 @@ import 'package:hisaab/ledger/domain/failures/ledger_failures.dart';
 import 'package:hisaab/ledger/domain/repository/recurring_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
+import 'fake_ledger_repository.dart';
+
 /// An in-memory [RecurringRepository] that records what was posted and set up. [rules] are the
 /// active ones; a stopped rule moves to [stopped].
 final class FakeRecurringRepository implements RecurringRepository {
-  FakeRecurringRepository([this.rules = const <RecurringRule>[]]);
+  /// [ledger], when given, is where [removeWithPostedEntries] deletes the rule's entries, and
+  /// its failure fails that call, as one database would.
+  FakeRecurringRepository([this.rules = const <RecurringRule>[], this.ledger]);
+
+  final FakeLedgerRepository? ledger;
 
   List<RecurringRule> rules;
   List<RecurringRule> stopped = <RecurringRule>[];
@@ -112,6 +120,21 @@ final class FakeRecurringRepository implements RecurringRepository {
     });
   }
 
+  /// Writes the reached marker over the stored rule [id], recorded in [updates] and gated by
+  /// [nextUpdateGate] like [update].
+  @override
+  TaskEither<Failure, Unit> markTargetReached(int id, Money target, CalendarDate on) {
+    final RecurringRule? stored = rules.where((RecurringRule r) => r.id == id).firstOrNull;
+    if (failure == null && stored == null) {
+      return TaskEither<Failure, Unit>.left(RuleNotFoundFailure('No rule $id'));
+    }
+    final RecurringRule? marked = stored?.copyWith(
+      targetReachedFor: Option<Money>.of(target),
+      targetReachedOn: Option<CalendarDate>.of(on),
+    );
+    return marked == null ? _run(() => unit) : update(marked).map((RecurringRule _) => unit);
+  }
+
   @override
   TaskEither<Failure, Unit> setActive(int id, {required bool active}) {
     final List<RecurringRule> from = active ? stopped : rules;
@@ -127,6 +150,19 @@ final class FakeRecurringRepository implements RecurringRepository {
       _changes.add(null);
       return unit;
     });
+  }
+
+  @override
+  TaskEither<Failure, Unit> removeWithPostedEntries(int id, {required CalendarDate since}) {
+    final Failure? current = failure ?? ledger?.failure;
+    if (current != null) {
+      return TaskEither<Failure, Unit>.left(current);
+    }
+    if (!rules.any((RecurringRule r) => r.id == id)) {
+      return TaskEither<Failure, Unit>.left(RuleNotFoundFailure('No rule $id'));
+    }
+    ledger?.entries.removeWhere((Entry e) => e.recurringId == id && !e.date.isBefore(since));
+    return setActive(id, active: false);
   }
 
   /// The skips recorded by [skip], in order; [unskip] removes one.

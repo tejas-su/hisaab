@@ -12,4 +12,6 @@
     <string name="tile_add_spend">Add a spend</string>
     <!-- shortcutAddSpend -->
     <string name="shortcut_add_spend">Add a spend</string>
+    <!-- shortcutAfford -->
+    <string name="shortcut_afford">Can I afford it?</string>
 </resources>

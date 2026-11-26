@@ -62,8 +62,8 @@ final class GetPromptInput implements UseCase<PromptInput, PayCycle> {
           (List<Category> categories) => _ledger
               .entriesBetween(cycles.last.start, to)
               .flatMap(
-                (List<Entry> entries) => _summary(params, today).map(
-                  (Option<CycleSummary> summary) => PromptInput(
+                (List<Entry> entries) => _summary(params, today).flatMap(
+                  (Option<CycleSummary> summary) => _setAside().map((SetAsideSummary setAside) => PromptInput(
                     cycles: cycles,
                     today: today,
                     incomeRule: income,
@@ -73,13 +73,18 @@ final class GetPromptInput implements UseCase<PromptInput, PayCycle> {
                     entries: entries,
                     summary: summary,
                     savings: rules.where((RecurringRule r) => r.kind == EntryKind.saved).toList(),
-                  ),
+                    setAsideBySaving: setAside.perSaving,
+                  )),
                 ),
               ),
         );
       }),
     );
   }
+
+  // why: the Savings list's own use case, so a target sentence's "set aside" can never differ from
+  // the list's (BR-15, D79, D215).
+  TaskEither<Failure, SetAsideSummary> _setAside() => GetSetAside(recurring: _recurring, ledger: _ledger)(const NoParams());
 
   // why: Home's own use case, so the prompt's numbers can never differ from the hero's. Only
   // the cycle holding today has a "today" to state.

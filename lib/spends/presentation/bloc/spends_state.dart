@@ -19,14 +19,17 @@ final class SpendsLoading extends SpendsState {
 /// One cycle's [overview]. [savingLimits] is true while "Use these limits" is being saved, and
 /// [limitsFailed] after that save failed (FR-SP-5).
 final class SpendsReady extends SpendsState {
-  const SpendsReady(this.overview, {this.savingLimits = false, this.limitsFailed = false});
+  const SpendsReady(this.overview, {this.savingLimits = false, this.limitsFailed = false, this.incomeSetUp = false});
 
   final SpendsOverview overview;
   final bool savingLimits;
   final bool limitsFailed;
 
+  /// Whether income is set up, so the *Can I afford it?* card shows on any cycle (FR-SP-9 AC-1).
+  final bool incomeSetUp;
+
   @override
-  List<Object?> get props => <Object?>[overview, savingLimits, limitsFailed];
+  List<Object?> get props => <Object?>[overview, savingLimits, limitsFailed, incomeSetUp];
 }
 
 /// Loading failed; a quiet message with Try again.

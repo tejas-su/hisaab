@@ -29,9 +29,13 @@ abstract interface class EntriesLocalDataSource {
   /// The sum of every *Saved* entry and the date of the first, or `firstDate` null with none.
   Future<({int totalMinor, String? firstDate})> savedTotal();
 
+  /// Whether any *Got* row exists.
+  Future<bool> anyGot();
+
   /// Per saving rule id: the sum of its posted *Saved* rows (`putInMinor`) and of the *Used* rows
   /// linked to it (`usedMinor`), plus whether any *Used* row exists at all (`anyUse`).
-  Future<({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse})> savingTotals();
+  Future<({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse})>
+  savingTotals();
 }
 
 /// [EntriesLocalDataSource] backed by the app's sqflite database.
@@ -44,7 +48,8 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
 
   // why: the category's key rides along so a *Not logged* fix is known from the row itself (BR-18);
   // a LEFT JOIN, so a row is never dropped from the money even if its category were missing.
-  static const String _selectWithKey = 'SELECT t.*, c.${CategoryColumns.key} AS ${TransactionColumns.categoryKey} '
+  static const String _selectWithKey =
+      'SELECT t.*, c.${CategoryColumns.key} AS ${TransactionColumns.categoryKey} '
       'FROM ${Tables.transactions} t LEFT JOIN ${Tables.categories} c ON c.${CategoryColumns.id} = t.${TransactionColumns.categoryId}';
 
   @override
@@ -54,36 +59,45 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
       'ORDER BY t.${TransactionColumns.date} DESC, t.${TransactionColumns.id} DESC',
       <Object?>[fromIso, toIso],
     );
-    return rows.map((Map<String, Object?> row) => requireRow(EntryModel.fromRow(row))).toList();
+    return rows
+        .map((Map<String, Object?> row) => requireRow(EntryModel.fromRow(row)))
+        .toList();
   }
 
   @override
   Future<EntryModel?> byId(int id) async {
-    final List<Map<String, Object?>> rows =
-        await _db.rawQuery('$_selectWithKey WHERE t.${TransactionColumns.id} = ?', <Object?>[id]);
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      '$_selectWithKey WHERE t.${TransactionColumns.id} = ?',
+      <Object?>[id],
+    );
     return rows.isEmpty ? null : requireRow(EntryModel.fromRow(rows.first));
   }
 
   @override
-  Future<int> insert(EntryModel model) => _db.insert(Tables.transactions, model.toRow());
+  Future<int> insert(EntryModel model) =>
+      _db.insert(Tables.transactions, model.toRow());
 
   @override
   Future<int> update(int id, EntryModel model) => _db.update(
-        Tables.transactions,
-        model.toRow(),
-        where: '${TransactionColumns.id} = ?',
-        whereArgs: <Object?>[id],
-      );
+    Tables.transactions,
+    model.toRow(),
+    where: '${TransactionColumns.id} = ?',
+    whereArgs: <Object?>[id],
+  );
 
   @override
-  Future<int> delete(int id) =>
-      _db.delete(Tables.transactions, where: '${TransactionColumns.id} = ?', whereArgs: <Object?>[id]);
+  Future<int> delete(int id) => _db.delete(
+    Tables.transactions,
+    where: '${TransactionColumns.id} = ?',
+    whereArgs: <Object?>[id],
+  );
 
   @override
   Future<String?> firstCreatedAt() async {
     const String first = 'first';
-    final List<Map<String, Object?>> rows =
-        await _db.rawQuery('SELECT MIN(${TransactionColumns.createdAt}) AS $first FROM ${Tables.transactions}');
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT MIN(${TransactionColumns.createdAt}) AS $first FROM ${Tables.transactions}',
+    );
     return rows.single.stringOrNullAt(first);
   }
 
@@ -96,18 +110,41 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
       'FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ?',
       <Object?>[EntryKindValues.saved],
     );
-    return (totalMinor: rows.single.intAt(total), firstDate: rows.single.stringOrNullAt(first));
+    return (
+      totalMinor: rows.single.intAt(total),
+      firstDate: rows.single.stringOrNullAt(first),
+    );
   }
 
   @override
-  Future<({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse})> savingTotals() async {
-    final Map<int, int> putIn = await _sumsBy(TransactionColumns.recurringId, EntryKindValues.saved);
-    final Map<int, int> used = await _sumsBy(TransactionColumns.savingId, EntryKindValues.used);
+  Future<bool> anyGot() async {
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT EXISTS(SELECT 1 FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ?) AS any',
+      <Object?>[EntryKindValues.got],
+    );
+    return rows.single.intAt('any') == 1;
+  }
+
+  @override
+  Future<({Map<int, int> putInMinor, Map<int, int> usedMinor, bool anyUse})>
+  savingTotals() async {
+    final Map<int, int> putIn = await _sumsBy(
+      TransactionColumns.recurringId,
+      EntryKindValues.saved,
+    );
+    final Map<int, int> used = await _sumsBy(
+      TransactionColumns.savingId,
+      EntryKindValues.used,
+    );
     final List<Map<String, Object?>> any = await _db.rawQuery(
       'SELECT EXISTS(SELECT 1 FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ?) AS any',
       <Object?>[EntryKindValues.used],
     );
-    return (putInMinor: putIn, usedMinor: used, anyUse: any.single.intAt('any') == 1);
+    return (
+      putInMinor: putIn,
+      usedMinor: used,
+      anyUse: any.single.intAt('any') == 1,
+    );
   }
 
   Future<Map<int, int>> _sumsBy(String linkColumn, String kind) async {
@@ -117,6 +154,9 @@ final class SqfliteEntriesLocalDataSource implements EntriesLocalDataSource {
       'FROM ${Tables.transactions} WHERE ${TransactionColumns.kind} = ? AND $linkColumn IS NOT NULL GROUP BY $linkColumn',
       <Object?>[kind],
     );
-    return <int, int>{for (final Map<String, Object?> row in rows) row.intAt('link'): row.intAt(total)};
+    return <int, int>{
+      for (final Map<String, Object?> row in rows)
+        row.intAt('link'): row.intAt(total),
+    };
   }
 }

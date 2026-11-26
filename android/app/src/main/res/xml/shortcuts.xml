@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The launcher-icon shortcut "Add a spend": the Add tray at the keypad (SPEC FR-WG-7). -->
+<!-- The launcher-icon shortcuts "Add a spend" (the Add tray at the keypad, SPEC FR-WG-7) and "Can I afford it?" (SPEC FR-WG-9). -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:enabled="true"
@@ -9,6 +9,17 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="hisaab://add"
+            android:targetClass="com.widgetsandco.hisaab.MainActivity"
+            android:targetPackage="com.widgetsandco.hisaab" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_afford"
+        android:shortcutId="afford"
+        android:shortcutShortLabel="@string/shortcut_afford">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="hisaab://afford"
             android:targetClass="com.widgetsandco.hisaab.MainActivity"
             android:targetPackage="com.widgetsandco.hisaab" />
     </shortcut>

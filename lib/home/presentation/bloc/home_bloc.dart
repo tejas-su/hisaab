@@ -12,6 +12,7 @@ import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/usecases/use_case.dart';
 import '../../../ledger/ledger.dart';
+import '../../domain/entities/reached_line.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -36,6 +37,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this._unskipBill,
     required this._haptics,
     this._settings,
+    this._getSetAside,
   }) : super(const HomeLoading()) {
     // why: every write reloads Home; a newer load cancels an older one still reading, so stale
     // numbers never land last.
@@ -80,6 +82,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   /// Where the install line's seen flag is read; none (older constructions) means no install line.
   final BudgetSettingsRepository? _settings;
+
+  /// What each saving has set aside, for the reached line; none (older constructions) means no line.
+  final GetSetAside? _getSetAside;
   late final StreamSubscription<void> _changes;
   late final StreamSubscription<void> _ruleChanges;
 
@@ -155,10 +160,34 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         )
         .run();
     final bool installDue = await loaded.match((Failure _) async => false, (HomeReady ready) => _installDue(ready.summary));
+    final Option<ReachedLine> reachedLine = await loaded.match(
+      (Failure _) async => const Option<ReachedLine>.none(),
+      (HomeReady ready) => _reachedLine(ready.summary.today),
+    );
     emit(loaded.match((Failure failure) {
       _logFailure('home.load_failed')(failure);
       return HomeFailed(failure);
-    }, (HomeReady ready) => _shown(ready.copyWith(installDue: installDue))));
+    }, (HomeReady ready) => _shown(ready.copyWith(installDue: installDue, reachedLine: reachedLine))));
+  }
+
+  // why: a read that fails just leaves the line out; it is news, never money (BR-23).
+  Future<Option<ReachedLine>> _reachedLine(CalendarDate today) async {
+    final GetSetAside? getSetAside = _getSetAside;
+    if (getSetAside == null) {
+      return const Option<ReachedLine>.none();
+    }
+    final Either<Failure, Option<ReachedLine>> picked = await _recurring
+        .activeRules()
+        .flatMap(
+          (List<RecurringRule> rules) => getSetAside(const NoParams()).map(
+            (SetAsideSummary summary) => ReachedLine.pick(rules: rules, setAside: summary.perSaving, today: today),
+          ),
+        )
+        .run();
+    return picked.match((Failure failure) {
+      _logFailure('home.reached_failed')(failure);
+      return const Option<ReachedLine>.none();
+    }, (Option<ReachedLine> line) => line);
   }
 
   // why: the install day is the day the earliest entry was saved (C1: the income rule has no created

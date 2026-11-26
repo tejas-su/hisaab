@@ -2016,6 +2016,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutAddSpend => 'Add a spend';
 
   @override
+  String get shortcutAfford => 'Can I afford it?';
+
+  @override
   String get settingsShortcuts => 'Shortcuts';
 
   @override
@@ -2796,6 +2799,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savingTargetLiveReached => 'You\'ve already set aside that much.';
 
   @override
+  String savingTargetDayUp(String amount) {
+    return 'Your daily number goes up by $amount.';
+  }
+
+  @override
+  String savingTargetDayUpSpoken(String amount) {
+    return 'Your daily number goes up by $amount.';
+  }
+
+  @override
+  String savingTargetDayDown(String amount) {
+    return 'Your daily number goes down by $amount.';
+  }
+
+  @override
+  String savingTargetDayDownSpoken(String amount) {
+    return 'Your daily number goes down by $amount.';
+  }
+
+  @override
   String get savingTargetClear => 'Clear';
 
   @override
@@ -2860,6 +2883,198 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String savingBoughtSnack(String amount, String saving) {
     return 'Used $amount from $saving';
+  }
+
+  @override
+  String savingReachedLine(String saving, String target) {
+    return '$saving reached $target.';
+  }
+
+  @override
+  String savingReachedLineSpoken(String saving, String target) {
+    return '$saving reached $target.';
+  }
+
+  @override
+  String get affordTitle => 'Can I afford it?';
+
+  @override
+  String get affordCardNote => 'Check a big buy';
+
+  @override
+  String affordHeading(String name, String price) {
+    return '$name · $price';
+  }
+
+  @override
+  String affordHeadingSpoken(String name, String price) {
+    return '$name, $price';
+  }
+
+  @override
+  String get affordItemQuestion => 'What do you want to buy?';
+
+  @override
+  String get affordNameLabel => 'What is it called?';
+
+  @override
+  String get affordPriceLabel => 'How much it costs';
+
+  @override
+  String get affordHaveQuestion => 'Saved anything for it already?';
+
+  @override
+  String get affordNothingYet => 'Nothing yet';
+
+  @override
+  String get affordHaveYes => 'Yes';
+
+  @override
+  String get affordHaveHint =>
+      'Money you\'ve put away for this, in any account';
+
+  @override
+  String get affordSeeAnswer => 'See the answer';
+
+  @override
+  String get affordFromSavingsVerdict => 'Yes, you can.';
+
+  @override
+  String affordFromSavingsLine(String have) {
+    return 'Pay it from the $have you\'ve saved.';
+  }
+
+  @override
+  String get affordWithCardVerdict => 'Yes, without a loan.';
+
+  @override
+  String affordWithCardLine(String have, String need) {
+    return 'Use your $have and put $need on the card. Add $need when you pay the card bill.';
+  }
+
+  @override
+  String affordCardOnlyLine(String need) {
+    return 'Put $need on the card. Add $need when you pay the card bill.';
+  }
+
+  @override
+  String affordWithCardDays(String perDay) {
+    return 'Your days stay at about $perDay.';
+  }
+
+  @override
+  String get affordNotYetVerdict => 'Not yet.';
+
+  @override
+  String affordSaveUpLine(String spare, String month) {
+    return 'Save $spare a month and it\'s yours by $month.';
+  }
+
+  @override
+  String affordSaveUpFarLine(String spare) {
+    return 'Save $spare a month. It would take over 10 years.';
+  }
+
+  @override
+  String affordSaveUpDays(String saving, String usually) {
+    return 'That\'s about $saving a day for now, instead of $usually.';
+  }
+
+  @override
+  String get affordDaysFullLine =>
+      'Your usual days already use your monthly money.';
+
+  @override
+  String get affordTooEarlyVerdict => 'Ask again after payday.';
+
+  @override
+  String affordStartSaving(String amount) {
+    return 'Start saving $amount a month';
+  }
+
+  @override
+  String get affordOkay => 'Okay';
+
+  @override
+  String affordBreathingSpace(String usual) {
+    return 'The line is your breathing space: usual $usual a day + 20%.';
+  }
+
+  @override
+  String get affordBarUsually => 'Usually';
+
+  @override
+  String get affordBarWithThis => 'With this buy';
+
+  @override
+  String affordBarSpoken(String label, String perDay) {
+    return '$label, $perDay a day';
+  }
+
+  @override
+  String get affordOtherWays => 'Other ways';
+
+  @override
+  String get affordWayFromSavings => 'From savings';
+
+  @override
+  String get affordWayCard => 'Savings, then the card';
+
+  @override
+  String get affordWaySaveUp => 'Save up';
+
+  @override
+  String affordWaySuggested(String way) {
+    return '$way · suggested';
+  }
+
+  @override
+  String affordWayCovered(String have) {
+    return 'Covered. $have saved for it.';
+  }
+
+  @override
+  String affordWayShort(String have, String need) {
+    return '$have saved. Short by $need.';
+  }
+
+  @override
+  String affordWayNothingSaved(String need) {
+    return 'Nothing saved yet. Short by $need.';
+  }
+
+  @override
+  String affordWayCardFits(String need, String perDay) {
+    return '$need on the card. After payday about $perDay a day.';
+  }
+
+  @override
+  String affordWayCardBelow(String need, String floor) {
+    return '$need on the card would leave less than your $floor a day.';
+  }
+
+  @override
+  String affordWaySaveFits(String spare, String month) {
+    return '$spare a month, ready by $month.';
+  }
+
+  @override
+  String affordWaySaveFar(String spare) {
+    return '$spare a month, over 10 years to go.';
+  }
+
+  @override
+  String get affordWayNothingSpare => 'Nothing spare after your usual days.';
+
+  @override
+  String get affordWayNotNeeded => 'Not needed.';
+
+  @override
+  String get affordWayNotYet => 'Not available yet.';
+
+  @override
+  String affordSavingStarted(String amount, String name) {
+    return 'Saving $amount a month for $name';
   }
 }
 

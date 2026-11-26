@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hisaab/core/errors/failure.dart';
 import 'package:hisaab/core/money/money.dart';
+import 'package:hisaab/core/time/calendar_date.dart';
 import 'package:hisaab/core/time/period_calculator.dart';
 import 'package:hisaab/home/presentation/bloc/home_bloc.dart';
 import 'package:hisaab/home/presentation/bloc/home_event.dart';
@@ -52,7 +53,7 @@ void main() {
         clock: clock,
       ),
       postDueRecurring: PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock),
-      getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
+      getDueSoonBill: GetDueSoonBill(recurring: recurring, ledger: ledger, clock: clock),
       ledger: ledger,
       recurring: recurring,
       categories: FakeCategoryRepository(),
@@ -110,6 +111,38 @@ void main() {
 
     expect(ledger.entries.where((Entry e) => e.id == 900), hasLength(1));
     expect(bloc.state, isA<HomeReady>());
+  });
+
+  test('I bought it on a reached saving with a put-in still due this cycle leaves the hero where it was (AC-T9)', () async {
+    final RecurringRule reached = RecurringRule(
+      id: 8,
+      label: 'Phone',
+      amount: Money.fromMajor(1000),
+      kind: EntryKind.saved,
+      categoryId: SeedCategoryIds.saved,
+      schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 9, 30)),
+      nextDue: const CalendarDate(2026, 10, 30),
+      target: Option<Money>.of(Money.fromMajor(12000)),
+    );
+    recurring.rules.add(reached);
+    ledger.entries.add(
+      Entry(
+        id: 901,
+        amount: Money.fromMajor(12000),
+        kind: EntryKind.saved,
+        categoryId: SeedCategoryIds.saved,
+        date: const CalendarDate(2026, 9, 30),
+        createdAt: DateTime(2026, 9, 30, 12),
+        recurringId: 8,
+      ),
+    );
+    await bloc.dispatch(const HomeLoadRequested());
+    final Money before = ready().summary.todayShare;
+
+    await recurring.setActive(8, active: false).run();
+    await bloc.dispatch(const HomeLoadRequested());
+
+    expect(ready().summary.todayShare, before);
   });
 
   test('the events compare by their fields', () {

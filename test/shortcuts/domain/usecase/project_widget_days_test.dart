@@ -39,7 +39,7 @@ final class _RealLedger {
   final BudgetSettingsRepositoryImpl settings;
 
   Future<void> rule(String label, int rupees, EntryKind kind, Schedule schedule,
-      {bool income = false, AmountMode mode = AmountMode.fixed, int category = SeedCategoryIds.bills}) async {
+      {bool income = false, AmountMode mode = AmountMode.fixed, int category = SeedCategoryIds.bills, Money? target}) async {
     _right(
       await recurring
           .add(RecurringDraft(
@@ -51,6 +51,7 @@ final class _RealLedger {
             nextDue: schedule.anchor,
             isIncomeSource: income,
             amountMode: mode,
+            target: target == null ? const Option<Money>.none() : Option<Money>.of(target),
           ))
           .run(),
     );
@@ -128,6 +129,25 @@ void main() {
       // why: today's cycle runs to 3 Nov; the next one, from payday on 4 Nov, ends on 3 Dec.
       expect(days.last.summary.today, const CalendarDate(2026, 12, 3));
       expect(days.skip(1).every((ProjectedDay d) => d.spends.isEmpty), isTrue);
+    });
+
+    test('a reached saving whose put-ins are older than the read window projects as Home does (D213, AC-T9)', () async {
+      await real.rule('Salary', 45000, EntryKind.got, _monthly(const CalendarDate(2026, 10, 4)), income: true, category: SeedCategoryIds.salary);
+      await real.rule('Phone', 1000, EntryKind.saved, _monthly(const CalendarDate(2026, 10, 30)),
+          category: SeedCategoryIds.saved, target: Money.fromMajor(12000));
+      final RecurringRule phone = _right(await real.recurring.activeRules().run()).firstWhere((RecurringRule r) => r.label == 'Phone');
+      _right(
+        await real.recurring
+            .post(RecurringPosting(
+              occurrences: <Occurrence>[Occurrence(rule: phone.copyWith(amount: Money.fromMajor(12000)), date: const CalendarDate(2026, 9, 30))],
+              nextDueByRuleId: <int, CalendarDate>{phone.id: const CalendarDate(2026, 10, 30)},
+            ))
+            .run(),
+      );
+
+      final List<ProjectedDay> days = await _expectParity(real);
+
+      expect(days.first.summary.today, const CalendarDate(2026, 10, 26));
     });
 
     test('payday on the 31st across February in a leap year', () async {

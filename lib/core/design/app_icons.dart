@@ -35,6 +35,12 @@ abstract final class AppIcons {
   static const AppIconData themeLight = HugeIcons.strokeRoundedSun03;
   static const AppIconData themeDark = HugeIcons.strokeRoundedMoon02;
 
+  /// Pay from this month's money, in *Can I afford it?*'s other ways (FR-SP-9 AC-5).
+  static const AppIconData wallet = HugeIcons.strokeRoundedWallet01;
+
+  /// Pay by card, in *Can I afford it?*'s other ways (FR-SP-9 AC-5).
+  static const AppIconData card = HugeIcons.strokeRoundedCreditCard;
+
   /// A saving such as an RD (D120).
   static const AppIconData saving = HugeIcons.strokeRoundedPiggyBank;
 

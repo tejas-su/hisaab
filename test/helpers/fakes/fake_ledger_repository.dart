@@ -184,6 +184,9 @@ final class FakeLedgerRepository implements LedgerRepository {
       });
 
   @override
+  TaskEither<Failure, bool> anyGot() => _run(() => entries.any((Entry e) => e.kind == EntryKind.got));
+
+  @override
   TaskEither<Failure, SavingTotals> savingTotals() => _run(() {
         Money sumOf(Iterable<Entry> rows) => rows.fold(Money.zero, (Money total, Entry e) => total + e.amount);
         final Set<int> ids = <int>{

@@ -18,13 +18,19 @@ final class ProjectedBook {
     required List<BillSkip> skips,
     required this.settings,
     required this.firstLogged,
-  })  : _entries = <Entry>[...entries],
-        _rules = <RecurringRule>[...rules],
-        _skips = <BillSkip>[...skips];
+    this._savingBaseline,
+  }) : _entries = <Entry>[...entries],
+       _rules = <RecurringRule>[...rules],
+       _skips = <BillSkip>[...skips];
 
   final List<Entry> _entries;
   final List<RecurringRule> _rules;
   final List<BillSkip> _skips;
+
+  // why: the copy holds only a window of entries, so the real lifetime totals are the baseline and
+  // only what the projection posts itself is added; without one, the copied entries are summed.
+  final SavingTotals? _savingBaseline;
+  final List<Entry> _posted = <Entry>[];
 
   /// The settings as stored when the copy was made.
   final BudgetSettings settings;
@@ -46,48 +52,63 @@ final class ProjectedBook {
   late final BudgetSettingsRepository budget = _ProjectedSettings(this);
 
   /// [day]'s *Spent* entries that no rule posted, oldest first, as Home's today's bar takes them.
-  List<Entry> typedSpendsOn(CalendarDate day) => _newestFirst(_entries.where((Entry e) => e.date == day))
-      .reversed
-      .where((Entry e) => e.kind == EntryKind.spent && e.recurringId == null && !e.isNotLogged)
-      .toList();
+  List<Entry> typedSpendsOn(CalendarDate day) =>
+      _newestFirst(_entries.where((Entry e) => e.date == day)).reversed
+          .where(
+            (Entry e) =>
+                e.kind == EntryKind.spent &&
+                e.recurringId == null &&
+                !e.isNotLogged,
+          )
+          .toList();
 
   Option<CalendarDate> _earliestSaved() => Option<CalendarDate>.fromNullable(
-        _entries.map((Entry e) => CalendarDate.fromDateTime(e.createdAt)).fold<CalendarDate?>(
-              null,
-              (CalendarDate? first, CalendarDate day) => first == null || day.isBefore(first) ? day : first,
-            ),
-      );
+    _entries
+        .map((Entry e) => CalendarDate.fromDateTime(e.createdAt))
+        .fold<CalendarDate?>(
+          null,
+          (CalendarDate? first, CalendarDate day) =>
+              first == null || day.isBefore(first) ? day : first,
+        ),
+  );
 
-  List<Entry> _between(CalendarDate from, CalendarDate to) =>
-      _newestFirst(_entries.where((Entry e) => !e.date.isBefore(from) && !e.date.isAfter(to)));
+  List<Entry> _between(CalendarDate from, CalendarDate to) => _newestFirst(
+    _entries.where((Entry e) => !e.date.isBefore(from) && !e.date.isAfter(to)),
+  );
 
   // why: the same order as the database's read (date, then id, newest first), so every list built
   // from it comes out as Home's does.
-  static List<Entry> _newestFirst(Iterable<Entry> entries) => entries.toList()
-    ..sort((Entry a, Entry b) => a.date == b.date ? b.id.compareTo(a.id) : b.date.compareTo(a.date));
+  static List<Entry> _newestFirst(Iterable<Entry> entries) =>
+      entries.toList()..sort(
+        (Entry a, Entry b) =>
+            a.date == b.date ? b.id.compareTo(a.id) : b.date.compareTo(a.date),
+      );
 
   // why: as the database's post: an occurrence already posted or skipped for that rule and date is
   // left out, and each rule's next due date moves on.
   int _post(RecurringPosting posting) {
-    int nextId = _entries.fold(0, (int top, Entry e) => e.id > top ? e.id : top);
+    int nextId = _entries.fold(
+      0,
+      (int top, Entry e) => e.id > top ? e.id : top,
+    );
     int inserted = 0;
     for (final Occurrence occurrence in posting.occurrences) {
       if (_answered(occurrence)) {
         continue;
       }
       final RecurringRule rule = occurrence.rule;
-      _entries.add(
-        Entry(
-          id: ++nextId,
-          amount: rule.amount,
-          kind: rule.kind,
-          categoryId: rule.categoryId,
-          date: occurrence.date,
-          createdAt: DateTime(runningOn.year, runningOn.month, runningOn.day),
-          note: rule.kind == EntryKind.saved ? rule.label : null,
-          recurringId: rule.id,
-        ),
+      final Entry posted = Entry(
+        id: ++nextId,
+        amount: rule.amount,
+        kind: rule.kind,
+        categoryId: rule.categoryId,
+        date: occurrence.date,
+        createdAt: DateTime(runningOn.year, runningOn.month, runningOn.day),
+        note: rule.kind == EntryKind.saved ? rule.label : null,
+        recurringId: rule.id,
       );
+      _entries.add(posted);
+      _posted.add(posted);
       inserted++;
     }
     for (int i = 0; i < _rules.length; i++) {
@@ -99,28 +120,43 @@ final class ProjectedBook {
   }
 
   SavingTotals _savingTotals() {
-    Money sumOf(EntryKind kind, int id, int? Function(Entry) link) => _entries
+    final SavingTotals base = _savingBaseline ?? const SavingTotals();
+    final List<Entry> counted = _savingBaseline == null ? _entries : _posted;
+    Money sumOf(EntryKind kind, int id, int? Function(Entry) link) => counted
         .where((Entry e) => e.kind == kind && link(e) == id)
         .fold(Money.zero, (Money total, Entry e) => total + e.amount);
     final Set<int> ids = <int>{
-      ..._entries.where((Entry e) => e.kind == EntryKind.saved).map((Entry e) => e.recurringId).nonNulls,
-      ..._entries.where((Entry e) => e.kind == EntryKind.used).map((Entry e) => e.savingId).nonNulls,
+      ...base.bySaving.keys,
+      ...counted
+          .where((Entry e) => e.kind == EntryKind.saved)
+          .map((Entry e) => e.recurringId)
+          .nonNulls,
+      ...counted
+          .where((Entry e) => e.kind == EntryKind.used)
+          .map((Entry e) => e.savingId)
+          .nonNulls,
     };
     return SavingTotals(
       bySaving: <int, ({Money putIn, Money used})>{
         for (final int id in ids)
           id: (
-            putIn: sumOf(EntryKind.saved, id, (Entry e) => e.recurringId),
-            used: sumOf(EntryKind.used, id, (Entry e) => e.savingId),
+            putIn:
+                (base.bySaving[id]?.putIn ?? Money.zero) +
+                sumOf(EntryKind.saved, id, (Entry e) => e.recurringId),
+            used:
+                (base.bySaving[id]?.used ?? Money.zero) +
+                sumOf(EntryKind.used, id, (Entry e) => e.savingId),
           ),
       },
-      anyUse: _entries.any((Entry e) => e.kind == EntryKind.used),
+      anyUse: base.anyUse || counted.any((Entry e) => e.kind == EntryKind.used),
     );
   }
 
   bool _answered(Occurrence occurrence) {
-    bool same(int? ruleId, CalendarDate date) => ruleId == occurrence.rule.id && date == occurrence.date;
-    return _entries.any((Entry e) => same(e.recurringId, e.date)) || _skips.any((BillSkip s) => same(s.ruleId, s.date));
+    bool same(int? ruleId, CalendarDate date) =>
+        ruleId == occurrence.rule.id && date == occurrence.date;
+    return _entries.any((Entry e) => same(e.recurringId, e.date)) ||
+        _skips.any((BillSkip s) => same(s.ruleId, s.date));
   }
 }
 
@@ -131,12 +167,15 @@ final class _ProjectedLedger implements LedgerRepository {
   final ProjectedBook _book;
 
   @override
-  TaskEither<Failure, List<Entry>> entriesBetween(CalendarDate from, CalendarDate to) =>
-      TaskEither<Failure, List<Entry>>.right(_book._between(from, to));
+  TaskEither<Failure, List<Entry>> entriesBetween(
+    CalendarDate from,
+    CalendarDate to,
+  ) => TaskEither<Failure, List<Entry>>.right(_book._between(from, to));
 
   // why: on an empty ledger the engine's first post is the first thing saved, as in the database.
   @override
-  TaskEither<Failure, Option<CalendarDate>> firstLoggedOn() => TaskEither<Failure, Option<CalendarDate>>.right(
+  TaskEither<Failure, Option<CalendarDate>> firstLoggedOn() =>
+      TaskEither<Failure, Option<CalendarDate>>.right(
         _book.firstLogged.alt(_book._earliestSaved),
       );
 
@@ -147,13 +186,20 @@ final class _ProjectedLedger implements LedgerRepository {
   TaskEither<Failure, Entry> add(EntryDraft draft) => throw _readOnly;
 
   @override
-  TaskEither<Failure, Entry> addForRule(EntryDraft draft, {required int recurringId}) => throw _readOnly;
+  TaskEither<Failure, Entry> addForRule(
+    EntryDraft draft, {
+    required int recurringId,
+  }) => throw _readOnly;
 
   @override
-  TaskEither<Failure, Entry> addForSaving(EntryDraft draft, {required int savingId}) => throw _readOnly;
+  TaskEither<Failure, Entry> addForSaving(
+    EntryDraft draft, {
+    required int savingId,
+  }) => throw _readOnly;
 
   @override
-  TaskEither<Failure, Entry> replace(int id, EntryDraft draft) => throw _readOnly;
+  TaskEither<Failure, Entry> replace(int id, EntryDraft draft) =>
+      throw _readOnly;
 
   @override
   TaskEither<Failure, Entry> delete(int id) => throw _readOnly;
@@ -164,10 +210,14 @@ final class _ProjectedLedger implements LedgerRepository {
   @override
   TaskEither<Failure, Option<SavedTotal>> savedTotal() => throw _readOnly;
 
+  @override
+  TaskEither<Failure, bool> anyGot() => throw _readOnly;
+
   // why: the engine stops a saving at its target from these totals, so a projected day must see the
   // puts-in it has already posted (SPEC BR-23, D213).
   @override
-  TaskEither<Failure, SavingTotals> savingTotals() => TaskEither<Failure, SavingTotals>.right(_book._savingTotals());
+  TaskEither<Failure, SavingTotals> savingTotals() =>
+      TaskEither<Failure, SavingTotals>.right(_book._savingTotals());
 }
 
 /// [ProjectedBook]'s rules and skips; [post] is the only write.
@@ -178,15 +228,25 @@ final class _ProjectedRecurring implements RecurringRepository {
 
   @override
   TaskEither<Failure, List<RecurringRule>> activeRules() =>
-      TaskEither<Failure, List<RecurringRule>>.right(List<RecurringRule>.unmodifiable(_book._rules));
-
-  @override
-  TaskEither<Failure, int> post(RecurringPosting posting) => TaskEither<Failure, int>(() async => Either<Failure, int>.right(_book._post(posting)));
-
-  @override
-  TaskEither<Failure, List<BillSkip>> skipsBetween(CalendarDate from, CalendarDate to) => TaskEither<Failure, List<BillSkip>>.right(
-        _book._skips.where((BillSkip s) => !s.date.isBefore(from) && !s.date.isAfter(to)).toList(),
+      TaskEither<Failure, List<RecurringRule>>.right(
+        List<RecurringRule>.unmodifiable(_book._rules),
       );
+
+  @override
+  TaskEither<Failure, int> post(RecurringPosting posting) =>
+      TaskEither<Failure, int>(
+        () async => Either<Failure, int>.right(_book._post(posting)),
+      );
+
+  @override
+  TaskEither<Failure, List<BillSkip>> skipsBetween(
+    CalendarDate from,
+    CalendarDate to,
+  ) => TaskEither<Failure, List<BillSkip>>.right(
+    _book._skips
+        .where((BillSkip s) => !s.date.isBefore(from) && !s.date.isAfter(to))
+        .toList(),
+  );
 
   @override
   Stream<void> get changes => const Stream<void>.empty();
@@ -195,13 +255,27 @@ final class _ProjectedRecurring implements RecurringRepository {
   TaskEither<Failure, Unit> startFresh(LedgerSetup setup) => throw _readOnly;
 
   @override
-  TaskEither<Failure, RecurringRule> add(RecurringDraft draft) => throw _readOnly;
+  TaskEither<Failure, RecurringRule> add(RecurringDraft draft) =>
+      throw _readOnly;
 
   @override
-  TaskEither<Failure, RecurringRule> update(RecurringRule rule) => throw _readOnly;
+  TaskEither<Failure, RecurringRule> update(RecurringRule rule) =>
+      throw _readOnly;
 
   @override
-  TaskEither<Failure, Unit> setActive(int id, {required bool active}) => throw _readOnly;
+  TaskEither<Failure, Unit> markTargetReached(
+    int id,
+    Money target,
+    CalendarDate on,
+  ) => throw _readOnly;
+
+  @override
+  TaskEither<Failure, Unit> setActive(int id, {required bool active}) =>
+      throw _readOnly;
+
+  @override
+  TaskEither<Failure, Unit> removeWithPostedEntries(int id, {required CalendarDate since}) =>
+      throw _readOnly;
 
   @override
   TaskEither<Failure, Unit> skip(BillSkip skip) => throw _readOnly;
@@ -217,14 +291,16 @@ final class _ProjectedSettings implements BudgetSettingsRepository {
   final ProjectedBook _book;
 
   @override
-  TaskEither<Failure, BudgetSettings> read() => TaskEither<Failure, BudgetSettings>.right(_book.settings);
+  TaskEither<Failure, BudgetSettings> read() =>
+      TaskEither<Failure, BudgetSettings>.right(_book.settings);
 
   @override
   TaskEither<Failure, Unit> addPaySwitch(PaySwitch change) => throw _readOnly;
 
   // why: the install line is a Home line; no projected day reads it, and it can't be written here.
   @override
-  TaskEither<Failure, bool> installLineSeen() => TaskEither<Failure, bool>.right(true);
+  TaskEither<Failure, bool> installLineSeen() =>
+      TaskEither<Failure, bool>.right(true);
 
   @override
   TaskEither<Failure, Unit> markInstallLineSeen() => throw _readOnly;
@@ -232,4 +308,6 @@ final class _ProjectedSettings implements BudgetSettingsRepository {
 
 // why: only the engine and the summary run on the copy; any other write is a programming error,
 // and a projected row must never pretend a user's change happened.
-final UnsupportedError _readOnly = UnsupportedError('A projected ledger only takes the engine\'s posts.');
+final UnsupportedError _readOnly = UnsupportedError(
+  'A projected ledger only takes the engine\'s posts.',
+);

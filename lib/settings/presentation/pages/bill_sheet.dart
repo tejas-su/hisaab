@@ -78,8 +78,9 @@ class BillSheet extends StatefulWidget {
   static bool _settled(UsedState state) => state is! UsedReady || !state.writing;
 
   /// The bottom-sheet route the bill sheet rises in, shared with the *Put in extra* sheet (D120):
-  /// [builder] builds its body. Its `completed` waits for the exit animation to end.
-  static ModalBottomSheetRoute<void> route(BuildContext context, {required WidgetBuilder builder}) {
+  /// [builder] builds its body and [settings] names the route. Its `completed` waits for the exit
+  /// animation to end.
+  static ModalBottomSheetRoute<void> route(BuildContext context, {required WidgetBuilder builder, RouteSettings? settings}) {
     final bool tabletop = context.layout.panes is TabletopPanes;
     final NavigatorState navigator = Navigator.of(context);
     final MaterialLocalizations localizations = MaterialLocalizations.of(context);
@@ -97,6 +98,7 @@ class BillSheet extends StatefulWidget {
       constraints: const BoxConstraints(maxWidth: AdaptiveSplit.readableWidth),
       showDragHandle: !tabletop && MediaQuery.sizeOf(context).height >= _handleMinHeight,
       builder: builder,
+      settings: settings,
     );
   }
 

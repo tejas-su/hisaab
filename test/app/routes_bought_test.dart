@@ -5,7 +5,7 @@ import 'package:hisaab/app/hisaab_app.dart';
 import 'package:hisaab/app/routes.dart';
 import 'package:hisaab/core/money/money.dart';
 import 'package:hisaab/core/time/calendar_date.dart';
-import 'package:hisaab/home/presentation/widgets/due_soon_row.dart';
+import 'package:hisaab/home/presentation/widgets/reached_line_row.dart';
 import 'package:hisaab/ledger/ledger.dart';
 import 'package:hisaab/settings/settings.dart';
 import 'package:material_ui/material_ui.dart';
@@ -14,8 +14,8 @@ import '../helpers/fake_services.dart';
 import '../helpers/fixtures/ledger/worked_example.dart';
 import '../helpers/pump_app.dart';
 
-/// Insurance with ₹12,000 set aside and a target of ₹12,000, due in 3 days, so Home's due-soon line
-/// opens its reached sheet.
+/// Insurance with ₹12,000 set aside and a target of ₹12,000, next put-in in 3 days. It is reached,
+/// so Home shows its reached line (never a due-soon row, D216), which opens its reached sheet.
 RecurringRule get _reachedInsurance => WorkedExample.insurance.copyWith(
       nextDue: const CalendarDate(2026, 10, 29),
       schedule: const Schedule(frequency: Frequency.monthly, anchor: CalendarDate(2026, 9, 29)),
@@ -94,7 +94,7 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpWidget(HisaabApp(getIt: services.register(GetIt.asNewInstance())));
       await _settle(tester);
-      await tester.tap(find.byType(DueSoonRow));
+      await tester.tap(find.byType(ReachedLineRow));
       await _settle(tester);
     }
 

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../habits/habits.dart';
+import '../../domain/entities/reached_line.dart';
 import '../../../ledger/ledger.dart';
 
 /// What Home knows at the moment the missed-log line is decided (SPEC FR-HO-3, D170).
@@ -14,6 +16,7 @@ final class HomeLinesFacts extends Equatable {
     this.overState = false,
     this.billLineShowing = false,
     this.installDue = false,
+    this.reached = const Option<ReachedLine>.none(),
   });
 
   /// The habit index read at that instant; null while the habits had not loaded (E106).
@@ -38,8 +41,12 @@ final class HomeLinesFacts extends Equatable {
   /// and not used up by a fix (FR-HO-3).
   final bool installDue;
 
+  /// The saving whose target was reached, shown today or pending (BR-23); none when no saving
+  /// qualifies.
+  final Option<ReachedLine> reached;
+
   @override
-  List<Object?> get props => <Object?>[index, categories, now, noIncome, overState, billLineShowing, installDue];
+  List<Object?> get props => <Object?>[index, categories, now, noIncome, overState, billLineShowing, installDue, reached];
 }
 
 /// What happens to the missed-log line. Only [HomeLinesEvaluated] can make a line appear; every
@@ -124,4 +131,21 @@ final class HomeLinesInstallTapped extends HomeLinesEvent {
 /// A fix was made, which uses the install line up (C11); the line leaves unless it was already seen.
 final class HomeLinesInstallConsumed extends HomeLinesEvent {
   const HomeLinesInstallConsumed();
+}
+
+/// The reached line is on screen with Home in view and nothing over it: write it as shown, once
+/// per target (FR-HO-3 AC-R2).
+final class HomeLinesReachedShown extends HomeLinesEvent {
+  const HomeLinesReachedShown();
+}
+
+/// The user tapped the reached line; it opens the saving's sheet, writes nothing and stays (AC-R5).
+final class HomeLinesReachedTapped extends HomeLinesEvent {
+  const HomeLinesReachedTapped();
+}
+
+/// A Home reload found that the reached line's saving no longer qualifies: set aside fell below its
+/// target, the target changed or was cleared, or the saving was deleted (AC-R3, F3).
+final class HomeLinesReachedGone extends HomeLinesEvent {
+  const HomeLinesReachedGone();
 }

@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../core/design/app_icon.dart';
 import '../../../core/design/app_icons.dart';
@@ -8,13 +9,16 @@ import '../../../core/design/hisaab_shapes.dart';
 import '../../../core/design/hisaab_type.dart';
 import '../../../core/extensions/build_context_extensions.dart';
 import '../../../core/money/money.dart';
+import '../../../core/time/calendar_date.dart';
 import '../../../core/widgets/focus_ring.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../ledger/ledger.dart';
 import '../../../ledger/presentation/rule_glyph.dart';
+import 'saving_target_copy.dart';
 
 /// One bill or saving: its name, its day of the month and its amount, "about" when it changes (SPEC FR-SE-1, D123).
-/// A saving with money set aside adds a third line, "{amount} set aside" (AC-Y3).
+/// A saving with money set aside adds a third line, "{amount} set aside" (AC-Y3); a saving with a
+/// target always has it, in BR-23's form ("₹18,000 set aside · done by May 2027", AC-T5).
 ///
 /// It leads with the bill's icon (D118). Tap opens the bill sheet; swiping left deletes it at once (Undo comes from the page). TalkBack gets a
 /// Delete action, since swiping is gesture-only.
@@ -26,12 +30,17 @@ class BillRow extends StatelessWidget {
     required this.onDelete,
     required this.onThresholdReached,
     this.setAside,
+    this.today = const Option<CalendarDate>.none(),
   });
 
   final RecurringRule bill;
 
   /// What this saving has set aside; the third line shows only when it is above ₹0.
   final Money? setAside;
+
+  /// Today, so a target's "done by" month carries its year only when it is not this year (BR-23);
+  /// none always names the year.
+  final Option<CalendarDate> today;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -81,6 +90,27 @@ class BillRow extends StatelessWidget {
     return aside != null && aside > Money.zero ? aside : null;
   }
 
+  // why: with a target the line follows BR-23's table, which names the target even before the
+  // first put-in (AC-T5); the visible dot and no-break space are never read (B4).
+  SpokenLine? _setAsideLine(BuildContext context, AppLocalizations strings) {
+    final Money? aside = _shownSetAside;
+    final SpokenLine? plain = aside == null
+        ? null
+        : (shown: strings.savingSetAside(context.money.format(aside)), spoken: strings.savingSetAside(strings.spokenAmount(context.money.digits(aside))));
+    final Money saved = aside ?? Money.zero;
+    return bill.target
+            .map(
+              (Money target) => context.targetLine(
+                progress: SavingTarget.progress(target: target, setAside: saved, saving: bill),
+                target: target,
+                setAside: saved,
+                today: today,
+              ),
+            )
+            .toNullable() ??
+        plain;
+  }
+
   // why: a changing or card bill's amount is only the estimate, so it says "about" (D123).
   String _estimated(AppLocalizations strings, String amount) =>
       bill.amountMode == AmountMode.fixed ? amount : strings.billAmountAbout(amount);
@@ -89,11 +119,9 @@ class BillRow extends StatelessWidget {
     final AppLocalizations strings = AppLocalizations.of(context);
     final TextTheme text = Theme.of(context).textTheme;
     final String when = strings.billEveryMonth(bill.schedule.anchor.day);
-    final Money? aside = _shownSetAside;
+    final SpokenLine? aside = _setAsideLine(context, strings);
     final String schedule = strings.billRowSpoken(bill.label, _estimated(strings, strings.spokenAmount(context.money.digits(bill.amount))), when);
-    final String spoken = aside == null
-        ? schedule
-        : strings.spokenPair(schedule, strings.savingSetAside(strings.spokenAmount(context.money.digits(aside))));
+    final String spoken = aside == null ? schedule : strings.spokenPair(schedule, aside.spoken);
     return Semantics(
       label: spoken,
       excludeSemantics: true,
@@ -117,7 +145,7 @@ class BillRow extends StatelessWidget {
                   Text(when, style: text.bodySmall?.copyWith(fontSize: 14)),
                   if (aside != null)
                     Text(
-                      strings.savingSetAside(context.money.format(aside)),
+                      aside.shown,
                       key: const ValueKey<String>('set-aside'),
                       style: text.bodySmall?.copyWith(fontSize: 14),
                     ),

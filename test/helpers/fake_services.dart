@@ -84,11 +84,12 @@ final class FakeServices {
 
   PostDueRecurring get postDue => PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock);
 
-  /// A [HomeBloc] over these fakes; the caller loads and closes it.
-  HomeBloc homeBloc() => HomeBloc(
+  /// A [HomeBloc] over these fakes; the caller loads and closes it. With [getSetAside] it also
+  /// works out the reached line's candidate (BR-23).
+  HomeBloc homeBloc({GetSetAside? getSetAside}) => HomeBloc(
         getCycleSummary: getCycleSummary,
         postDueRecurring: postDue,
-        getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
+        getDueSoonBill: GetDueSoonBill(recurring: recurring, ledger: ledger, clock: clock),
         ledger: ledger,
         recurring: recurring,
         categories: categories,
@@ -100,6 +101,7 @@ final class FakeServices {
         unskipBill: UnskipBillOccurrence(recurring: recurring),
         haptics: haptics,
         settings: settings,
+        getSetAside: getSetAside,
       );
 
   /// The limit offer's use case over these fakes.
@@ -143,9 +145,13 @@ final class FakeServices {
   SpendsBloc spendsBloc() => SpendsBloc(
         getOverview: getSpendsOverview,
         applyLimits: ApplySuggestedLimits(categories: categories),
+        isIncomeSetUp: isIncomeSetUp,
         ledger: ledger,
         haptics: haptics,
       );
+
+  /// Whether income is set up, over these fakes (FR-SP-9 AC-1).
+  IsIncomeSetUp get isIncomeSetUp => IsIncomeSetUp(getIncome: GetIncome(recurring: recurring, ledger: ledger, clock: clock), ledger: ledger);
 
   /// Registers every service the app's routes look up, backed by these fakes.
   GetIt register(GetIt getIt) => getIt
@@ -163,7 +169,7 @@ final class FakeServices {
     ..registerSingleton<DeleteEntry>(DeleteEntry(ledger: ledger))
     ..registerSingleton<RestoreEntry>(RestoreEntry(ledger: ledger))
     ..registerSingleton<PostDueRecurring>(postDue)
-    ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, clock: clock))
+    ..registerSingleton<GetDueSoonBill>(GetDueSoonBill(recurring: recurring, ledger: ledger, clock: clock))
     ..registerSingleton<GetLastBillAmount>(GetLastBillAmount(ledger: ledger, clock: clock))
     ..registerSingleton<GetBillStatus>(GetBillStatus(ledger: ledger, clock: clock, summary: getCycleSummary))
     ..registerSingleton<GetBills>(GetBills(recurring: recurring))
@@ -187,6 +193,7 @@ final class FakeServices {
     ..registerSingleton<GetNudgeSwitch>(GetNudgeSwitch(preferences: preferences, nudges: nudges))
     ..registerSingleton<GetSavedTotal>(GetSavedTotal(ledger: ledger))
     ..registerSingleton<GetSetAside>(GetSetAside(recurring: recurring, ledger: ledger))
+    ..registerSingleton<GetTargetDayEffect>(GetTargetDayEffect(summary: getCycleSummary, ledger: ledger))
     ..registerSingleton<UseFromSavings>(UseFromSavings(ledger: ledger, categories: categories, clock: clock))
     ..registerSingleton<GetIncome>(GetIncome(recurring: recurring, ledger: ledger, clock: clock))
     ..registerSingleton<ChangeIncomeAmount>(ChangeIncomeAmount(recurring: recurring))
@@ -235,6 +242,18 @@ final class FakeServices {
     ..registerSingleton<ForgetUsual>(ForgetUsual(states: states, clock: clock))
     ..registerSingleton<RestoreUsual>(RestoreUsual(states: states))
     ..registerSingleton<DeleteEverything>(DeleteEverything(backups: backups, reminders: reminders, nudges: nudges))
+    ..registerSingleton<IsIncomeSetUp>(isIncomeSetUp)
+    ..registerSingleton<GetAffordInputs>(
+      GetAffordInputs(ledger: ledger, recurring: recurring, settings: settings, periods: const PeriodCalculator(), clock: clock),
+    )
+    ..registerSingleton<StartSavingFor>(
+      StartSavingFor(
+        addBill: AddBill(recurring: recurring, categories: categories, clock: clock),
+        editBill: EditBill(recurring: recurring, categories: categories, clock: clock),
+        recurring: recurring,
+      ),
+    )
+    ..registerSingleton<UndoStartSaving>(UndoStartSaving(recurring: recurring))
     ..registerSingleton<OnboardingDraftRepository>(OnboardingDraftRepositoryImpl(preferences: preferences))
     ..registerSingleton<CompleteOnboarding>(
       CompleteOnboarding(

@@ -23,7 +23,9 @@ import '../bloc/spends_state.dart';
 import '../cycle_label.dart';
 import '../month_story_copy.dart';
 import '../spends_graph_copy.dart';
+import '../widgets/afford_card.dart';
 import '../widgets/ask_ai_card.dart';
+import '../widgets/card_pair.dart';
 import '../widgets/cycle_switcher.dart';
 import '../widgets/insights_card.dart';
 import '../widgets/month_story_card.dart';
@@ -41,15 +43,19 @@ import '../widgets/where_it_went_card.dart';
 /// entries, optionally for one category (FR-SP-6); [onAskAi] opens Ask AI for a cycle (FR-SP-2);
 /// [onOpenStory] opens the month story of the cycle so many cycles back (FR-SP-7). Without it the
 /// story card and the slim row are not shown. [onAddIncome] opens Settings at *Money coming in*
-/// from the split card when nothing came in (FR-SP-4b).
+/// from the split card when nothing came in (FR-SP-4b). [onAfford] opens *Can I afford it?*
+/// from its card beside Ask AI, shown on any cycle once income is set up (FR-SP-9 AC-1); none hides it.
 class SpendsPage extends StatelessWidget {
-  const SpendsPage({super.key, required this.today, required this.onSeeEntries, required this.onAskAi, this.onOpenStory, this.onAddIncome});
+  const SpendsPage({super.key, required this.today, required this.onSeeEntries, required this.onAskAi, this.onOpenStory, this.onAddIncome, this.onAfford});
 
   final CalendarDate today;
   final void Function(PayCycle cycle, Option<int> categoryId) onSeeEntries;
   final ValueChanged<PayCycle> onAskAi;
   final ValueChanged<int>? onOpenStory;
   final VoidCallback? onAddIncome;
+
+  /// Opens *Can I afford it?* (FR-SP-9); none hides its card.
+  final VoidCallback? onAfford;
 
   @override
   Widget build(BuildContext context) => BlocBuilder<SpendsBloc, SpendsState>(
@@ -92,16 +98,13 @@ class SpendsPage extends StatelessWidget {
   List<Widget> _content(BuildContext context, SpendsState state) => switch (state) {
         SpendsLoading() => const <Widget>[],
         SpendsFailed() => <Widget>[_failed(context)],
-        SpendsReady(:final SpendsOverview overview) when overview.isEmpty => <Widget>[
+        SpendsReady(:final SpendsOverview overview, :final bool incomeSetUp) when overview.isEmpty => <Widget>[
             _nothingSpent(context, overview),
+            ..._affordAlone(incomeSetUp: incomeSetUp),
             ..._storyDoor(context, overview),
           ],
-        SpendsReady(:final SpendsOverview overview, :final bool limitsFailed) => <Widget>[
-            AskAiCard(
-              key: const ValueKey<String>('ask-ai-card'),
-              cycleLabel: _label(context, overview.cycle),
-              onPressed: () => onAskAi(overview.cycle),
-            ),
+        SpendsReady(:final SpendsOverview overview, :final bool limitsFailed, :final bool incomeSetUp) => <Widget>[
+            _askAiDoors(context, overview, incomeSetUp: incomeSetUp),
             ..._storyDoor(context, overview),
             const SizedBox(height: HisaabSpacing.m),
             PaceCard(
@@ -155,6 +158,33 @@ class SpendsPage extends StatelessWidget {
             ),
           ],
       };
+
+  /// Ask AI, with *Can I afford it?* beside or under it when it is offered (FR-SP-2, FR-SP-9 AC-1).
+  Widget _askAiDoors(BuildContext context, SpendsOverview overview, {required bool incomeSetUp}) {
+    final Widget askAi = AskAiCard(
+      key: const ValueKey<String>('ask-ai-card'),
+      cycleLabel: _label(context, overview.cycle),
+      onPressed: () => onAskAi(overview.cycle),
+    );
+    final Widget? afford = _affordCard(incomeSetUp: incomeSetUp);
+    return afford == null ? askAi : CardPair(first: askAi, second: afford);
+  }
+
+  /// The empty state has no Ask AI card (D151), so *Can I afford it?* sits under the sentence.
+  List<Widget> _affordAlone({required bool incomeSetUp}) {
+    final Widget? afford = _affordCard(incomeSetUp: incomeSetUp);
+    return afford == null ? const <Widget>[] : <Widget>[const SizedBox(height: HisaabSpacing.m), afford];
+  }
+
+  // why: "whenever income is set up, on any cycle shown" (FR-SP-9 AC-1, D223), as the shortcut
+  // asks; with no income at all, the check has no money to weigh.
+  Widget? _affordCard({required bool incomeSetUp}) {
+    final VoidCallback? open = onAfford;
+    if (open == null || !incomeSetUp) {
+      return null;
+    }
+    return AffordCard(key: const ValueKey<String>('afford-card'), onPressed: open);
+  }
 
   SpendsGraphCopy _copy(BuildContext context) {
     final AppLocalizations strings = AppLocalizations.of(context);

@@ -38,7 +38,7 @@ void main() {
         clock: clock,
       ),
       postDueRecurring: PostDueRecurring(recurring: recurring, ledger: ledger, clock: clock),
-      getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
+      getDueSoonBill: GetDueSoonBill(recurring: recurring, ledger: ledger, clock: clock),
       ledger: ledger,
       recurring: recurring,
       categories: FakeCategoryRepository(),
@@ -137,7 +137,7 @@ void main() {
       final HomeBloc home = HomeBloc(
         getCycleSummary: GetCycleSummary(ledger: book, recurring: recurring, settings: settings, periods: const PeriodCalculator(), clock: clock),
         postDueRecurring: PostDueRecurring(recurring: recurring, ledger: book, clock: clock),
-        getDueSoonBill: GetDueSoonBill(recurring: recurring, clock: clock),
+        getDueSoonBill: GetDueSoonBill(recurring: recurring, ledger: book, clock: clock),
         ledger: book,
         recurring: recurring,
         categories: FakeCategoryRepository(),

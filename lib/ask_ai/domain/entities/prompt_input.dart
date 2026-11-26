@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../core/money/money.dart';
 import '../../../core/time/calendar_date.dart';
 import '../../../core/time/pay_cycle.dart';
 import '../../../core/time/pay_rule.dart';
@@ -18,6 +19,7 @@ final class PromptInput extends Equatable {
     required this.entries,
     this.summary = const Option<CycleSummary>.none(),
     this.savings = const <RecurringRule>[],
+    this.setAsideBySaving = const <int, Money>{},
   });
 
   /// The cycle Spends was showing, then the two before it: always 3, newest first.
@@ -44,6 +46,9 @@ final class PromptInput extends Equatable {
   /// Active *Saved* rules, such as an RD (D120); empty when nothing is saved.
   final List<RecurringRule> savings;
 
+  /// What is still set aside in each saving, by rule id (BR-19); a saving with none is absent.
+  final Map<int, Money> setAsideBySaving;
+
   /// Whether the on-track goal is offered (FR-AI-1): the shown cycle holds today, so the forecast
   /// has a payday or a month end to reach (DECISIONS D117, amending D72).
   bool get offersOnTrack => cycles.first.contains(today);
@@ -53,5 +58,5 @@ final class PromptInput extends Equatable {
   bool get endsAtMonthEnd => summary.match(() => false, (CycleSummary summary) => summary.endsAtMonthEnd);
 
   @override
-  List<Object?> get props => <Object?>[cycles, today, incomeRule, payRule, bills, categories, entries, summary, savings];
+  List<Object?> get props => <Object?>[cycles, today, incomeRule, payRule, bills, categories, entries, summary, savings, setAsideBySaving];
 }

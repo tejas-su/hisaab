@@ -51,14 +51,17 @@ final class ProjectWidgetDays implements UseCase<List<ProjectedDay>, NoParams> {
         (BudgetSettings settings) => _recurring.activeRules().flatMap(
               (List<RecurringRule> rules) => _ledger.entriesBetween(from, to).flatMap(
                     (List<Entry> entries) => _recurring.skipsBetween(from, to).flatMap(
-                          (List<BillSkip> skips) => _ledger.firstLoggedOn().map(
-                                (Option<CalendarDate> firstLogged) => ProjectedBook(
-                                  entries: entries,
-                                  rules: rules,
-                                  skips: skips,
-                                  settings: settings,
-                                  firstLogged: firstLogged,
-                                ),
+                          (List<BillSkip> skips) => _ledger.firstLoggedOn().flatMap(
+                                (Option<CalendarDate> firstLogged) => _ledger.savingTotals().map(
+                                      (SavingTotals totals) => ProjectedBook(
+                                        entries: entries,
+                                        rules: rules,
+                                        skips: skips,
+                                        settings: settings,
+                                        firstLogged: firstLogged,
+                                        savingBaseline: totals,
+                                      ),
+                                    ),
                               ),
                         ),
                   ),
