@@ -6,9 +6,24 @@ The app is Android-only and built for Indian users (INR). Dates are `YYYY-MM-DD`
 
 ## [Unreleased]
 
-Work after `0.1.0+2`. The daily nudge below is built and tested but **not yet committed**.
+## [0.1.1+3] - 2026-11-26
+
+Database schema **v7**; backups are v7 too. Older backups restore as before.
 
 ### Added
+- **Saving up to a target** (BR-23, D212 to D216). A saving can have an optional *Saving up to* amount, and shows when it will be done ("done by …") from what is set aside each cycle.
+  - Once the set-aside money reaches the target, the saving posts nothing more. The last put-in posts only the gap. A later *Used* that drops it below the target starts it again (D213).
+  - Because a saving with a target reserves only its capped put-ins, a target can raise today's share, and the app says so (D216).
+  - Reaching a target shows one quiet line on Home, once per target, and no notification (D214).
+  - The target and its estimate are in the Ask AI export (D215).
+  - New columns `recurring.target_minor`, `target_reached_for` and `target_reached_on` (migration 007).
+- **Can I afford it?** (BR-24, FR-SP-9, FR-WG-9, D217 to D223). A card on Spends checks one purchase and gives one answer: *Yes, you can*, *Yes, without a loan* or *Not yet*, worked out from next cycle's income less bills and savings.
+  - *Start saving* turns the answer into a saving named for the item, with the money still needed as its target, starting the day after payday (D220).
+  - Checking an item you already save for (same name) starts from that saving and updates it instead of adding a second one (D221, D222).
+  - A card purchase is planned against the next cycle and logged on the day the card bill is paid (D219).
+  - It needs income to be set up: a salary or any *Got* entry (D223). Undo of a new saving also removes the put-ins it posted.
+  - Also reachable as a **Can I afford it?** app shortcut (long-press the app icon).
+  - A general what-if simulator, a Goals screen and an *Emergency* preset stay out of the app (D211, D218).
 - **Daily nudge** (BR-22, FR-SE-7, D200 to D205). One local evening notification that reminds you to add what you usually spend, so today's number stays true.
   - Timed from your own pattern: it fires 90 minutes after the window in which you usually log a habit (*your usual*, BR-17), never later than 22:00. Someone with no regular habit yet gets one general nudge at 20:00 after two weeks of use.
   - Skipped on days you already added that category, and cancelled the moment you do. It is planned for today and tomorrow each time the app starts, resumes or saves.
@@ -16,13 +31,19 @@ Work after `0.1.0+2`. The daily nudge below is built and tested but **not yet co
   - Three rotating phrasings, picked by the date, for both the habit nudge ("Chai today?") and the general one ("Anything to add today?"). The text never carries an amount or a note, and a locked screen hides it.
   - A tap opens the Add tray, exactly like the widget's Add key.
   - Off until you say yes. The question is asked once, right after your first tap on Home's missed-log line, and never again. It is skipped that time if it would cover the 4-second Undo of a one-tap add (D203).
-  - **Settings › Reminders › Daily nudge** switch. It reads off, with a line saying where to allow notifications, when the phone's permission is off. Opening Settings never shows Android's permission prompt.
-  - New `nudge_state` table (database schema **v6**; backups are v6 too). Older backups restore as before. *Delete everything* clears it.
+  - **Settings › Reminders › Daily nudge** switch, under its own *Reminders* heading (D206). It reads off, with a line saying where to allow notifications, when the phone's permission is off. Opening Settings never shows Android's permission prompt.
+  - New `nudge_state` table (schema v6). *Delete everything* clears it.
 - **In-app updates** through Google Play (D199).
+- **Month story line art and motion** (D210, mockup 53): each page sits over its own hand-drawn pattern, lines appear one after another (still when reduced motion is on), and Back is on the top line.
 
 ### Changed
+- **The *your usual* pill** is filled, with a round icon well and an add cap (D207, mockup 51).
+- **The Add tray's amount** is larger (Anek 76, the Home hero's size) when the tray has room, and a tall phone's spare height goes around the amount, with the keypad still pinned (D208, D209).
 - Notification code now goes through one shared `NotificationHub`, so bill reminders and nudges can both receive taps. Bill reminders behave exactly as before.
 - Opening the app clears a nudge that is already showing, because Home asks the same question (D205).
+
+### Fixed
+- Going back from Settings after a restore no longer shows an error.
 
 ### Deferred
 - **Adding the amount from the notification** (Part 2 of the nudge: *Add ₹20* and *Other amount* buttons). Left out on purpose as too complicated for now (D204). The specification stays in SPEC BR-22.9 to BR-22.11, marked *Deferred*. The copy for it is already in `app_en.arb`.
